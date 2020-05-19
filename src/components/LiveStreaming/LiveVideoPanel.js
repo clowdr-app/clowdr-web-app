@@ -13,7 +13,7 @@ class LiveVideoPanel extends React.Component {
         const videoId = this.props.video.id;
         const video_url = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
 
-        const chat_url = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=localhost`;
+        const chat_url = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${process.env.REACT_APP_DOMAIN}`;
 
         return (
             <div className={"container"}>

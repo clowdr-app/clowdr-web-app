@@ -1,7 +1,9 @@
-// import app from 'firebase/app';
-// import 'firebase/auth';
-// import 'firebase/database';
-var app = require("firebase");
+import app from 'firebase/app';
+import 'firebase/auth';
+import 'firebase/database';
+import 'firebase/firestore';
+import 'firebase/storage';
+// var app = require("firebase");
 const config = {
     apiKey: process.env.REACT_APP_API_KEY,
     authDomain: process.env.REACT_APP_AUTH_DOMAIN,
@@ -18,6 +20,7 @@ class Firebase {
         this.auth = app.auth();
         this.db = app.database();
         this.firestore = app.firestore();
+        this.storage = app.storage();
     }
 
     doCreateUserWithEmailAndPassword = (email, password) =>

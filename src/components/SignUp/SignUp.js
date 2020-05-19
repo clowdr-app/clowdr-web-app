@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import * as ROUTES from '../../constants/routes';
 import * as ROLES from '../../constants/roles';
-import { withFirebase } from '../Firebase';
-
+import {withFirebase} from '../Firebase';
+import {Button, Checkbox, Form, Input} from 'antd';
 
 
 const ERROR_CODE_ACCOUNT_EXISTS = 'auth/email-already-in-use';
@@ -47,16 +47,9 @@ class SignUp extends Component {
                     email,
                     roles,
                 });
-            }).then(()=>{
-                if(this.props.firebase.auth.currentUser != null){
-                    this.props.firebase.auth.currentUser.updateProfile({
-                       displayName: username
-                    });
-                }
-        })
-            .then(() => {
+            }).then(() => {
                 this.setState({...INITIAL_STATE});
-                this.props.history.push(ROUTES.LANDING);
+                this.props.history.push(ROUTES.ACCOUNT);
             })
             .catch(error => {
                 if (error.code === ERROR_CODE_ACCOUNT_EXISTS) {
@@ -92,52 +85,89 @@ class SignUp extends Component {
             passwordOne === '' ||
             email === '' ||
             username === '';
-
         return (
-            <form onSubmit={this.onSubmit}>
-                <input
-                    name="username"
-                    value={username}
-                    onChange={this.onChange}
-                    type="text"
-                    placeholder="Full Name"
-                />
-                <input
-                    name="email"
-                    value={email}
-                    onChange={this.onChange}
-                    type="text"
-                    placeholder="Email Address"
-                />
-                <input
-                    name="passwordOne"
-                    value={passwordOne}
-                    onChange={this.onChange}
-                    type="password"
-                    placeholder="Password"
-                />
-                <input
-                    name="passwordTwo"
-                    value={passwordTwo}
-                    onChange={this.onChange}
-                    type="password"
-                    placeholder="Confirm Password"
-                />
-                <label>
-                    Admin:
-                    <input
-                        name="isAdmin"
-                        type="checkbox"
-                        checked={isAdmin}
-                        onChange={this.onChangeCheckbox}
+            <Form onFinish={this.onSubmit} labelCol={{
+                span: 4,
+            }}
+                  wrapperCol={{
+                      span: 14,
+                  }}
+                  layout="horizontal"
+                  initialValues={{
+                      size: 50,
+                  }}
+                  size={100}>
+                <Form.Item
+                    label="Full Name"
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Please input your full name',
+                        },
+                    ]}
+                ><Input name="username" value={username} onChange={this.onChange}/></Form.Item>
+                <Form.Item
+                    label="Email Address"
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Please input your email',
+                        },
+                    ]}
+                >
+                    <Input
+                        name="email"
+                        value={email}
+                        type="text"
+                        onChange={this.onChange}/>
+                </Form.Item>
+                <Form.Item
+                    label="Password"
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Please enter a password',
+                        },
+                    ]}
+                >
+                    <Input.Password
+
+                        name="passwordOne"
+                        value={passwordOne}
+                        onChange={this.onChange}/>
+                </Form.Item>
+                <Form.Item
+                    label="Confirm Password"
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Please enter a password',
+                        },
+                    ]}
+                >
+                    <Input.Password
+
+                        name="passwordTwo"
+                        value={passwordTwo}
+                        onChange={this.onChange}
                     />
-                </label>
-                <button disabled={isInvalid} type="submit">
+                </Form.Item>
+                <Form.Item
+                    label="Admin"
+                ><Checkbox
+
+                    name="isAdmin"
+                    type="checkbox"
+                    checked={isAdmin}
+                    onChange={this.onChangeCheckbox}
+                />
+                </Form.Item>
+                <Button type="primary" htmlType="submit" disabled={isInvalid} onClick={this.onSubmit}>
                     Sign Up
-                </button>
+                </Button>
 
                 {error && <p>{error.message}</p>}
-            </form>
+            </Form>
         );
     }
 }

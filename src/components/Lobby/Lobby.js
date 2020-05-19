@@ -1,5 +1,4 @@
 import React from 'react';
-// import { ZoomMtg } from ‘@zoomus/websdk‘;
 
 class Lobby extends React.Component {
     constructor(props) {

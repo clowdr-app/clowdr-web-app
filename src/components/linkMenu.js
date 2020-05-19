@@ -9,10 +9,12 @@ const LinkMenu = withRouter(
     props => {
         const {location} = props;
         let userTools = [];
-        console.log(props.firebase.auth.currentUser)
         if (props.firebase.auth.currentUser) {
             userTools =
                 [
+
+                    <Menu.Item key='/account' icon={<TeamOutlined/>}><NavLink to="/account">
+                        My Account</NavLink></Menu.Item>,
                     <Menu.Item key='/lobby' icon={<TeamOutlined/>}><NavLink to="/lobby">Lobby
                         Session</NavLink></Menu.Item>,
                     <Menu.Item key='/signout' icon={<TeamOutlined/>}><NavLink to="/signout">Sign
@@ -25,9 +27,9 @@ const LinkMenu = withRouter(
                 ]
         }
         return <Menu theme={"dark"} mode={"inline"} selectedKeys={[location.pathname]}>
-            {userTools}
             <Menu.Item key='/' icon={<VideoCameraOutlined/>}><NavLink to="/">Live
                 Videos</NavLink></Menu.Item>
+            {userTools}
         </Menu>;
     }
 );

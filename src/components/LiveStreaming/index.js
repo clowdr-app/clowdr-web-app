@@ -6,12 +6,15 @@ import VideoThumbnail from "./VideoThumbnail";
 
 class LiveStreaming extends Component {
     componentDidMount() {
-        this.props.firebase.firestore.collection("liveVideos").get().then(val => {
-            const videos = [];
-            val.forEach((vid) => {
-                videos.push({id: vid.id, data: vid.data()});
-            });
-            this.setState({videos: videos});
+        this.props.firebase.db.ref("liveVideos/").on('value', val => {
+            const res = val.val();
+            if(res) {
+                const videos = [];
+                val.forEach((vid) => {
+                    videos.push({id: vid.key, data: vid.val()});
+                });
+                this.setState({videos: videos});
+            }
         });
     }
 

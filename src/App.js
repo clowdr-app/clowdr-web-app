@@ -10,6 +10,7 @@ import './App.css';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
 import {withAuthentication} from "./components/Session";
+import Account from "./components/Account";
 
 const {Header, Content, Footer, Sider} = Layout;
 
@@ -29,7 +30,7 @@ class App extends Component {
                 <div className="App">
                     <Layout className="site-layout">
                         <Header className="site-layout-background" style={{"height": "140px"}}>
-                            <img src="icse2020-logo.png" width="800px" className="App-logo" alt="logo"/>
+                            <img src={require('./icse2020-logo.png')} width="800px" className="App-logo" alt="logo"/>
                         </Header>
                         <Layout>
                             <Sider>
@@ -38,6 +39,7 @@ class App extends Component {
                             <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
                                 <div className="site-layout-background" style={{padding: 24, textAlign: 'center'}}>
                                     <Route exact path="/" component={Home}/>
+                                    <Route exact path="/account" component={withAuthentication(Account)}/>
                                     <Route exact path="/lobby" component={withAuthentication(Lobby)}/>
                                     <Route exact path="/signup" component={withAuthentication(SignUp)}/>
                                     <Route exact path="/signin" component={withAuthentication(SignIn)}/>

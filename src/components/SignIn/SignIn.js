@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import * as ROUTES from '../../constants/routes';
+import {Button, Form, Input} from 'antd';
 
 const INITIAL_STATE = {
     email: '',
@@ -16,7 +17,20 @@ const ERROR_MSG_ACCOUNT_EXISTS = `
   this account instead and associate your social accounts on
   your personal account page.
 `;
-
+const layout = {
+    labelCol: {
+        span: 8,
+    },
+    wrapperCol: {
+        span: 16,
+    },
+};
+const tailLayout = {
+    wrapperCol: {
+        offset: 8,
+        span: 16,
+    },
+};
 class SignIn extends Component {
     constructor(props) {
         super(props);
@@ -50,27 +64,29 @@ class SignIn extends Component {
         const isInvalid = password === '' || email === '';
 
         return (
-            <form onSubmit={this.onSubmit}>
-                <input
-                    name="email"
-                    value={email}
-                    onChange={this.onChange}
-                    type="text"
-                    placeholder="Email Address"
-                />
-                <input
-                    name="password"
-                    value={password}
-                    onChange={this.onChange}
-                    type="password"
-                    placeholder="Password"
-                />
-                <button disabled={isInvalid} type="submit">
-                    Sign In
-                </button>
+            <Form {...layout} onFinish={this.onSubmit}>
+                <Form.Item label={"Email Address"}>
+                    <Input
+                        name="email"
+                        value={email}
+                        onChange={this.onChange}
+                        type="text"
+                    />
+                </Form.Item>
+                <Form.Item label={"Password"}>
+                    <Input.Password
+                        name="password"
+                        value={password}
+                        onChange={this.onChange}
+                        type="password"
+                    /></Form.Item>
+                <Form.Item {...tailLayout}>
+                    <Button type="primary" disabled={isInvalid} htmlType="submit">
+                        Sign In
+                    </Button></Form.Item>
 
                 {error && <p>{error.message}</p>}
-            </form>
+            </Form>
         );
     }
 }
