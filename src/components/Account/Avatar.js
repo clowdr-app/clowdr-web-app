@@ -63,11 +63,12 @@ class Avatar extends React.Component {
             req.onError(error);
         }, function () {
             task.snapshot.ref.getDownloadURL().then(ret => {
-                console.log(ret);
                 _this.props.firebase.auth.currentUser.updateProfile(
                     {photoURL: ret}
                 ).then(() => {
-                    console.log("Saved");
+                    _this.props.firebase.db.ref("/users").child(_this.props.user.uid).child("photoURL").set(ret).then(()=>{
+                        console.log("Saved");
+                    });
                 }).catch
                 (error => {
                     console.log(error);
