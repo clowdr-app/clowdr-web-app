@@ -6,19 +6,43 @@ class Account extends React.Component {
     constructor(props) {
         super(props);
         this.state = {'loading': true};
+        this.userRef = this.props.firebase.db.ref("users").child(this.props.user.uid);
     }
 
     componentDidMount() {
-        this.setState({
-            loading: false,
-            username: this.props.user.username,
-            email: this.props.user.email
-        })
+        this.userRef.once("value").then((val) => {
+            let data = val.val();
+            this.setState({
+                loading: false,
+                username: data.username,
+                email: data.email,
+                affiliation: data.affiliation
+            });
+        });
+
     }
 
     updateUser() {
-
+        this.setState({updating: true});
+        this.userRef.update({
+            affiliation: this.state.affiliation,
+            username: this.state.username
+        }).then(() => {
+            this.props.firebase.auth.currentUser.updateProfile({
+               displayName: this.state.username
+            }).then(()=>{
+                this.setState({updating: false});
+            });
+        });
     }
+
+    onChange = event => {
+        this.setState({[event.target.name]: event.target.value});
+    };
+
+    onChangeCheckbox = event => {
+        this.setState({[event.target.name]: event.target.checked});
+    };
 
     render() {
         if (this.state.loading || !this.props.firebase.auth.currentUser) {
@@ -73,55 +97,26 @@ class Account extends React.Component {
                     <Input
                         name="email"
                         value={this.state.email}
+                        disabled={true}
                         type="text"
                         onChange={this.onChange}/>
                 </Form.Item>
-                {/*<Form.Item*/}
-                {/*    label="Password"*/}
-                {/*    rules={[*/}
-                {/*        {*/}
-                {/*            required: true,*/}
-                {/*            message: 'Please enter a password',*/}
-                {/*        },*/}
-                {/*    ]}*/}
-                {/*>*/}
-                {/*    <Input.Password*/}
-
-                {/*        name="passwordOne"*/}
-                {/*        value={passwordOne}*/}
-                {/*        onChange={this.onChange}/>*/}
-                {/*</Form.Item>*/}
-                {/*<Form.Item*/}
-                {/*    label="Confirm Password"*/}
-                {/*    rules={[*/}
-                {/*        {*/}
-                {/*            required: true,*/}
-                {/*            message: 'Please enter a password',*/}
-                {/*        },*/}
-                {/*    ]}*/}
-                {/*>*/}
-                {/*    <Input.Password*/}
-
-                {/*        name="passwordTwo"*/}
-                {/*        value={passwordTwo}*/}
-                {/*        onChange={this.onChange}*/}
-                {/*    />*/}
-                {/*</Form.Item>*/}
-                <Form.Item label="Profile Photo">
-                    <Avatar user={this.props.user} firebase={this.props.firebase} imageURL={this.props.firebase.auth.currentUser.photoURL}/>
-                </Form.Item>
                 <Form.Item
-                    label="Admin"
-                ><Checkbox
-
-                    name="isAdmin"
-                    type="checkbox"
-                    checked={isAdmin}
-                    onChange={this.onChangeCheckbox}
-                />
+                    label="Affiliation">
+                    <Input
+                        name="affiliation"
+                        value={this.state.affiliation}
+                        disabled={this.state.updating}
+                        type="text"
+                        onChange={this.onChange}/>
                 </Form.Item>
-                <Button type="primary" htmlType="submit" disabled={isInvalid} onClick={this.onSubmit}>
-                    Sign Up
+                <Form.Item label="Profile Photo">
+                    <Avatar user={this.props.user} firebase={this.props.firebase}
+                            imageURL={this.props.firebase.auth.currentUser.photoURL}/>
+                </Form.Item>
+
+                <Button type="primary" htmlType="submit" disabled={isInvalid} onClick={this.onSubmit} loading={this.state.updating}>
+                    Save
                 </Button>
 
                 {error && <p>{error.message}</p>}

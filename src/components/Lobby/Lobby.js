@@ -1,21 +1,88 @@
 import React from 'react';
-import {Button, Card, Form, Input, Modal, Radio, Spin, Tabs} from "antd";
-import { List, Avatar, Space } from 'antd';
-import { MessageOutlined, LikeOutlined, StarOutlined } from '@ant-design/icons';
-import Room from "./examplecode/Room";
-import InfiniteScroll from 'react-infinite-scroller';
+import {Avatar, Button, Card, Divider, Form, Input, Layout, List, message, Modal, Radio, Space, Spin, Tabs} from "antd";
+import ActiveUsers from "./ActiveUsers";
+import InfiniteScroll from "react-infinite-scroller";
+
+const {Header, Content, Footer, Sider} = Layout;
 
 const {TabPane} = Tabs;
-const IconText = ({ icon, text }) => (
+const IconText = ({icon, text}) => (
     <Space>
         {React.createElement(icon)}
         {text}
     </Space>
 );
+
+
+class MeetingSummary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {loadingMeeting: false, loading: false, members: this.props.item.members};
+    }
+
+    componentDidMount() {
+        let ref = this.props.firebase.db.ref("users");
+        if (this.props.item && this.props.item.members)
+            Object.keys(this.props.item.members).forEach((key) => {
+                ref.child(key).once("value").then((v) => {
+                    this.setState((prevState) => {
+                        let members = Object.assign({}, prevState.members);
+                        members[key] = v.val();
+                        return {members};
+                    })
+                })
+            })
+    }
+
+    joinMeeting(meeting) {
+        if (meeting.id.startsWith("demo")) {
+            message.error('Sorry, you can not join the demo meetings. Try to create a new one!');
+
+        } else {
+            this.props.history.push("/videoChat/" + meeting.id);
+        }
+    }
+
+    render() {
+        let item = this.props.item;
+        return <Card title={item.title} style={{width: "350px", "height": "350px", overflow: "scroll"}}
+                     size={"small"}
+                     extra={<a href="#" onClick={this.joinMeeting.bind(this, item)}>Join</a>}
+        >
+            {(this.state.members ? <span>
+                {/*<h4>Currently here:</h4>*/}
+                {/*<Divider orientation="left">Here now:</Divider>*/}
+                <List
+                    dataSource={Object.values(this.state.members)}
+                    size={"small"}
+                    renderItem={user => (
+                        <List.Item key={user}>
+                            <List.Item.Meta
+                                avatar={
+                                    <Avatar src={user.photoURL}/>
+                                }
+                                title={user.username}
+                            />
+                        </List.Item>
+                    )}
+                >
+                    {this.state.loading && this.state.hasMore && (
+                        <div className="demo-loading-container">
+                            <Spin/>
+                        </div>
+                    )}
+                </List>
+            </span> : <span>Nobody's here yet</span>)}
+
+        </Card>
+
+    }
+}
+
 class Lobby extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {'loading': true, 'visible': false};
+        this.state = {'loading': true, 'visible': false, maxDisplayedRooms: 10};
         this.roomsRef = this.props.firebase.db.ref("breakoutRooms/");
         this.usersRef = this.props.firebase.db.ref("users/");
     }
@@ -23,30 +90,30 @@ class Lobby extends React.Component {
     componentDidMount() {
         this.roomsRef.on('value', val => {
             const res = val.val();
+            const rooms = {};
+            const users = {};
             if (res) {
-                const rooms = {};
-                const users = {};
                 val.forEach((room) => {
-                    rooms[room.key]= room.val();
-                    Object.keys(room.val().members).forEach((member)=>{
-                        this.usersRef.child(member).once("value").then((userData)=>{
-                            this.setState((prevState)=>{
-                                prevState.rooms[room.key].members[member] = userData.val();
-                                return prevState;
-                            });
-                        })
-                    })
+                    rooms[room.key] = room.val();
+                    rooms[room.key].id = room.key;
                 });
-                this.setState({rooms: rooms, loading: false, users: users});
             }
+            this.setState({rooms: rooms, loading: false});
         });
     }
 
+    componentWillUnmount() {
+        this.roomsRef.off("value");
+    }
+
     onCreate(values) {
+        var _this = this;
         var newRef = this.roomsRef.push();
         newRef.set({
             title: values.title,
             uid: this.props.user.uid
+        }).then((val) => {
+            _this.props.history.push("/videoChat/" + newRef.key);
         }).catch(err => {
             console.log(err);
         });
@@ -56,44 +123,17 @@ class Lobby extends React.Component {
         this.setState({'visible': !this.state.visible});
     }
 
-    joinMeeting(meeting){
-        var _this = this;
-        this.setState({loadingMeeting:'true'})
-        this.props.firebase.auth.currentUser.getIdToken(/* forceRefresh */ true).then(function(idToken) {
-            const data = fetch('http://localhost:3001/video/token', {
-                method: 'POST',
-                body: JSON.stringify({
-                    room: meeting.id,
-                    identity: idToken
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then(res => {
-                res.json().then((data)=>{
-                    _this.setState(
-                        {
-                            meeting: meeting,
-                            token: data.token,
-                            loadingMeeting: false
-                        }
-                    )
-                    console.log(data.token);
-                })
-            });
-        }).catch(function(error) {
-            // Handle error
-        });
 
-
-        //
-        // setToken(data.token);
+    displayMore() {
+        this.setState((prevState) => ({
+            maxDisplayedRooms: prevState.maxDisplayedRooms + 10
+        }));
     }
 
-    closeMeeting(meeting){
-
-        this.setState({token:null});
+    hasMoreRoomsToShow() {
+        return this.state.maxDisplayedRooms < this.state.rooms.length;
     }
+
     render() {
         if (this.state.loading || !this.props.firebase.auth.currentUser) {
             return (
@@ -101,68 +141,51 @@ class Lobby extends React.Component {
                 </Spin>)
         }
         return (
-            <Tabs defaultActiveKey="1">
-                <TabPane tab="Breakout Areas" key="1">
-                    <h4>{Object.keys(this.state.rooms).length > 0 ? "Join a room or create a new one!" : "Looks like there aren't any breakout rooms right now. Be the first to create a breakout room!"}</h4>
+            // <Tabs defaultActiveKey="1">
+            //     <TabPane tab="Breakout Areas" key="1">
+            <Layout>
+                <Content>
+                    <Card title={"The Lobby Track"} style={{textAlign: "left"}}>
 
-                    <Button
-                        type="primary"
-                        onClick={() => {
-                            this.setVisible(true);
-                        }}
-                    >
-                        New breakout room
-                    </Button>
-                    <List
-                        itemLayout="horizontal"
-                        dataSource={Object.values(this.state.rooms)}
-                        renderItem={item => (
-                            <List.Item
-                                key={item.id}
-                                // actions={[
-                                //     <IconText icon={StarOutlined} text="156" key="list-vertical-star-o" />,
-                                //     <IconText icon={LikeOutlined} text="156" key="list-vertical-like-o" />,
-                                //     <IconText icon={MessageOutlined} text="2" key="list-vertical-message" />,
-                                // ]}
-                                // extra={
-                                //     <img
-                                //         width={272}
-                                //         alt="logo"
-                                //         src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
-                                // }
-                            >
-                                <Card title={item.title}>
-                                    {item.description}
-
-                                    <br />
-                                    <Button type="primary" onClick={this.joinMeeting.bind(this,item)} loading={this.state.loadingMeeting}>Join Room</Button>
-                                    <h4>Currently here:</h4>
-                                    <List
-                                        dataSource={Object.values(item.members)}
-                                        renderItem={user => (
-                                            <List.Item key={user}>
-                                                <List.Item.Meta
-                                                    avatar={
-                                                        <Avatar src={user.photoURL} />
-                                                    }
-                                                    title={<a href="https://ant.design">{user.name}</a>}
-                                                    description={user.email}
-                                                />
-                                            </List.Item>
-                                        )}
-                                    >
-                                        {this.state.loading && this.state.hasMore && (
-                                            <div className="demo-loading-container">
-                                                <Spin />
-                                            </div>
-                                        )}
-                                    </List>
-                                </Card>
-
-
-                            </List.Item>
-                        )}
-                    />,
+                        Some say that the most valuable part of an academic conference is the "lobby track" - where
+                        colleagues meet, catch up, and share
+                        casual conversation. To bring the metaphor into the digital world, the digital lobby session
+                        allows you to create a small group video chat, and switch between group chats. Take
+                        a look at the breakout rooms that participants have formed so far and join one, or create a new
+                        one!<br/>
+                        <Button
+                            type="primary"
+                            onClick={() => {
+                                this.setVisible(true);
+                            }}
+                        >
+                            New breakout room
+                        </Button>
+                    </Card>
+                    <Divider/>
+                    <div style={{maxHeight: "80vh", overflow: 'auto', border: '1px sold #FAFAFA'}}>
+                        <InfiniteScroll
+                            pageStart={0}
+                            // hasMore={Object.keys(this.state.activeUsers).length >= 20}
+                            hasMore={this.hasMoreRoomsToShow.bind(this)}
+                            loadMore={this.displayMore.bind(this)}
+                            useWindow={false}
+                            initialLoad={false}
+                            loader={<Spin>Loading...</Spin>}
+                        >
+                            <Space style={{
+                                maxWidth: '80vw',
+                                display: "flex",
+                                marginLeft: "20px",
+                                flexWrap: "wrap"
+                            }}>
+                                {
+                                    Object.values(this.state.rooms).slice(0, this.state.maxDisplayedRooms).map((item) => (
+                                        <MeetingSummary key={item.id} item={item} firebase={this.props.firebase}/>
+                                    ))}
+                            </Space>
+                        </InfiniteScroll>
+                    </div>
                     <CollectionCreateForm
                         visible={this.state.visible}
                         onCreate={this.onCreate.bind(this)}
@@ -170,19 +193,19 @@ class Lobby extends React.Component {
                             this.setVisible(false);
                         }}
                     />
-                    {this.state.token ? <Modal
-                        visible={true}
-                    title={this.state.meeting.title}
-                    onCancel={this.closeMeeting.bind(this,this.state.meeting)}
-                    ><Room roomName={this.state.meeting.title} token={this.state.token} handleLogout={this.closeMeeting.bind(this,this.state.meeting)} /> </Modal>: ""}
-                </TabPane>
-                <TabPane tab="Tab 2" key="2">
-                    Content of Tab Pane 2
-                </TabPane>
-                <TabPane tab="Tab 3" key="3">
-                    Content of Tab Pane 3
-                </TabPane>
-            </Tabs>
+                </Content>
+                <Sider width="220px">
+                    <ActiveUsers firebase={this.props.firebase}/>
+                </Sider>
+            </Layout>
+            //     </TabPane>
+            //     <TabPane tab="Tab 2" key="2">
+            //         Content of Tab Pane 2
+            //     </TabPane>
+            //     <TabPane tab="Tab 3" key="3">
+            //         Content of Tab Pane 3
+            //     </TabPane>
+            // </Tabs>
         );
     }
 }
@@ -193,27 +216,44 @@ const CollectionCreateForm = ({visible, onCreate, onCancel}) => {
         <Modal
             visible={visible}
             title="Create a new breakout room"
-            okText="Create"
+            // okText="Create"
+            footer={[
+                <Button form="myForm" key="submit" type="primary" htmlType="submit">
+                    Submit
+                </Button>
+            ]}
             cancelText="Cancel"
             onCancel={onCancel}
-            onOk={() => {
-                form
-                    .validateFields()
-                    .then(values => {
-                        form.resetFields();
-                        onCreate(values);
-                    })
-                    .catch(info => {
-                        console.log('Validate Failed:', info);
-                    });
-            }}
+            // onOk={() => {
+            //     form
+            //         .validateFields()
+            //         .then(values => {
+            //             form.resetFields();
+            //             onCreate(values);
+            //         })
+            //         .catch(info => {
+            //             console.log('Validate Failed:', info);
+            //         });
+            // }}
         >
             <Form
                 form={form}
                 layout="vertical"
                 name="form_in_modal"
+                id="myForm"
                 initialValues={{
                     modifier: 'public',
+                }}
+                onFinish={() => {
+                    form
+                        .validateFields()
+                        .then(values => {
+                            form.resetFields();
+                            onCreate(values);
+                        })
+                        .catch(info => {
+                            console.log('Validate Failed:', info);
+                        });
                 }}
             >
                 <Form.Item

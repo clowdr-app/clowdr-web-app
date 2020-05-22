@@ -2,6 +2,8 @@ import React from 'react';
 
 import AuthUserContext from './context';
 import {withFirebase} from '../Firebase';
+import {Spin} from "antd";
+import * as ROUTES from "../../constants/routes";
 
 const withAuthentication = Component => {
     class WithAuthentication extends React.Component {
@@ -10,6 +12,7 @@ const withAuthentication = Component => {
 
             this.state = {
                 authUser: JSON.parse(localStorage.getItem('authUser')),
+                loading: true
             };
         }
 
@@ -18,7 +21,7 @@ const withAuthentication = Component => {
             this.listener = this.props.firebase.onAuthUserListener(
                 authUser => {
                     localStorage.setItem('authUser', JSON.stringify(authUser));
-                    this.setState({authUser});
+                    this.setState({authUser: authUser, loading: false});
                     // Fetch the current user's ID from Firebase Authentication.
                     var uid = _this.props.firebase.auth.currentUser.uid;
 
@@ -53,7 +56,7 @@ const withAuthentication = Component => {
                         // method to add a set which will only trigger once this
                         // client has disconnected by closing the app,
                         // losing internet, or any other means.
-                        userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(function () {
+                        userStatusDatabaseRef.onDisconnect().remove().then(function () {
                             // The promise returned from .onDisconnect().set() will
                             // resolve as soon as the server acknowledges the onDisconnect()
                             // request, NOT once we've actually disconnected:
@@ -68,16 +71,23 @@ const withAuthentication = Component => {
                 },
                 () => {
                     localStorage.removeItem('authUser');
-                    this.setState({authUser: null});
+                    this.setState({authUser: null, loading: false});
+                    if (this.props.history) {
+                        this.props.history.push(ROUTES.SIGN_IN);
+                    }
                 },
             );
         }
 
         componentWillUnmount() {
             this.listener();
+            this.listener = undefined;
         }
 
         render() {
+            if(this.state.loading)
+                return <div>    <Spin size="large" />
+                </div>
             return (
                 <AuthUserContext.Provider value={this.state.authUser}>
                     <Component {...this.props} user={this.state.authUser}/>
