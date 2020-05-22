@@ -1,5 +1,21 @@
 import React from 'react';
-import {Avatar, Button, Card, Divider, Form, Input, Layout, List, message, Modal, Radio, Space, Spin, Tabs} from "antd";
+import {
+    Avatar,
+    Button,
+    Card,
+    Divider,
+    Form,
+    Input,
+    Layout,
+    List,
+    message,
+    Modal,
+    Popconfirm,
+    Radio,
+    Space,
+    Spin,
+    Tabs
+} from "antd";
 import ActiveUsers from "./ActiveUsers";
 import InfiniteScroll from "react-infinite-scroller";
 
@@ -45,9 +61,15 @@ class MeetingSummary extends React.Component {
 
     render() {
         let item = this.props.item;
+        let _this = this;
         return <Card title={item.title} style={{width: "350px", "height": "350px", overflow: "scroll"}}
                      size={"small"}
-                     extra={<a href="#" onClick={this.joinMeeting.bind(this, item)}>Join</a>}
+                     extra={ <Popconfirm
+                         title="You are about to join a video call. Are you ready?"
+                         onConfirm={_this.joinMeeting.bind(_this, item)}
+                         okText="Yes"
+                         cancelText="No"
+                     ><a href="#" >Join</a></Popconfirm>}
         >
             {(this.state.members ? <span>
                 {/*<h4>Currently here:</h4>*/}
@@ -181,7 +203,7 @@ class Lobby extends React.Component {
                             }}>
                                 {
                                     Object.values(this.state.rooms).slice(0, this.state.maxDisplayedRooms).map((item) => (
-                                        <MeetingSummary key={item.id} item={item} firebase={this.props.firebase}/>
+                                        <MeetingSummary history={this.props.history} key={item.id} item={item} firebase={this.props.firebase}/>
                                     ))}
                             </Space>
                         </InfiniteScroll>

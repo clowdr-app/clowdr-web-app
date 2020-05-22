@@ -91,7 +91,7 @@ app.post('/video/token', async (req, res, next) => {
         try {
             let twilioRoom = await client.video.rooms.create({
                 uniqueName: room,
-                type: "peer-to-peer", //TESTING
+                // type: "peer-to-peer", //TESTING
                 statusCallback: "https://a9ffd588.ngrok.io/roomCallback"
             });
             await roomRef.update({'twilioID': twilioRoom.sid});

@@ -73,11 +73,11 @@ class ConnectBridge extends Component<{videoContext: IVideoContext, setRoomName:
     }
     componentDidMount(): void {
         let doConnect = this.doConnect.bind(this);
-        this.props.videoContext.getLocalAudioTrack().then(()=>{
-            console.log("Got video track");
+        // this.props.videoContext.getLocalAudioTrack().then(()=>{
+        //     console.log("Got video track");
             setTimeout(this.doConnect.bind(this), 3000);
             // doConnect();
-        })
+        // })
     }
     componentWillUnmount(): void {
         if(this.props.videoContext.room && this.props.videoContext.room.disconnect){

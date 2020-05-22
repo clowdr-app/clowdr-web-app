@@ -34,9 +34,9 @@ class SignUp extends Component {
         const {username, email, passwordOne, isAdmin} = this.state;
         const roles = {};
 
-        if (isAdmin) {
-            roles[ROLES.ADMIN] = ROLES.ADMIN;
-        }
+        // if (isAdmin) {
+        //     roles[ROLES.ADMIN] = ROLES.ADMIN;
+        // }
 
         this.props.firebase
             .doCreateUserWithEmailAndPassword(email, passwordOne)
@@ -152,16 +152,7 @@ class SignUp extends Component {
                         onChange={this.onChange}
                     />
                 </Form.Item>
-                <Form.Item
-                    label="Admin"
-                ><Checkbox
 
-                    name="isAdmin"
-                    type="checkbox"
-                    checked={isAdmin}
-                    onChange={this.onChangeCheckbox}
-                />
-                </Form.Item>
                 <Button type="primary" htmlType="submit" disabled={isInvalid} onClick={this.onSubmit}>
                     Sign Up
                 </Button>

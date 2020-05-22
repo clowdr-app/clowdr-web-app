@@ -52,7 +52,7 @@ class App extends Component {
                                     <Route exact path="/account" component={withAuthentication(Account)}/>
                                     <Route exact path="/videoChat/:roomId" component={withAuthentication(VideoChat)}/>
                                     <Route exact path="/lobby" component={withAuthentication(Lobby)}/>
-                                    <Route exact path="/signup" component={withAuthentication(SignUp)}/>
+                                    <Route exact path="/signup" component={SignUp}/>
                                     <Route exact path="/signin" component={withAuthentication(SignIn)}/>
                                     <Route exact path="/signout" component={withAuthentication(SignOut)}/>
 
