@@ -72,9 +72,9 @@ const withAuthentication = Component => {
                 () => {
                     localStorage.removeItem('authUser');
                     this.setState({authUser: null, loading: false});
-                    if (this.props.history) {
-                        this.props.history.push(ROUTES.SIGN_IN);
-                    }
+                    // if (this.props.history) {
+                    //     this.props.history.push(ROUTES.SIGN_IN);
+                    // }
                 },
             );
         }

@@ -5,7 +5,7 @@ import Home from "./components/Home"
 import Lobby from "./components/Lobby"
 import SignUp from "./components/SignUp"
 import SignIn from "./components/SignIn"
-import {Layout} from 'antd';
+import {Affix, Layout} from 'antd';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
@@ -19,6 +19,7 @@ import LiveVideosList from "./components/Admin/LiveVideos";
 import EditUser from "./components/Admin/Users/EditUser";
 import ChannelList from "./components/ChannelList";
 import {withFirebase} from "./components/Firebase";
+import Chat from "./components/Chat";
 
 const {Header, Content, Footer, Sider} = Layout;
 
@@ -45,7 +46,7 @@ class App extends Component {
                                 <LinkMenu/>
                             </Sider>
                             <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
-                                <div className="site-layout-background" style={{padding: 24, textAlign: 'center'}}>
+                                <div className="site-layout-background" style={{padding: 24}} >
                                     <Route exact path="/" component={Home}/>
                                     <Route exact path="/channelList" component={withFirebase(ChannelList)}/>
 
@@ -60,6 +61,9 @@ class App extends Component {
                                     <Route exact path='/admin/users' component={withAuthentication(UsersList)} />
                                     <Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />
                                     <Route exact path='/admin/livevideos' component={withAuthentication(LiveVideosList)} />
+                                    <Affix offsetBottom={10}>
+                                        <Chat />
+                                    </Affix>
                                 </div>
                             </Content>
                         </Layout>

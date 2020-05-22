@@ -1,12 +1,15 @@
+
 const config = require('./config');
 const express = require('express');
 const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
-const {videoToken} = require('./tokens');
+const {videoToken, ChatGrant, AccessToken} = require('./tokens');
+
 var cors = require('cors')
 var admin = require("firebase-admin");
 
 const client = require('twilio')(config.accountSid, config.token);
+
 
 var serviceAccount = require("./virtualconf-35e45-firebase-adminsdk-omcmk-679e332055.json");
 
@@ -70,6 +73,36 @@ app.post("/roomCallback", async (req, res) => {
     res.send();
 })
 
+app.post('/chat/token', async (req, res, next) => {
+    const identity = req.body.identity;
+
+    let decodedToken = await admin.auth().verifyIdToken(identity);
+    let uid = decodedToken.uid;
+    //now get username to give to twilio
+    let uname = await admin.database().ref("users/").child(uid).child("username").once('value');
+    let name = uid + ":" + uname.val();
+    const accessToken = new AccessToken(config.twilio.accountSid, config.twilio.apiKey, config.twilio.apiSecret);
+    const chatGrant = new ChatGrant({
+        serviceSid: config.twilio.chatServiceSid,
+        endpointId: `${name}:browser`
+    });
+    console.log("Service SID" + config.twilio.chatServiceSid);
+    accessToken.addGrant(chatGrant);
+    accessToken.identity = name;
+    res.set('Content-Type', 'application/json');
+    res.send(JSON.stringify({
+        token: accessToken.toJwt(),
+        identity: name
+    }));
+
+    console.log("Sent response");
+
+    // newNode[uid] = true;
+    // let membersRef = roomRef.child("members").child(uid).set(true).then(() => {
+    // });
+});
+
+
 app.post('/video/token', async (req, res, next) => {
     const identity = req.body.identity;
     const room = req.body.room;
@@ -114,7 +147,6 @@ app.post('/video/token', async (req, res, next) => {
     // let membersRef = roomRef.child("members").child(uid).set(true).then(() => {
     // });
 });
-
 /*
 TODO: we should populate the current counts of each room here
  */

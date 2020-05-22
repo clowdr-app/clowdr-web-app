@@ -10,6 +10,8 @@ const generateToken = config => {
   );
 };
 
+const ChatGrant = AccessToken.IpMessagingGrant;
+
 const videoToken = (identity, room, config) => {
   let videoGrant;
   if (typeof room !== 'undefined') {
@@ -23,4 +25,4 @@ const videoToken = (identity, room, config) => {
   return token;
 };
 
-module.exports = { videoToken };
+module.exports = { videoToken, ChatGrant, AccessToken };
