@@ -1,9 +1,9 @@
 import React, {Component} from 'react';
-import {withFirebase} from '../Firebase';
 import Chat from 'twilio-chat';
 
-import {Button, Form, Input, List, Tabs} from 'antd';
-import {CloseOutlined,ArrowUpOutlined} from '@ant-design/icons'
+import {Form, Input, List, Tabs} from 'antd';
+import {ArrowUpOutlined, CloseOutlined} from '@ant-design/icons'
+import {AuthUserContext} from "../Session";
 
 const {TabPane} = Tabs;
 const INITIAL_STATE = {
@@ -25,9 +25,11 @@ class ChatContainer extends Component {
     }
 
     componentDidMount() {
-        if (this.props.user) {
-            this.getToken();
-        }
+        this.props.refreshUser().then(() => {
+            if (this.props.user) {
+                this.getToken();
+            }
+        })
     }
 
     componentWillUnmount() {
@@ -38,36 +40,33 @@ class ChatContainer extends Component {
 
     getToken = () => {
         let _this = this;
-        this.props.firebase.auth.currentUser.getIdToken(/* forceRefresh */ true).then(function (idToken) {
-            if (idToken) {
-                console.log("Got token: " + idToken)
-                const data = fetch(
-                    'https://a9ffd588.ngrok.io/chat/token'
-                    // 'http://localhost:3001/video/token'
-                    , {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            identity: idToken
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    }).then(res => {
-                    res.json().then((data) => {
-                        _this.setState(
-                            {
-                                token: data.token
-                            }, _this.initChat.bind(_this)
-                        )
-                    })
-                });
-            } else {
-                console.log("Unable to get our token?");
-            }
-        }).catch(function (error) {
-            // Handle error
-            console.log(error);
-        });
+        let idToken = this.props.user.getSessionToken();
+        if (idToken) {
+            console.log("Got token: " + idToken)
+            const data = fetch(
+                'https://a9ffd588.ngrok.io/chat/token'
+                // 'http://localhost:3001/video/token'
+                , {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        identity: idToken
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(res => {
+                res.json().then((data) => {
+                    _this.setState(
+                        {
+                            token: data.token
+                        }, _this.initChat.bind(_this)
+                    )
+                })
+            });
+        } else {
+            console.log("Unable to get our token?");
+        }
+
 
     };
 
@@ -107,7 +106,7 @@ class ChatContainer extends Component {
     };
 
     messagesLoaded = messagePage => {
-        this.setState({messages: messagePage.items, chatLoading:false});
+        this.setState({messages: messagePage.items, chatLoading: false});
     };
 
     messageAdded = message => {
@@ -126,8 +125,8 @@ class ChatContainer extends Component {
         this.channel.sendMessage(message);
     };
 
-    onChangeTab(){
-        this.setState((prevState)=>({
+    onChangeTab() {
+        this.setState((prevState) => ({
             expanded: !prevState.expanded
         }));
     }
@@ -145,43 +144,53 @@ class ChatContainer extends Component {
             return (
                 <div>
                     <Tabs type="card" tabBarStyle={{margin: 0}}
-                    activeKey="Chat">
+                          activeKey="Chat">
                         <TabPane tab={<span onClick={this.onChangeTab.bind(this)}>
-                            Chat {this.state.expanded?
-                            <CloseOutlined  style={{ verticalAlign: 'middle' }} />:
-                            <ArrowUpOutlined  style={{ verticalAlign: 'middle' }}  />}</span>} key="Chat" style={{backgroundColor: "#FAFAFA",
-                        border: "1px solid #CCCCCC"}}>
+                            Chat {this.state.expanded ?
+                            <CloseOutlined style={{verticalAlign: 'middle'}}/> :
+                            <ArrowUpOutlined style={{verticalAlign: 'middle'}}/>}</span>} key="Chat" style={{
+                            backgroundColor: "#FAFAFA",
+                            border: "1px solid #CCCCCC"
+                        }}>
 
-                            {this.state.expanded?
-                           <div>
-                               <List loading={this.state.chatLoading} dataSource={this.state.messages} size="small" renderItem={
-                                   item => (
-                                       <List.Item style={{textAlign:'left'}} key={item.sid}>
-                                           <b>{item.author.substring(1+item.author.indexOf(":"))}:</b>
-                                           {item.body}
-                                       </List.Item>
-                                   )
-                               }
-                                     style={{
-                                         height: "400px",
-                                         display: 'flex',
-                                         flexDirection: 'column-reverse',
-                                         overflow: 'auto',
-                                         border: '1px solid #FAFAFA'
-                                     }}
-                               >
+                            {this.state.expanded ?
+                                <div>
+                                    <List loading={this.state.chatLoading} dataSource={this.state.messages} size="small"
+                                          renderItem={
+                                              item => (
+                                                  <List.Item style={{textAlign: 'left'}} key={item.sid}>
+                                                      {
+                                                          item.body.startsWith("/me") ? <span style={{fontStyle:"italic"}}>
+                                                              {item.author.substring(1 + item.author.indexOf(":"))} {item.body.substring(item.body.indexOf(" "))}
+                                                          </span> : <span>
+                                                              <b>{item.author.substring(1 + item.author.indexOf(":"))}:</b>
+                                                              {item.body}
+                                                          </span>
+                                                      }
 
-                               </List>
-                               <Form onFinish={this.sendMessage}>
-                                   <Form.Item>
-                                       <Input name={"message"} id={"message"} type="text"
-                                              placeholder={"Send a message to other attendes"}
-                                              onChange={this.onMessageChanged}
-                                              value={this.state.newMessage} />
-                                   </Form.Item>
-                                   {/*<Button type="primary" htmlType="submit">Send</Button>*/}
-                               </Form>
-                           </div> :<div></div>
+                                                  </List.Item>
+                                              )
+                                          }
+                                          style={{
+                                              height: "400px",
+                                              display: 'flex',
+                                              flexDirection: 'column-reverse',
+                                              overflow: 'auto',
+                                              border: '1px solid #FAFAFA'
+                                          }}
+                                    >
+
+                                    </List>
+                                    <Form onFinish={this.sendMessage}>
+                                        <Form.Item>
+                                            <Input name={"message"} id={"message"} type="text"
+                                                   placeholder={"Send a message to other attendes"}
+                                                   onChange={this.onMessageChanged}
+                                                   value={this.state.newMessage}/>
+                                        </Form.Item>
+                                        {/*<Button type="primary" htmlType="submit">Send</Button>*/}
+                                    </Form>
+                                </div> : <div></div>
                             }
 
                         </TabPane>
@@ -197,4 +206,12 @@ class ChatContainer extends Component {
     }
 }
 
-export default withFirebase(ChatContainer)
+const AuthConsumer = (props) => (
+    <AuthUserContext.Consumer>
+        {value => (
+            <ChatContainer {...props} user={value.user} refreshUser={value.refreshUser}/>
+        )}
+    </AuthUserContext.Consumer>
+);
+
+export default AuthConsumer

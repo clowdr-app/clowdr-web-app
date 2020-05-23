@@ -13,21 +13,23 @@ import {
     Popconfirm,
     Radio,
     Space,
-    Spin,
-    Tabs
+    Spin
 } from "antd";
 import ActiveUsers from "./ActiveUsers";
 import InfiniteScroll from "react-infinite-scroller";
+import {AuthUserContext} from "../Session";
+import ParseLiveContext from "../parse/context";
+import Parse from "parse";
 
-const {Header, Content, Footer, Sider} = Layout;
+const { Content, Footer, Sider} = Layout;
 
-const {TabPane} = Tabs;
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
+// const {TabPane} = Tabs;
+// const IconText = ({icon, text}) => (
+//     <Space>
+//         {React.createElement(icon)}
+//         {text}
+//     </Space>
+// );
 
 
 class MeetingSummary extends React.Component {
@@ -37,21 +39,21 @@ class MeetingSummary extends React.Component {
     }
 
     componentDidMount() {
-        let ref = this.props.firebase.db.ref("users");
-        if (this.props.item && this.props.item.members)
-            Object.keys(this.props.item.members).forEach((key) => {
-                ref.child(key).once("value").then((v) => {
-                    this.setState((prevState) => {
-                        let members = Object.assign({}, prevState.members);
-                        members[key] = v.val();
-                        return {members};
-                    })
-                })
-            })
+        // let ref = this.props.firebase.db.ref("users");
+        // if (this.props.item && this.props.item.members)
+        //     Object.keys(this.props.item.members).forEach((key) => {
+        //         ref.child(key).once("value").then((v) => {
+        //             this.setState((prevState) => {
+        //                 let members = Object.assign({}, prevState.members);
+        //                 members[key] = v.val();
+        //                 return {members};
+        //             })
+        //         })
+        //     })
     }
 
     joinMeeting(meeting) {
-        if (meeting.id.startsWith("demo")) {
+        if (meeting.get('twilioID').startsWith("demo")) {
             message.error('Sorry, you can not join the demo meetings. Try to create a new one!');
 
         } else {
@@ -62,28 +64,28 @@ class MeetingSummary extends React.Component {
     render() {
         let item = this.props.item;
         let _this = this;
-        return <Card title={item.title} style={{width: "350px", "height": "350px", overflow: "scroll"}}
+        return <Card title={item.get('title')} style={{width: "350px", "height": "350px", overflow: "scroll"}}
                      size={"small"}
-                     extra={ <Popconfirm
+                     extra={<Popconfirm
                          title="You are about to join a video call. Are you ready?"
                          onConfirm={_this.joinMeeting.bind(_this, item)}
                          okText="Yes"
                          cancelText="No"
-                     ><a href="#" >Join</a></Popconfirm>}
+                     ><a href="#">Join</a></Popconfirm>}
         >
-            {(this.state.members ? <span>
+            {(item.get('members') ? <span>
                 {/*<h4>Currently here:</h4>*/}
                 {/*<Divider orientation="left">Here now:</Divider>*/}
                 <List
-                    dataSource={Object.values(this.state.members)}
+                    dataSource={item.get('members').filter((v)=>(v != null ))}
                     size={"small"}
                     renderItem={user => (
-                        <List.Item key={user}>
+                        <List.Item key={user.id}>
                             <List.Item.Meta
                                 avatar={
-                                    <Avatar src={user.photoURL}/>
+                                    <Avatar src={(user.get("profilePhoto") ? user.get("profilePhoto").url() : "")} />
                                 }
-                                title={user.username}
+                                title={user.get('displayname')}
                             />
                         </List.Item>
                     )}
@@ -105,37 +107,53 @@ class Lobby extends React.Component {
     constructor(props) {
         super(props);
         this.state = {'loading': true, 'visible': false, maxDisplayedRooms: 10};
-        this.roomsRef = this.props.firebase.db.ref("breakoutRooms/");
-        this.usersRef = this.props.firebase.db.ref("users/");
     }
 
     componentDidMount() {
-        this.roomsRef.on('value', val => {
-            const res = val.val();
-            const rooms = {};
-            const users = {};
-            if (res) {
-                val.forEach((room) => {
-                    rooms[room.key] = room.val();
-                    rooms[room.key].id = room.key;
-                });
-            }
-            this.setState({rooms: rooms, loading: false});
-        });
+        let query = new Parse.Query("BreakoutRoom");
+        query.include(["members.displayname","members.profilePhoto"]);
+        query.addDescending("createdAt");
+        query.find().then(res => {
+            this.setState({
+                rooms: res,
+                loading: false
+            });
+            this.sub = this.props.parseLive.subscribe(query);
+            this.sub.on('create', newItem => {
+                this.setState((prevState) => ({
+                    rooms: [newItem, ...prevState.rooms]
+                }))
+            })
+            this.sub.on('update', newItem => {
+                this.setState((prevState) => ({
+                    rooms: prevState.rooms.map(room => room.id == newItem.id ? newItem : room)
+                }))
+            })
+            this.sub.on("delete", vid => {
+                this.setState((prevState) => ({
+                    rooms: prevState.rooms.filter((v) => (
+                        v.id != vid.id
+                    ))
+                }));
+            });
+        })
     }
 
     componentWillUnmount() {
-        this.roomsRef.off("value");
+        if(this.sub) {
+            this.sub.unsubscribe();
+        }
     }
 
     onCreate(values) {
         var _this = this;
-        var newRef = this.roomsRef.push();
-        newRef.set({
-            title: values.title,
-            uid: this.props.user.uid
-        }).then((val) => {
-            _this.props.history.push("/videoChat/" + newRef.key);
+        let Room =Parse.Object.extend("BreakoutRoom");
+        let room = new Room();
+        room.set("title", values.title);
+        room.set("creator", this.props.user);
+        room.set("description", values.description);
+        room.save().then((val) => {
+            _this.props.history.push("/videoChat/" + room.id);
         }).catch(err => {
             console.log(err);
         });
@@ -157,7 +175,7 @@ class Lobby extends React.Component {
     }
 
     render() {
-        if (this.state.loading || !this.props.firebase.auth.currentUser) {
+        if (this.state.loading || !this.props.user) {
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -189,7 +207,7 @@ class Lobby extends React.Component {
                         <InfiniteScroll
                             pageStart={0}
                             // hasMore={Object.keys(this.state.activeUsers).length >= 20}
-                            hasMore={this.hasMoreRoomsToShow.bind(this)}
+                            hasMore={this.hasMoreRoomsToShow()}
                             loadMore={this.displayMore.bind(this)}
                             useWindow={false}
                             initialLoad={false}
@@ -203,7 +221,7 @@ class Lobby extends React.Component {
                             }}>
                                 {
                                     Object.values(this.state.rooms).slice(0, this.state.maxDisplayedRooms).map((item) => (
-                                        <MeetingSummary history={this.props.history} key={item.id} item={item} firebase={this.props.firebase}/>
+                                        <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} />
                                     ))}
                             </Space>
                         </InfiniteScroll>
@@ -217,7 +235,7 @@ class Lobby extends React.Component {
                     />
                 </Content>
                 <Sider width="220px">
-                    <ActiveUsers firebase={this.props.firebase}/>
+                    <ActiveUsers parseLive={this.props.parseLive} />
                 </Sider>
             </Layout>
             //     </TabPane>
@@ -303,4 +321,17 @@ const CollectionCreateForm = ({visible, onCreate, onCancel}) => {
         </Modal>
     );
 };
-export default Lobby;
+const AuthConsumer = (props) => (
+    <ParseLiveContext.Consumer>
+        {parseValue => (
+            <AuthUserContext.Consumer>
+                {value => (
+                    <Lobby {...props} user={value.user} refreshUser={value.refreshUser} parseLive={parseValue}/>
+                )}
+            </AuthUserContext.Consumer>
+        )
+        }
+
+    </ParseLiveContext.Consumer>
+);
+export default AuthConsumer;

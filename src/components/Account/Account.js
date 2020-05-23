@@ -1,42 +1,60 @@
 import React from 'react';
-import {Button, Checkbox, Form, Input, Spin} from "antd";
+import {Button, Form, Input, Spin} from "antd";
 import Avatar from "./Avatar";
+import {AuthUserContext} from "../Session";
 
 class Account extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {'loading': true};
-        this.userRef = this.props.firebase.db.ref("users").child(this.props.user.uid);
+        this.state = {loading: 'true'}
     }
 
-    componentDidMount() {
-        this.userRef.once("value").then((val) => {
-            let data = val.val();
-            this.setState({
-                loading: false,
-                username: data.username,
-                email: data.email,
-                affiliation: data.affiliation
-            });
+    setStateFromUser(){
+        console.log(this.props.user);
+        this.setState({
+            user: this.props.user,
+            email: this.props.user.getEmail(),
+            affiliation: this.props.user.get("affiliation"),
+            displayName: this.props.user.get("displayname"),
+            loading: false
         });
+    }
+    componentDidMount() {
+        let _this = this;
+        if(!_this.state.user){
+            this.props.refreshUser().then(()=>{
+                console.log("Refreshed user")
+                _this.setStateFromUser();
+            });
+        }
+        // this.userRef.once("value").then((val) => {
+        //     let data = val.val();
+        //     this.setState({
+        //         loading: false,
+        //         username: data.username,
+        //         email: data.email,
+        //         affiliation: data.affiliation
+        //     });
+        // });
 
     }
 
     updateUser() {
         this.setState({updating: true});
-        this.userRef.update({
-            affiliation: this.state.affiliation,
-            username: this.state.username
-        }).then(() => {
-            this.props.firebase.auth.currentUser.updateProfile({
-               displayName: this.state.username
-            }).then(()=>{
+        this.props.user.set("displayname",this.state.displayName);
+        this.props.user.set("affiliation", this.state.affiliation);
+        this.props.user.save().then(() => {
+            this.props.refreshUser().then(() => {
                 this.setState({updating: false});
-            });
+
+                this.setStateFromUser();
+            })
         });
     }
 
     onChange = event => {
+        console.log(event.target.name)
+        console.log(event.target.value);
         this.setState({[event.target.name]: event.target.value});
     };
 
@@ -45,7 +63,7 @@ class Account extends React.Component {
     };
 
     render() {
-        if (this.state.loading || !this.props.firebase.auth.currentUser) {
+        if (!this.state.user) {
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -84,7 +102,7 @@ class Account extends React.Component {
                             message: 'Please input your full name',
                         },
                     ]}
-                ><Input name="displayName" value={this.state.username} onChange={this.onChange}/></Form.Item>
+                ><Input name="displayName" value={this.state.displayName} onChange={this.onChange}/></Form.Item>
                 <Form.Item
                     label="Email Address"
                     rules={[
@@ -111,11 +129,11 @@ class Account extends React.Component {
                         onChange={this.onChange}/>
                 </Form.Item>
                 <Form.Item label="Profile Photo">
-                    <Avatar user={this.props.user} firebase={this.props.firebase}
-                            imageURL={this.props.firebase.auth.currentUser.photoURL}/>
+                    <Avatar user={this.state.user} refreshUser={this.props.refreshUser} />
                 </Form.Item>
 
-                <Button type="primary" htmlType="submit" disabled={isInvalid} onClick={this.onSubmit} loading={this.state.updating}>
+                <Button type="primary" htmlType="submit" disabled={isInvalid} onClick={this.onSubmit}
+                        loading={this.state.updating}>
                     Save
                 </Button>
 
@@ -124,4 +142,11 @@ class Account extends React.Component {
     }
 }
 
-export default Account;
+const AuthConsumerAccount = () => (
+    <AuthUserContext.Consumer>
+        {value => (
+            <Account user={value.user} refreshUser={value.refreshUser}/>
+        )}
+    </AuthUserContext.Consumer>
+);
+export default AuthConsumerAccount;

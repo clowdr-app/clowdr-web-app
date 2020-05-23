@@ -13,7 +13,8 @@ class VideoThumbnail extends React.Component {
     }
 
     render() {
-        const thumbnail_url = `https://img.youtube.com/vi/${this.props.video.id}/0.jpg`
+        console.log(this.props.video.get("key"))
+        const thumbnail_url = `https://img.youtube.com/vi/${this.props.video.get("key")}/0.jpg`
 
         // return <div>{this.props.video.data.title}, {this.props.video.id}</div>
         let modal = "";
@@ -25,7 +26,7 @@ class VideoThumbnail extends React.Component {
                 <LiveVideoPanel video={this.props.video}/>
             </Modal>
         }
-        return <Card title={this.props.video.data.title} onClick={this.toggleExpanded.bind(this)}>
+        return <Card title={this.props.video.get('title')} onClick={this.toggleExpanded.bind(this)}>
             <img src={thumbnail_url}/>
             {modal}
 

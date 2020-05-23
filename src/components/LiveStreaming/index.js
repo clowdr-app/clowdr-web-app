@@ -1,21 +1,35 @@
 import React, {Component} from "react";
-import {withFirebase} from '../Firebase';
 import {Space, Spin} from 'antd';
 import VideoThumbnail from "./VideoThumbnail";
+import Parse from "parse";
+import ParseLiveContext from "../parse/context";
 
 
 class LiveStreaming extends Component {
     componentDidMount() {
-        this.props.firebase.db.ref("liveVideos/").on('value', val => {
-            const res = val.val();
-            if(res) {
-                const videos = [];
-                val.forEach((vid) => {
-                    videos.push({id: vid.key, data: vid.val()});
-                });
-                this.setState({videos: videos});
-            }
-        });
+        let query = new Parse.Query("LiveVideo");
+        query.find().then(res => {
+            this.setState({
+                videos: res,
+                loading: false
+            });
+            this.sub = this.props.parseLive.subscribe(query);
+            this.sub.on('create', vid => {
+                this.setState((prevState) => ({
+                        videos: [vid, ...prevState.videos]
+                }))
+            })
+            this.sub.on("delete", vid=>{
+                this.setState((prevState)=> ({
+                    videos: prevState.videos.filter((v)=>(
+                        v.id != vid.id
+                    ))
+                }));
+            });
+        })
+    }
+    componentWillUnmount() {
+        this.sub.unsubscribe();
     }
 
 
@@ -23,7 +37,7 @@ class LiveStreaming extends Component {
         if (this.state && this.state.videos) {
             return <div className={"space-align-container"}>
                 {this.state.videos.map((video) => {
-                    return <div className={"space-align-block"} key={video.id}>
+                    return <div className={"space-align-block"} key={video.get("key")}>
                         <Space align={"center"}>
                             <VideoThumbnail video={video}/>
                         </Space></div>
@@ -35,5 +49,11 @@ class LiveStreaming extends Component {
             </Spin>)
     }
 }
-
-export default withFirebase(LiveStreaming);
+const ParseLiveConsuemr = (props) => (
+    <ParseLiveContext.Consumer>
+        {value => (
+            <LiveStreaming {...props} parseLive={value}/>
+        )}
+    </ParseLiveContext.Consumer>
+)
+export default ParseLiveConsuemr;

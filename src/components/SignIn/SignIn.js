@@ -1,6 +1,9 @@
 import React, {Component} from 'react';
 import * as ROUTES from '../../constants/routes';
 import {Button, Form, Input} from 'antd';
+import Parse from "parse";
+import withAuthentication from "../Session/withAuthentication";
+import {AuthUserContext} from "../Session";
 
 const INITIAL_STATE = {
     email: '',
@@ -38,21 +41,20 @@ class SignIn extends Component {
         this.state = {...INITIAL_STATE};
     }
 
-    onSubmit = event => {
+    onSubmit = async (event) => {
         const {email, password} = this.state;
-
-        this.props.firebase
-            .doSignInWithEmailAndPassword(email, password)
-            .then(() => {
-                this.setState({...INITIAL_STATE});
-                this.props.history.push(ROUTES.LANDING);
-            })
-            .catch(error => {
-                this.setState({error});
-            });
-
         // event.preventDefault();
-    };
+        try{
+            await Parse.User.logIn(email, password);
+            await this.props.refreshUser();
+            this.props.history.push(ROUTES.ACCOUNT);
+
+        } catch (e){
+            alert(e.message);
+        }
+
+    }
+
 
     onChange = event => {
         this.setState({[event.target.name]: event.target.value});
@@ -91,4 +93,12 @@ class SignIn extends Component {
     }
 }
 
-export default SignIn;
+const AuthConsumer = (props)=>(
+    <AuthUserContext.Consumer>
+        {value => (
+            <SignIn {...props} user={value.user} refreshUser={value.refreshUser}/>
+        )}
+    </AuthUserContext.Consumer>
+);
+
+export default AuthConsumer;

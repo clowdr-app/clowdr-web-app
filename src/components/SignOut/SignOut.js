@@ -1,13 +1,20 @@
 import React, {Component} from 'react';
 import * as ROUTES from '../../constants/routes';
-import { withFirebase } from '../Firebase';
+import {Parse} from "../parse/parse";
+import withAuthentication from "../Session/withAuthentication";
+import {AuthUserContext} from "../Session";
 
 class SignOut extends Component {
     constructor(props) {
         super(props);
-
-        this.props.firebase.doSignOut().then(()=>{
-            this.props.history.push(ROUTES.LANDING);
+    }
+    componentDidMount() {
+        Parse.User.logOut().then(() => {
+            this.props.refreshUser().then(()=>{
+                this.props.history.push(ROUTES.LANDING);
+            });
+        }).catch((err)=>{
+            console.log(err);
         });
     }
 
@@ -16,4 +23,12 @@ class SignOut extends Component {
     }
 }
 
-export default withFirebase(SignOut);
+const AuthConsumer = (props)=>(
+    <AuthUserContext.Consumer>
+        {value => (
+            <SignOut {...props} user={value.user} refreshUser={value.refreshUser}/>
+        )}
+    </AuthUserContext.Consumer>
+);
+
+export default AuthConsumer;

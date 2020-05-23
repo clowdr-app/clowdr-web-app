@@ -1,9 +1,9 @@
 import React, {Component} from 'react';
 import * as ROUTES from '../../constants/routes';
 import * as ROLES from '../../constants/roles';
-import {withFirebase} from '../Firebase';
 import {Button, Checkbox, Form, Input} from 'antd';
 
+import Parse from "parse";
 
 const ERROR_CODE_ACCOUNT_EXISTS = 'auth/email-already-in-use';
 
@@ -34,31 +34,19 @@ class SignUp extends Component {
         const {username, email, passwordOne, isAdmin} = this.state;
         const roles = {};
 
-        // if (isAdmin) {
-        //     roles[ROLES.ADMIN] = ROLES.ADMIN;
-        // }
+        let user = new Parse.User();
+        user.set("username", email);
+        user.set("displayname",username);
+        user.set("password", passwordOne);
+        user.set("email", email);
 
-        this.props.firebase
-            .doCreateUserWithEmailAndPassword(email, passwordOne)
-            .then(authUser => {
-                // Create a user in your Firebase realtime database
-                return this.props.firebase.user(authUser.user.uid).set({
-                    username,
-                    email,
-                    roles,
-                });
-            }).then(() => {
-                this.setState({...INITIAL_STATE});
-                this.props.history.push(ROUTES.ACCOUNT);
-            })
-            .catch(error => {
-                if (error.code === ERROR_CODE_ACCOUNT_EXISTS) {
-                    error.message = ERROR_MSG_ACCOUNT_EXISTS;
-                }
-
-                this.setState({error});
-            });
-
+        user.signUp().then(()=>{
+            this.props.history.push(ROUTES.ACCOUNT);
+        }).catch((error)=> {
+            // Show the error message somewhere and let the user try again.
+            alert("Error: " + error.code + " " + error.message);
+            this.setState({error});
+        });
         event.preventDefault();
     };
 
@@ -163,4 +151,4 @@ class SignUp extends Component {
     }
 }
 
-export default withFirebase(SignUp)
+export default SignUp

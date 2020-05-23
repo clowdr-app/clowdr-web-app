@@ -1,5 +1,7 @@
 import React from 'react';
 import {Button, DatePicker, Form, Input, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
+import Parse from "parse";
+import ParseLiveContext from "../../parse/context";
 
 const {TabPane} = Tabs;
 const IconText = ({icon, text}) => (
@@ -9,29 +11,35 @@ const IconText = ({icon, text}) => (
     </Space>
 );
 
-export default class LiveVideos extends React.Component {
+class LiveVideos extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {loading: true, videos: []};
-        this.videoRef = this.props.firebase.db.ref("liveVideos/");
+        console.log(this.props);
+        this.state = {loading: false, videos: []};
+        // this.videoRef = this.props.firebase.db.ref("liveVideos/");
 
     }
 
     onCreate(values) {
         var _this = this;
-        var newRef = this.videoRef.child(values.ytid);
-        newRef.set({
-            title: values.title
-            // uid: this.props.user.uid
-        }).then((val) => {
+        var Video = Parse.Object.extend("LiveVideo");
+        var video = new Video();
+        video.set("title",values.title);
+        video.set("key",values.ytid);
+        video.save().then((val) => {
             _this.setState({visible: false})
+            _this.refreshList();
         }).catch(err => {
             console.log(err);
         });
     }
 
-    onDelete(key) {
-        this.videoRef.child(key).remove();
+    onDelete(value) {
+        console.log(value);
+        value.destroy().then(()=>{
+            this.refreshList();
+        });
+        // this.videoRef.child(key).remove();
     }
 
     setVisible() {
@@ -39,22 +47,24 @@ export default class LiveVideos extends React.Component {
     }
 
     componentDidMount() {
-        this.videoRef.on('value', val => {
-            const res = val.val();
-            if (res) {
-                const videos = [];
-                val.forEach((vid) => {
-                    let video = vid.val();
-                    video.key = vid.key;
-                    videos.push(video);
-                });
-                this.setState({videos: videos, loading: false});
-            }
-        });
+        this.refreshList();
+        // this.sub = this.props.parseLive.subscribe(query);
+        // this.sub.on('create', vid=>{
+        //     console.log(vid);
+        // })
     }
 
+    refreshList(){
+        let query = new Parse.Query("LiveVideo");
+        query.find().then(res=>{
+            this.setState({
+                videos: res,
+                loading: false
+            })
+        })
+    }
     componentWillUnmount() {
-        this.videoRef.off("value");
+        // this.sub.unsubscribe();
     }
 
     render() {
@@ -65,11 +75,12 @@ export default class LiveVideos extends React.Component {
                 key: 'title',
                 render: (text, record) => <a onClick={() => {
                     this.props.history.push("/admin/users/edit/" + record.key)
-                }}>{text}</a>,
+                }}>{record.get("title")}</a>,
             },
             {
                 title: 'YouTube Video ID',
                 dataIndex: 'key',
+                render: (text,record) => <span>{record.get("key")}</span>,
                 key: 'videoid',
             },
             // {
@@ -85,7 +96,7 @@ export default class LiveVideos extends React.Component {
                         {/*<a>Invite {record.name}</a>*/}
                         <Popconfirm
                             title="Are you sure delete this video?"
-                            onConfirm={()=>this.onDelete(record.key)}
+                            onConfirm={()=>this.onDelete(record)}
                             okText="Yes"
                             cancelText="No"
                         >
@@ -116,12 +127,21 @@ export default class LiveVideos extends React.Component {
                     this.setVisible(false);
                 }}
             />
-            <Table columns={columns} dataSource={this.state.videos}>
+            <Table columns={columns} dataSource={this.state.videos} rowKey={(v)=>(v.id)}>
             </Table>
         </div>
     }
 
 }
+
+const ParseLiveConsuemr = (props) => (
+    <ParseLiveContext.Consumer>
+        {value => (
+            <LiveVideos {...props} parseLive={value}/>
+        )}
+    </ParseLiveContext.Consumer>
+)
+export default ParseLiveConsuemr;
 const CollectionCreateForm = ({visible, onCreate, onCancel}) => {
     const [form] = Form.useForm();
     return (

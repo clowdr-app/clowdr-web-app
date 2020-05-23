@@ -1,29 +1,52 @@
-var admin = require("firebase-admin");
 const fs = require("fs");
+const Parse = require("parse/node");
+require('dotenv').config()
+var     request = require('request');
 
-var serviceAccount = require("../server/virtualconf-35e45-firebase-adminsdk-omcmk-679e332055.json");
+Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
+Parse.serverURL = 'https://parseapi.back4app.com/'
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://virtualconf-35e45.firebaseio.com"
-});
-
-let data = JSON.parse(fs.readFileSync("../data/confero.json"));
-console.log(Object.keys(data));
-
-let usersRef = admin.database().ref("users");
-let statusRef = admin.database().ref("status");
+let data = JSON.parse(fs.readFileSync("data/confero.json"));
+function sleep(millis) {
+    return new Promise(resolve => setTimeout(resolve, millis));
+}
 let i = 0;
-data.People.forEach((person)=>{
-    if(person.URLphoto) {
+data.People.forEach(async (person) => {
+    if (person.URLphoto ) {
+        i++;
         // usersRef.child("demo" + i).set({
         //     email: "demo@no-reply.com",
         //     username: person.Name,
         //     photoURL: person.URLphoto
         // });
+        try {
+            let name = person.URLphoto.substring(person.URLphoto.lastIndexOf("/")+1);
+            var file = new Parse.File(name, {uri: person.URLphoto});
+            var res = await file.save();
+            console.log(res);
+        } catch (err) {
+            console.log(err);
+        }
+        let user = new Parse.User();
+        let fakeEmail = "demo" + i + "@no-reply.com" + Math.random();
+        user.set("profilePhoto",file);
+        user.set("username", fakeEmail);
+        user.set("displayname", person.Name);
+        user.set("password", fakeEmail + i + Math.random());
+        user.set("email", fakeEmail);
 
-        statusRef.child("demo"+i).child("last_changed").set(100+i);
-        i++;
+        try {
+            await user.signUp();
+            let Status = Parse.Object.extend("UserStatus");
+            let status = new Status();
+            status.set("user",user);
+            await status.save();
+            user.set("status",status);
+            await user.save();
+        }catch(err){
+            console.log(err);
+        }
+        await sleep(100);
     }
 
 })

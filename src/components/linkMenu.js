@@ -1,8 +1,9 @@
-import {NavLink, withRouter} from "react-router-dom";
+import {NavLink} from "react-router-dom";
 import {Menu} from "antd";
 import React from "react";
-import {withAuthentication} from "./Session"
-
+import {
+    AuthUserContext,
+} from './Session';
 import {
     CalendarOutlined,
     CloseSquareOutlined,
@@ -12,17 +13,25 @@ import {
     ToolOutlined,
     UserOutlined,
     VideoCameraAddOutlined,
-    YoutubeOutlined,
-    VideoCameraOutlined
+    VideoCameraOutlined,
+    YoutubeOutlined
 } from '@ant-design/icons';
 import SubMenu from "antd/es/menu/SubMenu";
+import {withRouter} from "react-router";
 
-const LinkMenu = withRouter(
-    props => {
-        const {location} = props;
+class LinkMenu extends React.Component {
+
+    constructor(props) {
+        super(props);
+    }
+
+    componentDidMount() {
+    }
+
+    render() {
         let userTools = [];
         let adminTools = "";
-        if (props.firebase.auth.currentUser) {
+        if (this.props.user) {
             adminTools = <SubMenu key="/admin" title={<span><ToolOutlined/><span>Administration</span></span>}>
                 <Menu.Item key='/admin/liveVideos' icon={<VideoCameraAddOutlined/>}><NavLink to="/admin/liveVideos">
                     Live Videos</NavLink></Menu.Item>
@@ -50,12 +59,22 @@ const LinkMenu = withRouter(
                         In</NavLink></Menu.Item>
                 ]
         }
-        return <Menu theme={"dark"} mode={"inline"} selectedKeys={[location.pathname]} defaultOpenKeys="/admin">
+        return <Menu theme={"dark"} mode={"inline"} selectedKeys={[this.props.location.pathname]}
+                     defaultOpenKeys="/admin">
             <Menu.Item key='/' icon={<VideoCameraOutlined/>}><NavLink to="/">Live
                 Videos</NavLink></Menu.Item>
-            <Menu.Item key='/channelList' icon={<YoutubeOutlined />}><NavLink to="/channelList">Recorded Videos</NavLink></Menu.Item>
+            <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Recorded Videos</NavLink></Menu.Item>
             {userTools}
         </Menu>;
     }
+}
+let RouteredMenu = withRouter(LinkMenu);
+const MenuWithAuth = () => (
+    <AuthUserContext.Consumer>
+        {value => (
+            <RouteredMenu user={value.user} refreshUser={value.refreshUser}/>
+        )}
+    </AuthUserContext.Consumer>
 );
-export default withAuthentication(LinkMenu);
+
+export default withRouter(MenuWithAuth);

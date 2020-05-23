@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import { styled } from '@material-ui/core/styles';
+import React from 'react';
+import {styled} from '@material-ui/core/styles';
 
 import Controls from './components/Controls/Controls';
 import LocalVideoPreview from './components/LocalVideoPreview/LocalVideoPreview';
@@ -9,9 +9,6 @@ import Room from './components/Room/Room';
 
 import useHeight from './hooks/useHeight/useHeight';
 import useRoomState from './hooks/useRoomState/useRoomState';
-import {IVideoContext, VideoProvider} from './components/VideoProvider';
-import useVideoContext from "./hooks/useVideoContext/useVideoContext";
-import {RoomContext} from "twilio/lib/rest/video/v1/room";
 
 const Container = styled('div')({
   display: 'grid',

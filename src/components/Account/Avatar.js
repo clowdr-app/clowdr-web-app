@@ -2,6 +2,7 @@ import React from 'react';
 import 'antd/dist/antd.css';
 import {message, Upload} from 'antd';
 import {LoadingOutlined, PlusOutlined} from '@ant-design/icons';
+import Parse from "parse";
 
 function getBase64(img, callback) {
     const reader = new FileReader();
@@ -44,7 +45,6 @@ class Avatar extends React.Component {
     };
 
     upload(req) {
-        const storage = this.props.firebase.storage;
         const metadata = {
             contentType: req.file.type
         }
@@ -54,27 +54,14 @@ class Avatar extends React.Component {
             name = "profilePicture.jpg";
         else
             name = "profilePicture.png";
-        const storageRef = storage.ref(this.props.user.uid + "/" + name);
-        const task = storageRef.put(req.file);
-
-        _this.setState({loading: true});
-        task.on("state_changed", snapshot => {
-        }, error => {
-            req.onError(error);
-        }, function () {
-            task.snapshot.ref.getDownloadURL().then(ret => {
-                _this.props.firebase.auth.currentUser.updateProfile(
-                    {photoURL: ret}
-                ).then(() => {
-                    _this.props.firebase.db.ref("/users").child(_this.props.user.uid).child("photoURL").set(ret).then(()=>{
-                        console.log("Saved");
-                    });
-                }).catch
-                (error => {
-                    console.log(error);
-                });
-                req.onSuccess();
+        var file = new Parse.File(name,req.file);
+        file.save().then(()=>{
+            this.props.user.set("profilePhoto", file);
+            this.props.user.save().then(()=>{
+                this.props.refreshUser();
             });
+        }).catch((err)=>{
+            console.log(err);
         });
     }
 
@@ -85,7 +72,11 @@ class Avatar extends React.Component {
                 <div className="ant-upload-text">Upload</div>
             </div>
         );
-        const {imageUrl} = this.state;
+        let imageUrl = this.props.user.get("profilePhoto");
+        if(imageUrl){
+            imageUrl = imageUrl.url();
+        }
+
         return (
             <Upload
                 name="avatar"

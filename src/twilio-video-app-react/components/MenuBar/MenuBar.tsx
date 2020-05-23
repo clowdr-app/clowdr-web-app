@@ -13,7 +13,7 @@ import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import FlipCameraButton from './FlipCameraButton/FlipCameraButton';
 import {DeviceSelector} from './DeviceSelector/DeviceSelector';
 import {IVideoContext} from "../VideoProvider";
-import {LocalTrackPublication, LocalVideoTrackPublication} from "twilio-video";
+import {LocalVideoTrackPublication} from "twilio-video";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -73,11 +73,7 @@ class ConnectBridge extends Component<{videoContext: IVideoContext, setRoomName:
     }
     componentDidMount(): void {
         let doConnect = this.doConnect.bind(this);
-        // this.props.videoContext.getLocalAudioTrack().then(()=>{
-        //     console.log("Got video track");
             setTimeout(this.doConnect.bind(this), 3000);
-            // doConnect();
-        // })
     }
     componentWillUnmount(): void {
         if(this.props.videoContext.room && this.props.videoContext.room.disconnect){

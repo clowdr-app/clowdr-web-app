@@ -1,9 +1,7 @@
 import React from 'react';
 
 import AuthUserContext from './context';
-import {withFirebase} from '../Firebase';
-import {Spin} from "antd";
-import * as ROUTES from "../../constants/routes";
+import Parse from "parse";
 
 const withAuthentication = Component => {
     class WithAuthentication extends React.Component {
@@ -11,92 +9,58 @@ const withAuthentication = Component => {
             super(props);
 
             this.state = {
-                authUser: JSON.parse(localStorage.getItem('authUser')),
-                loading: true
+                user: null,
+                refreshUser: this.refreshUser.bind(this)
             };
         }
 
-        componentDidMount() {
+        refreshUser() {
             let _this = this;
-            this.listener = this.props.firebase.onAuthUserListener(
-                authUser => {
-                    localStorage.setItem('authUser', JSON.stringify(authUser));
-                    this.setState({authUser: authUser, loading: false});
-                    // Fetch the current user's ID from Firebase Authentication.
-                    var uid = _this.props.firebase.auth.currentUser.uid;
-
-                    // Create a reference to this user's specific status node.
-                    // This is where we will store data about being online/offline.
-                    var userStatusDatabaseRef = _this.props.firebase.db.ref('/status/' + uid);
-
-                    // We'll create two constants which we will write to
-                    // the Realtime database when this device is offline
-                    // or online.
-                    var isOfflineForDatabase = {
-                        state: 'offline',
-                        last_changed: _this.props.firebase.app.database.ServerValue.TIMESTAMP,
-                    };
-
-                    var isOnlineForDatabase = {
-                        state: 'online',
-                        last_changed: _this.props.firebase.app.database.ServerValue.TIMESTAMP,
-                    };
-
-                    // Create a reference to the special '.info/connected' path in
-                    // Realtime Database. This path returns `true` when connected
-                    // and `false` when disconnected.
-                    _this.props.firebase.db.ref('.info/connected').on('value', function (snapshot) {
-                        // If we're not currently connected, don't do anything.
-                        if (snapshot.val() == false) {
-                            return;
-                        }
-                        ;
-
-                        // If we are currently connected, then use the 'onDisconnect()'
-                        // method to add a set which will only trigger once this
-                        // client has disconnected by closing the app,
-                        // losing internet, or any other means.
-                        userStatusDatabaseRef.onDisconnect().remove().then(function () {
-                            // The promise returned from .onDisconnect().set() will
-                            // resolve as soon as the server acknowledges the onDisconnect()
-                            // request, NOT once we've actually disconnected:
-                            // https://firebase.google.com/docs/reference/js/firebase.database.OnDisconnect
-
-                            // We can now safely set ourselves as 'online' knowing that the
-                            // server will mark us as offline once we lose connection.
-                            userStatusDatabaseRef.set(isOnlineForDatabase);
-                        });
+            return Parse.User.currentAsync().then(async function (user) {
+                if (user) {
+                    let Status = Parse.Object.extend("UserStatus");
+                    //Logged in
+                    if (!user.get("status")) {
+                        let status = new Status();
+                        status.set("user", user);
+                        await status.save();
+                        user.set("status", status);
+                        await user.save();
+                    } else {
+                        user.get("status").save();
+                    }
+                    _this.setState({
+                        user: user
                     });
-
-                },
-                () => {
-                    localStorage.removeItem('authUser');
-                    this.setState({authUser: null, loading: false});
-                    // if (this.props.history) {
-                    //     this.props.history.push(ROUTES.SIGN_IN);
-                    // }
-                },
-            );
+                }
+                else{
+                    _this.setState({
+                        user: null
+                    })
+                }
+                // do stuff with your user
+            });
+        }
+        componentDidMount() {
+           this.refreshUser();
         }
 
         componentWillUnmount() {
-            this.listener();
-            this.listener = undefined;
         }
 
         render() {
-            if(this.state.loading)
-                return <div>    <Spin size="large" />
-                </div>
+            // if(this.state.loading)
+            //     return <div>    <Spin size="large" />
+            //     </div>
             return (
-                <AuthUserContext.Provider value={this.state.authUser}>
-                    <Component {...this.props} user={this.state.authUser}/>
+                <AuthUserContext.Provider value={this.state} >
+                    <Component {...this.props}  />
                 </AuthUserContext.Provider>
             );
         }
     }
 
-    return withFirebase(WithAuthentication);
+    return WithAuthentication;
 };
 
 export default withAuthentication;
