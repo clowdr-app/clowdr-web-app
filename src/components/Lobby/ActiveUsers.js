@@ -20,6 +20,7 @@ class ActiveUsers extends React.Component {
     installActivityListener(firstValueInList, firstKeyInList) {
         let query = new Parse.Query("UserStatus");
         query.include(["user.displayname","user.profilePhoto"]);
+        query.addDescending("updatedAt");
         let date = new Date();
         date.setTime(date.getTime() - 10);
 

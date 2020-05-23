@@ -28,6 +28,8 @@ class ChatContainer extends Component {
         this.props.refreshUser().then(() => {
             if (this.props.user) {
                 this.getToken();
+            }else{
+                console.log("Unable to find user id");
             }
         })
     }
