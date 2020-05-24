@@ -24,7 +24,6 @@ class ChatContainer extends Component {
         super(props);
 
         this.state = {...INITIAL_STATE};
-        this.channelName = 'general';
     }
 
     componentDidMount() {
@@ -125,16 +124,16 @@ class ChatContainer extends Component {
         let channelDescriptors = await this.chatClient.getPublicChannelDescriptors();
         this.setState({loadingChannels: false,
                     channels: channelDescriptors.items});
-        this.channelName ="general";
+        let channelName ="general";
         if(this.state.user.get("lastChatChannel"))
-            this.channelName = this.state.user.get("lastChatChannel");
+            channelName = this.state.user.get("lastChatChannel");
         //Find any channels that we are part of and join them
         let joinedChannelDescritporPaginator = await this.chatClient.getUserChannelDescriptors();
         console.log("Joined: ");
         console.log(joinedChannelDescritporPaginator.items);
         _this.setState({
             joinedChannels: joinedChannelDescritporPaginator.items,
-            activeChannel: this.channelName
+            activeChannel: channelName
         });
         if (joinedChannelDescritporPaginator.items.length == 0) {
             //force join general
@@ -144,7 +143,7 @@ class ChatContainer extends Component {
         }
         for (const channelDescriptor of joinedChannelDescritporPaginator.items) {
             let channel = await channelDescriptor.getChannel();
-            if(channel.uniqueName == this.channelName){
+            if(channel.uniqueName == channelName){
                 this.channel = channel;
             }
             console.log("Joining:");
@@ -203,21 +202,17 @@ class ChatContainer extends Component {
             expanded: !prevState.expanded
         }));
     }
-    createNewChannel(values){
+    async createNewChannel(values){
         var _this = this;
-        console.log(values);
-        this.channelName = values.title;
+        let newChannel = await this.chatClient.createChannel({uniqueName: values.title, description: values.description});
+        let room = await newChannel.join();
+        this.setState({newChannelVisible: false, activeChannel: newChannel.uniqueName});
+        this.channel = newChannel;
+
     }
     messageAdded = (channel, message) => {
-        let unreadCount = 0;
-        if(channel.uniqueName != this.state.activeChannel){
-            //Background
-            unreadCount++;
-        }
-        console.log(unreadCount);
         this.setState((prevState, props) => ({
             ["messages"+channel.uniqueName]: [...prevState["messages"+channel.uniqueName], message],
-            ["unread"+channel.uniqueName]: (prevState['unread'+channel.uniqueName] ? prevState['unread'+channel.uniqueName]+unreadCount : unreadCount)
         }));
     };
 
@@ -227,7 +222,6 @@ class ChatContainer extends Component {
         }));
     };
     messageUpdated = (channel, message) => {
-        let unreadCount = 0;
         this.setState((prevState, props) => ({
             ["messages"+channel.uniqueName]: prevState["messages"+channel.uniqueName].map(m => m.sid==message.sid ? message:m)
         }));
@@ -250,7 +244,6 @@ class ChatContainer extends Component {
     }
     async changeActiveChannel(channel) {
         let _this = this;
-        this.channelName = channel.uniqueName;
         this.channel = this.state.joinedChannels.find((item)=>(item.uniqueName == channel.uniqueName));
         if(!this.channel){
             try {
@@ -266,20 +259,18 @@ class ChatContainer extends Component {
                 console.log(err);
             }
         }
+        else if(this.channel.getChannel){
+            this.channel = await this.channel.getChannel();
+        }
         window.channel = this.channel;
         this.setState({activeChannel: channel.uniqueName});
     }
 
     async leaveChannelClick(channel){
-        console.log(channel);
-        console.log("Trying to leave " +channel);
         let chan = channel;
         if (channel.getChannel)
             chan = await channel.getChannel();
-        console.log(chan);
         chan.leave().then((res) => {
-            console.log("Left " + res);
-            console.log(res);
         }).catch((err) => {
             console.log(err);
         })
@@ -408,7 +399,7 @@ class ChatContainer extends Component {
                                         <Form onFinish={this.sendMessage}>
                                             <Form.Item>
                                                 <Input name={"message"} id={"message"} type="text"
-                                                       placeholder={"Send a message to other attendes in #"+this.channelName}
+                                                       placeholder={"Send a message to other attendes in #"+this.state.activeChannel}
                                                        onChange={this.onMessageChanged}
                                                        value={this.state.newMessage}/>
                                             </Form.Item>
