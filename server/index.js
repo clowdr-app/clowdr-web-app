@@ -107,6 +107,31 @@ async function checkToken(token) {
     return undefined;
 }
 
+app.post('/chat/deleteRoom', async (req, res, next) => {
+    const identity = req.body.identity;
+    const room = req.body.room;
+
+    let name = await checkToken(identity);
+    await client.chat.services(config.twilio.chatServiceSid).channels(room).remove();
+
+    res.send(JSON.stringify({
+        result: "OK"
+    }));
+});
+
+app.post('/chat/updateRoom', async (req, res, next) => {
+    const identity = req.body.identity;
+    const room = req.body.room;
+    const newName = req.body.newUniqueName;
+
+    let name = await checkToken(identity);
+    await client.chat.services(config.twilio.chatServiceSid).channels(room).update({uniqueName: newName});
+
+    res.send(JSON.stringify({
+        result: "OK"
+    }));
+});
+
 app.post('/chat/token', async (req, res, next) => {
     const identity = req.body.identity;
 

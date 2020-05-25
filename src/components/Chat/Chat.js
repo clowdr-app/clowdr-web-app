@@ -1,12 +1,36 @@
 import React, {Component} from 'react';
 import Chat from 'twilio-chat';
+import Parse from "parse"
 
-import {Badge, Button, Form, Input, Layout, List, Modal, Popconfirm, Radio, Tabs} from 'antd';
-import {ArrowUpOutlined, CloseOutlined, PlusOutlined} from '@ant-design/icons'
+import {
+    Avatar,
+    Badge,
+    Button,
+    Card,
+    Divider,
+    Form,
+    Input,
+    Layout,
+    List,
+    Menu,
+    Modal,
+    Popconfirm,
+    Popover,
+    Radio,
+    Spin,
+    Tabs,
+    Tooltip
+} from 'antd';
+import {ArrowUpOutlined, CloseOutlined} from '@ant-design/icons'
 import {AuthUserContext} from "../Session";
 import ParseLiveContext from "../parse/context";
+import Meta from "antd/lib/card/Meta";
+import "./chat.css"
 
 const {Header, Content, Footer, Sider} = Layout;
+var moment = require('moment'); // require
+
+var moment = require('moment'); // require
 
 const {TabPane} = Tabs;
 const INITIAL_STATE = {
@@ -15,6 +39,7 @@ const INITIAL_STATE = {
     token: '',
     chatReady: false,
     messages: [],
+    avatars: [],
     loadingChannels: true,
     newMessage: ''
 };
@@ -23,6 +48,7 @@ class ChatContainer extends Component {
     constructor(props) {
         super(props);
 
+        this.loadingAvatars = {};
         this.state = {...INITIAL_STATE};
     }
 
@@ -118,7 +144,6 @@ class ChatContainer extends Component {
     };
 
     clientInitiated = async () => {
-        console.log("Setting up")
         let _this = this;
         await this.setState({chatReady: true});
         let channelDescriptors = await this.chatClient.getPublicChannelDescriptors();
@@ -129,8 +154,6 @@ class ChatContainer extends Component {
             channelName = this.state.user.get("lastChatChannel");
         //Find any channels that we are part of and join them
         let joinedChannelDescritporPaginator = await this.chatClient.getUserChannelDescriptors();
-        console.log("Joined: ");
-        console.log(joinedChannelDescritporPaginator.items);
         _this.setState({
             joinedChannels: joinedChannelDescritporPaginator.items,
             activeChannel: channelName
@@ -146,8 +169,6 @@ class ChatContainer extends Component {
             if(channel.uniqueName == channelName){
                 this.channel = channel;
             }
-            console.log("Joining:");
-            console.log(channel);
             this.joinedChannel(channel);
         }
         //set up  listeners for channel changes
@@ -202,9 +223,13 @@ class ChatContainer extends Component {
             expanded: !prevState.expanded
         }));
     }
-    async createNewChannel(values){
+
+    async createNewChannel(values) {
         var _this = this;
-        let newChannel = await this.chatClient.createChannel({uniqueName: values.title, description: values.description});
+        let newChannel = await this.chatClient.createChannel({
+            uniqueName: values.title,
+            attributes: {description: values.description}
+        });
         let room = await newChannel.join();
         this.setState({newChannelVisible: false, activeChannel: newChannel.uniqueName});
         this.channel = newChannel;
@@ -230,8 +255,6 @@ class ChatContainer extends Component {
     joinedChannel(channel){
         //set up listeners
         //push to
-        console.log("Subscribed to: ")
-        console.log(channel)
         this.setState((prevState) => ({
             joinedChannels: [... prevState.joinedChannels, channel]
         }));
@@ -282,18 +305,112 @@ class ChatContainer extends Component {
         chan.removeAllListeners("messageAdded");
         console.log(this.state.joinedChannels);
         this.setState((prevState) => ({
+            activeChannel: 'general',
             joinedChannels: prevState.joinedChannels.filter(v => (v.sid != chan.sid))
         }));
+    }
+
+    async deleteChatRoom(chan) {
+        let idToken = this.state.user.getSessionToken();
+        if (idToken) {
+            console.log("Got token: " + idToken)
+            const data = fetch(
+                'https://a9ffd588.ngrok.io/chat/deleteRoom'
+                // 'http://localhost:3001/video/token'
+                , {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        identity: idToken,
+                        room: chan.sid
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+        } else {
+            console.log("Unable to get our token?");
+        }
+
+    }
+    async updateChannel(values) {
+        let idToken = this.state.user.getSessionToken();
+        let _this = this;
+        if (idToken) {
+            console.log("Got token: " + idToken)
+            const data = fetch(
+                'https://a9ffd588.ngrok.io/chat/updateRoom'
+                // 'http://localhost:3001/video/token'
+                , {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        identity: idToken,
+                        room: this.state.editingChannel.sid,
+                        newUniqueName: values.title
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(()=>{_this.setState({editChannelVisible : false})})
+        } else {
+            console.log("Unable to get our token?");
+        }
+
     }
 
     deleteMessage(message) {
         message.remove();
     }
+
+    formatTime(timestamp){
+        return <Tooltip title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
+    }
+
+    groupMessages(messages) {
+        let ret = [];
+        let lastMessage = undefined;
+        if(!messages)
+            return undefined;
+        let _this = this;
+
+        for (let message of messages) {
+            if (!lastMessage || message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp,'minutes') > 5) {
+                if (lastMessage)
+                    ret.push(lastMessage);
+                let authorID = message.author.substring(0,message.author.indexOf(":"));
+                let avatar = this.state.avatars[authorID];
+                if(!this.state.avatars[authorID] && !this.loadingAvatars[authorID]){
+                    this.loadingAvatars[authorID] = true;
+                    const query = new Parse.Query(Parse.User);
+                    query.get(authorID).then((u)=>{
+                        console.log(u);
+                        _this.setState((prevState)=>({
+                            avatars: {
+                                ...prevState.avatars,
+                                [u.id]: u.get("profilePhoto")
+                            }
+                        }));
+                    }).catch((err)=>{
+
+                    });
+                }
+
+                lastMessage = {
+                    author: message.author,
+                    timestamp: message.timestamp,
+                    messages: [message]
+                };
+            } else {
+                lastMessage.messages.push(message);
+            }
+        }
+        if (lastMessage)
+            ret.push(lastMessage);
+        return ret;
+
+    }
     render() {
         var loginOrChat;
-        const selectedChannelStyle = {backgroundColor: "#0095dd", width: "100%"};
-        const joinedChannelStyle = {fontWeight: "bolder", width: "100%"};
-        const nonJoinedChannelStyle = {color: "#121212", width: "100%"};
+        let _this = this;
         // const messages = this.state.messages.map(message => {
         //         //     return (
         //         //         <li key={message.sid} ref={this.newMessageAdded}>
@@ -304,60 +421,66 @@ class ChatContainer extends Component {
         if (this.state.user) {
             return (
                 <div>
-                    <Tabs type="card" tabBarStyle={{margin: 0}}
+                    <Tabs id="chatTabs" type="card" tabBarStyle={{margin: 0}}
                           activeKey="Chat">
                         <TabPane tab={<span onClick={this.onChangeTab.bind(this)}>
                             Chat {this.state.expanded ?
                             <CloseOutlined style={{verticalAlign: 'middle'}}/> :
                             <ArrowUpOutlined style={{verticalAlign: 'middle'}}/>}</span>} key="Chat" style={{
-                            backgroundColor: "#FAFAFA",
-                            overflow: 'auto',
                             border: "1px solid #CCCCCC"
                         }}>
 
                             {this.state.expanded ?
                                 <Layout>
-                                    <Layout>
-                                    <Sider style={{backgroundColor: "#CCCCCC"}}>
+                                    <Sider style={{backgroundColor: "white"}}>
+                                        <Divider>Channels</Divider>
                                         <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={()=>{this.setState({'newChannelVisible': false})}}
                                         onCreate={this.createNewChannel.bind(this)} />
-                                        <List header={<div style={{clear: 'both', verticalAlign: 'middle', padding: "5px"}}>
-                                            <span style={{float:'left', fontWeight:"bold"}}>Channels</span>
-                                            <PlusOutlined
-                                                onClick={()=>{this.setState({'newChannelVisible': true})}}
-                                                style={{float: "right"}}/></div>}
-                                              loading={this.state.loadingChannels}
-                                              style={{backgroundColor:"#EFEFEF",
-                                                  height: "100%",
-                                              border: "1px solid #666666"}}
-                                        dataSource={this.state.channels} size="small"
-                                        renderItem={
-                                            item =>{
-                                                let isJoined = false;
-                                                if(this.state.joinedChannels)
-                                                    isJoined = this.state.joinedChannels.find((v)=>(item.sid==v.sid));
-                                                return (
-                                                <List.Item style={(item.uniqueName == this.state.activeChannel ?
-                                                        selectedChannelStyle :
-                                                        (isJoined ? joinedChannelStyle : nonJoinedChannelStyle)
-                                                )} key={item.sid} >
-                                                    <div style={{clear: 'both'}}>
+                                        <UpdateCreateForm visible={this.state.editChannelVisible}
+                                                          onCancel={()=>{this.setState({'editChannelVisible': false})}}
+                                                           onCreate={this.updateChannel.bind(this)}
+                                                          values={this.state.editingChannel} />
+                                        <Menu theme="light" style={{height:"100%"}} selectedKeys={[_this.state.activeChannel]}>
+                                            {
+                                                (this.state.channels ? this.state.channels.map(function(item){
+                                                    let isJoined = false;
 
-                                                        <span style={{float: 'left'}} onClick={this.changeActiveChannel.bind(this, item)}>
-                                                                <Badge status={isJoined? "success":"default"} />
-                                                            {item.uniqueName}</span>
-                                                        <div style={{float: 'right'}}>
-                                                            {isJoined ? <CloseOutlined onClick={this.leaveChannelClick.bind(this,item)} />: ""}
-                                                            <Badge
-                                                                count={this.state["unread" + item.uniqueName]}/>
-                                                        </div>
-                                                    </div>
-                                                </List.Item>
-                                            )}
-                                        }/>
+                                                    if(_this.state.joinedChannels)
+                                                        isJoined = _this.state.joinedChannels.find((v) => (item.sid == v.sid));
+                                                    return <Menu.Item key={item.uniqueName}
+                                                                      onClick={_this.changeActiveChannel.bind(_this, item)}>
+                                                        <Popover
+                                                            placement="topRight" content={<span>
+                                                             <Popconfirm
+                                                                 title="Are you sure that you want to delete this chat room?"
+                                                                 onConfirm={_this.deleteChatRoom.bind(_this, item)}
+                                                                 okText="Yes"
+                                                                 cancelText="No"
+                                                             ><a href="#">Delete</a></Popconfirm> | <a href="#" onClick={()=>_this.setState({editChannelVisible: true, editingChannel: item})}>Edit</a> | {(isJoined ?
+                                                            <a href="#" onClick={_this.leaveChannelClick.bind(_this, item)}>Leave</a> : "")}</span>}
+                                                        >
+                                                            <div style={{width: "100%", height: "100%"}}>
+                                                                <div style={{clear: 'both'}}>
+
+                                                           <span style={{float: 'left'}}>
+                                                           <Badge status={isJoined ? "success" : "default"}/>
+                                                               {item.uniqueName}</span>
+                                                                    <div style={{float: 'right'}}>
+                                                                        <Badge
+                                                           count={_this.state["unread" + item.uniqueName]}/>
+                                                           </div></div>
+                                                           </div></Popover>
+                                                           {/*</List.Item>*/}
+                                                   </Menu.Item>
+                                                }
+                                               ) : <Spin tip="Loding..." />)
+                                            }
+                                        </Menu>
+
                                     </Sider>
-                                    <Content>
-                                    <List loading={this.state.chatLoading} dataSource={this.state["messages"+this.state.activeChannel]} size="small"
+                                    <Layout>
+                                    <Content style={{backgroundColor:"#FFFFFF", overflow:"auto"}}>
+                                    <List loading={this.state.chatLoading} dataSource={this.groupMessages(this.state["messages"+this.state.activeChannel])} size="small"
                                           renderItem={
                                               item => {
                                                  let isMyMessage = item.author.endsWith(this.state.myName);
@@ -369,19 +492,29 @@ class ChatContainer extends Component {
                                                          okText="Yes"
                                                          cancelText="No"
                                                      ><a href="#"><CloseOutlined /></a></Popconfirm>
+                                                  let authorName = item.author.substring(1+item.author.indexOf(":"));
+                                                  let initials = "";
+                                                  let authorID = item.author.substring(0,item.author.indexOf(":"));
+                                                  let addDate = this.lastDate && this.lastDate != moment(item.timestamp).day();
+                                                  this.lastDate = moment(item.timestamp).day();
+
+                                                  authorName.split(" ").forEach((v=>initials+=v.substring(0,1)))
+
                                                   return (
-                                                  <List.Item style={{width:"100%", textAlign: 'left'}} key={item.sid}>
-                                                      <div style={{width:"100%", clear: 'both'}}>
-                                                      <div style={{float: 'left' }}>{
-                                                          item.body.startsWith("/me") ? <span style={{fontStyle:"italic"}}>
-                                                              {item.author.substring(1 + item.author.indexOf(":"))} {item.body.substring(item.body.indexOf(" "))}
-                                                          </span> : <span>
-                                                              <b>{item.author.substring(1 + item.author.indexOf(":"))}:</b>
-                                                              {item.body}
-                                                          </span>
-                                                      }</div>
-                                                          <div style={{float:'right'}}>{options}</div>
-                                                      </div>
+                                                  <List.Item style={{padding: '0', width:"100%", textAlign: 'left'}} key={item.sid}>
+                                                      <div style={{width: "100%"}}>
+                                              {(addDate ? <Divider style={{margin: '0'}}>{moment(item.timestamp).format("LL")}</Divider>: "") }
+                                              <Card bodyStyle={{padding: '10px'}} style={{border: 'none', width: "100%"}}>
+                                                         <Meta avatar={ (this.state.avatars[authorID] ? <Avatar src={this.state.avatars[authorID].url()}></Avatar>: <Avatar>{initials}</Avatar>)}
+                                                               title={<div>{authorName}<span className="timestamp">{this.formatTime(item.timestamp)}</span></div>}
+                                                               />
+                                                               <div>
+                                                                   {item.messages.map((m)=>
+                                                                       this.wrapWithOptions(m,isMyMessage)
+
+                                                                   )}
+                                                               </div>
+                                                      </Card></div>
                                                   </List.Item>
                                               )}
                                           }
@@ -394,18 +527,20 @@ class ChatContainer extends Component {
                                           }}
                                     >
                                     </List>
-                                    </Content></Layout>
-                                    <Footer>
-                                        <Form onFinish={this.sendMessage}>
-                                            <Form.Item>
-                                                <Input name={"message"} id={"message"} type="text"
-                                                       placeholder={"Send a message to other attendes in #"+this.state.activeChannel}
-                                                       onChange={this.onMessageChanged}
-                                                       value={this.state.newMessage}/>
-                                            </Form.Item>
-                                            {/*<Button type="primary" htmlType="submit">Send</Button>*/}
-                                        </Form>
-                                    </Footer>
+
+                                    </Content>
+                                        <Footer style={{padding: "0px 0px 0px 0px", backgroundColor: "#FFFFFF"}}>
+                                            <Form onFinish={this.sendMessage}>
+                                                <Form.Item>
+                                                    <Input name={"message"} id={"message"} type="text"
+                                                           placeholder={"Send a message to other attendes in #" + this.state.activeChannel}
+                                                           autoComplete="off"
+                                                           onChange={this.onMessageChanged}
+                                                           value={this.state.newMessage}/>
+                                                </Form.Item>
+                                            </Form>
+                                        </Footer>
+                                    </Layout>
                                 </Layout> : <div></div>
                             }
 
@@ -420,7 +555,96 @@ class ChatContainer extends Component {
             </div>
         );
     }
+
+    wrapWithOptions(m, isMyMessage, data) {
+        if(isMyMessage)
+        return <Popover  key={m.sid} placement="topRight" content={<div style={{backgroundColor:"white"}}>
+            <Popconfirm
+                title="Are you sure that you want to delete this message?"
+                onConfirm={this.deleteMessage.bind(this, m)}
+                okText="Yes"
+                cancelText="No"
+            ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>
+        </div>}><div className="chatMessage">{m.body}</div>
+        </Popover>
+        return <div key={m.sid} className="chatMessage">{m.body}</div>
+
+    }
 }
+
+const UpdateCreateForm = ({visible, onCreate, onCancel, values}) => {
+    const [form] = Form.useForm();
+    if(!values)
+        return <div></div>
+    return (
+        <Modal
+            visible={visible}
+            title="Update a channel"
+            // okText="Create"
+            footer={[
+                <Button form="myForm" key="submit" type="primary" htmlType="submit">
+                    Create
+                </Button>
+            ]}
+            cancelText="Cancel"
+            onCancel={onCancel}
+            // onOk={() => {
+            //     form
+            //         .validateFields()
+            //         .then(values => {
+            //             form.resetFields();
+            //             onCreate(values);
+            //         })
+            //         .catch(info => {
+            //             console.log('Validate Failed:', info);
+            //         });
+            // }}
+        >
+            <Form
+                form={form}
+                layout="vertical"
+                name="form_in_modal"
+                id="myForm"
+                initialValues={{
+                    modifier: 'public',
+                }}
+                onFinish={() => {
+                    form
+                        .validateFields()
+                        .then(values => {
+                            form.resetFields();
+                            onCreate(values);
+                        })
+                        .catch(info => {
+                            console.log('Validate Failed:', info);
+                        });
+                }}
+            >
+                <Form.Item
+                    name="title"
+                    label="Title"
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Please input the title of the channel!',
+                        },
+                    ]}
+                >
+                    <Input defaultValue={values.uniqueName} />
+                </Form.Item>
+                <Form.Item name="description" label="Description (optional)">
+                    <Input type="textarea"/>
+                </Form.Item>
+                <Form.Item name="modifier" className="collection-create-form_last-form-item">
+                    <Radio.Group>
+                        <Radio value="public">Public</Radio>
+                        <Radio value="private">Private</Radio>
+                    </Radio.Group>
+                </Form.Item>
+            </Form>
+        </Modal>
+    );
+};
 
 const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
     const [form] = Form.useForm();
