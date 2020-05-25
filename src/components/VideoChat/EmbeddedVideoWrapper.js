@@ -17,36 +17,42 @@ class EmbeddedVideoWrapper extends Component {
         }
         let roomID = this.props.match.params.roomId;
         this.setState({loadingMeeting: 'true'})
-        if (!this.props.user) {
-            return;
-        }
-        let idToken = this.props.user.getSessionToken();
-        const data = fetch(
-            'https://a9ffd588.ngrok.io/video/token'
-            // 'http://localhost:3001/video/token'
-            , {
-                method: 'POST',
-                body: JSON.stringify({
-                    room: roomID,
-                    identity: idToken
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
+        this.props.authContext.refreshUser(
+            (user)=>{
+                if(user) {
+                    let idToken = user.getSessionToken();
+                    const data = fetch(
+                        'https://a9ffd588.ngrok.io/video/token'
+                        // 'http://localhost:3001/video/token'
+                        , {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                room: roomID,
+                                identity: idToken
+                            }),
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(res => {
+                        res.json().then((data) => {
+                            _this.setState(
+                                {
+                                    meeting: roomID,
+                                    meetingName: data.roomName,
+                                    token: data.token,
+                                    loadingMeeting: false
+                                }
+                            )
+                            console.log(data.token);
+                        })
+                    });
                 }
-            }).then(res => {
-            res.json().then((data) => {
-                _this.setState(
-                    {
-                        meeting: roomID,
-                        meetingName: data.roomName,
-                        token: data.token,
-                        loadingMeeting: false
-                    }
-                )
-                console.log(data.token);
-            })
-        });
+                else{
+                    _this.setState({token: null});
+                }
 
+            }
+        );
 
         //
         // setToken(data.token);
@@ -80,7 +86,7 @@ const AuthConsumer = (props) => (
         {parseValue => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <EmbeddedVideoWrapper {...props} user={value.user} refreshUser={value.refreshUser}
+                    <EmbeddedVideoWrapper {...props} authContext={value}
                                           parseLive={parseValue}/>
                 )}
             </AuthUserContext.Consumer>

@@ -150,7 +150,7 @@ class Lobby extends React.Component {
         let Room =Parse.Object.extend("BreakoutRoom");
         let room = new Room();
         room.set("title", values.title);
-        room.set("creator", this.props.user);
+        room.set("creator", this.props.auth.user);
         room.set("description", values.description);
         room.save().then((val) => {
             _this.props.history.push("/videoChat/" + room.id);
@@ -175,7 +175,7 @@ class Lobby extends React.Component {
     }
 
     render() {
-        if (this.state.loading || !this.props.user) {
+        if (this.state.loading || !this.props.auth.user) {
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -234,9 +234,9 @@ class Lobby extends React.Component {
                         }}
                     />
                 </Content>
-                <Sider width="220px">
-                    <ActiveUsers parseLive={this.props.parseLive} />
-                </Sider>
+                {/*<Sider width="220px">*/}
+                    {/*<ActiveUsers parseLive={this.props.parseLive} />*/}
+                {/*</Sider>*/}
             </Layout>
             //     </TabPane>
             //     <TabPane tab="Tab 2" key="2">
@@ -326,7 +326,7 @@ const AuthConsumer = (props) => (
         {parseValue => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <Lobby {...props} user={value.user} refreshUser={value.refreshUser} parseLive={parseValue}/>
+                    <Lobby {...props} auth={value} parseLive={parseValue}/>
                 )}
             </AuthUserContext.Consumer>
         )

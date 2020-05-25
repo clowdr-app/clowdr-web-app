@@ -1,13 +1,18 @@
 import React, {Component} from 'react';
-import Chat from 'twilio-chat';
-import Parse from "parse"
+
+import emoji from 'emoji-dictionary';
+import 'emoji-mart/css/emoji-mart.css'
+import { Picker } from 'emoji-mart'
+
 
 import {
+    Affix,
     Avatar,
     Badge,
     Button,
     Card,
     Divider,
+    Drawer,
     Form,
     Input,
     Layout,
@@ -19,13 +24,17 @@ import {
     Radio,
     Spin,
     Tabs,
+    Tag,
     Tooltip
 } from 'antd';
-import {ArrowUpOutlined, CloseOutlined} from '@ant-design/icons'
+import {ArrowUpOutlined, CloseOutlined, ToolOutlined, SmileOutlined} from '@ant-design/icons'
 import {AuthUserContext} from "../Session";
 import ParseLiveContext from "../parse/context";
 import Meta from "antd/lib/card/Meta";
 import "./chat.css"
+import ReactMarkdown from "react-markdown";
+
+const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
 const {Header, Content, Footer, Sider} = Layout;
 var moment = require('moment'); // require
@@ -39,8 +48,9 @@ const INITIAL_STATE = {
     token: '',
     chatReady: false,
     messages: [],
-    avatars: [],
+    profiles: [],
     loadingChannels: true,
+    chatHeight:"400px",
     newMessage: ''
 };
 
@@ -48,7 +58,6 @@ class ChatContainer extends Component {
     constructor(props) {
         super(props);
 
-        this.loadingAvatars = {};
         this.state = {...INITIAL_STATE};
     }
 
@@ -79,8 +88,7 @@ class ChatContainer extends Component {
         //         }));
         //     });
         // })
-        console.log("calling refresh");
-        this.props.refreshUser(this.handleAuthChange.bind(this)).then(this.handleAuthChange.bind(this));
+        this.props.auth.refreshUser(this.handleAuthChange.bind(this));
     }
 
     handleAuthChange(user) {
@@ -88,29 +96,47 @@ class ChatContainer extends Component {
         if(user){
             myName = user.id+":"+user.get('displayname');
         }
-        this.setState({user: user, myName: myName});
         if (user) {
+            this.setState({user: user, myName: myName});
             this.getToken(user);
         } else {
-            console.log("Unable to find user id");
+            this.setState({user:null});
+            this.cleanup();
         }
 
     }
 
-    componentWillUnmount() {
+    cleanup(){
+        let _this =this;
         if (this.chatClient) {
-            this.chatClient.shutdown();
+            console.log("Removing listeners");
+            this.chatClient.removeAllListeners("channelAdded");
+            this.chatClient.removeAllListeners("channelRemoved");
+            this.chatClient.removeAllListeners("channelJoined");
+            this.chatClient.removeAllListeners("channelLeft");
+            console.log("Calling shutdown");
+            this.chatClient.shutdown().then(
+                ()=>{
+                    console.log("Shut down")
+                    _this.chatClient = null;
+                }
+            ).catch(err=>{
+                console.log(err);
+            })
         }
         if(this.sub) {
             this.sub.unsubscribe();
+            this.sub = null;
         }
+    }
+    componentWillUnmount() {
+      this.cleanup();
     }
 
     getToken = (user) => {
         let _this = this;
         let idToken = user.getSessionToken();
         if (idToken) {
-            console.log("Got token: " + idToken)
             const data = fetch(
                 'https://a9ffd588.ngrok.io/chat/token'
                 // 'http://localhost:3001/video/token'
@@ -139,11 +165,15 @@ class ChatContainer extends Component {
     };
 
     initChat = () => {
-        this.chatClient = new Chat(this.state.token);
-        this.chatClient.initialize().then(this.clientInitiated.bind(this));
+        let _this = this;
+        this.props.auth.initChatClient(this.state.token).then((client) => {
+            _this.chatClient = client;
+            _this.clientInitiated();
+        });
     };
 
     clientInitiated = async () => {
+        console.log("Setting up client");
         let _this = this;
         await this.setState({chatReady: true});
         let channelDescriptors = await this.chatClient.getPublicChannelDescriptors();
@@ -194,7 +224,6 @@ class ChatContainer extends Component {
             )
         });
 
-        console.log("listeners installed");
         this.chatClient.on("channelJoined", (channel)=>{
             _this.joinedChannel(channel);
         });
@@ -310,6 +339,31 @@ class ChatContainer extends Component {
         }));
     }
 
+    async sendReactToMessage(message, emoji) {
+        let idToken = this.state.user.getSessionToken();
+        if (idToken) {
+            console.log("Got token: " + idToken)
+            const data = fetch(
+                'https://a9ffd588.ngrok.io/chat/reactTo'
+                // 'http://localhost:3001/video/token'
+                , {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        identity: idToken,
+                        room: message.channel.sid,
+                        message: message.sid,
+                        reaction: emoji
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+        } else {
+            console.log("Unable to get our token?");
+        }
+
+    }
+
     async deleteChatRoom(chan) {
         let idToken = this.state.user.getSessionToken();
         if (idToken) {
@@ -330,7 +384,6 @@ class ChatContainer extends Component {
         } else {
             console.log("Unable to get our token?");
         }
-
     }
     async updateChannel(values) {
         let idToken = this.state.user.getSessionToken();
@@ -376,21 +429,17 @@ class ChatContainer extends Component {
             if (!lastMessage || message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp,'minutes') > 5) {
                 if (lastMessage)
                     ret.push(lastMessage);
-                let authorID = message.author.substring(0,message.author.indexOf(":"));
-                let avatar = this.state.avatars[authorID];
-                if(!this.state.avatars[authorID] && !this.loadingAvatars[authorID]){
-                    this.loadingAvatars[authorID] = true;
-                    const query = new Parse.Query(Parse.User);
-                    query.get(authorID).then((u)=>{
+                let authorID = message.author.substring(0, message.author.indexOf(":"));
+                if (!this.state.profiles[authorID]) {
+                    console.log("Fetch " +authorID)
+                    this.props.auth.getUserProfile(authorID, (u) => {
                         console.log(u);
-                        _this.setState((prevState)=>({
-                            avatars: {
-                                ...prevState.avatars,
-                                [u.id]: u.get("profilePhoto")
+                        _this.setState((prevState) => ({
+                            profiles: {
+                                ...prevState.profiles,
+                                [u.id]: u
                             }
-                        }));
-                    }).catch((err)=>{
-
+                        }))
                     });
                 }
 
@@ -421,7 +470,7 @@ class ChatContainer extends Component {
         if (this.state.user) {
             return (
                 <div>
-                    <Tabs id="chatTabs" type="card" tabBarStyle={{margin: 0}}
+                    <Tabs id="chatTabs" type="card" tabBarStyle={{margin: 0, maxWidth: "500px"}}
                           activeKey="Chat">
                         <TabPane tab={<span onClick={this.onChangeTab.bind(this)}>
                             Chat {this.state.expanded ?
@@ -433,16 +482,20 @@ class ChatContainer extends Component {
                             {this.state.expanded ?
                                 <Layout>
                                     <Sider style={{backgroundColor: "white"}}>
-                                        <Divider>Channels</Divider>
+                                        <Divider style={{verticalAlign: 'middle'}}>Channels <Popover
+                                            content={<span onClick={()=>{this.setState({newChannelVisible: true})}}><a href="#">New channel</a></span>}
+                                        ><ToolOutlined /></Popover></Divider>
+
                                         <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={()=>{this.setState({'newChannelVisible': false})}}
                                         onCreate={this.createNewChannel.bind(this)} />
                                         <UpdateCreateForm visible={this.state.editChannelVisible}
                                                           onCancel={()=>{this.setState({'editChannelVisible': false})}}
                                                            onCreate={this.updateChannel.bind(this)}
                                                           values={this.state.editingChannel} />
-                                        <Menu theme="light" style={{height:"100%"}} selectedKeys={[_this.state.activeChannel]}>
+                                        {this.state.channels ?
+                                            <Menu theme="light" style={{height:"100%"}} selectedKeys={[_this.state.activeChannel]}>
                                             {
-                                                (this.state.channels ? this.state.channels.map(function(item){
+                                                this.state.channels.map(function(item){
                                                     let isJoined = false;
 
                                                     if(_this.state.joinedChannels)
@@ -472,14 +525,16 @@ class ChatContainer extends Component {
                                                            </div></Popover>
                                                            {/*</List.Item>*/}
                                                    </Menu.Item>
-                                                }
-                                               ) : <Spin tip="Loding..." />)
+                                                })
                                             }
                                         </Menu>
-
+                                         : <Spin tip="Loding..." />}
                                     </Sider>
                                     <Layout>
                                     <Content style={{backgroundColor:"#FFFFFF", overflow:"auto"}}>
+                                        {/*<Affix>*/}
+                                        {/*    <Picker onSelect={this.reactTo}/>*/}
+                                        {/*</Affix>*/}
                                     <List loading={this.state.chatLoading} dataSource={this.groupMessages(this.state["messages"+this.state.activeChannel])} size="small"
                                           renderItem={
                                               item => {
@@ -491,13 +546,14 @@ class ChatContainer extends Component {
                                                          onConfirm={this.deleteMessage.bind(this, item)}
                                                          okText="Yes"
                                                          cancelText="No"
-                                                     ><a href="#"><CloseOutlined /></a></Popconfirm>
+                                                     ><Tooltip title={"Delete this message"}><a href="#"><CloseOutlined /></a></Tooltip></Popconfirm>
                                                   let authorName = item.author.substring(1+item.author.indexOf(":"));
                                                   let initials = "";
                                                   let authorID = item.author.substring(0,item.author.indexOf(":"));
                                                   let addDate = this.lastDate && this.lastDate != moment(item.timestamp).day();
                                                   this.lastDate = moment(item.timestamp).day();
 
+                                                  console.log(item.Attributes)
                                                   authorName.split(" ").forEach((v=>initials+=v.substring(0,1)))
 
                                                   return (
@@ -505,13 +561,18 @@ class ChatContainer extends Component {
                                                       <div style={{width: "100%"}}>
                                               {(addDate ? <Divider style={{margin: '0'}}>{moment(item.timestamp).format("LL")}</Divider>: "") }
                                               <Card bodyStyle={{padding: '10px'}} style={{border: 'none', width: "100%"}}>
-                                                         <Meta avatar={ (this.state.avatars[authorID] ? <Avatar src={this.state.avatars[authorID].url()}></Avatar>: <Avatar>{initials}</Avatar>)}
-                                                               title={<div>{authorName}<span className="timestamp">{this.formatTime(item.timestamp)}</span></div>}
+                                                         <Meta avatar={ (this.state.profiles[authorID] && this.state.profiles[authorID].get("profilePhoto") ? <Avatar src={this.state.profiles[authorID].get("profilePhoto").url()}></Avatar>: <Avatar>{initials}</Avatar>)}
+                                                               title={<div>{authorName}<span className="timestamp">{this.formatTime(item.timestamp)}</span><span className="user-flair-lineup">
+                                                                   {
+                                                                       (this.state.profiles[authorID] && this.state.profiles[authorID].get("tags") ? this.state.profiles[authorID].get("tags").map((tag)=>(
+                                                                          <Tag color={tag.get("color")} key={tag.id}>{tag.get("label")}</Tag>
+                                                                       )):"")
+                                                                   }
+                                                               </span></div>}
                                                                />
                                                                <div>
                                                                    {item.messages.map((m)=>
                                                                        this.wrapWithOptions(m,isMyMessage)
-
                                                                    )}
                                                                </div>
                                                       </Card></div>
@@ -519,7 +580,7 @@ class ChatContainer extends Component {
                                               )}
                                           }
                                           style={{
-                                              height: "400px",
+                                              height: this.state.chatHeight,
                                               display: 'flex',
                                               flexDirection: 'column-reverse',
                                               overflow: 'auto',
@@ -556,18 +617,34 @@ class ChatContainer extends Component {
         );
     }
 
+    reactTo(event, emojji){
+        console.log(event);
+        console.log(emoji);
+        console.log(emoji.colons);
+        // console.log(more);
+        // this.sendReactToMessage(message, emoji.unified);
+    }
     wrapWithOptions(m, isMyMessage, data) {
+        let options = [];
+        let _this = this;
+        options.push(<a href="#" key="react" onClick={()=>{
+            _this.setState({
+                reactingTo: m
+            })
+        }}><SmileOutlined/> </a>);
+
         if(isMyMessage)
-        return <Popover  key={m.sid} placement="topRight" content={<div style={{backgroundColor:"white"}}>
-            <Popconfirm
+            options.push( <Popconfirm
+                key="delete"
                 title="Are you sure that you want to delete this message?"
                 onConfirm={this.deleteMessage.bind(this, m)}
                 okText="Yes"
                 cancelText="No"
-            ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>
-        </div>}><div className="chatMessage">{m.body}</div>
+            ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
+        return <Popover  key={m.sid} placement="topRight" content={<div style={{backgroundColor:"white"}}>
+            {options}
+        </div>}><div className="chatMessage"><ReactMarkdown source={m.body} renderers={{ text: emojiSupport }} /></div>
         </Popover>
-        return <div key={m.sid} className="chatMessage">{m.body}</div>
 
     }
 }
@@ -722,7 +799,7 @@ const AuthConsumer = (props) => (
         {parseLive => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <ChatContainer {...props}  parseLive={parseLive} auth={value} user={value.user} refreshUser={value.refreshUser}/>
+                    <ChatContainer {...props}  parseLive={parseLive} auth={value} />
                 )}
             </AuthUserContext.Consumer>
         )}
@@ -731,3 +808,4 @@ const AuthConsumer = (props) => (
 );
 
 export default AuthConsumer
+
