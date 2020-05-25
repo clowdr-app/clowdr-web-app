@@ -12,7 +12,7 @@ const client = require('twilio')(config.accountSid, config.token);
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
-Parse.serverURL = 'https://parseapi.back4app.com/'
+Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
 
 const app = express();
@@ -153,7 +153,7 @@ app.post('/video/token', async (req, res, next) => {
             let twilioRoom = await client.video.rooms.create({
                 uniqueName: room,
                 // type: "peer-to-peer", //TESTING
-                statusCallback: "https://a9ffd588.ngrok.io/roomCallback"
+                statusCallback: `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/roomCallback`
             });
             roomData.set("twilioID", twilioRoom.sid);
             await roomData.save();

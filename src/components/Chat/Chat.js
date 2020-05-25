@@ -44,9 +44,9 @@ class ChatContainer extends Component {
         let _this = this;
         let idToken = this.props.user.getSessionToken();
         if (idToken) {
-            console.log("Got token: " + idToken)
+            console.log("Got token: " + idToken + '; callback is ' + process.env.REACT_APP_TWILIO_CALLBACK_URL)
             const data = fetch(
-                'https://a9ffd588.ngrok.io/chat/token'
+                process.env.REACT_APP_TWILIO_CALLBACK_URL + '/chat/token'
                 // 'http://localhost:3001/video/token'
                 , {
                     method: 'POST',
