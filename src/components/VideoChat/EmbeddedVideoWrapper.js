@@ -22,8 +22,9 @@ class EmbeddedVideoWrapper extends Component {
                 if(user) {
                     let idToken = user.getSessionToken();
                     const data = fetch(
-                        'https://a9ffd588.ngrok.io/video/token'
-                        // 'http://localhost:3001/video/token'
+    `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
+
+        // 'http://localhost:3001/video/token'
                         , {
                             method: 'POST',
                             body: JSON.stringify({

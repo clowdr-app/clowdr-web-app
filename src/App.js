@@ -27,7 +27,8 @@ import Chat from "./components/Chat";
 import ContextualActiveUsers from "./components/Lobby/ContextualActiveusers";
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
-Parse.serverURL = 'https://parseapi.back4app.com/'
+Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
+console.log("Initialized Parse " + Parse.serverURL + ' ' + process.env.REACT_APP_PARSE_APP_ID);
 
 const {Header, Content, Footer, Sider} = Layout;
 
