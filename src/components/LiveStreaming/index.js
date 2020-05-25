@@ -29,7 +29,8 @@ class LiveStreaming extends Component {
         })
     }
     componentWillUnmount() {
-        this.sub.unsubscribe();
+        if(this.sub)
+            this.sub.unsubscribe();
     }
 
 

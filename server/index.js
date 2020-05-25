@@ -48,7 +48,7 @@ app.post("/roomCallback", async (req, res) => {
             if (!room.get("members")) {
                 room.set("members", [user]);
             } else {
-                room.get("members").add(user);
+                room.get("members").push(user);
             }
             await room.save();
         } catch (err) {
@@ -106,6 +106,31 @@ async function checkToken(token) {
     }
     return undefined;
 }
+
+app.post('/chat/deleteRoom', async (req, res, next) => {
+    const identity = req.body.identity;
+    const room = req.body.room;
+
+    let name = await checkToken(identity);
+    await client.chat.services(config.twilio.chatServiceSid).channels(room).remove();
+
+    res.send(JSON.stringify({
+        result: "OK"
+    }));
+});
+
+app.post('/chat/updateRoom', async (req, res, next) => {
+    const identity = req.body.identity;
+    const room = req.body.room;
+    const newName = req.body.newUniqueName;
+
+    let name = await checkToken(identity);
+    await client.chat.services(config.twilio.chatServiceSid).channels(room).update({uniqueName: newName});
+
+    res.send(JSON.stringify({
+        result: "OK"
+    }));
+});
 
 app.post('/chat/token', async (req, res, next) => {
     const identity = req.body.identity;
@@ -175,6 +200,34 @@ app.post('/video/token', async (req, res, next) => {
     // let membersRef = roomRef.child("members").child(uid).set(true).then(() => {
     // });
 });
+
+//Make sure that every channel in Twilio exists in Parse
+client.chat.services(config.twilio.chatServiceSid).channels.list().then(function(channels) {
+    if(channels){
+        channels.forEach(async (channel)=>{
+            let Channel = Parse.Object.extend("ChatRoom");
+            let query = new Parse.Query(Channel);
+            query.equalTo("chatSID", channel.sid);
+            const res = await query.first();
+            if(!res){
+                console.log("Creating new: ")
+                console.log(channel);
+                let newChan = new Channel();
+                newChan.set("chatSID", channel.sid);
+                newChan.set("title", channel.uniqueName);
+                newChan.set("friendlyname", channel.friendlyName);
+                await newChan.save();
+            }
+        })
+    }
+    // for (let i = 0; i < paginator.items.length; i++) {
+    //     const channel = paginator.items[i];
+    //     console.log('Channel: ' + channel.friendlyName);
+    // }
+});
+
+
+//Make sure that all of the breakout rooms are cleaned up
 let query = new Parse.Query("BreakoutRoom");
 query.find().then(async (rooms) => {
     if (rooms) {
