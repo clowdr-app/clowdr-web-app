@@ -2,6 +2,13 @@ import React from 'react';
 import LiveVideoPanel from "./LiveVideoPanel";
 import {Modal, Card} from "antd";
 
+const LiveVideoThumbnailSourceMappings = {
+    YouTube : {
+        url : "https://img.youtube.com/vi/",
+        extraPath : "/0.jpg"
+    }
+}
+
 class VideoThumbnail extends React.Component {
     constructor(props) {
         super(props);
@@ -13,10 +20,12 @@ class VideoThumbnail extends React.Component {
     }
 
     render() {
-        console.log(this.props.video.get("key"))
-        const thumbnail_url = `https://img.youtube.com/vi/${this.props.video.get("key")}/0.jpg`
+        const src1 = this.props.video.get("src1");
+        const id1 = this.props.video.get("id1");
+        console.log(id1);
 
-        // return <div>{this.props.video.data.title}, {this.props.video.id}</div>
+        const thumbnail_url = LiveVideoThumbnailSourceMappings[src1].url + id1 + LiveVideoThumbnailSourceMappings[src1].extraPath;
+
         let modal = "";
         if (this.state.expanded) {
             modal = <Modal visible={true} cancelText={"Close"} width={"100%"} height={"100%"}
