@@ -72,8 +72,11 @@ class ConnectBridge extends Component<{videoContext: IVideoContext, setRoomName:
         });
     }
     componentDidMount(): void {
-        let doConnect = this.doConnect.bind(this);
-            setTimeout(this.doConnect.bind(this), 3000);
+        console.log("Mounted")
+        if(this.props.videoContext.token){
+            console.log("and had token")
+            this.doConnect();
+        }
     }
     componentWillUnmount(): void {
         if(this.props.videoContext.room && this.props.videoContext.room.disconnect){

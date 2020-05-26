@@ -60,7 +60,8 @@ class LinkMenu extends React.Component {
                 ]
         }
         return <Menu theme={"dark"} mode={"inline"} selectedKeys={[this.props.location.pathname]}
-                     defaultOpenKeys="/admin">
+                     mode="horizontal"
+                     >
             <Menu.Item key='/' icon={<VideoCameraOutlined/>}><NavLink to="/">Live
                 Videos</NavLink></Menu.Item>
             <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Recorded Videos</NavLink></Menu.Item>
