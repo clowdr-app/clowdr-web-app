@@ -120,8 +120,9 @@ class LiveVideos extends React.Component {
                 title: 'Action',
                 key: 'action',
                 render: (text, record) => (
-                    <Space size="middle">
+                    <Space size="small">
                         {/*<a>Invite {record.name}</a>*/}
+                        <a href="#">Edit</a>
                         <Popconfirm
                             title="Are you sure delete this video?"
                             onConfirm={()=>this.onDelete(record)}
