@@ -29,7 +29,8 @@ class VideoThumbnail extends React.Component {
         const id1 = this.props.video.get("id1");
         console.log(id1);
         console.log(this.props + " " + this.context);
-        console.log(this.props.geoloc.country_code);
+        if (this.props.geoloc)
+            console.log(this.props.geoloc.country_code);
 
         const thumbnail_url = LiveVideoThumbnailSourceMappings[src1].url + id1 + LiveVideoThumbnailSourceMappings[src1].extraPath;
 
