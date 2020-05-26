@@ -43,8 +43,8 @@ class VideoThumbnail extends React.Component {
                 <LiveVideoPanel video={this.props.video}/>
             </Modal>
         }
-        return <Card title={this.props.video.get('title')} onClick={this.toggleExpanded.bind(this)}>
-            <img src={thumbnail_url}/>
+        return <Card title={this.props.video.get('title')} size="small" extra={<a href="#">Watch</a>} onClick={this.toggleExpanded.bind(this)}>
+            <img src={thumbnail_url} width="180px"/>
             {modal}
 
         </Card>
