@@ -13,7 +13,6 @@ import {withAuthentication} from "./components/Session";
 
 import Parse from "parse";
 
-
 import Account from "./components/Account";
 import VideoChat from "./components/VideoChat";
 // import ScheduleList from "./components/Admin/Schedule";
@@ -21,17 +20,17 @@ import VideoChat from "./components/VideoChat";
 //
 import LiveVideosList from "./components/Admin/LiveVideos";
 import withParseLive from "./components/parse/withParseLive";
+import withGeoLocation from './components/GeoLocation/withGeoLocation';
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 import Chat from "./components/Chat";
+import ContextualActiveUsers from "./components/Lobby/ContextualActiveusers";
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 console.log("Initialized Parse " + Parse.serverURL + ' ' + process.env.REACT_APP_PARSE_APP_ID);
 
 const {Header, Content, Footer, Sider} = Layout;
-
-
 
 class App extends Component {
 
@@ -41,8 +40,6 @@ class App extends Component {
     }
 
     render() {
-
-
         return (
             <BrowserRouter basename={process.env.PUBLIC_URL}>
                 <div className="App">
@@ -51,9 +48,11 @@ class App extends Component {
                             <img src={require('./icse2020-logo.png')} width="800px" className="App-logo" alt="logo"/>
                         </Header>
                         <Layout>
-                            <Sider>
+                            <Header>
                                 <LinkMenu/>
-                            </Sider>
+                            </Header>
+                            <Layout>
+
                             <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
                                 <div className="site-layout-background" style={{padding: 24}} >
                                     <Route exact path="/" component={Home}/>
@@ -70,17 +69,22 @@ class App extends Component {
                                     {/*<Route exact path='/admin/users' component={withAuthentication(UsersList)} />*/}
                                     {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
                                     <Route exact path='/admin/livevideos' component={LiveVideosList} />
-                                    <Affix offsetBottom={10}>
-                                        <Chat />
-                                    </Affix>
                                 </div>
                             </Content>
+                                <Sider style={{width:"250px"}}>
+                                    <ContextualActiveUsers />
+                                </Sider>
+                            </Layout>
                         </Layout>
                     </Layout>
+                    <div style={{position:
+                    "sticky", bottom: 0}}>
+                        <Chat />
+                    </div>
                 </div>
             </BrowserRouter>
         );
     }
 }
 
-export default withAuthentication(withParseLive(App));
+export default withAuthentication(withParseLive(withGeoLocation(App)));

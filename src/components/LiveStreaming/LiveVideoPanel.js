@@ -1,5 +1,14 @@
 import React from 'react';
 
+const LiveVideoSourceMappings = {
+    YouTube : {
+        url : "https://www.youtube.com/embed/",
+        vars : {
+            autoplay : 1
+        }
+    }
+}
+
 class LiveVideoPanel extends React.Component {
     constructor(props) {
         super(props);
@@ -9,12 +18,14 @@ class LiveVideoPanel extends React.Component {
     }
 
     render() {
+        const src1 = this.props.video.get("src1");
+        const id1 = this.props.video.get("id1");
+        var queryVars = Object.keys(LiveVideoSourceMappings[src1].vars);
+        const video_url = LiveVideoSourceMappings[src1].url + id1 + '?' + queryVars.map(k => `${k}=${LiveVideoSourceMappings[src1].vars[k]}&`);
+        //`https://www.youtube.com/embed/${videoId}?autoplay=1`;
 
-        const videoId = this.props.video.get("key");
-        const video_url = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-
-        const chat_url = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${process.env.REACT_APP_DOMAIN}`;
-
+        const chat_url = `https://www.youtube.com/live_chat?v=${id1}&embed_domain=${process.env.REACT_APP_DOMAIN}`;
+      
         return (
             <div className={"container"}>
                 <div className={"row"}>
@@ -36,4 +47,4 @@ class LiveVideoPanel extends React.Component {
     }
 }
 
-export default LiveVideoPanel
+export default LiveVideoPanel;

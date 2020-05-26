@@ -131,6 +131,31 @@ app.post('/chat/updateRoom', async (req, res, next) => {
         result: "OK"
     }));
 });
+app.post('/chat/reactTo', async (req, res, next) => {
+    const identity = req.body.identity;
+    const message = req.body.message;
+    const reaction = req.body.reaction;
+    const room = req.body.room;
+
+    let name = await checkToken(identity);
+    let msg = await client.chat.services(config.twilio.chatServiceSid).channels(room).messages(message);
+    let reacts = {};
+    if(msg.attributes)
+        reacts = msg.attributes['reactions'];
+    if(!reacts[reaction])
+        reacts[reaction] = [];
+    reacts[reaction].push(name);
+    console.log(JSON.stringify({reactions: reacts}));
+    let result =await msg.update({attributes:
+            JSON.stringify({
+                reactions: reacts
+            })});
+    console.log(result);
+
+    res.send(JSON.stringify({
+        result: "OK"
+    }));
+});
 
 app.post('/chat/token', async (req, res, next) => {
     const identity = req.body.identity;
