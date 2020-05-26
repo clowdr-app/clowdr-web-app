@@ -1,10 +1,10 @@
 import React from 'react';
 
 const LiveVideoSourceMappings = {
-    "YouTube" : {
-        "url" : "https://www.youtube.com/embed/",
-        "vars" : {
-            "autoplay" : 1
+    YouTube : {
+        url : "https://www.youtube.com/embed/",
+        vars : {
+            autoplay : 1
         }
     }
 }
@@ -25,7 +25,7 @@ class LiveVideoPanel extends React.Component {
         //`https://www.youtube.com/embed/${videoId}?autoplay=1`;
 
         const chat_url = `https://www.youtube.com/live_chat?v=${id1}&embed_domain=${process.env.REACT_APP_DOMAIN}`;
-
+      
         return (
             <div className={"container"}>
                 <div className={"row"}>
@@ -47,4 +47,4 @@ class LiveVideoPanel extends React.Component {
     }
 }
 
-export default LiveVideoPanel
+export default LiveVideoPanel;

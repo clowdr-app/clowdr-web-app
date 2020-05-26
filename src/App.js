@@ -13,7 +13,6 @@ import {withAuthentication} from "./components/Session";
 
 import Parse from "parse";
 
-
 import Account from "./components/Account";
 import VideoChat from "./components/VideoChat";
 // import ScheduleList from "./components/Admin/Schedule";
@@ -21,6 +20,7 @@ import VideoChat from "./components/VideoChat";
 //
 import LiveVideosList from "./components/Admin/LiveVideos";
 import withParseLive from "./components/parse/withParseLive";
+import withGeoLocation from './components/GeoLocation/withGeoLocation';
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 import Chat from "./components/Chat";
@@ -31,8 +31,6 @@ console.log("Initialized Parse " + Parse.serverURL + ' ' + process.env.REACT_APP
 
 const {Header, Content, Footer, Sider} = Layout;
 
-
-
 class App extends Component {
 
     constructor(props) {
@@ -41,8 +39,6 @@ class App extends Component {
     }
 
     render() {
-
-
         return (
             <BrowserRouter basename={process.env.PUBLIC_URL}>
                 <div className="App">
@@ -83,4 +79,4 @@ class App extends Component {
     }
 }
 
-export default withAuthentication(withParseLive(App));
+export default withAuthentication(withParseLive(withGeoLocation(App)));
