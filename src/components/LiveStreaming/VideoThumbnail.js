@@ -3,6 +3,7 @@ import LiveVideoPanel from "./LiveVideoPanel";
 import {Modal, Card} from "antd";
 import App from '../../App';
 import GeoLocationContext from '../GeoLocation/context';
+import {videoURLFromData} from './utils'
 
 const LiveVideoThumbnailSourceMappings = {
     YouTube : {
@@ -27,12 +28,14 @@ class VideoThumbnail extends React.Component {
 
         const src1 = this.props.video.get("src1");
         const id1 = this.props.video.get("id1");
+        const video_url = videoURLFromData(src1, id1);
+
         console.log(id1);
         console.log(this.props + " " + this.context);
         if (this.props.geoloc)
             console.log(this.props.geoloc.country_code);
 
-        const thumbnail_url = LiveVideoThumbnailSourceMappings[src1].url + id1 + LiveVideoThumbnailSourceMappings[src1].extraPath;
+//        const thumbnail_url = LiveVideoThumbnailSourceMappings[src1].url + id1 + LiveVideoThumbnailSourceMappings[src1].extraPath;
 
         let modal = "";
         if (this.state.expanded) {
@@ -44,7 +47,7 @@ class VideoThumbnail extends React.Component {
             </Modal>
         }
         return <Card title={this.props.video.get('title')} size="small" extra={<a href="#">Watch</a>} onClick={this.toggleExpanded.bind(this)}>
-            <img src={thumbnail_url} width="180px"/>
+            <iframe title={this.props.title} src={video_url} allowFullScreen/>
             {modal}
 
         </Card>

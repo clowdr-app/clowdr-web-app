@@ -1,14 +1,5 @@
 import React from 'react';
-
-const LiveVideoSourceMappings = {
-    YouTube : {
-        url : "https://www.youtube.com/embed/",
-        vars : {
-            mute : 1,
-            autoplay : 1,
-        }
-    }
-}
+import {videoURLFromData} from './utils'
 
 class LiveVideoPanel extends React.Component {
     constructor(props) {
@@ -21,11 +12,7 @@ class LiveVideoPanel extends React.Component {
     render() {
         const src1 = this.props.video.get("src1");
         const id1 = this.props.video.get("id1");
-        var queryVars = Object.keys(LiveVideoSourceMappings[src1].vars);
-        const video_url = LiveVideoSourceMappings[src1].url + id1 + '?' + queryVars.map(k => `${k}=${LiveVideoSourceMappings[src1].vars[k]}&`).join('');
-        console.log(video_url);
-
-        const chat_url = `https://www.youtube.com/live_chat?v=${id1}&embed_domain=${process.env.REACT_APP_DOMAIN}`;
+        const video_url = videoURLFromData(src1, id1);
 
         const q_url = this.props.video.get("slido");
       
