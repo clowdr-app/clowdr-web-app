@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import ParseLiveContext from "../../parse/context";
@@ -13,7 +13,7 @@ const IconText = ({icon, text}) => (
     </Space>
 );
 
-const LiveVideoSources = ['YouTube', 'Twitch', 'Facebook'];
+const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook'];
 
 class LiveVideos extends React.Component {
     constructor(props) {
@@ -23,7 +23,9 @@ class LiveVideos extends React.Component {
             loading: false, 
             videos: [],
             src1: undefined,
-            src2: undefined
+            src2: undefined,
+            editing: false,
+            edt_video: undefined
         };
     }
 
@@ -45,11 +47,51 @@ class LiveVideos extends React.Component {
     }
 
     onDelete(value) {
-        console.log(value);
+        console.log("Deleting " + value + " " + value.id1);
         value.destroy().then(()=>{
             this.refreshList();
         });
         // this.videoRef.child(key).remove();
+    }
+
+    onEdit(video) {
+        console.log("Editing " + JSON.stringify(video) + " " + video.get("id1") + " " + video.id);
+        this.setState({
+            visible: true, 
+            editing: true, 
+            edt_video: {
+                objectId: video.id,
+                title: video.get("title"),
+                src1: video.get("src1"),
+                id1: video.get("id1"),
+                src2: video.get("src2"),
+                id2: video.get("id2"),
+            }
+        });
+    }
+
+    onUpdate(values) {
+        var _this = this;
+        console.log("Updating " + values.id1 + "; " + values.objectId);
+        let query = new Parse.Query("LiveVideo");
+        query.get(values.objectId).then(video => {
+            if (video) {
+                video.set("title", values.title);
+                video.set("src1", values.src1);
+                video.set("id1", values.id1);
+                video.set("src2", values.src2);
+                video.set("id2", values.id2);
+                video.save().then((val) => {
+                    _this.setState({visible: false, editing: false});
+                    _this.refreshList();
+                }).catch(err => {
+                    console.log(err + ": " + values.objectId);
+                })
+            }
+            else {
+                console.log("Video not found: " + values.id1);
+            }
+        });
     }
 
     setVisible() {
@@ -83,9 +125,7 @@ class LiveVideos extends React.Component {
                 title: 'Title',
                 dataIndex: 'title',
                 key: 'title',
-                render: (text, record) => <a onClick={() => {
-                    this.props.history.push("/admin/users/edit/" + record.key)
-                }}>{record.get("title")}</a>,
+                render: (text, record) => <span>{record.get("title")}</span>,
             },
             {
                 title: 'Main Video Source',
@@ -121,8 +161,7 @@ class LiveVideos extends React.Component {
                 key: 'action',
                 render: (text, record) => (
                     <Space size="small">
-                        {/*<a>Invite {record.name}</a>*/}
-                        <a href="#">Edit</a>
+                        <a href="#" video={record} onClick={() => this.onEdit(record)}>Edit</a>
                         <Popconfirm
                             title="Are you sure delete this video?"
                             onConfirm={()=>this.onDelete(record)}
@@ -135,12 +174,35 @@ class LiveVideos extends React.Component {
                 ),
             },
         ];
+
         if (this.state.loading)
             return (
                 <Spin tip="Loading...">
                 </Spin>)
-        return <div>
 
+        else if (this.state.editing)
+            return (
+                <Fragment>
+                    <CollectionEditForm
+                        title="Edit live video link"
+                        visible={this.state.visible}
+                        data={this.state.edt_video}
+                        onAction={this.onUpdate.bind(this)}
+                        onCancel={() => {
+                            this.setVisible(false);
+                        }}
+                        onSelectPullDown1={(value) => {
+                            this.setState({src1: value});
+                        }}
+                        onSelectPullDown2={(value) => {
+                            this.setState({src2: value});
+                        }}
+                    />
+                <Table columns={columns} dataSource={this.state.videos} rowKey={(v)=>(v.id1)}>
+                </Table>
+            </Fragment>
+            )
+        return <div>
             <Button
                 type="primary"
                 onClick={() => {
@@ -149,9 +211,10 @@ class LiveVideos extends React.Component {
             >
                 New Video
             </Button>
-            <CollectionCreateForm
+            <CollectionEditForm
+                title="Add a live video link"
                 visible={this.state.visible}
-                onCreate={this.onCreate.bind(this)}
+                onAction={this.onCreate.bind(this)}
                 onCancel={() => {
                     this.setVisible(false);
                 }}
@@ -162,7 +225,7 @@ class LiveVideos extends React.Component {
                     this.setState({src2: value});
                 }}
             />
-            <Table columns={columns} dataSource={this.state.videos} rowKey={(v)=>(v.id)}>
+            <Table columns={columns} dataSource={this.state.videos} rowKey={(v)=>(v.id1)}>
             </Table>
         </div>
     }
@@ -177,12 +240,13 @@ const ParseLiveConsuemr = (props) => (
     </ParseLiveContext.Consumer>
 )
 export default ParseLiveConsuemr;
-const CollectionCreateForm = ({visible, onCreate, onCancel, onSelectPullDown1, onSelectPullDown2}) => {
+
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, onSelectPullDown2}) => {
     const [form] = Form.useForm();
     return (
         <Modal
             visible={visible}
-            title="Add a live video link"
+            title={title}
             // okText="Create"
             footer={[
                 <Button form="myForm" key="submit" type="primary" htmlType="submit">
@@ -199,13 +263,14 @@ const CollectionCreateForm = ({visible, onCreate, onCancel, onSelectPullDown1, o
                 id="myForm"
                 initialValues={{
                     modifier: 'public',
+                    ...data
                 }}
                 onFinish={() => {
                     form
                         .validateFields()
                         .then(values => {
                             form.resetFields();
-                            onCreate(values);
+                            onAction(values);
                         })
                         .catch(info => {
                             console.log('Validate Failed:', info);
@@ -236,7 +301,12 @@ const CollectionCreateForm = ({visible, onCreate, onCancel, onSelectPullDown1, o
                         ))}
                     </Select>
                 </Form.Item>
-                <Form.Item name="id1" label="Video ID in main source">
+                <Form.Item name="id1" label="Video ID in main source" rules={[
+                    {
+                        required: true,
+                        message: 'Please input the ID of this live video'
+                    },
+                ]}>
                     <Input type="textarea"/>
                 </Form.Item>
                 <Form.Item name="src2" label="Alternate source">
@@ -258,6 +328,9 @@ const CollectionCreateForm = ({visible, onCreate, onCancel, onSelectPullDown1, o
                 </Form.Item>
                 <Form.Item name="startTime" label="Remove from page at">
                     <DatePicker showTime/>
+                </Form.Item>
+                <Form.Item name="objectId">
+                    <Input type="hidden" />
                 </Form.Item>
             </Form>
         </Modal>
