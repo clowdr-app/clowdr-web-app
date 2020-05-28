@@ -43,10 +43,10 @@ class LinkMenu extends React.Component {
             </SubMenu>
             userTools =
                 [
+                    <Menu.Item key='/lobby' icon={<TeamOutlined/>}><NavLink to="/lobby">Lobby</NavLink></Menu.Item>,
                     <Menu.Item key='/account' icon={<UserOutlined/>}><NavLink to="/account">
-                        My Account</NavLink></Menu.Item>,
-                    <Menu.Item key='/lobby' icon={<TeamOutlined/>}><NavLink to="/lobby">Lobby
-                        Session</NavLink></Menu.Item>];
+                        My Account</NavLink></Menu.Item>
+                    ];
             userTools.push(adminTools);
             userTools.push(<Menu.Item key='/signout' icon={<CloseSquareOutlined/>}><NavLink to="/signout">Sign
                 Out</NavLink></Menu.Item>);
