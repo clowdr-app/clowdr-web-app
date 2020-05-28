@@ -36,7 +36,7 @@ class VideoThumbnail extends React.Component {
 
         let modal = "";
         if (this.state.expanded) {
-            modal = <Modal visible={true} cancelText={"Close"} width={"100%"} height={"100%"}
+            modal = <Modal centered visible={true} cancelText={"Close"} width={"100%"} height={"100%"}
                         onCancel={this.toggleExpanded.bind(this)}
                         okButtonProps={{style: {display: 'none'}}}
             >

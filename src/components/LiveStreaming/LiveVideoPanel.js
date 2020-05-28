@@ -22,22 +22,23 @@ class LiveVideoPanel extends React.Component {
         const id1 = this.props.video.get("id1");
         var queryVars = Object.keys(LiveVideoSourceMappings[src1].vars);
         const video_url = LiveVideoSourceMappings[src1].url + id1 + '?' + queryVars.map(k => `${k}=${LiveVideoSourceMappings[src1].vars[k]}&`);
-        //`https://www.youtube.com/embed/${videoId}?autoplay=1`;
 
         const chat_url = `https://www.youtube.com/live_chat?v=${id1}&embed_domain=${process.env.REACT_APP_DOMAIN}`;
+
+        const q_url = `https://app.sli.do/event/nfvznbye`;
       
         return (
             <div className={"container"}>
                 <div className={"row"}>
                     <div className={"col-sm"}>
-                        <div className={"embed-responsive embed-responsive-16by9"}>
-                            <iframe title={this.props.title} className={"embed-responsive-item"} src={video_url}
+                        <div className={"embed-responsive-item"} >
+                            <iframe title={this.props.title} src={video_url} style={{"minWidth":"720px", "height":"450px"}}
                                     allowFullScreen/>
                         </div>
                     </div>
-                    <div className={"col col-lg-4"}>
-                        <div className={"embed-responsive "} style={{"height": "100%", "minWidth":"500px"}}>
-                            <iframe title={this.props.title} className={"embed-responsive-item"} src={chat_url}
+                    <div className={"col-sm"}>
+                        <div className={"embed-responsive-item"} >
+                            <iframe title={this.props.title} src={q_url} style={{"minWidth":"360px", "height":"720px"}}
                                     allowFullScreen/>
                         </div>
                     </div>
