@@ -13,7 +13,7 @@ const IconText = ({icon, text}) => (
     </Space>
 );
 
-const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook'];
+const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook', 'Bilibili'];
 
 class LiveVideos extends React.Component {
     constructor(props) {
@@ -38,6 +38,7 @@ class LiveVideos extends React.Component {
         video.set("id1", values.id1);
         video.set("src2", values.src2);
         video.set("id2", values.id2);
+        video.set("slido", values.slido);
         video.save().then((val) => {
             _this.setState({visible: false})
             _this.refreshList();
@@ -66,6 +67,7 @@ class LiveVideos extends React.Component {
                 id1: video.get("id1"),
                 src2: video.get("src2"),
                 id2: video.get("id2"),
+                slido: video.get("slido"),
             }
         });
     }
@@ -81,6 +83,7 @@ class LiveVideos extends React.Component {
                 video.set("id1", values.id1);
                 video.set("src2", values.src2);
                 video.set("id2", values.id2);
+                video.set("slido", values.slido);
                 video.save().then((val) => {
                     _this.setState({visible: false, editing: false});
                     _this.refreshList();
@@ -151,11 +154,12 @@ class LiveVideos extends React.Component {
                 render: (text,record) => <span>{record.get("id2")}</span>,
                 key: 'videoid2',
             },
-            // {
-            //     title: 'Address',
-            //     dataIndex: 'address',
-            //     key: 'address',
-            // },
+            {
+                title: 'Slido',
+                dataIndex: 'slido',
+                render: (text,record) => <span>{record.get("slido")}</span>,
+                key: 'slido',
+            },
             {
                 title: 'Action',
                 key: 'action',
@@ -279,7 +283,6 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
             >
                 <Form.Item
                     name="title"
-                    label="Title"
                     rules={[
                         {
                             required: true,
@@ -287,50 +290,65 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                         },
                     ]}
                 >
-                    <Input/>
+                    <Input placeholder="Title"/>
                 </Form.Item>
-                <Form.Item name="src1" label="Main live video source" rules={[
-                    {
-                        required: true,
-                        message: 'Please input the source of this live video'
-                    },
-                ]}>
-                    <Select onChange={onSelectPullDown1}>
-                        {LiveVideoSources.map(src => (
-                            <Option key={src}>{src}</Option>
-                        ))}
-                    </Select>
+                <Form.Item name="stream1">
+                    <Input.Group compact>
+                        <Form.Item name="src1" rules={[
+                            {
+                                required: true,
+                                message: 'Please input the source'
+                            },
+                        ]}>
+                            <Select placeholder="Main Source" style={{ width: '100%' }} onChange={onSelectPullDown1}>
+                                {LiveVideoSources.map(src => (
+                                    <Option key={src}>{src}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item name="id1" rules={[
+                            {
+                                required: true,
+                                message: 'Please input the ID'
+                            },
+                        ]}>
+                            <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
+                        </Form.Item>
+                    </Input.Group>
                 </Form.Item>
-                <Form.Item name="id1" label="Video ID in main source" rules={[
-                    {
-                        required: true,
-                        message: 'Please input the ID of this live video'
-                    },
-                ]}>
-                    <Input type="textarea"/>
+                <Form.Item name="stream2">
+                    <Input.Group compact>
+                        <Form.Item name="src2" >
+                            <Select placeholder="Alt. Source" style={{ width: '100%' }} onChange={onSelectPullDown2}>
+                                {LiveVideoSources.map(src => (
+                                    <Option key={src}>{src}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item name="id2" rules={[
+                            {
+                                required: false
+                            },
+                        ]}>
+                            <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
+                        </Form.Item>
+                    </Input.Group>
                 </Form.Item>
-                <Form.Item name="src2" label="Alternate source">
-                    <Select onChange={onSelectPullDown2}>
-                        {LiveVideoSources.map(src => (
-                            <Option key={src}>{src}</Option>
-                        ))}
-                    </Select>
+                <Form.Item name="slido">
+                    <Input placeholder="Sli.do link"/>
                 </Form.Item>
-                <Form.Item name="id2" label="Video ID in alternate source" rules={[
-                    {
-                        required: false
-                    },
-                ]}>
-                    <Input type="textarea"/>
-                </Form.Item>
-                <Form.Item name="startTime" label="Publish at">
-                    <DatePicker showTime/>
-                </Form.Item>
-                <Form.Item name="startTime" label="Remove from page at">
-                    <DatePicker showTime/>
-                </Form.Item>
-                <Form.Item name="objectId">
-                    <Input type="hidden" />
+                <Form.Item name="dates">
+                    <Input.Group compact>
+                        <Form.Item name="startTime" label="Publish at">
+                            <DatePicker showTime/>
+                        </Form.Item>
+                        <Form.Item name="startTime" label="Remove from page at">
+                            <DatePicker showTime/>
+                        </Form.Item>
+                        <Form.Item name="objectId">
+                            <Input type="hidden" />
+                        </Form.Item>
+                    </Input.Group>
                 </Form.Item>
             </Form>
         </Modal>
