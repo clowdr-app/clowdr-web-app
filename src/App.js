@@ -9,8 +9,12 @@ import {Affix, Layout} from 'antd';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
+import Program from "./components/Program";
+import SlackLogin from "./components/Slack/login"
+
 import {withAuthentication} from "./components/Session";
 
+import LiveStreaming from "./components/LiveStreaming";
 import Parse from "parse";
 
 
@@ -60,6 +64,10 @@ class App extends Component {
                             <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
                                 <div className="site-layout-background" style={{padding: 24}} >
                                     <Route exact path="/" component={Home}/>
+                                    <Route exact path="/live" component={LiveStreaming}/>
+                                    <Route exact path="/program" component={Program}/>
+                                    <Route exact path="/slack/login/:slackUser/:token" component={SlackLogin}/>
+
                                     {/*<Route exact path="/channelList" component={ChannelList}/>*/}
 
                                     <Route exact path="/account" component={Account}/>
@@ -81,7 +89,9 @@ class App extends Component {
                             </Layout>
                         </Layout>
                     </Layout>
-                    <div style={{position:
+                    <div style={{
+                        maxWidth: "700px",
+                        position:
                     "sticky", bottom: 0}}>
                         <Chat />
                     </div>

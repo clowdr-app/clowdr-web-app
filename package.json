@@ -56,7 +56,7 @@
     ]
   },
   "scripts": {
-    "server": "node-env-run server --exec \"nodemon --ignore './utils/'\" | pino-colada",
+    "server": "node-env-run server --exec \"nodemon --ignore './utils/' --ignore './slack-app/'\" | pino-colada",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
