@@ -8,6 +8,7 @@ class SlackLogin extends React.Component{
     componentDidMount() {
         let token = this.props.match.params.token;
         let slackUser = this.props.match.params.slackUser;
+        let destination = this.props.match.params.destination;
 
         let authData = {
             id: token,
@@ -17,6 +18,10 @@ class SlackLogin extends React.Component{
         user.linkWith('anonymous', { authData: authData }).then(()=>{
             this.props.refreshUser();
         });
+        //Was there a destination?
+        if(!destination || !destination.startsWith("/"))
+            destination="/";
+        this.props.history.push(destination);
 
     }
 
