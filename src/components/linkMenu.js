@@ -8,7 +8,9 @@ import {
     CalendarOutlined,
     CloseSquareOutlined,
     DesktopOutlined,
+    HomeOutlined,
     SmileOutlined,
+    ScheduleOutlined,
     TeamOutlined,
     ToolOutlined,
     UserOutlined,
@@ -43,6 +45,8 @@ class LinkMenu extends React.Component {
             </SubMenu>
             userTools =
                 [
+                    <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">
+                        Program</NavLink></Menu.Item>,
                     <Menu.Item key='/lobby' icon={<TeamOutlined/>}><NavLink to="/lobby">Lobby</NavLink></Menu.Item>,
                     <Menu.Item key='/account' icon={<UserOutlined/>}><NavLink to="/account">
                         My Account</NavLink></Menu.Item>
@@ -62,8 +66,11 @@ class LinkMenu extends React.Component {
         return <Menu theme={"dark"} mode={"inline"} selectedKeys={[this.props.location.pathname]}
                      mode="horizontal"
                      >
-            <Menu.Item key='/' icon={<VideoCameraOutlined/>}><NavLink to="/">Live
+            <Menu.Item key='/' icon={<HomeOutlined/>}><NavLink to="/">
+                Home</NavLink></Menu.Item>
+            <Menu.Item key='/live' icon={<VideoCameraOutlined/>}><NavLink to="/live">Live
                 Videos</NavLink></Menu.Item>
+
             <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Recorded Videos</NavLink></Menu.Item>
             {userTools}
         </Menu>;

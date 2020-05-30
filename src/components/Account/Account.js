@@ -170,7 +170,7 @@ class Account extends React.Component {
                         onChange={this.onChange}/>
                 </Form.Item>
                 <Form.Item label="Profile Photo">
-                    <Avatar user={this.state.user} refreshUser={this.props.refreshUser} />
+                    <Avatar user={this.state.user} refreshUser={this.props.auth.refreshUser} />
                 </Form.Item>
                 <Form.Item label="Tags">
                     <Select

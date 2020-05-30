@@ -1,10 +1,10 @@
 import LiveVideoPanel from "./LiveStreaming/LiveVideoPanel"
 import React, { Component } from 'react';
 
-import LiveStreaming from './LiveStreaming';
+import Landing from './Landing';
 class Home extends Component {
     render() {
-        return <LiveStreaming/>
+        return <Landing />
     }
 }
 

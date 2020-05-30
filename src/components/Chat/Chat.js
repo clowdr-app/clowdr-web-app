@@ -2,17 +2,14 @@ import React, {Component} from 'react';
 
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
-import { Picker } from 'emoji-mart'
 
 
 import {
-    Affix,
     Avatar,
     Badge,
     Button,
     Card,
     Divider,
-    Drawer,
     Form,
     Input,
     Layout,
@@ -27,17 +24,18 @@ import {
     Tag,
     Tooltip
 } from 'antd';
-import {ArrowUpOutlined, CloseOutlined, ToolOutlined, SmileOutlined} from '@ant-design/icons'
+import {ArrowUpOutlined, CloseOutlined, SmileOutlined, ToolOutlined, VideoCameraAddOutlined} from '@ant-design/icons'
 import {AuthUserContext} from "../Session";
 import ParseLiveContext from "../parse/context";
 import Meta from "antd/lib/card/Meta";
 import "./chat.css"
 import ReactMarkdown from "react-markdown";
+import * as ROUTES from "../../constants/routes";
+import {withRouter} from "react-router";
 
 const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
 const {Header, Content, Footer, Sider} = Layout;
-var moment = require('moment'); // require
 
 var moment = require('moment'); // require
 
@@ -344,8 +342,7 @@ class ChatContainer extends Component {
         if (idToken) {
             console.log("Got token: " + idToken)
             const data = fetch(
-                'https://a9ffd588.ngrok.io/chat/reactTo'
-                // 'http://localhost:3001/video/token'
+                `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/chat/reactTo`
                 , {
                     method: 'POST',
                     body: JSON.stringify({
@@ -369,7 +366,7 @@ class ChatContainer extends Component {
         if (idToken) {
             console.log("Got token: " + idToken)
             const data = fetch(
-                'https://a9ffd588.ngrok.io/chat/deleteRoom'
+                `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/chat/deleteRoom`
                 // 'http://localhost:3001/video/token'
                 , {
                     method: 'POST',
@@ -391,10 +388,8 @@ class ChatContainer extends Component {
         if (idToken) {
             console.log("Got token: " + idToken)
             const data = fetch(
-                'https://a9ffd588.ngrok.io/chat/updateRoom'
-                // 'http://localhost:3001/video/token'
-                , {
-                    method: 'POST',
+                `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/chat/updateRoom`
+                    ,{method: 'POST',
                     body: JSON.stringify({
                         identity: idToken,
                         room: this.state.editingChannel.sid,
@@ -431,9 +426,7 @@ class ChatContainer extends Component {
                     ret.push(lastMessage);
                 let authorID = message.author.substring(0, message.author.indexOf(":"));
                 if (!this.state.profiles[authorID]) {
-                    console.log("Fetch " +authorID)
                     this.props.auth.getUserProfile(authorID, (u) => {
-                        console.log(u);
                         _this.setState((prevState) => ({
                             profiles: {
                                 ...prevState.profiles,
@@ -457,6 +450,35 @@ class ChatContainer extends Component {
         return ret;
 
     }
+    joinVideoRoom(chatRoom){
+        console.log(chatRoom);
+        let idToken = this.state.user.getSessionToken();
+        let _this = this;
+        if (idToken) {
+            const data = fetch(
+                `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/getVideoRoomForChatRoom`
+                , {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        identity: idToken,
+                        name: chatRoom.uniqueName,
+                        chatSID: chatRoom.sid,
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(res => {
+                res.json().then((data) => {
+                    _this.props.history.push(ROUTES.VIDEO_ROOM+data.roomID);
+
+                    console.log(data.roomID);
+                })
+            })
+        } else {
+            console.log("Unable to get our token?");
+        }
+    }
+
     render() {
         var loginOrChat;
         let _this = this;
@@ -519,6 +541,12 @@ class ChatContainer extends Component {
                                                            <Badge status={isJoined ? "success" : "default"}/>
                                                                {item.uniqueName}</span>
                                                                     <div style={{float: 'right'}}>
+                                                                        <Popconfirm
+                                                                            title="You are about to join a video call. Are you ready?"
+                                                                            onConfirm={_this.joinVideoRoom.bind(_this, item)}
+                                                                            okText="Yes"
+                                                                            cancelText="No"
+                                                                        ><a href="#"><VideoCameraAddOutlined /></a></Popconfirm>
                                                                         <Badge
                                                            count={_this.state["unread" + item.uniqueName]}/>
                                                            </div></div>
@@ -553,7 +581,6 @@ class ChatContainer extends Component {
                                                   let addDate = this.lastDate && this.lastDate != moment(item.timestamp).day();
                                                   this.lastDate = moment(item.timestamp).day();
 
-                                                  console.log(item.Attributes)
                                                   authorName.split(" ").forEach((v=>initials+=v.substring(0,1)))
 
                                                   return (
@@ -807,5 +834,5 @@ const AuthConsumer = (props) => (
 
 );
 
-export default AuthConsumer
+export default withRouter(AuthConsumer)
 

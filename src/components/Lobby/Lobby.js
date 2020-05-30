@@ -152,6 +152,7 @@ class Lobby extends React.Component {
         room.set("title", values.title);
         room.set("creator", this.props.auth.user);
         room.set("description", values.description);
+        room.set("ephemeral",true);
         room.save().then((val) => {
             _this.props.history.push("/videoChat/" + room.id);
         }).catch(err => {
