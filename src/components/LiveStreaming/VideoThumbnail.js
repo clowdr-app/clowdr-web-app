@@ -1,9 +1,9 @@
 import React from 'react';
 import LiveVideoPanel from "./LiveVideoPanel";
 import {Modal, Card} from "antd";
-import App from '../../App';
 import GeoLocationContext from '../GeoLocation/context';
 import {videoURLFromData} from './utils'
+import LiveVideoWatchers from './VideoWatchers';
 
 const LiveVideoThumbnailSourceMappings = {
     YouTube : {
@@ -15,23 +15,36 @@ const LiveVideoThumbnailSourceMappings = {
 class VideoThumbnail extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {"expanded": false};
+        // props includes video
+        this.state = {
+            expanded: false
+        };
         console.log(this.props.geoloc);
     }
 
+
     toggleExpanded() {
-        this.setState({"expanded": !this.state.expanded});
+        this.setState({"expanded": !this.state.expanded}, () => {
+            if (this.state.expanded) { 
+                console.log("+1 " + this.props.video.get("title"));
+            }
+            else {
+                // This is a hack to compensate for the fact that the Modal is inside the
+                // Card. A click on onCancel of the modal also triggers onClick of the Card...
+                // this.props.video.decrement("watchers", 0.5);
+                console.log("-1 " + this.props.video.get("title"));
+            }
+            // this.props.video.save();
+        });
     }
 
     render() {
-        console.log("I'm in " + this.props.geoloc);
-
         const src1 = this.props.video.get("src1");
         const id1 = this.props.video.get("id1");
+        console.log('Rendering ' + src1 + "-" + id1);
+
         const video_url = videoURLFromData(src1, id1);
 
-        console.log(id1);
-        console.log(this.props + " " + this.context);
         if (this.props.geoloc)
             console.log(this.props.geoloc.country_code);
 
@@ -47,10 +60,10 @@ class VideoThumbnail extends React.Component {
             </Modal>
         }
         return <Card title={this.props.video.get('title')} size="small" extra={<a href="#">Watch</a>} onClick={this.toggleExpanded.bind(this)}>
-            <iframe title={this.props.title} src={video_url} allowFullScreen/>
-            {modal}
-
-        </Card>
+                <iframe title={this.props.title} src={video_url} allowFullScreen/>
+                {modal}
+                <LiveVideoWatchers video={this.props.video} expanded={this.state.expanded}/>
+            </Card>
     }
 }
 
