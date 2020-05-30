@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {Space, Spin} from 'antd';
-import VideoThumbnail from "./VideoThumbnail";
+import GeoLocationLiveVideoThumbnail from "./VideoThumbnail";
 import Parse from "parse";
 import ParseLiveContext from "../parse/context";
 
@@ -40,7 +40,7 @@ class LiveStreaming extends Component {
                 {this.state.videos.map((video) => {
                     return <div className={"space-align-block"} key={video.get("key")}>
                         <Space align={"center"}>
-                            <VideoThumbnail video={video}/>
+                            <GeoLocationLiveVideoThumbnail video={video}/>
                         </Space></div>
                 })}
             </div>
@@ -56,5 +56,6 @@ const ParseLiveConsuemr = (props) => (
             <LiveStreaming {...props} parseLive={value}/>
         )}
     </ParseLiveContext.Consumer>
-)
+);
+
 export default ParseLiveConsuemr;

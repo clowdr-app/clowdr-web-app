@@ -11,6 +11,7 @@
   display: flex;
   align-item: flex-start;
   flex-wrap: wrap;
+  background: #141414;
 }
 .space-align-block {
   margin: 8px 4px;

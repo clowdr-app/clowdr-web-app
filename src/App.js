@@ -17,17 +17,17 @@ import {withAuthentication} from "./components/Session";
 import LiveStreaming from "./components/LiveStreaming";
 import Parse from "parse";
 
-
 import Account from "./components/Account";
-import VideoChat from "./components/VideoChat";
+// import VideoChat from "./components/VideoChat";
 // import ScheduleList from "./components/Admin/Schedule";
 // import UsersList from "./components/Admin/Users";
 //
 import LiveVideosList from "./components/Admin/LiveVideos";
 import withParseLive from "./components/parse/withParseLive";
+import withGeoLocation from './components/GeoLocation/withGeoLocation';
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
-import Chat from "./components/Chat";
+//import Chat from "./components/Chat";
 import ContextualActiveUsers from "./components/Lobby/ContextualActiveusers";
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -35,8 +35,6 @@ Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 console.log("Initialized Parse " + Parse.serverURL + ' ' + process.env.REACT_APP_PARSE_APP_ID);
 
 const {Header, Content, Footer, Sider} = Layout;
-
-
 
 class App extends Component {
 
@@ -46,8 +44,6 @@ class App extends Component {
     }
 
     render() {
-
-
         return (
             <BrowserRouter basename={process.env.PUBLIC_URL}>
                 <div className="App">
@@ -71,7 +67,7 @@ class App extends Component {
                                     {/*<Route exact path="/channelList" component={ChannelList}/>*/}
 
                                     <Route exact path="/account" component={Account}/>
-                                    <Route exact path="/videoChat/:roomId" component={VideoChat}/>
+                                    {/* <Route exact path="/videoChat/:roomId" component={VideoChat}/> */}
                                     <Route exact path="/lobby" component={Lobby}/>
                                     <Route exact path="/signup" component={SignUp}/>
                                     <Route exact path="/signin" component={SignIn}/>
@@ -89,16 +85,14 @@ class App extends Component {
                             </Layout>
                         </Layout>
                     </Layout>
-                    <div style={{
-                        maxWidth: "700px",
-                        position:
+                    {/* <div style={{position:
                     "sticky", bottom: 0}}>
                         <Chat />
-                    </div>
+                    </div> */}
                 </div>
             </BrowserRouter>
         );
     }
 }
 
-export default withAuthentication(withParseLive(App));
+export default withAuthentication(withParseLive(withGeoLocation(App)));
