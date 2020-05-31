@@ -24,18 +24,7 @@ class VideoThumbnail extends React.Component {
 
 
     toggleExpanded() {
-        this.setState({"expanded": !this.state.expanded}, () => {
-            if (this.state.expanded) { 
-                console.log("+1 " + this.props.video.get("title"));
-            }
-            else {
-                // This is a hack to compensate for the fact that the Modal is inside the
-                // Card. A click on onCancel of the modal also triggers onClick of the Card...
-                // this.props.video.decrement("watchers", 0.5);
-                console.log("-1 " + this.props.video.get("title"));
-            }
-            // this.props.video.save();
-        });
+        this.setState({"expanded": !this.state.expanded});
     }
 
     render() {
