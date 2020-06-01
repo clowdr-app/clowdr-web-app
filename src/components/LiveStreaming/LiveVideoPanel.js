@@ -1,5 +1,6 @@
 import React from 'react';
 import {videoURLFromData} from './utils'
+import LiveVideoWatchers from './VideoWatchers';
 
 class LiveVideoPanel extends React.Component {
     constructor(props) {
@@ -20,9 +21,18 @@ class LiveVideoPanel extends React.Component {
             <div className={"container"}>
                 <div className={"row"}>
                     <div className={"col-sm"}>
-                        <div className={"embed-responsive-item"} >
-                            <iframe title={this.props.title} src={video_url} style={{"minWidth":"720px", "height":"450px"}}
-                                    allowFullScreen/>
+                        <div className={"container"}>
+                            <div className={"row"}>
+                                <div className={"embed-responsive-item"} >
+                                    <iframe title={this.props.title} src={video_url} style={{"minWidth":"720px", "height":"450px"}}
+                                            allowFullScreen/>
+                                </div>
+                            </div>
+                            <div className={"row"}>
+                                <div className={"embed-responsive-item"}>
+                                    <LiveVideoWatchers video={this.props.video} expanded={false}/>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div className={"col-sm"}>

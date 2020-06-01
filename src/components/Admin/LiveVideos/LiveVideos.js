@@ -31,6 +31,7 @@ class LiveVideos extends React.Component {
 
     onCreate(values) {
         var _this = this;
+        // Create the Video record
         var Video = Parse.Object.extend("LiveVideo");
         var video = new Video();
         video.set("title", values.title);
@@ -42,17 +43,34 @@ class LiveVideos extends React.Component {
         video.save().then((val) => {
             _this.setState({visible: false})
             _this.refreshList();
+            _this.createWatchers(video);
         }).catch(err => {
             console.log(err);
         });
     }
 
+    createWatchers(video) {
+        // Create the Video Watchers record
+        const VideoWatchers = Parse.Object.extend("LiveVideoWatchers");
+        const name = video.get("title");
+        const count = new VideoWatchers();
+        console.log("trying to create watchers for" + name);
+        count.set("name", name);
+        count.set("count", 0);
+        count.save().catch(err => {
+            console.log(err);
+        });
+
+
+    }
+
     onDelete(value) {
-        console.log("Deleting " + value + " " + value.id1);
+        console.log("Deleting " + value + " " + value.get("id1"));
+        // Delete the watchers first
+        
         value.destroy().then(()=>{
             this.refreshList();
         });
-        // this.videoRef.child(key).remove();
     }
 
     onEdit(video) {
@@ -115,7 +133,7 @@ class LiveVideos extends React.Component {
             this.setState({
                 videos: res,
                 loading: false
-            })
+            });
         })
     }
     componentWillUnmount() {
