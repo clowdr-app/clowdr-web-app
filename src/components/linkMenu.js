@@ -33,16 +33,18 @@ class LinkMenu extends React.Component {
     render() {
         let userTools = [];
         let adminTools = "";
-        if (this.props.user) {
-            adminTools = <SubMenu key="/admin" title={<span><ToolOutlined/><span>Administration</span></span>}>
-                <Menu.Item key='/admin/liveVideos' icon={<VideoCameraAddOutlined/>}><NavLink to="/admin/liveVideos">
-                    Live Videos</NavLink></Menu.Item>
-                <Menu.Item key='/admin/schedule' icon={<CalendarOutlined/>}><NavLink to="/admin/schedule">
-                    Schedule</NavLink></Menu.Item>
+        if (this.props.authContext.user) {
+            if(this.props.authContext.isAdmin) {
+                adminTools = <SubMenu key="/admin" title={<span><ToolOutlined/><span>Administration</span></span>}>
+                    <Menu.Item key='/admin/liveVideos' icon={<VideoCameraAddOutlined/>}><NavLink to="/admin/liveVideos">
+                        Live Videos</NavLink></Menu.Item>
+                    <Menu.Item key='/admin/schedule' icon={<CalendarOutlined/>}><NavLink to="/admin/schedule">
+                        Schedule</NavLink></Menu.Item>
 
-                <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
-                    Users</NavLink></Menu.Item>
-            </SubMenu>
+                    <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
+                        Users</NavLink></Menu.Item>
+                </SubMenu>
+            }
             userTools =
                 [
                     <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">
@@ -80,7 +82,7 @@ let RouteredMenu = withRouter(LinkMenu);
 const MenuWithAuth = () => (
     <AuthUserContext.Consumer>
         {value => (
-            <RouteredMenu user={value.user} refreshUser={value.refreshUser}/>
+            <RouteredMenu authContext={value} />
         )}
     </AuthUserContext.Consumer>
 );

@@ -1,8 +1,11 @@
-import App from "../../twilio-video-app-react/embed.tsx"
 import React, {Component} from 'react';
 import * as ROUTES from "../../constants/routes";
+import theme from "./theme";
+import {MuiThemeProvider} from "@material-ui/core/styles";
+
 import ParseLiveContext from "../parse/context";
 import {AuthUserContext} from "../Session";
+import EmbeddedVideoApp from "clowdr-video-frontend"
 
 class EmbeddedVideoWrapper extends Component {
     constructor(props) {
@@ -15,6 +18,7 @@ class EmbeddedVideoWrapper extends Component {
         if (!this.props.match) {
             return;
         }
+        //TODO test this
         let roomID = this.props.match.params.roomId;
         this.setState({loadingMeeting: 'true'})
         this.props.authContext.refreshUser(
@@ -29,7 +33,8 @@ class EmbeddedVideoWrapper extends Component {
                             method: 'POST',
                             body: JSON.stringify({
                                 room: roomID,
-                                identity: idToken
+                                identity: idToken,
+                                conf: this.props.authContext.currentConference.get("conferenceName")
                             }),
                             headers: {
                                 'Content-Type': 'application/json'
@@ -73,12 +78,16 @@ class EmbeddedVideoWrapper extends Component {
         if (!this.state.meetingName || !this.state.token) {
             return <div>Loading...</div>
         }
-        return <div>
-            <App meeting={this.state.meetingName} meetingID={this.state.meeting} token={this.state.token}
-                 onDisconnect={this.handleLogout.bind(this)}/>
-            {/*<OldVideoChat roomName={this.state.meeting} token={this.state.token} handleLogout={this.handleLogout} />*/}
-
-        </div>
+        return (
+            <MuiThemeProvider theme={theme}>
+                <EmbeddedVideoApp.AppStateProvider meeting={this.state.meetingName} token={this.state.token}
+                                                   onDisconnect={this.handleLogout.bind(this)}>
+                    <div className={"videoEmbed"}>
+                        <EmbeddedVideoApp.VideoEmbed/>
+                    </div>
+                </EmbeddedVideoApp.AppStateProvider>
+            </MuiThemeProvider>
+        )
     }
 }
 

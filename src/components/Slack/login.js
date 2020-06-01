@@ -9,6 +9,7 @@ class SlackLogin extends React.Component{
         let token = this.props.match.params.token;
         let slackUser = this.props.match.params.slackUser;
         let destination = this.props.match.params.destination;
+        console.log(this.props.match.params)
 
         let authData = {
             id: token,
@@ -19,9 +20,9 @@ class SlackLogin extends React.Component{
             this.props.refreshUser();
         });
         //Was there a destination?
-        if(!destination || !destination.startsWith("/"))
-            destination="/";
-        this.props.history.push(destination);
+        // if(!destination || !destination.startsWith("/"))
+            // destination="/";
+        // this.props.history.push(destination);
 
     }
 

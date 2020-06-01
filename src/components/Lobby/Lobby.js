@@ -1,25 +1,9 @@
 import React from 'react';
-import {
-    Avatar,
-    Button,
-    Card,
-    Divider,
-    Form,
-    Input,
-    Layout,
-    List,
-    message,
-    Modal,
-    Popconfirm,
-    Radio,
-    Space,
-    Spin
-} from "antd";
-import ActiveUsers from "./ActiveUsers";
-import InfiniteScroll from "react-infinite-scroller";
+import {Button, Card, Divider, Form, Input, Layout, List, message, Modal, Popconfirm, Space, Spin } from "antd";
 import {AuthUserContext} from "../Session";
 import ParseLiveContext from "../parse/context";
 import Parse from "parse";
+import NewRoomForm from "./NewRoomForm";
 
 const { Content, Footer, Sider} = Layout;
 
@@ -57,7 +41,8 @@ class MeetingSummary extends React.Component {
             message.error('Sorry, you can not join the demo meetings. Try to create a new one!');
 
         } else {
-            this.props.history.push("/videoChat/" + meeting.id);
+            console.log(meeting.get("conference"))
+            this.props.history.push("/video/" + encodeURI(meeting.get("conference").get("conferenceName"))+ '/'+encodeURI(meeting.get("title")));
         }
     }
 
@@ -82,9 +67,9 @@ class MeetingSummary extends React.Component {
                     renderItem={user => (
                         <List.Item key={user.id}>
                             <List.Item.Meta
-                                avatar={
-                                    <Avatar src={(user.get("profilePhoto") ? user.get("profilePhoto").url() : "")} />
-                                }
+                                // avatar={
+                                //     <Avatar src={(user.get("profilePhoto") ? user.get("profilePhoto").url() : "")} />
+                                // }
                                 title={user.get('displayname')}
                             />
                         </List.Item>
@@ -110,33 +95,44 @@ class Lobby extends React.Component {
     }
 
     componentDidMount() {
-        let query = new Parse.Query("BreakoutRoom");
-        query.include(["members.displayname","members.profilePhoto"]);
-        query.addDescending("createdAt");
-        query.find().then(res => {
-            this.setState({
-                rooms: res,
-                loading: false
-            });
-            this.sub = this.props.parseLive.subscribe(query);
-            this.sub.on('create', newItem => {
-                this.setState((prevState) => ({
-                    rooms: [newItem, ...prevState.rooms]
-                }))
-            })
-            this.sub.on('update', newItem => {
-                this.setState((prevState) => ({
-                    rooms: prevState.rooms.map(room => room.id == newItem.id ? newItem : room)
-                }))
-            })
-            this.sub.on("delete", vid => {
-                this.setState((prevState) => ({
-                    rooms: prevState.rooms.filter((v) => (
-                        v.id != vid.id
-                    ))
-                }));
-            });
-        })
+        this.props.auth.refreshUser((user)=>{
+           if(user){
+               if(this.sub){
+                   this.sub.unsubscribe();
+                   this.sub = null;
+               }
+               let query = new Parse.Query("BreakoutRoom");
+               // query.include(["members.displayname","members.profilePhoto"]);
+               query.addDescending("createdAt");
+               query.equalTo("conference", this.props.auth.currentConference);
+
+               query.find().then(res => {
+                   this.setState({
+                       rooms: res,
+                       loading: false
+                   });
+                   this.sub = this.props.parseLive.subscribe(query);
+                   this.sub.on('create', newItem => {
+                       this.setState((prevState) => ({
+                           rooms: [newItem, ...prevState.rooms]
+                       }))
+                   })
+                   this.sub.on('update', newItem => {
+                       this.setState((prevState) => ({
+                           rooms: prevState.rooms.map(room => room.id == newItem.id ? newItem : room)
+                       }))
+                   })
+                   this.sub.on("delete", vid => {
+                       this.setState((prevState) => ({
+                           rooms: prevState.rooms.filter((v) => (
+                               v.id != vid.id
+                           ))
+                       }));
+                   });
+               })
+           }
+        });
+
     }
 
     componentWillUnmount() {
@@ -145,19 +141,44 @@ class Lobby extends React.Component {
         }
     }
 
-    onCreate(values) {
-        var _this = this;
-        let Room =Parse.Object.extend("BreakoutRoom");
-        let room = new Room();
-        room.set("title", values.title);
-        room.set("creator", this.props.auth.user);
-        room.set("description", values.description);
-        room.set("ephemeral",true);
-        room.save().then((val) => {
-            _this.props.history.push("/videoChat/" + room.id);
-        }).catch(err => {
-            console.log(err);
-        });
+    async onCreate(values) {
+        let user = this.props.auth.user;
+        let idToken = user.getSessionToken();
+        const data = await fetch(
+            `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/new`
+
+            // 'http://localhost:3001/video/token'
+            , {
+                method: 'POST',
+                body: JSON.stringify({
+                    room: values.title,
+                    identity: idToken,
+                    slackTeam: this.props.auth.currentConference.get("slackWorkspace"),
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        let res = await data.json();
+        if(res.status == "error"){
+            message.error(res.message);
+        }
+        else{
+            this.props.history.push("/video/"+encodeURI(this.props.auth.currentConference.get("conferenceName"))+"/"+encodeURI(values.title));
+        }
+        // var _this = this;
+        // let Room =Parse.Object.extend("BreakoutRoom");
+        // let room = new Room();
+        // room.set("title", values.title);
+        // room.set("creator", this.props.auth.user);
+        // // room.set("description", values.description);
+        // // room.set("ephemeral",true);
+        // room.set("conference", this.props.auth.currentConference);
+        // room.save().then((val) => {
+        //     _this.props.history.push("/video/" + room.id);
+        // }).catch(err => {
+        //     console.log(err);
+        // });
     }
 
     setVisible() {
@@ -194,26 +215,21 @@ class Lobby extends React.Component {
                         allows you to create a small group video chat, and switch between group chats. Take
                         a look at the breakout rooms that participants have formed so far and join one, or create a new
                         one!<br/>
-                        <Button
-                            type="primary"
-                            onClick={() => {
-                                this.setVisible(true);
-                            }}
-                        >
-                            New breakout room
-                        </Button>
+
+                        <NewRoomForm />
+
                     </Card>
                     <Divider/>
                     <div style={{maxHeight: "80vh", overflow: 'auto', border: '1px sold #FAFAFA'}}>
-                        <InfiniteScroll
-                            pageStart={0}
-                            // hasMore={Object.keys(this.state.activeUsers).length >= 20}
-                            hasMore={this.hasMoreRoomsToShow()}
-                            loadMore={this.displayMore.bind(this)}
-                            useWindow={false}
-                            initialLoad={false}
-                            loader={<Spin>Loading...</Spin>}
-                        >
+                        {/*<InfiniteScroll*/}
+                        {/*    pageStart={0}*/}
+                        {/*    // hasMore={Object.keys(this.state.activeUsers).length >= 20}*/}
+                        {/*    hasMore={this.hasMoreRoomsToShow()}*/}
+                        {/*    loadMore={this.displayMore.bind(this)}*/}
+                        {/*    useWindow={false}*/}
+                        {/*    initialLoad={false}*/}
+                        {/*    loader={<Spin>Loading...</Spin>}*/}
+                        {/*>*/}
                             <Space style={{
                                 maxWidth: '80vw',
                                 display: "flex",
@@ -225,15 +241,15 @@ class Lobby extends React.Component {
                                         <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} />
                                     ))}
                             </Space>
-                        </InfiniteScroll>
+                        {/*</InfiniteScroll>*/}
                     </div>
-                    <CollectionCreateForm
-                        visible={this.state.visible}
-                        onCreate={this.onCreate.bind(this)}
-                        onCancel={() => {
-                            this.setVisible(false);
-                        }}
-                    />
+                    {/*<CollectionCreateForm*/}
+                    {/*    visible={this.state.visible}*/}
+                    {/*    onCreate={this.onCreate.bind(this)}*/}
+                    {/*    onCancel={() => {*/}
+                    {/*        this.setVisible(false);*/}
+                    {/*    }}*/}
+                    {/*/>*/}
                 </Content>
                 {/*<Sider width="220px">*/}
                     {/*<ActiveUsers parseLive={this.props.parseLive} />*/}
@@ -251,77 +267,6 @@ class Lobby extends React.Component {
     }
 }
 
-const CollectionCreateForm = ({visible, onCreate, onCancel}) => {
-    const [form] = Form.useForm();
-    return (
-        <Modal
-            visible={visible}
-            title="Create a new breakout room"
-            // okText="Create"
-            footer={[
-                <Button form="myForm" key="submit" type="primary" htmlType="submit">
-                    Submit
-                </Button>
-            ]}
-            cancelText="Cancel"
-            onCancel={onCancel}
-            // onOk={() => {
-            //     form
-            //         .validateFields()
-            //         .then(values => {
-            //             form.resetFields();
-            //             onCreate(values);
-            //         })
-            //         .catch(info => {
-            //             console.log('Validate Failed:', info);
-            //         });
-            // }}
-        >
-            <Form
-                form={form}
-                layout="vertical"
-                name="form_in_modal"
-                id="myForm"
-                initialValues={{
-                    modifier: 'public',
-                }}
-                onFinish={() => {
-                    form
-                        .validateFields()
-                        .then(values => {
-                            form.resetFields();
-                            onCreate(values);
-                        })
-                        .catch(info => {
-                            console.log('Validate Failed:', info);
-                        });
-                }}
-            >
-                <Form.Item
-                    name="title"
-                    label="Title"
-                    rules={[
-                        {
-                            required: true,
-                            message: 'Please input the title of the breakout room!',
-                        },
-                    ]}
-                >
-                    <Input/>
-                </Form.Item>
-                <Form.Item name="description" label="Description">
-                    <Input type="textarea"/>
-                </Form.Item>
-                <Form.Item name="modifier" className="collection-create-form_last-form-item">
-                    <Radio.Group>
-                        <Radio value="public">Public</Radio>
-                        <Radio value="private">Private</Radio>
-                    </Radio.Group>
-                </Form.Item>
-            </Form>
-        </Modal>
-    );
-};
 const AuthConsumer = (props) => (
     <ParseLiveContext.Consumer>
         {parseValue => (

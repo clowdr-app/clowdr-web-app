@@ -28,6 +28,14 @@ class SignUp extends Component {
         super(props);
 
         this.state = {...INITIAL_STATE};
+
+    }
+
+    async componentDidMount() {
+        let user = await Parse.User.currentAsync();
+        if(user){
+            Parse.User.logOut();
+        }
     }
 
     onSubmit = event => {

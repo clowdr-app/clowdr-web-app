@@ -1,16 +1,17 @@
 import React, {Component} from 'react';
-import {BrowserRouter, Route} from 'react-router-dom';
+import {BrowserRouter, NavLink, Route} from 'react-router-dom';
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
 import SignUp from "./components/SignUp"
 import SignIn from "./components/SignIn"
-import {Affix, Layout} from 'antd';
+import {Layout} from 'antd';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
 import Program from "./components/Program";
-import SlackLogin from "./components/Slack/login"
+import VideoRoom from "./components/VideoChat/VideoRoom"
+import SlackToVideo from "./components/Slack/slackToVideo"
 
 import {withAuthentication} from "./components/Session";
 
@@ -18,7 +19,7 @@ import LiveStreaming from "./components/LiveStreaming";
 import Parse from "parse";
 
 import Account from "./components/Account";
-// import VideoChat from "./components/VideoChat";
+import VideoChat from "./components/VideoChat";
 // import ScheduleList from "./components/Admin/Schedule";
 // import UsersList from "./components/Admin/Users";
 //
@@ -29,6 +30,7 @@ import withGeoLocation from './components/GeoLocation/withGeoLocation';
 // import ChannelList from "./components/ChannelList";
 //import Chat from "./components/Chat";
 import ContextualActiveUsers from "./components/Lobby/ContextualActiveusers";
+import GenericHeader from "./components/GenericHeader";
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
@@ -43,44 +45,81 @@ class App extends Component {
         // this.state ={'activeKey'=routing}
     }
 
+    isSlackAuthOnly() {
+        return process.env.REACT_APP_IS_MINIMAL_UI;
+    }
+
+    siteHeader() {
+        if (this.isSlackAuthOnly()) {
+            return <GenericHeader />
+        } else {
+            return <Header className="site-layout-background" style={{"height": "140px"}}>
+                <img src={require('./' + process.env.REACT_APP_BACKGROUND_IMAGE)} width="800px" className="App-logo"
+                     alt="logo"/>
+            </Header>
+        }
+    }
+
+    navBar() {
+        if (this.isSlackAuthOnly()) {
+            return <div></div>
+        }
+        return <Header><LinkMenu/></Header>
+
+    }
+
+    routes() {
+        if (this.isSlackAuthOnly()) {
+            return <div><Route exact path="/" component={Lobby}/>
+                <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
+                <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
+                <Route exact path="/signout" component={SignOut}/>
+                <Route exact path="/lobby" component={Lobby}/>
+
+            </div>
+
+        }
+       return (<div>
+           <Route exact path="/" component={Home}/>
+           <Route exact path="/live" component={LiveStreaming}/>
+           <Route exact path="/program" component={Program}/>
+           <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
+           <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
+
+
+           {/*<Route exact path="/channelList" component={ChannelList}/>*/}
+
+           <Route exact path="/account" component={Account}/>
+           <Route exact path="/videoChat/:roomId" component={VideoChat}/>
+           <Route exact path="/lobby" component={Lobby}/>
+           <Route exact path="/signup" component={SignUp}/>
+           <Route exact path="/signin" component={SignIn}/>
+           <Route exact path="/signout" component={SignOut}/>
+
+           {/*<Route exact path='/admin/schedule' component={withAuthentication(ScheduleList)} />*/}
+           {/*<Route exact path='/admin/users' component={withAuthentication(UsersList)} />*/}
+           {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
+           <Route exact path='/admin/livevideos' component={LiveVideosList}/>
+       </div>)
+    }
+
     render() {
         return (
             <BrowserRouter basename={process.env.PUBLIC_URL}>
                 <div className="App">
                     <Layout className="site-layout">
-                        <Header className="site-layout-background" style={{"height": "140px"}}>
-                            <img src={require('./icse2020-logo.png')} width="800px" className="App-logo" alt="logo"/>
-                        </Header>
+                        {this.siteHeader()}
                         <Layout>
-                            <Header>
-                                <LinkMenu/>
-                            </Header>
+                                {this.navBar()}
                             <Layout>
 
-                            <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
-                                <div className="site-layout-background" style={{padding: 24}} >
-                                    <Route exact path="/" component={Home}/>
-                                    <Route exact path="/live" component={LiveStreaming}/>
-                                    <Route exact path="/program" component={Program}/>
-                                    <Route exact path="/slack/login/:slackUser/:token" component={SlackLogin}/>
-
-                                    {/*<Route exact path="/channelList" component={ChannelList}/>*/}
-
-                                    <Route exact path="/account" component={Account}/>
-                                    {/* <Route exact path="/videoChat/:roomId" component={VideoChat}/> */}
-                                    <Route exact path="/lobby" component={Lobby}/>
-                                    <Route exact path="/signup" component={SignUp}/>
-                                    <Route exact path="/signin" component={SignIn}/>
-                                    <Route exact path="/signout" component={SignOut}/>
-
-                                    {/*<Route exact path='/admin/schedule' component={withAuthentication(ScheduleList)} />*/}
-                                    {/*<Route exact path='/admin/users' component={withAuthentication(UsersList)} />*/}
-                                    {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
-                                    <Route exact path='/admin/livevideos' component={LiveVideosList} />
-                                </div>
-                            </Content>
-                                <Sider style={{width:"250px"}}>
-                                    <ContextualActiveUsers />
+                                <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
+                                    <div className="site-layout-background" style={{padding: 24}}>
+                                        {this.routes()}
+                                    </div>
+                                </Content>
+                                <Sider style={{width: "250px"}}>
+                                    <ContextualActiveUsers/>
                                 </Sider>
                             </Layout>
                         </Layout>
