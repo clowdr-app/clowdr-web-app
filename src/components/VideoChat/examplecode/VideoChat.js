@@ -18,8 +18,7 @@ const VideoChat = () => {
   const handleSubmit = useCallback(
     async event => {
       event.preventDefault();
-      console.log("Fetching");
-      const data = await fetch('http://localhost:3001/video/token', {
+      const data = await fetch(`${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`, {
         method: 'POST',
         body: JSON.stringify({
           identity: username,
