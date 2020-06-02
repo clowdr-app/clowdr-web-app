@@ -158,7 +158,7 @@ const withAuthentication = Component => {
                             conf = await q.get(confID);
                         }
                         console.log("Found: " );
-                        console.log(conf.get("conferenceName"))
+//                        console.log(conf.get("conferenceName"))
                         if (!conf) {
                             for (let role of roles) {
                                 if (role.get("name") == "ClowdrSysAdmin")
