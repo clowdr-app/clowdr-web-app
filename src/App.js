@@ -43,10 +43,13 @@ class App extends Component {
     constructor(props) {
         super(props);
         // this.state ={'activeKey'=routing}
+        this.state ={
+            conference: null
+        }
     }
 
     isSlackAuthOnly() {
-        return process.env.REACT_APP_IS_MINIMAL_UI;
+        return process.env.REACT_APP_IS_MINIMAL_UI == "true";
     }
 
     siteHeader() {
@@ -66,6 +69,21 @@ class App extends Component {
         }
         return <Header><LinkMenu/></Header>
 
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!prevProps.authContext || prevProps.authContext.currentConference != this.props.authContext.currentConference){
+            this.refreshConferenceInformation();
+        }
+    }
+
+    componentDidMount() {
+        if(this.props.authContext.currentConference)
+            this.refreshConferenceInformation();
+    }
+
+    refreshConferenceInformation(){
+        this.setState({conference: this.props.authContext.currentConference});
     }
 
     routes() {

@@ -51,7 +51,11 @@ class LinkMenu extends React.Component {
                         Program</NavLink></Menu.Item>,
                     <Menu.Item key='/lobby' icon={<TeamOutlined/>}><NavLink to="/lobby">Lobby</NavLink></Menu.Item>,
                     <Menu.Item key='/account' icon={<UserOutlined/>}><NavLink to="/account">
-                        My Account</NavLink></Menu.Item>
+                        My Account</NavLink></Menu.Item>,
+                    <SubMenu key="conf-select" title="Select Conference">
+                        <Menu.Item key="ICSE 2020" onClick={this.props.authContext.setActiveConferenceByName.bind(this,"ICSE 2020")}>ICSE 2020</Menu.Item>
+                        <Menu.Item key="PLDI 2020" onClick={this.props.authContext.setActiveConferenceByName.bind(this,"PLDI 2020")}>PLDI 2020</Menu.Item>
+                    </SubMenu>
                     ];
             userTools.push(adminTools);
             userTools.push(<Menu.Item key='/signout' icon={<CloseSquareOutlined/>}><NavLink to="/signout">Sign

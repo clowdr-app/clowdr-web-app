@@ -3,6 +3,7 @@ import React from 'react';
 import AuthUserContext from './context';
 import Parse from "parse";
 import Chat from "twilio-chat";
+import {Spin} from "antd";
 
 const withAuthentication = Component => {
     class WithAuthentication extends React.Component {
@@ -18,6 +19,7 @@ const withAuthentication = Component => {
             this.channelChangeListeners = [];
             this.state = {
                 user: null,
+                loading: true,
                 refreshUser: this.refreshUser.bind(this),
                 initChatClient: this.initChatClient.bind(this),
                 getUserProfile: this.getUserProfile.bind(this),
@@ -27,6 +29,7 @@ const withAuthentication = Component => {
                 addLiveChannelListener: this.addLiveChannelListener.bind(this),
                 removeLiveChannelListener: this.removeLiveChannelListener.bind(this),
                 setActiveConferenceBySlack: this.setActiveConferenceBySlack.bind(this),
+                setActiveConferenceByName: this.setActiveConferenceByName.bind(this),
                 setActiveRoom: this.setActiveRoom.bind(this),
                 teamID: null,
                 currentConference: null,
@@ -38,6 +41,17 @@ const withAuthentication = Component => {
             this.setState({activeRoom: room});
         }
 
+        async setActiveConferenceByName(confName){
+            let confQ = new Parse.Query("ClowdrInstance");
+            confQ.equalTo("conferenceName", confName);
+            let res = await confQ.first();
+            let session = await Parse.Session.current();
+            session.set("currentConference", res);
+            session.save();
+            this.setState({currentConference: res});
+
+            return res;
+        }
         async setActiveConferenceBySlack(teamId) {
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("slackWorkspace", teamId);
@@ -49,6 +63,7 @@ const withAuthentication = Component => {
 
             return res;
         }
+
         // activeConference(teamID){
         //     if(teamID){
         //         this.setState({teamID: teamID})
@@ -73,7 +88,7 @@ const withAuthentication = Component => {
                 _this.liveChannel = chan;
                 try {
                     let room = await chan.join();
-                }catch(err){
+                } catch (err) {
                     //allready joined
                 }
                 this.channelChangeListeners.forEach((cb) => cb(chan));
@@ -100,7 +115,7 @@ const withAuthentication = Component => {
                 return undefined;
             if (!this.chatClient) {
                 console.log("Created a new chat client");
-                this.chatClient =await Chat.create(token);
+                this.chatClient = await Chat.create(token);
                 // await this.chatClient.initialize();
                 this.chatWaiters.forEach((p) => p(this.chatClient));
                 this.setLiveChannelByName("general");
@@ -110,10 +125,9 @@ const withAuthentication = Component => {
 
         getUserProfile(authorID, callback) {
             if (!this.profiles[authorID]) {
-                if(this.loadingProfiles[authorID])
-                {
+                if (this.loadingProfiles[authorID]) {
                     this.loadingProfiles[authorID].push(callback);
-                }else {
+                } else {
                     this.loadingProfiles[authorID] = [callback];
                     const query = new Parse.Query(Parse.User);
                     let _this = this;
@@ -126,7 +140,9 @@ const withAuthentication = Component => {
                 }
             }
             if (this.profiles[authorID]) {
-                setTimeout(()=>{callback(this.profiles[authorID])}, 0);
+                setTimeout(() => {
+                    callback(this.profiles[authorID])
+                }, 0);
             }
         }
 
@@ -146,19 +162,17 @@ const withAuthentication = Component => {
                         }
                         let session = await Parse.Session.current();
                         const roleQuery = new Parse.Query(Parse.Role);
-                        roleQuery.equalTo("users",userWithRelations);
+                        roleQuery.equalTo("users", userWithRelations);
 
                         const roles = await roleQuery.find();
-                        let isAdmin  =false;
+                        let isAdmin = false;
                         let validConferences = [];
                         let conf = _this.state.currentConference;
-                        if(session.get("currentConference")){
+                        if (session.get("currentConference")) {
                             let confID = session.get("currentConference").id;
                             let q = new Parse.Query("ClowdrInstance");
                             conf = await q.get(confID);
                         }
-                        console.log("Found: " );
-                        console.log(conf.get("conferenceName"))
                         if (!conf) {
                             for (let role of roles) {
                                 if (role.get("name") == "ClowdrSysAdmin")
@@ -176,7 +190,8 @@ const withAuthentication = Component => {
                             teamID: session.get("activeTeam"),
                             isAdmin: isAdmin,
                             validConferences: validConferences,
-                            currentConference: conf
+                            currentConference: conf,
+                            loading: false
                         });
 
                         if (callback) {
@@ -193,12 +208,13 @@ const withAuthentication = Component => {
                         _this.isLoggedIn = false;
                         _this.authCallbacks.forEach((cb) => (cb(null)));
                     }
-                    if(_this.chatClient){
+                    if (_this.chatClient) {
                         await _this.chatClient.shutdown();
                         _this.chatClient = null;
                     }
                     _this.setState({
-                        user: null
+                        user: null,
+                        loading: false
                     })
                     if (callback) {
                         _this.authCallbacks.push(callback);
@@ -219,12 +235,12 @@ const withAuthentication = Component => {
         }
 
         render() {
-            // if(this.state.loading)
-            //     return <div>    <Spin size="large" />
-            //     </div>
+            if (this.state.loading)
+                return <div><Spin size="large"/>
+                </div>
             return (
                 <AuthUserContext.Provider value={this.state}>
-                    <Component {...this.props}  />
+                    <Component {...this.props}  authContext={this.state} />
                 </AuthUserContext.Provider>
             );
         }
