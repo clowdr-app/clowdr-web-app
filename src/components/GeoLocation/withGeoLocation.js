@@ -2,7 +2,7 @@ import React from 'react';
 
 import GeoLocationContext from './context';
 
-const GEOIP_API = 'http://geolocation-db.com/json/redux';
+const GEOIP_API = 'https://geolocation-db.com/json/redux';
 var geoLocation = undefined;
 
 const withGeoLocation = Component => {
