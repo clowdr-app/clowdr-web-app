@@ -53,8 +53,9 @@ class LinkMenu extends React.Component {
                     <Menu.Item key='/account' icon={<UserOutlined/>}><NavLink to="/account">
                         My Account</NavLink></Menu.Item>,
                     <SubMenu key="conf-select" title="Select Conference">
-                        <Menu.Item key="ICSE 2020" onClick={this.props.authContext.setActiveConferenceByName.bind(this,"ICSE 2020")}>ICSE 2020</Menu.Item>
-                        <Menu.Item key="PLDI 2020" onClick={this.props.authContext.setActiveConferenceByName.bind(this,"PLDI 2020")}>PLDI 2020</Menu.Item>
+                        {
+                            this.props.authContext.validConferences.map((conf)=><Menu.Item key={conf.id} onClick={this.props.authContext.helpers.setActiveConference.bind(this,conf)}>{conf.get("conferenceName")}</Menu.Item>)
+                        }
                     </SubMenu>
                     ];
             userTools.push(adminTools);

@@ -257,7 +257,7 @@ class LiveVideos extends React.Component {
 const ParseLiveConsuemr = (props) => (
     <ParseLiveContext.Consumer>
         {value => (
-            <LiveVideos {...props} parseLive={value}/>
+            <LiveVideos {...props} parseLive={value.client}/>
         )}
     </ParseLiveContext.Consumer>
 )

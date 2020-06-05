@@ -11,7 +11,7 @@
     "@testing-library/user-event": "^7.2.1",
     "@types/react-router-dom": "^5.1.3",
     "antd": "^4.2.4",
-    "clowdr-video-frontend": "0.0.6",
+    "clowdr-video-frontend": "0.0.7",
     "concurrently": "^5.1.0",
     "cors": "^2.8.5",
     "cross-env": "^7.0.2",

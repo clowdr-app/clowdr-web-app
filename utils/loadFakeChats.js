@@ -18,6 +18,9 @@ let roomNames = [];
 // roomNames.push("PLDI 2020 Planning");
 roomNames.push("Registration Desk")
 roomNames.push("Coffee Machine")
+roomNames.push("Cats of ICSE");
+roomNames.push("New Student Hangout");
+roomNames.push("New Faculty Chats");
 roomNames.push("Snack Room")
 // roomNames.push("ICSE 2022 Discussion")
 topics.forEach((topic) => {
@@ -49,8 +52,17 @@ function randomMembership(users, keysToPop) {
 }
 
 async function fn() {
+    let confQ = new Parse.Query("ClowdrInstance");
+    confQ.equalTo("conferenceName","GMU Computer Science");
+    let conf = await confQ.first();
+
+    let roleQ = new Parse.Query(Parse.Role);
+    roleQ.equalTo("name",conf.id+"-conference");
+    let role = await roleQ.first();
+    let query = role.getUsers().query();
+    query.limit(1000);
+
     let i = 0;
-    let query = new Parse.Query("User");
     let users = await query.find();
     let keysToPop = [];
     for (let i = 0; i < users.length; i++) {
@@ -69,6 +81,9 @@ async function fn() {
             room.set("title", name);
             room.set("description", "");
             room.set("members", randomMembership(users, keysToPop));
+            room.set("conference", conf);
+            room.set("persistence","persistent");
+            room.set("visibility", "listed")
             room.save().then((val) => {
             }).catch(err => {
                 console.log(err);
@@ -82,5 +97,6 @@ async function fn() {
     // await roomsRef.set(breakoutRooms);
     console.log("DOne")
 }
+
 
 fn();

@@ -35,3 +35,29 @@
 .videoEmbed h4{
   color: white;
 }
+.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel> .ant-collapse-header{
+  padding: 4px 0 4px 5px;
+}
+.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel> .ant-collapse-header:hover{
+    background-color: #dddfe2;
+}
+/*.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel .ant-badge{*/
+/*  padding-right: 2px;*/
+/*}*/
+#sidepopoutcontainer > div > div.ant-tabs-content.ant-tabs-content-no-animated.ant-tabs-right-content.ant-tabs-card-content{
+  padding-right: 0;
+}
+.active-chats-list-title{
+    position: absolute;
+  left: 35px;
+}
+#tab-general {
+  /*padding-left: 0;*/
+  background-color: #f0f2f5;
+  color: #4a4a4a;
+  font-weight: bold;
+  border-right: 2px solid #cacaca;
+  border-bottom: 2px solid #cacaca;
+  border-top: 2px solid #cacaca;
+    padding-right: 0px;
+}

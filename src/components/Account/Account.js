@@ -1,13 +1,14 @@
 import React from 'react';
-import {Button, Form, Input, Select, Spin, Tag} from "antd";
+import {Button, Form, Input, Select, Skeleton, Spin, Tag} from "antd";
 import Avatar from "./Avatar";
 import {AuthUserContext} from "../Session";
 import Parse from "parse";
+import withLoginRequired from "../Session/withLoginRequired";
 
 class Account extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {loading: 'true'}
+        this.state={}
     }
 
     setStateFromUser(){
@@ -57,6 +58,9 @@ class Account extends React.Component {
                 _this.setStateFromUser();
             });
         }
+        else{
+            this.setStateFromUser();
+        }
         // this.userRef.once("value").then((val) => {
         //     let data = val.val();
         //     this.setState({
@@ -103,10 +107,9 @@ class Account extends React.Component {
     }
 
     render() {
-        if (!this.state.user) {
-            return (
-                <Spin tip="Loading...">
-                </Spin>)
+
+        if(!this.state.user){
+            return <Skeleton />
         }
         const {
             username,
@@ -201,4 +204,4 @@ const AuthConsumerAccount = () => (
         )}
     </AuthUserContext.Consumer>
 );
-export default AuthConsumerAccount;
+export default withLoginRequired(AuthConsumerAccount);

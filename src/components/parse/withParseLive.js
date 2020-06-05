@@ -22,6 +22,7 @@ const withParseLive = Component => {
                 client: client
             };
         }
+
         render() {
             // if(this.state.loading)
             //     return <div>    <Spin size="large" />

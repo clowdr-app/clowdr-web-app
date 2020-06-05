@@ -1,9 +1,10 @@
 import React from 'react';
-import {Button, Card, Divider, Form, Input, Layout, List, message, Modal, Popconfirm, Space, Spin } from "antd";
+import {Avatar, Card, Divider, Layout, List, message, Popconfirm, Space, Typography, Spin} from "antd";
 import {AuthUserContext} from "../Session";
 import ParseLiveContext from "../parse/context";
 import Parse from "parse";
 import NewRoomForm from "./NewRoomForm";
+import withLoginRequired from "../Session/withLoginRequired";
 
 const { Content, Footer, Sider} = Layout;
 
@@ -19,7 +20,7 @@ const { Content, Footer, Sider} = Layout;
 class MeetingSummary extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {loadingMeeting: false, loading: false, members: this.props.item.members};
+        this.state = {loadingMeeting: false, loading: false, members: this.props.item.members, profiles: {}};
     }
 
     componentDidMount() {
@@ -36,8 +37,27 @@ class MeetingSummary extends React.Component {
         //     })
     }
 
+    differentMembers(a, b) {
+        if (a && b)
+            for (let i = 0; i < a.length && i < b.length; i++) {
+                if (a[i] != b[i])
+                    return true;
+                if (a[i] && b[i] && a[i].id != b[i].id)
+                    return true;
+                if(a[i].get("displayname") !=b[i].get("displayname") || a[i].get("profilePhoto") != b[i].get("profilePhoto"))
+                    return true;
+            }
+        return false;
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.item.get('members') != prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
+            this.setState({members: this.props.item.members});
+        }
+    }
+
     joinMeeting(meeting) {
-        if (meeting.get('twilioID').startsWith("demo")) {
+        if (meeting.get("twilioID") && meeting.get('twilioID').startsWith("demo")) {
             message.error('Sorry, you can not join the demo meetings. Try to create a new one!');
 
         } else {
@@ -64,16 +84,26 @@ class MeetingSummary extends React.Component {
                 <List
                     dataSource={item.get('members').filter((v)=>(v != null ))}
                     size={"small"}
-                    renderItem={user => (
-                        <List.Item key={user.id}>
+                    renderItem={user => {
+                        let avatar;
+                        if (user.get("profilePhoto"))
+                            avatar = <Avatar src={user.get("profilePhoto").url()}/>
+                        else {
+                            let initials = "";
+                            if(user.get("displayname"))
+                                user.get("displayname").split(" ").forEach((v=>initials+=v.substring(0,1)))
+
+                            avatar = <Avatar>{initials}</Avatar>
+                        }
+                        return <List.Item key={user.id}>
                             <List.Item.Meta
-                                // avatar={
-                                //     <Avatar src={(user.get("profilePhoto") ? user.get("profilePhoto").url() : "")} />
-                                // }
-                                title={user.get('displayname')}
+                                avatar={
+                                    avatar
+                                }
+                                title={user.get("displayname")}
                             />
                         </List.Item>
-                    )}
+                    }}
                 >
                     {this.state.loading && this.state.hasMore && (
                         <div className="demo-loading-container">
@@ -95,44 +125,44 @@ class Lobby extends React.Component {
     }
 
     componentDidMount() {
-        this.props.auth.refreshUser((user)=>{
-           if(user){
-               if(this.sub){
-                   this.sub.unsubscribe();
-                   this.sub = null;
-               }
-               let query = new Parse.Query("BreakoutRoom");
-               // query.include(["members.displayname","members.profilePhoto"]);
-               query.addDescending("createdAt");
-               query.equalTo("conference", this.props.auth.currentConference);
+        let user = this.props.auth.user;
+        if (user) {
+            if (this.sub) {
+                this.sub.unsubscribe();
+                this.sub = null;
+            }
+            let query = new Parse.Query("BreakoutRoom");
+            query.include("members");
+            query.addDescending("createdAt");
+            query.equalTo("conference", this.props.auth.currentConference);
 
-               query.find().then(res => {
-                   this.setState({
-                       rooms: res,
-                       loading: false
-                   });
-                   this.sub = this.props.parseLive.subscribe(query);
-                   this.sub.on('create', newItem => {
-                       this.setState((prevState) => ({
-                           rooms: [newItem, ...prevState.rooms]
-                       }))
-                   })
-                   this.sub.on('update', newItem => {
-                       this.setState((prevState) => ({
-                           rooms: prevState.rooms.map(room => room.id == newItem.id ? newItem : room)
-                       }))
-                   })
-                   this.sub.on("delete", vid => {
-                       this.setState((prevState) => ({
-                           rooms: prevState.rooms.filter((v) => (
-                               v.id != vid.id
-                           ))
-                       }));
-                   });
-               })
-           }
-        });
-
+            query.find().then(res => {
+                this.setState({
+                    rooms: res,
+                    loading: false
+                });
+                this.sub = this.props.parseLive.subscribe(query, this.props.auth.user.getSessionToken());
+                this.sub.on('create', async (newItem) => {
+                    newItem = await this.props.auth.helpers.populateMembers(newItem);
+                    this.setState((prevState) => ({
+                        rooms: [newItem, ...prevState.rooms]
+                    }))
+                })
+                this.sub.on('update', async (newItem) => {
+                    newItem = await this.props.auth.helpers.populateMembers(newItem);
+                    this.setState((prevState) => ({
+                        rooms: prevState.rooms.map(room => room.id == newItem.id ? newItem : room)
+                    }))
+                })
+                this.sub.on("delete", vid => {
+                    this.setState((prevState) => ({
+                        rooms: prevState.rooms.filter((v) => (
+                            v.id != vid.id
+                        ))
+                    }));
+                });
+            })
+        }
     }
 
     componentWillUnmount() {
@@ -197,7 +227,7 @@ class Lobby extends React.Component {
     }
 
     render() {
-        if (this.state.loading || !this.props.auth.user) {
+        if (this.state.loading) {
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -205,21 +235,21 @@ class Lobby extends React.Component {
         return (
             // <Tabs defaultActiveKey="1">
             //     <TabPane tab="Breakout Areas" key="1">
-            <Layout>
-                <Content>
-                    <Card title={"The Lobby Track"} style={{textAlign: "left"}}>
+            <div>
+                <Typography.Title level={2}>Lobby Session</Typography.Title>
 
-                        Some say that the most valuable part of an academic conference is the "lobby track" - where
-                        colleagues meet, catch up, and share
-                        casual conversation. To bring the metaphor into the digital world, the digital lobby session
-                        allows you to create a small group video chat, and switch between group chats. Take
-                        a look at the breakout rooms that participants have formed so far and join one, or create a new
-                        one!<br/>
+                <Typography.Paragraph>
+                Some say that the most valuable part of an academic conference is the "lobby track" - where
+                colleagues meet, catch up, and share
+                casual conversation. To bring the metaphor into the digital world, the digital lobby session
+                allows you to create a small group video chat, and switch between group chats. Take
+                a look at the breakout rooms that participants have formed so far and join one, or create a new
+                one!
+                </Typography.Paragraph>
+                <NewRoomForm style={{float: "right", paddingTop: "5px"}}/>
 
-                        <NewRoomForm />
-
-                    </Card>
-                    <Divider/>
+                <Space />
+                <Divider/>
                     <div style={{maxHeight: "80vh", overflow: 'auto', border: '1px sold #FAFAFA'}}>
                         {/*<InfiniteScroll*/}
                         {/*    pageStart={0}*/}
@@ -238,31 +268,12 @@ class Lobby extends React.Component {
                             }}>
                                 {
                                     Object.values(this.state.rooms).slice(0, this.state.maxDisplayedRooms).map((item) => (
-                                        <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} />
+                                        <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} auth={this.props.auth} />
                                     ))}
                             </Space>
                         {/*</InfiniteScroll>*/}
                     </div>
-                    {/*<CollectionCreateForm*/}
-                    {/*    visible={this.state.visible}*/}
-                    {/*    onCreate={this.onCreate.bind(this)}*/}
-                    {/*    onCancel={() => {*/}
-                    {/*        this.setVisible(false);*/}
-                    {/*    }}*/}
-                    {/*/>*/}
-                </Content>
-                {/*<Sider width="220px">*/}
-                    {/*<ActiveUsers parseLive={this.props.parseLive} />*/}
-                {/*</Sider>*/}
-            </Layout>
-            //     </TabPane>
-            //     <TabPane tab="Tab 2" key="2">
-            //         Content of Tab Pane 2
-            //     </TabPane>
-            //     <TabPane tab="Tab 3" key="3">
-            //         Content of Tab Pane 3
-            //     </TabPane>
-            // </Tabs>
+                </div>
         );
     }
 }
@@ -280,4 +291,4 @@ const AuthConsumer = (props) => (
 
     </ParseLiveContext.Consumer>
 );
-export default AuthConsumer;
+export default withLoginRequired(AuthConsumer);

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Timeline} from 'antd';
+import {Tabs, Timeline} from 'antd';
 import Parse from "parse";
 import ParseLiveContext from "../parse/context";
 import {AuthUserContext} from "../Session";
@@ -48,11 +48,24 @@ class Program extends React.Component {
         })
     }
 
-
+    groupBy(list, keyGetter) {
+        const map = new Map();
+        list.forEach((item) => {
+            const key = keyGetter(item);
+            const collection = map.get(key);
+            if (!collection) {
+                map.set(key, [item]);
+            } else {
+                collection.push(item);
+            }
+        });
+        return map;
+    }
     render() {
         let firstDate = moment(moment().format("YYYY-MM-DD"));
         let lastDate = firstDate.clone();
         lastDate.add(1, "days")
+        let groupedByDate = this.groupBy(this.state.sessions,(item)=>moment(item.get("startTime"),"ddd "))
         // console.log(firstDate.toDate())
         // console.log(lastDate.toDate())
         // console.log(this.state.sessions)

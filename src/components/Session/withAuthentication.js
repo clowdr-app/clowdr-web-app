@@ -17,9 +17,18 @@ const withAuthentication = Component => {
             this.chatWaiters = [];
             this.liveChannel = null;
             this.channelChangeListeners = [];
+            let exports ={
+                getUsers: this.getUsers.bind(this),
+                getRoleByName: this.getRoleByName.bind(this),
+                setActiveConference: this.setActiveConference.bind(this),
+                populateMembers: this.populateMembers.bind(this),
+                setGlobalState: this.setState.bind(this)//well that seems dangerous...
+            }
             this.state = {
                 user: null,
                 loading: true,
+                roles: [],
+                currentRoom: null,
                 refreshUser: this.refreshUser.bind(this),
                 initChatClient: this.initChatClient.bind(this),
                 getUserProfile: this.getUserProfile.bind(this),
@@ -33,10 +42,73 @@ const withAuthentication = Component => {
                 setActiveRoom: this.setActiveRoom.bind(this),
                 teamID: null,
                 currentConference: null,
-                activeRoom: null
+                activeRoom: null,
+                helpers: exports
             };
+            this.fetchingUsers = false;
         }
 
+        async getUsers() {
+            if (this.state.users || this.fetchingUsers)
+                return;
+            this.fetchingUsers = true;
+            let roleQ = new Parse.Query(Parse.Role);
+            roleQ.equalTo("name",this.state.currentConference.id+"-conference");
+            let role = await roleQ.first();
+            let parseUserQ = role.getUsers().query();
+            parseUserQ.limit(1000);
+            parseUserQ.withCount();
+            let nRetrieved = 0;
+            let {count, results} = await parseUserQ.find();
+            nRetrieved = results.length;
+            let allUsers = [];
+            allUsers = allUsers.concat(results);
+            while (nRetrieved < count) {
+                let parseUserQ = roleQ.getUsers().query();
+                parseUserQ.limit(1000);
+                parseUserQ.skip(nRetrieved);
+                let results = await parseUserQ.find();
+                // results = dat.results;
+                nRetrieved += results.length;
+                if (results)
+                    allUsers = allUsers.concat(results);
+            }
+            let usersByID = {};
+            allUsers.forEach((u)=>usersByID[u.id]=u);
+            this.setState({users: usersByID});
+        }
+
+        async setActiveConference(conf) {
+            this.setState({loading: true});
+            let session = await Parse.Session.current();
+            session.set("currentConference", conf);
+            session.save();
+            this.setState({currentConference: conf, users: null});
+            this.setState({loading: false});
+        }
+
+        async getRoleByName(role) {
+            let existingRoles = this.state.roles.find(i => i.get("name") == role);
+            if(existingRoles)
+                return existingRoles;
+            //Make sure to refresh first...
+            const roleQuery = new Parse.Query(Parse.Role);
+            roleQuery.equalTo("users", this.state.user);
+            const roles = await roleQuery.find();
+            existingRoles = roles.find(i => i.get("name") == role);
+            if(existingRoles){
+                this.setState({roles: roles});
+                return existingRoles;
+            }
+            if(!existingRoles){
+                //maybe we are a mod.
+                let roleQ = new Parse.Query(Parse.Role);
+                roleQ.equalTo("name", role);
+                existingRoles = await roleQ.first();
+                return existingRoles;
+            }
+            return null;
+        }
         setActiveRoom(room) {
             this.setState({activeRoom: room});
         }
@@ -49,7 +121,6 @@ const withAuthentication = Component => {
             session.set("currentConference", res);
             session.save();
             this.setState({currentConference: res});
-
             return res;
         }
         async setActiveConferenceBySlack(teamId) {
@@ -124,6 +195,8 @@ const withAuthentication = Component => {
         }
 
         getUserProfile(authorID, callback) {
+            //DEPRECATED
+            console.log("This is deprecated and probably broken")
             if (!this.profiles[authorID]) {
                 if (this.loadingProfiles[authorID]) {
                     this.loadingProfiles[authorID].push(callback);
@@ -145,12 +218,36 @@ const withAuthentication = Component => {
                 }, 0);
             }
         }
-
+        async getUserRecord(uid){
+            if(this.state.users && this.state.users[uid])
+                return this.state.users[uid];
+            else{
+                let uq = new Parse.Query(Parse.User);
+                return await uq.get(uid);
+            }
+        }
+        async populateMembers(breakoutRoom){
+            let promises =[];
+            if(breakoutRoom.get('members')) {
+                for (let i = 0; i < breakoutRoom.get("members").length; i++) {
+                    let member = breakoutRoom.get("members")[i];
+                    if (!member.get("displayname")) {
+                        promises.push(this.getUserRecord(member.id).then((fullUser) => {
+                                breakoutRoom.get("members")[i] = fullUser;
+                            }
+                        ))
+                    }
+                }
+                return Promise.all(promises).then(()=>breakoutRoom);
+            }
+            return breakoutRoom;
+        }
         refreshUser(callback) {
 
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
                 if (user) {
+                    console.log(user);
                     const query = new Parse.Query(Parse.User);
                     query.include(["tags.label", "tags.color", "roles.name"]);
                     try {
@@ -161,12 +258,21 @@ const withAuthentication = Component => {
                             _this.authCallbacks.forEach((cb) => (cb(userWithRelations)));
                         }
                         let session = await Parse.Session.current();
+                        console.log("Got session:")
+                        console.log(session);
                         const roleQuery = new Parse.Query(Parse.Role);
                         roleQuery.equalTo("users", userWithRelations);
 
                         const roles = await roleQuery.find();
+                        console.log(roles);
                         let isAdmin = false;
                         let validConferences = [];
+
+                        let validConfQ= new Parse.Query("ClowdrInstanceAccess");
+                        validConfQ.include('instance');
+                        let validInstances = await validConfQ.find();
+                        validConferences=validInstances.map(i=>i.get("instance"));
+
                         let conf = _this.state.currentConference;
                         if (session.get("currentConference")) {
                             let confID = session.get("currentConference").id;
@@ -177,13 +283,19 @@ const withAuthentication = Component => {
                             for (let role of roles) {
                                 if (role.get("name") == "ClowdrSysAdmin")
                                     isAdmin = true;
-                                if (role.get("name").startsWith("Conf"))
-                                    validConferences.push(role.get("name").substring(4));
                             }
-                            let defaultConference = validConferences[0];
-                            let confQ = new Parse.Query("ClowdrInstance");
-                            confQ.equalTo("conferenceName", defaultConference);
-                            conf = await confQ.first();
+                            if (process.env.REACT_APP_DEFAULT_CONFERENCE) {
+                                console.log(process.env.REACT_APP_DEFAULT_CONFERENCE)
+                                for (let c of validConferences) {
+                                    console.log(c.get("conferenceName"))
+                                }
+                                conf = validConferences.find((c) => c.get("conferenceName") == process.env.REACT_APP_DEFAULT_CONFERENCE);
+                                if (!conf) {
+                                    console.log("This user does nto have access to " + process.env.REACT_APP_DEFAULT_CONFERENCE);
+                                    conf = validConferences[0];
+                                }
+                            } else
+                                conf = validConferences[0];
                         }
                         _this.setState({
                             user: userWithRelations,
@@ -191,7 +303,8 @@ const withAuthentication = Component => {
                             isAdmin: isAdmin,
                             validConferences: validConferences,
                             currentConference: conf,
-                            loading: false
+                            loading: false,
+                            roles: roles
                         });
 
                         if (callback) {
@@ -201,6 +314,12 @@ const withAuthentication = Component => {
                         return userWithRelations;
                     } catch (err) {
                         console.log(err);
+                        try {
+                            await Parse.User.logOut();
+                            _this.setState({loading: false, user: null});
+                        }catch(err2){
+                            console.log(err2);
+                        }
                         return null;
                     }
                 } else {

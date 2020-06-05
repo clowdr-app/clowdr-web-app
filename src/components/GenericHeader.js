@@ -17,7 +17,6 @@ class GenericHeader extends Component {
 
 
     componentDidUpdate() {
-        console.log(this.props.authContext.currentConference)
         if (this.props.authContext.currentConference) {
             let name = this.props.authContext.currentConference.get("conferenceName");
             if (this.state.conferenceName != name) {
@@ -27,8 +26,8 @@ class GenericHeader extends Component {
     }
 
     render() {
-        return <Header className="site-layout-background"><h1><NavLink
-            to="/">CLOWDR {this.state.conferenceName}</NavLink></h1></Header>
+        return <Header className="site-layout-background"><h1>
+            {this.state.conferenceName} Group Video Chat</h1></Header>
     }
 }
 

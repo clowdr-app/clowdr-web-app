@@ -4,6 +4,7 @@ import {Button, Form, Input} from 'antd';
 import Parse from "parse";
 import withAuthentication from "../Session/withAuthentication";
 import {AuthUserContext} from "../Session";
+import GenericLanding from "../GenericLanding";
 
 const INITIAL_STATE = {
     email: '',
@@ -61,6 +62,10 @@ class SignIn extends Component {
     };
 
     render() {
+        if(process.env.REACT_APP_IS_MINIMAL_UI && !this.props.dontBounce){
+            this.props.authContext.helpers.setGlobalState({showingLanding: true});
+            return <div></div>;
+        }
         const {email, password, error} = this.state;
 
         const isInvalid = password === '' || email === '';
@@ -96,7 +101,7 @@ class SignIn extends Component {
 const AuthConsumer = (props)=>(
     <AuthUserContext.Consumer>
         {value => (
-            <SignIn {...props} user={value.user} refreshUser={value.refreshUser}/>
+            <SignIn {...props} user={value.user} authContext={value} refreshUser={value.refreshUser}/>
         )}
     </AuthUserContext.Consumer>
 );
