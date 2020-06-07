@@ -8,56 +8,80 @@ class VideoWatchers extends React.Component {
         super(props);
         this.state = {
             count: 0,
-            updating: 0
+            addme: false
         };
         this._isMounted = false;
     }
 
     componentDidUpdate(prevProps, prevState) {
-        console.log("componentDidUpdate " + prevProps.expanded + " new " + this.props.expanded);
-        if (this.props.expanded !== prevProps.expanded) {
-            this.changeCount(this.props.expanded);
-        }
     }
 
-    async changeCount(isIncrement) {
+    async getWatchersRecord() {
         const name = this.props.video.get("title");
         const WatchersCount = Parse.Object.extend("LiveVideoWatchers");
         let q = new Parse.Query(WatchersCount);
         q.equalTo("name", name);
-        console.log("Changing count for " + name);
+        console.log("Getting count for " + name);
         const record = await q.first();
-        if (record) {
-            console.log("Changing watchers count for " + name + " " + isIncrement + " " + JSON.stringify(record));
-            this.setState({updating: (isIncrement ? -1 : 1)}); // Remember that we are the ones doing the update
-            if (isIncrement)
-                record.increment("count");
-            else
-                record.decrement("count");
-            record.save();
-        } else {
-            console.log("LiveVideoWatcher not found for " + name);
-        }
+        return record;
     }
 
     componentDidMount() {
+        console.log("videoWatchers mounted. Subscription? " + this.sub);
         this._isMounted = true;
+
+        this.getWatchersRecord().then(record => {
+            console.log(JSON.stringify(record));
+            this.setState({count: record.get("count")});
+            if (this.props.expanded && !this.state.addme) {
+                console.log("Incrementing " + JSON.stringify(record));
+                record.increment("count");
+                record.save();
+            }    
+        });
+
         let q = new Parse.Query("LiveVideoWatchers");
         const name = this.props.video.get("title");
         q.equalTo("name", name);
-        this.sub = this.props.parseLive.subscribe(q);
-
-        this.sub.on('update', watchRecord => {
-            console.log("Update received: watchers count for " + watchRecord.get("name") + " is now " + watchRecord.get("count") + ". Local count=" + this.state.count);
-            const adjustedCount = watchRecord.get("count") + this.state.updating; // adjust when it's our update
-            if (this._isMounted) 
-                this.setState({ count: adjustedCount, updating: false});
+//        this.sub = this.props.parseLive.subscribe(q);
+        q.subscribe().then(subscription => {
+            this.sub = subscription;
+            this.sub.on('update', watchRecord => {
+                console.log("Update received: watchers count for " + watchRecord.get("name") + " is now " + watchRecord.get("count") + ". Local count=" + this.state.count);
+                // const adjustedCount = watchRecord.get("count"); // adjust when it's our update
+                if (this._isMounted) {
+                    const myOwnUpdate = this.props.expanded && !this.state.addme;
+                    console.log("My own update? " + myOwnUpdate);
+                    const adjustedCount = (myOwnUpdate ? -1 : 0)
+                    this.setState({ count: watchRecord.get("count") + adjustedCount });
+                    if (myOwnUpdate)
+                        this.setState({addme: true})
+                }
+                else
+                    console.log("VideoWatchers is unmounted");
+            });
+    
         });
+
     }
 
     componentWillUnmount() {
-        if (this.sub)
+        console.log("VideoWatchers unmounted");
+
+        if (this.props.expanded) {
+            this.getWatchersRecord().then(record => {
+                console.log("Decrementing " + JSON.stringify(record));
+                record.decrement("count");
+                record.save();
+            });
+            this.setState({addme: false});
+        }
+
+        if (this.sub) {
             this.sub.unsubscribe();
+            console.log("Unsubscribed");
+        }
+
         this._isMounted = false;
     }
 

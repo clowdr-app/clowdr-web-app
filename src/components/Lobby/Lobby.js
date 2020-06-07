@@ -40,18 +40,18 @@ class MeetingSummary extends React.Component {
     differentMembers(a, b) {
         if (a && b)
             for (let i = 0; i < a.length && i < b.length; i++) {
-                if (a[i] != b[i])
+                if (a[i] !== b[i])
                     return true;
-                if (a[i] && b[i] && a[i].id != b[i].id)
+                if (a[i] && b[i] && a[i].id !== b[i].id)
                     return true;
-                if(a[i].get("displayname") !=b[i].get("displayname") || a[i].get("profilePhoto") != b[i].get("profilePhoto"))
+                if(a[i].get("displayname") !== b[i].get("displayname") || a[i].get("profilePhoto") !== b[i].get("profilePhoto"))
                     return true;
             }
         return false;
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.item.get('members') != prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
+        if (this.props.item.get('members') !== prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
             this.setState({members: this.props.item.members});
         }
     }
@@ -151,13 +151,13 @@ class Lobby extends React.Component {
                 this.sub.on('update', async (newItem) => {
                     newItem = await this.props.auth.helpers.populateMembers(newItem);
                     this.setState((prevState) => ({
-                        rooms: prevState.rooms.map(room => room.id == newItem.id ? newItem : room)
+                        rooms: prevState.rooms.map(room => room.id === newItem.id ? newItem : room)
                     }))
                 })
                 this.sub.on("delete", vid => {
                     this.setState((prevState) => ({
                         rooms: prevState.rooms.filter((v) => (
-                            v.id != vid.id
+                            v.id !== vid.id
                         ))
                     }));
                 });
@@ -190,7 +190,7 @@ class Lobby extends React.Component {
                 }
             });
         let res = await data.json();
-        if(res.status == "error"){
+        if(res.status === "error"){
             message.error(res.message);
         }
         else{

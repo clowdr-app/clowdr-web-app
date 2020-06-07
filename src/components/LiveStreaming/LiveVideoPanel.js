@@ -1,13 +1,29 @@
 import React from 'react';
 import {videoURLFromData} from './utils'
-import LiveVideoWatchers from './VideoWatchers';
+import Parse from "parse";
 
 class LiveVideoPanel extends React.Component {
     constructor(props) {
         super(props);
+        console.log("VideoPanel count: " + this.props.count)
     }
 
     componentDidMount() {
+        console.log("VideoPanel mounted: " + this.props.watchers.get("count"));
+        this.props.onUpdate();
+        this.props.watchers.increment("count");
+        this.props.watchers.save();
+    }
+
+    componentWillUnmount() {
+        console.log("VideoPanel unmounted: " + this.props.watchers.get("count"));
+        this.props.onUpdate();
+        this.props.watchers.decrement("count");
+        this.props.watchers.save();
+    }
+
+    componentDidUpdate(prevProps) {
+        console.log("Something changed");
     }
 
     render() {
@@ -30,7 +46,7 @@ class LiveVideoPanel extends React.Component {
                             </div>
                             <div className={"row"}>
                                 <div className={"embed-responsive-item"}>
-                                    <LiveVideoWatchers video={this.props.video} expanded={false}/>
+                                    Watching now: {this.props.watchers.get("count")}
                                 </div>
                             </div>
                         </div>

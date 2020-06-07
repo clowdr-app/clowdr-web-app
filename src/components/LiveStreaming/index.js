@@ -8,6 +8,10 @@ class LiveStreaming extends Component {
     constructor(props) {
         // props.parseLive
         super(props);
+        this.state = {
+            dirty: false,
+            updating: false
+        };
     }
     
     componentDidMount() {
@@ -36,7 +40,7 @@ class LiveStreaming extends Component {
                 console.log("Video updated " + vid.get("title"));
                 const found = this.state.videos.find(v => v.objectId === vid.objectId);
                 if (found) {
-                    console.log("Found it ");
+                    console.log("Found video " + found.title);
                     found.set("title", vid.get("title"));
                     found.set("src1", vid.get("src1"));
                     found.set("id1", vid.get("id1"));
@@ -46,21 +50,55 @@ class LiveStreaming extends Component {
             });
         });
 
+        let q = new Parse.Query("LiveVideoWatchers");
+        q.find().then(res => {
+            console.log(JSON.stringify(res));
+            this.setState({
+                watchers: res
+            });
+        });
+        q.subscribe().then(subscription => {
+            this.wactherSubscription = subscription;
+
+            this.wactherSubscription.on('update', watchRecord => {
+                console.log("Update received: watchers count for " + watchRecord.get("name") + " is now " + watchRecord.get("count"));
+                console.log(JSON.stringify(watchRecord));
+                if (!this.state.updating) {
+                    const found = this.state.watchers.find(w => w.objectId === watchRecord.objectId);
+                    if (found) {
+                        console.log("Found watcher ");
+                        found.set("count", watchRecord.get("count"));
+                        this.setState({dirty: !this.state.dirty});
+                    }
+                    else
+                        console.log("VideoWatcher not found locally: " + watchRecord.get("name"));
+                    this.setState({updating: false});
+                }
+                else
+                    console.log("Local update: ignoring " + watchRecord.get("count"));
+            });
+        });
     }
 
     componentWillUnmount() {
         if (this.sub)
             this.sub.unsubscribe();
+        if (this.wactherSubscription)
+            this.wactherSubscription.unsubscribe();
     }
 
+    onUpdate() {
+        this.setState({updating: true});
+    }
 
     render() {
-        if (this.state && this.state.videos) {
+        if (this.state && this.state.videos && this.state.watchers) {
             return <div className={"space-align-container"}>
                 {this.state.videos.map((video) => {
+                    let w = this.state.watchers.find(w => w.get("name") === video.get("title"))
                     return <div className={"space-align-block"} key={video.get("key")}>
                         <Space align={"center"}>
-                            <GeoLocationLiveVideoThumbnail video={video}/>
+                            <GeoLocationLiveVideoThumbnail video={video} watchers={w} dirty={this.state.dirty} onUpdate={this.onUpdate.bind(this)}/>
                         </Space></div>
                 })}
             </div>
