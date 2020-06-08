@@ -21,7 +21,7 @@ class Account extends React.Component {
             user: this.props.auth.user,
             email: this.props.auth.user.getEmail(),
             affiliation: this.props.auth.user.get("affiliation"),
-            displayName: this.props.auth.user.get("displayname"),
+            displayName: this.props.auth.user.get("displayName"),
             tags: this.props.auth.user.get("tags"),
             flair: this.props.auth.user.get("primaryFlair"),
             selectedFlair: selectedFlair,
@@ -76,7 +76,7 @@ class Account extends React.Component {
     updateUser() {
         this.setState({updating: true});
         this.props.auth.user.set("tags", this.state.flairObj.filter((item)=>(this.state.selectedFlair.includes(item.get("label")))));
-        this.props.auth.user.set("displayname",this.state.displayName);
+        this.props.auth.user.set("displayName",this.state.displayName);
         this.props.auth.user.set("affiliation", this.state.affiliation);
         this.props.auth.user.save().then(() => {
             this.props.auth.refreshUser().then(() => {

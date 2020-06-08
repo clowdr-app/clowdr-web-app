@@ -5,6 +5,8 @@ import Parse from "parse";
 import Chat from "twilio-chat";
 import {Spin} from "antd";
 
+let UserProfile = Parse.Object.extend("UserProfile");
+
 const withAuthentication = Component => {
     class WithAuthentication extends React.Component {
 
@@ -22,7 +24,9 @@ const withAuthentication = Component => {
                 getRoleByName: this.getRoleByName.bind(this),
                 setActiveConference: this.setActiveConference.bind(this),
                 populateMembers: this.populateMembers.bind(this),
-                setGlobalState: this.setState.bind(this)//well that seems dangerous...
+                setGlobalState: this.setState.bind(this),//well that seems dangerous...
+                getUserProfilesFromUserIDs: this.getUserProfilesFromUserIDs.bind(this),
+                ifPermission: this.ifPermission.bind(this)
             }
             this.state = {
                 user: null,
@@ -47,15 +51,22 @@ const withAuthentication = Component => {
             };
             this.fetchingUsers = false;
         }
+        ifPermission(permission, jsxElement, elseJsx){
+            if(this.state.permissions && this.state.permissions.includes(permission))
+                return jsxElement;
+            if(elseJsx)
+                return elseJsx;
+            return <></>
+
+        }
 
         async getUsers() {
+            console.log("Get users called")
             if (this.state.users || this.fetchingUsers)
                 return;
             this.fetchingUsers = true;
-            let roleQ = new Parse.Query(Parse.Role);
-            roleQ.equalTo("name",this.state.currentConference.id+"-conference");
-            let role = await roleQ.first();
-            let parseUserQ = role.getUsers().query();
+            let parseUserQ = new Parse.Query(UserProfile)
+            parseUserQ.equalTo("conference", this.state.currentConference);
             parseUserQ.limit(1000);
             parseUserQ.withCount();
             let nRetrieved = 0;
@@ -64,9 +75,9 @@ const withAuthentication = Component => {
             let allUsers = [];
             allUsers = allUsers.concat(results);
             while (nRetrieved < count) {
-                let parseUserQ = roleQ.getUsers().query();
+                let parseUserQ = new Parse.Query(UserProfile)
+                parseUserQ.equalTo("conference", this.state.currentConference);
                 parseUserQ.limit(1000);
-                parseUserQ.skip(nRetrieved);
                 let results = await parseUserQ.find();
                 // results = dat.results;
                 nRetrieved += results.length;
@@ -194,6 +205,21 @@ const withAuthentication = Component => {
             return this.chatClient;
         }
 
+        async getUserProfilesFromUserIDs(ids) {
+            let q = new Parse.Query(UserProfile);
+            let users = [];
+            for (let id of ids) {
+                let u = new Parse.User();
+                u.id = id;
+                users.push(u);
+            }
+            console.log(users);
+            q.containedIn("user", users);
+            q.equalTo("conference", this.state.currentConference);
+            return await q.find();
+
+        }
+
         getUserProfile(authorID, callback) {
             //DEPRECATED
             console.log("This is deprecated and probably broken")
@@ -222,7 +248,7 @@ const withAuthentication = Component => {
             if(this.state.users && this.state.users[uid])
                 return this.state.users[uid];
             else{
-                let uq = new Parse.Query(Parse.User);
+                let uq = new Parse.Query(UserProfile);
                 return await uq.get(uid);
             }
         }
@@ -231,7 +257,7 @@ const withAuthentication = Component => {
             if(breakoutRoom.get('members')) {
                 for (let i = 0; i < breakoutRoom.get("members").length; i++) {
                     let member = breakoutRoom.get("members")[i];
-                    if (!member.get("displayname")) {
+                    if (!member.get("displayName")) {
                         promises.push(this.getUserRecord(member.id).then((fullUser) => {
                                 breakoutRoom.get("members")[i] = fullUser;
                             }
@@ -247,7 +273,6 @@ const withAuthentication = Component => {
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
                 if (user) {
-                    console.log(user);
                     const query = new Parse.Query(Parse.User);
                     query.include(["tags.label", "tags.color", "roles.name"]);
                     try {
@@ -258,13 +283,11 @@ const withAuthentication = Component => {
                             _this.authCallbacks.forEach((cb) => (cb(userWithRelations)));
                         }
                         let session = await Parse.Session.current();
-                        console.log("Got session:")
-                        console.log(session);
                         const roleQuery = new Parse.Query(Parse.Role);
                         roleQuery.equalTo("users", userWithRelations);
 
                         const roles = await roleQuery.find();
-                        console.log(roles);
+
                         let isAdmin = false;
                         let validConferences = [];
 
@@ -285,22 +308,27 @@ const withAuthentication = Component => {
                                     isAdmin = true;
                             }
                             if (process.env.REACT_APP_DEFAULT_CONFERENCE) {
-                                console.log(process.env.REACT_APP_DEFAULT_CONFERENCE)
-                                for (let c of validConferences) {
-                                    console.log(c.get("conferenceName"))
-                                }
                                 conf = validConferences.find((c) => c.get("conferenceName") == process.env.REACT_APP_DEFAULT_CONFERENCE);
                                 if (!conf) {
-                                    console.log("This user does nto have access to " + process.env.REACT_APP_DEFAULT_CONFERENCE);
                                     conf = validConferences[0];
                                 }
                             } else
                                 conf = validConferences[0];
                         }
+                        const privsQuery = new Parse.Query("InstancePermission");
+                        privsQuery.equalTo("conference", conf);
+                        privsQuery.include("action");
+                        let permissions =  await privsQuery.find();
+                        let profileQ = new Parse.Query(UserProfile);
+                        profileQ.equalTo("conference",conf);
+                        profileQ.equalTo("user",userWithRelations);
+                        let activeProfile = await profileQ.first();
                         _this.setState({
                             user: userWithRelations,
+                            userProfile: activeProfile,
                             teamID: session.get("activeTeam"),
                             isAdmin: isAdmin,
+                            permissions: permissions.map(p=>p.get("action").get("action")),
                             validConferences: validConferences,
                             currentConference: conf,
                             loading: false,
@@ -315,8 +343,8 @@ const withAuthentication = Component => {
                     } catch (err) {
                         console.log(err);
                         try {
-                            await Parse.User.logOut();
                             _this.setState({loading: false, user: null});
+                            await Parse.User.logOut();
                         }catch(err2){
                             console.log(err2);
                         }

@@ -33,7 +33,7 @@
   display: block;
 }
 .videoEmbed h4{
-  color: white;
+  color: black;
 }
 .ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel> .ant-collapse-header{
   padding: 4px 0 4px 5px;
@@ -60,4 +60,21 @@
   border-bottom: 2px solid #cacaca;
   border-top: 2px solid #cacaca;
     padding-right: 0px;
+}
+.video-masonry-grid {
+  display: -webkit-box; /* Not needed if autoprefixing */
+  display: -ms-flexbox; /* Not needed if autoprefixing */
+  display: flex;
+  margin-left: auto; /* gutter size offset */
+  width: auto;
+  height: 80vh;
+}
+.video-masonry-column {
+  padding-left: 0px; /* gutter size */
+  background-clip: padding-box;
+}
+
+/* Style your items */
+.video-masonry-column > div { /* change div to reference your elements you put in <Masonry> */
+  margin-bottom: 0px;
 }

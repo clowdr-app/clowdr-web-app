@@ -1,18 +1,15 @@
-import React, {Component, useState} from 'react';
+import React, {Component, useCallback, useEffect, useState} from 'react';
 import * as ROUTES from "../../constants/routes";
 import theme from "./theme";
 import {MuiThemeProvider} from "@material-ui/core/styles";
 import Parse from "parse"
 import ParseLiveContext from "../parse/context";
 import {AuthUserContext} from "../Session";
-import {Alert, Button, Descriptions, Form, message, Popover, Select, Skeleton, Spin,Tooltip, Typography} from "antd";
+import {Alert, Button, Descriptions, Form, message, Select, Skeleton, Spin, Tag, Tooltip, Typography} from "antd";
 import './VideoChat.css';
 import {VideoContext, VideoProvider} from "clowdr-video-frontend/lib/components/VideoProvider";
 import AppStateProvider from "clowdr-video-frontend/lib/state";
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
-import FlipCameraButton from "clowdr-video-frontend/lib/components/MenuBar/FlipCameraButton/FlipCameraButton";
-import ToggleFullScreenButton
-    from "clowdr-video-frontend/lib/components/MenuBar/ToggleFullScreenButton/ToggleFullScreenButton";
 import IconButton from "@material-ui/core/IconButton";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from "@material-ui/core/DialogContent";
@@ -23,9 +20,16 @@ import VideoInputList from "clowdr-video-frontend/lib/components/MenuBar/DeviceS
 import {makeStyles} from "@material-ui/styles";
 import {createStyles} from "@material-ui/core";
 import SettingsInputComponentIcon from '@material-ui/icons/SettingsInputComponent';
-import SecurityIcon from '@material-ui/icons/Security';
 import withLoginRequired from "../Session/withLoginRequired";
 import NewRoomForm from "../Lobby/NewRoomForm";
+import {isMobile} from "clowdr-video-frontend/lib/utils";
+import useFullScreenToggle from "clowdr-video-frontend/lib/hooks/useFullScreenToggle/useFullScreenToggle";
+import fscreen from "fscreen";
+import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
+import FullscreenIcon from '@material-ui/icons/Fullscreen';
+import FlipCameraIosIcon from '@material-ui/icons/FlipCameraIos';
+import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
+import ReportToModsButton from "./ReportToModsButton";
 
 const {Paragraph} = Typography;
 
@@ -36,8 +40,12 @@ class VideoRoom extends Component {
         this.state = {};
     }
 
-    componentDidMount() {
-        this.joinCallFromProps();
+    async componentDidMount() {
+        try {
+            await this.joinCallFromProps();
+        }catch(err){
+            console.log(err);
+        }
     }
 
     async joinCallFromProps() {
@@ -124,29 +132,9 @@ class VideoRoom extends Component {
         }
     }
 
-    getMeetingInfo() {
-        let res = []
-        if (this.state.room.get("visibility") == "unlisted") {
-            res.push(<Descriptions.Item label="Visibility" key="visibility">Private</Descriptions.Item>)
-        } else {
-            res.push(<Descriptions.Item label="Visibility" key="visibility">Public</Descriptions.Item>)
-        }
-        if (this.state.room.get("persistence") == "ephemeral") {
-            res.push(<Descriptions.Item label="Persistence" key="persistence">Ephemeral (garbage collects 5 minutes
-                after being empty)</Descriptions.Item>)
-        } else {
-            res.push(<Descriptions.Item label="Persistence" key="persistence">Persistent (until deleted by
-                mods)</Descriptions.Item>)
-        }
-        if (this.state.room.get("visibility") == "unlisted") {
-            res.push(<Descriptions.Item label="Access" key="access-controller"><RoomVisibilityController
-                authContext={this.props.authContext} roomID={this.state.room.id} sid={this.state.room.get("twilioID")}
-                acl={this.state.room.getACL()}/></Descriptions.Item>);
-        }
-        return res;
-    }
-    onError(err){
-        console.log(err);
+    onError(err) {
+        message.error({content: "Unable to join room. " + err.toString()})
+        this.props.history.push(ROUTES.LOBBY_SESSION);
     }
     render() {
         if (this.state.error) {
@@ -192,55 +180,109 @@ class VideoRoom extends Component {
         //     </Paragraph>
         // }
 
-        let visibilityDescription, privacyDescription, ACLdescription;
-        if (this.state.room.get("visibility") == "unlisted") {
-            visibilityDescription = (<Descriptions.Item label="Visibility" key="visibility">Private</Descriptions.Item>)
+        let visibilityDescription, privacyDescription, ACLdescription, fullLabel;
+        if (this.state.room.get("isPrivate")) {
+            visibilityDescription = (<Tag key="visibility">Private</Tag>)
         } else {
-            visibilityDescription = (<Descriptions.Item label="Visibility" key="visibility">Public to {this.props.authContext.currentConference.get("conferenceName")}</Descriptions.Item>);
+            visibilityDescription = (<Tag key="visibility">Open</Tag>);
+        }
+        if(this.state.room.get("members") && this.state.room.get("members").length == this.state.room.get("capacity"))
+        {
+            fullLabel=<Tooltip title="This room is at capacity. Nobody else can join until someone leaves"><Tag color="#f50">Full Capacity</Tag></Tooltip>
         }
         if (this.state.room.get("persistence") == "ephemeral") {
             privacyDescription = (
-                <Descriptions.Item label="Persistence" key="persistence">Ephemeral (garbage collects 5 minutes
-                    after being empty)</Descriptions.Item>)
+                <Tooltip title="Garbage collects 5 minutes
+                    after being empty"><Tag key="persistence">Ephemeral</Tag></Tooltip>)
         } else {
-            privacyDescription = (<Descriptions.Item label="Persistence" key="persistence">Persistent (until deleted by
-                mods)</Descriptions.Item>)
+            privacyDescription = (<Tag key="persistence">Persistent</Tag>)
         }
-        if (this.state.room.get("visibility") == "unlisted") {
-            ACLdescription = (<Descriptions.Item label="Access" key="access-controller"><RoomVisibilityController
+        if (this.state.room.get("isPrivate")) {
+            ACLdescription = (<RoomVisibilityController
                 authContext={this.props.authContext} roomID={this.state.room.id} sid={this.state.room.get("twilioID")}
-                acl={this.state.room.getACL()}/></Descriptions.Item>);
+                acl={this.state.room.getACL()}/>);
+        }
+        let isP2P = this.state.room.get("mode") == "oeer-to-peer";
+// See:
+// for available connection options.https://media.twiliocdn.com/sdk/js/video/releases/2.0.0/docs/global.html#ConnectOptions
+        let connectionOptions= {
+            // Bandwidth Profile, Dominant Speaker, and Network Quality
+            // features are only available in Small Group or Group Rooms.
+            // Please set "Room Type" to "Group" or "Small Group" in your
+            // Twilio Console: https://www.twilio.com/console/video/configure
+            bandwidthProfile: {
+                video: {
+                    mode: 'collaboration',
+                    // dominantSpeakerPriority: 'standard',
+                    renderDimensions: {
+                        high: { height: 1080, width: 1920 },
+                        standard: { height: 720, width: 1280 },
+                        low: {height:176, width:144}
+                    },
+                },
+            },
+            dominantSpeakerfalse: false,
+            networkQuality: { local: 1, remote: 1 },
+
+            // Comment this line if you are playing music.
+            maxAudioBitrate: 16000,
+
+            // VP8 simulcast enables the media server in a Small Group or Group Room
+            // to adapt your encoded video quality for each RemoteParticipant based on
+            // their individual bandwidth constraints. This has no effect if you are
+            // using Peer-to-Peer Rooms.
+            preferredVideoCodecs: [{codec: 'VP8', simulcast: true}],
+        };
+        if (isP2P) {
+            connectionOptions = {
+                audio: true,
+                maxAudioBitrate: 16000, //For music remove this line
+                video: {height: 720, frameRate: 24, width: 1280}
+            }
+        }
+
+// For mobile browsers, limit the maximum incoming video bitrate to 2.5 Mbps.
+        if (isMobile && connectionOptions.bandwidthProfile.video) {
+            connectionOptions.bandwidthProfile.video.maxSubscriptionBitrate = 2500000;
+            connectionOptions.video= {height: 480, frameRate: 24, width: 640};
         }
         return (
             <div>
                 <h1>Lobby Session</h1>
-                <h3>{this.state.meetingName}</h3>
+
 
                 {/*{greeting}*/}
                 <MuiThemeProvider theme={theme}>
                     <AppStateProvider meeting={this.state.meetingName} token={this.state.token}
                                       isEmbedded={true}
                                       onDisconnect={this.handleLogout.bind(this)}>
-                        <VideoProvider onError={this.onError} isEmbedded={true} meeting={this.state.meetingName}
+                        <VideoProvider onError={this.onError.bind(this)} isEmbedded={true} meeting={this.state.meetingName}
+                                       options={connectionOptions}
                                        token={this.state.token} onDisconnect={this.handleLogout.bind(this)}>
-                            <Descriptions size="small" column={2}>
-                                {visibilityDescription}
-                                {privacyDescription}
-
-                                <Descriptions.Item label="Status">
-                                    <VideoContext.Consumer>
+                            <div style={{display:"flex"}}>
+                                <div style={{flex:1}}>
+                                    <h3>{this.state.meetingName} <VideoContext.Consumer>
                                         {
-                                            videoContext => (
-                                                videoContext.room.state
-                                            )
+                                            videoContext => {
+                                                let desc = videoContext.room.state;
+                                                if(desc)
+                                                    desc = desc[0].toUpperCase()+desc.slice(1);
+                                                else
+                                                    desc = "Connecting";
+                                                return   <Tag>{desc}</Tag>
+                                            }
                                         }
                                     </VideoContext.Consumer>
-                                </Descriptions.Item>
-                                <Descriptions.Item
-                                    label="Options"><FlipCameraButton/><DeviceSelector/><ToggleFullScreenButton/><HelpButton />
-                                </Descriptions.Item>
+                                        {visibilityDescription}
+                                        {privacyDescription}{fullLabel}</h3>
+
+                                </div>
+                                <div style={{}}>
+                                    <FlipCameraButton/><DeviceSelector/><ToggleFullscreenButton /> <ReportToModsButton room={this.state.room} />
+                                </div>
+                            </div>
+
                                 {ACLdescription}
-                            </Descriptions>
                         <div className={"videoEmbed"}>
                             <EmbeddedVideoWrapper />
                         </div></VideoProvider>
@@ -250,22 +292,65 @@ class VideoRoom extends Component {
         )
     }
 }
+function FlipCameraButton() {
+    const {
+        room: { localParticipant },
+        localTracks,
+        getLocalVideoTrack,
+    } = useVideoContext();
+    const [supportsFacingMode, setSupportsFacingMode] = useState(null);
+    const videoTrack = localTracks.find(track => track.name.includes('camera'));
+    const facingMode = videoTrack?.mediaStreamTrack.getSettings().facingMode;
 
-class HelpButton extends React.Component{
-    render(){
-        return       <Tooltip title="Report or Ban a User">
+    useEffect(() => {
+        // The 'supportsFacingMode' variable determines if this component is rendered
+        // If 'facingMode' exists, we will set supportsFacingMode to true.
+        // However, if facingMode is ever undefined again (when the user unpublishes video), we
+        // won't set 'supportsFacingMode' to false. This prevents the icon from briefly
+        // disappearing when the user switches their front/rear camera.
+        if (facingMode && supportsFacingMode === null) {
+            setSupportsFacingMode(facingMode);
+        }
+    }, [facingMode, supportsFacingMode]);
 
-            <IconButton>
-            <SecurityIcon color="secondary" />
+    const toggleFacingMode = useCallback(() => {
+        const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
+
+        if(videoTrack)
+        videoTrack.stop();
+
+        getLocalVideoTrack({ facingMode: newFacingMode }).then(newVideoTrack => {
+            const localTrackPublication = localParticipant.unpublishTrack(videoTrack);
+            // TODO: remove when SDK implements this event. See: https://issues.corp.twilio.com/browse/JSDK-2592
+            localParticipant.emit('trackUnpublished', localTrackPublication);
+
+            localParticipant.publishTrack(newVideoTrack, { priority: 'low' });
+        });
+    }, [facingMode, getLocalVideoTrack, localParticipant, videoTrack]);
+
+    return supportsFacingMode ? (
+        <IconButton onClick={toggleFacingMode} disabled={!videoTrack}>
+            <FlipCameraIosIcon />
+        </IconButton>
+    ) : null;
+}
+function ToggleFullscreenButton() {
+    const [isFullScreen, toggleFullScreen] = useFullScreenToggle();
+
+    return fscreen.fullscreenEnabled ? (
+        <Tooltip title="Toggle Full Screen view">
+        <IconButton aria-label={`full screen`} onClick={toggleFullScreen}>
+            {isFullScreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
         </IconButton>
         </Tooltip>
-    }
+    ) : null;
 }
+
 class RoomVisibilityController extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {users: [], loading: true, selected: [], hasChange: false}
+        this.state = {users: [], loading: true, selected: null, hasChange: false}
     }
 
     handleChange(value) {
@@ -288,16 +373,14 @@ class RoomVisibilityController extends React.Component {
         let selected = Object.keys(this.props.acl.permissionsById).filter(v=>!v.startsWith("role"));
         // let selected = await selectedQuery.find();
         this.props.authContext.helpers.getUsers();
-        this.setState({selected: selected});
-        if(this.props.authContext.users){
-            this.setState({users: this.props.authContext.users, loading: false});
-
-        }
+        let profiles = await this.props.authContext.helpers.getUserProfilesFromUserIDs(selected);
+        let selectedIDs = profiles.map(p=>p.get("user").id);
+        this.setState({selected: selectedIDs, loading: this.props.authContext.users == undefined, users: this.props.authContext.users});
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(prevProps.authContext.users != this.props.authContext.users){
-            this.setState({users: this.props.authContext.users, loading: false});
+            this.setState({users: this.props.authContext.users, loadingUsers: false});
         }
     }
 
@@ -306,7 +389,6 @@ class RoomVisibilityController extends React.Component {
             return;
         this.setState({pendingSave: true});
         let users = values.users;
-        let theRole = this.state.selectedRole;
         let idToken = this.props.authContext.user.getSessionToken();
         const data = await fetch(
             `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/acl`
@@ -324,7 +406,7 @@ class RoomVisibilityController extends React.Component {
             });
         let res = await data.json();
         if (res.status == "error") {
-            message.error(res.message);
+            message.error({content: res.message, style:{zIndex: 2020}});
             this.setState({pendingSave: false})
         } else {
             this.setState({pendingSave: false})
@@ -334,10 +416,12 @@ class RoomVisibilityController extends React.Component {
     }
 
     render() {
+        if(!this.state.users || !this.state.selected)
+            return <Skeleton />;
         const options = Object.keys(this.state.users).map(d => {
             return {
-                label: this.state.users[d].get("displayname"), value:
-                d
+                label: this.state.users[d].get("displayName"), value:
+                this.state.users[d].get("user").id
             };
         });
         let _this = this;
@@ -348,8 +432,6 @@ class RoomVisibilityController extends React.Component {
         error = <Alert type="warning"
                message={"Warning: you are removing yourself from this chat. You will not be able to return unless invited."}/>
         // const options = [];
-        if (this.state.loading || this.state.users.length == 0)
-            return <Skeleton.Input></Skeleton.Input>
         return <Form initialValues={{
             users: this.state.selected
         }}
@@ -357,7 +439,8 @@ class RoomVisibilityController extends React.Component {
                      layout="inline"
         >
             <Form.Item name="users"
-                       extra="Any user that you add here will see and manage this room from slack and this site.">
+                       label="Permitted Users:"
+                       extra="Any user that you add here will see and manage this room">
                 <Select
                     loading={this.state.loading}
                     mode="multiple" style={{width: '100%'}} placeholder="Users"
@@ -367,7 +450,7 @@ class RoomVisibilityController extends React.Component {
                 </Select>
             </Form.Item>
             <Form.Item>
-                <Button htmlTh1ype="submit" type={!this.state.hasChange ? "default" : "primary"} loading={this.state.pendingSave}>
+                <Button htmlType="submit" type={!this.state.hasChange ? "default" : "primary"} loading={this.state.pendingSave}>
                     Update
                 </Button>
             </Form.Item>
@@ -407,9 +490,11 @@ export function DeviceSelector() {
 
     return (
         <>
+            <Tooltip title="Adjust Inputs">
             <IconButton onClick={() => setIsOpen(true)} data-cy-device-select>
                 <SettingsInputComponentIcon />
             </IconButton>
+            </Tooltip>
             <Dialog open={isOpen} onClose={() => setIsOpen(false)} classes={{ paper: classes.paper }}>
                 <DialogContent className={classes.container}>
                     <div className={classes.listSection}>

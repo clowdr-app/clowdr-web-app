@@ -43,9 +43,13 @@ class App extends Component {
     constructor(props) {
         super(props);
         // this.state ={'activeKey'=routing}
+        let showSider = false;
+        this.router = React.createRef();
+
+        // if(this.props.match.)
         this.state = {
             conference: null,
-            collapsed: false,
+            siderCollapsed: false,
             showingLanding: this.props.authContext.showingLanding
         }
     }
@@ -111,6 +115,7 @@ class App extends Component {
     }
 
     componentDidMount() {
+        console.log(this.router.current)
         if (this.props.authContext.currentConference)
             this.refreshConferenceInformation();
     }
@@ -127,6 +132,7 @@ class App extends Component {
                 <Route exact path="/signout" component={SignOut}/>
                 <Route exact path="/lobby" component={Lobby}/>
                 <Route exact path="/signin" component={SignIn}/>
+                <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
 
                 <Route exact path="/admin" component={(props)=><SignIn {...props} dontBounce={true}/>} />
             </div>
@@ -145,6 +151,7 @@ class App extends Component {
             <Route exact path="/account" component={Account}/>
             <Route exact path="/videoChat/:roomId" component={VideoChat}/>
             <Route exact path="/lobby" component={Lobby}/>
+            <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
             <Route exact path="/signup" component={SignUp}/>
             <Route exact path="/signin" component={SignIn}/>
             <Route exact path="/signout" component={SignOut}/>
@@ -158,8 +165,7 @@ class App extends Component {
     }
 
     setCollapsed(collapsed) {
-        console.log(collapsed)
-        this.setState({collapsed: collapsed});
+        this.setState({siderCollapsed: collapsed});
     }
 
     render() {
@@ -180,7 +186,7 @@ class App extends Component {
             }
         }
         return (
-            <BrowserRouter basename={process.env.PUBLIC_URL}>
+            <BrowserRouter basename={process.env.PUBLIC_URL} ref={this.router}>
                 <div className="App">
                     <Layout className="site-layout">
                         {this.siteHeader()}
@@ -188,11 +194,12 @@ class App extends Component {
                             {this.navBar()}
 
                             <Layout>
-                                <Sider collapsible collapsed={this.state.collapsed}
+                                <Sider collapsible collapsed={this.state.siderCollapsed}
                                        trigger={null}
                                        onCollapse={this.setCollapsed.bind(this)} width="350px"
+                                       collapsedWidth={100}
                                        style={{backgroundColor: '#f0f2f5'}}>
-                                    <ContextualActiveUsers collapsed={this.state.collapsed}
+                                    <ContextualActiveUsers collapsed={this.state.siderCollapsed}
                                                            setCollapsed={this.setCollapsed.bind(this)}/>
                                 </Sider>
                                 <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>

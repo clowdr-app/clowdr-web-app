@@ -17,7 +17,7 @@ class LiveStreaming extends Component {
                 videos: res,
                 loading: false
             });
-            this.sub = this.props.parseLive.subscribe(query);
+            this.sub = this.props.parseLive.client.subscribe(query);
             this.sub.on('create', vid => {
                 console.log("Video created " + JSON.stringify(vid) + " " + vid.get("title") + " " + vid.title);
                 this.setState((prevState) => ({

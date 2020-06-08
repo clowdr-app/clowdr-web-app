@@ -92,7 +92,7 @@ class ChatContainer extends Component {
     handleAuthChange(user) {
         let myName = "";
         if(user){
-            myName = user.id+":"+user.get('displayname');
+            myName = user.id+":"+user.get('displayName');
         }
         if (user) {
             this.setState({user: user, myName: myName});

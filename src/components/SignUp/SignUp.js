@@ -44,7 +44,7 @@ class SignUp extends Component {
 
         let user = new Parse.User();
         user.set("username", email);
-        user.set("displayname",username);
+        user.set("displayName",username);
         user.set("password", passwordOne);
         user.set("email", email);
 
@@ -81,6 +81,9 @@ class SignUp extends Component {
             passwordOne === '' ||
             email === '' ||
             username === '';
+        if(true){
+            return <div>This page needs to be corrected to make a user profile, enroll user, etc. before it is used again.</div>
+        }
         return (
             <Form onFinish={this.onSubmit} labelCol={{
                 span: 4,

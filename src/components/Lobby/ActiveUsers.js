@@ -179,7 +179,7 @@ class ActiveUsers extends React.Component {
                         else
                             avatar = <Avatar>{item.initials}</Avatar>
                         if (profile)
-                            username = profile.get("displayname");
+                            username = profile.get("displayName");
                         else
                             username = item.name;
                         return (

@@ -28,7 +28,7 @@ const withParseLive = Component => {
             //     return <div>    <Spin size="large" />
             //     </div>
             return (
-                <ParseLiveContext.Provider value={this.state.client} >
+                <ParseLiveContext.Provider value={this.state} >
                     <Component {...this.props}  />
                 </ParseLiveContext.Provider>
             );

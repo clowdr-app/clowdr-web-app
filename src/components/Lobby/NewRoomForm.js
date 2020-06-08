@@ -1,37 +1,29 @@
 import React from "react";
-import {Button, Form, Input, message, Modal, Radio, Select} from "antd";
+import {Button, Form, Input, message, Modal, Radio, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
 class NewRoomForm extends React.Component {
 
-    state = {
-        ModalText: 'Content of the modal',
-        visible: this.props.visible,
-        confirmLoading: false,
-    };
 
+    constructor(props) {
+        super(props);
+        this.form = React.createRef();
+        this.state = {
+            ModalText: 'Content of the modal',
+            visible: this.props.visible,
+            confirmLoading: false,
+        };
+    }
     showModal = () => {
         this.setState({
             visible: true,
         });
     };
 
-    handleOk = () => {
-        this.setState({
-            ModalText: 'The modal will be closed after two seconds',
-            confirmLoading: true,
-        });
-        setTimeout(() => {
-            this.setState({
-                visible: false,
-                confirmLoading: false,
-            });
-        }, 2000);
-    };
-
     handleCancel = () => {
-        console.log('Clicked cancel button');
+        if (this.form && this.form.current)
+            this.form.current.resetFields();
         this.setState({
             visible: false,
         });
@@ -42,16 +34,16 @@ class NewRoomForm extends React.Component {
         const { visible, confirmLoading, ModalText } = this.state;
         let buttonText = (this.props.text ? this.props.text : "New Room");
         let buttonType= (this.props.type ? this.props.type : "primary");
-        return (
+
+        return this.props.auth.helpers.ifPermission("createVideoRoom",
             <div>
                 <Button type={buttonType} onClick={this.showModal} style={this.props.style}>
                     {buttonText}
                 </Button>
                 <Modal
-                    zIndex="2000"
+                    zIndex="200"
                     title="Create a new video chat room"
                     visible={visible}
-                    // onOk={this.handleOk}
                     confirmLoading={confirmLoading}
                     footer={[
                         <Button form="myForm" key="submit" type="primary" htmlType="submit" loading={confirmLoading}>
@@ -63,11 +55,15 @@ class NewRoomForm extends React.Component {
                     <Form
                         layout="vertical"
                         name="form_in_modal"
+                        ref={this.form}
+
                         id="myForm"
                         initialValues={{
+                            title: this.props.initialName,
                             visibility: 'listed',
-                            category: 'general',
-                            mode: 'group-small',
+                            // category: 'general',
+                            // mode: 'group-small',
+                            mode: 'peer-to-peer',
                             persistence: 'ephemeral'
                         }}
                         onFinish={async (values) => {
@@ -96,6 +92,7 @@ class NewRoomForm extends React.Component {
                                 message.error(res.message);
                                 this.setState({confirmLoading: false})
                             } else {
+                                this.form.current.resetFields();
                                 this.setState({confirmLoading: false, visible: false})
                                 this.props.history.push("/video/" + encodeURI(this.props.auth.currentConference.get("conferenceName")) + "/" + encodeURI(values.title));
                             }
@@ -113,44 +110,56 @@ class NewRoomForm extends React.Component {
                         >
                             <Input/>
                         </Form.Item>
-                        <Form.Item
-                            name="category"
-                            label="Category"
-                        >
-                            <Select>
-                                <Select.Option value="general">General</Select.Option>
-                                <Select.Option value="bof">Birds-of-a-Feather</Select.Option>
-                            </Select>
-                        </Form.Item>
+                        {/*<Form.Item*/}
+                        {/*    name="category"*/}
+                        {/*    label="Category"*/}
+                        {/*>*/}
+                        {/*    <Select>*/}
+                        {/*        <Select.Option value="general">General</Select.Option>*/}
+                        {/*        <Select.Option value="bof">Birds-of-a-Feather</Select.Option>*/}
+                        {/*    </Select>*/}
+                        {/*</Form.Item>*/}
                         <Form.Item
                             name="persistence"
                             label="Persistence"
                             extra={"Ephemeral rooms disappear 5 minutes after the last participant leaves"}>
                             <Radio.Group buttonStyle="solid">
                                 <Radio.Button value="ephemeral">Ephemeral</Radio.Button>
-                                <Radio.Button value="persistent">Persistent</Radio.Button>
+                                {this.props.auth.helpers.ifPermission("createVideoRoom-persistent",
+                                    <Radio.Button value="persistent">Persistent</Radio.Button>,
+                                    <Tooltip title="You do not have access permissions to create persistent rooms"><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
+                                )}
                             </Radio.Group>
                         </Form.Item>
                         <Form.Item
                             name="mode"
-                            label="mode"
-                            extra={"Peer-to-peer is best for 2 participants, small-group up to 4, large group up to 50"}>
+                            label="Room connection mode and participant capacity"
+                            extra={"Peer-to-Peer rooms may have not work as well across continents or on mobile devices."}>
                             <Radio.Group buttonStyle="solid">
-                                <Radio.Button value="peer-to-peer">Peer-to-Peer</Radio.Button>
-                                <Radio.Button value="group-small">Small Group</Radio.Button>
-                                <Radio.Button value="group">Large Group</Radio.Button>
+                                {this.props.auth.helpers.ifPermission("createVideoRoom-peer-to-peer",
+                                    <Radio.Button value="peer-to-peer">Peer-to-Peer (1-10)</Radio.Button>,
+                                    <Tooltip title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="peer-to-peer" disabled={true}>Peer-to-Peer (1-10)</Radio.Button></Tooltip>)}
+                                {this.props.auth.helpers.ifPermission("createVideoRoom-smallgroup",<Radio.Button value="group-small">Small Group (1-4)</Radio.Button>,
+                                    <Tooltip title="You do not have access permissions to create small group rooms"><Radio.Button value="group-small" disabled={true}>Small Group (1-4)</Radio.Button></Tooltip>)}
+                                {this.props.auth.helpers.ifPermission("createVideoRoom-group",<Radio.Button value="group">Large Group (4-24)</Radio.Button>,
+                                    <Tooltip title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="group">Large Group (1-24)</Radio.Button></Tooltip>)}
+
                             </Radio.Group>
                         </Form.Item>
                         <Form.Item
                             name="visibility"
                             label="Visibility"
-                            extra={"All video calls can be joined by any member of the " + this.props.auth.currentConference.get("conferenceName") +" slack workspace. " +
-                            "However, you can restrict others from finding this room by selecting unlisted and can then share a link to join it"
+                            extra={"'Open' video calls can be joined by any member of the " + this.props.auth.currentConference.get("conferenceName") +" slack workspace. " +
+                            "Private rooms allow you to restrict access to specific users of the workspace"
                             }
                         >
                             <Radio.Group buttonStyle="solid">
-                                <Radio.Button value="listed">Listed</Radio.Button>
-                                <Radio.Button value="unlisted">Unlisted</Radio.Button>
+                                <Radio.Button value="listed">Open</Radio.Button>
+                                {this.props.auth.helpers.ifPermission("createVideoRoom-private",
+                                    <Radio.Button value="unlisted">Private</Radio.Button>,
+                                    <Tooltip title="You do not have access permissions to create private rooms"><Radio.Button disabled={true} value="unlisted">Private</Radio.Button></Tooltip>
+                                )}
+
                             </Radio.Group>
                         </Form.Item>
                     </Form>

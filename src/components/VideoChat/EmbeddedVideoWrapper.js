@@ -1,17 +1,14 @@
-import Container from "@material-ui/core/Container";
-import useHeight from "clowdr-video-frontend/lib/hooks/useHeight/useHeight";
-import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import {createStyles, makeStyles} from '@material-ui/core/styles';
 import clsx from 'clsx';
 
 import useRoomState from "clowdr-video-frontend/lib/hooks/useRoomState/useRoomState";
 import MenuBar from "clowdr-video-frontend/lib/components/MenuBar/MenuBar";
-import Controls from "clowdr-video-frontend/lib/components/Controls/Controls";
-import ConnectTriggeringLocalVideoPreview from "clowdr-video-frontend/lib/components/LocalVideoPreview/ConnectTriggeringLocalVideoPreview"
+import ConnectTriggeringLocalVideoPreview
+    from "clowdr-video-frontend/lib/components/LocalVideoPreview/ConnectTriggeringLocalVideoPreview"
 import ReconnectingNotification
     from "clowdr-video-frontend/lib/components/ReconnectingNotification/ReconnectingNotification";
-import Room from "clowdr-video-frontend/lib/components/Room/Room";
 import {styled} from "@material-ui/core";
-import React, {Component} from "react";
+import React from "react";
 import Grid from '@material-ui/core/Grid';
 
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
@@ -31,8 +28,17 @@ import useParticipantNetworkQualityLevel
 import useTrack from "clowdr-video-frontend/lib/hooks/useTrack/useTrack";
 import useIsTrackSwitchedOff from "clowdr-video-frontend/lib/hooks/useIsTrackSwitchedOff/useIsTrackSwitchedOff";
 import Publication from "clowdr-video-frontend/lib/components/Publication/Publication";
+import Masonry from "react-masonry-css";
+import useIsUserActive from "clowdr-video-frontend/lib/components/Controls/useIsUserActive/useIsUserActive";
+import ToggleAudioButton from "clowdr-video-frontend/lib/components/Controls/ToggleAudioButton/ToggleAudioButton";
+import ToggleVideoButton from "clowdr-video-frontend/lib/components/Controls/ToggleVideoButton/ToggleVideoButton";
+import ToggleScreenShareButton
+    from "clowdr-video-frontend/lib/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
+import EndCallButton from "clowdr-video-frontend/lib/components/Controls/EndCallButton/EndCallButton";
+
+let backgroundImg = require('../../clowdr-background.jpg');
 const Main = styled('main')({
-    overflow: 'hidden',
+    // overflow: 'hidden',
 });
 
 const ParticipantContainer = styled('Grid')(({ theme }) => ({
@@ -42,7 +48,7 @@ const ParticipantContainer = styled('Grid')(({ theme }) => ({
     flexGrow: 1,
     // gridTemplateColumns: `${theme.sidebarWidth}px 1fr`,
     gridTemplateAreas: '". participantList"',
-    gridTemplateRows: '100%',
+    // gridTemplateRows: '100%',
     spacing: 0,
     // [theme.breakpoints.down('xs')]: {
     //     gridTemplateAreas: '"participantList" "."',
@@ -51,7 +57,6 @@ const ParticipantContainer = styled('Grid')(({ theme }) => ({
     //     gridGap: '6px',
     // },
 }));
-
 
 export default function App() {
     const roomState = useRoomState();
@@ -70,62 +75,117 @@ export default function App() {
                 {roomState === 'disconnected' ? <ConnectTriggeringLocalVideoPreview /> : <div>
                     <ParticipantStrip />
                 </div>}
-                <Controls />
             </Main>
             <ReconnectingNotification />
         </div>
     );
 }
 
-const ParticipantStripContainer = styled('aside')(({ theme }) => ({
-    padding: '0.5em',
-    overflowY: 'auto',
-    [theme.breakpoints.down('xs')]: {
-        overflowY: 'initial',
-        overflowX: 'auto',
-        padding: 0,
-        display: 'flex',
-    },
-}));
-
-const ScrollContainer = styled('div')(({ theme }) => ({
-    [theme.breakpoints.down('xs')]: {
-        display: 'flex',
-    },
-}));
 
 function ParticipantStrip() {
     const {
         room: { localParticipant },
     } = useVideoContext();
     const participants = useParticipants();
+    const classes = useStyles();
+    const roomState = useRoomState();
+
+    const isReconnecting = roomState === 'reconnecting';
+    const isUserActive = useIsUserActive();
+    const showControls = isUserActive || roomState === 'disconnected';
+
     const [selectedParticipant, setSelectedParticipant] = useSelectedParticipant();
-    // const height = useHeight();
+    // const height = useHeight();o
+    let nImages = participants.length;
+    let defaultPriority = "standard";
+    let breakpointColumnsObj = {
+        default: 4,
+        1100: 3,
+        700: 2,
+        500: 1
+    };
+    if(nImages > 6){
+        defaultPriority="low";
+    }
+    if(nImages ==0){
+        breakpointColumnsObj={
+            default: 1
+        }
+    }
+    else if (nImages < 2) {
+        breakpointColumnsObj = {
+            default: 2,
+            500: 1
+        };
+    } else if (nImages <= 8) {
+        breakpointColumnsObj = {
+            default: 3,
+            1100: 2,
+            500: 1
+        };
+    }
+    if (selectedParticipant) {
+        breakpointColumnsObj = {
+            default: 8,
+            1100: 6,
+            700: 4,
+            500: 2
+        };
+        if (nImages < 2) {
+            breakpointColumnsObj = {
+                default: 4,
+                500: 2
+            };
+        } else if (nImages <= 8) {
+            breakpointColumnsObj = {
+                default: 4,
+                1100: 2,
+                500: 2
+            };
+        }
+    }
 
     return (
         // <ParticipantStripContainer>
         //     <ScrollContainer>
         // <Container style={{ height }}>
-
-        <Grid container spacing={0} style={{height: "80vh"}}>
-            <Grid item xs={6}>
-        <Participant
+<div style={{paddingLeft: "5px"}}>
+    {selectedParticipant?  <Participant
+        key={selectedParticipant.sid}
+        participant={selectedParticipant}
+        isSelected={true}
+        enableScreenShare={true}
+        priority={"high"}
+        onClick={() => setSelectedParticipant(selectedParticipant)}
+    /> : ""}
+        <Masonry         breakpointCols={breakpointColumnsObj} className="video-masonry-grid" columnClassName="video-masonry-column">
+            {selectedParticipant == localParticipant ? "" : <Participant
                     participant={localParticipant}
                     isSelected={selectedParticipant === localParticipant}
                     onClick={() => setSelectedParticipant(localParticipant)}
-                /></Grid>
-                {participants.map(participant => (
-                    <Grid item xs={6}
-                          key={participant.sid}
-                    ><Participant
-                        key={participant.sid}
+                />}
+                {participants.filter((participant)=>(participant != selectedParticipant)).map((participant, idx)=> (
+                    <Participant
+                        key={""+idx+participant.sid}
                         participant={participant}
                         isSelected={selectedParticipant === participant}
                         enableScreenShare={true}
+                        priority={defaultPriority}
                         onClick={() => setSelectedParticipant(participant)}
-                    /></Grid>
+                    />
                 ))}
-        </Grid>
+        </Masonry>
+    <div className={clsx(classes.controlsContainer, { showControls })}>
+        <ToggleAudioButton disabled={isReconnecting} />
+        <ToggleVideoButton disabled={isReconnecting} />
+        {roomState !== 'disconnected' && (
+            <>
+                <ToggleScreenShareButton disabled={isReconnecting} />
+                <EndCallButton />
+            </>
+        )}
+    </div>
+</div>
         // </ParticipantStripContainer>
     );
 }
@@ -136,10 +196,11 @@ function Participant({
                          enableScreenShare,
                          onClick,
                          isSelected,
+    priority
                      }) {
     return (
         <ParticipantInfo participant={participant} onClick={onClick} isSelected={isSelected}>
-            <ParticipantTracks participant={participant} disableAudio={disableAudio} enableScreenShare={enableScreenShare} />
+            <ParticipantTracks participant={participant} disableAudio={disableAudio} enableScreenShare={enableScreenShare} videoPriority={priority}/>
         </ParticipantInfo>
     );
 }
@@ -147,10 +208,10 @@ function Participant({
 const useStyles = makeStyles((theme) =>
     createStyles({
         container: {
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            overflow: 'hidden',
+            // position: 'relative',
+            // display: 'flex',
+            // alignItems: 'stretch',
+            // overflow: 'hidden',
             cursor: 'pointer',
             '& video': {
                 filter: 'none',
@@ -159,9 +220,10 @@ const useStyles = makeStyles((theme) =>
                 stroke: 'black',
                 strokeWidth: '0.8px',
             },
+            border: "1px solid black",
             [theme.breakpoints.down('xs')]: {
-                height: theme.sidebarMobileHeight,
-                marginRight: '3px',
+                // height: theme.sidebarMobileHeight,
+                // marginRight: '3px',
                 fontSize: '10px',
             },
         },
@@ -171,21 +233,15 @@ const useStyles = makeStyles((theme) =>
             },
         },
         infoContainer: {
-            position: 'absolute',
-            zIndex: 1,
             display: 'flex',
-            flexDirection: 'column',
             justifyContent: 'space-between',
-            height: '100%',
             padding: '0.4em',
-            width: '100%',
             background: 'transparent',
         },
         hideVideo: {
             background: 'black',
         },
         identity: {
-            background: 'rgba(0,0,0, 0.7)',
             fontSize: '12px',
             padding: '0.1em 0.3em',
             margin: 0,
@@ -195,6 +251,24 @@ const useStyles = makeStyles((theme) =>
         infoRow: {
             display: 'flex',
             justifyContent: 'space-between',
+        },
+        controlsContainer: {
+            display: 'flex',
+            position: 'sticky',
+            bottom: 0,
+            transition: 'opacity 1.2s, transform 1.2s, visibility 0s 1.2s',
+            opacity: 0,
+            visibility: 'hidden',
+            maxWidth: 'min-content',
+            '&.showControls, &:hover': {
+                transition: 'opacity 0.6s, transform 0.6s, visibility 0s',
+                opacity: 1,
+                visibility: 'visible',
+                transform: 'translate(50%, 0px)',
+            },
+            [theme.breakpoints.down('xs')]: {
+                bottom: `${theme.sidebarMobileHeight + 3}px`,
+            },
         },
     })
 );

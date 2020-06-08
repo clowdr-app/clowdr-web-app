@@ -7,7 +7,7 @@ Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE
 Parse.serverURL = 'https://parseapi.back4app.com/'
 
 
-let data = JSON.parse(fs.readFileSync("data/confero.json"));
+let data = JSON.parse(fs.readFileSync("data/confero-pldi.json"));
 let conferoPeople = {};
 
 let i = 0;
@@ -48,7 +48,7 @@ async function findOrAddUser(key) {
                 user.set("email", cp.Key + "@clowdr.org");
                 user.set("displayname", cp.Name);
                 user.set("affiliation", cp.Affiliation);
-                user.set("username", cp.Key + "@clowdr.org");
+                user.set("username", cp.Key);
                 user.set("password", "abcd" + cp.Key + i + Math.random());
                 try {
                     if (cp.URLphoto) {

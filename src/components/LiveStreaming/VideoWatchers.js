@@ -14,7 +14,6 @@ class VideoWatchers extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        console.log("componentDidUpdate " + prevProps.expanded + " new " + this.props.expanded);
         if (this.props.expanded !== prevProps.expanded) {
             this.changeCount(this.props.expanded);
         }
@@ -25,7 +24,7 @@ class VideoWatchers extends React.Component {
         const WatchersCount = Parse.Object.extend("LiveVideoWatchers");
         let q = new Parse.Query(WatchersCount);
         q.equalTo("name", name);
-        console.log("Changing count for " + name);
+        console.log("Changing count for " + name + (isIncrement ? " increment" : " decrement"));
         const record = await q.first();
         if (record) {
             console.log("Changing watchers count for " + name + " " + isIncrement + " " + JSON.stringify(record));
@@ -34,7 +33,7 @@ class VideoWatchers extends React.Component {
                 record.increment("count");
             else
                 record.decrement("count");
-            record.save();
+            await record.save();
         } else {
             console.log("LiveVideoWatcher not found for " + name);
         }
@@ -44,8 +43,9 @@ class VideoWatchers extends React.Component {
         this._isMounted = true;
         let q = new Parse.Query("LiveVideoWatchers");
         const name = this.props.video.get("title");
+        console.log("Mounted watchers, title: " + name)
         q.equalTo("name", name);
-        this.sub = this.props.parseLive.subscribe(q);
+        this.sub = this.props.parseLive.client.subscribe(q);
 
         this.sub.on('update', watchRecord => {
             console.log("Update received: watchers count for " + watchRecord.get("name") + " is now " + watchRecord.get("count") + ". Local count=" + this.state.count);
@@ -58,6 +58,7 @@ class VideoWatchers extends React.Component {
     componentWillUnmount() {
         if (this.sub)
             this.sub.unsubscribe();
+        console.log("Unmounted watchers")
         this._isMounted = false;
     }
 

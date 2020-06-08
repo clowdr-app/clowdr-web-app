@@ -1,5 +1,5 @@
 import React from 'react';
-import {Avatar, Card, Divider, Layout, List, message, Popconfirm, Space, Typography, Spin} from "antd";
+import {Avatar, Card, Divider, Layout, List, message, Popconfirm, Space, Tooltip, Typography, Spin} from "antd";
 import {AuthUserContext} from "../Session";
 import ParseLiveContext from "../parse/context";
 import Parse from "parse";
@@ -44,7 +44,7 @@ class MeetingSummary extends React.Component {
                     return true;
                 if (a[i] && b[i] && a[i].id != b[i].id)
                     return true;
-                if(a[i].get("displayname") !=b[i].get("displayname") || a[i].get("profilePhoto") != b[i].get("profilePhoto"))
+                if(a[i].get("displayName") !=b[i].get("displayName") || a[i].get("profilePhoto") != b[i].get("profilePhoto"))
                     return true;
             }
         return false;
@@ -71,12 +71,12 @@ class MeetingSummary extends React.Component {
         let _this = this;
         return <Card title={item.get('title')} style={{width: "350px", "height": "350px", overflow: "scroll"}}
                      size={"small"}
-                     extra={<Popconfirm
+                     extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
                          title="You are about to join a video call. Are you ready?"
                          onConfirm={_this.joinMeeting.bind(_this, item)}
                          okText="Yes"
                          cancelText="No"
-                     ><a href="#">Join</a></Popconfirm>}
+                     ><a href="#">Join</a></Popconfirm>)}
         >
             {(item.get('members') ? <span>
                 {/*<h4>Currently here:</h4>*/}
@@ -90,8 +90,8 @@ class MeetingSummary extends React.Component {
                             avatar = <Avatar src={user.get("profilePhoto").url()}/>
                         else {
                             let initials = "";
-                            if(user.get("displayname"))
-                                user.get("displayname").split(" ").forEach((v=>initials+=v.substring(0,1)))
+                            if(user.get("displayName"))
+                                user.get("displayName").split(" ").forEach((v=>initials+=v.substring(0,1)))
 
                             avatar = <Avatar>{initials}</Avatar>
                         }
@@ -100,7 +100,7 @@ class MeetingSummary extends React.Component {
                                 avatar={
                                     avatar
                                 }
-                                title={user.get("displayname")}
+                                title={user.get("displayName")}
                             />
                         </List.Item>
                     }}
@@ -121,7 +121,14 @@ class MeetingSummary extends React.Component {
 class Lobby extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {'loading': true, 'visible': false, maxDisplayedRooms: 10};
+        let newName = "";
+        let showModal = false;
+        if(this.props.match && this.props.match.params && this.props.match.params.roomName){
+            newName = this.props.match.params.roomName;
+            showModal =true;
+        }
+
+        this.state = {'loading': true, 'visible': showModal, requestedName: newName, maxDisplayedRooms: 10};
     }
 
     componentDidMount() {
@@ -141,7 +148,7 @@ class Lobby extends React.Component {
                     rooms: res,
                     loading: false
                 });
-                this.sub = this.props.parseLive.subscribe(query, this.props.auth.user.getSessionToken());
+                this.sub = this.props.parseLive.client.subscribe(query, this.props.auth.user.getSessionToken());
                 this.sub.on('create', async (newItem) => {
                     newItem = await this.props.auth.helpers.populateMembers(newItem);
                     this.setState((prevState) => ({
@@ -211,10 +218,6 @@ class Lobby extends React.Component {
         // });
     }
 
-    setVisible() {
-        this.setState({'visible': !this.state.visible});
-    }
-
 
     displayMore() {
         this.setState((prevState) => ({
@@ -246,7 +249,7 @@ class Lobby extends React.Component {
                 a look at the breakout rooms that participants have formed so far and join one, or create a new
                 one!
                 </Typography.Paragraph>
-                <NewRoomForm style={{float: "right", paddingTop: "5px"}}/>
+                <NewRoomForm style={{float: "right", paddingTop: "5px"}} initialName={this.state.requestedName} visible={this.state.visible} />
 
                 <Space />
                 <Divider/>
