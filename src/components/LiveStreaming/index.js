@@ -9,13 +9,6 @@ class LiveStreaming extends Component {
     constructor(props) {
         // props.parseLive
         super(props);
-        this.state = {
-            dirty: false
-        };
-    }
-
-    dirty() {
-        this.setState({dirty: !this.state.dirty});
     }
     
     componentDidMount() {
@@ -69,7 +62,6 @@ class LiveStreaming extends Component {
                 this.setState((prevState) => ({
                         watchers: [...prevState.watchers, watchRecord]
                 }));
-                this.dirty();
             })
             this.wactherSubscription.on('delete', watchRecord => {
                 console.log("Watcher deleted " + watchRecord.get("user") + " " + watchRecord.get("video"));
@@ -96,7 +88,7 @@ class LiveStreaming extends Component {
                     // let w = this.state.watchers.filter(w => w.video === video.id)
                     return <div className={"space-align-block"} key={video.get("key")}>
                         <Space align={"center"}>
-                            <GeoLocationLiveVideoThumbnail auth={this.props.auth} video={video} watchers={this.state.watchers} dirty={this.state.dirty} />
+                            <GeoLocationLiveVideoThumbnail auth={this.props.auth} video={video} watchers={this.state.watchers} />
                         </Space></div>
                 })}
             </div>
