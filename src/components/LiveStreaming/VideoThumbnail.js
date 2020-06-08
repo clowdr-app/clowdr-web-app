@@ -15,22 +15,22 @@ class VideoThumbnail extends React.Component {
     constructor(props) {
         super(props);
         // props includes video and watchers
+        var w = this.props.watchers.filter(w =>  w.get("video") == this.props.video.id );
         this.state = {
             expanded: false,
-            count: this.props.watchers.get("count")
+            count: w.length
         };
-        console.log(this.props.geoloc);
-        console.log("watchers: " + this.props.watchers.get("count"));
+    }
+
+    componentDidMount() {
     }
 
     componentDidUpdate(prevProps) {
         // Typical usage (don't forget to compare props):
-        console.log("props.dirty=" + this.props.dirty+ " prevProps.dirty=" + prevProps.dirty);
-        console.log("props.count=" + this.props.watchers.get("count")+ " prevProps.count=" + prevProps.watchers.get("count"));
-        if (this.props.dirty !== prevProps.dirty) {
-            if (this.state.count !== this.props.watchers.get("count")) {
-                console.log("NEW COUNT! " + this.props.watchers.get("count"));
-                this.setState({count: this.props.watchers.get("count")});
+        if (prevProps.watchers.length !== this.props.watchers.length) {
+            var w = this.props.watchers.filter(w =>  w.get("video") == this.props.video.id );
+            if (w.length !== this.state.count) {
+                this.setState({count: w.length});
             }
         }
     }
@@ -42,7 +42,7 @@ class VideoThumbnail extends React.Component {
     render() {
         const src1 = this.props.video.get("src1");
         const id1 = this.props.video.get("id1");
-        console.log('Rendering ' + src1 + "-" + id1);
+        // console.log('Rendering ' + src1 + "-" + id1);
 
         const video_url = videoURLFromData(src1, id1);
 
@@ -59,7 +59,7 @@ class VideoThumbnail extends React.Component {
                         onCancel={this.toggleExpanded.bind(this)}
                         okButtonProps={{style: {display: 'none'}}}
             >
-                <LiveVideoPanel video={this.props.video} watchers={this.props.watchers} count={this.state.count} onUpdate={this.props.onUpdate}/>
+                <LiveVideoPanel video={this.props.video} watchers={this.props.watchers} auth={this.props.auth}/>
             </Modal>
         }
         else {

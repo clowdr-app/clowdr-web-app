@@ -3,15 +3,19 @@ import {Space, Spin} from 'antd';
 import GeoLocationLiveVideoThumbnail from "./VideoThumbnail";
 import Parse from "parse";
 import ParseLiveContext from "../parse/context";
+import AuthUserContext from "../Session/context"
 
 class LiveStreaming extends Component {
     constructor(props) {
         // props.parseLive
         super(props);
         this.state = {
-            dirty: false,
-            updating: false
+            dirty: false
         };
+    }
+
+    dirty() {
+        this.setState({dirty: !this.state.dirty});
     }
     
     componentDidMount() {
@@ -52,7 +56,7 @@ class LiveStreaming extends Component {
 
         let q = new Parse.Query("LiveVideoWatchers");
         q.find().then(res => {
-            console.log(JSON.stringify(res));
+            // console.log("WATCHERS: " + JSON.stringify(res));
             this.setState({
                 watchers: res
             });
@@ -60,22 +64,20 @@ class LiveStreaming extends Component {
         q.subscribe().then(subscription => {
             this.wactherSubscription = subscription;
 
-            this.wactherSubscription.on('update', watchRecord => {
-                console.log("Update received: watchers count for " + watchRecord.get("name") + " is now " + watchRecord.get("count"));
-                console.log(JSON.stringify(watchRecord));
-                if (!this.state.updating) {
-                    const found = this.state.watchers.find(w => w.objectId === watchRecord.objectId);
-                    if (found) {
-                        console.log("Found watcher ");
-                        found.set("count", watchRecord.get("count"));
-                        this.setState({dirty: !this.state.dirty});
-                    }
-                    else
-                        console.log("VideoWatcher not found locally: " + watchRecord.get("name"));
-                    this.setState({updating: false});
-                }
-                else
-                    console.log("Local update: ignoring " + watchRecord.get("count"));
+            this.wactherSubscription.on('create', watchRecord => {
+                console.log("New watcher " + JSON.stringify(watchRecord) + " " + watchRecord.get("user") + " " + watchRecord.get("video"));
+                this.setState((prevState) => ({
+                        watchers: [...prevState.watchers, watchRecord]
+                }));
+                this.dirty();
+            })
+            this.wactherSubscription.on('delete', watchRecord => {
+                console.log("Watcher deleted " + watchRecord.get("user") + " " + watchRecord.get("video"));
+                this.setState((prevState) => ({
+                    watchers: prevState.watchers.filter((w)=>(
+                        w.id != watchRecord.id
+                    ))
+                }));
             });
         });
     }
@@ -87,18 +89,14 @@ class LiveStreaming extends Component {
             this.wactherSubscription.unsubscribe();
     }
 
-    onUpdate() {
-        this.setState({updating: true});
-    }
-
     render() {
         if (this.state && this.state.videos && this.state.watchers) {
             return <div className={"space-align-container"}>
                 {this.state.videos.map((video) => {
-                    let w = this.state.watchers.find(w => w.get("name") === video.get("title"))
+                    // let w = this.state.watchers.filter(w => w.video === video.id)
                     return <div className={"space-align-block"} key={video.get("key")}>
                         <Space align={"center"}>
-                            <GeoLocationLiveVideoThumbnail video={video} watchers={w} dirty={this.state.dirty} onUpdate={this.onUpdate.bind(this)}/>
+                            <GeoLocationLiveVideoThumbnail auth={this.props.auth} video={video} watchers={this.state.watchers} dirty={this.state.dirty} />
                         </Space></div>
                 })}
             </div>
@@ -109,12 +107,17 @@ class LiveStreaming extends Component {
     }
 }
 
-const ParseLiveConsuemr = (props) => (
+const ParseLiveConsumer = (props) => (
     <ParseLiveContext.Consumer>
-        {value => (
-            <LiveStreaming {...props} parseLive={value}/>
-        )}
+        {parseValue => (
+            <AuthUserContext.Consumer>
+                {value => (
+                    <LiveStreaming {...props} auth={value} parseLive={parseValue}/>
+                )}
+            </AuthUserContext.Consumer>
+        )
+        }
     </ParseLiveContext.Consumer>
 );
 
-export default ParseLiveConsuemr;
+export default ParseLiveConsumer;
