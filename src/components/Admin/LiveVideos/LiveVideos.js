@@ -49,21 +49,6 @@ class LiveVideos extends React.Component {
         });
     }
 
-    createWatchers(video) {
-        // Create the Video Watchers record
-        const VideoWatchers = Parse.Object.extend("LiveVideoWatchers");
-        const name = video.get("title");
-        const count = new VideoWatchers();
-        console.log("trying to create watchers for" + name);
-        count.set("name", name);
-        count.set("count", 0);
-        count.save().catch(err => {
-            console.log(err);
-        });
-
-
-    }
-
     onDelete(value) {
         console.log("Deleting " + value + " " + value.get("id1"));
         // Delete the watchers first

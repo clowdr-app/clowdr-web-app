@@ -3,6 +3,7 @@ import {Space, Spin} from 'antd';
 import GeoLocationLiveVideoThumbnail from "./VideoThumbnail";
 import Parse from "parse";
 import ParseLiveContext from "../parse/context";
+import AuthUserContext from "../Session/context"
 
 class LiveStreaming extends Component {
     constructor(props) {
@@ -36,7 +37,7 @@ class LiveStreaming extends Component {
                 console.log("Video updated " + vid.get("title"));
                 const found = this.state.videos.find(v => v.objectId === vid.objectId);
                 if (found) {
-                    console.log("Found it ");
+                    console.log("Found video " + found.title);
                     found.set("title", vid.get("title"));
                     found.set("src1", vid.get("src1"));
                     found.set("id1", vid.get("id1"));
@@ -46,21 +47,48 @@ class LiveStreaming extends Component {
             });
         });
 
+        let q = new Parse.Query("LiveVideoWatchers");
+        q.find().then(res => {
+            // console.log("WATCHERS: " + JSON.stringify(res));
+            this.setState({
+                watchers: res
+            });
+        });
+        q.subscribe().then(subscription => {
+            this.wactherSubscription = subscription;
+
+            this.wactherSubscription.on('create', watchRecord => {
+                console.log("New watcher " + JSON.stringify(watchRecord) + " " + watchRecord.get("user") + " " + watchRecord.get("video"));
+                this.setState((prevState) => ({
+                        watchers: [...prevState.watchers, watchRecord]
+                }));
+            })
+            this.wactherSubscription.on('delete', watchRecord => {
+                console.log("Watcher deleted " + watchRecord.get("user") + " " + watchRecord.get("video"));
+                this.setState((prevState) => ({
+                    watchers: prevState.watchers.filter((w)=>(
+                        w.id != watchRecord.id
+                    ))
+                }));
+            });
+        });
     }
 
     componentWillUnmount() {
         if (this.sub)
             this.sub.unsubscribe();
+        if (this.wactherSubscription)
+            this.wactherSubscription.unsubscribe();
     }
 
-
     render() {
-        if (this.state && this.state.videos) {
+        if (this.state && this.state.videos && this.state.watchers) {
             return <div className={"space-align-container"}>
                 {this.state.videos.map((video) => {
+                    // let w = this.state.watchers.filter(w => w.video === video.id)
                     return <div className={"space-align-block"} key={video.get("key")}>
                         <Space align={"center"}>
-                            <GeoLocationLiveVideoThumbnail video={video}/>
+                            <GeoLocationLiveVideoThumbnail auth={this.props.auth} video={video} watchers={this.state.watchers} />
                         </Space></div>
                 })}
             </div>
@@ -71,12 +99,17 @@ class LiveStreaming extends Component {
     }
 }
 
-const ParseLiveConsuemr = (props) => (
+const ParseLiveConsumer = (props) => (
     <ParseLiveContext.Consumer>
-        {value => (
-            <LiveStreaming {...props} parseLive={value}/>
-        )}
+        {parseValue => (
+            <AuthUserContext.Consumer>
+                {value => (
+                    <LiveStreaming {...props} auth={value} parseLive={parseValue}/>
+                )}
+            </AuthUserContext.Consumer>
+        )
+        }
     </ParseLiveContext.Consumer>
 );
 
-export default ParseLiveConsuemr;
+export default ParseLiveConsumer;
