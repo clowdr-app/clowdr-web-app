@@ -1,27 +1,27 @@
 import React, {Component} from "react";
-import ParseLiveContext from "../parse/context";
 import {AuthUserContext} from "../Session";
-import Parse from "parse";
-import {Avatar, Badge, Collapse, Divider, List, Skeleton, Tabs, Tooltip, Typography} from "antd";
+import {Avatar, Badge, Collapse, Divider, List, Skeleton, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
 import NewRoomForm from "./NewRoomForm";
-import {ArrowRightOutlined, CloseOutlined} from '@ant-design/icons'
 
 
 class ContextualActiveUsers extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {loading: true, currentRoom: this.props.auth.currentRoom, collapsed: this.props.collapsed, activePrivateRooms: []};
-        this.privateRoomSub = null;
+        this.state = {
+            loading: this.props.auth.videoRoomsLoaded, currentRoom: this.props.auth.currentRoom,
+            collapsed: this.props.collapsed,
+            activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms,
+            activePublicVideoRooms: this.props.auth.activePublicVideoRooms
+        };
     }
 
     async componentDidMount() {
         let user = await this.props.auth.refreshUser();
         if (user) {
+            await this.props.auth.subscribeToVideoRoomState();
             this.setState({loggedIn: true});
-            this.installActivityListener();
-
         } else {
             this.setState({loggedIn: false});
         }
@@ -40,11 +40,18 @@ class ContextualActiveUsers extends Component {
         if (!this.areEqualID(this.props.auth.currentConference, prevProps.auth.currentConference) || !this.areEqualID(prevProps.auth.user, this.props.auth.user)) {
             if (this.props.auth.user) {
                 this.setState({loggedIn: true});
+                this.props.auth.subscribeToVideoRoomState();
             }
-            this.installActivityListener();
         }
-        if (this.state.collapsed != this.props.collapsed) {
-            this.setState({collapsed: this.props.collapsed});
+        if (this.props.auth.videoRoomsLoaded != this.state.loading) {
+            this.setState({loading: this.props.auth.videoRoomsLoaded});
+        }
+        if (this.props.auth.activePrivateVideoRooms != this.state.activePrivateVideoRooms)
+        {
+            this.setState({activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms})
+        }
+        if(this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms){
+            this.setState({activePublicVideoRooms: this.props.auth.activePublicVideoRooms})
         }
         if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
             this.setState({currentRoom: this.props.auth.currentRoom})
@@ -52,73 +59,8 @@ class ContextualActiveUsers extends Component {
         this.mounted = true;
     }
 
-    installActivityListener() {
-        let query = new Parse.Query("BreakoutRoom");
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.include("members");
-        query.equalTo("isPrivate", false);
-        // query.greaterThanOrEqualTo("updatedAt",date);
-        query.find().then(res => {
-            if(!this.props.auth.user){
-                //event race: user is logged out...
-                if(this.sub){
-                    this.sub.unsubscribe();
-                    return;
-                }
-            }
-            this.setState({
-                activeRooms: res,
-                loading: false
-            });
-            if (this.sub) {
-                this.sub.unsubscribe();
-            }
-            this.sub = this.props.parseLive.client.subscribe(query, this.props.auth.user.getSessionToken());
-            this.sub.on('create', async (vid) => {
-                vid = await this.props.auth.helpers.populateMembers(vid);
-                this.setState((prevState) => ({
-                    activeRooms: [vid, ...prevState.activeRooms]
-                }))
-            })
-            this.sub.on("delete", vid => {
-                this.setState((prevState) => ({
-                    activeRooms: prevState.activeRooms.filter((v) => (
-                        v.id != vid.id
-                    ))
-                }));
-            });
-            this.sub.on('update', async (newItem) => {
-                newItem = await this.props.auth.helpers.populateMembers(newItem);
-                this.setState((prevState) => ({
-                    activeRooms: prevState.activeRooms.map(room => room.id == newItem.id ? newItem : room)
-                }))
-            })
-        })
-
-        let queryForPrivateActivity = new Parse.Query("LiveActivity");
-        queryForPrivateActivity.equalTo("conference", this.props.auth.currentConference);
-        queryForPrivateActivity.equalTo("topic","privateBreakoutRooms");
-        queryForPrivateActivity.equalTo("user", this.props.auth.user);
-        this.subscribeToNewPrivateRooms().then(
-            () => {
-                this.privateSub = this.props.parseLive.client.subscribe(queryForPrivateActivity, this.props.auth.user.getSessionToken());
-                this.privateSub.on('create', this.subscribeToNewPrivateRooms.bind(this));
-                this.privateSub.on("update", this.subscribeToNewPrivateRooms.bind(this));
-            }
-        )
-    }
-
     componentWillUnmount() {
         this.mounted = false;
-        if (this.sub) {
-            this.sub.unsubscribe();
-        }
-        if(this.privateSub){
-            this.privateSub.unsubscribe();
-        }
-        if(this.privateRoomsSub){
-            this.privateRoomsSub.unsubscribe();
-        }
     }
 
     joinCall(room) {
@@ -127,9 +69,7 @@ class ContextualActiveUsers extends Component {
         this.props.auth.setActiveRoom(room.get("title"));
     }
 
-    expandTab() {
-        this.props.setCollapsed(!this.state.collapsed);
-    }
+
 
     render() {
         if (!this.state.loggedIn) {
@@ -138,13 +78,13 @@ class ContextualActiveUsers extends Component {
         let tabs = "";
         let liveMembers = 0
         let allActiveRooms;
-        if(!this.state.activePrivateRooms)
-            allActiveRooms = this.state.activeRooms;
-        else if(!this.state.activeRooms){
-            allActiveRooms = this.state.activePrivateRooms;
+        if(!this.state.activePrivateVideoRooms)
+            allActiveRooms = this.state.activePublicVideoRooms;
+        else if(!this.state.activePublicVideoRooms){
+            allActiveRooms = this.state.activePrivateVideoRooms;
         }
         else{
-            allActiveRooms = this.state.activePrivateRooms.concat(this.state.activeRooms);
+            allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
         }
         if (allActiveRooms)
             for (let room of allActiveRooms) {
@@ -249,115 +189,28 @@ class ContextualActiveUsers extends Component {
             </Collapse></div>
         }
         return (
-            <div id="sidepopoutcontainer" style={{
-                height: '100vh',
-                margin: '0 0 0 auto',
-                // zIndex: "5",
-                // right: 0
-            }}>
-                <Tabs tabPosition="right" style={{height: '100vh'}}
-                      type="card"
 
-                >
-                    <Tabs.TabPane
-                        tab=
-                            {<span onClick={this.expandTab.bind(this)} style={{paddingLeft: "0px", verticalAlign: "middle"}}>Lobby<Badge
-                        title={liveMembers + " user"+(liveMembers == 1 ? " is" : "s are")+" in video chats"}
-                        showZero={true} style={{backgroundColor: '#52c41a'}} count={liveMembers} offset={[-2,-20]}></Badge>{!this.state.collapsed ?
-                            <CloseOutlined style={{verticalAlign: 'middle'}}/> :
-                            <ArrowRightOutlined style={{verticalAlign: 'middle'}}/>}</span>}
-                    key="general" style={{backgroundColor: '#f0f2f5',
-                        overflow: 'auto',
-                        // width: "350px",
-                        border: '2px solid #c1c1c1',
-                        height: '100vh'}}>
+
                         <div style={{backgroundColor: '#f0f2f5'}}>
 
                             {tabs}
                         </div>
-                    </Tabs.TabPane>
-                </Tabs>
-            </div>
 
         );
     }
 
 
-    async subscribeToNewPrivateRooms() {
-        console.log("Ssubscribe called " +this.mounted)
-        if (!this.mounted)
-            return;
-        let currentlySubscribedTo = [];
-        if (this.state.activePrivateRooms) {
-            currentlySubscribedTo = this.state.activePrivateRooms.map(r => r.id);
-        }
-        let newRoomsQuery = new Parse.Query("BreakoutRoom");
-        newRoomsQuery.equalTo("conference", this.props.auth.currentConference);
-        newRoomsQuery.include("members");
-        newRoomsQuery.equalTo("isPrivate", true)
-        newRoomsQuery.limit(100);
-        if (this.privateRoomsSub) {
-            this.privateRoomsSub.unsubscribe();
-        }
-        let res = await newRoomsQuery.find();
-        if (!this.mounted)
-            return;
-        let newRooms = [];
-        let fetchedIDs = [];
-        for (let room of res) {
-            fetchedIDs.push(room.id);
-            if (!currentlySubscribedTo.includes(room.id)) {
-                console.log("Initial fetch reating " + room.id)
-                this.setState((prevState) => ({
-                    activePrivateRooms: [room, ...prevState.activePrivateRooms]
-                }));
-            }
-        }
-        for (let roomID of currentlySubscribedTo) {
-            if (!fetchedIDs.includes(roomID)) {
-                this.setState((prevState) => ({
-                    activePrivateRooms: prevState.activePrivateRooms.filter((v) => (
-                        v.id != roomID
-                    ))
-                }));
-            }
-        }
-        this.privateRoomsSub = this.props.parseLive.client.subscribe(newRoomsQuery, this.props.auth.user.getSessionToken());
-        this.privateRoomsSub.on("update", async (newItem) => {
-            newItem = await this.props.auth.helpers.populateMembers(newItem);
-            this.setState((prevState) => ({
-                activePrivateRooms: prevState.activePrivateRooms.map(room => room.id == newItem.id ? newItem : room)
-            }))
-        });
-        this.privateRoomsSub.on("create", async (vid) => {
-            vid = await this.props.auth.helpers.populateMembers(vid);
-            console.log("Private sub created " + vid.id)
-            this.setState((prevState) => ({
-                activePrivateRooms: [vid, ...prevState.activePrivateRooms]
-            }))
-        });
-        this.privateRoomsSub.on("delete", (vid) => {
-            this.setState((prevState) => ({
-                activePrivateRooms: prevState.activePrivateRooms.filter((v) => (
-                    v.id != vid.id
-                ))
-            }));
-        })
-    }
+
 }
 
 const AuthConsumer = (props) => (
     // <Router.Consumer>
     //     {router => (
-    <ParseLiveContext.Consumer>
-        {parseLive => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <ContextualActiveUsers {...props} parseLive={parseLive} auth={value}/>
+                    <ContextualActiveUsers {...props} auth={value}/>
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ParseLiveContext.Consumer>
     // )}</Router.Consumer>
 
 );

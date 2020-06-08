@@ -1,8 +1,6 @@
 import React from 'react';
-import {Avatar, Card, Divider, Layout, List, message, Popconfirm, Space, Tooltip, Typography, Spin} from "antd";
+import {Avatar, Card, Divider, Layout, List, message, Popconfirm, Space, Spin, Tooltip, Typography} from "antd";
 import {AuthUserContext} from "../Session";
-import ParseLiveContext from "../parse/context";
-import Parse from "parse";
 import NewRoomForm from "./NewRoomForm";
 import withLoginRequired from "../Session/withLoginRequired";
 
@@ -20,7 +18,8 @@ const { Content, Footer, Sider} = Layout;
 class MeetingSummary extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {loadingMeeting: false, loading: false, members: this.props.item.members, profiles: {}};
+        this.state = {loadingMeeting: false, loading: false, members: this.props.item.members, profiles: {},
+            videoRoomsLoaded: this.props.auth.videoRoomsLoaded};
     }
 
     componentDidMount() {
@@ -128,54 +127,57 @@ class Lobby extends React.Component {
             showModal =true;
         }
 
-        this.state = {'loading': true, 'visible': showModal, requestedName: newName, maxDisplayedRooms: 10};
+        this.state = {videoRoomsLoaded: this.props.auth.videoRoomsLoaded, 'visible': showModal, requestedName: newName, maxDisplayedRooms: 10,
+            activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms,
+            activePublicVideoRooms: this.props.auth.activePublicVideoRooms
+        };
     }
 
-    componentDidMount() {
-        let user = this.props.auth.user;
+    async componentDidMount() {
+        let user = await this.props.auth.refreshUser();
+        this.mounted = true;
         if (user) {
-            if (this.sub) {
-                this.sub.unsubscribe();
-                this.sub = null;
-            }
-            let query = new Parse.Query("BreakoutRoom");
-            query.include("members");
-            query.addDescending("createdAt");
-            query.equalTo("conference", this.props.auth.currentConference);
-
-            query.find().then(res => {
-                this.setState({
-                    rooms: res,
-                    loading: false
-                });
-                this.sub = this.props.parseLive.client.subscribe(query, this.props.auth.user.getSessionToken());
-                this.sub.on('create', async (newItem) => {
-                    newItem = await this.props.auth.helpers.populateMembers(newItem);
-                    this.setState((prevState) => ({
-                        rooms: [newItem, ...prevState.rooms]
-                    }))
-                })
-                this.sub.on('update', async (newItem) => {
-                    newItem = await this.props.auth.helpers.populateMembers(newItem);
-                    this.setState((prevState) => ({
-                        rooms: prevState.rooms.map(room => room.id === newItem.id ? newItem : room)
-                    }))
-                })
-                this.sub.on("delete", vid => {
-                    this.setState((prevState) => ({
-                        rooms: prevState.rooms.filter((v) => (
-                            v.id !== vid.id
-                        ))
-                    }));
-                });
-            })
+            await this.props.auth.subscribeToVideoRoomState();
+            this.setState({loggedIn: true});
+        } else {
+            this.setState({loggedIn: false});
         }
     }
 
     componentWillUnmount() {
-        if(this.sub) {
-            this.sub.unsubscribe();
+        this.mounted = false;
+    }
+
+    areEqualID(o1, o2) {
+        if (!o1 && !o2)
+            return true;
+        if (!o1 || !o2)
+            return false;
+        return o1.id == o2.id;
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.auth.videoRoomsLoaded != this.state.videoRoomsLoaded) {
+            this.setState({videoRoomsLoaded: this.props.auth.videoRoomsLoaded});
         }
+        if (!this.areEqualID(this.props.auth.currentConference, prevProps.auth.currentConference) || !this.areEqualID(prevProps.auth.user, this.props.auth.user)) {
+            if (this.props.auth.user) {
+                this.props.auth.subscribeToVideoRoomState();
+
+                this.setState({loggedIn: true});
+            }
+        }
+        if(this.props.auth.activePrivateVideoRooms != this.state.activePrivateVideoRooms)
+        {
+            this.setState({activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms})
+        }
+        if(this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms){
+            this.setState({activePublicVideoRooms: this.props.auth.activePublicVideoRooms})
+        }
+        if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
+            this.setState({currentRoom: this.props.auth.currentRoom})
+        }
+        this.mounted = true;
     }
 
     async onCreate(values) {
@@ -235,6 +237,16 @@ class Lobby extends React.Component {
                 <Spin tip="Loading...">
                 </Spin>)
         }
+        let allActiveRooms;
+        if(!this.state.activePrivateVideoRooms)
+            allActiveRooms = this.state.activePublicVideoRooms;
+        else if(!this.state.activePublicVideoRooms){
+            allActiveRooms = this.state.activePrivateVideoRooms;
+        }
+        else{
+            allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
+        }
+
         return (
             // <Tabs defaultActiveKey="1">
             //     <TabPane tab="Breakout Areas" key="1">
@@ -270,7 +282,8 @@ class Lobby extends React.Component {
                                 flexWrap: "wrap"
                             }}>
                                 {
-                                    Object.values(this.state.rooms).slice(0, this.state.maxDisplayedRooms).map((item) => (
+                                    Object.values(allActiveRooms)//.slice(0, this.state.maxDisplayedRooms)
+                                        .map((item) => (
                                         <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} auth={this.props.auth} />
                                     ))}
                             </Space>
@@ -282,16 +295,10 @@ class Lobby extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <ParseLiveContext.Consumer>
-        {parseValue => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <Lobby {...props} auth={value} parseLive={parseValue}/>
+                    <Lobby {...props} auth={value} parseLive={value.parseLive}/>
                 )}
             </AuthUserContext.Consumer>
-        )
-        }
-
-    </ParseLiveContext.Consumer>
 );
 export default withLoginRequired(AuthConsumer);

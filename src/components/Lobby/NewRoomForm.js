@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Form, Input, message, Modal, Radio, Tooltip} from "antd";
+import {Button, Form, Input, message, Modal, Radio, Tooltip, Typography} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
@@ -26,6 +26,7 @@ class NewRoomForm extends React.Component {
             this.form.current.resetFields();
         this.setState({
             visible: false,
+            confirmLoading: false
         });
 
     };
@@ -52,6 +53,13 @@ class NewRoomForm extends React.Component {
                     ]}
                     onCancel={this.handleCancel}
                 >
+                    <Typography.Paragraph>
+                        CLOWDR lets you create video chat rooms with other conference participants.
+                        You can create a new room, or join existing rooms. Public rooms are open to all
+                        conference participants, and private rooms use a simple access control list:
+                        you can add any conference participant to be able to see the room, and then
+                        they will have the same options to add more people.
+                    </Typography.Paragraph>
                     <Form
                         layout="vertical"
                         name="form_in_modal"
@@ -100,7 +108,8 @@ class NewRoomForm extends React.Component {
                     >
                         <Form.Item
                             name="title"
-                            label="Title"
+                            label="Room title"
+                            extra="Shown in slack and on the lobby sidebar in this app"
                             rules={[
                                 {
                                     required: true,

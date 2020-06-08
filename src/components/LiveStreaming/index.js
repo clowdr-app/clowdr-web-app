@@ -2,7 +2,6 @@ import React, {Component} from "react";
 import {Space, Spin} from 'antd';
 import GeoLocationLiveVideoThumbnail from "./VideoThumbnail";
 import Parse from "parse";
-import ParseLiveContext from "../parse/context";
 import AuthUserContext from "../Session/context"
 
 class LiveStreaming extends Component {
@@ -100,16 +99,11 @@ class LiveStreaming extends Component {
 }
 
 const ParseLiveConsumer = (props) => (
-    <ParseLiveContext.Consumer>
-        {parseValue => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <LiveStreaming {...props} auth={value} parseLive={parseValue}/>
+                    <LiveStreaming {...props} auth={value} parseLive={value.parseLive}/>
                 )}
             </AuthUserContext.Consumer>
-        )
-        }
-    </ParseLiveContext.Consumer>
 );
 
 export default ParseLiveConsumer;

@@ -73,7 +73,7 @@ class ReportToModsButton extends React.Component {
         }
         return (
             <span>
-                <Tooltip title="Report or Ban a User">
+                <Tooltip title="Report inappropriate behavior to the moderators">
 
                     <IconButton onClick={this.showModal}>
                         <SecurityIcon color="secondary" />

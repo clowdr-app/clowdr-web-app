@@ -1,6 +1,7 @@
 import React from 'react';
 import Parse from "parse";
-import ParseLiveContext from "../parse/context";
+import {AuthUserContext} from "../Session";
+
 
 class VideoWatchers extends React.Component {
     constructor(props) {
@@ -71,11 +72,11 @@ class VideoWatchers extends React.Component {
 }
 
 const LiveVideoWatchers = (props) => (
-    <ParseLiveContext.Consumer>
+    <AuthUserContext.Consumer>
         {value => (
-            <VideoWatchers {...props} parseLive={value}/>
+            <VideoWatchers {...props} parseLive={value.parseLive}/>
         )}
-    </ParseLiveContext.Consumer>
+    </AuthUserContext.Consumer>
 );
 
 export default LiveVideoWatchers;

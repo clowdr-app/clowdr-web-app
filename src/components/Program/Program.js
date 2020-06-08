@@ -1,7 +1,6 @@
 import React from 'react';
-import {Tabs, Timeline} from 'antd';
+import {Timeline} from 'antd';
 import Parse from "parse";
-import ParseLiveContext from "../parse/context";
 import {AuthUserContext} from "../Session";
 import LiveVideoPanel from "../LiveStreaming/LiveVideoPanel";
 
@@ -113,17 +112,12 @@ class Program extends React.Component {
 
 const
     AuthConsumer = (props) => (
-        <ParseLiveContext.Consumer>
-            {parseValue => (
-                <AuthUserContext.Consumer>
-                    {value => (
-                        <Program {...props} auth={value} parseLive={parseValue}/>
-                    )}
-                </AuthUserContext.Consumer>
-            )
-            }
+        <AuthUserContext.Consumer>
+            {value => (
+                <Program {...props} auth={value} />
+            )}
+        </AuthUserContext.Consumer>
 
-        </ParseLiveContext.Consumer>
     );
 export default AuthConsumer;
 

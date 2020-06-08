@@ -1,17 +1,19 @@
 import React, {Component} from 'react';
-import {BrowserRouter, NavLink, Route} from 'react-router-dom';
+import {BrowserRouter, Route} from 'react-router-dom';
+import {NavLink} from "react-router-dom";
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
 import SignUp from "./components/SignUp"
 import SignIn from "./components/SignIn"
-import {Layout, Select, Spin, Typography} from 'antd';
+import {Button, Layout, Select, Spin, Tooltip, Typography} from 'antd';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
 import Program from "./components/Program";
 import VideoRoom from "./components/VideoChat/VideoRoom"
 import SlackToVideo from "./components/Slack/slackToVideo"
+import {InfoCircleFilled, QuestionCircleFilled} from '@ant-design/icons'
 
 import {withAuthentication} from "./components/Session";
 
@@ -24,20 +26,21 @@ import VideoChat from "./components/VideoChat";
 // import UsersList from "./components/Admin/Users";
 //
 import LiveVideosList from "./components/Admin/LiveVideos";
-import withParseLive from "./components/parse/withParseLive";
 import withGeoLocation from './components/GeoLocation/withGeoLocation';
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 //import Chat from "./components/Chat";
-import ContextualActiveUsers from "./components/Lobby/ContextualActiveusers";
 import GenericHeader from "./components/GenericHeader";
 import GenericLanding from "./components/GenericLanding";
+import SocialTab from "./components/SocialTab";
+import About from "./components/About";
+import Help from "./components/Help";
+
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
 const {Header, Content, Footer, Sider} = Layout;
-
 class App extends Component {
 
     constructor(props) {
@@ -49,7 +52,6 @@ class App extends Component {
         // if(this.props.match.)
         this.state = {
             conference: null,
-            siderCollapsed: false,
             showingLanding: this.props.authContext.showingLanding
         }
     }
@@ -68,7 +70,7 @@ class App extends Component {
             let headerText = this.state.conference.get("headerText");
             let confSwitcher;
             if(this.props.authContext && this.props.authContext.validConferences.length > 1 && this.isSlackAuthOnly()){
-                confSwitcher = <Select style={{width: 200, float: "right"}}
+                confSwitcher = <Select
                                        placeholder="Change conference"
                                        onChange={(conf)=>{
                                            console.log(conf);
@@ -80,6 +82,13 @@ class App extends Component {
                     }
                 </Select>
             }
+            let clowdrActionButtons = <span><Tooltip title="CLOWDR Support"><NavLink to="/help">    <Button size="small">Help</Button></NavLink></Tooltip>
+                <Tooltip title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip></span>
+            if(confSwitcher){
+                confSwitcher = <span style={{float: "right"}}>{confSwitcher} {clowdrActionButtons}</span>
+            }
+            else
+                confSwitcher= <span style={{float: "right"}}>clowdrActionButtons</span>;
             if (headerImage)
                 return <Header className="site-layout-background" style={{height: "140px", clear: "both"}}>
                     <img src={headerImage.url()} className="App-logo" height="140"
@@ -132,6 +141,9 @@ class App extends Component {
                 <Route exact path="/signout" component={SignOut}/>
                 <Route exact path="/lobby" component={Lobby}/>
                 <Route exact path="/signin" component={SignIn}/>
+                <Route exact path="/about" component={About}/>
+                <Route exact path="/help" component={Help} />
+
                 <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
 
                 <Route exact path="/admin" component={(props)=><SignIn {...props} dontBounce={true}/>} />
@@ -145,7 +157,8 @@ class App extends Component {
             <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
             <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
 
-
+            <Route exact path="/about" component={About}/>
+            <Route exact path="/help" component={Help} />
             {/*<Route exact path="/channelList" component={ChannelList}/>*/}
 
             <Route exact path="/account" component={Account}/>
@@ -164,9 +177,6 @@ class App extends Component {
         </div>)
     }
 
-    setCollapsed(collapsed) {
-        this.setState({siderCollapsed: collapsed});
-    }
 
     render() {
         if(this.state.showingLanding){
@@ -194,14 +204,7 @@ class App extends Component {
                             {this.navBar()}
 
                             <Layout>
-                                <Sider collapsible collapsed={this.state.siderCollapsed}
-                                       trigger={null}
-                                       onCollapse={this.setCollapsed.bind(this)} width="350px"
-                                       collapsedWidth={100}
-                                       style={{backgroundColor: '#f0f2f5'}}>
-                                    <ContextualActiveUsers collapsed={this.state.siderCollapsed}
-                                                           setCollapsed={this.setCollapsed.bind(this)}/>
-                                </Sider>
+                               <SocialTab />
                                 <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
                                     <div className="site-layout-background" style={{padding: 24}}>
                                         {this.routes()}
@@ -222,4 +225,4 @@ class App extends Component {
     }
 }
 
-export default withAuthentication(withParseLive(withGeoLocation(App)));
+export default withAuthentication(withGeoLocation(App));

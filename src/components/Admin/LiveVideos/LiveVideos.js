@@ -1,7 +1,7 @@
 import React, {Fragment} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
-import ParseLiveContext from "../../parse/context";
+import {AuthUserContext} from "../../Session";
 
 const { Option } = Select;
 
@@ -239,14 +239,14 @@ class LiveVideos extends React.Component {
 
 }
 
-const ParseLiveConsuemr = (props) => (
-    <ParseLiveContext.Consumer>
+const AuthConsumer = (props) => (
+    <AuthUserContext.Consumer>
         {value => (
-            <LiveVideos {...props} parseLive={value.client}/>
+            <LiveVideos {...props} parseLive={value.parseLive}/>
         )}
-    </ParseLiveContext.Consumer>
+    </AuthUserContext.Consumer>
 )
-export default ParseLiveConsuemr;
+export default AuthConsumer;
 
 const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, onSelectPullDown2}) => {
     const [form] = Form.useForm();

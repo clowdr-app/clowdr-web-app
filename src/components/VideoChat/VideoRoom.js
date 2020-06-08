@@ -3,9 +3,8 @@ import * as ROUTES from "../../constants/routes";
 import theme from "./theme";
 import {MuiThemeProvider} from "@material-ui/core/styles";
 import Parse from "parse"
-import ParseLiveContext from "../parse/context";
 import {AuthUserContext} from "../Session";
-import {Alert, Button, Descriptions, Form, message, Select, Skeleton, Spin, Tag, Tooltip, Typography} from "antd";
+import {Alert, Button, Form, message, Select, Skeleton, Spin, Tag, Tooltip, Typography} from "antd";
 import './VideoChat.css';
 import {VideoContext, VideoProvider} from "clowdr-video-frontend/lib/components/VideoProvider";
 import AppStateProvider from "clowdr-video-frontend/lib/state";
@@ -30,6 +29,7 @@ import FullscreenIcon from '@material-ui/icons/Fullscreen';
 import FlipCameraIosIcon from '@material-ui/icons/FlipCameraIos';
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
 import ReportToModsButton from "./ReportToModsButton";
+import {SyncOutlined} from '@ant-design/icons'
 
 const {Paragraph} = Typography;
 
@@ -265,11 +265,13 @@ class VideoRoom extends Component {
                                         {
                                             videoContext => {
                                                 let desc = videoContext.room.state;
-                                                if(desc)
-                                                    desc = desc[0].toUpperCase()+desc.slice(1);
-                                                else
-                                                    desc = "Connecting";
-                                                return   <Tag>{desc}</Tag>
+                                                if(desc) {
+                                                    desc = desc[0].toUpperCase() + desc.slice(1);
+                                                    return <Tag>{desc}</Tag>
+                                                }
+                                                else{
+                                                    return <Tag color={"warning"} icon={<SyncOutlined spin />}>Connecting...</Tag>
+                                                }
                                             }
                                         }
                                     </VideoContext.Consumer>
@@ -516,17 +518,11 @@ export function DeviceSelector() {
 }
 
 const AuthConsumer = (props) => (
-    <ParseLiveContext.Consumer>
-        {parseValue => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <VideoRoom {...props} authContext={value}
-                               parseLive={parseValue}/>
-                )}
-            </AuthUserContext.Consumer>
-        )
-        }
-
-    </ParseLiveContext.Consumer>
+    <AuthUserContext.Consumer>
+        {value => (
+            <VideoRoom {...props} authContext={value}
+            />
+        )}
+    </AuthUserContext.Consumer>
 );
 export default withLoginRequired(AuthConsumer);

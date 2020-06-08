@@ -26,7 +26,6 @@ import {
 } from 'antd';
 import {ArrowUpOutlined, CloseOutlined, SmileOutlined, ToolOutlined, VideoCameraAddOutlined} from '@ant-design/icons'
 import {AuthUserContext} from "../Session";
-import ParseLiveContext from "../parse/context";
 import Meta from "antd/lib/card/Meta";
 import "./chat.css"
 import ReactMarkdown from "react-markdown";
@@ -822,15 +821,11 @@ const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
     );
 };
 const AuthConsumer = (props) => (
-    <ParseLiveContext.Consumer>
-        {parseLive => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <ChatContainer {...props}  parseLive={parseLive} auth={value} />
+                    <ChatContainer {...props}  parseLive={value.parseLive} auth={value} />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ParseLiveContext.Consumer>
 
 );
 

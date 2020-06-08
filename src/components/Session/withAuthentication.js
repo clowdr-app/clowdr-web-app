@@ -19,6 +19,17 @@ const withAuthentication = Component => {
             this.chatWaiters = [];
             this.liveChannel = null;
             this.channelChangeListeners = [];
+
+            this.subscribedToVideoRoomState = false;
+            this.videoRoomListeners = [];
+
+            var parseLive = new Parse.LiveQueryClient({
+                applicationId: process.env.REACT_APP_PARSE_APP_ID,
+                serverURL: process.env.REACT_APP_PARSE_DOMAIN,
+                javascriptKey: process.env.REACT_APP_PARSE_JS_KEY,
+            });
+            parseLive.open();
+
             let exports ={
                 getUsers: this.getUsers.bind(this),
                 getRoleByName: this.getRoleByName.bind(this),
@@ -47,7 +58,16 @@ const withAuthentication = Component => {
                 teamID: null,
                 currentConference: null,
                 activeRoom: null,
-                helpers: exports
+                helpers: exports,
+                parseLive: parseLive,
+                subscribeToVideoRoomState: this.subscribeToVideoRoomState.bind(this),
+                // video: {
+                videoRoomsLoaded: false,
+                    liveVideoRoomMembers: 0,
+                    activePublicVideoRooms: [],
+                    activePrivateVideoRooms: [],
+                // },
+
             };
             this.fetchingUsers = false;
         }
@@ -59,6 +79,16 @@ const withAuthentication = Component => {
             return <></>
 
         }
+
+        async subscribeToVideoRoomState(caller) {
+            this.videoRoomListeners.push(caller);
+            if (this.subscribedToVideoRoomState)
+                return;
+            console.log("Subscribing to video state.")
+            this.subscribedToVideoRoomState = true;
+            this.subscribeToPublicRooms();
+        }
+
 
         async getUsers() {
             console.log("Get users called")
@@ -89,12 +119,30 @@ const withAuthentication = Component => {
             this.setState({users: usersByID});
         }
 
+
+        conferenceChanged(){
+            console.log("Current conference has changed to " + this.state.currentConference.get('conferenceName'))
+            if (this.parseLivePublicVideosSub) {
+                this.parseLivePublicVideosSub.unsubscribe();
+            }
+            if (this.parseLivePrivateVideosSub) {
+                this.parseLivePrivateVideosSub.unsubscribe();
+            }
+            if (this.parseLiveActivitySub) {
+                this.parseLiveActivitySub.unsubscribe();
+            }
+            if(this.subscribedToVideoRoomState){
+                this.subscribedToVideoRoomState = false;
+                this.subscribeToVideoRoomState();
+            }
+        }
         async setActiveConference(conf) {
             this.setState({loading: true});
             let session = await Parse.Session.current();
             session.set("currentConference", conf);
             session.save();
-            this.setState({currentConference: conf, users: null});
+            let resetLobbyInfo = (this.state.currentConference != conf ? this.conferenceChanged : null);
+            this.setState({currentConference: conf, users: null}, resetLobbyInfo);
             this.setState({loading: false});
         }
 
@@ -348,6 +396,7 @@ const withAuthentication = Component => {
                         }catch(err2){
                             console.log(err2);
                         }
+                        // _this.props.history.push("/signin")
                         return null;
                     }
                 } else {
@@ -373,12 +422,138 @@ const withAuthentication = Component => {
                 // do stuff with your user
             });
         }
+        async subscribeToPublicRooms() {
+            if(!this.state.currentConference){
+                throw "Not logged in"
+            }
+            let query = new Parse.Query("BreakoutRoom");
+            query.equalTo("conference", this.state.currentConference);
+            query.include("members");
+            query.equalTo("isPrivate", false);
+            // query.greaterThanOrEqualTo("updatedAt",date);
+            query.find().then(res => {
+                if(!this.state.user){
+                    //event race: user is logged out...
+                    if(this.parseLivePublicVideosSub){
+                        this.parseLivePublicVideosSub.unsubscribe();
+                        return;
+                    }
+                }
+                this.setState({activePublicVideoRooms: res})
+                if (this.parseLivePublicVideosSub) {
+                    this.parseLivePublicVideosSub.unsubscribe();
+                }
+                this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.state.user.getSessionToken());
+                this.parseLivePublicVideosSub.on('create', async (vid) => {
+                    vid = await this.populateMembers(vid);
+                    this.setState((prevState) => ({
+                        activePublicVideoRooms: [vid, ...prevState.activePublicVideoRooms]
+                    }))
+                })
+                this.parseLivePublicVideosSub.on("delete", vid => {
+                    this.setState((prevState) => ({
+                        activePublicVideoRooms: prevState.activePublicVideoRooms.filter((v) => (
+                            v.id != vid.id
+                        ))
+                    }));
+                });
+                this.parseLivePublicVideosSub.on('update', async (newItem) => {
+                    newItem = await this.populateMembers(newItem);
+                    this.setState((prevState) => ({
+                        activePublicVideoRooms: prevState.activePublicVideoRooms.map(room => room.id == newItem.id ? newItem : room)
+                    }))
+                })
+            })
+
+            let queryForPrivateActivity = new Parse.Query("LiveActivity");
+            queryForPrivateActivity.equalTo("conference", this.state.currentConference);
+            queryForPrivateActivity.equalTo("topic", "privateBreakoutRooms");
+            queryForPrivateActivity.equalTo("user", this.state.user);
+            this.setState({videoRoomsLoaded: true});
+            await this.subscribeToNewPrivateRooms();
+            this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.state.user.getSessionToken());
+            this.parseLiveActivitySub.on('create', this.subscribeToNewPrivateRooms.bind(this));
+            this.parseLiveActivitySub.on("update", this.subscribeToNewPrivateRooms.bind(this));
+        }
+
+        async subscribeToNewPrivateRooms() {
+            console.log("Ssubscribe called " +this.mounted)
+            if (!this.mounted)
+                return;
+            let currentlySubscribedTo = [];
+            if (this.state.activePrivateVideoRooms) {
+                currentlySubscribedTo = this.state.activePrivateVideoRooms.map(r => r.id);
+            }
+            let newRoomsQuery = new Parse.Query("BreakoutRoom");
+            newRoomsQuery.equalTo("conference", this.state.currentConference);
+            newRoomsQuery.include("members");
+            newRoomsQuery.equalTo("isPrivate", true)
+            newRoomsQuery.limit(100);
+            if (this.parseLivePrivateVideosSub) {
+                this.parseLivePrivateVideosSub.unsubscribe();
+            }
+            let res = await newRoomsQuery.find();
+            if (!this.mounted)
+                return;
+            let newRooms = [];
+            let fetchedIDs = [];
+            for (let room of res) {
+                fetchedIDs.push(room.id);
+                if (!currentlySubscribedTo.includes(room.id)) {
+                    console.log("Initial fetch reating " + room.id)
+                    this.setState((prevState) => ({
+                        activePrivateVideoRooms: [room, ...prevState.activePrivateVideoRooms]
+                    }));
+                }
+            }
+            for (let roomID of currentlySubscribedTo) {
+                if (!fetchedIDs.includes(roomID)) {
+                    this.setState((prevState) => ({
+                        activePrivateVideoRooms: prevState.activePrivateVideoRooms.filter((v) => (
+                            v.id != roomID
+                        ))
+                    }));
+                }
+            }
+            this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.state.user.getSessionToken());
+            this.parseLivePrivateVideosSub.on("update", async (newItem) => {
+                newItem = await this.populateMembers(newItem);
+                this.setState((prevState) => ({
+                    activePrivateVideoRooms: prevState.activePrivateVideoRooms.map(room => room.id == newItem.id ? newItem : room)
+                }))
+            });
+            this.parseLivePrivateVideosSub.on("create", async (vid) => {
+                vid = await this.populateMembers(vid);
+                console.log("Private sub created " + vid.id)
+                this.setState((prevState) => ({
+                    activePrivateVideoRooms: [vid, ...prevState.activePrivateVideoRooms]
+                }))
+            });
+            this.parseLivePrivateVideosSub.on("delete", (vid) => {
+                this.setState((prevState) => ({
+                    activePrivateVideoRooms: prevState.activePrivateVideoRooms.filter((v) => (
+                        v.id != vid.id
+                    ))
+                }));
+            })
+        }
 
         componentDidMount() {
             this.refreshUser();
+            this.mounted = true;
         }
 
         componentWillUnmount() {
+            this.mounted = false;
+            if (this.parseLivePublicVideosSub) {
+                this.parseLivePublicVideosSub.unsubscribe();
+            }
+            if (this.parseLivePrivateVideosSub) {
+                this.parseLivePrivateVideosSub.unsubscribe();
+            }
+            if (this.parseLiveActivitySub) {
+                this.parseLiveActivitySub.unsubscribe();
+            }
         }
 
         render() {
@@ -387,7 +562,7 @@ const withAuthentication = Component => {
                 </div>
             return (
                 <AuthUserContext.Provider value={this.state}>
-                    <Component {...this.props}  authContext={this.state} />
+                    <Component {...this.props}  authContext={this.state} parseLive={this.state.parseLive} />
                 </AuthUserContext.Provider>
             );
         }
