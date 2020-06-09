@@ -52,7 +52,7 @@ class LiveVideoPanel extends React.Component {
         let video_url = videoURLFromData(src, id);
         let videopanel = "";
 
-        if (true || this.props.geoloc && this.props.geoloc.country_code.toLowerCase() == 'cn')
+        if (this.props.geoloc && this.props.geoloc.country_code.toLowerCase() == 'cn')
         {
             console.log("Viewer from China! Nǐ hǎo");
             src = this.props.video.get("src2");
