@@ -3,6 +3,7 @@ import LiveVideoPanel from "./LiveVideoPanel";
 import {Modal, Card} from "antd";
 import GeoLocationContext from '../GeoLocation/context';
 import {videoURLFromData} from './utils'
+import ReactPlayer from 'react-player';
 
 const LiveVideoThumbnailSourceMappings = {
     YouTube : {
@@ -40,11 +41,21 @@ class VideoThumbnail extends React.Component {
     }
 
     render() {
-        const src1 = this.props.video.get("src1");
-        const id1 = this.props.video.get("id1");
-        // console.log('Rendering ' + src1 + "-" + id1);
+        let src = this.props.video.get("src1");
+        let id = this.props.video.get("id1");
+        let video_url = videoURLFromData(src, id);
+        let thumbnail = "";
 
-        const video_url = videoURLFromData(src1, id1);
+        if (this.props.geoloc && this.props.geoloc.country_code.toLowerCase() == 'cn')
+        {
+            console.log("Viewer from China! Nǐ hǎo");
+            src = this.props.video.get("src2");
+            id = this.props.video.get("id2");
+            video_url = videoURLFromData(src, id);
+            thumbnail = <ReactPlayer playing controls muted fluid={false} width={280} height={150} url={video_url}/>
+        } else {
+            thumbnail = <iframe title={this.props.title} src={video_url} allowFullScreen/>
+        }
 
         if (this.props.geoloc) {
             console.log(this.props.geoloc.country_code);
@@ -68,7 +79,7 @@ class VideoThumbnail extends React.Component {
         else {
             // watchers = <LiveVideoWatchers video={this.props.video} expanded={false}/>
             content = <Card title={this.props.video.get('title')} size="small" extra={<a href="#">Watch</a>} onClick={this.toggleExpanded.bind(this)}>
-                    <iframe title={this.props.title} src={video_url} allowFullScreen/>
+                    {thumbnail}
                     <div>Watching now: {this.state.count}</div>
                 </Card>
         }

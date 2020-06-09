@@ -28,7 +28,7 @@ const LiveVideoSourceMappings = {
             qd_ip: "72603d2c",
             qd_uid: 0,
             qd_tm: "1591621238950",
-            qd_vip=0
+            qd_vip: 0
         }
     },
 }
