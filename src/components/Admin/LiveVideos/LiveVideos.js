@@ -13,7 +13,7 @@ const IconText = ({icon, text}) => (
     </Space>
 );
 
-const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook', 'Bilibili'];
+const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook', 'iQIYI'];
 
 class LiveVideos extends React.Component {
     constructor(props) {

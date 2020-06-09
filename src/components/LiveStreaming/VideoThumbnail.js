@@ -46,9 +46,12 @@ class VideoThumbnail extends React.Component {
 
         const video_url = videoURLFromData(src1, id1);
 
-        if (this.props.geoloc)
+        if (this.props.geoloc) {
             console.log(this.props.geoloc.country_code);
+            if (this.props.geoloc.country_code.toLowerCase() == 'cn') {
 
+            }
+        }
 //        const thumbnail_url = LiveVideoThumbnailSourceMappings[src1].url + id1 + LiveVideoThumbnailSourceMappings[src1].extraPath;
 
         let content = "";
@@ -59,7 +62,7 @@ class VideoThumbnail extends React.Component {
                         onCancel={this.toggleExpanded.bind(this)}
                         okButtonProps={{style: {display: 'none'}}}
             >
-                <LiveVideoPanel video={this.props.video} watchers={this.props.watchers} auth={this.props.auth}/>
+                <LiveVideoPanel video={this.props.video} watchers={this.props.watchers} auth={this.props.auth} geoloc={this.props.geoloc}/>
             </Modal>
         }
         else {
