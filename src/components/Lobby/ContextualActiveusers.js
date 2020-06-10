@@ -2,6 +2,7 @@ import React, {Component} from "react";
 import {AuthUserContext} from "../Session";
 import {Avatar, Badge, Collapse, Divider, List, Skeleton, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
+import {LockTwoTone} from "@ant-design/icons"
 import NewRoomForm from "./NewRoomForm";
 
 
@@ -13,7 +14,8 @@ class ContextualActiveUsers extends Component {
             loading: this.props.auth.videoRoomsLoaded, currentRoom: this.props.auth.currentRoom,
             collapsed: this.props.collapsed,
             activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms,
-            activePublicVideoRooms: this.props.auth.activePublicVideoRooms
+            activePublicVideoRooms: this.props.auth.activePublicVideoRooms,
+            user: this.props.auth.user
         };
     }
 
@@ -55,6 +57,9 @@ class ContextualActiveUsers extends Component {
         }
         if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
             this.setState({currentRoom: this.props.auth.currentRoom})
+        }
+        if(this.props.collapsed != this.state.collapsed){
+            this.setState({collapsed: this.props.collapsed})
         }
         this.mounted = true;
     }
@@ -103,7 +108,7 @@ class ContextualActiveUsers extends Component {
                 </div>
             <Collapse bordered={false}
                              defaultActiveKey={this.props.auth.currentRoom ? [this.props.auth.currentRoom.id] : []}
-                             style={{backgroundColor: "#f0f2f5"}}>
+                             style={{backgroundColor: "#f8f8f8"}}>
                 {/*<List*/}
                 {/*    dataSource={this.state.activeRooms}*/}
                 {/*renderItem={item => {*/}
@@ -120,7 +125,7 @@ class ContextualActiveUsers extends Component {
                     }
                     let header = <div style={{clear: 'both'}}>
 
-                        <div style={{float: 'left'}}>{item.get('title')}</div>
+                        <div style={{float: 'left'}}>{item.get("isPrivate") ? <LockTwoTone style={{verticalAlign: 'middle'}} /> : <></>}{item.get('title')}</div>
                         <div style={{float: 'right', paddingRight: '10px'}}>
 
 
@@ -191,8 +196,9 @@ class ContextualActiveUsers extends Component {
         return (
 
 
-                        <div style={{backgroundColor: '#f0f2f5'}}>
-
+                        <div
+                            // style={{backgroundColor: '#f0f2f5'}}>
+                            >
                             {tabs}
                         </div>
 

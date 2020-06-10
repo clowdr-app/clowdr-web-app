@@ -4,11 +4,10 @@ import theme from "./theme";
 import {MuiThemeProvider} from "@material-ui/core/styles";
 import Parse from "parse"
 import {AuthUserContext} from "../Session";
-import {Alert, Button, Form, message, Select, Skeleton, Spin, Tag, Tooltip, Typography} from "antd";
+import {Alert, Button, Form, message, notification, Select, Skeleton, Spin, Tag, Tooltip, Typography} from "antd";
 import './VideoChat.css';
 import {VideoContext, VideoProvider} from "clowdr-video-frontend/lib/components/VideoProvider";
 import AppStateProvider from "clowdr-video-frontend/lib/state";
-import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import IconButton from "@material-ui/core/IconButton";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from "@material-ui/core/DialogContent";
@@ -30,6 +29,7 @@ import FlipCameraIosIcon from '@material-ui/icons/FlipCameraIos';
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
 import ReportToModsButton from "./ReportToModsButton";
 import {SyncOutlined} from '@ant-design/icons'
+import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 
 const {Paragraph} = Typography;
 
@@ -37,7 +37,7 @@ const {Paragraph} = Typography;
 class VideoRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {};
+        this.state = {members: []};
     }
 
     async componentDidMount() {
@@ -48,12 +48,21 @@ class VideoRoom extends Component {
         }
     }
 
+    componentWillUnmount() {
+        console.log("Unmounting video room")
+        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general" });
+    }
+
     async joinCallFromProps() {
         if (!this.props.match) {
             return;
         }
         let confName = this.props.match.params.conf;
         let roomID = this.props.match.params.roomName;
+        if(confName == this.confName && roomID == this.roomID)
+            return;
+        this.confName = confName;
+        this.roomID = roomID;
 
         //find the room in parse...
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
@@ -68,12 +77,14 @@ class VideoRoom extends Component {
         roomQuery.include("conference");
 
         let room = await roomQuery.first();
-        this.props.authContext.helpers.setGlobalState({currentRoom: room});
         if (!room) {
             this.setState({error: "invalidRoom"})
             return;
         }
 
+        room = await this.props.authContext.helpers.populateMembers(room);
+        console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
+        this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         this.setState({loadingMeeting: 'true', room: room})
 
         let user = this.props.authContext.user;
@@ -118,18 +129,57 @@ class VideoRoom extends Component {
     }
 
     handleLogout() {
-        this.props.authContext.helpers.setGlobalState({currentRoom: null});
+
+        console.log("VIdeo room log out")
+        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general"});
         this.props.history.push(ROUTES.LOBBY_SESSION);
     }
 
 
-    async componentDidUpdate(prevProps) {
+    async componentDidUpdate(prevProps, prevState, snapshot) {
         let conf = this.props.match.params.conf;
         let roomID = this.props.match.params.roomName;
         if (this.props.authContext.user != prevProps.authContext.user || conf != this.state.conf || roomID !=this.state.meetingName){
             this.setState({conf: conf, meetingName: roomID, token: null});
             await this.joinCallFromProps();
         }
+        if(this.state.room && this.state.room.get("members")){
+            let hadChange = false;
+            for(let member of this.state.room.get("members")){
+                if(!this.state.members.find(v=>v.id == member.id)){
+                    //new member appeared
+                    hadChange = true;
+                    if (this.state.members.length > 0 && this.props.authContext.userProfile.id != member.id)
+                        notification.info({
+                            message: member.get("displayName") + " has joined the room",
+                            placement: 'topLeft',
+                        });
+                }
+            }
+            for(let member of this.state.members){
+                if(this.props.authContext.userProfile.id != member.id && !this.state.room.get("members").find(v=>v.id == member.id)){
+                    hadChange = true;
+                    notification.info({
+                        message: member.get("displayName") + " has left the room",
+                        placement: 'topLeft',
+                    });
+                }
+            }
+            if(hadChange)
+                this.setState({members: this.state.room.get("members")});
+        }
+        // if (this.state.room && this.state.room.get("isPrivate")) {
+            //Was there an update to the ACL?
+            // let room = this.props.authContext.activePrivateVideoRooms.find(r => r.id == this.state.room.id);
+            // console.log(room)
+            // console.log(this.state.room.getACL().permissionsById)
+            // if(room)
+            // console.log(room.getACL().permissionsById);
+            // if(room && room.getACL().permissionsById != this.state.room.getACL().permissionsById){
+            //     console.log("Updated ACL")
+            //     this.setState({room: room});
+            // }
+        // }
     }
 
     onError(err) {
@@ -384,6 +434,15 @@ class RoomVisibilityController extends React.Component {
         if(prevProps.authContext.users != this.props.authContext.users){
             this.setState({users: this.props.authContext.users, loadingUsers: false});
         }
+        if(prevProps.acl.permissionsById != this.props.acl.permissionsById){
+            if (this.aclSelector)
+            {
+                let newValue={
+                    "users": Object.keys(this.props.acl.permissionsById).filter(v=>!v.startsWith("role"))
+                }
+                this.aclSelector.setFieldsValue(newValue);
+            }
+        }
     }
 
     async updateACL(values) {
@@ -437,6 +496,7 @@ class RoomVisibilityController extends React.Component {
         return <Form initialValues={{
             users: this.state.selected
         }}
+                     ref={(el) => { this.aclSelector = el; }}
                      onFinish={this.updateACL.bind(this)}
                      layout="inline"
         >

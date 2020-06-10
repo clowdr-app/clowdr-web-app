@@ -1,80 +1,146 @@
 @import '~antd/dist/antd.css';
 
 .site-layout .site-layout-background {
-  background: #fff;
+    background: #fff;
 }
+
 [data-theme="dark"] .site-layout .site-layout-background {
-  background: #141414;
+    background: #141414;
 }
 
 .space-align-container {
-  display: flex;
-  align-item: flex-start;
-  flex-wrap: wrap;
-  background: #141414;
+    display: flex;
+    align-item: flex-start;
+    flex-wrap: wrap;
+    background: #141414;
 }
+
 .space-align-block {
-  margin: 8px 4px;
-  border: 1px solid #40a9ff;
-  padding: 4px;
-  flex: none;
+    margin: 8px 4px;
+    border: 1px solid #40a9ff;
+    padding: 4px;
+    flex: none;
 }
+
 .space-align-block .mock-block {
-  display: inline-block;
-  padding: 32px 8px 16px;
-  background: rgba(150, 150, 150, 0.2);
+    display: inline-block;
+    padding: 32px 8px 16px;
+    background: rgba(150, 150, 150, 0.2);
 }
+
 .avatar-uploader > .ant-upload {
-  width: 128px;
-  height: 128px;
+    width: 128px;
+    height: 128px;
 }
-.site-layout-background:after{
-  content:"";
-  display: block;
+
+.site-layout-background:after {
+    content: "";
+    display: block;
 }
-.videoEmbed h4{
-  color: black;
+
+.videoEmbed h4 {
+    color: black;
 }
-.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel> .ant-collapse-header{
-  padding: 4px 0 4px 5px;
+
+.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel > .ant-collapse-header {
+    padding: 4px 0 4px 5px;
 }
-.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel> .ant-collapse-header:hover{
+
+.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel > .ant-collapse-header:hover {
     background-color: #dddfe2;
 }
+
 /*.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel .ant-badge{*/
 /*  padding-right: 2px;*/
 /*}*/
-#sidepopoutcontainer > div > div.ant-tabs-content.ant-tabs-content-no-animated.ant-tabs-right-content.ant-tabs-card-content{
-  padding-right: 0;
+#sidepopoutcontainer > div > div.ant-tabs-content.ant-tabs-content-no-animated.ant-tabs-right-content.ant-tabs-card-content {
+    padding-right: 0;
 }
-.active-chats-list-title{
+
+.active-chats-list-title {
     position: absolute;
-  left: 35px;
+    left: 35px;
 }
+
 #tab-general {
-  /*padding-left: 0;*/
-  background-color: #f0f2f5;
-  color: #4a4a4a;
-  font-weight: bold;
-  border-right: 2px solid #cacaca;
-  border-bottom: 2px solid #cacaca;
-  border-top: 2px solid #cacaca;
+    /*padding-left: 0;*/
+    background-color: white;
+    color: #4a4a4a;
+    font-weight: bold;
+    border-right: 2px solid #cacaca;
+    border-bottom: 2px solid #cacaca;
+    border-top: 2px solid #cacaca;
     padding-right: 0px;
 }
+
 .video-masonry-grid {
-  display: -webkit-box; /* Not needed if autoprefixing */
-  display: -ms-flexbox; /* Not needed if autoprefixing */
-  display: flex;
-  margin-left: auto; /* gutter size offset */
-  width: auto;
-  height: 80vh;
+    display: -webkit-box; /* Not needed if autoprefixing */
+    display: -ms-flexbox; /* Not needed if autoprefixing */
+    display: flex;
+    margin-left: auto; /* gutter size offset */
+    width: auto;
+    height: 80vh;
 }
+
 .video-masonry-column {
-  padding-left: 0px; /* gutter size */
-  background-clip: padding-box;
+    padding-left: 0px; /* gutter size */
+    background-clip: padding-box;
 }
 
 /* Style your items */
 .video-masonry-column > div { /* change div to reference your elements you put in <Masonry> */
-  margin-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+#sidepopoutcontainer > div > div.ant-tabs-content.ant-tabs-content-no-animated.ant-tabs-right-content.ant-tabs-card-content {
+    height: 100%;
+
+}
+
+#sidepopoutcontainer > div > div.ant-tabs-content.ant-tabs-content-no-animated.ant-tabs-right-content.ant-tabs-card-content > div.ant-tabs-tabpane.ant-tabs-tabpane-active {
+    height: 100%;
+    background-color: white;
+}
+
+.action-bar {
+    background-color: #F8F8F8;
+    border-top: 0.5px solid #e7e7e7;
+    border-bottom: 0.5px solid #e7e7e7;
+    height: initial;
+    line-height: normal;
+    padding: 0;
+    height: 26px;
+}
+
+.chatMessage :hover {
+    background-color: #f0f2f5;
+}
+
+.ant-layout {
+    background-color: white;
+}
+#top-content{
+    border-bottom: 1px solid #e7e7e7;
+}
+
+.lobbySessionTab {
+    position: absolute;
+    z-index: 4;
+    border-right: 1px solid #e7e7e7;
+    border-top: 1px solid #e7e7e7;
+    border-bottom: 1px solid #e7e7e7;
+    background-color: #F8F8F8;
+    margin-top: 10px;
+    padding: 4px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+}
+
+
+.chatMessage p{
+    margin: 0;
+    padding-left: 5px;
 }

@@ -103,131 +103,10 @@ class ChatContainer extends Component {
 
     }
 
-    cleanup(){
-        let _this =this;
-        if (this.chatClient) {
-            console.log("Removing listeners");
-            this.chatClient.removeAllListeners("channelAdded");
-            this.chatClient.removeAllListeners("channelRemoved");
-            this.chatClient.removeAllListeners("channelJoined");
-            this.chatClient.removeAllListeners("channelLeft");
-            console.log("Calling shutdown");
-            this.chatClient.shutdown().then(
-                ()=>{
-                    console.log("Shut down")
-                    _this.chatClient = null;
-                }
-            ).catch(err=>{
-                console.log(err);
-            })
-        }
-        if(this.sub) {
-            this.sub.unsubscribe();
-            this.sub = null;
-        }
-    }
+
     componentWillUnmount() {
       this.cleanup();
     }
-
-    getToken = (user) => {
-        let _this = this;
-        let idToken = user.getSessionToken();
-        if (idToken) {
-            const data = fetch(
-                process.env.REACT_APP_TWILIO_CALLBACK_URL + '/chat/token'
-                // 'http://localhost:3001/video/token'
-                , {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        identity: idToken
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(res => {
-                res.json().then((data) => {
-                    _this.setState(
-                        {
-                            token: data.token
-                        }, _this.initChat.bind(_this)
-                    )
-                })
-            });
-        } else {
-            console.log("Unable to get our token?");
-        }
-
-
-    };
-
-    initChat = () => {
-        let _this = this;
-        this.props.auth.initChatClient(this.state.token).then((client) => {
-            _this.chatClient = client;
-            _this.clientInitiated();
-        });
-    };
-
-    clientInitiated = async () => {
-        console.log("Setting up client");
-        let _this = this;
-        await this.setState({chatReady: true});
-        let channelDescriptors = await this.chatClient.getPublicChannelDescriptors();
-        this.setState({loadingChannels: false,
-                    channels: channelDescriptors.items});
-        let channelName ="general";
-        if(this.state.user.get("lastChatChannel"))
-            channelName = this.state.user.get("lastChatChannel");
-        //Find any channels that we are part of and join them
-        let joinedChannelDescritporPaginator = await this.chatClient.getUserChannelDescriptors();
-        _this.setState({
-            joinedChannels: joinedChannelDescritporPaginator.items,
-            activeChannel: channelName
-        });
-        if (joinedChannelDescritporPaginator.items.length == 0) {
-            //force join general
-            let generalRoom = await this.chatClient.getChannelByUniqueName("general");
-            let room = await generalRoom.join();
-            joinedChannelDescritporPaginator = await this.chatClient.getUserChannelDescriptors();
-        }
-        for (const channelDescriptor of joinedChannelDescritporPaginator.items) {
-            let channel = await channelDescriptor.getChannel();
-            if(channel.uniqueName == channelName){
-                this.channel = channel;
-            }
-            this.joinedChannel(channel);
-        }
-        //set up  listeners for channel changes
-        this.chatClient.on("channelAdded", (channel)=>{
-            console.log("Channel added: " + channel);
-            console.log(channel);
-            _this.setState(
-                (prevState)=>({
-                    channels: [...prevState.channels.filter((v)=>(
-                        v.sid != channel.sid
-                    )), channel]
-                })
-            )
-        });
-        this.chatClient.on("channelRemoved", (channel)=>{
-            console.log("channel removed " + channel);
-            _this.setState(
-                (prevState)=>({
-                    channels: prevState.channels.filter((v) => (
-                        v.sid != channel.sid
-                    ))
-                })
-            )
-        });
-
-        this.chatClient.on("channelJoined", (channel)=>{
-            _this.joinedChannel(channel);
-        });
-        this.chatClient.on("channelLeft", (channel)=>{
-            _this.leaveChannel(channel);
-        });
-    };
 
     messagesLoaded = (channel, messagePage) => {
         this.setState({["messages"+channel.uniqueName]: messagePage.items, chatLoading: false});
@@ -278,19 +157,7 @@ class ChatContainer extends Component {
         }));
     };
 
-    joinedChannel(channel){
-        //set up listeners
-        //push to
-        this.setState((prevState) => ({
-            joinedChannels: [... prevState.joinedChannels, channel]
-        }));
-        channel.getMessages().then(this.messagesLoaded.bind(this,channel));
-        channel.on('messageAdded', this.messageAdded.bind(this,channel));
-        channel.on("messageRemoved", this.messageRemoved.bind(this,channel));
-        channel.on("messageUpdated", this.messageUpdated.bind(this,channel));
-        // channel.on("typingStarted", this.typingStarted.bind(this,channel));
-        // channel.on("typingEnded", this.typingEnded.bind(this,channel));
-    }
+
     async changeActiveChannel(channel) {
         let _this = this;
         this.channel = this.state.joinedChannels.find((item)=>(item.uniqueName == channel.uniqueName));
@@ -408,9 +275,7 @@ class ChatContainer extends Component {
         message.remove();
     }
 
-    formatTime(timestamp){
-        return <Tooltip title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
-    }
+
 
     groupMessages(messages) {
         let ret = [];
@@ -828,6 +693,4 @@ const AuthConsumer = (props) => (
             </AuthUserContext.Consumer>
 
 );
-
-export default withRouter(AuthConsumer)
 
