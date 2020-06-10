@@ -8,7 +8,7 @@ import ConnectTriggeringLocalVideoPreview
 import ReconnectingNotification
     from "clowdr-video-frontend/lib/components/ReconnectingNotification/ReconnectingNotification";
 import {styled} from "@material-ui/core";
-import React from "react";
+import React, {useContext} from "react";
 import Grid from '@material-ui/core/Grid';
 
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
@@ -35,6 +35,7 @@ import ToggleVideoButton from "clowdr-video-frontend/lib/components/Controls/Tog
 import ToggleScreenShareButton
     from "clowdr-video-frontend/lib/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
 import EndCallButton from "clowdr-video-frontend/lib/components/Controls/EndCallButton/EndCallButton";
+import AuthUserContext from "../Session/context";
 
 let backgroundImg = require('../../clowdr-background.jpg');
 const Main = styled('main')({
@@ -290,6 +291,15 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
 
     const classes = useStyles();
 
+    const authContext = useContext(AuthUserContext);
+    let profiles = authContext.currentRoom.get("members");
+    let name = participant.identity;
+    if (profiles) {
+        let userProfile = profiles.find(p => p.id == participant.identity);
+        if (userProfile) {
+            name = userProfile.get("displayName");
+        }
+    }
     return (
         <div
             className={clsx(classes.container, {
@@ -302,7 +312,7 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
                 <div className={classes.infoRow}>
                     <h4 className={classes.identity}>
                         <ParticipantConnectionIndicator participant={participant} />
-                        {participant.identity.substring(1 + participant.identity.indexOf(':'))}
+                        {name}
                     </h4>
                     <NetworkQualityLevel qualityLevel={networkQualityLevel} />
                 </div>

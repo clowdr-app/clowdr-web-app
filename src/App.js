@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
-import {BrowserRouter, Route} from 'react-router-dom';
-import {NavLink} from "react-router-dom";
+import {BrowserRouter, NavLink, Route} from 'react-router-dom';
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
 import SignUp from "./components/SignUp"
 import SignIn from "./components/SignIn"
+import {RightOutlined} from "@ant-design/icons"
 import {Button, Layout, Select, Spin, Tooltip, Typography} from 'antd';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
@@ -13,7 +13,6 @@ import SignOut from "./components/SignOut";
 import Program from "./components/Program";
 import VideoRoom from "./components/VideoChat/VideoRoom"
 import SlackToVideo from "./components/Slack/slackToVideo"
-import {InfoCircleFilled, QuestionCircleFilled} from '@ant-design/icons'
 
 import {withAuthentication} from "./components/Session";
 
@@ -35,6 +34,7 @@ import GenericLanding from "./components/GenericLanding";
 import SocialTab from "./components/SocialTab";
 import About from "./components/About";
 import Help from "./components/Help";
+import SidebarChat from "./components/SocialTab/SidebarChat";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -46,13 +46,14 @@ class App extends Component {
     constructor(props) {
         super(props);
         // this.state ={'activeKey'=routing}
-        let showSider = false;
         this.router = React.createRef();
 
         // if(this.props.match.)
         this.state = {
             conference: null,
-            showingLanding: this.props.authContext.showingLanding
+            showingLanding: this.props.authContext.showingLanding,
+            socialCollapsed: false,
+            chatCollapsed: false
         }
     }
 
@@ -82,13 +83,14 @@ class App extends Component {
                     }
                 </Select>
             }
-            let clowdrActionButtons = <span><Tooltip title="CLOWDR Support"><NavLink to="/help">    <Button size="small">Help</Button></NavLink></Tooltip>
+            let clowdrActionButtons = <span>
+                <Tooltip title="CLOWDR Support"><NavLink to="/help">    <Button size="small">Help</Button></NavLink></Tooltip>
                 <Tooltip title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip></span>
             if(confSwitcher){
                 confSwitcher = <span style={{float: "right"}}>{confSwitcher} {clowdrActionButtons}</span>
             }
             else
-                confSwitcher= <span style={{float: "right"}}>clowdrActionButtons</span>;
+                confSwitcher= <span style={{float: "right"}}>{clowdrActionButtons}</span>;
             if (headerImage)
                 return <Header className="site-layout-background" style={{height: "140px", clear: "both"}}>
                     <img src={headerImage.url()} className="App-logo" height="140"
@@ -177,7 +179,12 @@ class App extends Component {
         </div>)
     }
 
-
+    toggleLobbySider() {
+        this.setState({socialCollapsed: !this.state.socialCollapsed});
+    }
+    toggleChatSider() {
+        this.setState({chatCollapsed: !this.state.chatCollapsed});
+    }
     render() {
         if(this.state.showingLanding){
             return <GenericLanding />
@@ -199,20 +206,31 @@ class App extends Component {
             <BrowserRouter basename={process.env.PUBLIC_URL} ref={this.router}>
                 <div className="App">
                     <Layout className="site-layout">
-                        {this.siteHeader()}
-                        <Layout>
+                        <div id="top-content">
+                            {this.siteHeader()}
                             {this.navBar()}
+                        {/*<Header className="action-bar">*/}
+                        {/*    /!*<Badge*!/*/}
+                        {/*    /!*    title={this.props.authContext.liveVideoRoomMembers + " user"+(this.props.authContext.liveVideoRoomMembers == 1 ? " is" : "s are")+" in video chats"}*!/*/}
+                        {/*    /!*    showZero={true} style={{backgroundColor: '#52c41a'}} count={this.props.authContext.liveVideoRoomMembers} offset={[0,-5]}>*!/*/}
+                        {/*    <Button style={lobbySiderButtonStyle} onClick={this.toggleLobbySider.bind(this)} size="small" >Breakout Rooms <RightOutlined /></Button>*/}
+                        {/*    <Button style={chatSiderButtonStyle} onClick={this.toggleChatSider.bind(this)} size="small" >Chat</Button>*/}
 
+                        {/*    /!*</Badge>*!/*/}
+                        {/*    </Header>*/}
+                        </div>
                             <Layout>
-                               <SocialTab />
+                                <div className="lobbySessionTab" style={{left: (this.state.socialCollapsed?"0px":"250px")}}><Button onClick={this.toggleLobbySider.bind(this)}  size="small">Breakout Rooms {(this.state.socialCollapsed? ">":"x")}</Button> </div>
+                                <div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>
+
+                                <SocialTab collapsed={this.state.socialCollapsed}/>
                                 <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
                                     <div className="site-layout-background" style={{padding: 24}}>
                                         {this.routes()}
                                     </div>
                                 </Content>
-
+                                <SidebarChat collapsed={this.state.chatCollapsed} />
                             </Layout>
-                        </Layout>
                     </Layout>
 
                     {/* <div style={{position:

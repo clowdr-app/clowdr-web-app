@@ -2,8 +2,8 @@ import React from 'react';
 
 import AuthUserContext from './context';
 import Parse from "parse";
-import Chat from "twilio-chat";
 import {Spin} from "antd";
+import ChatClient from "../../classes/ChatClient"
 
 let UserProfile = Parse.Object.extend("UserProfile");
 
@@ -17,7 +17,7 @@ const withAuthentication = Component => {
             this.loadingProfiles = {};
             this.profiles = {};
             this.chatWaiters = [];
-            this.liveChannel = null;
+            this.livegneChannel = null;
             this.channelChangeListeners = [];
 
             this.subscribedToVideoRoomState = false;
@@ -37,15 +37,16 @@ const withAuthentication = Component => {
                 populateMembers: this.populateMembers.bind(this),
                 setGlobalState: this.setState.bind(this),//well that seems dangerous...
                 getUserProfilesFromUserIDs: this.getUserProfilesFromUserIDs.bind(this),
-                ifPermission: this.ifPermission.bind(this)
+                ifPermission: this.ifPermission.bind(this),
+                getUserRecord: this.getUserRecord.bind(this)
             }
             this.state = {
                 user: null,
+                users: {},
                 loading: true,
                 roles: [],
                 currentRoom: null,
                 refreshUser: this.refreshUser.bind(this),
-                initChatClient: this.initChatClient.bind(this),
                 getUserProfile: this.getUserProfile.bind(this),
                 getChatClient: this.getChatClient.bind(this),
                 getLiveChannel: this.getLiveChannel.bind(this),
@@ -59,6 +60,7 @@ const withAuthentication = Component => {
                 currentConference: null,
                 activeRoom: null,
                 helpers: exports,
+                chatClient: new ChatClient(this.setState.bind(this)),
                 parseLive: parseLive,
                 subscribeToVideoRoomState: this.subscribeToVideoRoomState.bind(this),
                 // video: {
@@ -71,6 +73,7 @@ const withAuthentication = Component => {
             };
             this.fetchingUsers = false;
         }
+
         ifPermission(permission, jsxElement, elseJsx){
             if(this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
@@ -91,8 +94,7 @@ const withAuthentication = Component => {
 
 
         async getUsers() {
-            console.log("Get users called")
-            if (this.state.users || this.fetchingUsers)
+            if ((this.state.users && Object.keys(this.state.users).length > 0) || this.fetchingUsers)
                 return;
             this.fetchingUsers = true;
             let parseUserQ = new Parse.Query(UserProfile)
@@ -240,18 +242,7 @@ const withAuthentication = Component => {
                 this.chatWaiters.push(callback);
         }
 
-        async initChatClient(token) {
-            if (!token)
-                return undefined;
-            if (!this.chatClient) {
-                console.log("Created a new chat client");
-                this.chatClient = await Chat.create(token);
-                // await this.chatClient.initialize();
-                this.chatWaiters.forEach((p) => p(this.chatClient));
-                this.setLiveChannelByName("general");
-            }
-            return this.chatClient;
-        }
+
 
         async getUserProfilesFromUserIDs(ids) {
             let q = new Parse.Query(UserProfile);
@@ -296,8 +287,15 @@ const withAuthentication = Component => {
             if(this.state.users && this.state.users[uid])
                 return this.state.users[uid];
             else{
-                let uq = new Parse.Query(UserProfile);
-                return await uq.get(uid);
+                try {
+                    let uq = new Parse.Query(UserProfile);
+                    let ret = await uq.get(uid);
+                    this.state.users[uid] = ret;
+                    return ret;
+                }catch(err){
+                    return null;
+                }
+
             }
         }
         async populateMembers(breakoutRoom){
@@ -307,6 +305,7 @@ const withAuthentication = Component => {
                     let member = breakoutRoom.get("members")[i];
                     if (!member.get("displayName")) {
                         promises.push(this.getUserRecord(member.id).then((fullUser) => {
+                            console.log("Retrieved: " + fullUser.get("displayName"))
                                 breakoutRoom.get("members")[i] = fullUser;
                             }
                         ))
@@ -383,6 +382,7 @@ const withAuthentication = Component => {
                             roles: roles
                         });
 
+                        _this.getUsers();
                         if (callback) {
                             _this.authCallbacks.push(callback);
                             callback(userWithRelations);
@@ -410,7 +410,9 @@ const withAuthentication = Component => {
                     }
                     _this.setState({
                         user: null,
-                        loading: false
+                        videoRoomsLoaded: false,
+                        loading: false,
+                        users: {}
                     })
                     if (callback) {
                         _this.authCallbacks.push(callback);
@@ -477,7 +479,6 @@ const withAuthentication = Component => {
         }
 
         async subscribeToNewPrivateRooms() {
-            console.log("Ssubscribe called " +this.mounted)
             if (!this.mounted)
                 return;
             let currentlySubscribedTo = [];
@@ -497,24 +498,13 @@ const withAuthentication = Component => {
                 return;
             let newRooms = [];
             let fetchedIDs = [];
+            this.setState({
+                activePrivateVideoRooms: res
+            });
             for (let room of res) {
                 fetchedIDs.push(room.id);
-                if (!currentlySubscribedTo.includes(room.id)) {
-                    console.log("Initial fetch reating " + room.id)
-                    this.setState((prevState) => ({
-                        activePrivateVideoRooms: [room, ...prevState.activePrivateVideoRooms]
-                    }));
-                }
             }
-            for (let roomID of currentlySubscribedTo) {
-                if (!fetchedIDs.includes(roomID)) {
-                    this.setState((prevState) => ({
-                        activePrivateVideoRooms: prevState.activePrivateVideoRooms.filter((v) => (
-                            v.id != roomID
-                        ))
-                    }));
-                }
-            }
+
             this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.state.user.getSessionToken());
             this.parseLivePrivateVideosSub.on("update", async (newItem) => {
                 newItem = await this.populateMembers(newItem);
@@ -536,6 +526,7 @@ const withAuthentication = Component => {
                     ))
                 }));
             })
+            this.setState({videoRoomsLoaded: true});
         }
 
         componentDidMount() {
