@@ -480,6 +480,11 @@ class RoomVisibilityController extends React.Component {
         if(!this.state.users || !this.state.selected)
             return <Skeleton />;
         const options = Object.keys(this.state.users).map(d => {
+            if(!this.state.users[d].get('displayName'))
+                return {
+                label: "undefined",
+                    value: this.state.users[d].get("user").id
+                }
             return {
                 label: this.state.users[d].get("displayName"), value:
                 this.state.users[d].get("user").id

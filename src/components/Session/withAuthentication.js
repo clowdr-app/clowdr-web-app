@@ -370,6 +370,7 @@ const withAuthentication = Component => {
                         profileQ.equalTo("conference",conf);
                         profileQ.equalTo("user",userWithRelations);
                         let activeProfile = await profileQ.first();
+                        console.log("current conference: " + conf.get("conferenceName"))
                         _this.setState({
                             user: userWithRelations,
                             userProfile: activeProfile,
@@ -396,7 +397,8 @@ const withAuthentication = Component => {
                         }catch(err2){
                             console.log(err2);
                         }
-                        // _this.props.history.push("/signin")
+                        if(_this.props.history)
+                        _this.props.history.push("/signin")
                         return null;
                     }
                 } else {
