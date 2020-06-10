@@ -13,7 +13,7 @@ const IconText = ({icon, text}) => (
     </Space>
 );
 
-const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook', 'Bilibili'];
+const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook', 'iQIYI'];
 
 class LiveVideos extends React.Component {
     constructor(props) {
@@ -232,7 +232,7 @@ class LiveVideos extends React.Component {
                     this.setState({src2: value});
                 }}
             />
-            <Table columns={columns} dataSource={this.state.videos} rowKey={(v)=>(v.id1)}>
+            <Table columns={columns} dataSource={this.state.videos} rowKey={(v)=>(v.id)}>
             </Table>
         </div>
     }

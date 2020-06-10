@@ -1,10 +1,12 @@
 import React from 'react';
 import {videoURLFromData} from './utils'
 import Parse from "parse";
+import ReactPlayer from 'react-player';
 
 class LiveVideoPanel extends React.Component {
     constructor(props) {
         super(props);
+        // available: video, watchers, geoloc
         var w = this.props.watchers.filter(w =>  w.get("video") == this.props.video.id );
         this.state = {
             count: w.length,
@@ -45,9 +47,22 @@ class LiveVideoPanel extends React.Component {
     }
 
     render() {
-        const src1 = this.props.video.get("src1");
-        const id1 = this.props.video.get("id1");
-        const video_url = videoURLFromData(src1, id1);
+        let src = this.props.video.get("src1");
+        let id = this.props.video.get("id1");
+        let video_url = videoURLFromData(src, id);
+        let videopanel = "";
+
+        if (this.props.geoloc && this.props.geoloc.country_code.toLowerCase() == 'cn')
+        {
+            console.log("Viewer from China! Nǐ hǎo");
+            src = this.props.video.get("src2");
+            id = this.props.video.get("id2");
+            video_url = videoURLFromData(src, id);
+            videopanel = <ReactPlayer playing controls muted url={video_url}/>
+        } else {
+            videopanel = <iframe title={this.props.title} src={video_url} style={{"minWidth":"720px", "height":"450px"}} allowFullScreen/>
+        }
+
 
         const q_url = this.props.video.get("slido");
 
@@ -65,8 +80,7 @@ class LiveVideoPanel extends React.Component {
                         <div className={"container"}>
                             <div className={"row"}>
                                 <div className={"embed-responsive-item"} >
-                                    <iframe title={this.props.title} src={video_url} style={{"minWidth":"720px", "height":"450px"}}
-                                            allowFullScreen/>
+                                    {videopanel}
                                 </div>
                             </div>
                             <div className={"row"}>

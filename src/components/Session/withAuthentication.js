@@ -335,7 +335,7 @@ const withAuthentication = Component => {
 
                         const roles = await roleQuery.find();
 
-                        let isAdmin = false;
+                        let isAdmin = _this.state ? _this.state.isAdmin : false;
                         let validConferences = [];
 
                         let validConfQ= new Parse.Query("ClowdrInstanceAccess");

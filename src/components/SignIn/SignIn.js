@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import * as ROUTES from '../../constants/routes';
 import {Button, Form, Input} from 'antd';
 import Parse from "parse";
-import withAuthentication from "../Session/withAuthentication";
 import {AuthUserContext} from "../Session";
 import GenericLanding from "../GenericLanding";
 

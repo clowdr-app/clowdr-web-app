@@ -17,7 +17,9 @@ class LiveStreaming extends Component {
                 videos: res,
                 loading: false
             });
-            this.sub = this.props.parseLive.client.subscribe(query);
+        });
+        query.subscribe().then(sub => {
+            this.sub = sub;
             this.sub.on('create', vid => {
                 console.log("Video created " + JSON.stringify(vid) + " " + vid.get("title") + " " + vid.title);
                 this.setState((prevState) => ({
@@ -98,12 +100,12 @@ class LiveStreaming extends Component {
     }
 }
 
-const ParseLiveConsumer = (props) => (
+const LiveVideosArea = (props) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <LiveStreaming {...props} auth={value} parseLive={value.parseLive}/>
+                    <LiveStreaming {...props} auth={value}/>
                 )}
             </AuthUserContext.Consumer>
 );
 
-export default ParseLiveConsumer;
+export default LiveVideosArea;
