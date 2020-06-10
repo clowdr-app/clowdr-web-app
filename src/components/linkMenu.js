@@ -11,6 +11,7 @@ import {
     HomeOutlined,
     SmileOutlined,
     ScheduleOutlined,
+    SolutionOutlined,
     TeamOutlined,
     ToolOutlined,
     UserOutlined,
@@ -43,6 +44,9 @@ class LinkMenu extends React.Component {
 
                     <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
                         Users</NavLink></Menu.Item>
+
+                    <Menu.Item key='/admin/registrations' icon={<SolutionOutlined/>}><NavLink to="/admin/registrations">
+                        Registrations</NavLink></Menu.Item>
                 </SubMenu>
             }
             userTools =
