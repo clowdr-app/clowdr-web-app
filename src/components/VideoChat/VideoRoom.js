@@ -52,8 +52,7 @@ class VideoRoom extends Component {
         console.log("Unmounting video room")
         this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general" });
     }
-
-    async joinCallFromProps() {
+    async joinCallFromProps(){
         if (!this.props.match) {
             return;
         }
@@ -61,9 +60,28 @@ class VideoRoom extends Component {
         let roomID = this.props.match.params.roomName;
         if(confName == this.confName && roomID == this.roomID)
             return;
+        this.props.authContext.refreshUser().then((u)=>{
+            console.log(u);
+            this.joinCallFromPropsWithCurrentUser()
+        })
+    }
+    async joinCallFromPropsWithCurrentUser() {
+
+        if (!this.props.match) {
+            return;
+        }
+        let confName = this.props.match.params.conf;
+        let roomID = this.props.match.params.roomName;
+        console.log("Current room: " + this.roomID)
+        if(confName == this.confName && roomID == this.roomID)
+            return;
+        if(this.loadingVideo)
+            return;
+        this.loadingVideo = true;
         this.confName = confName;
         this.roomID = roomID;
 
+        console.log("OK joining room " + roomID)
         //find the room in parse...
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
         let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
@@ -90,7 +108,9 @@ class VideoRoom extends Component {
         let user = this.props.authContext.user;
         let _this = this;
 
+        console.log(user)
         if (user) {
+            console.log("And asking for video token...")
             let idToken = user.getSessionToken();
             const data = fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
@@ -108,15 +128,19 @@ class VideoRoom extends Component {
                     }
                 }).then(res => {
                 res.json().then((data) => {
+                    console.log("Got result:" +data.token)
                     _this.setState(
                         {
                             error: undefined,
                             meeting: room.id,
                             token: data.token,
-                            loadingMeeting: false
+                            loadingMeeting: false,
+                            meetingName: room.get("title")
                         }
                     )
+                    _this.loadingVideo = false;
                 }).catch((err)=>{
+                    console.log("Error")
                     this.setState({error: "authentication"});
                 });
             });
