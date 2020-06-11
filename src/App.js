@@ -25,6 +25,7 @@ import VideoChat from "./components/VideoChat";
 // import UsersList from "./components/Admin/Users";
 //
 import LiveVideosList from "./components/Admin/LiveVideos";
+import Registrations from "./components/Admin/Registrations";
 import withGeoLocation from './components/GeoLocation/withGeoLocation';
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
@@ -178,6 +179,7 @@ class App extends Component {
             {/*<Route exact path='/admin/users' component={withAuthentication(UsersList)} />*/}
             {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
             <Route exact path='/admin/livevideos' component={LiveVideosList}/>
+            <Route exact path='/admin/registrations' component={Registrations}/>
         </div>)
     }
 
