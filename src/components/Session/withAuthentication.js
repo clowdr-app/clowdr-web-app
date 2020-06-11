@@ -252,7 +252,6 @@ const withAuthentication = Component => {
                 u.id = id;
                 users.push(u);
             }
-            console.log(users);
             q.containedIn("user", users);
             q.equalTo("conference", this.state.currentConference);
             return await q.find();

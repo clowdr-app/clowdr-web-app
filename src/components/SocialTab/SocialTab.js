@@ -1,21 +1,27 @@
 import React, {Component} from "react";
-import {Button, Layout, Tooltip} from "antd";
+import {Layout, Tooltip} from "antd";
 import ContextualActiveUsers from "../Lobby/ContextualActiveusers";
 import {AuthUserContext} from "../Session";
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+
 class SocialTab extends Component {
     constructor(props) {
         super(props);
-        this.state = {siderCollapsed: this.props.collapsed}
+
+        let siderWidth = Number(localStorage.getItem("lobbyWidth"));
+        if(siderWidth == 0)
+            siderWidth = 250;
+        else if(siderWidth == -1)
+            siderWidth = 0;
+        this.state = {siderCollapsed: this.props.collapsed, siderWidth: siderWidth}
     }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if(this.props.collapsed != this.state.siderCollapsed){
-          this.setState({siderCollapsed: this.props.collapsed, siderWidth: 250})
-        }
+    componentWillUnmount() {
     }
+
     setDrawerWidth(width){
         this.setState({siderWidth: width})
+        localStorage.setItem("lobbyWidth", (width == 0 ? -1 : width));
     }
 
     render() {
@@ -69,9 +75,12 @@ class SocialTab extends Component {
 
                 </div>
         </Layout.Sider>
-            {/*<div className="dragIconTop" onMouseDown={e => handleMouseDown(e)}></div>*/}
-            <div className="dragIconMiddle"
-                 onClick={()=>this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))}
+                {/*<div className="dragIconTop" onMouseDown={e => handleMouseDown(e)}></div>*/}
+                <div className="dragIconMiddle"
+                     onClick={() => {
+                         localStorage.setItem("lobbyWidth", (this.state.siderWidth == 0 ? 250 : -1));
+                         this.setState((prevState) => ({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
+                     }}
             >
                 {this.state.siderWidth == 0 ? <Tooltip title="Collapse the lobby drawer"><ChevronRightIcon/></Tooltip>:<Tooltip title="Expand the lobby drawer"><ChevronLeftIcon/></Tooltip>}
                 {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}

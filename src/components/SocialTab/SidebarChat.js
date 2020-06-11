@@ -38,7 +38,13 @@ class SidebarChat extends React.Component {
         super(props);
 
         this.messages = {};
-        this.state = {...INITIAL_STATE, siderCollapsed: this.props.collapsed, chatChannel: "#general", siderWidth: 250}
+        let siderWidth = Number(localStorage.getItem("chatWidth"));
+        console.log("Read: " + siderWidth)
+        if(siderWidth == 0)
+            siderWidth = 250;
+        else if(siderWidth == -1)
+            siderWidth = 0;
+        this.state = {...INITIAL_STATE, chatChannel: "#general", siderWidth: siderWidth}
 
     }
 
@@ -65,6 +71,9 @@ class SidebarChat extends React.Component {
                 chatLoading: true,
                 messages: []
             }, async () => {
+                if(this.currentUniqueName != uniqueNameOrSID){
+                    return;//raced with another update
+                }
                 if (this.activeChannel) {
                     //leave the current channel
                     console.log("Leaving: ")
@@ -78,22 +87,38 @@ class SidebarChat extends React.Component {
                         await this.activeChannel.leave();
                 }
                 this.activeChannel = await this.props.auth.chatClient.joinAndGetChannel(uniqueNameOrSID);
-                this.activeChannel.getMessages().then(this.messagesLoaded.bind(this, this.activeChannel));
+                this.activeChannel.getMessages().then((messages)=> {
+                    if(this.currentUniqueName != uniqueNameOrSID)
+                        return;
+                    this.messagesLoaded(this.activeChannel, messages)
+                });
                 this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
                 this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
                 this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
                 console.log(this.activeChannel)
-                this.setState({
+               let stateUpdate = {
                     chatLoading: false,
-                    activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
-                })
+                   activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
+               }
+               console.log("Changing active channel name to: " + stateUpdate.activeChannelName)
+               if(!uniqueNameOrSID.startsWith("#"))
+               {
+                   if(this.state.siderWidth == 0)
+                       stateUpdate.siderWidth = 250;
+               }
+                this.setState(stateUpdate);
             });
 
         } else {
-            console.log("Nope")
+            if(this.currentUniqueName != uniqueNameOrSID){
+                return;//raced with another update
+            }
+            // console.log("Unable to set channel because no user or something:")
+            // console.log(user);
+            // console.log(uniqueNameOrSID)
             this.setState({
                 chatAvailable: false,
-                siderWidth: 0,
+                // siderWidth: 0,
                 meesages: []
             })
         }
@@ -185,9 +210,6 @@ class SidebarChat extends React.Component {
         return o1.sid == o2.sid;
     }
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.collapsed != this.state.siderCollapsed) {
-            this.setState({siderCollapsed: this.props.collapsed})
-        }
         if (this.props.auth.chatChannel != this.state.chatChannel) {
             this.setState({chatChannel: this.props.auth.chatChannel});
             this.changeChannel(this.props.auth.chatChannel);
@@ -212,8 +234,11 @@ class SidebarChat extends React.Component {
 
         const handleMouseMove = (e) => {
             const newWidth = e.clientX - document.body.offsetLeft;
-            if (newWidth >= 0 && newWidth <= 300)
+            if (newWidth >= 0 && newWidth <= 500)
+            {
                 this.setDrawerWidth(newWidth);
+                localStorage.setItem("chatWidth", (newWidth == 0 ? -1 : newWidth));
+            }
         };
 
         if(!this.props.auth.user){
@@ -310,7 +335,11 @@ class SidebarChat extends React.Component {
                 </div>
             </Layout.Sider>
                 <div className="dragIconMiddleRight"
-                     onClick={()=>this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))}
+                     onClick={()=>{
+                         localStorage.setItem("chatWidth", this.state.siderWidth == 0 ? 250 : -1);
+                         console.log("Chat width local storage: " + localStorage.getItem("chatWidth"))
+                         this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
+                     }}
                 >
                     {this.state.siderWidth == 0 ? <Tooltip title="Open the chat drawer"><ChevronLeftIcon/></Tooltip>:<Tooltip title="Close the chat drawer"><ChevronRightIcon/></Tooltip>}
                     {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
