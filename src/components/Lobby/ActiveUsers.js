@@ -123,7 +123,6 @@ class ActiveUsers extends React.Component {
     componentDidMount() {
         // this.installActivityListener();
         let _this = this;
-        this.props.auth.refreshUser(this.userChanged.bind(this));
         // console.log(client.getChannelUserDescriptors())
         // client.users.list().then((user)=>{
         //     console.log(user);

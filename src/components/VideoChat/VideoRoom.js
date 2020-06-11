@@ -57,7 +57,7 @@ class VideoRoom extends Component {
             return;
         }
 
-        this.props.authContext.refreshUser().then((u)=>{
+        this.props.authContext.refreshUser(null, this.props.match.params.conf).then((u)=>{
             this.joinCallFromPropsWithCurrentUser()
         })
     }

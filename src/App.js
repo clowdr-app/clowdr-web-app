@@ -5,7 +5,6 @@ import Home from "./components/Home"
 import Lobby from "./components/Lobby"
 import SignUp from "./components/SignUp"
 import SignIn from "./components/SignIn"
-import {RightOutlined} from "@ant-design/icons"
 import {Button, Layout, Select, Spin, Tooltip, Typography} from 'antd';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
@@ -36,6 +35,7 @@ import SocialTab from "./components/SocialTab";
 import About from "./components/About";
 import Help from "./components/Help";
 import SidebarChat from "./components/SocialTab/SidebarChat";
+import {withRouter} from "react-router";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -47,7 +47,6 @@ class App extends Component {
     constructor(props) {
         super(props);
         // this.state ={'activeKey'=routing}
-        this.router = React.createRef();
 
         // if(this.props.match.)
         this.state = {
@@ -55,6 +54,10 @@ class App extends Component {
             showingLanding: this.props.authContext.showingLanding,
             socialCollapsed: false,
             chatCollapsed: false
+        }
+
+        if(window.location.pathname.startsWith("/fromSlack") &&!this.props.authContext.user){
+            this.state.isMagicLogin = true;
         }
     }
 
@@ -123,13 +126,15 @@ class App extends Component {
         if (!prevProps.authContext || prevProps.authContext.currentConference != this.props.authContext.currentConference) {
             this.refreshConferenceInformation();
         }
-        if(this.props.authContext.showingLanding != this.state.showingLanding){
+        if (this.props.authContext.showingLanding != this.state.showingLanding) {
             this.setState({showingLanding: this.props.authContext.showingLanding});
+        }
+        if (this.state.isMagicLogin && (!window.location.pathname.startsWith("/fromSlack") || this.props.authContext.user)) {
+            this.setState({isMagicLogin: false});
         }
     }
 
     componentDidMount() {
-        console.log(this.router.current)
         if (this.props.authContext.currentConference)
             this.refreshConferenceInformation();
     }
@@ -189,7 +194,11 @@ class App extends Component {
     toggleChatSider() {
         this.setState({chatCollapsed: !this.state.chatCollapsed});
     }
+
     render() {
+        if (this.state.isMagicLogin) {
+            return <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
+        }
         if(this.state.showingLanding){
             return <GenericLanding />
         }
@@ -207,8 +216,8 @@ class App extends Component {
             }
         }
 
+        let isLoggedIn = this.props.authContext.user != null;
         return (
-            <BrowserRouter basename={process.env.PUBLIC_URL} ref={this.router}>
                 <div className="App">
                     <Layout className="site-layout">
                         <div id="top-content">
@@ -246,9 +255,17 @@ class App extends Component {
                         <Chat />
                     </div> */}
                 </div>
-            </BrowserRouter>
         );
     }
 }
 
-export default withAuthentication(withGeoLocation(App));
+let RouteredApp = withRouter(App);
+class ClowdrApp extends React.Component{
+   render() {
+       return <BrowserRouter basename={process.env.PUBLIC_URL}>
+           <RouteredApp authContext={this.props.authContext} />
+       </BrowserRouter>
+   }
+}
+
+export default withAuthentication(withGeoLocation(ClowdrApp));

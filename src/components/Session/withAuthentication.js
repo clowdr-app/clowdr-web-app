@@ -53,8 +53,7 @@ const withAuthentication = Component => {
                 setLiveChannelByName: this.setLiveChannelByName.bind(this),
                 addLiveChannelListener: this.addLiveChannelListener.bind(this),
                 removeLiveChannelListener: this.removeLiveChannelListener.bind(this),
-                setActiveConferenceBySlack: this.setActiveConferenceBySlack.bind(this),
-                setActiveConferenceByName: this.setActiveConferenceByName.bind(this),
+                getConferenceBySlackName: this.getConferenceBySlackName.bind(this),
                 setActiveRoom: this.setActiveRoom.bind(this),
                 teamID: null,
                 currentConference: null,
@@ -139,13 +138,7 @@ const withAuthentication = Component => {
             }
         }
         async setActiveConference(conf) {
-            this.setState({loading: true});
-            let session = await Parse.Session.current();
-            session.set("currentConference", conf);
-            session.save();
-            let resetLobbyInfo = (this.state.currentConference != conf ? this.conferenceChanged : null);
-            this.setState({currentConference: conf, users: null}, resetLobbyInfo);
-            this.setState({loading: false});
+            this.refreshUser(conf);
         }
 
         async getRoleByName(role) {
@@ -178,21 +171,13 @@ const withAuthentication = Component => {
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("conferenceName", confName);
             let res = await confQ.first();
-            let session = await Parse.Session.current();
-            session.set("currentConference", res);
-            session.save();
-            this.setState({currentConference: res});
+            this.refreshUser(res);
             return res;
         }
-        async setActiveConferenceBySlack(teamId) {
+        async getConferenceBySlackName(teamId) {
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("slackWorkspace", teamId);
             let res = await confQ.first();
-            let session = await Parse.Session.current();
-            session.set("currentConference", res);
-            session.save();
-            this.setState({currentConference: res});
-
             return res;
         }
 
@@ -314,7 +299,7 @@ const withAuthentication = Component => {
             }
             return breakoutRoom;
         }
-        async refreshUser(callback) {
+        async refreshUser(preferredConference) {
 
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
@@ -324,6 +309,7 @@ const withAuthentication = Component => {
                     try {
                         let userWithRelations = await query.get(user.id);
 
+                        console.log(userWithRelations);
                         if (!_this.isLoggedIn) {
                             _this.isLoggedIn = true;
                             _this.authCallbacks.forEach((cb) => (cb(userWithRelations)));
@@ -342,34 +328,51 @@ const withAuthentication = Component => {
                         let validInstances = await validConfQ.find();
                         validConferences=validInstances.map(i=>i.get("instance"));
 
-                        let conf = _this.state.currentConference;
-                        if (session.get("currentConference")) {
-                            let confID = session.get("currentConference").id;
-                            let q = new Parse.Query("ClowdrInstance");
-                            conf = await q.get(confID);
+                        let conf = _this.currentConference;
+                        let currentProfileID = localStorage.getItem("activeProfileID");
+                        let activeProfile = null;
+                        if(currentProfileID){
+                            let profileQ = new Parse.Query(UserProfile);
+                            profileQ.include("conference");
+                            activeProfile = await profileQ.get(currentProfileID);
+                            console.log("active profile conference id" + activeProfile.get("conference").id);
+                            conf = activeProfile.get("conference");
+                            if(preferredConference && preferredConference.id != activeProfile.get("conference").id)
+                            {
+                                console.log("But want: " + preferredConference.id)
+                                activeProfile = null;
+                            }
                         }
-                        if (!conf) {
+                        if(!activeProfile){
+                            if(!preferredConference && process.env.REACT_APP_DEFAULT_CONFERENCE){
+                                let confQ = new Parse.Query("ClowdrInstance")
+                                confQ.equalTo("conferenceName", process.env.REACT_APP_DEFAULT_CONFERENCE);
+                                preferredConference = await confQ.first();
+                            }
                             for (let role of roles) {
                                 if (role.get("name") == "ClowdrSysAdmin")
                                     isAdmin = true;
                             }
-                            if (process.env.REACT_APP_DEFAULT_CONFERENCE) {
-                                conf = validConferences.find((c) => c.get("conferenceName") == process.env.REACT_APP_DEFAULT_CONFERENCE);
+                            if (preferredConference) {
+                                conf = validConferences.find((c) => c.id == preferredConference.id);
                                 if (!conf) {
                                     conf = validConferences[0];
                                 }
-                            } else
+                            } else if(!conf)
                                 conf = validConferences[0];
+                            let profileQ = new Parse.Query(UserProfile);
+                            profileQ.equalTo("conference",conf);
+                            profileQ.equalTo("user",userWithRelations);
+                            activeProfile = await profileQ.first();
+                            localStorage.setItem("activeProfileID",activeProfile.id);
+                            window.location.reload(false);
                         }
                         const privsQuery = new Parse.Query("InstancePermission");
-                        privsQuery.equalTo("conference", conf);
+                        privsQuery.equalTo("conference", activeProfile.get("conference"));
                         privsQuery.include("action");
                         let permissions =  await privsQuery.find();
-                        let profileQ = new Parse.Query(UserProfile);
-                        profileQ.equalTo("conference",conf);
-                        profileQ.equalTo("user",userWithRelations);
-                        let activeProfile = await profileQ.first();
                         console.log("current conference: " + conf.get("conferenceName"))
+                        let currentConference = _this.state.currentConference;
                         _this.setState({
                             user: userWithRelations,
                             userProfile: activeProfile,
@@ -383,9 +386,10 @@ const withAuthentication = Component => {
                         });
 
                         _this.getUsers();
-                        if (callback) {
-                            _this.authCallbacks.push(callback);
-                            callback(userWithRelations);
+                        if(currentConference && currentConference.id != conf.id){
+                            console.log("There was a change!")
+                            // window.location.reload(false);
+
                         }
                         _this.forceUpdate();
                         return userWithRelations;
@@ -402,6 +406,11 @@ const withAuthentication = Component => {
                         return null;
                     }
                 } else {
+                    let currentProfileID = localStorage.getItem("activeProfileID");
+                    if(currentProfileID){
+                        localStorage.clear();
+                        window.location.reload();
+                    }
                     if (_this.isLoggedIn) {
                         _this.isLoggedIn = false;
                         _this.authCallbacks.forEach((cb) => (cb(null)));
@@ -416,10 +425,6 @@ const withAuthentication = Component => {
                         loading: false,
                         users: {}
                     })
-                    if (callback) {
-                        _this.authCallbacks.push(callback);
-                        callback(null);
-                    }
 
                     return null;
                 }

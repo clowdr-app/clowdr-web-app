@@ -21,7 +21,7 @@ class ContextualActiveUsers extends Component {
     }
 
     async componentDidMount() {
-        let user = await this.props.auth.refreshUser();
+        let user = this.props.auth.user;
         if (user) {
             await this.props.auth.subscribeToVideoRoomState();
             this.setState({loggedIn: true});

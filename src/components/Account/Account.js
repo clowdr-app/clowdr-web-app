@@ -51,12 +51,7 @@ class Account extends React.Component {
     componentDidMount() {
         let _this = this;
         if(!_this.state.user){
-            this.props.auth.refreshUser(()=>{
-                console.log("User refreshed!")
-                _this.setStateFromUser()
-            }).then(()=>{
-                _this.setStateFromUser();
-            });
+            _this.setStateFromUser()
         }
         else{
             this.setStateFromUser();

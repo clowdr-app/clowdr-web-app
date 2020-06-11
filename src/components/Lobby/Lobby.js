@@ -134,7 +134,7 @@ class Lobby extends React.Component {
     }
 
     async componentDidMount() {
-        let user = await this.props.auth.refreshUser();
+        let user = this.props.auth.user;
         this.mounted = true;
         if (user) {
             this.props.auth.helpers.setGlobalState({chatChannel: "#general" });

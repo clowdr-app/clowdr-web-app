@@ -1,7 +1,8 @@
 import {AuthUserContext} from "../Session";
 import React from "react";
-import {Alert, Spin} from "antd";
+import {Alert, Spin, Typography} from "antd";
 import Parse from "parse";
+import { LoadingOutlined } from '@ant-design/icons';
 
 class SlackToVideo extends React.Component {
 
@@ -31,16 +32,16 @@ class SlackToVideo extends React.Component {
         let res = await data.json();
         try {
             let u = await Parse.User.become(res.token);
-            let session = await Parse.Session.current();
-            session.set("activeTeam", team);
-            await session.save();
-            await this.props.authContext.refreshUser();
-            let conf = await this.props.authContext.setActiveConferenceBySlack(team);
+            let conf = await this.props.authContext.getConferenceBySlackName(team);
+            await this.props.authContext.refreshUser(conf);
             let roomQ = new Parse.Query("BreakoutRoom");
             roomQ.equalTo("conference",conf);
             roomQ.equalTo("title", roomName);
             let room = await roomQ.first();
             if(room){
+                console.log("You are logged in and ready to go to ")
+                console.log(room)
+                console.log(room.get("conferenceName"))
                 this.props.history.push("/video/" + conf.get("conferenceName") + "/" + roomName);
             }else{
                 this.props.history.push("/lobby/new/"+roomName);
@@ -56,7 +57,24 @@ class SlackToVideo extends React.Component {
         if (this.state.error) {
             return <Alert message="Invalid magic link." description={this.state.error} type="error"/>
         }
-        return <div><Spin/>Logging you in...</div>
+        const antIcon = <LoadingOutlined color="white" style={{ fontSize: 96 }} spin />;
+
+        if(this.props.authContext.user){
+            return <div></div>
+        }
+        return <div id="landing-page">
+            <header style={{height: "100vh"}}>
+                <div className="header-content" style={{top: "33%"}}>
+                    <div className="header-content-inner" style={{backgroundColor:"rgba(1,1,1,.5)", maxWidth:"800px"}}>
+
+                        <Typography.Title>Just a minute...</Typography.Title>
+                        <p style={{marginLeft: 'auto', marginRight: 'auto'}}>
+                            <Spin indicator={antIcon} />
+                        </p>
+                    </div>
+                </div>
+            </header>
+        </div>
     }
 }
 

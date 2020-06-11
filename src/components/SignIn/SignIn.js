@@ -55,6 +55,11 @@ class SignIn extends Component {
 
     }
 
+    componentDidMount() {
+        if (process.env.REACT_APP_IS_MINIMAL_UI && !this.props.dontBounce) {
+            this.props.authContext.helpers.setGlobalState({showingLanding: true});
+        }
+    }
 
     onChange = event => {
         this.setState({[event.target.name]: event.target.value});
@@ -62,7 +67,6 @@ class SignIn extends Component {
 
     render() {
         if(process.env.REACT_APP_IS_MINIMAL_UI && !this.props.dontBounce){
-            this.props.authContext.helpers.setGlobalState({showingLanding: true});
             return <div></div>;
         }
         const {email, password, error} = this.state;

@@ -10,6 +10,7 @@ import ReconnectingNotification
 import {styled} from "@material-ui/core";
 import React, {useContext} from "react";
 import Grid from '@material-ui/core/Grid';
+import {Skeleton} from "antd"
 
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
 import useParticipants from "clowdr-video-frontend/lib/hooks/useParticipants/useParticipants";
@@ -279,18 +280,15 @@ class UserProfileDisplay extends React.Component{
         super(props);
         this.state = {name: this.props.id, loading: true};
     }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if(this.state.loading){
-            let profiles = this.props.authContext.currentRoom.get("members");
-            if (profiles) {
-                let userProfile = profiles.find(p => p.id == this.props.id);
-                if (userProfile) {
-                    this.setState({name: userProfile.get("displayName"), loading: false});
-                }
-            }
-        }
+    async componentDidMount() {
+        let profile = await this.props.authContext.helpers.getUserRecord(this.props.id);
+        this.setState({name: profile.get("displayName"), loading: false});
+
     }
     render(){
+        if(this.state.loading){
+            return <Skeleton.Input active style={{width: '200px'}} />
+        }
         return <span>{this.state.name}</span>
     }
 }

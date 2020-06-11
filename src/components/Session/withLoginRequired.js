@@ -13,6 +13,16 @@ const withLoginRequired = Component => {
                 showingLogin: false
             };
         }
+        componentDidMount() {
+            this.context.refreshUser().then(u=>{
+                if(u){
+                    this.setState({showingLogin: false});
+                }
+                else{
+                    this.props.history.push("/signin");
+                }
+            })
+        }
 
         render() {
             if (this.state.showingLogin){
@@ -30,11 +40,6 @@ const withLoginRequired = Component => {
                             if(this.state.showingLogin){
                                 return <Spin>I should show a login  here instead</Spin>
                             }
-                            authUserContext.refreshUser().then(u=>{
-                                if(!u){
-                                    this.setState({showingLogin: true});
-                                }
-                            })
                             return <Spin />
                         }
                     }}
