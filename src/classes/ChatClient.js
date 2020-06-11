@@ -79,6 +79,7 @@ export default class ChatClient{
         let _this = this;
         let idToken = user.getSessionToken();
         if (idToken) {
+            console.log("Fetching chat token for " + idToken + ", " + conference.get("slackWorkspace"))
             const res = await fetch(
                 process.env.REACT_APP_TWILIO_CALLBACK_URL + '/chat/token'
                 // 'http://localhost:3001/video/token'

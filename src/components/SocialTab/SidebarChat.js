@@ -43,13 +43,15 @@ class SidebarChat extends React.Component {
     }
 
     async componentDidMount() {
-        // this.changeChannel("#general");
+        this.changeChannel("#general");
     }
 
     async changeChannel(uniqueNameOrSID) {
         let user = this.props.auth.user;
-        if(uniqueNameOrSID == this.currentUniqueName)
+        console.log("Change channel: " + uniqueNameOrSID)
+        if(uniqueNameOrSID == this.currentUniqueName && this.props.auth.currentConference == this.currentConference)
             return;
+        this.currentConference = this.props.auth.currentConference;
         this.currentUniqueName = uniqueNameOrSID
         if (user && uniqueNameOrSID) {
             if (!this.client) {
