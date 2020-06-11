@@ -2,13 +2,16 @@ const Papa = require('./papaparse.min');
 
 Parse.Cloud.define("registrations", (request) => {
     console.log('Request to upload registration data');
-    data = request.params.content;
+    const data = request.params.content;
+    const conferenceID = request.params.conference;
     rows = Papa.parse(data, {header: true});
-    rows.data.map(addRow);
+    rows.data.forEach(element => {
+       addRow(element, conferenceID); 
+    });
 });
 
 
-function addRow(row) {
+function addRow(row, conferenceID) {
     console.log("row--> " + JSON.stringify(row));
     if (row.Email) {
         var Registrations = Parse.Object.extend("Registrations");
@@ -17,6 +20,7 @@ function addRow(row) {
         reg.set("name", row.Name);
         reg.set("affiliation", row.Affiliation);
         reg.set("country", row.Country);
+        reg.set("conference", conferenceID);
         reg.save();
     }
 }
