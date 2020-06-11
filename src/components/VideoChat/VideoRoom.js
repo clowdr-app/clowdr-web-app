@@ -56,10 +56,7 @@ class VideoRoom extends Component {
         if (!this.props.match) {
             return;
         }
-        let confName = this.props.match.params.conf;
-        let roomID = this.props.match.params.roomName;
-        if(confName == this.confName && roomID == this.roomID)
-            return;
+
         this.props.authContext.refreshUser().then((u)=>{
             console.log(u);
             this.joinCallFromPropsWithCurrentUser()
@@ -100,13 +97,25 @@ class VideoRoom extends Component {
             return;
         }
 
+        let _this = this;
+        this.loadingMeeting = true;
+        this.loadingMessage = null;
+        setTimeout(function(){
+            if(_this.loadingVideo){
+                _this.loadingMessage = message.loading('Sorry that this is taking longer than usual..', 0);
+            }
+        }, 1000);
+        setTimeout(function(){
+            if(_this.loadingVideo){
+                window.location.reload(false);
+            }
+        }, 3000);
         room = await this.props.authContext.helpers.populateMembers(room);
         console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
         this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         this.setState({loadingMeeting: 'true', room: room})
 
         let user = this.props.authContext.user;
-        let _this = this;
 
         console.log(user)
         if (user) {
@@ -127,22 +136,31 @@ class VideoRoom extends Component {
                         'Content-Type': 'application/json'
                     }
                 }).then(res => {
-                res.json().then((data) => {
-                    console.log("Got result:" +data.token)
-                    _this.setState(
-                        {
-                            error: undefined,
-                            meeting: room.id,
-                            token: data.token,
-                            loadingMeeting: false,
-                            meetingName: room.get("title")
+                if (res.status == 500) {
+                    // console.log("Error")
+                    // this.setState({error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
+
+                } else {
+                    res.json().then((data) => {
+                        console.log("Got result:" + data.token)
+                        _this.setState(
+                            {
+                                error: undefined,
+                                meeting: room.id,
+                                token: data.token,
+                                loadingMeeting: false,
+                                meetingName: room.get("title")
+                            }
+                        )
+                        if(_this.loadingMessage){
+                            _this.loadingMessage();
                         }
-                    )
-                    _this.loadingVideo = false;
-                }).catch((err)=>{
-                    console.log("Error")
-                    this.setState({error: "authentication"});
-                });
+                        _this.loadingVideo = false;
+                    })
+                }
+            }).catch((err) => {
+                console.log("Error")
+                this.setState({error: "authentication"});
             });
         } else {
         }
@@ -154,7 +172,7 @@ class VideoRoom extends Component {
 
     handleLogout() {
 
-        console.log("VIdeo room log out")
+        console.log("Video room log out")
         this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general"});
         this.props.history.push(ROUTES.LOBBY_SESSION);
     }
@@ -164,8 +182,17 @@ class VideoRoom extends Component {
         let conf = this.props.match.params.conf;
         let roomID = this.props.match.params.roomName;
         if (this.props.authContext.user != prevProps.authContext.user || conf != this.state.conf || roomID !=this.state.meetingName){
-            this.setState({conf: conf, meetingName: roomID, token: null});
-            await this.joinCallFromProps();
+            let confName = this.props.match.params.conf;
+            let roomID = this.props.match.params.roomName;
+            if((confName != this.confName || roomID != this.roomID) &&!this.state.error)
+            {
+                console.log("Clearing state...")
+                this.confName = null;
+                this.roomID = null;
+                this.setState({conf: conf, meetingName: roomID, token: null});
+                    await this.joinCallFromProps();
+            }
+
         }
         if(this.state.room && this.state.room.get("members")){
             let hadChange = false;
@@ -514,6 +541,7 @@ class RoomVisibilityController extends React.Component {
                 this.state.users[d].get("user").id
             };
         });
+        console.log(options)
         let _this = this;
         //<Select.Option value={d.id} key={d.id}>{d.get("displayname")}</Select.Option>);
 
@@ -529,8 +557,9 @@ class RoomVisibilityController extends React.Component {
                      onFinish={this.updateACL.bind(this)}
                      layout="inline"
         >
+            <div>Visible to:</div>
             <Form.Item name="users"
-                       label="Permitted Users:"
+                       className="aclSelector"
                        extra="Any user that you add here will see and manage this room">
                 <Select
                     loading={this.state.loading}

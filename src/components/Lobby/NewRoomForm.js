@@ -1,7 +1,8 @@
 import React from "react";
-import {Button, Form, Input, message, Modal, Radio, Tooltip, Typography} from "antd";
+import {Button, Form, Input, message, Modal, Radio, Select, Tooltip, Typography} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
+import Parse from "parse";
 
 class NewRoomForm extends React.Component {
 
@@ -30,12 +31,21 @@ class NewRoomForm extends React.Component {
         });
 
     };
+    componentDidMount() {
+        let tagQ = new Parse.Query("BreakoutRoomCategory");
+        tagQ.find().then((res => this.setState({categories: res})));
+    }
 
     render() {
         const { visible, confirmLoading, ModalText } = this.state;
         let buttonText = (this.props.text ? this.props.text : "New Room");
         let buttonType= (this.props.type ? this.props.type : "primary");
 
+        let selectOptions = [];
+        if (this.state.categories)
+            selectOptions = this.state.categories.map(c => {
+                return {label: c.get("description"), value: c.id }
+            });
         return this.props.auth.helpers.ifPermission("createVideoRoom",
             <div>
                 <Button type={buttonType} onClick={this.showModal} style={this.props.style}>
@@ -43,7 +53,7 @@ class NewRoomForm extends React.Component {
                 </Button>
                 <Modal
                     zIndex="200"
-                    title="Create a new video chat room"
+                    title="Create a New Video Chat Room"
                     visible={visible}
                     confirmLoading={confirmLoading}
                     footer={[
@@ -123,9 +133,7 @@ class NewRoomForm extends React.Component {
                         {/*    name="category"*/}
                         {/*    label="Category"*/}
                         {/*>*/}
-                        {/*    <Select>*/}
-                        {/*        <Select.Option value="general">General</Select.Option>*/}
-                        {/*        <Select.Option value="bof">Birds-of-a-Feather</Select.Option>*/}
+                        {/*    <Select options={selectOptions}>*/}
                         {/*    </Select>*/}
                         {/*</Form.Item>*/}
                         <Form.Item
@@ -142,14 +150,14 @@ class NewRoomForm extends React.Component {
                         </Form.Item>
                         <Form.Item
                             name="mode"
-                            label="Room connection mode and participant capacity"
-                            extra={"Peer-to-Peer rooms may have not work as well across continents or on mobile devices."}>
+                            label="Room Type"
+                            extra={"Peer Group rooms may have not work as well across continents or on mobile devices."}>
                             <Radio.Group buttonStyle="solid">
-                                {this.props.auth.helpers.ifPermission("createVideoRoom-peer-to-peer",
-                                    <Radio.Button value="peer-to-peer">Peer-to-Peer (1-10)</Radio.Button>,
-                                    <Tooltip title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="peer-to-peer" disabled={true}>Peer-to-Peer (1-10)</Radio.Button></Tooltip>)}
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-smallgroup",<Radio.Button value="group-small">Small Group (1-4)</Radio.Button>,
                                     <Tooltip title="You do not have access permissions to create small group rooms"><Radio.Button value="group-small" disabled={true}>Small Group (1-4)</Radio.Button></Tooltip>)}
+                                {this.props.auth.helpers.ifPermission("createVideoRoom-peer-to-peer",
+                                    <Radio.Button value="peer-to-peer">Peer Group (1-10)</Radio.Button>,
+                                    <Tooltip title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="peer-to-peer" disabled={true}>Peer-to-Peer (1-10)</Radio.Button></Tooltip>)}
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-group",<Radio.Button value="group">Large Group (4-24)</Radio.Button>,
                                     <Tooltip title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="group">Large Group (1-24)</Radio.Button></Tooltip>)}
 
@@ -159,13 +167,13 @@ class NewRoomForm extends React.Component {
                             name="visibility"
                             label="Visibility"
                             extra={"'Open' video calls can be joined by any member of the " + this.props.auth.currentConference.get("conferenceName") +" slack workspace. " +
-                            "Private rooms allow you to restrict access to specific users of the workspace"
+                            "Closed rooms allow you to restrict access to specific users of the workspace"
                             }
                         >
                             <Radio.Group buttonStyle="solid">
                                 <Radio.Button value="listed">Open</Radio.Button>
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-private",
-                                    <Radio.Button value="unlisted">Private</Radio.Button>,
+                                    <Radio.Button value="unlisted">Closed</Radio.Button>,
                                     <Tooltip title="You do not have access permissions to create private rooms"><Radio.Button disabled={true} value="unlisted">Private</Radio.Button></Tooltip>
                                 )}
 

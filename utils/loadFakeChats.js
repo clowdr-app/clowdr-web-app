@@ -53,17 +53,15 @@ function randomMembership(users, keysToPop) {
 
 async function fn() {
     let confQ = new Parse.Query("ClowdrInstance");
-    confQ.equalTo("conferenceName","GMU Computer Science");
+    confQ.equalTo("conferenceName","ClowdrTest");
     let conf = await confQ.first();
 
-    let roleQ = new Parse.Query(Parse.Role);
-    roleQ.equalTo("name",conf.id+"-conference");
-    let role = await roleQ.first();
-    let query = role.getUsers().query();
+    let query = new Parse.Query("UserProfile");
+    query.equalTo("conference",conf);
     query.limit(1000);
 
     let i = 0;
-    let users = await query.find();
+    let users = await query.find({useMasterKey: true});
     let keysToPop = [];
     for (let i = 0; i < users.length; i++) {
         keysToPop.push(i);

@@ -137,6 +137,8 @@ class Lobby extends React.Component {
         let user = await this.props.auth.refreshUser();
         this.mounted = true;
         if (user) {
+            this.props.auth.helpers.setGlobalState({chatChannel: "#general" });
+
             await this.props.auth.subscribeToVideoRoomState();
             this.setState({loggedIn: true});
         } else {

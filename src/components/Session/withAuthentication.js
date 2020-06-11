@@ -315,7 +315,7 @@ const withAuthentication = Component => {
             }
             return breakoutRoom;
         }
-        refreshUser(callback) {
+        async refreshUser(callback) {
 
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
@@ -388,6 +388,7 @@ const withAuthentication = Component => {
                             _this.authCallbacks.push(callback);
                             callback(userWithRelations);
                         }
+                        _this.forceUpdate();
                         return userWithRelations;
                     } catch (err) {
                         console.log(err);
