@@ -86,7 +86,6 @@ const withAuthentication = Component => {
             this.videoRoomListeners.push(caller);
             if (this.subscribedToVideoRoomState)
                 return;
-            console.log("Subscribing to video state.")
             this.subscribedToVideoRoomState = true;
             this.subscribeToPublicRooms();
         }
@@ -122,7 +121,6 @@ const withAuthentication = Component => {
 
 
         conferenceChanged(){
-            console.log("Current conference has changed to " + this.state.currentConference.get('conferenceName'))
             if (this.parseLivePublicVideosSub) {
                 this.parseLivePublicVideosSub.unsubscribe();
             }
@@ -289,7 +287,6 @@ const withAuthentication = Component => {
                     let member = breakoutRoom.get("members")[i];
                     if (!member.get("displayName")) {
                         promises.push(this.getUserRecord(member.id).then((fullUser) => {
-                            console.log("Retrieved: " + fullUser.get("displayName"))
                                 breakoutRoom.get("members")[i] = fullUser;
                             }
                         ))
@@ -309,7 +306,6 @@ const withAuthentication = Component => {
                     try {
                         let userWithRelations = await query.get(user.id);
 
-                        console.log(userWithRelations);
                         if (!_this.isLoggedIn) {
                             _this.isLoggedIn = true;
                             _this.authCallbacks.forEach((cb) => (cb(userWithRelations)));
@@ -335,11 +331,9 @@ const withAuthentication = Component => {
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.include("conference");
                             activeProfile = await profileQ.get(currentProfileID);
-                            console.log("active profile conference id" + activeProfile.get("conference").id);
                             conf = activeProfile.get("conference");
                             if(preferredConference && preferredConference.id != activeProfile.get("conference").id)
                             {
-                                console.log("But want: " + preferredConference.id)
                                 activeProfile = null;
                             }
                         }
@@ -371,7 +365,6 @@ const withAuthentication = Component => {
                         privsQuery.equalTo("conference", activeProfile.get("conference"));
                         privsQuery.include("action");
                         let permissions =  await privsQuery.find();
-                        console.log("current conference: " + conf.get("conferenceName"))
                         let currentConference = _this.state.currentConference;
                         _this.setState({
                             user: userWithRelations,
@@ -387,7 +380,6 @@ const withAuthentication = Component => {
 
                         _this.getUsers();
                         if(currentConference && currentConference.id != conf.id){
-                            console.log("There was a change!")
                             // window.location.reload(false);
 
                         }
@@ -521,7 +513,6 @@ const withAuthentication = Component => {
             });
             this.parseLivePrivateVideosSub.on("create", async (vid) => {
                 vid = await this.populateMembers(vid);
-                console.log("Private sub created " + vid.id)
                 this.setState((prevState) => ({
                     activePrivateVideoRooms: [vid, ...prevState.activePrivateVideoRooms]
                 }))

@@ -19,7 +19,17 @@ export default class ChatClient{
         return channel;
     }
 
-    async initChatClient(user, conference) {
+    initChatClient(user, conference) {
+        if(this.chatClientPromise){
+            return this.chatClientPromise;
+        }
+        else{
+            this.chatClientPromise = this._initChatClient(user, conference);
+            return this.chatClientPromise;
+        }
+    }
+
+    async _initChatClient(user, conference){
         if (this.chatClient && this.chatUser && this.chatUser.id == user.id && this.conference && this.conference.id == conference.id) {
             return this.chatClient;
         } else if (this.chatClient) {
@@ -45,7 +55,6 @@ export default class ChatClient{
         });
         return this.chatClient;
     }
-
     addChannelListener(listener) {
         this.channelListeners.push(listener);
     }

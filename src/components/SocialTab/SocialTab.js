@@ -70,7 +70,7 @@ class SocialTab extends Component {
                 // width: "350px",
                 // // height: '100vh'
             }}>
-                    <ContextualActiveUsers collapsed={this.state.siderWidth == 0}/>
+                {this.props.auth.watchParty ? <></> : <ContextualActiveUsers collapsed={this.state.siderWidth == 0}/>}
 
 
                 </div>

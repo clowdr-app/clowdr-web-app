@@ -11,6 +11,7 @@ import {styled} from "@material-ui/core";
 import React, {useContext} from "react";
 import Grid from '@material-ui/core/Grid';
 import {Skeleton} from "antd"
+import {PushpinOutlined, PushpinFilled } from "@ant-design/icons"
 
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
 import useParticipants from "clowdr-video-frontend/lib/hooks/useParticipants/useParticipants";
@@ -37,7 +38,6 @@ import ToggleScreenShareButton
     from "clowdr-video-frontend/lib/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
 import EndCallButton from "clowdr-video-frontend/lib/components/Controls/EndCallButton/EndCallButton";
 import AuthUserContext from "../Session/context";
-
 let backgroundImg = require('../../clowdr-background.jpg');
 const Main = styled('main')({
     // overflow: 'hidden',
@@ -75,13 +75,15 @@ export default function App() {
             <MenuBar />
             <Main>
                 {roomState === 'disconnected' ? <ConnectTriggeringLocalVideoPreview /> : <div>
-                    <ParticipantStrip />
+                    <ParticipantStrip/>
                 </div>}
             </Main>
             <ReconnectingNotification />
         </div>
     );
 }
+
+
 
 
 function ParticipantStrip() {
@@ -92,13 +94,22 @@ function ParticipantStrip() {
     const classes = useStyles();
     const roomState = useRoomState();
 
+    let tmp = [];
+    tmp = tmp.concat(participants)
+    // for(let i = 0; i < 10; i++){
+        tmp.push(localParticipant);
+    // }
+
+
     const isReconnecting = roomState === 'reconnecting';
     const isUserActive = useIsUserActive();
     const showControls = isUserActive || roomState === 'disconnected';
 
     const [selectedParticipant, setSelectedParticipant] = useSelectedParticipant();
     // const height = useHeight();o
-    let nImages = participants.length;
+    // let nImages = participants.length;
+    let nImages = tmp.length; //don't forget +1 for you!
+    // console.log(nImages)
     let defaultPriority = "standard";
     let breakpointColumnsObj = {
         default: 4,
@@ -109,19 +120,19 @@ function ParticipantStrip() {
     if(nImages > 6){
         defaultPriority="low";
     }
-    if(nImages ==0){
+    if(nImages ==1){
         breakpointColumnsObj={
             default: 1
         }
     }
-    else if (nImages < 2) {
+    else if (nImages == 2) {
         breakpointColumnsObj = {
             default: 2,
             500: 1
         };
     } else if (nImages <= 8) {
         breakpointColumnsObj = {
-            default: 3,
+            default: 2,
             1100: 2,
             500: 1
         };
@@ -133,7 +144,12 @@ function ParticipantStrip() {
             700: 4,
             500: 2
         };
-        if (nImages < 2) {
+        if(nImages == 1){
+            breakpointColumnsObj ={
+                default: 1
+            }
+        }
+        else if (nImages == 2) {
             breakpointColumnsObj = {
                 default: 4,
                 500: 2
@@ -146,12 +162,17 @@ function ParticipantStrip() {
             };
         }
     }
+    if(selectedParticipant && !tmp.find(p=>p.sid == selectedParticipant.sid)){
+        //selected is gone
+        setSelectedParticipant(null);
+    }
 
     return (
         // <ParticipantStripContainer>
         //     <ScrollContainer>
         // <Container style={{ height }}>
-<div style={{paddingLeft: "5px"}}>
+
+                <div style={{paddingLeft: "5px"}}>
     {selectedParticipant?  <Participant
         key={selectedParticipant.sid}
         participant={selectedParticipant}
@@ -161,12 +182,13 @@ function ParticipantStrip() {
         onClick={() => setSelectedParticipant(selectedParticipant)}
     /> : ""}
         <Masonry         breakpointCols={breakpointColumnsObj} className="video-masonry-grid" columnClassName="video-masonry-column">
-            {selectedParticipant == localParticipant ? "" : <Participant
-                    participant={localParticipant}
-                    isSelected={selectedParticipant === localParticipant}
-                    onClick={() => setSelectedParticipant(localParticipant)}
-                />}
-                {participants.filter((participant)=>(participant != selectedParticipant)).map((participant, idx)=> (
+            {/*{selectedParticipant == localParticipant ? "" : <Participant*/}
+            {/*        participant={localParticipant}*/}
+            {/*        isSelected={selectedParticipant === localParticipant}*/}
+            {/*        onClick={() => setSelectedParticipant(localParticipant)}*/}
+            {/*    />}*/}
+            {tmp.filter((participant)=>(participant != selectedParticipant)).map((participant,idx)=>(
+                // {participants.filter((participant)=>(participant != selectedParticipant)).map((participant, idx)=> (
                     <Participant
                         key={""+idx+participant.sid}
                         participant={participant}
@@ -333,7 +355,7 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
                     <AudioLevelIndicator audioTrack={audioTrack} background="white" />
                     {!isVideoEnabled && <VideocamOff />}
                     {isScreenShareEnabled && <ScreenShare />}
-                    {isSelected && <PinIcon />}
+                    {isSelected ? <PushpinFilled /> : <PushpinOutlined/>}
                 </div>
             </div>
             {isVideoSwitchedOff && <BandwidthWarning />}

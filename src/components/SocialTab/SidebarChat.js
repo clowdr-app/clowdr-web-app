@@ -39,7 +39,6 @@ class SidebarChat extends React.Component {
 
         this.messages = {};
         let siderWidth = Number(localStorage.getItem("chatWidth"));
-        console.log("Read: " + siderWidth)
         if(siderWidth == 0)
             siderWidth = 250;
         else if(siderWidth == -1)
@@ -53,7 +52,10 @@ class SidebarChat extends React.Component {
     }
 
     async componentDidMount() {
-        this.changeChannel("#general");
+        if(this.props.auth.user){
+            this.user = this.props.auth.user;
+            this.changeChannel("#general");
+        }
     }
 
     async changeChannel(uniqueNameOrSID) {
@@ -76,7 +78,6 @@ class SidebarChat extends React.Component {
                 }
                 if (this.activeChannel) {
                     //leave the current channel
-                    console.log("Leaving: ")
                     this.activeChannel.removeAllListeners("messageAdded");
                     this.activeChannel.removeAllListeners("messageRemoved");
                     this.activeChannel.removeAllListeners("messageUpdated");
@@ -95,7 +96,6 @@ class SidebarChat extends React.Component {
                 this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
                 this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
                 this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
-                console.log(this.activeChannel)
                let stateUpdate = {
                     chatLoading: false,
                    activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
@@ -337,7 +337,6 @@ class SidebarChat extends React.Component {
                 <div className="dragIconMiddleRight"
                      onClick={()=>{
                          localStorage.setItem("chatWidth", this.state.siderWidth == 0 ? 250 : -1);
-                         console.log("Chat width local storage: " + localStorage.getItem("chatWidth"))
                          this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
                      }}
                 >
