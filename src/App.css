@@ -139,8 +139,131 @@
     border-bottom-left-radius: 2px;
 }
 
-
 .chatMessage p{
     margin: 0;
     padding-left: 5px;
+}
+.roomDragger{
+    top:0;
+    right:0;
+    bottom: 0;
+    position:absolute;
+    background-color:#DFE2E8;
+    width:10px;
+    z-index:100;
+    cursor: ew-resize;
+}
+.activeBreakoutRoom{
+    padding:0;
+    line-height: 1;
+    /*overflow-y: auto;*/
+}
+.activeRoomsList .ant-list-item {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.personHoverable:hover{
+    background-color: white;
+}
+#sidepopoutcontainer .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
+    line-height:1;
+    height: auto;
+}
+#sidepopoutcontainer .ant-menu-sub.ant-menu-inline > .ant-menu-item{
+    line-height: 1;
+    height:auto;
+}
+.dragIconMiddle {
+    color: white;
+    top: calc(50vh - 20px);
+    display: inline-block;
+    /*padding: 3px;*/
+    right: 0px;
+    padding-top: 1px;
+    z-index:101;
+    font-family: FontAwesome !important;
+background-color:#97a7b7;
+    font-weight: bold;
+    font-size:2em;
+
+    height:40px;
+   width: 10px;
+    position: absolute;
+}
+.dragIconMiddle:hover{
+    background-color:#138A07;
+}
+.dragIconTop {
+    background-color: #97a7b7;
+    top: 25vh;
+    right: 3px;
+    z-index:101;
+    position: absolute;
+}
+.dragIconBottom {
+    background-color: red;
+    top: 75vh;
+    right: 3px;
+    z-index:101;
+    position: absolute;
+}
+.activeRoomsTab{
+    /*position:relative;*/
+    /*min-width: 10px;*/
+}
+.activeRoomsSider{
+}
+.dragIconMiddle svg{
+    position: absolute;
+    left: -7px;
+}
+.collapseIcon{
+    width: 5px;
+    height: 20px;
+}
+
+.dragIconMiddleRight svg{
+    position: absolute;
+    left: -7px;
+}
+.dragIconMiddleRight {
+    color: white;
+    top: calc(50vh - 20px);
+    display: inline-block;
+    /*padding: 3px;*/
+    left: 0px;
+    padding-top: 1px;
+    z-index:101;
+    font-family: FontAwesome !important;
+    background-color:#97a7b7;
+    font-weight: bold;
+    font-size:2em;
+
+    height:40px;
+    width: 10px;
+    position: absolute;
+}
+.dragIconMiddleRight:hover{
+    background-color:#138A07;
+}
+.roomDraggerRight{
+    top:0;
+    left:0;
+    bottom: 0;
+    position:absolute;
+    background-color:#DFE2E8;
+    width:10px;
+    z-index:100;
+    cursor: ew-resize;
+}
+.chatTab{
+    position: relative;
+    padding-left:10px;
+}
+.ant-form-inline .ant-form-item,.aclSelector{
+    flex: initial;
+    flex-wrap: initial;
+}
+.personFiltered{
 }

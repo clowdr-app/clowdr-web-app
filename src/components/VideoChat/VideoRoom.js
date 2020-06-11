@@ -56,12 +56,8 @@ class VideoRoom extends Component {
         if (!this.props.match) {
             return;
         }
-        let confName = this.props.match.params.conf;
-        let roomID = this.props.match.params.roomName;
-        if(confName == this.confName && roomID == this.roomID)
-            return;
+
         this.props.authContext.refreshUser().then((u)=>{
-            console.log(u);
             this.joinCallFromPropsWithCurrentUser()
         })
     }
@@ -81,7 +77,6 @@ class VideoRoom extends Component {
         this.confName = confName;
         this.roomID = roomID;
 
-        console.log("OK joining room " + roomID)
         //find the room in parse...
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
         let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
@@ -100,22 +95,52 @@ class VideoRoom extends Component {
             return;
         }
 
+        let _this = this;
+        this.loadingMeeting = true;
+        this.loadingMessage = null;
+        let timeout = Number(window.localStorage.getItem("videoLoadTimeout"));
+        if(Number(window.localStorage.getItem("videoReloads") > 3)){
+            localStorage.setItem("videoReloads", 0);
+            localStorage.setItem("videoLoadTimeout", 0);
+            this.setState({error: <span>Sorry, but we were unable to connect you to the video room, likely due to a bug in this frontend. If this issue persists, please contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
+            return;
+        }
+        if(!timeout){
+            timeout = 0;
+        }
+        timeout = timeout + 4000;
+        if(timeout > 20000){
+            timeout = 20000;
+        }
+        window.localStorage.setItem("videoLoadTimeout", "" + timeout);
+        let numReloads = Number(window.localStorage.getItem("videoReloads"));
+
+        if (numReloads > 0) {
+            _this.loadingMessage = message.loading('Sorry that this is taking longer than usual... we agree that this really shouldn\'t be happening!', 0);
+        } else {
+            setTimeout(function () {
+                if (_this.loadingVideo) {
+                    _this.loadingMessage = message.loading('Sorry that this is taking longer than usual...', 0);
+                }
+            }, 1000);
+            }
+        setTimeout(function(){
+            if(_this.loadingVideo){
+                window.localStorage.setItem("videoReloads", ""+(numReloads+1));
+                window.location.reload(false);
+            }
+        }, timeout);
         room = await this.props.authContext.helpers.populateMembers(room);
         console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
         this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         this.setState({loadingMeeting: 'true', room: room})
 
         let user = this.props.authContext.user;
-        let _this = this;
 
-        console.log(user)
         if (user) {
-            console.log("And asking for video token...")
             let idToken = user.getSessionToken();
             const data = fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
-
-                // 'http://localhost:3001/video/token'
                 , {
                     method: 'POST',
                     body: JSON.stringify({
@@ -127,22 +152,33 @@ class VideoRoom extends Component {
                         'Content-Type': 'application/json'
                     }
                 }).then(res => {
-                res.json().then((data) => {
-                    console.log("Got result:" +data.token)
-                    _this.setState(
-                        {
-                            error: undefined,
-                            meeting: room.id,
-                            token: data.token,
-                            loadingMeeting: false,
-                            meetingName: room.get("title")
-                        }
-                    )
-                    _this.loadingVideo = false;
-                }).catch((err)=>{
+                if (res.status == 500) {
                     console.log("Error")
-                    this.setState({error: "authentication"});
-                });
+                    this.setState({error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
+
+                } else {
+
+                    res.json().then((data) => {
+                        localStorage.setItem("videoReloads", 0);
+                        localStorage.setItem("videoLoadTimeout", 0);
+                        _this.setState(
+                            {
+                                error: undefined,
+                                meeting: room.id,
+                                token: data.token,
+                                loadingMeeting: false,
+                                meetingName: room.get("title")
+                            }
+                        )
+                        if(_this.loadingMessage){
+                            _this.loadingMessage();
+                        }
+                        _this.loadingVideo = false;
+                    })
+                }
+            }).catch((err) => {
+                console.log("Error")
+                this.setState({error: "authentication"});
             });
         } else {
         }
@@ -154,7 +190,7 @@ class VideoRoom extends Component {
 
     handleLogout() {
 
-        console.log("VIdeo room log out")
+        console.log("Video room log out")
         this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general"});
         this.props.history.push(ROUTES.LOBBY_SESSION);
     }
@@ -164,8 +200,17 @@ class VideoRoom extends Component {
         let conf = this.props.match.params.conf;
         let roomID = this.props.match.params.roomName;
         if (this.props.authContext.user != prevProps.authContext.user || conf != this.state.conf || roomID !=this.state.meetingName){
-            this.setState({conf: conf, meetingName: roomID, token: null});
-            await this.joinCallFromProps();
+            let confName = this.props.match.params.conf;
+            let roomID = this.props.match.params.roomName;
+            if((confName != this.confName || roomID != this.roomID) &&!this.state.error)
+            {
+                console.log("Clearing state...")
+                this.confName = null;
+                this.roomID = null;
+                this.setState({conf: conf, meetingName: roomID, token: null});
+                    await this.joinCallFromProps();
+            }
+
         }
         if(this.state.room && this.state.room.get("members")){
             let hadChange = false;
@@ -529,8 +574,9 @@ class RoomVisibilityController extends React.Component {
                      onFinish={this.updateACL.bind(this)}
                      layout="inline"
         >
+            <div>Visible to:</div>
             <Form.Item name="users"
-                       label="Permitted Users:"
+                       className="aclSelector"
                        extra="Any user that you add here will see and manage this room">
                 <Select
                     loading={this.state.loading}

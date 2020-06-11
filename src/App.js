@@ -85,8 +85,10 @@ class App extends Component {
                 </Select>
             }
             let clowdrActionButtons = <span>
-                <Tooltip title="CLOWDR Support"><NavLink to="/help">    <Button size="small">Help</Button></NavLink></Tooltip>
-                <Tooltip title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip></span>
+                <Tooltip title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
+                <Tooltip title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
+                <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
+                </span>
             if(confSwitcher){
                 confSwitcher = <span style={{float: "right"}}>{confSwitcher} {clowdrActionButtons}</span>
             }
@@ -204,6 +206,7 @@ class App extends Component {
                 </div>
             }
         }
+
         return (
             <BrowserRouter basename={process.env.PUBLIC_URL} ref={this.router}>
                 <div className="App">
@@ -221,18 +224,21 @@ class App extends Component {
                         {/*    /!*</Badge>*!/*/}
                         {/*    </Header>*/}
                         </div>
+                        <div>
                             <Layout>
-                                <div className="lobbySessionTab" style={{left: (this.state.socialCollapsed?"0px":"250px")}}><Button onClick={this.toggleLobbySider.bind(this)}  size="small">Breakout Rooms {(this.state.socialCollapsed? ">":"x")}</Button> </div>
-                                <div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>
+                                {/*<div className="lobbySessionTab" style={{left: (this.state.socialCollapsed?"0px":"250px")}}><Button onClick={this.toggleLobbySider.bind(this)}  size="small">Breakout Rooms {(this.state.socialCollapsed? ">":"x")}</Button> </div>*/}
+                                {/*<div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>*/}
 
                                 <SocialTab collapsed={this.state.socialCollapsed}/>
-                                <Content style={{margin: '24px 16px 0', overflow: 'initial'}}>
+                                <Content style={{margin: '24px 16px 0', overflow: 'initial'
+                                }}>
                                     <div className="site-layout-background" style={{padding: 24}}>
                                         {this.routes()}
                                     </div>
                                 </Content>
                                 <SidebarChat collapsed={this.state.chatCollapsed} />
                             </Layout>
+                        </div>
                     </Layout>
 
                     {/* <div style={{position:

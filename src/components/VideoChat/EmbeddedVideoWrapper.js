@@ -274,6 +274,27 @@ const useStyles = makeStyles((theme) =>
     })
 );
 
+class UserProfileDisplay extends React.Component{
+    constructor(props){
+        super(props);
+        this.state = {name: this.props.id, loading: true};
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if(this.state.loading){
+            let profiles = this.props.authContext.currentRoom.get("members");
+            if (profiles) {
+                let userProfile = profiles.find(p => p.id == this.props.id);
+                if (userProfile) {
+                    this.setState({name: userProfile.get("displayName"), loading: false});
+                }
+            }
+        }
+    }
+    render(){
+        return <span>{this.state.name}</span>
+    }
+}
+
 function ParticipantInfo({ participant, onClick, isSelected, children }) {
     const publications = usePublications(participant);
 
@@ -292,14 +313,8 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
     const classes = useStyles();
 
     const authContext = useContext(AuthUserContext);
-    let profiles = authContext.currentRoom.get("members");
     let name = participant.identity;
-    if (profiles) {
-        let userProfile = profiles.find(p => p.id == participant.identity);
-        if (userProfile) {
-            name = userProfile.get("displayName");
-        }
-    }
+
     return (
         <div
             className={clsx(classes.container, {
@@ -312,7 +327,7 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
                 <div className={classes.infoRow}>
                     <h4 className={classes.identity}>
                         <ParticipantConnectionIndicator participant={participant} />
-                        {name}
+                        <UserProfileDisplay authContext={authContext} id={participant.identity}/>
                     </h4>
                     <NetworkQualityLevel qualityLevel={networkQualityLevel} />
                 </div>

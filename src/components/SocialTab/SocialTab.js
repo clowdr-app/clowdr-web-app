@@ -1,19 +1,27 @@
 import React, {Component} from "react";
-import {Badge, Button, Layout, Tabs} from "antd";
+import {Layout, Tooltip} from "antd";
 import ContextualActiveUsers from "../Lobby/ContextualActiveusers";
-import {ArrowRightOutlined, CloseOutlined} from '@ant-design/icons'
 import {AuthUserContext} from "../Session";
-import SidebarChat from "./SidebarChat";
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
 class SocialTab extends Component {
     constructor(props) {
         super(props);
-        this.state = {siderCollapsed: this.props.collapsed}
+
+        let siderWidth = Number(localStorage.getItem("lobbyWidth"));
+        if(siderWidth == 0)
+            siderWidth = 250;
+        else if(siderWidth == -1)
+            siderWidth = 0;
+        this.state = {siderCollapsed: this.props.collapsed, siderWidth: siderWidth}
     }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if(this.props.collapsed != this.state.siderCollapsed){
-          this.setState({siderCollapsed: this.props.collapsed})
-        }
+    componentWillUnmount() {
+    }
+
+    setDrawerWidth(width){
+        this.setState({siderWidth: width})
+        localStorage.setItem("lobbyWidth", (width == 0 ? -1 : width));
     }
 
     render() {
@@ -22,11 +30,32 @@ class SocialTab extends Component {
         if(topElement)
             topHeight = topElement.clientHeight;
 
-        return <div style={{height: "calc(100vh - "+topHeight+"px)"}}>
+        const handleMouseDown = e => {
+            document.addEventListener("mouseup", handleMouseUp, true);
+            document.addEventListener("mousemove", handleMouseMove, true);
+        };
 
-            <Layout.Sider collapsible collapsed={this.state.siderCollapsed}
+        const handleMouseUp = () => {
+            document.removeEventListener("mouseup", handleMouseUp, true);
+            document.removeEventListener("mousemove", handleMouseMove, true);
+        };
+
+        const handleMouseMove = (e) => {
+            const newWidth = e.clientX - document.body.offsetLeft;
+            if (newWidth >= 0 && newWidth <= 300)
+                this.setDrawerWidth(newWidth);
+        };
+        let containerStyle = {position: 'relative', height:'100%'};
+        if(this.state.siderWidth <5){
+            containerStyle.width="10px";
+        }
+        return <div className="activeRoomsTab">
+
+            <div style={containerStyle}>
+            <Layout.Sider collapsible collapsed={this.state.siderWidth == 0}
                              trigger={null}
-                          width="250px"
+                          className="activeRoomsSider"
+                          width={this.state.siderWidth}
                              collapsedWidth={0}
                              theme="light"
                              style={{backgroundColor: '#f8f8f8', height: "100%"}}>
@@ -41,10 +70,26 @@ class SocialTab extends Component {
                 // width: "350px",
                 // // height: '100vh'
             }}>
-                    <ContextualActiveUsers collapsed={this.state.siderCollapsed}/>
+                    <ContextualActiveUsers collapsed={this.state.siderWidth == 0}/>
+
 
                 </div>
         </Layout.Sider>
+                {/*<div className="dragIconTop" onMouseDown={e => handleMouseDown(e)}></div>*/}
+                <div className="dragIconMiddle"
+                     onClick={() => {
+                         localStorage.setItem("lobbyWidth", (this.state.siderWidth == 0 ? 250 : -1));
+                         this.setState((prevState) => ({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
+                     }}
+            >
+                {this.state.siderWidth == 0 ? <Tooltip title="Collapse the lobby drawer"><ChevronRightIcon/></Tooltip>:<Tooltip title="Expand the lobby drawer"><ChevronLeftIcon/></Tooltip>}
+                {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
+            </div>
+
+            <div className="roomDragger" onMouseDown={e => handleMouseDown(e)} ></div>
+
+            {/*<div className="dragIconBottom" onMouseDown={e => handleMouseDown(e)}></div>*/}
+            </div>
         </div>
     }
 }

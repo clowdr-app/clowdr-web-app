@@ -9,8 +9,12 @@ import {Card, Divider, Form, Input, Layout, List, Tooltip} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 
 const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
+
+const linkRenderer = props => <a href={props.href} target="_blank">{props.children}</a>;
 
 const {Header, Content, Footer, Sider} = Layout;
 
@@ -34,7 +38,13 @@ class SidebarChat extends React.Component {
         super(props);
 
         this.messages = {};
-        this.state = {...INITIAL_STATE, siderCollapsed: this.props.collapsed, chatChannel: "#general"}
+        let siderWidth = Number(localStorage.getItem("chatWidth"));
+        console.log("Read: " + siderWidth)
+        if(siderWidth == 0)
+            siderWidth = 250;
+        else if(siderWidth == -1)
+            siderWidth = 0;
+        this.state = {...INITIAL_STATE, chatChannel: "#general", siderWidth: siderWidth}
 
     }
 
@@ -60,34 +70,55 @@ class SidebarChat extends React.Component {
             this.setState({
                 chatLoading: true,
                 messages: []
-            })
-            if (this.activeChannel) {
-                //leave the current channel
-                console.log("Leaving: ")
-                this.activeChannel.removeAllListeners("messageAdded");
-                this.activeChannel.removeAllListeners("messageRemoved");
-                this.activeChannel.removeAllListeners("messageUpdated");
-                //we never actually leave a private channel because it's very hard to get back in
-                // - we need to be invited by the server, and that's a pain...
-                //we kick users out when they lose their privileges to private channels.
-                if (this.activeChannel.type !== "private")
-                    await this.activeChannel.leave();
-            }
-            this.activeChannel = await this.props.auth.chatClient.joinAndGetChannel(uniqueNameOrSID);
-            this.activeChannel.getMessages().then(this.messagesLoaded.bind(this, this.activeChannel));
-            this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
-            this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
-            this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
-            console.log(this.activeChannel)
-            this.setState({
-                chatLoading: false,
-                activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
-            })
+            }, async () => {
+                if(this.currentUniqueName != uniqueNameOrSID){
+                    return;//raced with another update
+                }
+                if (this.activeChannel) {
+                    //leave the current channel
+                    console.log("Leaving: ")
+                    this.activeChannel.removeAllListeners("messageAdded");
+                    this.activeChannel.removeAllListeners("messageRemoved");
+                    this.activeChannel.removeAllListeners("messageUpdated");
+                    //we never actually leave a private channel because it's very hard to get back in
+                    // - we need to be invited by the server, and that's a pain...
+                    //we kick users out when they lose their privileges to private channels.
+                    if (this.activeChannel.type !== "private")
+                        await this.activeChannel.leave();
+                }
+                this.activeChannel = await this.props.auth.chatClient.joinAndGetChannel(uniqueNameOrSID);
+                this.activeChannel.getMessages().then((messages)=> {
+                    if(this.currentUniqueName != uniqueNameOrSID)
+                        return;
+                    this.messagesLoaded(this.activeChannel, messages)
+                });
+                this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
+                this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
+                this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
+                console.log(this.activeChannel)
+               let stateUpdate = {
+                    chatLoading: false,
+                   activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
+               }
+               console.log("Changing active channel name to: " + stateUpdate.activeChannelName)
+               if(!uniqueNameOrSID.startsWith("#"))
+               {
+                   if(this.state.siderWidth == 0)
+                       stateUpdate.siderWidth = 250;
+               }
+                this.setState(stateUpdate);
+            });
+
         } else {
-            console.log("Nope")
+            if(this.currentUniqueName != uniqueNameOrSID){
+                return;//raced with another update
+            }
+            // console.log("Unable to set channel because no user or something:")
+            // console.log(user);
+            // console.log(uniqueNameOrSID)
             this.setState({
                 chatAvailable: false,
-                siderCollapsed: true,
+                // siderWidth: 0,
                 meesages: []
             })
         }
@@ -179,9 +210,6 @@ class SidebarChat extends React.Component {
         return o1.sid == o2.sid;
     }
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.collapsed != this.state.siderCollapsed) {
-            this.setState({siderCollapsed: this.props.collapsed})
-        }
         if (this.props.auth.chatChannel != this.state.chatChannel) {
             this.setState({chatChannel: this.props.auth.chatChannel});
             this.changeChannel(this.props.auth.chatChannel);
@@ -194,16 +222,42 @@ class SidebarChat extends React.Component {
         if (topElement)
             topHeight = topElement.clientHeight;
 
-        return <div style={{height: "calc(100vh - " + topHeight + "px)"}}>
-            <Layout.Sider collapsible collapsed={this.state.siderCollapsed}
+        const handleMouseDown = e => {
+            document.addEventListener("mouseup", handleMouseUp, true);
+            document.addEventListener("mousemove", handleMouseMove, true);
+        };
+
+        const handleMouseUp = () => {
+            document.removeEventListener("mouseup", handleMouseUp, true);
+            document.removeEventListener("mousemove", handleMouseMove, true);
+        };
+
+        const handleMouseMove = (e) => {
+            const newWidth = e.clientX - document.body.offsetLeft;
+            if (newWidth >= 0 && newWidth <= 500)
+            {
+                this.setDrawerWidth(newWidth);
+                localStorage.setItem("chatWidth", (newWidth == 0 ? -1 : newWidth));
+            }
+        };
+
+        if(!this.props.auth.user){
+            return <div></div>
+        }
+        let containerStyle = {height:'100%'};
+        if(this.state.siderWidth <5){
+            containerStyle.width="10px";
+        }
+        return <div className="chatTab" style={containerStyle}>
+            <Layout.Sider collapsible collapsed={this.state.siderWidth == 0}
                           trigger={null}
-                          width="250px"
+                          width={this.state.siderWidth}
                           collapsedWidth={0}
                           theme="light"
                           style={{backgroundColor: '#f8f8f8', height: "100%"}}>
                 <div>
                     <Layout>
-                        <Content style={{backgroundColor: "#f8f8f8", overflow:"auto"}}>
+                        <Content style={{backgroundColor: "#f8f8f8", overflowY:"auto", overflowWrap:"break-word"}}>
                             <Divider>Chat: {this.state.activeChannelName}</Divider>
                             {/*<div style={{ height:"calc(100vh - "+(topHeight + 20)+"px)", overflow: "auto"}}>*/}
                                 {/*<Affix>*/}
@@ -241,7 +295,7 @@ class SidebarChat extends React.Component {
                                                                 style={{border: 'none', width: "100%"}}>
                                                               <Meta
                                                                   title={<div>{this.state.authors[item.author]}&nbsp;
-                                                                      <span
+                                                                     <span
                                                                           className="timestamp">{this.formatTime(item.timestamp)}</span>
                                                                   </div>}
                                                               />
@@ -280,7 +334,22 @@ class SidebarChat extends React.Component {
                     </Layout>
                 </div>
             </Layout.Sider>
-        </div>
+                <div className="dragIconMiddleRight"
+                     onClick={()=>{
+                         localStorage.setItem("chatWidth", this.state.siderWidth == 0 ? 250 : -1);
+                         console.log("Chat width local storage: " + localStorage.getItem("chatWidth"))
+                         this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
+                     }}
+                >
+                    {this.state.siderWidth == 0 ? <Tooltip title="Open the chat drawer"><ChevronLeftIcon/></Tooltip>:<Tooltip title="Close the chat drawer"><ChevronRightIcon/></Tooltip>}
+                    {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
+                </div>
+
+                <div className="roomDraggerRight" onMouseDown={e => handleMouseDown(e)} ></div>
+
+                {/*<div className="dragIconBottom" onMouseDown={e => handleMouseDown(e)}></div>*/}
+
+            </div>
 
     }
 
@@ -306,7 +375,7 @@ class SidebarChat extends React.Component {
         // </div>}><div ref={(el) => { this.messagesEnd = el; }} className="chatMessage"><ReactMarkdown source={m.body} renderers={{ text: emojiSupport }} /></div>
         // </Popover>
         return <div key={m.sid} className="chatMessage"><ReactMarkdown source={m.body}
-                                                                       renderers={{text: emojiSupport}}/></div>
+                                                                       renderers={{text: emojiSupport, link:linkRenderer}}/></div>
 
 
     }
