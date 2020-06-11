@@ -41,18 +41,6 @@ class Registrations extends React.Component {
         }
     }
 
-    JSONfy(file) {
-        console.log("JSONfy " + file);
-        return new Promise(resolve => {
-            const reader = new FileReader();
-            reader.readAsDataText(file);
-            reader.onload = () => {
-                console.log("onload");
-                return {content: reader.result}
-            }
-        });
-    }
-
     setVisible() {
         this.setState({'visible': !this.state.visible});
     }
@@ -64,6 +52,16 @@ class Registrations extends React.Component {
         //     console.log(vid);
         // })
     }
+
+    beforeUpload(file, fileList) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const data = {content: reader.result};
+            Parse.Cloud.run("registrations", data).then(() => this.refreshList());
+        }
+        reader.readAsText(file);
+        return false;
+    }        
 
     refreshList(){
         let query = new Parse.Query("Registrations");
@@ -107,21 +105,6 @@ class Registrations extends React.Component {
             }
         ];
 
-//        console.log(this.headers);
-
-        const props = {
-//            action: "https://parseapi.back4app.com/functions/registrations",
-            accept:".txt, .csv",
-            beforeUpload(file, fileList) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const data = {content: reader.result};
-                    Parse.Cloud.run("registrations", data)
-                }
-                reader.readAsText(file);
-                return false;
-            }        
-        };
 
         if (this.state.loading)
             return (
@@ -129,7 +112,7 @@ class Registrations extends React.Component {
                 </Spin>)
 
         return <div>
-                <Upload {...props} onChange={this.onChange.bind(this)}>
+                <Upload accept=".txt, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
                     <Button>
                         <UploadOutlined /> Click to upload registration data
                     </Button>
