@@ -16,17 +16,14 @@ const IconText = ({icon, text}) => (
 
 class Registrations extends React.Component {
     constructor(props) {
-        super(props);
+        super(props); // has props.auth
         console.log("Registrations starting " + this.props);
         this.state = {
             loading: true, 
             regs: []
         };
-        this.headers = {
-            'X-Parse-Application-Id': process.env.REACT_APP_PARSE_APP_ID,
-            'X-Parse-REST-API-Key': process.env.REACT_APP_PARSE_REST_API_KEY,
-            'Content-Type': 'application/json'
-        }
+        this.currentConference = props.auth.currentConference;
+        console.log("Current conference is " + this.currentConference);
     }
 
     onChange(info) {
@@ -47,16 +44,12 @@ class Registrations extends React.Component {
 
     componentDidMount() {
         this.refreshList();
-        // this.sub = this.props.parseLive.subscribe(query);
-        // this.sub.on('create', vid=>{
-        //     console.log(vid);
-        // })
     }
 
     beforeUpload(file, fileList) {
         const reader = new FileReader();
         reader.onload = () => {
-            const data = {content: reader.result};
+            const data = {content: reader.result, conference: this.currentConference.id};
             Parse.Cloud.run("registrations", data).then(() => this.refreshList());
         }
         reader.readAsText(file);
