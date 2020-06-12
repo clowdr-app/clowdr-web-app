@@ -338,15 +338,15 @@ const withAuthentication = Component => {
                                 activeProfile = null;
                             }
                         }
+                        for (let role of roles) {
+                            if (role.get("name") == "ClowdrSysAdmin")
+                                isAdmin = true;
+                        }
                         if(!activeProfile){
                             if(!preferredConference && process.env.REACT_APP_DEFAULT_CONFERENCE){
                                 let confQ = new Parse.Query("ClowdrInstance")
                                 confQ.equalTo("conferenceName", process.env.REACT_APP_DEFAULT_CONFERENCE);
                                 preferredConference = await confQ.first();
-                            }
-                            for (let role of roles) {
-                                if (role.get("name") == "ClowdrSysAdmin")
-                                    isAdmin = true;
                             }
                             if (preferredConference) {
                                 conf = validConferences.find((c) => c.id == preferredConference.id);
