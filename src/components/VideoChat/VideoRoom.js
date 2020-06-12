@@ -350,7 +350,7 @@ class VideoRoom extends Component {
         else if(freeSpots <= 2){
             membersListColor = "warning";
         }
-        let isP2P = this.state.room.get("mode") == "oeer-to-peer";
+        let isP2P = this.state.room.get("mode") == "peer-to-peer";
 // See:
 // for available connection options.https://media.twiliocdn.com/sdk/js/video/releases/2.0.0/docs/global.html#ConnectOptions
         let connectionOptions= {
@@ -436,6 +436,7 @@ class VideoRoom extends Component {
                                         {privacyDescription}</h3>
 
                                     <div>
+                                        <Button>Watch this room</Button>
                                         <Collapse>
                                             <Collapse.Panel key="watchers" header={"Users watching this room: "+nWatchers}>
 
@@ -450,7 +451,7 @@ class VideoRoom extends Component {
 
                                 {ACLdescription}
                         <div className={"videoEmbed"}>
-                            {/*<EmbeddedVideoWrapper />*/}
+                            <EmbeddedVideoWrapper />
                         </div></VideoProvider>
                     </AppStateProvider>
                 </MuiThemeProvider>
