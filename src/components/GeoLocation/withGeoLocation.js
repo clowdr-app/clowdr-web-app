@@ -26,7 +26,7 @@ const withGeoLocation = Component => {
                     }
                 })
                 .then(data => {
-                    console.log(data);
+                    console.log(JSON.stringify(data));
                     geoLocation = data;
                     this.setState({geoloc: geoLocation});
                 })

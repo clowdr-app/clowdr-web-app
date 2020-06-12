@@ -1,6 +1,6 @@
 import React from 'react';
 import LiveVideoPanel from "./LiveVideoPanel";
-import {Modal, Card} from "antd";
+import {Modal, Card, Spin} from "antd";
 import GeoLocationContext from '../GeoLocation/context';
 import {videoURLFromData} from './utils'
 import ReactPlayer from 'react-player';
@@ -41,12 +41,19 @@ class VideoThumbnail extends React.Component {
     }
 
     render() {
+        if (!this.props.geoloc) {
+            return (
+                <Spin tip="Loading...">
+                </Spin>)
+    
+        }
+
         let src = this.props.video.get("src1");
         let id = this.props.video.get("id1");
         let video_url = videoURLFromData(src, id);
         let thumbnail = "";
 
-        if (this.props.geoloc && this.props.geoloc.country_code.toLowerCase() == 'cn')
+        if (this.props.geoloc.country_code.toLowerCase() == 'cn')
         {
             console.log("Viewer from China! Nǐ hǎo");
             src = this.props.video.get("src2");
@@ -57,17 +64,7 @@ class VideoThumbnail extends React.Component {
             thumbnail = <iframe title={this.props.title} src={video_url} allowFullScreen/>
         }
 
-        if (this.props.geoloc) {
-            console.log(this.props.geoloc.country_code);
-            if (this.props.geoloc.country_code.toLowerCase() == 'cn') {
-
-            }
-        }
-//        const thumbnail_url = LiveVideoThumbnailSourceMappings[src1].url + id1 + LiveVideoThumbnailSourceMappings[src1].extraPath;
-
         let content = "";
-        let modal = "";
-        let watchers = "";
         if (this.state.expanded) {
             content = <Modal centered visible={true} cancelText={"Close"} width={"100%"} height={"100%"}
                         onCancel={this.toggleExpanded.bind(this)}

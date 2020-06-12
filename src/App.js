@@ -25,7 +25,6 @@ import VideoChat from "./components/VideoChat";
 //
 import LiveVideosList from "./components/Admin/LiveVideos";
 import Registrations from "./components/Admin/Registrations";
-import withGeoLocation from './components/GeoLocation/withGeoLocation';
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 //import Chat from "./components/Chat";
@@ -268,4 +267,4 @@ class ClowdrApp extends React.Component{
    }
 }
 
-export default withAuthentication(withGeoLocation(ClowdrApp));
+export default withAuthentication(ClowdrApp);

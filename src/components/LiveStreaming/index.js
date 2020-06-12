@@ -3,6 +3,8 @@ import {Space, Spin} from 'antd';
 import GeoLocationLiveVideoThumbnail from "./VideoThumbnail";
 import Parse from "parse";
 import AuthUserContext from "../Session/context"
+import withGeoLocation from '../GeoLocation/withGeoLocation';
+
 
 class LiveStreaming extends Component {
     constructor(props) {
@@ -108,4 +110,4 @@ const LiveVideosArea = (props) => (
             </AuthUserContext.Consumer>
 );
 
-export default LiveVideosArea;
+export default withGeoLocation(LiveVideosArea);
