@@ -2,7 +2,7 @@ import React from 'react';
 
 import AuthUserContext from './context';
 import Parse from "parse";
-import {Spin} from "antd";
+import {notification, Spin} from "antd";
 import ChatClient from "../../classes/ChatClient"
 
 let UserProfile = Parse.Object.extend("UserProfile");
@@ -12,6 +12,7 @@ const withAuthentication = Component => {
 
         constructor(props) {
             super(props);
+            this.watchedRoomMembers = {};
             this.authCallbacks = [];
             this.isLoggedIn = false;
             this.loadingProfiles = {};
@@ -440,6 +441,7 @@ const withAuthentication = Component => {
                         return;
                     }
                 }
+                res.forEach(this.notifyUserOfChanges.bind(this));
                 this.setState({activePublicVideoRooms: res})
                 if (this.parseLivePublicVideosSub) {
                     this.parseLivePublicVideosSub.unsubscribe();
@@ -460,6 +462,8 @@ const withAuthentication = Component => {
                 });
                 this.parseLivePublicVideosSub.on('update', async (newItem) => {
                     newItem = await this.populateMembers(newItem);
+                    this.notifyUserOfChanges(newItem);
+                    //Deliver notifications if applicable
                     this.setState((prevState) => ({
                         activePublicVideoRooms: prevState.activePublicVideoRooms.map(room => room.id == newItem.id ? newItem : room)
                     }))
@@ -477,13 +481,51 @@ const withAuthentication = Component => {
             this.parseLiveActivitySub.on("update", this.subscribeToNewPrivateRooms.bind(this));
         }
 
+        notifyUserOfChanges(updatedRoom){
+            if(!this.state.userProfile)
+                return;
+            let oldRoom = this.watchedRoomMembers[updatedRoom.id];
+            if(!oldRoom){
+                this.watchedRoomMembers[updatedRoom.id] = [];
+                if(updatedRoom.get("members")){
+                    this.watchedRoomMembers[updatedRoom.id] = updatedRoom.get("members").filter(m=>m.id!=this.state.user.id).map(m=>m.get("displayName"));
+                }
+            }
+            if(updatedRoom && oldRoom && this.state.userProfile.get("watchedRooms")){
+                if(this.state.userProfile.get("watchedRooms").find(r=>r.id == updatedRoom.id)){
+                    //We have a watch on it.
+
+                    //Who is new?
+                    let update = [];
+                    if(updatedRoom.get("members")){
+                        update = updatedRoom.get("members").filter(m=>m.id!=this.state.user.id).map(m=>m.get("displayName"));
+                    }
+                    let newUsers = update.filter(u=>!oldRoom.includes(u));
+                    let goneUsers = oldRoom.filter(u=>!update.includes(u));
+                    if(newUsers.length)
+                    {
+                        notification.info({
+                            message: "Activity in " + updatedRoom.get("title"),
+                            description: newUsers.join(", ")+ (newUsers.length > 1 ? " have":" has")+" joined. To turn off these notifications, select the room '" + updatedRoom.get("title")+ "' and un-follow it",
+                            placement: 'topLeft',
+                        });
+                    }
+                    if(goneUsers.length)
+                    {
+                        notification.info({
+                            message: "Activity in " + updatedRoom.get("title"),
+                            description: goneUsers.join(", ")+ (goneUsers.length > 1 ? " have":" has")+" left. To turn off these notifications, select the room '" + updatedRoom.get("title")+ "' and un-follow it",
+                            placement: 'topLeft',
+                        });
+                    }
+                    this.watchedRoomMembers[updatedRoom.id] = update;
+                }
+            }
+        }
         async subscribeToNewPrivateRooms() {
             if (!this.mounted)
                 return;
             let currentlySubscribedTo = [];
-            if (this.state.activePrivateVideoRooms) {
-                currentlySubscribedTo = this.state.activePrivateVideoRooms.map(r => r.id);
-            }
             let newRoomsQuery = new Parse.Query("BreakoutRoom");
             newRoomsQuery.equalTo("conference", this.state.currentConference);
             newRoomsQuery.include("members");
@@ -495,6 +537,8 @@ const withAuthentication = Component => {
             let res = await newRoomsQuery.find();
             if (!this.mounted)
                 return;
+            res.forEach(this.notifyUserOfChanges.bind(this));
+
             let newRooms = [];
             let fetchedIDs = [];
             this.setState({
@@ -507,6 +551,8 @@ const withAuthentication = Component => {
             this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.state.user.getSessionToken());
             this.parseLivePrivateVideosSub.on("update", async (newItem) => {
                 newItem = await this.populateMembers(newItem);
+                this.notifyUserOfChanges(newItem);
+
                 this.setState((prevState) => ({
                     activePrivateVideoRooms: prevState.activePrivateVideoRooms.map(room => room.id == newItem.id ? newItem : room)
                 }))
