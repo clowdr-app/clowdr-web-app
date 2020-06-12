@@ -4,7 +4,20 @@ import theme from "./theme";
 import {MuiThemeProvider} from "@material-ui/core/styles";
 import Parse from "parse"
 import {AuthUserContext} from "../Session";
-import {Alert, Button, Form, message, notification, Select, Skeleton, Spin, Tag, Tooltip, Typography} from "antd";
+import {
+    Alert,
+    Button,
+    Collapse,
+    Form,
+    message,
+    notification,
+    Select,
+    Skeleton,
+    Spin,
+    Tag,
+    Tooltip,
+    Typography
+} from "antd";
 import './VideoChat.css';
 import {VideoContext, VideoProvider} from "clowdr-video-frontend/lib/components/VideoProvider";
 import AppStateProvider from "clowdr-video-frontend/lib/state";
@@ -30,6 +43,7 @@ import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/use
 import ReportToModsButton from "./ReportToModsButton";
 import {SyncOutlined} from '@ant-design/icons'
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
+import AboutModal from "../SignIn/AboutModal";
 
 const {Paragraph} = Typography;
 
@@ -301,9 +315,9 @@ class VideoRoom extends Component {
 
         let visibilityDescription, privacyDescription, ACLdescription, fullLabel;
         if (this.state.room.get("isPrivate")) {
-            visibilityDescription = (<Tag key="visibility">Private</Tag>)
+            visibilityDescription = (<Tooltip title="This room can only be accessed by users listed below."><Tag key="visibility" color="#2db7f5">Private</Tag></Tooltip>)
         } else {
-            visibilityDescription = (<Tag key="visibility">Open</Tag>);
+            visibilityDescription = (<Tooltip title={"This room can be accessed by any member of " + this.props.authContext.currentConference.get("conferenceName")}><Tag key="visibility" color="#87d068">Open</Tag></Tooltip>);
         }
         if(this.state.room.get("members") && this.state.room.get("members").length == this.state.room.get("capacity"))
         {
@@ -311,15 +325,30 @@ class VideoRoom extends Component {
         }
         if (this.state.room.get("persistence") == "ephemeral") {
             privacyDescription = (
-                <Tooltip title="Garbage collects 5 minutes
-                    after being empty"><Tag key="persistence">Ephemeral</Tag></Tooltip>)
+                <Tooltip title="This room wil be garbage collected after 5 minutes
+                    of being empty"><Tag key="persistence" color="#2db7f5">Ephemeral</Tag></Tooltip>)
         } else {
-            privacyDescription = (<Tag key="persistence">Persistent</Tag>)
+            privacyDescription = (
+                <Tooltip title="This room will exist until deleted by a moderator"><Tag key="persistence" color="#87d068">Persistent</Tag></Tooltip>
+            )
         }
         if (this.state.room.get("isPrivate")) {
             ACLdescription = (<RoomVisibilityController
                 authContext={this.props.authContext} roomID={this.state.room.id} sid={this.state.room.get("twilioID")}
                 acl={this.state.room.getACL()}/>);
+        }
+        let nMembers = 0;
+        let membersListColor = "#87d068";
+        if(this.state.room.get("members"))
+        {
+            nMembers = this.state.room.get("members").length;
+        }
+        let freeSpots = this.state.room.get("capacity") - nMembers;
+        if(freeSpots == 0){
+            membersListColor = "#f50";
+        }
+        else if(freeSpots <= 2){
+            membersListColor = "warning";
         }
         let isP2P = this.state.room.get("mode") == "oeer-to-peer";
 // See:
@@ -360,6 +389,10 @@ class VideoRoom extends Component {
             }
         }
 
+        let nWatchers = 0;
+        if(this.state.room.get("watchers")){
+            nWatchers = this.state.room.get("watchers").length;
+        }
 // For mobile browsers, limit the maximum incoming video bitrate to 2.5 Mbps.
         if (isMobile && connectionOptions.bandwidthProfile.video) {
             connectionOptions.bandwidthProfile.video.maxSubscriptionBitrate = 2500000;
@@ -367,8 +400,7 @@ class VideoRoom extends Component {
         }
         return (
             <div>
-                <h1>Lobby Session</h1>
-
+                <AboutModal />
 
                 {/*{greeting}*/}
                 <MuiThemeProvider theme={theme}>
@@ -386,7 +418,10 @@ class VideoRoom extends Component {
                                                 let desc = videoContext.room.state;
                                                 if(desc) {
                                                     desc = desc[0].toUpperCase() + desc.slice(1);
-                                                    return <Tag>{desc}</Tag>
+                                                    let color = "red";
+                                                    if(desc == "Connected")
+                                                        color = "#87d068";
+                                                    return <Tag color={color}>{desc}</Tag>
                                                 }
                                                 else{
                                                     return <Tag color={"warning"} icon={<SyncOutlined spin />}>Connecting...</Tag>
@@ -394,9 +429,19 @@ class VideoRoom extends Component {
                                             }
                                         }
                                     </VideoContext.Consumer>
-                                        {visibilityDescription}
-                                        {privacyDescription}{fullLabel}</h3>
+                                        <Tooltip title={"This room was created as a " +
+                                        this.state.room.get("mode") + " room with a capacity of " +
+                                        this.state.room.get("capacity") +", there's currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
+                                        {fullLabel}{visibilityDescription}
+                                        {privacyDescription}</h3>
 
+                                    <div>
+                                        <Collapse>
+                                            <Collapse.Panel key="watchers" header={"Users watching this room: "+nWatchers}>
+
+                                            </Collapse.Panel>
+                                        </Collapse>
+                                    </div>
                                 </div>
                                 <div style={{}}>
                                     <FlipCameraButton/><DeviceSelector/><ToggleFullscreenButton /> <ReportToModsButton room={this.state.room} />
@@ -405,7 +450,7 @@ class VideoRoom extends Component {
 
                                 {ACLdescription}
                         <div className={"videoEmbed"}>
-                            <EmbeddedVideoWrapper />
+                            {/*<EmbeddedVideoWrapper />*/}
                         </div></VideoProvider>
                     </AppStateProvider>
                 </MuiThemeProvider>

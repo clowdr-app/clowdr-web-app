@@ -3,6 +3,7 @@ import {Avatar, Card, Divider, Layout, List, message, Popconfirm, Space, Spin, T
 import {AuthUserContext} from "../Session";
 import NewRoomForm from "./NewRoomForm";
 import withLoginRequired from "../Session/withLoginRequired";
+import AboutModal from "../SignIn/AboutModal";
 
 const { Content, Footer, Sider} = Layout;
 
@@ -253,6 +254,7 @@ class Lobby extends React.Component {
             // <Tabs defaultActiveKey="1">
             //     <TabPane tab="Breakout Areas" key="1">
             <div>
+                <AboutModal />
                 <Typography.Title level={2}>Lobby Session</Typography.Title>
 
                 <Typography.Paragraph>

@@ -18,7 +18,13 @@ class About extends Component {
             </p>
             <p>CLOWDR is created by <a href="https://jonbell.net">Jonathan Bell</a>, <a href="https://www.ics.uci.edu/~lopes/">Crista Lopes</a> and <a href="https://www.cis.upenn.edu/~bcpierce/">Benjamin Pierce</a>.
                 If you are interested in helping develop CLOWDR or using it for your live event, please <a href="https://github.com/clowdr-app">check out our GitHub</a> or send us an email.</p>
-            <p>CLOWDR is built on a stack of React, Ant Design, Parse Server, and Twilio</p>
+            <p>CLOWDR is built on a stack of React, Ant Design, Parse Server, and Twilio.
+            CLOWDR is open source, but is not entirely free to operate. We rely on Twilio to provide video calling services.
+            Twilio's rates are: $0.01/person per minute for large group rooms, $0.004/person per minute for
+            small group rooms, and $0.0015/person per minute for peer-to-peer rooms. CLOWDR is made possible
+                thanks to support by the National Science Foundation
+                under awards CCF-2035003, CCF-2035101 and CCF-203500
+                and support from <a href="https://www.twilio.org">Twilio.org</a>.</p>
         </div>
     }
 }

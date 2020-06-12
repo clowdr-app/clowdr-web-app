@@ -128,7 +128,7 @@ function ParticipantStrip() {
     else if (nImages == 2) {
         breakpointColumnsObj = {
             default: 2,
-            500: 1
+            1200: 1
         };
     } else if (nImages <= 8) {
         breakpointColumnsObj = {
