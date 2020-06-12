@@ -8,12 +8,12 @@ import {
     Alert,
     Button,
     Collapse,
-    Form,
+    Form, List,
     message,
     notification,
     Select,
     Skeleton,
-    Spin,
+    Spin, Switch,
     Tag,
     Tooltip,
     Typography
@@ -44,6 +44,7 @@ import ReportToModsButton from "./ReportToModsButton";
 import {SyncOutlined} from '@ant-design/icons'
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import AboutModal from "../SignIn/AboutModal";
+import UserDescriptor from "./UserDescriptor";
 
 const {Paragraph} = Typography;
 
@@ -122,7 +123,7 @@ class VideoRoom extends Component {
         if(!timeout){
             timeout = 0;
         }
-        timeout = timeout + 4000;
+        timeout = timeout + 6000;
         if(timeout > 20000){
             timeout = 20000;
         }
@@ -147,7 +148,11 @@ class VideoRoom extends Component {
         room = await this.props.authContext.helpers.populateMembers(room);
         console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
         this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
-        this.setState({loadingMeeting: 'true', room: room})
+        let watchedByMe = false;
+        if(this.props.authContext.userProfile.get("watchedRooms")){
+            watchedByMe = this.props.authContext.userProfile.get("watchedRooms").find(v =>v.id ==room.id);
+        }
+        this.setState({loadingMeeting: 'true', room: room, watchedByMe: watchedByMe})
 
         let user = this.props.authContext.user;
 
@@ -234,7 +239,7 @@ class VideoRoom extends Component {
                     hadChange = true;
                     if (this.state.members.length > 0 && this.props.authContext.userProfile.id != member.id)
                         notification.info({
-                            message: member.get("displayName") + " has joined the room",
+                            message: member.get("displayName") + " has joined this room",
                             placement: 'topLeft',
                         });
                 }
@@ -243,7 +248,7 @@ class VideoRoom extends Component {
                 if(this.props.authContext.userProfile.id != member.id && !this.state.room.get("members").find(v=>v.id == member.id)){
                     hadChange = true;
                     notification.info({
-                        message: member.get("displayName") + " has left the room",
+                        message: member.get("displayName") + " has left this room",
                         placement: 'topLeft',
                     });
                 }
@@ -268,6 +273,61 @@ class VideoRoom extends Component {
     onError(err) {
         message.error({content: "Unable to join room. " + err.toString()})
         this.props.history.push(ROUTES.LOBBY_SESSION);
+    }
+    async toggleWatch(){
+        this.setState({watchLoading: true})
+        let idToken = this.props.authContext.user.getSessionToken();
+
+        const data = await fetch(
+            `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/follow`
+            , {
+                method: 'POST',
+                body: JSON.stringify({
+                    roomID: this.state.room.id,
+                    identity: idToken,
+                    add: !this.state.watchedByMe,
+                    slackTeam: this.props.authContext.currentConference.get("slackWorkspace"),
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        let res = await data.json();
+        if (res.status == "error") {
+            message.error({content: res.message, style:{zIndex: 2020}});
+            this.setState({watchLoading: false});
+        }
+        else{
+            if(!this.state.watchedByMe){
+                //toggle to true
+                let watched = this.props.authContext.userProfile.get("watchedRooms");
+                if(!watched)
+                    watched = [];
+                watched.push(this.state.room);
+                this.props.authContext.userProfile.set("watchedRooms", watched);
+                await this.props.authContext.userProfile.save();
+                notification.info({
+                    message: "You're now watching this room. You'll get notifications like this one whenever someone comes or goes, regardless of which room you're in at the time",
+                    placement: 'topLeft',
+                });
+                this.setState({watchedByMe: true, watchLoading: false});
+            }
+            else{
+                let watched = this.props.authContext.userProfile.get("watchedRooms");
+                if(!watched)
+                    watched = [];
+                watched = watched.filter(r => r.id != this.state.room.id);
+                this.props.authContext.userProfile.set("watchedRooms", watched);
+                await this.props.authContext.userProfile.save();
+                notification.info({
+                    message: "OK, you won't receive notifications about this room unless you're in it. We'll still notify you while you're here as people come and go.",
+                    placement: 'topLeft',
+                });
+                this.setState({watchedByMe: false, watchLoading: false})
+            }
+        }
+
+
     }
     render() {
         if (this.state.error) {
@@ -435,13 +495,19 @@ class VideoRoom extends Component {
                                         {fullLabel}{visibilityDescription}
                                         {privacyDescription}</h3>
 
-                                    <div>
-                                        <Button>Watch this room</Button>
-                                        <Collapse>
-                                            <Collapse.Panel key="watchers" header={"Users watching this room: "+nWatchers}>
+                                    <div style={{width: "100%", display:"flex"}}>
+                                        <Collapse style={{flexGrow: 1}}>
+                                            <Collapse.Panel key="watchers" header={"Users following this room: "+nWatchers}>
+                                                <List size="small" renderItem={item => <List.Item><UserDescriptor id={item.id} /></List.Item>}
+                                                dataSource={this.state.room.get("watchers")}
+                                                />
 
                                             </Collapse.Panel>
                                         </Collapse>
+                                        <Tooltip title="Follow this room to get notifications in-app when people come and go">
+                                            <Switch checkedChildren="Following" unCheckedChildren="Not Following" onChange={this.toggleWatch.bind(this)}
+                                                    loading={this.state.watchLoading}
+                                                    style={{marginTop: "5px", marginLeft:"5px"}} checked={this.state.watchedByMe}/></Tooltip>
                                     </div>
                                 </div>
                                 <div style={{}}>
