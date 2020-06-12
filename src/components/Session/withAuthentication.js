@@ -482,6 +482,8 @@ const withAuthentication = Component => {
         }
 
         notifyUserOfChanges(updatedRoom){
+            if(!this.state.userProfile)
+                return;
             let oldRoom = this.watchedRoomMembers[updatedRoom.id];
             if(!oldRoom){
                 this.watchedRoomMembers[updatedRoom.id] = [];

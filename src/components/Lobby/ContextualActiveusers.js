@@ -46,12 +46,6 @@ class ContextualActiveUsers extends Component {
                 this.props.auth.subscribeToVideoRoomState();
             }
         }
-        //Check for new notifications
-        if(this.props.auth.userProfile.get("watchedRooms")){
-            for(let room of this.props.auth.activePublicVideoRooms){
-                //Check against prev
-            }
-        }
         if (this.props.auth.videoRoomsLoaded != this.state.loading) {
             this.setState({loading: this.props.auth.videoRoomsLoaded});
         }
