@@ -400,7 +400,7 @@ const withAuthentication = Component => {
                 } else {
                     let currentProfileID = localStorage.getItem("activeProfileID");
                     if(currentProfileID){
-                        localStorage.clear();
+                        localStorage.removeItem("activeProfileID");
                         window.location.reload();
                     }
                     if (_this.isLoggedIn) {
