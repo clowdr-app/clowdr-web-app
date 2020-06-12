@@ -2,7 +2,8 @@ import {AuthUserContext} from "../Session";
 import React from "react";
 import {Alert, Spin, Typography} from "antd";
 import Parse from "parse";
-import { LoadingOutlined } from '@ant-design/icons';
+import {LoadingOutlined} from '@ant-design/icons';
+import LandingContainer from "../LandingContainer";
 
 class SlackToVideo extends React.Component {
 
@@ -63,17 +64,18 @@ class SlackToVideo extends React.Component {
             return <div></div>
         }
         return <div id="landing-page">
-            <header style={{height: "100vh"}}>
+            <LandingContainer>
                 <div className="header-content" style={{top: "33%"}}>
-                    <div className="header-content-inner" style={{backgroundColor:"rgba(1,1,1,.5)", maxWidth:"800px"}}>
+                    <div className="header-content-inner"
+                         style={{backgroundColor: "rgba(1,1,1,.5)", maxWidth: "800px"}}>
 
                         <Typography.Title>Just a minute...</Typography.Title>
-                        <p style={{marginLeft: 'auto', marginRight: 'auto'}}>
-                            <Spin indicator={antIcon} />
-                        </p>
+                        <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
+                            <Spin indicator={antIcon}/>
+                        </div>
                     </div>
                 </div>
-            </header>
+            </LandingContainer>
         </div>
     }
 }

@@ -12,7 +12,9 @@ export default class GenericLanding extends Component {
 
     render() {
         return <div id="landing-page">
-            <header style={{height: "100vh"}}>
+            <header style={{height: "100vh",
+                backgroundImage: "url(/backgrounds/error.jpg)"
+            }}>
             <div className="header-content" style={{top: "33%"}}>
                 <div className="header-content-inner" style={{backgroundColor:"rgba(1,1,1,.5)", maxWidth:"800px"}}>
 

@@ -18,7 +18,7 @@ class About extends Component {
             </p>
             <p>CLOWDR is created by <a href="https://jonbell.net">Jonathan Bell</a>, <a href="https://www.ics.uci.edu/~lopes/">Crista Lopes</a> and <a href="https://www.cis.upenn.edu/~bcpierce/">Benjamin Pierce</a>.
                 If you are interested in helping develop CLOWDR or using it for your live event, please <a href="https://github.com/clowdr-app">check out our GitHub</a> or send us an email.</p>
-            <p>CLOWDR is built on a stack of React, Ant Design, Parse Server, and Twilio.</p>
+            <p>CLOWDR is built on a stack of React, Ant Design, Parse Server, and Twilio</p>
         </div>
     }
 }
