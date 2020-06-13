@@ -72,9 +72,14 @@ class VideoRoom extends Component {
             return;
         }
 
-        this.props.authContext.refreshUser(null, this.props.match.params.conf).then((u)=>{
-            this.joinCallFromPropsWithCurrentUser()
-        })
+        if(!this.props.authContext.user || this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName")){
+            this.props.authContext.refreshUser(null, this.props.match.params.conf).then((u)=>{
+                this.joinCallFromPropsWithCurrentUser()
+            })
+        }
+        else{
+            this.joinCallFromPropsWithCurrentUser();
+        }
     }
     async joinCallFromPropsWithCurrentUser() {
 
@@ -88,6 +93,7 @@ class VideoRoom extends Component {
             return;
         if(this.loadingVideo)
             return;
+        console.log(this.loadingVideo)
         this.loadingVideo = true;
         this.confName = confName;
         this.roomID = roomID;
@@ -107,6 +113,7 @@ class VideoRoom extends Component {
         let room = await roomQuery.first();
         if (!room) {
             this.setState({error: "invalidRoom"})
+            this.loadingVideo = false;
             return;
         }
 
@@ -118,12 +125,13 @@ class VideoRoom extends Component {
             localStorage.setItem("videoReloads", 0);
             localStorage.setItem("videoLoadTimeout", 0);
             this.setState({error: <span>Sorry, but we were unable to connect you to the video room, likely due to a bug in this frontend. If this issue persists, please contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
+            this.loadingVideo = false;
             return;
         }
         if(!timeout){
             timeout = 0;
         }
-        timeout = timeout + 6000;
+        timeout = timeout + 10000;
         if(timeout > 20000){
             timeout = 20000;
         }
@@ -142,7 +150,7 @@ class VideoRoom extends Component {
         setTimeout(function(){
             if(_this.loadingVideo){
                 window.localStorage.setItem("videoReloads", ""+(numReloads+1));
-                window.location.reload(false);
+                // window.location.reload(false);
             }
         }, timeout);
         room = await this.props.authContext.helpers.populateMembers(room);
@@ -197,6 +205,7 @@ class VideoRoom extends Component {
                 }
             }).catch((err) => {
                 console.log("Error")
+                this.loadingVideo = false;
                 this.setState({error: "authentication"});
             });
         } else {
@@ -221,12 +230,12 @@ class VideoRoom extends Component {
         if (this.props.authContext.user != prevProps.authContext.user || conf != this.state.conf || roomID !=this.state.meetingName){
             let confName = this.props.match.params.conf;
             let roomID = this.props.match.params.roomName;
-            if((confName != this.confName || roomID != this.roomID) &&!this.state.error)
+            if((confName != this.confName || roomID != this.roomID) &&(!this.state.error || this.roomID != roomID))
             {
                 console.log("Clearing state...")
                 this.confName = null;
                 this.roomID = null;
-                this.setState({conf: conf, meetingName: roomID, token: null});
+                this.setState({conf: conf, meetingName: roomID, token: null, error: null});
                     await this.joinCallFromProps();
             }
 
@@ -420,11 +429,12 @@ class VideoRoom extends Component {
             // Twilio Console: https://www.twilio.com/console/video/configure
             bandwidthProfile: {
                 video: {
-                    mode: 'collaboration',
+                    mode: 'grid',
+                    maxTracks: 4,
                     // dominantSpeakerPriority: 'standard',
                     renderDimensions: {
-                        high: { height: 1080, width: 1920 },
-                        standard: { height: 720, width: 1280 },
+                        high: { height: 720, width: 1080 },
+                        standard: { height: 480, width: 640 },
                         low: {height:176, width:144}
                     },
                 },
@@ -439,13 +449,13 @@ class VideoRoom extends Component {
             // to adapt your encoded video quality for each RemoteParticipant based on
             // their individual bandwidth constraints. This has no effect if you are
             // using Peer-to-Peer Rooms.
-            preferredVideoCodecs: [{codec: 'VP8', simulcast: true}],
+            preferredVideoCodecs: [{codec: 'VP8', simulcast: false}],
         };
         if (isP2P) {
             connectionOptions = {
                 audio: true,
                 maxAudioBitrate: 16000, //For music remove this line
-                video: {height: 720, frameRate: 24, width: 1280}
+                video: {height: 480, frameRate: 24, width: 640}
             }
         }
 

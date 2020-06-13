@@ -326,7 +326,7 @@ const withAuthentication = Component => {
                         validConferences=validInstances.map(i=>i.get("instance"));
 
                         let conf = _this.currentConference;
-                        let currentProfileID = localStorage.getItem("activeProfileID");
+                        let currentProfileID = sessionStorage.getItem("activeProfileID");
                         let activeProfile = null;
                         if(currentProfileID){
                             let profileQ = new Parse.Query(UserProfile);
@@ -359,7 +359,7 @@ const withAuthentication = Component => {
                             profileQ.equalTo("conference",conf);
                             profileQ.equalTo("user",userWithRelations);
                             activeProfile = await profileQ.first();
-                            localStorage.setItem("activeProfileID",activeProfile.id);
+                            sessionStorage.setItem("activeProfileID",activeProfile.id);
                             window.location.reload(false);
                         }
                         const privsQuery = new Parse.Query("InstancePermission");
@@ -399,9 +399,9 @@ const withAuthentication = Component => {
                         return null;
                     }
                 } else {
-                    let currentProfileID = localStorage.getItem("activeProfileID");
+                    let currentProfileID = sessionStorage.getItem("activeProfileID");
                     if(currentProfileID){
-                        localStorage.removeItem("activeProfileID");
+                        sessionStorage.removeItem("activeProfileID");
                         window.location.reload();
                     }
                     if (_this.isLoggedIn) {
