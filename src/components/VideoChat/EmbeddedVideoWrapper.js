@@ -11,7 +11,7 @@ import {styled} from "@material-ui/core";
 import React, {useContext} from "react";
 import Grid from '@material-ui/core/Grid';
 import {Skeleton} from "antd"
-import {PushpinOutlined, PushpinFilled } from "@ant-design/icons"
+import {PushpinFilled, PushpinOutlined} from "@ant-design/icons"
 
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
 import useParticipants from "clowdr-video-frontend/lib/hooks/useParticipants/useParticipants";
@@ -22,8 +22,6 @@ import ParticipantConnectionIndicator
 import NetworkQualityLevel from "clowdr-video-frontend/lib/components/NewtorkQualityLevel/NetworkQualityLevel";
 import AudioLevelIndicator from "clowdr-video-frontend/lib/components/AudioLevelIndicator/AudioLevelIndicator";
 import {ScreenShare, VideocamOff} from "@material-ui/icons";
-import PinIcon from "clowdr-video-frontend/lib/components/ParticipantInfo/PinIcon/PinIcon";
-import BandwidthWarning from "clowdr-video-frontend/lib/components/BandwidthWarning/BandwidthWarning";
 import usePublications from "clowdr-video-frontend/lib/hooks/usePublications/usePublications";
 import useParticipantNetworkQualityLevel
     from "clowdr-video-frontend/lib/hooks/useParticipantNetworkQualityLevel/useParticipantNetworkQualityLevel";
@@ -38,6 +36,8 @@ import ToggleScreenShareButton
     from "clowdr-video-frontend/lib/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
 import EndCallButton from "clowdr-video-frontend/lib/components/Controls/EndCallButton/EndCallButton";
 import AuthUserContext from "../Session/context";
+import useLocalTracks from "clowdr-video-frontend/lib/components/VideoProvider/useLocalTracks/useLocalTracks";
+
 let backgroundImg = require('../../clowdr-background.jpg');
 const Main = styled('main')({
     // overflow: 'hidden',

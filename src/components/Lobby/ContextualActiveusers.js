@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {AuthUserContext} from "../Session";
-import {Collapse, Divider, Menu, Popover, Select, Skeleton, Tooltip, Typography} from "antd";
+import {Collapse, Divider, Menu, Popover, Select, Skeleton, Tag, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
 import {LockTwoTone} from "@ant-design/icons"
 import NewRoomForm from "./NewRoomForm";
@@ -176,8 +176,21 @@ class ContextualActiveUsers extends Component {
                     if (item.get("members")) {
                         membersCount = item.get("members").length;
                     }
+                    let tag, joinInfo;
+                    if(item.get("mode") == "group"){
+                        tag = <Tag color="#FF9C6E" style={{width:"43px", textAlign: "center"}}>Big</Tag>
+                        joinInfo = "Join this big group room. Big group rooms support up to 50 callers, but you can only see the video of up to 8 other callers at once."
+                    }
+                    else if(item.get("mode") == "peer-to-peer"){
+                        tag = <Tag color="#69C0FF" style={{width:"43px", textAlign: "center"}}>P2P</Tag>
+                        joinInfo ="Join this peer-to-peer room. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
+                    }
+                    else if(item.get("mode") == "group-small"){
+                        tag = <Tag color="#52C41A" style={{width:"43px", textAlign: "center"}}>Small</Tag>
+                        joinInfo = "Join this small group room. Small group rooms support only up to 4 callers, but provide the best quality experience."
+                    }
                     let formattedRoom =
-                        <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{item.get("isPrivate") ? <LockTwoTone style={{verticalAlign: 'middle'}} /> : <></>}{item.get('title')}</div>
+                        <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{tag}{item.get("isPrivate") ? <LockTwoTone style={{verticalAlign: 'middle'}} /> : <></>}{item.get('title')}</div>
 
                     let joinLink = "";
                         if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
@@ -186,7 +199,7 @@ class ContextualActiveUsers extends Component {
                                 joinLink = <div><Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
                                     disabled>{formattedRoom}</Typography.Text></Tooltip></div>
                             else
-                                joinLink = <div><Tooltip title="Join this video room"><a href="#"
+                                joinLink = <div><Tooltip title={joinInfo}><a href="#"
                                                                                          onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                 </div>;
                                 // joinLink=  <Popconfirm

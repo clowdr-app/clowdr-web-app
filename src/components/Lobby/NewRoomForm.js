@@ -151,15 +151,15 @@ class NewRoomForm extends React.Component {
                         <Form.Item
                             name="mode"
                             label="Room Type"
-                            extra={"Peer Group rooms may have not work as well across continents or on mobile devices."}>
+                            extra={"Small groups and Large groups provide the best quality; Peer group rooms will allow you to see up to 9 other people at a time. Large group rooms will only show 6 active speakers at a time."}>
                             <Radio.Group buttonStyle="solid">
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-smallgroup",<Radio.Button value="group-small">Small Group (1-4)</Radio.Button>,
                                     <Tooltip title="You do not have access permissions to create small group rooms"><Radio.Button value="group-small" disabled={true}>Small Group (1-4)</Radio.Button></Tooltip>)}
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-peer-to-peer",
                                     <Radio.Button value="peer-to-peer">Peer Group (1-10)</Radio.Button>,
                                     <Tooltip title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="peer-to-peer" disabled={true}>Peer-to-Peer (1-10)</Radio.Button></Tooltip>)}
-                                {this.props.auth.helpers.ifPermission("createVideoRoom-group",<Radio.Button value="group">Large Group (4-24)</Radio.Button>,
-                                    <Tooltip title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="group">Large Group (1-24)</Radio.Button></Tooltip>)}
+                                {this.props.auth.helpers.ifPermission("createVideoRoom-group",<Radio.Button value="group">Large Group (4-50)</Radio.Button>,
+                                    <Tooltip title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="group">Large Group (4-50)</Radio.Button></Tooltip>)}
 
                             </Radio.Group>
                         </Form.Item>
