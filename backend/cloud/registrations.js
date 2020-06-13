@@ -18,7 +18,7 @@ function addRow(row, conferenceID) {
         var reg = new Registrations();
         reg.set("email", row.Email);
         reg.set("name", row.Name);
-        reg.set("password", row.Password);
+        reg.set("passcode", row.Password);
         reg.set("affiliation", row.Affiliation);
         reg.set("country", row.Country);
         reg.set("conference", conferenceID);
