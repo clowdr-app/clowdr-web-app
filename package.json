@@ -53,7 +53,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "deploy": "deployator",
-    "export-schema": "node-env-run -E .env-main scripts/export-schema.js"
+    "export-schema": "node-env-run -E .env-main scripts/export-schema.js",
+    "init-app": "node-env-run -E ./db/env-db scripts/db.js"
   },
   "eslintConfig": {
     "extends": "react-app"
