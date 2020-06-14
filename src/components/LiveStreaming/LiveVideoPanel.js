@@ -12,6 +12,11 @@ class LiveVideoPanel extends React.Component {
             count: w.length,
             mywatch: undefined
         };
+
+        let src = this.props.video.get("src1");
+        let id = this.props.video.get("id1");
+        this.video_url = videoURLFromData(src, id);
+
     }
 
     componentDidMount() {
@@ -36,7 +41,7 @@ class LiveVideoPanel extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.log("[LiveVideoPanel]: Something changed " + this.props.watchers.length + " " + prevProps.watchers.length);
+        console.log("[LiveVideoPanel]: Something changed " + this.props.watchers.length + " " + prevProps.watchers.length + " in " + this.props.video.get("title"));
         if (prevProps.watchers.length !== this.props.watchers.length) {
             var w = this.props.watchers.filter(w =>  w.get("video") == this.props.video.id );
             if (!this.state || w.length !== this.state.count) {
@@ -47,21 +52,9 @@ class LiveVideoPanel extends React.Component {
     }
 
     render() {
-        let src = this.props.video.get("src1");
-        let id = this.props.video.get("id1");
-        let video_url = videoURLFromData(src, id);
-        let videopanel = "";
 
-        if (this.props.geoloc && this.props.geoloc.country_code.toLowerCase() == 'cn')
-        {
-            console.log("Viewer from China! Nǐ hǎo");
-            src = this.props.video.get("src2");
-            id = this.props.video.get("id2");
-            video_url = videoURLFromData(src, id);
-            videopanel = <ReactPlayer playing controls muted url={video_url}/>
-        } else {
-            videopanel = <iframe title={this.props.title} src={video_url} style={{"minWidth":"720px", "height":"450px"}} allowFullScreen/>
-        }
+        let videopanel = <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
+                                      url={this.video_url}/>
 
 
         const q_url = this.props.video.get("slido");
