@@ -56,7 +56,6 @@ class LiveVideoPanel extends React.Component {
         let videopanel = <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
                                       url={this.video_url}/>
 
-
         const q_url = this.props.video.get("slido");
 
         let count = ""

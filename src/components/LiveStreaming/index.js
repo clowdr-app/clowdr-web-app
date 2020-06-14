@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Modal, Space, Spin} from 'antd';
+import {Button, Space, Spin} from 'antd';
 import GeoLocationLiveVideoThumbnail from "./VideoThumbnail";
 import LiveVideoPanel from "./LiveVideoPanel";
 import Parse from "parse";
@@ -101,7 +101,7 @@ class LiveStreaming extends Component {
                 return <div className={"space-align-container"}>
                     {this.state.videos.map((video) => {
                         // let w = this.state.watchers.filter(w => w.video === video.id)
-                        return <div className={"space-align-block"} key={video.get("key")}>
+                        return <div className={"space-align-block"} key={video.id}>
                             <Space align={"center"}>
                                 <GeoLocationLiveVideoThumbnail auth={this.props.auth} video={video} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
                             </Space></div>
@@ -109,11 +109,10 @@ class LiveStreaming extends Component {
                 </div>
             }
             else {
-                return <Modal centered visible={true} cancelText={"Close"} width={"100%"} height={"100%"}
-                                onCancel={this.toggleExpanded.bind(this)}
-                                okButtonProps={{style: {display: 'none'}}}>
-                            <LiveVideoPanel video={this.state.expanded_video} watchers={this.state.watchers} auth={this.props.auth} geoloc={this.props.geoloc}/>
-                    </Modal>
+                return <div>
+                    <Button type="link" href="#" onClick={this.toggleExpanded.bind(this)}>Go Back</Button>
+                    <LiveVideoPanel video={this.state.expanded_video} watchers={this.state.watchers} auth={this.props.auth} geoloc={this.props.geoloc}/>
+                    </div>
             }
         
             
