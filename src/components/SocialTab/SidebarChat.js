@@ -4,13 +4,15 @@ import Meta from "antd/lib/card/Meta";
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
+import InfiniteScroll from 'react-infinite-scroller';
 
-import {Card, Divider, Form, Input, Layout, List, Tooltip} from 'antd';
+import {Card, Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
+import {CloseOutlined} from "@material-ui/icons";
 
 const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
@@ -38,14 +40,25 @@ class SidebarChat extends React.Component {
         super(props);
 
         this.messages = {};
+        this.currentPage = {};
         let siderWidth = Number(localStorage.getItem("chatWidth"));
         if(siderWidth == 0)
             siderWidth = 250;
         else if(siderWidth == -1)
             siderWidth = 0;
-        this.state = {...INITIAL_STATE, chatChannel: "#general", siderWidth: siderWidth}
+        this.state = {...INITIAL_STATE, chatChannel: "#general", siderWidth: siderWidth, hasMoreMessages: false, loadingMessages: true,
+        numMessagesDisplayed: 0}
+        this.form = React.createRef();
+
 
     }
+
+    setDrawerWidth(width){
+        this.setState({siderWidth: width})
+        this.props.setWidth(width);
+        localStorage.setItem("chatWidth", (width == 0 ? -1 : width));
+    }
+
 
     formatTime(timestamp) {
         return <Tooltip title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
@@ -56,6 +69,7 @@ class SidebarChat extends React.Component {
             this.user = this.props.auth.user;
             this.changeChannel("#general");
         }
+        this.props.setWidth(this.state.siderWidth)
     }
 
     async changeChannel(uniqueNameOrSID) {
@@ -71,7 +85,10 @@ class SidebarChat extends React.Component {
             }
             this.setState({
                 chatLoading: true,
-                messages: []
+                messages: [],
+                numMessagesDisplayed: 0,
+                hasMoreMessages: false,
+                loadingMessages: true
             }, async () => {
                 if(this.currentUniqueName != uniqueNameOrSID){
                     return;//raced with another update
@@ -88,7 +105,7 @@ class SidebarChat extends React.Component {
                         await this.activeChannel.leave();
                 }
                 this.activeChannel = await this.props.auth.chatClient.joinAndGetChannel(uniqueNameOrSID);
-                this.activeChannel.getMessages().then((messages)=> {
+                this.activeChannel.getMessages(300).then((messages)=> {
                     if(this.currentUniqueName != uniqueNameOrSID)
                         return;
                     this.messagesLoaded(this.activeChannel, messages)
@@ -131,8 +148,12 @@ class SidebarChat extends React.Component {
         if (!messages)
             return undefined;
         let _this = this;
+        let lastSID;
 
         for (let message of messages) {
+            if(lastSID && lastSID==message.sid)
+                continue;
+            lastSID = message.sid;
             if (!lastMessage || message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5) {
                 if (lastMessage)
                     ret.push(lastMessage);
@@ -162,9 +183,12 @@ class SidebarChat extends React.Component {
     }
 
     messagesLoaded = (channel, messagePage) => {
+        this.count = 0;
+        if(messagePage.items && messagePage.items.length > 0)
+            this.currentPage[channel.sid] = messagePage;
         this.messages[channel.uniqueName] = messagePage.items
         this.groupMessages(this.messages[channel.uniqueName]);
-
+        this.setState({hasMoreMessages: messagePage.hasPrevPage, loadingMessages: false})
     };
     messageAdded = (channel, message) => {
         this.messages[channel.uniqueName].push(message);
@@ -182,17 +206,43 @@ class SidebarChat extends React.Component {
     };
 
     onMessageChanged = event => {
+        if(event.target.value != '\n')
         this.setState({newMessage: event.target.value});
     };
 
     sendMessage = event => {
-        const message = this.state.newMessage;
-        this.setState({newMessage: ''});
-        this.activeChannel.sendMessage(message);
+        if(!event.getModifierState("Shift")){
+            let message = this.state.newMessage;
+            this.setState({newMessage: ''});
+            if(message)
+                message = message.replace(/\n/g, "  \n");
+            this.activeChannel.sendMessage(message);
+            if (this.form && this.form.current)
+                this.form.current.resetFields();
+        }
     };
 
     deleteMessage(message) {
-        message.remove();
+        if (message.author == this.props.auth.userProfile.id)
+            message.remove();
+        else {
+            let idToken = this.props.auth.user.getSessionToken();
+
+            const data = fetch(
+                `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/chat/deleteMessage`
+                , {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        conference: this.props.auth.currentConference.get("slackWorkspace"),
+                        identity: idToken,
+                        room: message.channel.sid,
+                        message: message.sid,
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+        }
     }
 
     areEqualID(o1, o2) {
@@ -216,6 +266,38 @@ class SidebarChat extends React.Component {
         }
     }
 
+    loadMoreMessages(){
+        console.log("LMM " + this.loadingMessages)
+        if(this.activeChannel && !this.loadingMessages){
+            this.loadingMessages =true;
+            let intendedChanelSID = this.activeChannel.sid;
+            this.setState({loadingMessages: true});
+            console.log("Old oldest message:" + this.currentPage[this.activeChannel.sid] )
+            this.currentPage[this.activeChannel.sid].prevPage().then(messagePage=>{
+                if(this.activeChannel.sid != intendedChanelSID){
+                    this.loadingMessages =false;
+                    return;
+                }
+                this.setState({hasMoreMessages: messagePage.hasPrevPage
+                    //messagePage.hasPrevPage
+                    , loadingMessages: false})
+                this.count++;
+                console.log(messagePage.items[0].index);
+                console.log(messagePage)
+                this.currentPage[this.activeChannel.sid] = messagePage;
+                this.messages[this.activeChannel.uniqueName] = messagePage.items.concat(this.messages[this.activeChannel.uniqueName]);
+                this.groupMessages(this.messages[this.activeChannel.uniqueName]);
+                this.loadingMessages =false;
+                console.log("Set loadingMessages =false")
+
+                // if(messagePage.items && messagePage.items.length > 0)
+                //     this.oldestMessages[channel.sid] = messagePage.items[0].index;
+                //
+                // this.messagesLoaded(this.activeChannel, messages)
+            });
+        }
+
+    }
     render() {
         let topHeight = 0;
         let topElement = document.getElementById("top-content");
@@ -223,18 +305,20 @@ class SidebarChat extends React.Component {
             topHeight = topElement.clientHeight;
 
         const handleMouseDown = e => {
+            console.log("Mouse down")
             document.addEventListener("mouseup", handleMouseUp, true);
             document.addEventListener("mousemove", handleMouseMove, true);
         };
 
         const handleMouseUp = () => {
+            console.log("Mouse up")
             document.removeEventListener("mouseup", handleMouseUp, true);
             document.removeEventListener("mousemove", handleMouseMove, true);
         };
 
         const handleMouseMove = (e) => {
-            const newWidth = e.clientX - document.body.offsetLeft;
-            if (newWidth >= 0 && newWidth <= 500)
+            const newWidth = document.body.offsetWidth - e.clientX;
+            if (newWidth >= 0 && newWidth <= document.body.offsetWidth - 20)
             {
                 this.setDrawerWidth(newWidth);
                 localStorage.setItem("chatWidth", (newWidth == 0 ? -1 : newWidth));
@@ -244,7 +328,7 @@ class SidebarChat extends React.Component {
         if(!this.props.auth.user){
             return <div></div>
         }
-        let containerStyle = {height:'100%'};
+        let containerStyle = {width: this.state.siderWidth, top: topHeight};
         if(this.state.siderWidth <5){
             containerStyle.width="10px";
         }
@@ -254,22 +338,31 @@ class SidebarChat extends React.Component {
                           width={this.state.siderWidth}
                           collapsedWidth={0}
                           theme="light"
-                          style={{backgroundColor: '#f8f8f8', height: "100%"}}>
+                          style={{backgroundColor: '#f8f8f8', position: "absolute", top:"0", bottom:"0",right:"0", width: this.state.siderWidth}}>
                 <div>
                     <Layout>
-                        <Content style={{backgroundColor: "#f8f8f8", overflowY:"auto", overflowWrap:"break-word"}}>
-                            <Divider>Chat: {this.state.activeChannelName}</Divider>
+                        <Header style={{backgroundColor: "#f8f8f8", paddingRight:0, paddingBottom:"5px", paddingLeft:"10px", fontWeight: "bold"}}>
+                            <div className="chatChannelID">Chat: {this.state.activeChannelName}</div>
+                        </Header>
+                        <Content style={{backgroundColor: "#f8f8f8", overflowY:"auto", overflowWrap:"break-word", position: "fixed", top: topHeight+40, bottom: "50px",
+                            paddingLeft: "10px",
+                            display: 'flex',
+                            flexDirection: 'column-reverse'}}>
                             {/*<div style={{ height:"calc(100vh - "+(topHeight + 20)+"px)", overflow: "auto"}}>*/}
                                 {/*<Affix>*/}
                                 {/*    <Picker onSelect={this.reactTo}/>*/}
                                 {/*</Affix>*/}
+                                {/*<InfiniteScroll*/}
+                                {/*    getScrollParent={() => this.scrollParentRef}*/}
+
+                                {/*    loadMore={this.loadMoreMessages.bind(this)} hasMore={!this.state.loadingMessages && this.state.hasMoreMessages}*/}
+                                {/*style={{overflow:"auto", display:"flex"}}>*/}
                                 <List loading={this.state.chatLoading}
                                       dataSource={this.state.groupedMessages} size="small"
-
                                       renderItem={
                                           item => {
-                                              let itemUID = item.author.substring(0, item.author.indexOf(":"));
-                                              let isMyMessage = itemUID == this.props.auth.user.id;
+                                              let itemUID = item.author;
+                                              let isMyMessage = itemUID == this.props.auth.userProfile.id;
                                               // let options = "";
                                               // if (isMyMessage)
                                               //     options = <Popconfirm
@@ -310,24 +403,29 @@ class SidebarChat extends React.Component {
                                           }
                                       }
                                       style={{
+                                          width: this.state.siderWidth,
+                                          // height: 'calc(100vh - '+(topHeight+90)+"px)",
+                                          overflow: 'auto',
                                           display: 'flex',
                                           flexDirection: 'column-reverse',
-                                          height: 'calc(100vh - '+(topHeight+90)+"px)",
-                                          overflow: 'auto',
                                           border: '1px solid #FAFAFA'
                                       }}
                                 >
                                 </List>
+                                {/*</InfiniteScroll>*/}
                         </Content>
-                        <Footer style={{padding: "0px 0px 0px 0px", backgroundColor: "#f8f8f8", height: "40px"}}>
+                        <Footer style={{padding: "0px 0px 0px 0px", backgroundColor: "#f8f8f8", position: "fixed", bottom: "0px", width: this.state.siderWidth, paddingLeft: "10px"}}>
                             <div></div>
-                            <Form onFinish={this.sendMessage}>
+                            <Form ref={this.form}>
                                 <Form.Item>
-                                    <Input name={"message"} id={"message"} type="text"
-                                           placeholder={"Chat in this room"}
-                                           autoComplete="off"
-                                           onChange={this.onMessageChanged}
-                                           value={this.state.newMessage}/>
+                                    <Input.TextArea
+                                        name={"message"}
+                                        id={"message"}
+                                        placeholder={"Send a message"}
+                                        autoSize={{ minRows: 1, maxRows: 6 }}
+                                        onChange={this.onMessageChanged}
+                                        onPressEnter={this.sendMessage}
+                                        value={this.state.newMessage}/>
                                 </Form.Item>
                             </Form>
                         </Footer>
@@ -337,6 +435,7 @@ class SidebarChat extends React.Component {
                 <div className="dragIconMiddleRight"
                      onClick={()=>{
                          localStorage.setItem("chatWidth", this.state.siderWidth == 0 ? 250 : -1);
+                         this.props.setWidth((this.state.siderWidth == 0 ? 250 : 10));
                          this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
                      }}
                 >
@@ -353,26 +452,27 @@ class SidebarChat extends React.Component {
     }
 
     wrapWithOptions(m, isMyMessage, data) {
-        // let options = [];
-        // let _this = this;
+        let options = [];
+        let _this = this;
         // options.push(<a href="#" key="react" onClick={()=>{
         //     _this.setState({
         //         reactingTo: m
         //     })
         // }}><SmileOutlined/> </a>);
         //
-        // if(isMyMessage)
-        //     options.push( <Popconfirm
-        //         key="delete"
-        //         title="Are you sure that you want to delete this message?"
-        //         onConfirm={this.deleteMessage.bind(this, m)}
-        //         okText="Yes"
-        //         cancelText="No"
-        //     ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
-        // return <Popover  key={m.sid} placement="topRight" content={<div style={{backgroundColor:"white"}}>
-        //     {options}
-        // </div>}><div ref={(el) => { this.messagesEnd = el; }} className="chatMessage"><ReactMarkdown source={m.body} renderers={{ text: emojiSupport }} /></div>
-        // </Popover>
+        if(isMyMessage || this.props.auth.permissions.includes("moderator"))
+            options.push( <Popconfirm
+                key="delete"
+                title="Are you sure that you want to delete this message?"
+                onConfirm={this.deleteMessage.bind(this, m)}
+                okText="Yes"
+                cancelText="No"
+            ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
+        if(options.length > 0)
+         return <Popover  key={m.sid} placement="topRight" content={<div style={{backgroundColor:"white"}}>
+            {options}
+        </div>}><div ref={(el) => { this.messagesEnd = el; }} className="chatMessage"><ReactMarkdown source={m.body} renderers={{ text: emojiSupport, link:linkRenderer}} /></div>
+        </Popover>
         return <div key={m.sid} className="chatMessage"><ReactMarkdown source={m.body}
                                                                        renderers={{text: emojiSupport, link:linkRenderer}}/></div>
 

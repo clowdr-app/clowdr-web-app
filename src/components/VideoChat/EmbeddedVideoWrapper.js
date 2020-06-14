@@ -11,7 +11,7 @@ import {styled} from "@material-ui/core";
 import React, {useContext} from "react";
 import Grid from '@material-ui/core/Grid';
 import {Skeleton} from "antd"
-import {PushpinOutlined, PushpinFilled } from "@ant-design/icons"
+import {PushpinFilled, PushpinOutlined} from "@ant-design/icons"
 
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
 import useParticipants from "clowdr-video-frontend/lib/hooks/useParticipants/useParticipants";
@@ -22,8 +22,6 @@ import ParticipantConnectionIndicator
 import NetworkQualityLevel from "clowdr-video-frontend/lib/components/NewtorkQualityLevel/NetworkQualityLevel";
 import AudioLevelIndicator from "clowdr-video-frontend/lib/components/AudioLevelIndicator/AudioLevelIndicator";
 import {ScreenShare, VideocamOff} from "@material-ui/icons";
-import PinIcon from "clowdr-video-frontend/lib/components/ParticipantInfo/PinIcon/PinIcon";
-import BandwidthWarning from "clowdr-video-frontend/lib/components/BandwidthWarning/BandwidthWarning";
 import usePublications from "clowdr-video-frontend/lib/hooks/usePublications/usePublications";
 import useParticipantNetworkQualityLevel
     from "clowdr-video-frontend/lib/hooks/useParticipantNetworkQualityLevel/useParticipantNetworkQualityLevel";
@@ -38,6 +36,8 @@ import ToggleScreenShareButton
     from "clowdr-video-frontend/lib/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
 import EndCallButton from "clowdr-video-frontend/lib/components/Controls/EndCallButton/EndCallButton";
 import AuthUserContext from "../Session/context";
+import useLocalTracks from "clowdr-video-frontend/lib/components/VideoProvider/useLocalTracks/useLocalTracks";
+
 let backgroundImg = require('../../clowdr-background.jpg');
 const Main = styled('main')({
     // overflow: 'hidden',
@@ -110,16 +110,13 @@ function ParticipantStrip() {
     // let nImages = participants.length;
     let nImages = tmp.length; //don't forget +1 for you!
     // console.log(nImages)
-    let defaultPriority = "standard";
+    let defaultPriority = "low";
     let breakpointColumnsObj = {
         default: 4,
         1100: 3,
         700: 2,
         500: 1
     };
-    if(nImages > 6){
-        defaultPriority="low";
-    }
     if(nImages ==1){
         breakpointColumnsObj={
             default: 1
@@ -130,12 +127,26 @@ function ParticipantStrip() {
             default: 2,
             1200: 1
         };
-    } else if (nImages <= 8) {
+    } else if (nImages <= 9) {
         breakpointColumnsObj = {
-            default: 2,
-            1100: 2,
-            500: 1
+            default: 3,
+            1100: 3,
+            500: 3
         };
+    }
+    else if(nImages <= 16){
+        breakpointColumnsObj ={
+            default: 4,
+            1100: 4,
+            500 : 4
+        }
+    }
+    else{
+        breakpointColumnsObj ={
+            default: 10,
+            1100: 6,
+            500 : 4
+        }
     }
     if (selectedParticipant) {
         breakpointColumnsObj = {
@@ -156,10 +167,14 @@ function ParticipantStrip() {
             };
         } else if (nImages <= 8) {
             breakpointColumnsObj = {
-                default: 4,
-                1100: 2,
-                500: 2
+                default: 5,
+                1100: 3,
+                500: 3
             };
+        } else{
+            breakpointColumnsObj ={
+                default: 8
+            }
         }
     }
     if(selectedParticipant && !tmp.find(p=>p.sid == selectedParticipant.sid)){
@@ -263,7 +278,7 @@ const useStyles = makeStyles((theme) =>
             background: 'transparent',
         },
         hideVideo: {
-            background: 'black',
+            // background: 'black',
         },
         identity: {
             fontSize: '12px',
@@ -304,7 +319,8 @@ class UserProfileDisplay extends React.Component{
     }
     async componentDidMount() {
         let profile = await this.props.authContext.helpers.getUserRecord(this.props.id);
-        this.setState({name: profile.get("displayName"), loading: false});
+        if(profile)
+            this.setState({name: profile.get("displayName"), loading: false});
 
     }
     render(){
@@ -358,7 +374,7 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
                     {isSelected ? <PushpinFilled /> : <PushpinOutlined/>}
                 </div>
             </div>
-            {isVideoSwitchedOff && <BandwidthWarning />}
+            {/*{isVideoSwitchedOff && <BandwidthWarning />}*/}
             {children}
         </div>
     );
@@ -381,6 +397,7 @@ function ParticipantTracks({
         filteredPublications = publications.filter(p => !p.trackName.includes('screen'));
     }
 
+    console.log("Render participant: " + participant.sid + " at " + videoPriority);
     return (
         <>
             {filteredPublications.map(publication => (

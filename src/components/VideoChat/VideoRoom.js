@@ -16,6 +16,7 @@ import {
     Spin, Switch,
     Tag,
     Tooltip,
+    Popconfirm,
     Typography
 } from "antd";
 import './VideoChat.css';
@@ -45,6 +46,7 @@ import {SyncOutlined} from '@ant-design/icons'
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import AboutModal from "../SignIn/AboutModal";
 import UserDescriptor from "./UserDescriptor";
+import {NavLink} from "react-router-dom";
 
 const {Paragraph} = Typography;
 
@@ -72,8 +74,33 @@ class VideoRoom extends Component {
             return;
         }
 
-        this.props.authContext.refreshUser(null, this.props.match.params.conf).then((u)=>{
-            this.joinCallFromPropsWithCurrentUser()
+        if(!this.props.authContext.user || this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName")){
+            this.props.authContext.refreshUser(null, this.props.match.params.conf).then((u)=>{
+                this.joinCallFromPropsWithCurrentUser()
+            })
+        }
+        else{
+            this.joinCallFromPropsWithCurrentUser();
+        }
+    }
+    async deleteRoom(){
+        let idToken = this.props.authContext.user.getSessionToken();
+        this.setState({roomDeleteInProgress: true})
+
+        const data = fetch(
+            `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/deleteRoom`
+            , {
+                method: 'POST',
+                body: JSON.stringify({
+                    conference: this.props.authContext.currentConference.get("slackWorkspace"),
+                    identity: idToken,
+                    room: this.state.room.id,
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(()=>{
+                this.setState({roomDeleteInProgress: false});
         })
     }
     async joinCallFromPropsWithCurrentUser() {
@@ -88,6 +115,7 @@ class VideoRoom extends Component {
             return;
         if(this.loadingVideo)
             return;
+        console.log(this.loadingVideo)
         this.loadingVideo = true;
         this.confName = confName;
         this.roomID = roomID;
@@ -107,6 +135,7 @@ class VideoRoom extends Component {
         let room = await roomQuery.first();
         if (!room) {
             this.setState({error: "invalidRoom"})
+            this.loadingVideo = false;
             return;
         }
 
@@ -118,12 +147,13 @@ class VideoRoom extends Component {
             localStorage.setItem("videoReloads", 0);
             localStorage.setItem("videoLoadTimeout", 0);
             this.setState({error: <span>Sorry, but we were unable to connect you to the video room, likely due to a bug in this frontend. If this issue persists, please contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
+            this.loadingVideo = false;
             return;
         }
         if(!timeout){
             timeout = 0;
         }
-        timeout = timeout + 6000;
+        timeout = timeout + 10000;
         if(timeout > 20000){
             timeout = 20000;
         }
@@ -142,7 +172,7 @@ class VideoRoom extends Component {
         setTimeout(function(){
             if(_this.loadingVideo){
                 window.localStorage.setItem("videoReloads", ""+(numReloads+1));
-                window.location.reload(false);
+                // window.location.reload(false);
             }
         }, timeout);
         room = await this.props.authContext.helpers.populateMembers(room);
@@ -197,6 +227,7 @@ class VideoRoom extends Component {
                 }
             }).catch((err) => {
                 console.log("Error")
+                this.loadingVideo = false;
                 this.setState({error: "authentication"});
             });
         } else {
@@ -221,12 +252,12 @@ class VideoRoom extends Component {
         if (this.props.authContext.user != prevProps.authContext.user || conf != this.state.conf || roomID !=this.state.meetingName){
             let confName = this.props.match.params.conf;
             let roomID = this.props.match.params.roomName;
-            if((confName != this.confName || roomID != this.roomID) &&!this.state.error)
+            if((confName != this.confName || roomID != this.roomID) &&(!this.state.error || this.roomID != roomID))
             {
                 console.log("Clearing state...")
                 this.confName = null;
                 this.roomID = null;
-                this.setState({conf: conf, meetingName: roomID, token: null});
+                this.setState({conf: conf, meetingName: roomID, token: null, error: null});
                     await this.joinCallFromProps();
             }
 
@@ -420,11 +451,12 @@ class VideoRoom extends Component {
             // Twilio Console: https://www.twilio.com/console/video/configure
             bandwidthProfile: {
                 video: {
-                    mode: 'collaboration',
+                    mode: 'grid',
+                    maxTracks: 8,
                     // dominantSpeakerPriority: 'standard',
                     renderDimensions: {
-                        high: { height: 1080, width: 1920 },
-                        standard: { height: 720, width: 1280 },
+                        high: { height: 720, width: 1080 },
+                        standard: { height: 480, width: 640 },
                         low: {height:176, width:144}
                     },
                 },
@@ -439,13 +471,13 @@ class VideoRoom extends Component {
             // to adapt your encoded video quality for each RemoteParticipant based on
             // their individual bandwidth constraints. This has no effect if you are
             // using Peer-to-Peer Rooms.
-            preferredVideoCodecs: [{codec: 'VP8', simulcast: true}],
+            preferredVideoCodecs: [{codec: 'VP8', simulcast: false}],
         };
         if (isP2P) {
             connectionOptions = {
                 audio: true,
                 maxAudioBitrate: 16000, //For music remove this line
-                video: {height: 720, frameRate: 24, width: 1280}
+                video: {height: 480, frameRate: 24, width: 640}
             }
         }
 
@@ -495,20 +527,20 @@ class VideoRoom extends Component {
                                         {fullLabel}{visibilityDescription}
                                         {privacyDescription}</h3>
 
-                                    <div style={{width: "100%", display:"flex"}}>
-                                        <Collapse style={{flexGrow: 1}}>
-                                            <Collapse.Panel key="watchers" header={"Users following this room: "+nWatchers}>
-                                                <List size="small" renderItem={item => <List.Item><UserDescriptor id={item.id} /></List.Item>}
-                                                dataSource={this.state.room.get("watchers")}
-                                                />
+                                    {/*<div style={{width: "100%", display:"flex"}}>*/}
+                                    {/*    <Collapse style={{flexGrow: 1}}>*/}
+                                    {/*        <Collapse.Panel key="watchers" header={"Users following this room: "+nWatchers}>*/}
+                                    {/*            <List size="small" renderItem={item => <List.Item><UserDescriptor id={item.id} /></List.Item>}*/}
+                                    {/*            dataSource={this.state.room.get("watchers")}*/}
+                                    {/*            />*/}
 
-                                            </Collapse.Panel>
-                                        </Collapse>
-                                        <Tooltip title="Follow this room to get notifications in-app when people come and go">
-                                            <Switch checkedChildren="Following" unCheckedChildren="Not Following" onChange={this.toggleWatch.bind(this)}
-                                                    loading={this.state.watchLoading}
-                                                    style={{marginTop: "5px", marginLeft:"5px"}} checked={this.state.watchedByMe}/></Tooltip>
-                                    </div>
+                                    {/*        </Collapse.Panel>*/}
+                                    {/*    </Collapse>*/}
+                                    {/*    <Tooltip title="Follow this room to get notifications in-app when people come and go">*/}
+                                    {/*        <Switch checkedChildren="Following" unCheckedChildren="Not Following" onChange={this.toggleWatch.bind(this)}*/}
+                                    {/*                loading={this.state.watchLoading}*/}
+                                    {/*                style={{marginTop: "5px", marginLeft:"5px"}} checked={this.state.watchedByMe}/></Tooltip>*/}
+                                    {/*</div>*/}
                                 </div>
                                 <div style={{}}>
                                     <FlipCameraButton/><DeviceSelector/><ToggleFullscreenButton /> <ReportToModsButton room={this.state.room} />
@@ -516,6 +548,14 @@ class VideoRoom extends Component {
                             </div>
 
                                 {ACLdescription}
+
+                            {(this.props.authContext.user && this.props.authContext.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
+                            onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
+
+                            <div>
+                                {(this.state.room.get("mode") == "group" ? "This is a big group room. It supports up to 50 participants, but will only show the video of the 8 most active participants. Click a participant to pin them to always show their video." :
+                                    this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
+                            </div>
                         <div className={"videoEmbed"}>
                             <EmbeddedVideoWrapper />
                         </div></VideoProvider>

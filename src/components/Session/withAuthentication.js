@@ -326,7 +326,7 @@ const withAuthentication = Component => {
                         validConferences=validInstances.map(i=>i.get("instance"));
 
                         let conf = _this.currentConference;
-                        let currentProfileID = localStorage.getItem("activeProfileID");
+                        let currentProfileID = sessionStorage.getItem("activeProfileID");
                         let activeProfile = null;
                         if(currentProfileID){
                             let profileQ = new Parse.Query(UserProfile);
@@ -359,7 +359,7 @@ const withAuthentication = Component => {
                             profileQ.equalTo("conference",conf);
                             profileQ.equalTo("user",userWithRelations);
                             activeProfile = await profileQ.first();
-                            localStorage.setItem("activeProfileID",activeProfile.id);
+                            sessionStorage.setItem("activeProfileID",activeProfile.id);
                             window.location.reload(false);
                         }
                         const privsQuery = new Parse.Query("InstancePermission");
@@ -399,9 +399,9 @@ const withAuthentication = Component => {
                         return null;
                     }
                 } else {
-                    let currentProfileID = localStorage.getItem("activeProfileID");
+                    let currentProfileID = sessionStorage.getItem("activeProfileID");
                     if(currentProfileID){
-                        localStorage.removeItem("activeProfileID");
+                        sessionStorage.removeItem("activeProfileID");
                         window.location.reload();
                     }
                     if (_this.isLoggedIn) {
@@ -472,15 +472,22 @@ const withAuthentication = Component => {
 
             let queryForPrivateActivity = new Parse.Query("LiveActivity");
             queryForPrivateActivity.equalTo("conference", this.state.currentConference);
-            queryForPrivateActivity.equalTo("topic", "privateBreakoutRooms");
+            // queryForPrivateActivity.equalTo("topic", "privateBreakoutRooms");
             queryForPrivateActivity.equalTo("user", this.state.user);
             this.setState({videoRoomsLoaded: true});
             await this.subscribeToNewPrivateRooms();
             this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.state.user.getSessionToken());
-            this.parseLiveActivitySub.on('create', this.subscribeToNewPrivateRooms.bind(this));
-            this.parseLiveActivitySub.on("update", this.subscribeToNewPrivateRooms.bind(this));
+            this.parseLiveActivitySub.on('create', this.handleNewParseLiveActivity.bind(this));
+            this.parseLiveActivitySub.on("update", this.handleNewParseLiveActivity.bind(this));
         }
 
+        handleNewParseLiveActivity(activity){
+            if(activity.get("topic") == "privateBreakoutRooms"){
+                this.subscribeToNewPrivateRooms(activity);
+            }else if(activity.get("topic") == "profile"){
+                window.location.reload(true);
+            }
+        }
         notifyUserOfChanges(updatedRoom){
             if(!this.state.userProfile)
                 return;
