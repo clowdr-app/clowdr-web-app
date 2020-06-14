@@ -9,6 +9,8 @@ import {Button, Layout, Select, Spin, Tooltip, Typography} from 'antd';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
+import Moderation from "./components/Moderation";
+
 import Program from "./components/Program";
 import VideoRoom from "./components/VideoChat/VideoRoom"
 import SlackToVideo from "./components/Slack/slackToVideo"
@@ -87,6 +89,7 @@ class App extends Component {
                 </Select>
             }
             let clowdrActionButtons = <span>
+                {(this.props.authContext.user && this.props.authContext.permissions.includes("moderator") ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
                 <Tooltip title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
                 <Tooltip title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
                 <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
@@ -152,6 +155,7 @@ class App extends Component {
                 <Route exact path="/signin" component={SignIn}/>
                 <Route exact path="/about" component={About}/>
                 <Route exact path="/help" component={Help} />
+                <Route exact path="/moderation" component={Moderation} />
 
                 <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
 
@@ -165,6 +169,7 @@ class App extends Component {
             <Route exact path="/program" component={Program}/>
             <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
             <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
+            <Route exact path="/moderation" component={Moderation} />
 
             <Route exact path="/about" component={About}/>
             <Route exact path="/help" component={Help} />
@@ -194,6 +199,10 @@ class App extends Component {
         this.setState({chatCollapsed: !this.state.chatCollapsed});
     }
 
+    setChatWidth(w){
+        this.setState({chatWidth: w});
+
+    }
     render() {
         if (this.state.isMagicLogin) {
             return <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
@@ -238,13 +247,14 @@ class App extends Component {
                                 {/*<div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>*/}
 
                                 <SocialTab collapsed={this.state.socialCollapsed}/>
-                                <Content style={{margin: '24px 16px 0', overflow: 'initial'
+                                <Content style={{margin: '24px 16px 0', overflow: 'initial',
+                                    paddingRight: this.state.chatWidth
                                 }}>
                                     <div className="site-layout-background" style={{padding: 24}}>
                                         {this.routes()}
                                     </div>
                                 </Content>
-                                <SidebarChat collapsed={this.state.chatCollapsed} />
+                                <SidebarChat collapsed={this.state.chatCollapsed} setWidth={this.setChatWidth.bind(this)}/>
                             </Layout>
                         </div>
                     </Layout>

@@ -1,7 +1,7 @@
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 import React from "react";
-import {Button, Modal, Result, Typography} from "antd";
+import {About, Alert, Button, Modal, Result, Typography} from "antd";
 import { SmileOutlined } from '@ant-design/icons';
 
 class WelcomePortal extends React.Component{
@@ -20,7 +20,7 @@ class WelcomePortal extends React.Component{
                    CLOWDR lets you create public rooms (visible to any conference attendee) or private rooms
                    (visible only to attendees that you allow).
                    CLOWDR lets you see which rooms your colleagues are in
-                   (assuming that they are in public rooms, or private rooms to which you have access).
+                   (assuming that they are in public rooms, or private rooms to which you have access). <br /><br />
                    This came together in just a couple of weeks, so if you find bugs, please be gentle and remember
                    that <a href="https://github.com/clowdr-app" target="_blank">this is an open source platform built by volunteers</a>.
                </Typography.Paragraph>
@@ -32,6 +32,10 @@ class WelcomePortal extends React.Component{
     }
 
     render() {
+
+        let codeOfConductWarning = <span>This is a social platform to engage with your colleagues, and while we have a very light hand for moderating
+            content, violators of the <a href="https://www.acm.org/special-interest-groups/volunteer-resources/officers-manual/policy-against-discrimination-and-harassment" target="_blank">
+                ACM Policy Against Discrimination and Harassment</a> risk being permanently banned from this platform.</span>
         return <Modal zIndex="300"
                       // title="Welcome to CLOWDR"
                       onCancel={()=>{this.setState({visible: false})}}
@@ -47,9 +51,14 @@ class WelcomePortal extends React.Component{
             <Typography.Title>Welcome to CLOWDR!</Typography.Title>
             {this.state.welcomeText}
             <div>
-                This is a social platform to engage with your colleagues, and while we have a very light hand for moderating
-                content, violators of the <a href="https://www.acm.org/special-interest-groups/volunteer-resources/officers-manual/policy-against-discrimination-and-harassment" target="_blank">
-                ACM Policy Against Discrimination and Harassment</a> risk being permanently banned from this platform.
+                <Alert
+                    message="Code of Conduct"
+                    description={codeOfConductWarning}
+                    type="warning"
+                />
+            </div>
+            <div>
+
             </div>
         </Modal>
     }

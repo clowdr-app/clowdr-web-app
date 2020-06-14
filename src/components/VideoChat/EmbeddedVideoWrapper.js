@@ -278,7 +278,7 @@ const useStyles = makeStyles((theme) =>
             background: 'transparent',
         },
         hideVideo: {
-            background: 'black',
+            // background: 'black',
         },
         identity: {
             fontSize: '12px',
@@ -319,7 +319,8 @@ class UserProfileDisplay extends React.Component{
     }
     async componentDidMount() {
         let profile = await this.props.authContext.helpers.getUserRecord(this.props.id);
-        this.setState({name: profile.get("displayName"), loading: false});
+        if(profile)
+            this.setState({name: profile.get("displayName"), loading: false});
 
     }
     render(){

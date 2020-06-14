@@ -16,6 +16,7 @@ import {
     Spin, Switch,
     Tag,
     Tooltip,
+    Popconfirm,
     Typography
 } from "antd";
 import './VideoChat.css';
@@ -45,6 +46,7 @@ import {SyncOutlined} from '@ant-design/icons'
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import AboutModal from "../SignIn/AboutModal";
 import UserDescriptor from "./UserDescriptor";
+import {NavLink} from "react-router-dom";
 
 const {Paragraph} = Typography;
 
@@ -80,6 +82,26 @@ class VideoRoom extends Component {
         else{
             this.joinCallFromPropsWithCurrentUser();
         }
+    }
+    async deleteRoom(){
+        let idToken = this.props.authContext.user.getSessionToken();
+        this.setState({roomDeleteInProgress: true})
+
+        const data = fetch(
+            `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/deleteRoom`
+            , {
+                method: 'POST',
+                body: JSON.stringify({
+                    conference: this.props.authContext.currentConference.get("slackWorkspace"),
+                    identity: idToken,
+                    room: this.state.room.id,
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(()=>{
+                this.setState({roomDeleteInProgress: false});
+        })
     }
     async joinCallFromPropsWithCurrentUser() {
 
@@ -430,7 +452,7 @@ class VideoRoom extends Component {
             bandwidthProfile: {
                 video: {
                     mode: 'grid',
-                    maxTracks: 4,
+                    maxTracks: 8,
                     // dominantSpeakerPriority: 'standard',
                     renderDimensions: {
                         high: { height: 720, width: 1080 },
@@ -505,20 +527,20 @@ class VideoRoom extends Component {
                                         {fullLabel}{visibilityDescription}
                                         {privacyDescription}</h3>
 
-                                    <div style={{width: "100%", display:"flex"}}>
-                                        <Collapse style={{flexGrow: 1}}>
-                                            <Collapse.Panel key="watchers" header={"Users following this room: "+nWatchers}>
-                                                <List size="small" renderItem={item => <List.Item><UserDescriptor id={item.id} /></List.Item>}
-                                                dataSource={this.state.room.get("watchers")}
-                                                />
+                                    {/*<div style={{width: "100%", display:"flex"}}>*/}
+                                    {/*    <Collapse style={{flexGrow: 1}}>*/}
+                                    {/*        <Collapse.Panel key="watchers" header={"Users following this room: "+nWatchers}>*/}
+                                    {/*            <List size="small" renderItem={item => <List.Item><UserDescriptor id={item.id} /></List.Item>}*/}
+                                    {/*            dataSource={this.state.room.get("watchers")}*/}
+                                    {/*            />*/}
 
-                                            </Collapse.Panel>
-                                        </Collapse>
-                                        <Tooltip title="Follow this room to get notifications in-app when people come and go">
-                                            <Switch checkedChildren="Following" unCheckedChildren="Not Following" onChange={this.toggleWatch.bind(this)}
-                                                    loading={this.state.watchLoading}
-                                                    style={{marginTop: "5px", marginLeft:"5px"}} checked={this.state.watchedByMe}/></Tooltip>
-                                    </div>
+                                    {/*        </Collapse.Panel>*/}
+                                    {/*    </Collapse>*/}
+                                    {/*    <Tooltip title="Follow this room to get notifications in-app when people come and go">*/}
+                                    {/*        <Switch checkedChildren="Following" unCheckedChildren="Not Following" onChange={this.toggleWatch.bind(this)}*/}
+                                    {/*                loading={this.state.watchLoading}*/}
+                                    {/*                style={{marginTop: "5px", marginLeft:"5px"}} checked={this.state.watchedByMe}/></Tooltip>*/}
+                                    {/*</div>*/}
                                 </div>
                                 <div style={{}}>
                                     <FlipCameraButton/><DeviceSelector/><ToggleFullscreenButton /> <ReportToModsButton room={this.state.room} />
@@ -526,6 +548,14 @@ class VideoRoom extends Component {
                             </div>
 
                                 {ACLdescription}
+
+                            {(this.props.authContext.user && this.props.authContext.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
+                            onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
+
+                            <div>
+                                {(this.state.room.get("mode") == "group" ? "This is a big group room. It supports up to 50 participants, but will only show the video of the 8 most active participants. Click a participant to pin them to always show their video." :
+                                    this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
+                            </div>
                         <div className={"videoEmbed"}>
                             <EmbeddedVideoWrapper />
                         </div></VideoProvider>

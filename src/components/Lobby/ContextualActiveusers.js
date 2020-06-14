@@ -179,15 +179,15 @@ class ContextualActiveUsers extends Component {
                     let tag, joinInfo;
                     if(item.get("mode") == "group"){
                         tag = <Tag color="#FF9C6E" style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                        joinInfo = "Join this big group room. Big group rooms support up to 50 callers, but you can only see the video of up to 8 other callers at once."
+                        joinInfo = "Join this big group room, '"+item.get("title")+"'. Big group rooms support up to 50 callers, but you can only see the video of up to 8 other callers at once."
                     }
                     else if(item.get("mode") == "peer-to-peer"){
                         tag = <Tag color="#69C0FF" style={{width:"43px", textAlign: "center"}}>P2P</Tag>
-                        joinInfo ="Join this peer-to-peer room. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
+                        joinInfo ="Join this peer-to-peer room, '"+item.get("title")+"'. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
                     }
                     else if(item.get("mode") == "group-small"){
                         tag = <Tag color="#52C41A" style={{width:"43px", textAlign: "center"}}>Small</Tag>
-                        joinInfo = "Join this small group room. Small group rooms support only up to 4 callers, but provide the best quality experience."
+                        joinInfo = "Join this small group room, '"+item.get("title")+"'. Small group rooms support only up to 4 callers, but provide the best quality experience."
                     }
                     let formattedRoom =
                         <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{tag}{item.get("isPrivate") ? <LockTwoTone style={{verticalAlign: 'middle'}} /> : <></>}{item.get('title')}</div>

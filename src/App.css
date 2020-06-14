@@ -258,7 +258,9 @@ background-color:#97a7b7;
     cursor: ew-resize;
 }
 .chatTab{
-    position: relative;
+    position: fixed;
+    bottom: 0;
+    right: 4px;
     padding-left:10px;
 }
 .ant-form-inline .ant-form-item,.aclSelector{
@@ -266,4 +268,7 @@ background-color:#97a7b7;
     flex-wrap: initial;
 }
 .personFiltered{
+}
+.chatChannelID{
+
 }

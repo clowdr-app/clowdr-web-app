@@ -472,15 +472,22 @@ const withAuthentication = Component => {
 
             let queryForPrivateActivity = new Parse.Query("LiveActivity");
             queryForPrivateActivity.equalTo("conference", this.state.currentConference);
-            queryForPrivateActivity.equalTo("topic", "privateBreakoutRooms");
+            // queryForPrivateActivity.equalTo("topic", "privateBreakoutRooms");
             queryForPrivateActivity.equalTo("user", this.state.user);
             this.setState({videoRoomsLoaded: true});
             await this.subscribeToNewPrivateRooms();
             this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.state.user.getSessionToken());
-            this.parseLiveActivitySub.on('create', this.subscribeToNewPrivateRooms.bind(this));
-            this.parseLiveActivitySub.on("update", this.subscribeToNewPrivateRooms.bind(this));
+            this.parseLiveActivitySub.on('create', this.handleNewParseLiveActivity.bind(this));
+            this.parseLiveActivitySub.on("update", this.handleNewParseLiveActivity.bind(this));
         }
 
+        handleNewParseLiveActivity(activity){
+            if(activity.get("topic") == "privateBreakoutRooms"){
+                this.subscribeToNewPrivateRooms(activity);
+            }else if(activity.get("topic") == "profile"){
+                window.location.reload(true);
+            }
+        }
         notifyUserOfChanges(updatedRoom){
             if(!this.state.userProfile)
                 return;
