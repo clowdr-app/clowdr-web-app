@@ -13,7 +13,7 @@ const IconText = ({icon, text}) => (
     </Space>
 );
 
-const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook', 'iQIYI'];
+const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook', 'iQIYI', 'ZoomUS', 'ZoomCN'];
 
 class LiveVideos extends React.Component {
     constructor(props) {
@@ -37,8 +37,10 @@ class LiveVideos extends React.Component {
         video.set("title", values.title);
         video.set("src1", values.src1);
         video.set("id1", values.id1);
+        video.set("pwd1", values.pwd1);
         video.set("src2", values.src2);
         video.set("id2", values.id2);
+        video.set("pwd2", values.pwd2);
         video.set("slido", values.slido);
         video.save().then((val) => {
             _this.setState({visible: false})
@@ -67,9 +69,11 @@ class LiveVideos extends React.Component {
                 objectId: video.id,
                 title: video.get("title"),
                 src1: video.get("src1"),
+                pwd1: video.get("pwd1"),
                 id1: video.get("id1"),
                 src2: video.get("src2"),
                 id2: video.get("id2"),
+                pwd2: video.get("pwd2"),
                 slido: video.get("slido"),
             }
         });
@@ -84,8 +88,10 @@ class LiveVideos extends React.Component {
                 video.set("title", values.title);
                 video.set("src1", values.src1);
                 video.set("id1", values.id1);
+                video.set("pwd1", values.pwd1);
                 video.set("src2", values.src2);
                 video.set("id2", values.id2);
+                video.set("pwd2", values.pwd2);
                 video.set("slido", values.slido);
                 video.save().then((val) => {
                     _this.setState({visible: false, editing: false});
@@ -146,6 +152,12 @@ class LiveVideos extends React.Component {
                 key: 'videoid1',
             },
             {
+                title: 'Password',
+                dataIndex: 'pwd1',
+                render: (text,record) => <span>{record.get("pwd1")}</span>,
+                key: 'pwd1',
+            },
+            {
                 title: 'Alt Video Source',
                 dataIndex: 'src2',
                 render: (text,record) => <span>{record.get("src2")}</span>,
@@ -156,6 +168,12 @@ class LiveVideos extends React.Component {
                 dataIndex: 'id2',
                 render: (text,record) => <span>{record.get("id2")}</span>,
                 key: 'videoid2',
+            },
+            {
+                title: 'Password',
+                dataIndex: 'pwd2',
+                render: (text,record) => <span>{record.get("pwd2")}</span>,
+                key: 'pwd2',
             },
             {
                 title: 'Slido',
@@ -216,7 +234,7 @@ class LiveVideos extends React.Component {
                     this.setVisible(true);
                 }}
             >
-                New Video
+                New Live Session
             </Button>
             <CollectionEditForm
                 title="Add a live video link"
@@ -317,6 +335,9 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                         ]}>
                             <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
                         </Form.Item>
+                        <Form.Item name="pwd1">
+                            <Input style={{ width: '100%' }} type="textarea" placeholder="Encrypted Password (Optional)"/>
+                        </Form.Item>
                     </Input.Group>
                 </Form.Item>
                 <Form.Item name="stream2">
@@ -335,6 +356,9 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                         ]}>
                             <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
                         </Form.Item>
+                        <Form.Item name="pwd2">
+                            <Input style={{ width: '100%' }} type="textarea" placeholder="Encrypted Password (Optional)"/>
+                        </Form.Item>
                     </Input.Group>
                 </Form.Item>
                 <Form.Item name="slido">
@@ -345,7 +369,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                         <Form.Item name="startTime" label="Publish at">
                             <DatePicker showTime/>
                         </Form.Item>
-                        <Form.Item name="startTime" label="Remove from page at">
+                        <Form.Item name="stopTime" label="Remove from page at">
                             <DatePicker showTime/>
                         </Form.Item>
                         <Form.Item name="objectId">
