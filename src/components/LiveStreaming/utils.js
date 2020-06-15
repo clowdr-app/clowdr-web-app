@@ -2,10 +2,11 @@ const LiveVideoSourceMappings = {
     YouTube : {
         url : "https://www.youtube.com/embed/",
         vars : {
-            mute : 1,
-            autoplay : 1,
-            version: 3,
-            enablejsapi: 1
+            // mute : 1,
+            // autoplay : 1,
+            // version: 3,
+            // controls: true,
+            // enablejsapi: 1
         }
     },
     Twitch : {

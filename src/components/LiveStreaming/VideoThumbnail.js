@@ -21,6 +21,18 @@ class VideoThumbnail extends React.Component {
             expanded: false,
             count: w.length
         };
+
+        let src = this.props.video.get("src1");
+        let id = this.props.video.get("id1");
+        this.video_url = videoURLFromData(src, id);
+
+        // if (this.props.geoloc.country_code.toLowerCase() == 'cn')
+        // {
+        //     console.log("Viewer from China! Nǐ hǎo");
+        //     src = this.props.video.get("src2");
+        //     id = this.props.video.get("id2");
+        //     this.video_url = videoURLFromData(src, id);
+        // }
     }
 
     componentDidMount() {
@@ -37,6 +49,7 @@ class VideoThumbnail extends React.Component {
     }
 
     toggleExpanded() {
+        this.props.onExpand(this.props.video);
         this.setState({"expanded": !this.state.expanded});
     }
 
@@ -48,39 +61,12 @@ class VideoThumbnail extends React.Component {
     
         }
 
-        let src = this.props.video.get("src1");
-        let id = this.props.video.get("id1");
-        let video_url = videoURLFromData(src, id);
-        let thumbnail = "";
+        let thumbnail = <ReactPlayer playing playsinline controls={true} muted={true} volume={1} width={360} height={180} url={this.video_url}/>
 
-        if (this.props.geoloc.country_code.toLowerCase() == 'cn')
-        {
-            console.log("Viewer from China! Nǐ hǎo");
-            src = this.props.video.get("src2");
-            id = this.props.video.get("id2");
-            video_url = videoURLFromData(src, id);
-            thumbnail = <ReactPlayer playing controls muted fluid={false} width={280} height={150} url={video_url}/>
-        } else {
-            thumbnail = <iframe title={this.props.title} src={video_url} allowFullScreen/>
-        }
-
-        let content = "";
-        if (this.state.expanded) {
-            content = <Modal centered visible={true} cancelText={"Close"} width={"100%"} height={"100%"}
-                        onCancel={this.toggleExpanded.bind(this)}
-                        okButtonProps={{style: {display: 'none'}}}
-            >
-                <LiveVideoPanel video={this.props.video} watchers={this.props.watchers} auth={this.props.auth} geoloc={this.props.geoloc}/>
-            </Modal>
-        }
-        else {
-            // watchers = <LiveVideoWatchers video={this.props.video} expanded={false}/>
-            content = <Card title={this.props.video.get('title')} size="small" extra={<a href="#">Watch</a>} onClick={this.toggleExpanded.bind(this)}>
+        return <Card title={this.props.video.get('title')} size="small" extra={<a href="#">Watch</a>} onClick={this.toggleExpanded.bind(this)}>
                     {thumbnail}
                     <div>Watching now: {this.state.count}</div>
                 </Card>
-        }
-        return content
     }
 }
 

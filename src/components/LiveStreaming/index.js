@@ -1,6 +1,7 @@
 import React, {Component} from "react";
-import {Space, Spin} from 'antd';
+import {Button, Space, Spin} from 'antd';
 import GeoLocationLiveVideoThumbnail from "./VideoThumbnail";
+import LiveVideoPanel from "./LiveVideoPanel";
 import Parse from "parse";
 import AuthUserContext from "../Session/context"
 import withGeoLocation from '../GeoLocation/withGeoLocation';
@@ -10,6 +11,7 @@ class LiveStreaming extends Component {
     constructor(props) {
         // props.parseLive
         super(props);
+        this.state = {expanded: false};
     }
     
     componentDidMount() {
@@ -84,17 +86,36 @@ class LiveStreaming extends Component {
             this.wactherSubscription.unsubscribe();
     }
 
+    toggleExpanded(vid) {
+        console.log('--> ' + this.state.expanded);
+        this.setState({
+            expanded: !this.state.expanded,
+            expanded_video: vid
+        });
+    }
+
+    
     render() {
         if (this.state && this.state.videos && this.state.watchers) {
-            return <div className={"space-align-container"}>
-                {this.state.videos.map((video) => {
-                    // let w = this.state.watchers.filter(w => w.video === video.id)
-                    return <div className={"space-align-block"} key={video.get("key")}>
-                        <Space align={"center"}>
-                            <GeoLocationLiveVideoThumbnail auth={this.props.auth} video={video} watchers={this.state.watchers} />
-                        </Space></div>
-                })}
-            </div>
+            if (!this.state.expanded) {
+                return <div className={"space-align-container"}>
+                    {this.state.videos.map((video) => {
+                        // let w = this.state.watchers.filter(w => w.video === video.id)
+                        return <div className={"space-align-block"} key={video.id}>
+                            <Space align={"center"}>
+                                <GeoLocationLiveVideoThumbnail auth={this.props.auth} video={video} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
+                            </Space></div>
+                    })}
+                </div>
+            }
+            else {
+                return <div>
+                    <Button type="link" href="#" onClick={this.toggleExpanded.bind(this)}>Go Back</Button>
+                    <LiveVideoPanel video={this.state.expanded_video} watchers={this.state.watchers} auth={this.props.auth} geoloc={this.props.geoloc}/>
+                    </div>
+            }
+        
+            
         }
         return (
             <Spin tip="Loading...">
