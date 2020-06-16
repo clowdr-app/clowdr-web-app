@@ -5,6 +5,7 @@ import Home from "./components/Home"
 import Lobby from "./components/Lobby"
 import SignUp from "./components/SignUp"
 import SignIn from "./components/SignIn"
+import AccountFromToken from "./components/Account/AccountFromToken"
 import {Button, Layout, Select, Spin, Tooltip, Typography} from 'antd';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
@@ -19,6 +20,7 @@ import {withAuthentication} from "./components/Session";
 
 import LiveStreaming from "./components/LiveStreaming";
 import Parse from "parse";
+import ForgotPassword from "./components/Account/ForgotPassword";
 
 import Account from "./components/Account";
 import VideoChat from "./components/VideoChat";
@@ -75,7 +77,7 @@ class App extends Component {
             let headerImage = this.state.conference.get("headerImage");
             let headerText = this.state.conference.get("headerText");
             let confSwitcher;
-            if(this.props.authContext && this.props.authContext.validConferences.length > 1 && this.isSlackAuthOnly()){
+            if(this.props.authContext.validConferences && this.props.authContext.validConferences.length > 1 && this.isSlackAuthOnly()){
                 confSwitcher = <Select
                                        placeholder="Change conference"
                                        onChange={(conf)=>{
@@ -146,8 +148,15 @@ class App extends Component {
     }
 
     routes() {
+        let baseRoutes = [
+            <Route key="finishAccount" exact path="/finishAccount/:userID/:conferenceID/:token" component={AccountFromToken} />,
+            <Route key="forgotPassword" exact path="/resetPassword/:userID/:token" component={ForgotPassword} />
+
+        ];
         if (this.isSlackAuthOnly()) {
-            return <div><Route exact path="/" component={Lobby}/>
+            return <div>
+                {baseRoutes}
+                <Route exact path="/" component={Lobby}/>
                 <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
                 <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
                 <Route exact path="/signout" component={SignOut}/>
@@ -164,6 +173,7 @@ class App extends Component {
 
         }
         return (<div>
+            {baseRoutes}
             <Route exact path="/" component={Home}/>
             <Route exact path="/live" component={LiveStreaming}/>
             <Route exact path="/program" component={Program}/>

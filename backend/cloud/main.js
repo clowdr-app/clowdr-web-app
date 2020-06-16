@@ -1,2 +1,2 @@
-require('./slack-integration');
-require('./registrations');
+require("./registrations")
+require("./presence")
