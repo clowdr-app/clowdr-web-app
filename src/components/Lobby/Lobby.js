@@ -4,6 +4,7 @@ import {AuthUserContext} from "../Session";
 import NewRoomForm from "./NewRoomForm";
 import withLoginRequired from "../Session/withLoginRequired";
 import AboutModal from "../SignIn/AboutModal";
+import Parse from "parse";
 
 const { Content, Footer, Sider} = Layout;
 
@@ -139,6 +140,8 @@ class Lobby extends React.Component {
         this.mounted = true;
         if (user) {
             this.props.auth.helpers.setGlobalState({chatChannel: "#general" });
+            // const data = {spaceID:'TOCVe54R2j', confID: this.props.auth.currentConference.id};
+            // Parse.Cloud.run("presence-addToPage", data);
 
             await this.props.auth.subscribeToVideoRoomState();
             this.setState({loggedIn: true});
@@ -148,6 +151,9 @@ class Lobby extends React.Component {
     }
 
     componentWillUnmount() {
+        // const data = {spaceID:'TOCVe54R2j', confID: this.props.auth.currentConference.id};
+        // Parse.Cloud.run("presence-removeFromPage", data);
+
         this.mounted = false;
     }
 

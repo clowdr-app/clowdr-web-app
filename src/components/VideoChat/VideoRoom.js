@@ -452,11 +452,11 @@ class VideoRoom extends Component {
             bandwidthProfile: {
                 video: {
                     mode: 'grid',
-                    maxTracks: 8,
+                    maxTracks: 4,
                     // dominantSpeakerPriority: 'standard',
                     renderDimensions: {
                         high: { height: 720, width: 1080 },
-                        standard: { height: 480, width: 640 },
+                        standard: { height: 240, width: 320 },
                         low: {height:176, width:144}
                     },
                 },

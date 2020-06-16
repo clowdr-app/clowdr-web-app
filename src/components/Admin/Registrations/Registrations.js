@@ -3,6 +3,7 @@ import {Button, DatePicker, Form, Input, message, Modal, Select, Space, Spin, Ta
 import { UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
+import moment from "moment";
 
 const { Option } = Select;
 
@@ -50,14 +51,14 @@ class Registrations extends React.Component {
         const reader = new FileReader();
         reader.onload = () => {
             const data = {content: reader.result, conference: this.currentConference.id};
-            Parse.Cloud.run("registrations", data).then(() => this.refreshList());
+            Parse.Cloud.run("registrations-upload", data).then(() => this.refreshList());
         }
         reader.readAsText(file);
         return false;
     }        
 
     refreshList(){
-        let query = new Parse.Query("Registrations");
+        let query = new Parse.Query("Registration");
         query.find().then(res=>{
             this.setState({
                 regs: res,
@@ -70,6 +71,17 @@ class Registrations extends React.Component {
         // this.sub.unsubscribe();
     }
 
+    async sendInvitation(record){
+        try {
+            await Parse.Cloud.run("registrations-inviteUser", {
+                conference: this.currentConference.id,
+                registrations: [record.id]
+            });
+            this.refreshList();
+        }catch(err){
+            console.log(err);
+        }
+    }
     render() {
         const columns = [
             {
@@ -95,6 +107,17 @@ class Registrations extends React.Component {
                 dataIndex: 'country',
                 render: (text,record) => <span>{record.get("country")}</span>,
                 key: 'country',
+            },
+            {
+                title: 'Invitation Sent',
+                dataIndex: 'invitationSent',
+                render: (text,record) => {
+                    if(record.get("invitationSentDate"))
+                    {
+                        return <span>{moment(record.get("invitationSentDate")).calendar()} <Button onClick={this.sendInvitation.bind(this, record)}>Re-send</Button></span>
+                    }
+                    return <span><Button onClick={this.sendInvitation.bind(this, record)}>Send</Button></span>},
+                key: 'invitationSent',
             }
         ];
 
