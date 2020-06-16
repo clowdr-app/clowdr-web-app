@@ -107,6 +107,7 @@ const withAuthentication = Component => {
             allUsers = allUsers.concat(results);
             while (nRetrieved < count) {
                 let parseUserQ = new Parse.Query(UserProfile)
+                parseUserQ.skip(nRetrieved);
                 parseUserQ.equalTo("conference", this.state.currentConference);
                 parseUserQ.limit(1000);
                 let results = await parseUserQ.find();
@@ -331,6 +332,7 @@ const withAuthentication = Component => {
                         if(currentProfileID){
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.include("conference");
+                            profileQ.include("tags");
                             activeProfile = await profileQ.get(currentProfileID);
                             conf = activeProfile.get("conference");
                             if(preferredConference && preferredConference.id != activeProfile.get("conference").id)
@@ -358,6 +360,7 @@ const withAuthentication = Component => {
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.equalTo("conference",conf);
                             profileQ.equalTo("user",userWithRelations);
+                            profileQ.include("tags");
                             activeProfile = await profileQ.first();
                             sessionStorage.setItem("activeProfileID",activeProfile.id);
                             window.location.reload(false);
@@ -412,9 +415,16 @@ const withAuthentication = Component => {
                         await _this.chatClient.shutdown();
                         _this.chatClient = null;
                     }
+                    let conference = null;
+                    if(process.env.REACT_APP_DEFAULT_CONFERENCE){
+                        let confQ = new Parse.Query("ClowdrInstance")
+                        confQ.equalTo("conferenceName", process.env.REACT_APP_DEFAULT_CONFERENCE);
+                        conference = await confQ.first();
+                    }
                     _this.setState({
                         user: null,
                         videoRoomsLoaded: false,
+                        currentConference: conference,
                         loading: false,
                         users: {}
                     })
