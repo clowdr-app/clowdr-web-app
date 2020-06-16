@@ -24,7 +24,8 @@ class VideoThumbnail extends React.Component {
 
         let src = this.props.video.get("src1");
         let id = this.props.video.get("id1");
-        this.video_url = videoURLFromData(src, id);
+        let pwd = this.props.video.get("pwd1");
+        this.video_url = videoURLFromData(src, id, pwd);
 
         // if (this.props.geoloc.country_code.toLowerCase() == 'cn')
         // {
@@ -49,8 +50,10 @@ class VideoThumbnail extends React.Component {
     }
 
     toggleExpanded() {
-        this.props.onExpand(this.props.video);
-        this.setState({"expanded": !this.state.expanded});
+        if (!this.props.video.get("src1").includes("Zoom") ) {
+            this.props.onExpand(this.props.video);
+            this.setState({"expanded": !this.state.expanded});
+        }
     }
 
     render() {
@@ -61,9 +64,21 @@ class VideoThumbnail extends React.Component {
     
         }
 
-        let thumbnail = <ReactPlayer playing playsinline controls={true} muted={true} volume={1} width={360} height={180} url={this.video_url}/>
+        let isLight = false;
+        let link = "#";
+        let target = "";
+        let rel=""
+        if (this.props.video.get("src1").includes("Zoom")) {
+            console.log("LIGHT!");
+            isLight = true;
+            link = this.video_url;
+            target = "_blank";
+            rel="noopener noreferrer";
+        }
+        let thumbnail = <ReactPlayer playing playsinline light={isLight} controls={true} playIcon={<img src="preview-unavailable.png" width={260}/>} 
+                        muted={true} volume={1} width={360} height={180} url={this.video_url}/>
 
-        return <Card title={this.props.video.get('title')} size="small" extra={<a href="#">Watch</a>} onClick={this.toggleExpanded.bind(this)}>
+        return <Card title={this.props.video.get('title')} size="small" extra={<a href={link} target={target} rel={rel}>Watch</a>} onClick={this.toggleExpanded.bind(this)}>
                     {thumbnail}
                     <div>Watching now: {this.state.count}</div>
                 </Card>

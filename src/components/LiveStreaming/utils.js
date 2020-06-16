@@ -32,15 +32,30 @@ const LiveVideoSourceMappings = {
             qd_vip: 0
         }
     },
+    ZoomUS : {
+        url: "https://zoom.us/j/",
+        vars: {
+            pwd: "TBD"
+        }
+    },
+    ZoomCN : {
+        url: "https://zoom.edu.cn/j/",
+        vars: {
+            pwd: "TBD"
+        }
+    }
 }
 
 //http://m3u8live.video.iqiyi.com/tslive/liveugc/rqy_alteuytj/rqy_alteuytj.m3u8?pv=0.2&atype=qiyi&qd_tvid=3104576123&qd_vipres=0&qd_scc=35c08a7820bd1a04d83bc8c8aa1d1003&qd_sc=f3b55e56a4b2b155fed75e00a60c26be&qd_src=01010031010000000000&qd_ip=72603d2c&qd_uid=0&qd_tm=1591621238950&qd_vip=0">
 
 
-export function videoURLFromData(src, id) {
-//    console.log("videoURLFromData " + src + " " + id);
-    const queryVars = Object.keys(LiveVideoSourceMappings[src].vars);
-    const video_url = LiveVideoSourceMappings[src].url + id + '?' + queryVars.map(k => `${k}=${LiveVideoSourceMappings[src].vars[k]}&`).join('');
+export function videoURLFromData(src, id, pwd) {
+//    console.log("videoURLFromData " + src + " " + id + " " + pwd);
+    var queryVars = Object.keys(LiveVideoSourceMappings[src].vars);
+    if (pwd) {
+        queryVars.pwd = pwd;
+    }
+    const video_url = LiveVideoSourceMappings[src].url + id + '?' + queryVars.map(k => `${k}=${queryVars[k]}&`).join('');
     console.log(video_url);
     return video_url;
 }

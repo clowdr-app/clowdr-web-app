@@ -15,7 +15,8 @@ class LiveVideoPanel extends React.Component {
 
         let src = this.props.video.get("src1");
         let id = this.props.video.get("id1");
-        this.video_url = videoURLFromData(src, id);
+        let pwd = this.props.video.get("pwd1");
+        this.video_url = videoURLFromData(src, id, pwd);
 
     }
 
@@ -56,7 +57,16 @@ class LiveVideoPanel extends React.Component {
         let videopanel = <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
                                       url={this.video_url}/>
 
+        let qa = "";
         const q_url = this.props.video.get("slido");
+        if (q_url) {
+            qa = <div className={"col-sm"}>
+                    <div className={"embed-responsive-item"} >
+                        <iframe title={this.props.title} src={q_url} style={{"minWidth":"360px", "height":"720px"}}
+                        allowFullScreen/>
+                    </div>
+                </div>
+        }
 
         let count = ""
         if (this.state) {
@@ -82,12 +92,7 @@ class LiveVideoPanel extends React.Component {
                             </div>
                         </div>
                     </div>
-                    <div className={"col-sm"}>
-                        <div className={"embed-responsive-item"} >
-                            <iframe title={this.props.title} src={q_url} style={{"minWidth":"360px", "height":"720px"}}
-                                    allowFullScreen/>
-                        </div>
-                    </div>
+                    {qa} 
                 </div>
             </div>
         )

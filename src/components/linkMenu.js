@@ -38,7 +38,7 @@ class LinkMenu extends React.Component {
             if(this.props.authContext.isAdmin) {
                 adminTools = <SubMenu key="/admin" title={<span><ToolOutlined/><span>Administration</span></span>}>
                     <Menu.Item key='/admin/liveVideos' icon={<VideoCameraAddOutlined/>}><NavLink to="/admin/liveVideos">
-                        Live Videos</NavLink></Menu.Item>
+                        Live Sessions</NavLink></Menu.Item>
                     <Menu.Item key='/admin/schedule' icon={<CalendarOutlined/>}><NavLink to="/admin/schedule">
                         Schedule</NavLink></Menu.Item>
 
@@ -79,8 +79,7 @@ class LinkMenu extends React.Component {
                      >
             <Menu.Item key='/' icon={<HomeOutlined/>}><NavLink to="/">
                 Home</NavLink></Menu.Item>
-            <Menu.Item key='/live' icon={<VideoCameraOutlined/>}><NavLink to="/live">Live
-                Videos</NavLink></Menu.Item>
+            <Menu.Item key='/live' icon={<VideoCameraOutlined/>}><NavLink to="/live">Live Sessions</NavLink></Menu.Item>
 
             <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Recorded Videos</NavLink></Menu.Item>
             {userTools}
