@@ -360,7 +360,7 @@ const withAuthentication = Component => {
             return Parse.User.currentAsync().then(async function (user) {
                 if (user) {
                     const query = new Parse.Query(Parse.User);
-                    query.include(["tags.label", "tags.color", "roles.name"]);
+                    query.include(["tags"]);
                     try {
                         let userWithRelations = await query.get(user.id);
 

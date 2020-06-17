@@ -59,24 +59,22 @@ class UserStatusDisplay extends React.Component{
                 badgeStyle = "default"
                 dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
             }
-            let statusDesc = <><b>Status:</b> {this.state.presence.get("status")}</>;
-            if(!this.state.presence.get("status") || this.state.presence.get('status').length == 0){
-                statusDesc = <i>No status set</i>
-            }
+            let statusDesc = <i>{this.state.presence.get("status")}</i>;
             if (this.props.popover)
                 return <div className="userDisplay" style={this.props.style}>
                     <Popover title={this.state.profile.get("displayName") + "'s availability is: " + presenceDesc}
                              content={<div>{statusDesc} {dntWaiver}</div>}>
                         <Badge status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Popover>
                 </div>
-            else return <Card
+            else return <div
                 key={this.state.profile.id}
-                size="small"
                 className="userTag"
-                title={<><Tooltip title={this.state.profile.get("displayName") +"'s availability is: " + presenceDesc}><Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Tooltip></>}>
-                {statusDesc}
-                {dntWaiver}
-            </Card>
+                title=
+                {dntWaiver}>
+                <Tooltip
+                    title={this.state.profile.get("displayName") +"'s availability is: " + presenceDesc}>
+                    <Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")} {statusDesc}</Tooltip>
+            </div>
         }
 
     }

@@ -286,3 +286,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     padding: 0;
     margin: 0;
 }
+.userTag{
+    /*border: 1px solid #5d5d5d;*/
+    /*padding: 2px;*/
+}
