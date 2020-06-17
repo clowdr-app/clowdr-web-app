@@ -145,7 +145,7 @@
 }
 .roomDragger{
     top:0;
-    right:0;
+    right:-10px;
     bottom: 0;
     position:absolute;
     background-color:#DFE2E8;
@@ -179,7 +179,7 @@
     top: calc(50vh - 20px);
     display: inline-block;
     /*padding: 3px;*/
-    right: 0px;
+    right: -5px;
     padding-top: 1px;
     z-index:101;
     font-family: FontAwesome !important;
@@ -263,6 +263,12 @@ background-color:#97a7b7;
     right: 4px;
     padding-left:10px;
 }
+.activeRoomsTab{
+    position: fixed;
+    bottom: 0;
+    left: 4px;
+    padding-right:10px;
+}
 .ant-form-inline .ant-form-item,.aclSelector{
     flex: initial;
     flex-wrap: initial;
@@ -271,6 +277,9 @@ background-color:#97a7b7;
 }
 .chatChannelID{
 
+}
+.App{
+    height: 100vh;
 }
 span.availabilityOption{
     display: none;
@@ -286,7 +295,11 @@ div.availabilityOptionsOpen  span.availabilityOption{
     padding: 0;
     margin: 0;
 }
-.userTag{
-    /*border: 1px solid #5d5d5d;*/
-    /*padding: 2px;*/
+#bottom-chat-container {
+    background-color: #DFE2E8;
+
+    overflow: hidden;
+    position: fixed;
+    bottom: 0;
+    height: 25px;
 }

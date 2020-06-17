@@ -181,7 +181,14 @@ class ContextualActiveUsers extends Component {
                 <Menu mode="inline"
                       className="activeRoomsList"
                       // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
-                    style={{height: "100%"}}
+                    style={{
+                        // height: "100%",
+                        // overflow: 'auto',
+                        // display: 'flex',
+                        // flexDirection: 'column-reverse',
+                        border: '1px solid #FAFAFA'
+
+                    }}
                       forceSubMenuRender={true}
                       openKeys={allActiveRooms.map(r=>r.id)}
                       expandIcon={null}
