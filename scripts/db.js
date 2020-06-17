@@ -60,7 +60,13 @@ function addRequiredData() {
     instance.set('conferenceName', 'XYZ');
     instance.set('shortName', 'xyz');
     instance.set('headerText', 'XYZ Conference');
+    instance.set('isIncludeAllFeatures', true);
     instance.save().then(i => {
+        let InstanceAccess = Parse.Object.extend('ClowdrInstanceAccess');
+        let iaccess = new InstanceAccess();
+        iaccess.set('instance', i);
+        iaccess.save().catch(err => console.log('InstanceAccess saved: ' + err));
+    
         let user = new Parse.User();
         user.set('username', 'admin');
         user.set('password', 'admin');
