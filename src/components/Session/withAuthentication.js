@@ -437,10 +437,11 @@ const withAuthentication = Component => {
                         let currentConference = _this.state.currentConference;
                         await _this.createSocialSpaceSubscription(spacesByName["Lobby"], user, activeProfile);
                         console.log("RefreshUser called, setting chat channel for some reason?")
+                        let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
                         _this.setState((prevState) => ({
                             spaces: spacesByName,
                             activeSpace: prevState.activeSpace ? prevState.activeSpace : spacesByName['Lobby'],
-                            chatChannel: prevState.chatChannel ? prevState.chatChannel : spacesByName['Lobby'].get("chatChannel"),
+                            chatChannel: prevState.chatChannel ? prevState.chatChannel : cchann,
                             user: userWithRelations,
                             userProfile: activeProfile,
                             teamID: session.get("activeTeam"),
