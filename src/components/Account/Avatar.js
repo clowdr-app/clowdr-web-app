@@ -56,10 +56,8 @@ class Avatar extends React.Component {
             name = "profilePicture.png";
         var file = new Parse.File(name,req.file);
         file.save().then(()=>{
-            this.props.user.set("profilePhoto", file);
-            this.props.user.save().then(()=>{
-                this.props.refreshUser();
-            });
+            this.props.userProfile.set("profilePhoto", file);
+            this.props.userProfile.save();
         }).catch((err)=>{
             console.log(err);
         });
@@ -72,7 +70,7 @@ class Avatar extends React.Component {
                 <div className="ant-upload-text">Upload</div>
             </div>
         );
-        let imageUrl = this.props.user.get("profilePhoto");
+        let imageUrl = this.props.userProfile.get("profilePhoto");
         if(imageUrl){
             imageUrl = imageUrl.url();
         }

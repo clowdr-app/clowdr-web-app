@@ -50,10 +50,7 @@ const withAuthentication = Component => {
                 refreshUser: this.refreshUser.bind(this),
                 getUserProfile: this.getUserProfile.bind(this),
                 getChatClient: this.getChatClient.bind(this),
-                getLiveChannel: this.getLiveChannel.bind(this),
-                setLiveChannelByName: this.setLiveChannelByName.bind(this),
-                addLiveChannelListener: this.addLiveChannelListener.bind(this),
-                removeLiveChannelListener: this.removeLiveChannelListener.bind(this),
+                setSocialSpace: this.setSocialSpace.bind(this),
                 getConferenceBySlackName: this.getConferenceBySlackName.bind(this),
                 setActiveRoom: this.setActiveRoom.bind(this),
                 teamID: null,
@@ -107,6 +104,7 @@ const withAuthentication = Component => {
             allUsers = allUsers.concat(results);
             while (nRetrieved < count) {
                 let parseUserQ = new Parse.Query(UserProfile)
+                parseUserQ.skip(nRetrieved);
                 parseUserQ.equalTo("conference", this.state.currentConference);
                 parseUserQ.limit(1000);
                 let results = await parseUserQ.find();
@@ -189,34 +187,94 @@ const withAuthentication = Component => {
         //     }
         // }
 
-        getLiveChannel(cb) {
-            if (this.liveChannel)
-                cb(this.liveChannel);
-            else
-                this.setLiveChannelByName("general").then(() => {
-                    cb(this.liveChannel)
-                });
-        }
+        async createSocialSpaceSubscription(space, user, userProfile){
+            if(this.socialSpaceSubscription){
+                this.socialSpaceSubscription.unsubscribe();
+            }
+            if(!user)
+                user = this.state.user;
+            if(!userProfile)
+                userProfile = this.state.userProfile;
+            if (userProfile.get("presence") &&
+                (!userProfile.get("presence").get("socialSpace") ||
+                    userProfile.get('presence').get('socialSpace').id != space.id)) {
+                let presence = userProfile.get("presence");
+                presence.set("socialSpace", space);
+                presence.save();
+            }
 
-        setLiveChannelByName(channelName) {
-            let _this = this;
-            return this.chatClient.getChannelByUniqueName(channelName).then(async (chan) => {
-                _this.liveChannel = chan;
-                try {
-                    let room = await chan.join();
-                } catch (err) {
-                    //allready joined
-                }
-                this.channelChangeListeners.forEach((cb) => cb(chan));
+
+            let query  =new Parse.Query("UserPresence");
+            query.equalTo("socialSpace", space);
+            let presences = await query.find();
+            let presenceByProfile = {};
+            for(let presence of presences){
+                presenceByProfile[presence.get("user").id] = presence;
+            }
+            this.setState({presences: presenceByProfile});
+            this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
+            this.socialSpaceSubscription.on('create',(presence)=>{
+                this.setState(
+                    (prevState)=>({
+                        presences: {
+                            ...prevState.presences,
+                            [presence.get("user").id]: presence
+                        }
+                    })
+                )
+            })
+            this.socialSpaceSubscription.on('enter',(presence)=>{
+                this.setState(
+                    (prevState)=>({
+                        presences: {
+                            ...prevState.presences,
+                            [presence.get("user").id]: presence
+                        }
+                    })
+                )
+            })
+            this.socialSpaceSubscription.on('delete',(presence)=>{
+
+                console.log("Leave")
+                console.log(presence)
+                this.setState(
+                    (prevState)=>({
+                        presences: {
+                            ...prevState.presences,
+                            [presence.get("user").id]: undefined
+                        }
+                    })
+                )
+            })
+            this.socialSpaceSubscription.on('leave',(presence)=>{
+                console.log("Leave")
+                console.log(presence)
+                this.setState(
+                    (prevState)=>({
+                        presences: {
+                            ...prevState.presences,
+                            [presence.get("user").id]: undefined
+                        }
+                    })
+                )
+            })
+            this.socialSpaceSubscription.on('update',(presence)=>{
+                this.setState(
+                    (prevState)=>({
+                        presences: {
+                            ...prevState.presences,
+                            [presence.get("user").id]: presence
+                        }
+                    })
+                )
+            })
+        }
+        async setSocialSpace(spaceName) {
+            await this.createSocialSpaceSubscription(this.state.spaces[spaceName]);
+            this.setState({
+                activeSpace: this.state.spaces[spaceName],
+                chatChannel: this.state.spaces[spaceName].get("chatChannel")
             });
-        }
-
-        removeLiveChannelListener(cb) {
-            this.channelChangeListeners = this.channelChangeListeners.filter((v) => v != cb);
-        }
-
-        addLiveChannelListener(cb) {
-            this.channelChangeListeners.push(cb);
         }
 
         getChatClient(callback) {
@@ -243,8 +301,7 @@ const withAuthentication = Component => {
         }
 
         getUserProfile(authorID, callback) {
-            //DEPRECATED
-            console.log("This is deprecated and probably broken")
+            //DEPRECATEDgetUserRecord is deprecated and probably broken")
             if (!this.profiles[authorID]) {
                 if (this.loadingProfiles[authorID]) {
                     this.loadingProfiles[authorID].push(callback);
@@ -331,6 +388,8 @@ const withAuthentication = Component => {
                         if(currentProfileID){
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.include("conference");
+                            profileQ.include("tags");
+                            profileQ.include("presence")
                             activeProfile = await profileQ.get(currentProfileID);
                             conf = activeProfile.get("conference");
                             if(preferredConference && preferredConference.id != activeProfile.get("conference").id)
@@ -358,6 +417,7 @@ const withAuthentication = Component => {
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.equalTo("conference",conf);
                             profileQ.equalTo("user",userWithRelations);
+                            profileQ.include("tags");
                             activeProfile = await profileQ.first();
                             sessionStorage.setItem("activeProfileID",activeProfile.id);
                             window.location.reload(false);
@@ -366,8 +426,22 @@ const withAuthentication = Component => {
                         privsQuery.equalTo("conference", activeProfile.get("conference"));
                         privsQuery.include("action");
                         let permissions =  await privsQuery.find();
+
+                        const spacesQ = new Parse.Query("SocialSpace");
+                        spacesQ.equalTo("conference", activeProfile.get("conference"));
+                        let spaces = await spacesQ.find();
+                        let spacesByName = {};
+                        for(let space of spaces){
+                            spacesByName[space.get("name")] = space;
+                        }
                         let currentConference = _this.state.currentConference;
-                        _this.setState({
+                        await _this.createSocialSpaceSubscription(spacesByName["Lobby"], user, activeProfile);
+                        console.log("RefreshUser called, setting chat channel for some reason?")
+                        let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
+                        _this.setState((prevState) => ({
+                            spaces: spacesByName,
+                            activeSpace: prevState.activeSpace ? prevState.activeSpace : spacesByName['Lobby'],
+                            chatChannel: prevState.chatChannel ? prevState.chatChannel : cchann,
                             user: userWithRelations,
                             userProfile: activeProfile,
                             teamID: session.get("activeTeam"),
@@ -377,12 +451,11 @@ const withAuthentication = Component => {
                             currentConference: conf,
                             loading: false,
                             roles: roles
-                        });
+                        }));
 
                         _this.getUsers();
                         if(currentConference && currentConference.id != conf.id){
-                            // window.location.reload(false);
-
+                            window.location.reload(false);
                         }
                         _this.forceUpdate();
                         return userWithRelations;
@@ -412,9 +485,16 @@ const withAuthentication = Component => {
                         await _this.chatClient.shutdown();
                         _this.chatClient = null;
                     }
+                    let conference = null;
+                    if(process.env.REACT_APP_DEFAULT_CONFERENCE){
+                        let confQ = new Parse.Query("ClowdrInstance")
+                        confQ.equalTo("conferenceName", process.env.REACT_APP_DEFAULT_CONFERENCE);
+                        conference = await confQ.first();
+                    }
                     _this.setState({
                         user: null,
                         videoRoomsLoaded: false,
+                        currentConference: conference,
                         loading: false,
                         users: {}
                     })
@@ -577,15 +657,39 @@ const withAuthentication = Component => {
                     ))
                 }));
             })
+            this.parseLivePrivateVideosSub.on("leave", (vid) => {
+                this.setState((prevState) => ({
+                    activePrivateVideoRooms: prevState.activePrivateVideoRooms.filter((v) => (
+                        v.id != vid.id
+                    ))
+                }));
+            })
             this.setState({videoRoomsLoaded: true});
         }
 
         componentDidMount() {
             this.refreshUser();
             this.mounted = true;
+            console.log("Installing before ulnload")
+            window.addEventListener("beforeunload", this.disconnectPresence.bind(this));
+
         }
 
+        disconnectPresence(){
+
+            console.log("Want to disconnect...")
+            console.log(this.state.userProfile)
+            if(this.state.userProfile && this.state.userProfile.get("presence")){
+                let presence = this.state.userProfile.get("presence");
+                if(presence.get("socialSpace")){
+                    presence.set("socialSpace", null);
+                    presence.save();
+                }
+            }
+        }
         componentWillUnmount() {
+            window.removeEventListener("beforeunload", this.disconnectPresence.bind(this));
+            this.disconnectPresence();
             this.mounted = false;
             if (this.parseLivePublicVideosSub) {
                 this.parseLivePublicVideosSub.unsubscribe();

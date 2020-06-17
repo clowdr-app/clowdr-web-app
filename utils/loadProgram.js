@@ -7,7 +7,7 @@ Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE
 Parse.serverURL = 'https://parseapi.back4app.com/'
 
 
-let data = JSON.parse(fs.readFileSync("data/confero-pldi.json"));
+let data = JSON.parse(fs.readFileSync("data/confero-icse.json"));
 let conferoPeople = {};
 
 let i = 0;
@@ -90,26 +90,35 @@ let daysTillStart = moment("2020-10-06", "YYYY-MM-DD").subtract(moment(moment().
 function mockDate(date) {
     return date.subtract(daysTillStart);
 }
+let ProgramSession = Parse.Object.extend("ProgramSession");
 
 async function loadItems() {
+    let confQ = new Parse.Query("ClowdrInstance")
+    confQ.equalTo("conferenceName", "ICSE 2020");
+    let conf = await confQ.first({useMasterKey: true});
     let ProgramItem = Parse.Object.extend("ProgramItem");
     let q = new Parse.Query(ProgramItem);
-    q.limit(10000);
-    let items = await q.find();
+    q.equalTo("conference", conf);
+    q.limit(1000);
+    let items = await q.find({useMasterKey: true});
     items.forEach((item) => {
         allItems[item.get("confKey")] = item;
     })
     q = new Parse.Query(Parse.User);
     q.limit(10000);
-    let usersArray = await q.find();
+    let usersArray = await q.find({useMasterKey: true});
     console.log("Found " + usersArray.length);
     usersArray.forEach((u) => {
         allUsers[u.get("displayname")] = u
     });
+    let acl = new Parse.ACL();
+    acl.setPublicWriteAccess(false);
+    acl.setRoleWriteAccess(conf.id+"-manager", true);
+    acl.setRoleWriteAccess(conf.id+"-admin", true);
 
+    let promises = [];
     for (const item of data.Items) {
         if (allItems[item.Key]) {
-            // console.log("Found")
             continue
         }
         console.log("Adding new item");
@@ -119,11 +128,14 @@ async function loadItems() {
         newItem.set("url", item.URL);
         newItem.set("abstract", item.Abstract);
         newItem.set("affiliations", item.Affiliations);
+        newItem.set("conference",conf);
         newItem.set("confKey", item.Key);
+        newItem.setACL(acl);
         //find affiliated users
-        newItem.set("authors", await buildUsersArray(item.Authors))
-        await newItem.save();
+        newItem.set("authors", item.Authors)
+        promises.push(newItem.save({},{useMasterKey: true}));
     }
+    await Promise.all(promises);
 
     console.log("Done with items");
     let ProgramSession = Parse.Object.extend("ProgramSession");
@@ -134,29 +146,30 @@ async function loadItems() {
         allSessions[session.get("confKey")] = session;
     })
 
+    let toSave =[];
     for (const item of data.Sessions) {
         // if (i > 1)
         //     continue;
-
         if(allSessions[item.Key])
             continue;
-
         let startTime = item.Time.substring(0, item.Time.indexOf('-'));
         let dateTime = item.Day + " " + startTime;
         console.log(">" + dateTime)
         var start = moment(dateTime, "YYYY-MM-DD HH:mm");
         var end = moment(dateTime, "YYYY-MM-DD HH:mm");
-        start = mockDate(start).toDate();
-        end = mockDate(end).toDate();
+        // start = mockDate(start).toDate();
+        // end = mockDate(end).toDate();
 
         let session = new ProgramSession();
         session.set("title",item.Title);
         session.set("abstract", item.Abstract);
         session.set("type", item.Type);
-        session.set("startTime", start);
-        session.set("endTime", end);
+        session.set("startTime", start.toDate());
+        session.set("endTime", end.toDate());
         session.set("location", item.Location);
         session.set("confKey", item.Key);
+        session.set("conference",conf);
+        session.setACL(acl);
 
         item.Key = item.Key.replace("/", "-");
         // await programRef.child("sessions").child(item.Key).update(dat);
@@ -175,14 +188,19 @@ async function loadItems() {
             // await programRef.child("sessions").child(item.Key).child("items").set(items);
         }
         session.set("items", items);
-        await session.save();
+        toSave.push(session);
+        // promises.push(session.save({},{useMasterKey: true}));
         // Object.keys(categories).forEach(async (v)=>{
         //     await programRef.child("categories").child("members").child(v).child(item.Key).set(true);
         // })
         // console.log(categories);
         // console.log(item);
         i++;
-
+    }
+    try{
+        await Parse.Object.saveAll(toSave,{useMasterKey: true});
+    } catch(err){
+        console.log(err);
     }
     console.log("Done");
 // data.People.forEach((person)=>{

@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import * as ROUTES from '../../constants/routes';
-import {Button, Form, Input} from 'antd';
+import {Button, message, Form, Input, Tooltip} from 'antd';
 import Parse from "parse";
 import {AuthUserContext} from "../Session";
 import GenericLanding from "../GenericLanding";
@@ -47,7 +47,7 @@ class SignIn extends Component {
         try{
             await Parse.User.logIn(email, password);
             await this.props.refreshUser();
-            this.props.history.push(ROUTES.ACCOUNT);
+            this.props.history.push("/");
 
         } catch (e){
             alert(e.message);
@@ -65,6 +65,17 @@ class SignIn extends Component {
         this.setState({[event.target.name]: event.target.value});
     };
 
+    async forgotPassword(){
+        let res = await Parse.Cloud.run("reset-password", {
+            email: this.state.email,
+            confID: this.props.authContext.currentConference.id
+        });
+        if(res.status == "error")
+            message.error(res.message);
+        else
+            message.success(res.message, 0);
+
+    }
     render() {
         if(process.env.REACT_APP_IS_MINIMAL_UI && !this.props.dontBounce){
             return <div></div>;
@@ -93,7 +104,9 @@ class SignIn extends Component {
                 <Form.Item {...tailLayout}>
                     <Button type="primary" disabled={isInvalid} htmlType="submit">
                         Sign In
-                    </Button></Form.Item>
+                    </Button> <Tooltip title="If you have forgotten your password, please enter your email address and click this button to receive a link to reset it."><Button disabled={email === ''} onClick={this.forgotPassword.bind(this)}>
+                    Forgot Password
+                </Button></Tooltip></Form.Item>
 
                 {error && <p>{error.message}</p>}
             </Form>

@@ -241,7 +241,7 @@ class VideoRoom extends Component {
     handleLogout() {
 
         console.log("Video room log out")
-        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general"});
+        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null});
         this.props.history.push(ROUTES.LOBBY_SESSION);
     }
 
@@ -452,11 +452,11 @@ class VideoRoom extends Component {
             bandwidthProfile: {
                 video: {
                     mode: 'grid',
-                    maxTracks: 8,
+                    maxTracks: 4,
                     // dominantSpeakerPriority: 'standard',
                     renderDimensions: {
                         high: { height: 720, width: 1080 },
-                        standard: { height: 480, width: 640 },
+                        standard: { height: 240, width: 320 },
                         low: {height:176, width:144}
                     },
                 },
@@ -553,7 +553,7 @@ class VideoRoom extends Component {
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             <div>
-                                {(this.state.room.get("mode") == "group" ? "This is a big group room. It supports up to 50 participants, but will only show the video of the 8 most active participants. Click a participant to pin them to always show their video." :
+                                {(this.state.room.get("mode") == "group" ? "This is a big group room. It supports up to 50 participants, but will only show the video of the 4 most active participants. Click a participant to pin them to always show their video." :
                                     this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
                             </div>
                         <div className={"videoEmbed"}>

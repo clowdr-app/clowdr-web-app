@@ -32,8 +32,6 @@ class NewRoomForm extends React.Component {
 
     };
     componentDidMount() {
-        let tagQ = new Parse.Query("BreakoutRoomCategory");
-        tagQ.find().then((res => this.setState({categories: res})));
     }
 
     render() {
@@ -125,6 +123,14 @@ class NewRoomForm extends React.Component {
                                     required: true,
                                     message: 'Please input the title for your video room.',
                                 },
+                                ({ getFieldValue }) => ({
+                                    validator(rule, value) {
+                                        if (!value || !value.includes("/")) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject('Room title cannot include /');
+                                    },
+                                }),
                             ]}
                         >
                             <Input/>

@@ -6,13 +6,14 @@ import 'emoji-mart/css/emoji-mart.css'
 
 import InfiniteScroll from 'react-infinite-scroller';
 
-import {Card, Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip} from 'antd';
+import {Card, Divider, Form, Input, Layout, List, Menu, Popconfirm, Popover, Tooltip} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import {CloseOutlined} from "@material-ui/icons";
+import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
 const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
@@ -47,6 +48,7 @@ class SidebarChat extends React.Component {
         else if(siderWidth == -1)
             siderWidth = 0;
         this.state = {...INITIAL_STATE, chatChannel: "#general", siderWidth: siderWidth, hasMoreMessages: false, loadingMessages: true,
+            priorWidth: siderWidth,
         numMessagesDisplayed: 0}
         this.form = React.createRef();
 
@@ -74,11 +76,15 @@ class SidebarChat extends React.Component {
 
     async changeChannel(uniqueNameOrSID) {
         let user = this.props.auth.user;
-        console.log("Change channel: " + uniqueNameOrSID)
-        if(uniqueNameOrSID == this.currentUniqueName && this.props.auth.currentConference == this.currentConference)
+        if(!uniqueNameOrSID){
+            this.setState({ chatDisabled: true});
+        }else if(this.state.chatDisabled){
+            this.setState({chatDisabled: false});
+        }
+        if(uniqueNameOrSID == this.currentUniqueNameOrSID && this.props.auth.currentConference == this.currentConference)
             return;
         this.currentConference = this.props.auth.currentConference;
-        this.currentUniqueName = uniqueNameOrSID
+        this.currentUniqueNameOrSID = uniqueNameOrSID
         if (user && uniqueNameOrSID) {
             if (!this.client) {
                 this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference);
@@ -90,7 +96,7 @@ class SidebarChat extends React.Component {
                 hasMoreMessages: false,
                 loadingMessages: true
             }, async () => {
-                if(this.currentUniqueName != uniqueNameOrSID){
+                if(this.currentUniqueNameOrSID != uniqueNameOrSID){
                     return;//raced with another update
                 }
                 if (this.activeChannel) {
@@ -105,8 +111,11 @@ class SidebarChat extends React.Component {
                         await this.activeChannel.leave();
                 }
                 this.activeChannel = await this.props.auth.chatClient.joinAndGetChannel(uniqueNameOrSID);
+                if(this.currentUniqueNameOrSID != uniqueNameOrSID){
+                    return;//raced with another update
+                }
                 this.activeChannel.getMessages(300).then((messages)=> {
-                    if(this.currentUniqueName != uniqueNameOrSID)
+                    if(this.currentUniqueNameOrSID != uniqueNameOrSID)
                         return;
                     this.messagesLoaded(this.activeChannel, messages)
                 });
@@ -117,17 +126,20 @@ class SidebarChat extends React.Component {
                     chatLoading: false,
                    activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
                }
-               console.log("Changing active channel name to: " + stateUpdate.activeChannelName)
+               console.log("Changing active channel name to: " + stateUpdate.activeChannelName + " aka " + uniqueNameOrSID)
                if(!uniqueNameOrSID.startsWith("#"))
                {
                    if(this.state.siderWidth == 0)
                        stateUpdate.siderWidth = 250;
                }
+                if(this.currentUniqueNameOrSID != uniqueNameOrSID){
+                    return;//raced with another update
+                }
                 this.setState(stateUpdate);
             });
 
         } else {
-            if(this.currentUniqueName != uniqueNameOrSID){
+            if(this.currentUniqueNameOrSID != uniqueNameOrSID){
                 return;//raced with another update
             }
             // console.log("Unable to set channel because no user or something:")
@@ -260,19 +272,29 @@ class SidebarChat extends React.Component {
         return o1.sid == o2.sid;
     }
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.auth.chatChannel != this.state.chatChannel) {
-            this.setState({chatChannel: this.props.auth.chatChannel});
-            this.changeChannel(this.props.auth.chatChannel);
+        let isDifferentUser = this.user != this.props.auth.user;
+        this.user = this.props.auth.user;
+        let isDifferentChannel = this.props.auth.chatChannel != this.currentUniqueNameOrSID;
+        if (isDifferentChannel || isDifferentUser) {
+            if(!isDifferentUser && this.props.auth.activeSpace && this.props.auth.activeSpace.get("chatChannel") == this.state.chatChannel){
+                return;
+            }
+            let newChannel = this.props.auth.chatChannel;
+            if(!newChannel && this.props.auth.activeSpace){
+                //fall back to the current social space
+                newChannel = this.props.auth.activeSpace.get("chatChannel");
+            }
+            this.activeChannelName =  newChannel;
+            this.setState({chatChannel: newChannel});
+            this.changeChannel(newChannel);
         }
     }
 
     loadMoreMessages(){
-        console.log("LMM " + this.loadingMessages)
         if(this.activeChannel && !this.loadingMessages){
             this.loadingMessages =true;
             let intendedChanelSID = this.activeChannel.sid;
             this.setState({loadingMessages: true});
-            console.log("Old oldest message:" + this.currentPage[this.activeChannel.sid] )
             this.currentPage[this.activeChannel.sid].prevPage().then(messagePage=>{
                 if(this.activeChannel.sid != intendedChanelSID){
                     this.loadingMessages =false;
@@ -288,7 +310,6 @@ class SidebarChat extends React.Component {
                 this.messages[this.activeChannel.uniqueName] = messagePage.items.concat(this.messages[this.activeChannel.uniqueName]);
                 this.groupMessages(this.messages[this.activeChannel.uniqueName]);
                 this.loadingMessages =false;
-                console.log("Set loadingMessages =false")
 
                 // if(messagePage.items && messagePage.items.length > 0)
                 //     this.oldestMessages[channel.sid] = messagePage.items[0].index;
@@ -299,6 +320,9 @@ class SidebarChat extends React.Component {
 
     }
     render() {
+        if(this.state.chatDisabled){
+            return <div></div>
+        }
         let topHeight = 0;
         let topElement = document.getElementById("top-content");
         if (topElement)
@@ -387,7 +411,8 @@ class SidebarChat extends React.Component {
                                                           <Card bodyStyle={{padding: '5px', backgroundColor:"#f8f8f8"}}
                                                                 style={{border: 'none', width: "100%"}}>
                                                               <Meta
-                                                                  title={<div>{this.state.authors[item.author]}&nbsp;
+                                                                  title={<div>
+                                                                      <UserStatusDisplay style={{display: "inline"}} popover={true} profileID={item.author}/>&nbsp;
                                                                      <span
                                                                           className="timestamp">{this.formatTime(item.timestamp)}</span>
                                                                   </div>}

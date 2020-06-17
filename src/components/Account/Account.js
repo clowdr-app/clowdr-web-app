@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Form, Input, Select, Skeleton, Spin, Tag} from "antd";
+import {Button, Form, Input, Select, Skeleton, Tag} from "antd";
 import Avatar from "./Avatar";
 import {AuthUserContext} from "../Session";
 import Parse from "parse";
@@ -13,15 +13,13 @@ class Account extends React.Component {
 
     setStateFromUser(){
         let selectedFlair = [];
-        if (this.props.auth.user.get("tags"))
-            this.props.auth.user.get("tags").forEach((tag) => {
+        if (this.props.auth.userProfile.get("tags"))
+            this.props.auth.userProfile.get("tags").forEach((tag) => {
                 selectedFlair.push(tag.get("label"));
             });
         this.setState({
             user: this.props.auth.user,
             email: this.props.auth.user.getEmail(),
-            affiliation: this.props.auth.user.get("affiliation"),
-            displayName: this.props.auth.user.get("displayName"),
             tags: this.props.auth.user.get("tags"),
             flair: this.props.auth.user.get("primaryFlair"),
             selectedFlair: selectedFlair,
@@ -42,6 +40,25 @@ class Account extends React.Component {
                 flairColors: flairColors,
                 allFlair: res,
                 flairObj: u
+            });
+        }).catch((err)=>{
+
+        });
+
+        const BioTopic = Parse.Object.extend("BioTopic");
+        const bioquery = new Parse.Query(BioTopic);
+        bioquery.find().then((u)=>{
+            //convert to something that the dom will be happier with
+            let res = [];
+            let topicColors = {};
+            for(let topic of u){
+                topicColors[topic.get("label")] = topic.get("color");
+                res.push({value: topic.get("label"), color: topic.get("color"), id: topic.id})
+            }
+            _this.setState({
+                topicColors: topicColors,
+                allTopics: res,
+                topicObj: u
             });
         }).catch((err)=>{
 
@@ -68,27 +85,27 @@ class Account extends React.Component {
 
     }
 
-    updateUser() {
+    async updateUser(values) {
         this.setState({updating: true});
-        this.props.auth.user.set("tags", this.state.flairObj.filter((item)=>(this.state.selectedFlair.includes(item.get("label")))));
-        this.props.auth.user.set("displayName",this.state.displayName);
-        this.props.auth.user.set("affiliation", this.state.affiliation);
-        this.props.auth.user.save().then(() => {
-            this.props.auth.refreshUser().then(() => {
+        if(values.password){
+            this.props.auth.user.setPassword(values.password);
+            this.props.auth.user.set("passwordSet",true);
+            await this.props.auth.user.save();
+        }
+        this.props.auth.userProfile.set("tags", this.state.flairObj.filter((item)=>(values.flair.includes(item.get("label")))));
+        this.props.auth.userProfile.set("displayName",values.displayName);
+        this.props.auth.userProfile.set("affiliation", values.affiliation);
+        this.props.auth.userProfile.set("webpage", values.website);
+        this.props.auth.userProfile.set("bio", values.bio);
+        this.props.auth.userProfile.save().then(() => {
                 this.setState({updating: false});
-
                 this.setStateFromUser();
-            })
+                if(this.props.onFinish)
+                    this.props.onFinish();
+
         });
     }
 
-    onChange = event => {
-        this.setState({[event.target.name]: event.target.value});
-    };
-
-    onChangeCheckbox = event => {
-        this.setState({[event.target.name]: event.target.checked});
-    };
     tagRender(props) {
         const { value, label, id, closable, onClose } = props;
 
@@ -100,6 +117,19 @@ class Account extends React.Component {
             </Tag>
         );
     }
+
+    topicRender(props) {
+        const { value, label, id, closable, onClose } = props;
+
+        if(!this.state.topicColors)
+            return <Tag>{value}</Tag>
+        return (
+            <Tag key={id} color={this.state.topicColors[value]} closable={closable} onClose={onClose} style={{ marginRight: 3 }}>
+                {value}
+            </Tag>
+        );
+    }
+
 
     render() {
 
@@ -120,7 +150,30 @@ class Account extends React.Component {
             passwordOne === '' ||
             email === '' ||
             username === '';
-        let _this=this;
+        let _this = this;
+
+        let passwordRequired = !this.props.auth.user.get("passwordSet");
+        let password1Rules = [
+            {
+                required: passwordRequired,
+                message: 'Please input your password!',
+            }
+        ];
+        let password2Rules = [
+            {
+                required: passwordRequired,
+                message: 'Please confirm your password!',
+            },
+            ({ getFieldValue }) => ({
+                validator(rule, value) {
+                    if (!value || getFieldValue('password') === value) {
+                        return Promise.resolve();
+                    }
+                    return Promise.reject('The two passwords that you entered do not match!');
+                },
+            }),
+        ];
+
         return (
             <Form onFinish={this.updateUser.bind(this)} labelCol={{
                 span: 4,
@@ -131,19 +184,29 @@ class Account extends React.Component {
                   layout="horizontal"
                   initialValues={{
                       size: 50,
+                      displayName: this.props.auth.userProfile.get("displayName"),
+                      website: this.props.auth.userProfile.get("webpage"),
+                      affiliation: this.props.auth.userProfile.get("affiliation"),
+                      bio: this.props.auth.userProfile.get("bio"),
+                      flair: this.state.selectedFlair
+
                   }}
                   size={100}>
                 <Form.Item
-                    label="Full Name"
+                    label="Display Name"
+                    name="displayName"
+                    extra="Feel free to customize how your name is displayed, but please use your real name."
                     rules={[
                         {
                             required: true,
                             message: 'Please input your full name',
                         },
                     ]}
-                ><Input name="displayName" value={this.state.displayName} onChange={this.onChange}/></Form.Item>
+                ><Input  /></Form.Item>
+                {this.props.embedded ? <></> :<>
                 <Form.Item
                     label="Email Address"
+                    extra="Your email address cannot be changed"
                     rules={[
                         {
                             required: true,
@@ -156,29 +219,67 @@ class Account extends React.Component {
                         value={this.state.email}
                         disabled={true}
                         type="text"
-                        onChange={this.onChange}/>
+                        />
                 </Form.Item>
+
+
+                    <Form.Item label="Password"
+                               name="password"
+                               rules={password1Rules}
+                               hasFeedback
+                    >
+                        <Input.Password placeholder="input password"
+                        />
+                    </Form.Item>
+                    < Form.Item label="Confirm Password"
+                    name="confirm"
+                    rules={password2Rules}
+                    >
+                    <Input.Password
+                    placeholder="input password"
+                    />
+                    </Form.Item></>
+                }
                 <Form.Item
+                    name="affiliation"
                     label="Affiliation">
                     <Input
-                        name="affiliation"
-                        value={this.state.affiliation}
                         disabled={this.state.updating}
                         type="text"
-                        onChange={this.onChange}/>
+                        />
                 </Form.Item>
-                <Form.Item label="Profile Photo">
-                    <Avatar user={this.state.user} refreshUser={this.props.auth.refreshUser} />
+                <Form.Item
+                    name="website"
+                    label="Website">
+                    <Input
+                        disabled={this.state.updating}
+                        type="text"
+                       />
                 </Form.Item>
-                <Form.Item label="Tags">
+                <Form.Item label="Avatar">
+                    <Avatar userProfile={this.props.auth.userProfile} refreshUser={this.props.auth.refreshUser} />
+                </Form.Item>
+
+                <Form.Item label="Profile" name="bio">
+                    <Input.TextArea placeholder="Write a brief bio that other users will see when they encounter you on CLOWDR" allowClear />
+                </Form.Item>
+                {/*<Form.Item label="Topics of Interest">*/}
+                {/*    <Select*/}
+                {/*        mode="multiple"*/}
+                {/*        tagRender={this.topicRender.bind(this)}*/}
+                {/*        style={{ width: '100%' }}*/}
+                {/*        onChange={(item)=>{*/}
+                {/*            _this.setState({selectedTopics: item});*/}
+                {/*        }}*/}
+                {/*        options={(this.state.allTopics ? this.state.allTopics: [])}*/}
+                {/*    />*/}
+                {/*</Form.Item>*/}
+
+                <Form.Item label="Flair" name="flair">
                     <Select
                         mode="multiple"
                         tagRender={this.tagRender.bind(this)}
                         style={{ width: '100%' }}
-                        defaultValue={this.state.selectedFlair}
-                        onChange={(item)=>{
-                            _this.setState({selectedFlair: item});
-                        }}
                         options={(this.state.allFlair ? this.state.allFlair: [])}
                     />
                 </Form.Item>
@@ -192,10 +293,10 @@ class Account extends React.Component {
     }
 }
 
-const AuthConsumerAccount = () => (
+const AuthConsumerAccount = (props) => (
     <AuthUserContext.Consumer>
         {value => (
-            <Account auth={value} />
+            <Account auth={value} {...props} />
         )}
     </AuthUserContext.Consumer>
 );

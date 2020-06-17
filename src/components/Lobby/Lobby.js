@@ -1,9 +1,10 @@
 import React from 'react';
-import {Avatar, Card, Divider, Layout, List, message, Popconfirm, Space, Spin, Tooltip, Typography} from "antd";
+import {Avatar, Card, Layout, List, message, Popconfirm, Space, Spin, Tooltip, Typography} from "antd";
 import {AuthUserContext} from "../Session";
-import NewRoomForm from "./NewRoomForm";
 import withLoginRequired from "../Session/withLoginRequired";
 import AboutModal from "../SignIn/AboutModal";
+import UserStatusDisplay from "./UserStatusDisplay";
+import NewRoomForm from "./NewRoomForm";
 
 const { Content, Footer, Sider} = Layout;
 
@@ -138,16 +139,25 @@ class Lobby extends React.Component {
         let user = this.props.auth.user;
         this.mounted = true;
         if (user) {
-            this.props.auth.helpers.setGlobalState({chatChannel: "#general" });
+            // this.props.auth.helpers.setGlobalState({chatChannel: "#general" });
+            // const data = {spaceID:'TOCVe54R2j', confID: this.props.auth.currentConference.id};
+            // Parse.Cloud.run("presence-addToPage", data);
 
+            this.setState({presences: this.props.auth.presences});
             await this.props.auth.subscribeToVideoRoomState();
-            this.setState({loggedIn: true});
+            //subscribe to membership here too
+            if (this.mounted){
+
+                this.setState({loggedIn: true});
+            }
         } else {
             this.setState({loggedIn: false});
         }
     }
 
     componentWillUnmount() {
+        // const data = {spaceID:'TOCVe54R2j', confID: this.props.auth.currentConference.id};
+        // Parse.Cloud.run("presence-removeFromPage", data);
         this.mounted = false;
     }
 
@@ -160,6 +170,11 @@ class Lobby extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!this.mounted)
+            return;
+        if(this.props.auth.presences != this.state.presences){
+            this.setState({presences: this.props.auth.presences});
+        }
         if (this.props.auth.videoRoomsLoaded != this.state.videoRoomsLoaded) {
             this.setState({videoRoomsLoaded: this.props.auth.videoRoomsLoaded});
         }
@@ -224,18 +239,18 @@ class Lobby extends React.Component {
     }
 
 
-    displayMore() {
-        this.setState((prevState) => ({
-            maxDisplayedRooms: prevState.maxDisplayedRooms + 10
-        }));
-    }
+    // displayMore() {
+    //     this.setState((prevState) => ({
+    //         maxDisplayedRooms: prevState.maxDisplayedRooms + 10
+    //     }));
+    // }
 
     hasMoreRoomsToShow() {
         return this.state.maxDisplayedRooms < this.state.rooms.length;
     }
 
     render() {
-        if (this.state.loading) {
+        if (this.state.loading || !this.state.presences) {
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -250,6 +265,15 @@ class Lobby extends React.Component {
             allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
         }
 
+        const compareDates = (i,j)=>{
+            let a = this.state.presences[i];
+            let b = this.state.presences[j];
+            if(!a)
+                return -1;
+            if(!b) return 1;
+            a = a.get("updatedAt");
+            b = b.get("updatedAt");
+            return (a < b ? 1 : a>b?-1: 0)};
         return (
             // <Tabs defaultActiveKey="1">
             //     <TabPane tab="Breakout Areas" key="1">
@@ -261,41 +285,55 @@ class Lobby extends React.Component {
                 Some say that the most valuable part of an academic conference is the "lobby track" - where
                 colleagues meet, catch up, and share
                 casual conversation. To bring the metaphor into the digital world, the digital lobby session
-                allows you to create a small group video chat, and switch between group chats. Take
-                a look at the breakout rooms that participants have formed so far and join one, or create a new
-                one!
-                </Typography.Paragraph>
-                <NewRoomForm style={{float: "right", paddingTop: "5px"}} initialName={this.state.requestedName} visible={this.state.visible} />
+                allows you to create a small group video chat, and switch between group chats.
+                    The pane on the left shows the active video chats, and the list below shows the users currently looking for a conversation.
 
+                    <NewRoomForm style={{display: "none"}} initialName={this.state.requestedName} visible={this.state.visible} />
+                </Typography.Paragraph>
                 <Space />
-                <Divider/>
-                    <div style={{maxHeight: "80vh", overflow: 'auto', border: '1px sold #FAFAFA'}}>
-                        {/*<InfiniteScroll*/}
-                        {/*    pageStart={0}*/}
-                        {/*    // hasMore={Object.keys(this.state.activeUsers).length >= 20}*/}
-                        {/*    hasMore={this.hasMoreRoomsToShow()}*/}
-                        {/*    loadMore={this.displayMore.bind(this)}*/}
-                        {/*    useWindow={false}*/}
-                        {/*    initialLoad={false}*/}
-                        {/*    loader={<Spin>Loading...</Spin>}*/}
-                        {/*>*/}
-                            <Space style={{
-                                maxWidth: '80vw',
-                                display: "flex",
-                                marginLeft: "20px",
-                                flexWrap: "wrap"
-                            }}>
-                                {
-                                    Object.values(allActiveRooms)//.slice(0, this.state.maxDisplayedRooms)
-                                        .map((item) => (
-                                        <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} auth={this.props.auth} />
-                                    ))}
-                            </Space>
-                        {/*</InfiniteScroll>*/}
-                    </div>
+
+                <List grid={{ gutter: 16,
+                    xs: 1,
+                    sm: 1,
+                    md: 2,
+                    lg: 3,
+                    xl: 4,
+                    xxl: 5,
+                }}
+                      dataSource={Object.keys(this.state.presences).sort((a,b)=>(compareDates(a,
+                          b) ))}
+                      renderItem={item => (<List.Item><UserStatusDisplay key={item} onlyShowWithPresence={true} profileID={item} popover={false}/></List.Item>
+                          )}>
+
+                </List>
+                {/*<div style={{maxHeight: "80vh", overflow: 'auto', border: '1px sold #FAFAFA'}}>*/}
+                    {/*    /!*<InfiniteScroll*!/*/}
+                    {/*    /!*    pageStart={0}*!/*/}
+                    {/*    /!*    // hasMore={Object.keys(this.state.activeUsers).length >= 20}*!/*/}
+                    {/*    /!*    hasMore={this.hasMoreRoomsToShow()}*!/*/}
+                    {/*    /!*    loadMore={this.displayMore.bind(this)}*!/*/}
+                    {/*    /!*    useWindow={false}*!/*/}
+                    {/*    /!*    initialLoad={false}*!/*/}
+                    {/*    /!*    loader={<Spin>Loading...</Spin>}*!/*/}
+                    {/*    /!*>*!/*/}
+                    {/*        <Space style={{*/}
+                    {/*            maxWidth: '80vw',*/}
+                    {/*            display: "flex",*/}
+                    {/*            marginLeft: "20px",*/}
+                    {/*            flexWrap: "wrap"*/}
+                    {/*        }}>*/}
+                    {/*            {*/}
+                    {/*                Object.values(allActiveRooms)//.slice(0, this.state.maxDisplayedRooms)*/}
+                    {/*                    .map((item) => (*/}
+                    {/*                    <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} auth={this.props.auth} />*/}
+                    {/*                ))}*/}
+                    {/*        </Space>*/}
+                    {/*    /!*</InfiniteScroll>*!/*/}
+                    {/*</div>*/}
                 </div>
         );
     }
+
 }
 
 const AuthConsumer = (props) => (
