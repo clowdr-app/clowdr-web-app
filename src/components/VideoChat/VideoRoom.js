@@ -64,7 +64,7 @@ class VideoRoom extends Component {
 
     componentWillUnmount() {
         console.log("Unmounting video room")
-        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general" });
+        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null });
     }
     async joinCallFromProps(){
         if (!this.props.match) {
@@ -237,7 +237,7 @@ class VideoRoom extends Component {
 
     handleLogout() {
 
-        console.log("Video room log out")
+        // console.log("Video room log out")
         this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null});
         this.props.history.push(ROUTES.LOBBY_SESSION);
     }
@@ -631,7 +631,7 @@ class RoomVisibilityController extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {users: [], loading: true, selected: null, hasChange: false}
+        this.state = {users: [],  hasChange: false, loadedUsers: false}
     }
 
     handleChange(value) {
@@ -652,17 +652,12 @@ class RoomVisibilityController extends React.Component {
 
     async componentDidMount() {
         let selected = Object.keys(this.props.acl.permissionsById).filter(v=>!v.startsWith("role"));
-        // let selected = await selectedQuery.find();
-        this.props.authContext.helpers.getUsers();
         let profiles = await this.props.authContext.helpers.getUserProfilesFromUserIDs(selected);
         let selectedIDs = profiles.map(p=>p.get("user").id);
-        this.setState({selected: selectedIDs, loading: this.props.authContext.users == undefined, users: this.props.authContext.users});
+        this.setState({selected: selectedIDs, users: profiles});
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(prevProps.authContext.users != this.props.authContext.users){
-            this.setState({users: this.props.authContext.users, loadingUsers: false});
-        }
         if(prevProps.acl.permissionsById != this.props.acl.permissionsById){
             if (this.aclSelector)
             {
@@ -705,6 +700,15 @@ class RoomVisibilityController extends React.Component {
 
     }
 
+    async handleSearch(value){
+        if (!this.triggeredUserLoad) {
+            this.setState({loading: true})
+            this.triggeredUserLoad = true;
+            let users = await this.props.authContext.helpers.getUsers();
+            this.setState({loading: false, users: users});
+        }
+    }
+
     render() {
         if(!this.state.users || !this.state.selected)
             return <Skeleton />;
@@ -741,6 +745,7 @@ class RoomVisibilityController extends React.Component {
                 <Select
                     loading={this.state.loading}
                     mode="multiple" style={{width: '100%'}} placeholder="Users"
+                    onSearch={this.handleSearch.bind(this)}
                     filterOption={(input,option)=>option.label.toLowerCase().includes(input.toLowerCase())}
                     options={options}
                     onChange={this.handleChange.bind(this)}>

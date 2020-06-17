@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {AuthUserContext} from "../Session";
-import {Collapse, Divider, Menu, Select, Skeleton, Tag, Tooltip, Typography} from "antd";
+import {Collapse, Divider, Menu, Popconfirm, Select, Skeleton, Tag, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
 import {LockTwoTone} from "@ant-design/icons"
 import NewRoomForm from "./NewRoomForm";
@@ -125,7 +125,7 @@ class ContextualActiveUsers extends Component {
         let usersToFilter = [];
         for (let room of allActiveRooms) {
             if (room && room.get("members")) {
-                usersToFilter = usersToFilter.concat(room.get("members").map(u => u.id));
+                usersToFilter = usersToFilter.concat(room.get("members").filter(u=>u).map(u => u.id));
             }
         }
         let lobbyRoom = new BreakoutRoom();
@@ -229,8 +229,21 @@ class ContextualActiveUsers extends Component {
                         joinInfo = "Join this small group room, '"+item.get("title")+"'. Small group rooms support only up to 4 callers, but provide the best quality experience."
                     }
 
+                    let isModOverride = false;
+                    if(item.get("isPrivate")){
+                        //check for our uid in the acl
+                        let acl = item.getACL();
+                        if(!acl.getReadAccess(this.props.auth.user.id))
+                            isModOverride = true;
+                    }
+                    let privateSymbol = <></>
+                    if (item.get("isPrivate")) {
+                        if (isModOverride)
+                            privateSymbol = <LockTwoTone style={{verticalAlign: 'middle'}} twoToneColor="#eb2f96"/>
+                        else privateSymbol = <LockTwoTone style={{verticalAlign: 'middle'}}/>
+                    }
                     let formattedRoom =
-                        <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{tag}{item.get("isPrivate") ? <LockTwoTone style={{verticalAlign: 'middle'}} /> : <></>}{item.get('title')}</div>
+                        <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{tag}{privateSymbol}{item.get('title')}</div>
 
 
                     let joinLink = "";
@@ -239,6 +252,20 @@ class ContextualActiveUsers extends Component {
                             if (item.get("members") && item.get("capacity") <= item.get("members").length)
                                 joinLink = <div><Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
                                     disabled>{formattedRoom}</Typography.Text></Tooltip></div>
+                            else if(isModOverride){
+                                joinLink = <div><Tooltip title={joinInfo}>
+                                    <Popconfirm title={<span style={{width: "250px"}}>You do not have permission to join this room, but can override<br />
+                                        this as a moderator. Please only join this room if you were asked<br /> by a participant
+                                        to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
+                                                onConfirm={this.joinCall.bind(this,item)}
+                                        >
+                                    <a href="#"
+                                    >{formattedRoom}</a>
+                                    </Popconfirm>
+                                    </Tooltip>
+                                </div>;
+
+                            }
                             else
                                 joinLink = <div><Tooltip title={joinInfo}><a href="#"
                                                                                          onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>

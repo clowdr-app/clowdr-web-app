@@ -4,9 +4,7 @@ import Meta from "antd/lib/card/Meta";
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import InfiniteScroll from 'react-infinite-scroller';
-
-import {Card, Divider, Form, Input, Layout, List, Menu, Popconfirm, Popover, Tooltip} from 'antd';
+import {Card, Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -69,7 +67,7 @@ class SidebarChat extends React.Component {
     async componentDidMount() {
         if(this.props.auth.user){
             this.user = this.props.auth.user;
-            this.changeChannel("#general");
+            // this.changeChannel("#general");
         }
         this.props.setWidth(this.state.siderWidth)
     }
@@ -86,60 +84,62 @@ class SidebarChat extends React.Component {
         this.currentConference = this.props.auth.currentConference;
         this.currentUniqueNameOrSID = uniqueNameOrSID
         if (user && uniqueNameOrSID) {
-            if (!this.client) {
-                this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference);
-            }
             this.setState({
                 chatLoading: true,
                 messages: [],
                 numMessagesDisplayed: 0,
                 hasMoreMessages: false,
                 loadingMessages: true
-            }, async () => {
-                if(this.currentUniqueNameOrSID != uniqueNameOrSID){
-                    return;//raced with another update
-                }
-                if (this.activeChannel) {
-                    //leave the current channel
-                    this.activeChannel.removeAllListeners("messageAdded");
-                    this.activeChannel.removeAllListeners("messageRemoved");
-                    this.activeChannel.removeAllListeners("messageUpdated");
-                    //we never actually leave a private channel because it's very hard to get back in
-                    // - we need to be invited by the server, and that's a pain...
-                    //we kick users out when they lose their privileges to private channels.
-                    if (this.activeChannel.type !== "private")
-                        await this.activeChannel.leave();
-                }
-                this.activeChannel = await this.props.auth.chatClient.joinAndGetChannel(uniqueNameOrSID);
-                if(this.currentUniqueNameOrSID != uniqueNameOrSID){
-                    return;//raced with another update
-                }
-                this.activeChannel.getMessages(300).then((messages)=> {
-                    if(this.currentUniqueNameOrSID != uniqueNameOrSID)
-                        return;
-                    this.messagesLoaded(this.activeChannel, messages)
-                });
-                this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
-                this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
-                this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
-               let stateUpdate = {
-                    chatLoading: false,
-                   activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
-               }
-               console.log("Changing active channel name to: " + stateUpdate.activeChannelName + " aka " + uniqueNameOrSID)
-               if(!uniqueNameOrSID.startsWith("#"))
-               {
-                   if(this.state.siderWidth == 0)
-                       stateUpdate.siderWidth = 250;
-               }
-                if(this.currentUniqueNameOrSID != uniqueNameOrSID){
-                    return;//raced with another update
-                }
-                this.setState(stateUpdate);
             });
+            if (!this.client) {
+                this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference);
+            }
+            // console.log("Prepared client for " + uniqueNameOrSID + ", " + this.currentUniqueNameOrSID)
+            if (this.currentUniqueNameOrSID != uniqueNameOrSID) {
+                return;//raced with another update
+            }
+            if (this.activeChannel) {
+                //leave the current channel
+                this.activeChannel.removeAllListeners("messageAdded");
+                this.activeChannel.removeAllListeners("messageRemoved");
+                this.activeChannel.removeAllListeners("messageUpdated");
+                //we never actually leave a private channel because it's very hard to get back in
+                // - we need to be invited by the server, and that's a pain...
+                //we kick users out when they lose their privileges to private channels.
+                if (this.activeChannel.type !== "private")
+                    await this.activeChannel.leave();
+            }
+            if (this.currentUniqueNameOrSID != uniqueNameOrSID) {
+                return;//raced with another update
+            }
+            this.activeChannel = await this.props.auth.chatClient.joinAndGetChannel(uniqueNameOrSID);
+            if (this.currentUniqueNameOrSID != uniqueNameOrSID) {
+                return;//raced with another update
+            }
+            this.activeChannel.getMessages(300).then((messages) => {
+                if (this.currentUniqueNameOrSID != uniqueNameOrSID)
+                    return;
+                this.messagesLoaded(this.activeChannel, messages)
+            });
+            this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
+            this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
+            this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
+            let stateUpdate = {
+                chatLoading: false,
+                activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
+            }
+            console.log("Changing active channel name to: " + stateUpdate.activeChannelName + " aka " + uniqueNameOrSID + " vs " + this.currentUniqueNameOrSID)
+            if (!uniqueNameOrSID.startsWith("#")) {
+                if (this.state.siderWidth == 0)
+                    stateUpdate.siderWidth = 250;
+            }
+            if (this.currentUniqueNameOrSID != uniqueNameOrSID) {
+                return;//raced with another update
+            }
+            this.setState(stateUpdate);
 
         } else {
-            if(this.currentUniqueNameOrSID != uniqueNameOrSID){
+            if (this.currentUniqueNameOrSID != uniqueNameOrSID) {
                 return;//raced with another update
             }
             // console.log("Unable to set channel because no user or something:")
@@ -162,6 +162,7 @@ class SidebarChat extends React.Component {
         let _this = this;
         let lastSID;
 
+        let authorIDs = {};
         for (let message of messages) {
             if(lastSID && lastSID==message.sid)
                 continue;
@@ -170,14 +171,7 @@ class SidebarChat extends React.Component {
                 if (lastMessage)
                     ret.push(lastMessage);
                 let authorID = message.author;
-                if (!this.state.authors[authorID]) {
-                    this.props.auth.helpers.getUserRecord(authorID).then((user) => {
-                        _this.setState((prevState) => ({
-                            authors: {...prevState.authors, [authorID]: (user ? user.get("displayName") : authorID)}
-                        }))
-                    })
-                }
-
+                authorIDs[authorID] = authorID;
                 lastMessage = {
                     author: message.author,
                     timestamp: message.timestamp,
@@ -190,6 +184,8 @@ class SidebarChat extends React.Component {
         }
         if (lastMessage)
             ret.push(lastMessage);
+        this.props.auth.helpers.getUserProfilesFromUserProfileIDs(Object.keys(authorIDs));
+
         this.setState({groupedMessages: ret});
 
     }
@@ -275,8 +271,9 @@ class SidebarChat extends React.Component {
         let isDifferentUser = this.user != this.props.auth.user;
         this.user = this.props.auth.user;
         let isDifferentChannel = this.props.auth.chatChannel != this.currentUniqueNameOrSID;
+
         if (isDifferentChannel || isDifferentUser) {
-            if(!isDifferentUser && this.props.auth.activeSpace && this.props.auth.activeSpace.get("chatChannel") == this.state.chatChannel){
+            if(!isDifferentUser && this.props.auth.chatChannel == null && this.props.auth.activeSpace && this.props.auth.activeSpace.get("chatChannel") == this.state.chatChannel){
                 return;
             }
             let newChannel = this.props.auth.chatChannel;
