@@ -13,8 +13,15 @@ const withLoginRequired = Component => {
                 showingLogin: false
             };
         }
+        componentWillUnmount() {
+            this.mounted = false;
+        }
+
         componentDidMount() {
+            this.mounted = true;
             this.context.refreshUser().then(u=>{
+                if(!this.mounted)
+                    return;
                 if(u){
                     this.setState({showingLogin: false});
                 }

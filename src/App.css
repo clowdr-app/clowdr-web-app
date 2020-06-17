@@ -272,3 +272,17 @@ background-color:#97a7b7;
 .chatChannelID{
 
 }
+span.availabilityOption{
+    display: none;
+}
+div.availabilityOptionsOpen{
+    /*width: 200px;*/
+}
+div.availabilityOptionsOpen  span.availabilityOption{
+    display: inline;
+}
+
+#statusForm  .ant-form-item{
+    padding: 0;
+    margin: 0;
+}

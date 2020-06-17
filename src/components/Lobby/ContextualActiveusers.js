@@ -1,9 +1,12 @@
 import React, {Component} from "react";
 import {AuthUserContext} from "../Session";
-import {Collapse, Divider, Menu, Popover, Select, Skeleton, Tag, Tooltip, Typography} from "antd";
+import {Collapse, Divider, Menu, Select, Skeleton, Tag, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
 import {LockTwoTone} from "@ant-design/icons"
 import NewRoomForm from "./NewRoomForm";
+import UserStatusDisplay from "./UserStatusDisplay";
+import Parse from "parse";
+import PresenceForm from "./PresenceForm";
 
 
 class ContextualActiveUsers extends Component {
@@ -23,6 +26,7 @@ class ContextualActiveUsers extends Component {
     async componentDidMount() {
         let user = this.props.auth.user;
         if (user) {
+            this.setState({presences: this.props.auth.presences});
             await this.props.auth.subscribeToVideoRoomState();
             this.setState({loggedIn: true});
         } else {
@@ -40,6 +44,9 @@ class ContextualActiveUsers extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if(this.props.auth.presences != this.state.presences){
+            this.setState({presences: this.props.auth.presences});
+        }
         if (!this.areEqualID(this.props.auth.currentConference, prevProps.auth.currentConference) || !this.areEqualID(prevProps.auth.user, this.props.auth.user)) {
             if (this.props.auth.user) {
                 this.setState({loggedIn: true});
@@ -98,7 +105,7 @@ class ContextualActiveUsers extends Component {
 
         let tabs = "";
         let liveMembers = 0
-        let allActiveRooms;
+        let allActiveRooms = [];
         if(!this.state.activePrivateVideoRooms)
             allActiveRooms = this.state.activePublicVideoRooms;
         else if(!this.state.activePublicVideoRooms){
@@ -107,20 +114,39 @@ class ContextualActiveUsers extends Component {
         else{
             allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
         }
+        //Also make a fake rom for the lobby.
+        let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
+
+
         if(this.state.filteredRoom)
             allActiveRooms = allActiveRooms.filter(r=>r.id == this.state.filteredRoom);
         let searchOptions = [];
 
-        if (allActiveRooms)
-            for (let room of allActiveRooms) {
-                searchOptions.push({label: "#"+room.get("title"), value: room.id});
-                if (room && room.get("members")) {
-                    searchOptions = searchOptions.concat(room.get("members").map(u => {
-                        return {label: "@"+u.get("displayName"), value: u.id+"@"+room.id}
-                    }));
-                    liveMembers += room.get("members").length;
-                }
+        let usersToFilter = [];
+        for (let room of allActiveRooms) {
+            if (room && room.get("members")) {
+                usersToFilter = usersToFilter.concat(room.get("members").map(u => u.id));
             }
+        }
+        let lobbyRoom = new BreakoutRoom();
+        lobbyRoom.set("title", "Lobby")
+        lobbyRoom.id = "lobby";
+        let lobbyMembers = [];
+        if (this.state.presences)
+            lobbyMembers = Object.values(this.state.presences).filter(p => p).map(p => p.get("user")).filter(u=>!usersToFilter.includes(u.id));
+
+        for (let room of allActiveRooms) {
+            searchOptions.push({label: "#" + room.get("title"), value: room.id});
+            if (room && room.get("members")) {
+                searchOptions = searchOptions.concat(room.get("members").map(u => {
+                    return {label: "@" + u.get("displayName"), value: u.id + "@" + room.id}
+                }));
+                liveMembers += room.get("members").length;
+            }
+        }
+
+        lobbyRoom.set("members", lobbyMembers);
+        allActiveRooms.push(lobbyRoom);
         if (!this.state.collapsed) {
             let selectedKeys = [];
             if(this.props.auth.currentRoom)
@@ -131,8 +157,10 @@ class ContextualActiveUsers extends Component {
                 selectedKeys.push(this.state.filteredUser);
             tabs = <div>
                 <div>
+
+                    <div><PresenceForm /></div>
                     <Divider>
-                        Available Rooms
+                        Available Rooms and Users
                     </Divider>
                     <div style={{textAlign: 'center'}}>
                         <NewRoomForm type="secondary" text="Create New Room" />
@@ -166,6 +194,10 @@ class ContextualActiveUsers extends Component {
                 {/*    dataSource={this.state.activeRooms}*/}
                 {/*renderItem={item => {*/}
                 {allActiveRooms ? allActiveRooms.sort((i1, i2) => {
+                    if(i1 == lobbyRoom)
+                        return 1;
+                    else if(i2 == lobbyRoom)
+                        return -1;
                     return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
                 }).map((item) => {
                     if(!item){
@@ -178,19 +210,21 @@ class ContextualActiveUsers extends Component {
                     }
                     let tag, joinInfo;
                     if(item.get("mode") == "group"){
-                        tag = <Tag color="#FF9C6E" style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                        joinInfo = "Join this big group room, '"+item.get("title")+"'. Big group rooms support up to 50 callers, but you can only see the video of up to 8 other callers at once."
+                        tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
+                        joinInfo = "Join this big group room, '"+item.get("title")+"'. Big group rooms support up to 50 callers, but you can only see the video of up to 4 other callers at once."
                     }
                     else if(item.get("mode") == "peer-to-peer"){
-                        tag = <Tag color="#69C0FF" style={{width:"43px", textAlign: "center"}}>P2P</Tag>
+                        tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
                         joinInfo ="Join this peer-to-peer room, '"+item.get("title")+"'. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
                     }
                     else if(item.get("mode") == "group-small"){
-                        tag = <Tag color="#52C41A" style={{width:"43px", textAlign: "center"}}>Small</Tag>
+                        tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
                         joinInfo = "Join this small group room, '"+item.get("title")+"'. Small group rooms support only up to 4 callers, but provide the best quality experience."
                     }
+
                     let formattedRoom =
                         <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{tag}{item.get("isPrivate") ? <LockTwoTone style={{verticalAlign: 'middle'}} /> : <></>}{item.get('title')}</div>
+
 
                     let joinLink = "";
                         if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
@@ -212,7 +246,12 @@ class ContextualActiveUsers extends Component {
                         else {
                             joinLink = formattedRoom;
                         }
-                        let list;
+                    if (item == lobbyRoom) {
+                        joinLink = <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}><a href="#"
+                                                                                                       onClick={() => this.props.history.push("/lobby")}>General
+                            Lobby</a></div>
+                    }
+                    let list;
                     // let header = <div style={{clear: 'both', paddingLeft: '5px'}}>
                     //
                     //     {joinLink}
@@ -245,15 +284,16 @@ class ContextualActiveUsers extends Component {
                                              //
                                              //     avatar = <Avatar>{initials}</Avatar>
                                              // }
-                                             let popoverContent=<a href={"slack://user?team="+this.props.auth.currentConference.get("slackWorkspace")+"&id="+user.get("slackID")}>Direct message on Slack</a>;
+                                let popoverContent = <a
+                                    href={"slack://user?team=" + this.props.auth.currentConference.get("slackWorkspace") + "&id=" + user.get("slackID")}>Direct
+                                    message on Slack</a>;
                                 let className = "personHoverable";
-                                if(this.state.filteredUser == user.id)
+                                if (this.state.filteredUser == user.id)
                                     className += " personFiltered"
-                                             return <Menu.Item key={user.id} className={className}>
-                                                 <Popover placement="topRight"  content={popoverContent}>{user.get("displayName")}</Popover>
-                                                 {/*{user.get("displayName")}*/}
-                                             </Menu.Item>
-                                         }) //}>
+                                return <Menu.Item key={user.id} className={className}>
+                                    <UserStatusDisplay popover={true}profileID={user.id}/>
+                                </Menu.Item>
+                            }) //}>
                         else
                             list = <Menu.Item disabled={true}>Empty</Menu.Item>
                         return (

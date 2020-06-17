@@ -157,7 +157,7 @@ class App extends Component {
             return <div>
                 {baseRoutes}
                 <Route exact path="/" component={Lobby}/>
-                <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
+                <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
                 <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
                 <Route exact path="/signout" component={SignOut}/>
                 <Route exact path="/lobby" component={Lobby}/>
@@ -177,7 +177,8 @@ class App extends Component {
             <Route exact path="/" component={Home}/>
             <Route exact path="/live" component={LiveStreaming}/>
             <Route exact path="/program" component={Program}/>
-            <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
+
+            <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
             <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
             <Route exact path="/moderation" component={Moderation} />
 
@@ -215,7 +216,7 @@ class App extends Component {
     }
     render() {
         if (this.state.isMagicLogin) {
-            return <Route exact path="/fromSlack/:team/:roomName/:token" component={SlackToVideo}/>
+            return <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
         }
         if(this.state.showingLanding){
             return <GenericLanding />
