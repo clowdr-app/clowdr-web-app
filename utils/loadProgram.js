@@ -2,18 +2,28 @@ const fs = require("fs");
 const Parse = require("parse/node");
 require('dotenv').config()
 var moment = require('moment'); // require
+const { exit } = require("process");
+
+if (process.argv.length < 3) {
+    console.log('Usage: node utils/loadProgram <CONFERENCE NAME>');
+    exit();
+}
+let conferenceName = process.argv[2];
+console.log('Uploading program for ' + conferenceName);
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
 Parse.serverURL = 'https://parseapi.back4app.com/'
+Parse.Cloud.useMasterKey();
 
 
-let data = JSON.parse(fs.readFileSync("data/confero-pldi.json"));
+let data = JSON.parse(fs.readFileSync("data/confero-icse.json"));
 let conferoPeople = {};
 
 let i = 0;
 data.People.forEach((p) => {
     conferoPeople[p.Key] = p;
 })
+
 //Event, Sessions, Items
 
 /*    {
@@ -31,6 +41,7 @@ data.People.forEach((p) => {
       "AffiliationsString": "Kyungpook National University",
       "Abstract": "This paper proposes a collaboration application that allows multi-user to add extra content to live video streaming, based on augmented reality annotation in real-time. Compared to the previous work, we think the integration of remote collaboration and a co-located collaborative way is one of the novelty points of the proposed application. The AR-based collaborative system can render annotations directly on an environment which helps local users easily recognize the original intention that the remote helper wants to deliver. We introduce how the application work."
     },*/
+
 async function findOrAddUser(key) {
     if (allUsers[key])
         return allUsers[key];
@@ -91,10 +102,95 @@ function mockDate(date) {
     return date.subtract(daysTillStart);
 }
 
-async function loadItems() {
+let tracks = {};
+data.Items.forEach(item => {
+    let parts = item.Key.split("/");
+    let trackName = parts[0];
+    if (trackName.includes('catering') || trackName == 'icse-2020-test')
+        return;
+    if (trackName in tracks)
+        tracks[trackName] = tracks[trackName] + 1;
+    else
+        tracks[trackName] = 1;
+});
+
+let rooms = {}
+data.Sessions.forEach (session => {
+    if (session.Location in rooms)
+        rooms[session.Location] = rooms[session.Location] + 1;
+    else
+        rooms[session.Location] = 1;
+});
+
+async function loadProgram() {
+    let confQ = new Parse.Query("ClowdrInstance")
+    confQ.equalTo("conferenceName", conferenceName);
+    let conf = await confQ.first();
+
+    let acl = new Parse.ACL();
+    acl.setPublicWriteAccess(false);
+    acl.setRoleWriteAccess(conf.id+"-manager", true);
+    acl.setRoleWriteAccess(conf.id+"-admin", true);
+
+    // Create the tracks first
+    let newtracks = [];
+    let ProgramTrack = Parse.Object.extend('ProgramTrack');
+    var qt = new Parse.Query(ProgramTrack);
+    qt.equalTo("conference", conf);
+    qt.limit(100);
+    var existingTracks = await qt.find();
+    for (let [name, count] of Object.entries(tracks)) {
+        if (existingTracks.find(t => t.get('name') == name)) {
+            console.log('Track already exists: ' + name);
+            continue;
+        }
+        let newtrack = new ProgramTrack();
+        newtrack.set('name', name);
+        newtrack.set('conference', conf);
+        newtrack.setACL(acl);
+        newtracks.push(newtrack);
+        existingTracks.push(newtrack);
+    }
+
+    try {
+        await Parse.Object.saveAll(newtracks);
+    } catch(err){
+        console.log(err);
+    }
+    console.log('Tracks saved: ' + newtracks.length);
+
+    // Create the rooms next
+    let newrooms = [];
+    let ProgramRoom = Parse.Object.extend('ProgramRoom');
+    var qr = new Parse.Query(ProgramRoom);
+    qr.equalTo("conference", conf);
+    qr.limit(100);
+    var existingRooms = await qr.find();
+    for (let [name, count] of Object.entries(rooms)) {
+        if (existingRooms.find(r => r.get('name') == name)) {
+            console.log('Room already exists: ' + name);
+            continue;
+        }
+        let newroom = new ProgramRoom();
+        newroom.set('name', name);
+        newroom.set('location', 'TBD');
+        newroom.set('conference', conf);
+        newroom.setACL(acl);
+        newrooms.push(newroom);
+        existingRooms.push(newroom);
+    }
+
+    try {
+        await Parse.Object.saveAll(newrooms);
+    } catch(err){
+        console.log(err);
+    }
+    console.log('Rooms saved: ' + newrooms.length);
+
     let ProgramItem = Parse.Object.extend("ProgramItem");
     let q = new Parse.Query(ProgramItem);
-    q.limit(10000);
+    q.equalTo("conference", conf);
+    q.limit(1000);
     let items = await q.find();
     items.forEach((item) => {
         allItems[item.get("confKey")] = item;
@@ -107,66 +203,82 @@ async function loadItems() {
         allUsers[u.get("displayname")] = u
     });
 
+    let newItems = [];
     for (const item of data.Items) {
         if (allItems[item.Key]) {
-            // console.log("Found")
             continue
         }
-        console.log("Adding new item");
+        let parts = item.Key.split("/");
+        let trackName = parts[0];
+        let track = existingTracks.find(t => t.get('name') == trackName);    
+        if (!track)
+            console.log('Warning: Adding item without track: ' + item.Key);
+
         let newItem = new ProgramItem();
         newItem.set("title", item.Title);
         newItem.set("type", item.Type);
         newItem.set("url", item.URL);
         newItem.set("abstract", item.Abstract);
         newItem.set("affiliations", item.Affiliations);
+        newItem.set("conference",conf);
         newItem.set("confKey", item.Key);
+        newItem.set('track', track);
+        newItem.setACL(acl);
         //find affiliated users
-        newItem.set("authors", await buildUsersArray(item.Authors))
-        await newItem.save();
+        newItem.set("authors", item.Authors);
+        newItems.push(newItem);
+        allItems[newItem.get("confKey")] = newItem;
     }
+    try {
+        await Parse.Object.saveAll(newItems);
+    } catch(err){
+        console.log(err);
+    }
+    console.log("Items saved: " + newItems.length);
 
-    console.log("Done with items");
     let ProgramSession = Parse.Object.extend("ProgramSession");
     let qs = new Parse.Query(ProgramSession);
     qs.limit(10000);
     let sessions = await qs.find();
-    items.forEach((session) => {
+    sessions.forEach((session) => {
         allSessions[session.get("confKey")] = session;
     })
 
-    for (const item of data.Sessions) {
+    let toSave = [];
+    for (const ses of data.Sessions) {
         // if (i > 1)
         //     continue;
-
-        if(allSessions[item.Key])
+        if (allSessions[ses.Key])
             continue;
-
-        let startTime = item.Time.substring(0, item.Time.indexOf('-'));
-        let dateTime = item.Day + " " + startTime;
-        console.log(">" + dateTime)
+        let startTime = ses.Time.substring(0, ses.Time.indexOf('-'));
+        let dateTime = ses.Day + " " + startTime;
+        //console.log(">" + dateTime)
         var start = moment(dateTime, "YYYY-MM-DD HH:mm");
         var end = moment(dateTime, "YYYY-MM-DD HH:mm");
-        start = mockDate(start).toDate();
-        end = mockDate(end).toDate();
+        // start = mockDate(start).toDate();
+        // end = mockDate(end).toDate();
 
         let session = new ProgramSession();
-        session.set("title",item.Title);
-        session.set("abstract", item.Abstract);
-        session.set("type", item.Type);
-        session.set("startTime", start);
-        session.set("endTime", end);
-        session.set("location", item.Location);
-        session.set("confKey", item.Key);
+        session.set("title", ses.Title);
+        session.set("abstract", ses.Abstract);
+        session.set("type", ses.Type);
+        session.set("startTime", start.toDate());
+        session.set("endTime", end.toDate());
+        session.set("confKey", ses.Key);
+        session.set("conference", conf);
+        session.setACL(acl);
 
-        item.Key = item.Key.replace("/", "-");
-        // await programRef.child("sessions").child(item.Key).update(dat);
+        // Find the pointer to the room
+        let room = existingRooms.find(r => r.get('name') == ses.Location);
+        if (room)
+            session.set("room", room);
+        else
+            console.log(`Warning: room ${ses.Location} not found for session ${ses.Title}`);
+
+        // Find the pointers to the items
         let items = [];
-        let categories = {};
-        if (item.Items) {
-            item.Items.forEach((k) => {
-                // categories[k.substring(0, k.indexOf("/"))] = true;
-                // k = k.replace("/", "-");
-                // items[k] = k;
+        if (ses.Items) {
+            ses.Items.forEach((k) => {
                 if(allItems[k])
                     items.push(allItems[k]);
                 else
@@ -175,14 +287,19 @@ async function loadItems() {
             // await programRef.child("sessions").child(item.Key).child("items").set(items);
         }
         session.set("items", items);
-        await session.save();
+        toSave.push(session);
+        // promises.push(session.save({},{useMasterKey: true}));
         // Object.keys(categories).forEach(async (v)=>{
         //     await programRef.child("categories").child("members").child(v).child(item.Key).set(true);
         // })
         // console.log(categories);
         // console.log(item);
         i++;
-
+    }
+    try{
+        await Parse.Object.saveAll(toSave);
+    } catch(err){
+        console.log(err);
     }
     console.log("Done");
 // data.People.forEach((person)=>{
@@ -201,6 +318,6 @@ async function loadItems() {
 
 }
 
-loadItems().then(() => {
+loadProgram().then(() => {
     console.log("Done")
 });

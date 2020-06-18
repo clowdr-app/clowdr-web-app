@@ -32,8 +32,6 @@ class NewRoomForm extends React.Component {
 
     };
     componentDidMount() {
-        let tagQ = new Parse.Query("BreakoutRoomCategory");
-        tagQ.find().then((res => this.setState({categories: res})));
     }
 
     render() {

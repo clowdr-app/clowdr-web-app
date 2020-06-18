@@ -18,9 +18,13 @@ class SocialTab extends Component {
     }
     componentWillUnmount() {
     }
+    componentDidMount() {
+        this.props.setWidth(this.state.siderWidth);
+    }
 
     setDrawerWidth(width){
         this.setState({siderWidth: width})
+        this.props.setWidth(width);
         localStorage.setItem("lobbyWidth", (width == 0 ? -1 : width));
     }
 
@@ -45,22 +49,30 @@ class SocialTab extends Component {
             if (newWidth >= 0 && newWidth <= 300)
                 this.setDrawerWidth(newWidth);
         };
-        let containerStyle = {position: 'relative', height:'100%'};
+        let containerStyle = {width: this.state.siderWidth, top: topHeight};
         if(this.state.siderWidth <5){
             containerStyle.width="10px";
         }
-        return <div className="activeRoomsTab">
+        return <div className="activeRoomsTab" style={containerStyle}>
 
-            <div style={containerStyle}>
+            <div style={{width:this.state.siderWidth,
+                top:"0", bottom:"0",left:"0",position:"absolute"}}>
+
             <Layout.Sider collapsible collapsed={this.state.siderWidth == 0}
                              trigger={null}
                           className="activeRoomsSider"
                           width={this.state.siderWidth}
                              collapsedWidth={0}
                              theme="light"
-                             style={{backgroundColor: '#f8f8f8', height: "100%"}}>
+                          style={{backgroundColor: '#f8f8f8',
+                              overflowY:"auto",
+                              overflowX:"hidden",
+                              overflowWrap:"break-word",
+                              height:"100%",
+                              boxSizing:  "border-box",
+                              width: this.state.siderWidth}}>
+
             <div id="sidepopoutcontainer" style={{
-                overflowY: "auto"
                 // height: '100vh',
                 // margin: '0 0 0 auto',
                 // // zIndex: "5",
@@ -75,10 +87,14 @@ class SocialTab extends Component {
 
                 </div>
         </Layout.Sider>
+
+            </div>
                 {/*<div className="dragIconTop" onMouseDown={e => handleMouseDown(e)}></div>*/}
                 <div className="dragIconMiddle"
                      onClick={() => {
                          localStorage.setItem("lobbyWidth", (this.state.siderWidth == 0 ? 250 : -1));
+                         this.props.setWidth((this.state.siderWidth == 0 ? 250 : 10));
+
                          this.setState((prevState) => ({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
                      }}
             >
@@ -90,7 +106,6 @@ class SocialTab extends Component {
 
             {/*<div className="dragIconBottom" onMouseDown={e => handleMouseDown(e)}></div>*/}
             </div>
-        </div>
     }
 }
 const AuthConsumer = (props) => (
