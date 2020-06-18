@@ -112,8 +112,15 @@ data.Items.forEach(item => {
         tracks[trackName] = tracks[trackName] + 1;
     else
         tracks[trackName] = 1;
-})
+});
 
+let rooms = {}
+data.Sessions.forEach (session => {
+    if (session.Location in rooms)
+        rooms[session.Location] = rooms[session.Location] + 1;
+    else
+        rooms[session.Location] = 1;
+});
 
 async function loadProgram() {
     let confQ = new Parse.Query("ClowdrInstance")
@@ -141,7 +148,7 @@ async function loadProgram() {
         newtrack.set('name', name);
         newtrack.set('conference', conf);
         newtrack.setACL(acl);
-        newtracks.push(newtrack.save());
+        newtracks.push(newtrack);
         existingTracks.push(newtrack);
     }
 
@@ -151,6 +158,34 @@ async function loadProgram() {
         console.log(err);
     }
     console.log('Tracks saved: ' + newtracks.length);
+
+    // Create the rooms next
+    let newrooms = [];
+    let ProgramRoom = Parse.Object.extend('ProgramRoom');
+    var qr = new Parse.Query(ProgramRoom);
+    qr.equalTo("conference", conf);
+    qr.limit(100);
+    var existingRooms = await qr.find();
+    for (let [name, count] of Object.entries(rooms)) {
+        if (existingRooms.find(r => r.get('name') == name)) {
+            console.log('Room already exists: ' + name);
+            continue;
+        }
+        let newroom = new ProgramRoom();
+        newroom.set('name', name);
+        newroom.set('location', 'TBD');
+        newroom.set('conference', conf);
+        newroom.setACL(acl);
+        newrooms.push(newroom);
+        existingRooms.push(newroom);
+    }
+
+    try {
+        await Parse.Object.saveAll(newrooms);
+    } catch(err){
+        console.log(err);
+    }
+    console.log('Rooms saved: ' + newrooms.length);
 
     let ProgramItem = Parse.Object.extend("ProgramItem");
     let q = new Parse.Query(ProgramItem);
@@ -229,11 +264,18 @@ async function loadProgram() {
         session.set("type", ses.Type);
         session.set("startTime", start.toDate());
         session.set("endTime", end.toDate());
-        session.set("location", ses.Location);
         session.set("confKey", ses.Key);
         session.set("conference", conf);
         session.setACL(acl);
 
+        // Find the pointer to the room
+        let room = existingRooms.find(r => r.get('name') == ses.Location);
+        if (room)
+            session.set("room", room);
+        else
+            console.log(`Warning: room ${ses.Location} not found for session ${ses.Title}`);
+
+        // Find the pointers to the items
         let items = [];
         if (ses.Items) {
             ses.Items.forEach((k) => {
