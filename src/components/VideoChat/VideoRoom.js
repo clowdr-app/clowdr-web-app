@@ -72,7 +72,7 @@ class VideoRoom extends Component {
         }
 
         if(!this.props.authContext.user || this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName")){
-            this.props.authContext.refreshUser(null, this.props.match.params.conf).then((u)=>{
+            this.props.authContext.refreshUser(this.props.match.params.conf).then((u)=>{
                 this.joinCallFromPropsWithCurrentUser()
             })
         }

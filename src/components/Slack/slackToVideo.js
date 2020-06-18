@@ -37,7 +37,7 @@ class SlackToVideo extends React.Component {
         try {
             let u = await Parse.User.become(res.token);
             let conf = await this.props.authContext.getConferenceBySlackName(team);
-            await this.props.authContext.refreshUser(conf);
+            await this.props.authContext.refreshUser(conf, true);
             if(!roomName){
                 this.props.history.push("/lobby");
                 return;
