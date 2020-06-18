@@ -139,7 +139,10 @@ class ContextualActiveUsers extends Component {
             searchOptions.push({label: "#" + room.get("title"), value: room.id});
             if (room && room.get("members")) {
                 searchOptions = searchOptions.concat(room.get("members").map(u => {
-                    return {label: "@" + u.get("displayName"), value: u.id + "@" + room.id}
+                    if(u)
+                        return {label: "@" + u.get("displayName"), value: u.id + "@" + room.id}
+                    else
+                        return {label: "@???", value: "??"}
                 }));
                 liveMembers += room.get("members").length;
             }

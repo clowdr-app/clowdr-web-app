@@ -1,5 +1,5 @@
 import React from "react";
-import {Badge, Card, Popover, Skeleton, Tooltip} from "antd";
+import {Badge, Button, Card, Popover, Skeleton, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
@@ -24,6 +24,9 @@ class UserStatusDisplay extends React.Component{
         if(this.props.auth.presences[this.state.id] != this.state.presence){
             this.setState({presence: this.props.auth.presences[this.state.id]});
         }
+    }
+    openDM(){
+        this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
 
     render() {
@@ -58,6 +61,11 @@ class UserStatusDisplay extends React.Component{
                 dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
             }
             let statusDesc = <i>{this.state.presence.get("status")}</i>;
+            let dmButton = <></>
+            if(this.props.auth.userProfile.id != this.state.profile.id){
+                dmButton = <Button onClick={this.openDM.bind(this)} type="primary">Message</Button>
+            }
+            let popoverContent = <span>{dmButton}</span>
             if (this.props.popover)
                 return <div className="userDisplay" style={this.props.style}>
                     <Popover title={this.state.profile.get("displayName") + "'s availability is: " + presenceDesc}
@@ -69,9 +77,10 @@ class UserStatusDisplay extends React.Component{
                 className="userTag"
                 title=
                 {dntWaiver}>
-                <Tooltip
-                    title={this.state.profile.get("displayName") +"'s availability is: " + presenceDesc}>
-                    <Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")} {statusDesc}</Tooltip>
+                <Popover
+                    title={presenceDesc}
+                content={popoverContent}>
+                    <Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")} {statusDesc}</Popover>
             </div>
         }
 
