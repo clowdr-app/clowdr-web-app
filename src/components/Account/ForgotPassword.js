@@ -26,7 +26,7 @@ class SlackToVideo extends React.Component {
                 try {
                     let u = await Parse.User.become(res.token);
                     let confQ = new Parse.Query("ClowdrInstance");
-                    await this.props.authContext.refreshUser();
+                    await this.props.authContext.refreshUser(null, true);
                     this.setState({loading: false});
                 } catch (err) {
                     console.log(err);

@@ -138,7 +138,7 @@ const withAuthentication = Component => {
             }
         }
         async setActiveConference(conf) {
-            this.refreshUser(conf);
+            this.refreshUser(conf, true);
         }
 
         async getRoleByName(role) {
@@ -171,7 +171,7 @@ const withAuthentication = Component => {
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("conferenceName", confName);
             let res = await confQ.first();
-            this.refreshUser(res);
+            this.refreshUser(res, true);
             return res;
         }
         async getConferenceBySlackName(teamId) {
@@ -426,7 +426,6 @@ const withAuthentication = Component => {
         }
         async _refreshUser(preferredConference) {
 
-            console.trace();
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
                 if (user) {

@@ -27,10 +27,10 @@ class PresenceForm extends React.Component {
             //Create a new one...
             let presence = new UserPresence();
             presence.set("user", this.props.auth.userProfile);
-            presence.set("isAvailable", false);
+            presence.set("isAvailable", true);
             presence.set("isDND", false);
             presence.set("isDNT", false);
-            presence.set("isLookingForConversation", true);
+            presence.set("isLookingForConversation", false);
             presence.set("socialSpace", this.props.auth.activeSpace);
 
             let presenceACL = new Parse.ACL();
