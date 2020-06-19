@@ -93,7 +93,7 @@ async function buildUsersArray(authors) {
     }
 }
 
-let allUsers = {};
+let allPeople = {};
 let allItems = {};
 let allSessions = {};
 let daysTillStart = moment("2020-10-06", "YYYY-MM-DD").subtract(moment(moment().format("YYYY-MM-DD")));
@@ -121,6 +121,18 @@ data.Sessions.forEach (session => {
     else
         rooms[session.Location] = 1;
 });
+
+function getAuthors(authorKeys) {
+    let authors = [];
+    authorKeys.map(key => {
+        author = allPeople[key];
+        if (author)
+            authors.push(author);
+        else
+            console.log(`Warning: author ${key} not found`)
+    })
+    return authors;
+}
 
 async function loadProgram() {
     let confQ = new Parse.Query("ClowdrInstance")
@@ -188,6 +200,39 @@ async function loadProgram() {
     }
     console.log('Rooms saved: ' + newrooms.length);
 
+    // Create People next
+    let ProgramPerson = Parse.Object.extend("ProgramPerson");
+    let qp = new Parse.Query(ProgramPerson);
+    qp.limit(10000);
+    let people = await qp.find();
+    people.forEach((person) => {
+        allPeople[person.get("confKey")] = person;
+    })
+    let newPeople = [];
+    for (const person of data.People) {
+        if (newPeople[person.Key]) {
+            continue
+        }
+
+        let newPerson = new ProgramPerson();
+        newPerson.set("name", person.Name);
+        newPerson.set("bio", person.Bio);
+        newPerson.set("affiliation", person.Affiliation);
+        newPerson.set("confKey", person.Key);
+        newPerson.set("URL", person.URL);
+        newPerson.set("URLPhoto", person.URLPhoto);
+        newPerson.setACL(acl);
+        newPeople.push(newPerson);
+        allPeople[newPerson.get("confKey")] = newPerson;
+    }
+    try {
+        await Parse.Object.saveAll(newPeople);
+    } catch(err){
+        console.log(err);
+    }
+    console.log("People saved: " + newPeople.length);
+
+
     let ProgramItem = Parse.Object.extend("ProgramItem");
     let q = new Parse.Query(ProgramItem);
     q.equalTo("conference", conf);
@@ -196,13 +241,13 @@ async function loadProgram() {
     items.forEach((item) => {
         allItems[item.get("confKey")] = item;
     })
-    q = new Parse.Query(Parse.User);
-    q.limit(10000);
-    let usersArray = await q.find();
-    console.log("Found " + usersArray.length);
-    usersArray.forEach((u) => {
-        allUsers[u.get("displayname")] = u
-    });
+    // q = new Parse.Query(Parse.User);
+    // q.limit(10000);
+    // let usersArray = await q.find();
+    // console.log("Found " + usersArray.length);
+    // usersArray.forEach((u) => {
+    //     allUsers[u.get("displayname")] = u
+    // });
 
     let newItems = [];
     for (const item of data.Items) {
@@ -225,8 +270,9 @@ async function loadProgram() {
         newItem.set("confKey", item.Key);
         newItem.set('track', track);
         newItem.setACL(acl);
-        //find affiliated users
-        newItem.set("authors", item.Authors);
+        // get authors pointers
+        let authors = getAuthors(item.Authors);
+        newItem.set("authors", authors);
         newItems.push(newItem);
         allItems[newItem.get("confKey")] = newItem;
     }
