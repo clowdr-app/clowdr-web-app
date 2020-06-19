@@ -127,6 +127,11 @@ async function loadProgram() {
     confQ.equalTo("conferenceName", conferenceName);
     let conf = await confQ.first();
 
+    let acl = new Parse.ACL();
+    acl.setPublicWriteAccess(false);
+    acl.setRoleWriteAccess(conf.id+"-manager", true);
+    acl.setRoleWriteAccess(conf.id+"-admin", true);
+
     // Create the tracks first
     let newtracks = [];
     let ProgramTrack = Parse.Object.extend('ProgramTrack');
@@ -142,6 +147,7 @@ async function loadProgram() {
         let newtrack = new ProgramTrack();
         newtrack.set('name', name);
         newtrack.set('conference', conf);
+        newtrack.setACL(acl);
         newtracks.push(newtrack);
         existingTracks.push(newtrack);
     }
@@ -167,14 +173,9 @@ async function loadProgram() {
         }
         let newroom = new ProgramRoom();
         newroom.set('name', name);
-        newroom.set('src1', '');
-        newroom.set('id1', '');
-        newroom.set('pwd1', '');
-        newroom.set('src2', '');
-        newroom.set('id2', '');
-        newroom.set('pwd2', '');
-        newroom.set('qa', '');
+        newroom.set('location', 'TBD');
         newroom.set('conference', conf);
+        newroom.setACL(acl);
         newrooms.push(newroom);
         existingRooms.push(newroom);
     }
@@ -222,6 +223,7 @@ async function loadProgram() {
         newItem.set("conference",conf);
         newItem.set("confKey", item.Key);
         newItem.set('track', track);
+        newItem.setACL(acl);
         //find affiliated users
         newItem.set("authors", item.Authors);
         newItems.push(newItem);
@@ -264,6 +266,7 @@ async function loadProgram() {
         session.set("endTime", end.toDate());
         session.set("confKey", ses.Key);
         session.set("conference", conf);
+        session.setACL(acl);
 
         // Find the pointer to the room
         let room = existingRooms.find(r => r.get('name') == ses.Location);
