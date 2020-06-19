@@ -241,13 +241,6 @@ async function loadProgram() {
     items.forEach((item) => {
         allItems[item.get("confKey")] = item;
     })
-    // q = new Parse.Query(Parse.User);
-    // q.limit(10000);
-    // let usersArray = await q.find();
-    // console.log("Found " + usersArray.length);
-    // usersArray.forEach((u) => {
-    //     allUsers[u.get("displayname")] = u
-    // });
 
     let newItems = [];
     for (const item of data.Items) {
@@ -293,17 +286,18 @@ async function loadProgram() {
 
     let toSave = [];
     for (const ses of data.Sessions) {
-        // if (i > 1)
-        //     continue;
         if (allSessions[ses.Key])
             continue;
-        let startTime = ses.Time.substring(0, ses.Time.indexOf('-'));
-        let dateTime = ses.Day + " " + startTime;
-        //console.log(">" + dateTime)
-        var start = moment(dateTime, "YYYY-MM-DD HH:mm");
-        var end = moment(dateTime, "YYYY-MM-DD HH:mm");
-        // start = mockDate(start).toDate();
-        // end = mockDate(end).toDate();
+
+        var start = Date.now(), end = Date.now();
+        let times = ses.Time.split('-');
+        if (times.length >= 2) {
+            let startTime = ses.Day + ' ' + times[0];
+            let endTime = ses.Day + ' ' + times[1];
+            start = moment.utc(startTime, "YYYY-MM-DD HH:mm");
+            end = moment.utc(endTime, "YYYY-MM-DD HH:mm");
+//            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
+        }
 
         let session = new ProgramSession();
         session.set("title", ses.Title);
@@ -311,6 +305,7 @@ async function loadProgram() {
         session.set("type", ses.Type);
         session.set("startTime", start.toDate());
         session.set("endTime", end.toDate());
+        session.set("location", ses.Location);
         session.set("confKey", ses.Key);
         session.set("conference", conf);
         session.setACL(acl);
@@ -331,16 +326,9 @@ async function loadProgram() {
                 else
                     console.log("Could not find item: " + k);
             });
-            // await programRef.child("sessions").child(item.Key).child("items").set(items);
         }
         session.set("items", items);
         toSave.push(session);
-        // promises.push(session.save({},{useMasterKey: true}));
-        // Object.keys(categories).forEach(async (v)=>{
-        //     await programRef.child("categories").child("members").child(v).child(item.Key).set(true);
-        // })
-        // console.log(categories);
-        // console.log(item);
         i++;
     }
     try{
@@ -349,19 +337,6 @@ async function loadProgram() {
         console.log(err);
     }
     console.log("Done");
-// data.People.forEach((person)=>{
-//     if(person.URLphoto) {
-//         // usersRef.child("demo" + i).set({
-//         //     email: "demo@no-reply.com",
-//         //     username: person.Name,
-//         //     photoURL: person.URLphoto
-//         // });
-//
-//         statusRef.child("demo"+i).child("last_changed").set(100+i);
-//         i++;
-//     }
-//
-// })
 
 }
 
