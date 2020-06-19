@@ -141,6 +141,7 @@ async function loadProgram() {
 
     let acl = new Parse.ACL();
     acl.setPublicWriteAccess(false);
+    acl.setPublicReadAccess(true);
     acl.setRoleWriteAccess(conf.id+"-manager", true);
     acl.setRoleWriteAccess(conf.id+"-admin", true);
 
