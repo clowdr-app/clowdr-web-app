@@ -73,8 +73,6 @@ class SidebarChat extends React.Component {
         this.user = this.props.auth.user;
         let isDifferentChannel = this.props.auth.chatChannel != this.state.channel;
 
-        console.log(this.props.auth.chatChannel)
-        console.log(this.state.channel)
         if (isDifferentChannel || isDifferentUser) {
             if(!isDifferentUser && this.props.auth.chatChannel == null && this.props.auth.activeSpace && this.props.auth.activeSpace.get("chatChannel") == this.state.channel){
                 return;
@@ -90,9 +88,10 @@ class SidebarChat extends React.Component {
             this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
             //check to make sure we are a member
             let channels = this.props.auth.chatClient.joinedChannels;
-            let found = channels.find((chan) => chan.channel.sid == newChannel);
+            let found = channels[newChannel];
             if (!found) {
                 found = await this.props.auth.chatClient.joinAndGetChannel(newChannel);
+                console.log("Found/jkoined " + found)
                 if (this.desiredChannel != newChannel)
                     return;
             }

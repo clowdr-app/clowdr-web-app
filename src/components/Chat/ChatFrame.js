@@ -61,6 +61,7 @@ class ChatFrame extends React.Component {
     }
 
     async changeChannel(sid) {
+        console.log(sid);
         let user = this.props.auth.user;
         if (!sid) {
             this.setState({chatDisabled: true});
