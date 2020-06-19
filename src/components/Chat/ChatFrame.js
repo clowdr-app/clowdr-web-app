@@ -61,6 +61,7 @@ class ChatFrame extends React.Component {
     }
 
     async changeChannel(sid) {
+        console.log(sid);
         let user = this.props.auth.user;
         if (!sid) {
             this.setState({chatDisabled: true});
@@ -100,6 +101,10 @@ class ChatFrame extends React.Component {
                 return;//raced with another update
             }
             this.activeChannel = this.props.auth.chatClient.getJoinedChannel(sid);
+            if(!this.activeChannel){
+                console.log("Unable to join channel: " + sid)
+                return;
+            }
             if (this.currentSID != sid) {
                 return;//raced with another update
             }

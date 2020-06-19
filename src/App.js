@@ -244,11 +244,6 @@ class App extends Component {
                 </div>
             }
         }
-        let topHeight = 0;
-        let topElement = document.getElementById("top-content");
-        if (topElement)
-            topHeight = topElement.clientHeight;
-
 
         let isLoggedIn = this.props.authContext.user != null;
         return (
@@ -268,14 +263,13 @@ class App extends Component {
                         {/*    /!*</Badge>*!/*/}
                         {/*    </Header>*/}
                         </div>
-                        <div>
+                        <div className="main-area">
                             <Layout>
                                 {/*<div className="lobbySessionTab" style={{left: (this.state.socialCollapsed?"0px":"250px")}}><Button onClick={this.toggleLobbySider.bind(this)}  size="small">Breakout Rooms {(this.state.socialCollapsed? ">":"x")}</Button> </div>*/}
                                 {/*<div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>*/}
 
                                 <SocialTab collapsed={this.state.socialCollapsed} setWidth={this.setLobbyWidth.bind(this)}/>
                                 <Content style={{
-                                    marginTop: topHeight,
                                     overflow: 'initial',
                                     paddingRight: this.state.chatWidth,
                                     paddingLeft: this.state.lobbyWidth

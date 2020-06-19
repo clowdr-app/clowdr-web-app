@@ -4,7 +4,7 @@ export default class ChatClient{
     constructor(setGlobalState) {
         this.channelListeners = [];
         this.channels = [];
-        this.joinedChannels = [];
+        this.joinedChannels = {};
         this.chatUser = null;
         this.twilio = null;
         this.chats = [];
@@ -12,23 +12,26 @@ export default class ChatClient{
     }
 
     getJoinedChannel(sid){
-        let chan = this.joinedChannels.find((v)=> {
-           return  v && v.channel.sid == sid
-        });
+        console.log(this.joinedChannels)
+        let chan = this.joinedChannels[sid];
+        if(!chan)
+            return null;
         return chan.channel;
     }
     async joinAndGetChannel(uniqueName) {
         let channel = await this.twilio.getChannelByUniqueName(uniqueName);
-        let chan = this.joinedChannels.find((v) => v.channel.sid == channel.sid)
+        let chan = this.joinedChannels[channel.sid];
         if(chan){
             return chan.channel;
         }
-        return await channel.join();
+        let membership = await channel.join();
+        this.joinedChannels[membership.sid] = await this.getChannelInfo(membership);
+        return membership;
     }
 
     initBottomChatBar(chatBar){
         this.chatBar = chatBar;
-        chatBar.setState({chats: this.joinedChannels.filter(c=>c.attributes.mode == "directMessage" && c.members.length == 1)});
+        chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes.mode == "directMessage" && c.members.length == 1)});
     }
     initChatClient(user, conference, userProfile) {
         this.userProfile = userProfile;
@@ -76,7 +79,10 @@ export default class ChatClient{
         for (let channel of paginator.items) {
             promises.push(this.getChannelInfo(channel));
         }
-        this.joinedChannels = await Promise.all(promises);
+        let channelsArray  =await Promise.all(promises);
+        for(let channel of channelsArray){
+            this.joinedChannels[channel.channel.sid] = channel;
+        }
         twilio.on("channelAdded", (channel)=>{
             this.channels.push(channel);
             this.channelListeners.forEach(v=> v.channelAdded(channel));
@@ -86,12 +92,13 @@ export default class ChatClient{
             this.channelListeners.forEach(v => v.channelRemoved(channel));
         });
         twilio.on("channelJoined", async (channel) => {
-            this.joinedChannels.push(await this.getChannelInfo(channel));
+            console.log("Channel join event: " + channel)
+            this.joinedChannels[channel.sid] = await this.getChannelInfo(channel);
 
             this.channelListeners.forEach(v => v.channelJoined(channel));
         });
         twilio.on("channelLeft", (channel) => {
-            this.joinedChannels = this.joinedChannels.filter(v => v.channel.sid != channel.sid);
+            this.joinedChannels[channel.sid] = undefined;
             this.channelListeners.forEach(v => v.channelLeft(channel));
         });
         this.twilio = twilio;
