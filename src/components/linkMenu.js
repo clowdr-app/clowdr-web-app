@@ -42,6 +42,9 @@ class LinkMenu extends React.Component {
                     <Menu.Item key='/admin/schedule' icon={<CalendarOutlined/>}><NavLink to="/admin/schedule">
                         Schedule</NavLink></Menu.Item>
 
+                    <Menu.Item key='/admin/program/rooms' icon={<SolutionOutlined/>}><NavLink to="/admin/program/rooms">
+                        Virtual Rooms</NavLink></Menu.Item>
+
                     <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
                         Users</NavLink></Menu.Item>
 
