@@ -242,11 +242,6 @@ class App extends Component {
                 </div>
             }
         }
-        let topHeight = 0;
-        let topElement = document.getElementById("top-content");
-        if (topElement)
-            topHeight = topElement.clientHeight;
-
 
         let isLoggedIn = this.props.authContext.user != null;
         return (
@@ -273,7 +268,6 @@ class App extends Component {
 
                                 <SocialTab collapsed={this.state.socialCollapsed} setWidth={this.setLobbyWidth.bind(this)}/>
                                 <Content style={{
-                                    marginTop: topHeight,
                                     overflow: 'initial',
                                     paddingRight: this.state.chatWidth,
                                     paddingLeft: this.state.lobbyWidth

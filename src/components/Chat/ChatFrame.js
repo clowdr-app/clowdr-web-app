@@ -100,6 +100,10 @@ class ChatFrame extends React.Component {
                 return;//raced with another update
             }
             this.activeChannel = this.props.auth.chatClient.getJoinedChannel(sid);
+            if(!this.activeChannel){
+                console.log("Unable to join channel: " + sid)
+                return;
+            }
             if (this.currentSID != sid) {
                 return;//raced with another update
             }

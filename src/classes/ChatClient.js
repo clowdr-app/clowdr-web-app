@@ -15,6 +15,8 @@ export default class ChatClient{
         let chan = this.joinedChannels.find((v)=> {
            return  v && v.channel.sid == sid
         });
+        if(!chan)
+            return null;
         return chan.channel;
     }
     async joinAndGetChannel(uniqueName) {
