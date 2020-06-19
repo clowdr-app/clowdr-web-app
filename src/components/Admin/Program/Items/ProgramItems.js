@@ -22,6 +22,7 @@ class ProgramItems extends React.Component {
         this.state = {
             loading: false, 
             items: [],
+            tracks: [],
             editing: false,
             edt_item: undefined
         };
@@ -108,6 +109,16 @@ class ProgramItems extends React.Component {
     }
 
     componentDidMount() {
+        // Get the tracks
+        let query = new Parse.Query("ProgramTrack");
+        query.equalTo("conference", this.props.auth.currentConference);
+        query.find().then(res=>{
+            console.log('Found tracks ' + res.length);
+            this.setState({
+                tracks: res
+            });
+        })
+
         this.refreshList();
         // this.sub = this.props.parseLive.subscribe(query);
         // this.sub.on('create', vid=>{
@@ -119,6 +130,7 @@ class ProgramItems extends React.Component {
         let query = new Parse.Query("ProgramItem");
         console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
         query.equalTo("conference", this.props.auth.currentConference);
+        query.limit(5000);
         query.find().then(res=>{
             console.log('Found items ' + res.length);
             this.setState({
@@ -131,6 +143,20 @@ class ProgramItems extends React.Component {
         // this.sub.unsubscribe();
     }
 
+    // getAuthorsNames(item) {
+    //     let people = record.get("authors");
+    //     let ProgramPerson = Parse.Object.extend('ProgramPerson');
+    //     let qlist = [];
+    //     people.map(p => {
+    //         let qq = new Parse.Query(ProgramPerson);
+    //         qq.equalTo('objectId', p.id);
+    //         qlist.push(qq);
+    //     });
+    //     let q = Parse.Query.or(qlist);
+    //     let authors = await q.find();
+    //     return authors;
+    // }
+
     render() {
         const columns = [
             {
@@ -138,12 +164,6 @@ class ProgramItems extends React.Component {
                 dataIndex: 'title',
                 key: 'title',
                 render: (text, record) => <span>{record.get("title")}</span>,
-            },
-            {
-                title: 'Authors',
-                dataIndex: 'authors',
-                render: (text,record) => <span>{record.get("authors")}</span>,
-                key: 'authors',
             },
             {
                 title: 'Track',
