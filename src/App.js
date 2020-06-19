@@ -29,6 +29,8 @@ import VideoChat from "./components/VideoChat";
 //
 import LiveVideosList from "./components/Admin/LiveVideos";
 import Registrations from "./components/Admin/Registrations";
+import Rooms from "./components/Admin/Program/Rooms";
+import Tracks from "./components/Admin/Program/Tracks";
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 //import Chat from "./components/Chat";
@@ -202,6 +204,8 @@ class App extends Component {
             {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
             <Route exact path='/admin/livevideos' component={LiveVideosList}/>
             <Route exact path='/admin/registrations' component={Registrations}/>
+            <Route exact path='/admin/program/rooms' component={Rooms}/>
+            <Route exact path='/admin/program/tracks' component={Tracks}/>
         </div>)
     }
 
