@@ -2,58 +2,100 @@ import Chat from "twilio-chat";
 
 export default class ChatClient{
     constructor(setGlobalState) {
-        this.setState = setGlobalState;
         this.channelListeners = [];
         this.channels = [];
         this.joinedChannels = [];
         this.chatUser = null;
-        this.chatClient = null;
+        this.twilio = null;
+        this.chats = [];
+        console.log("Created a chatclient")
     }
 
+    getJoinedChannel(sid){
+        let chan = this.joinedChannels.find((v)=> {
+           return  v && v.channel.sid == sid
+        });
+        return chan.channel;
+    }
     async joinAndGetChannel(uniqueName) {
-
-        let channel = await this.chatClient.getChannelByUniqueName(uniqueName);
-        let chan = this.joinedChannels.find((v) => v.sid == channel.sid)
-        if (!chan)
-            channel = await channel.join();
-        return channel;
+        let channel = await this.twilio.getChannelByUniqueName(uniqueName);
+        let chan = this.joinedChannels.find((v) => v.channel.sid == channel.sid)
+        if(chan){
+            return chan.channel;
+        }
+        return await channel.join();
     }
 
-    initChatClient(user, conference) {
-        if(this.chatClientPromise){
-            return this.chatClientPromise;
+    initBottomChatBar(chatBar){
+        this.chatBar = chatBar;
+        chatBar.setState({chats: this.joinedChannels.filter(c=>c.attributes.mode == "directMessage" && c.members.length == 1)});
+    }
+    initChatClient(user, conference, userProfile) {
+        this.userProfile = userProfile;
+        if (!this.chatClientPromise) {
+            this.chatClientPromise = new Promise(async (resolve) => {
+                let ret = await this._initChatClient(user, conference);
+                console.log("Resolving promise:" + ret)
+                resolve(ret);
+            });
         }
-        else{
-            this.chatClientPromise = this._initChatClient(user, conference);
-            return this.chatClientPromise;
-        }
+        return this.chatClientPromise;
     }
 
+    openChat(chatSID) {
+        this.chats.push(chatSID);
+        if (this.chatBar)
+            this.chatBar.openChat(chatSID);
+    }
+    async getChannelInfo(channel){
+
+        let attributes = await channel.getAttributes();
+        let members = await channel.getMembers();
+        let membersWithoutUs = members.map(m=>m.identity).filter(m=>m!= this.userProfile.id);
+        return {channel: channel, attributes: attributes, members: membersWithoutUs,
+        };
+    }
     async _initChatClient(user, conference){
-        if (this.chatClient && this.chatUser && this.chatUser.id == user.id && this.conference && this.conference.id == conference.id) {
-            return this.chatClient;
-        } else if (this.chatClient) {
+        console.log("Init chat client:")
+        console.log(this.twilio);
+        console.log(this.conference)
+        console.log(conference);
+        console.log(this.chatUser)
+        console.log(user);
+        if (this.twilio && this.chatUser && this.chatUser.id == user.id && this.conference && this.conference.id == conference.id) {
+            return this.twilio;
+        } else if (this.twilio) {
             await this.cleanup();
         }
+        console.log("Doing the ini")
         let token = await this.getToken(user, conference);
-        this.chatClient = await Chat.create(token);
-        this.chatClient.on("channelAdded", (channel)=>{
+        let twilio = await Chat.create(token);
+        console.log(this.twilio)
+        let paginator = await twilio.getSubscribedChannels();
+        let promises = [];
+        for (let channel of paginator.items) {
+            promises.push(this.getChannelInfo(channel));
+        }
+        this.joinedChannels = await Promise.all(promises);
+        twilio.on("channelAdded", (channel)=>{
             this.channels.push(channel);
             this.channelListeners.forEach(v=> v.channelAdded(channel));
         });
-        this.chatClient.on("channelRemoved", (channel) => {
+        twilio.on("channelRemoved", (channel) => {
             this.channels = this.channels.filter((v) => v.sid != channel.sid);
             this.channelListeners.forEach(v => v.channelRemoved(channel));
         });
-        this.chatClient.on("channelJoined", (channel) => {
-            this.joinedChannels.push(channel);
+        twilio.on("channelJoined", async (channel) => {
+            this.joinedChannels.push(await this.getChannelInfo(channel));
+
             this.channelListeners.forEach(v => v.channelJoined(channel));
         });
-        this.chatClient.on("channelLeft", (channel) => {
-            this.joinedChannels = this.joinedChannels.filter(v => v.sid != channel.sid);
+        twilio.on("channelLeft", (channel) => {
+            this.joinedChannels = this.joinedChannels.filter(v => v.channel.sid != channel.sid);
             this.channelListeners.forEach(v => v.channelLeft(channel));
         });
-        return this.chatClient;
+        this.twilio = twilio;
+        return this.twilio;
     }
     addChannelListener(listener) {
         this.channelListeners.push(listener);
@@ -63,25 +105,18 @@ export default class ChatClient{
         this.channelListeners = this.channelListeners.filter((v) => v != listener);
     }
 
-    initChat(user) {
-        let _this = this;
-        this.props.auth.initChatClient(this.state.token).then((client) => {
-            _this.chatClient = client;
-            _this.clientInitiated();
-        });
-    };
 
     async cleanup() {
-        if (this.chatClient) {
+        if (this.twilio) {
             console.log("Removing listeners");
-            this.chatClient.removeAllListeners("channelAdded");
-            this.chatClient.removeAllListeners("channelRemoved");
-            this.chatClient.removeAllListeners("channelJoined");
-            this.chatClient.removeAllListeners("channelLeft");
+            this.twilio.removeAllListeners("channelAdded");
+            this.twilio.removeAllListeners("channelRemoved");
+            this.twilio.removeAllListeners("channelJoined");
+            this.twilio.removeAllListeners("channelLeft");
             console.log("Calling shutdown");
-            await this.chatClient.shutdown();
+            await this.twilio.shutdown();
             console.log("Shut down")
-            this.chatClient = null;
+            this.twilio = null;
         }
     }
     getToken = async (user, conference) => {

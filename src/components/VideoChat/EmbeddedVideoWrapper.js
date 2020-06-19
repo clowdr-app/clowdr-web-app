@@ -397,7 +397,6 @@ function ParticipantTracks({
         filteredPublications = publications.filter(p => !p.trackName.includes('screen'));
     }
 
-    console.log("Render participant: " + participant.sid + " at " + videoPriority);
     return (
         <>
             {filteredPublications.map(publication => (

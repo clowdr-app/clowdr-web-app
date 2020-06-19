@@ -1,6 +1,5 @@
 let UserProfile = Parse.Object.extend("UserProfile");
 let SocialSpace = Parse.Object.extend("SocialSpace");
-let UserSocialSpace = Parse.Object.extend("UserSocialSpace");
 let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 
 Parse.Cloud.define("presence-addToPage", async (request) => {

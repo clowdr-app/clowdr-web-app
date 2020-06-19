@@ -83,12 +83,22 @@ function addRequiredData() {
                 u.save().then(u2 => {
                     const roleACL = new Parse.ACL();
                     roleACL.setPublicReadAccess(true);
-                    let role = new Parse.Role('ClowdrSysAdmin', roleACL);
-                    role.save().then(r => {
-                        let users = r.relation('users');
-                        users.add(u2);
-                        r.save().catch(err => console.log('Role saved (again): ' + err));    
-                    }).catch(err => console.log('Role saved: ' + err))
+                    let role1 = new Parse.Role('ClowdrSysAdmin', roleACL);
+                    let role2 = new Parse.Role(i.id+'-admin', roleACL);
+                
+                    let users1 = role1.relation('users');
+                    users1.add(u2);
+                    let users2 = role2.relation('users');
+                    users2.add(u2);
+
+                    let roles = [role1, role2];
+
+                    try{
+                        await Parse.Object.saveAll(roles);
+                    } catch(err){
+                        console.log('Roles saved: ' + err);
+                    }
+
                 }).catch(err => {console.log('User saved (again):' + err)}); 
             }).catch(err => console.log('UserProfile saved:' + err));    
         }).catch(err => console.log('User saved:' + err));

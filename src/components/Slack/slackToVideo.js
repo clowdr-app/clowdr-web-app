@@ -14,8 +14,9 @@ class SlackToVideo extends React.Component {
 
     async componentDidMount() {
 
+
+        console.log("HI!")
         let team = this.props.match.params.team;
-        let roomName = this.props.match.params.roomName;
         let token = this.props.match.params.token;
         const data = await fetch(
             `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/slack/login`
@@ -31,10 +32,16 @@ class SlackToVideo extends React.Component {
                 }
             });
         let res = await data.json();
+        console.log(res);
+        let roomName = res.roomName;
         try {
             let u = await Parse.User.become(res.token);
             let conf = await this.props.authContext.getConferenceBySlackName(team);
-            await this.props.authContext.refreshUser(conf);
+            await this.props.authContext.refreshUser(conf, true);
+            if(!roomName){
+                this.props.history.push("/lobby");
+                return;
+            }
             let roomQ = new Parse.Query("BreakoutRoom");
             roomQ.equalTo("conference",conf);
             roomQ.equalTo("title", roomName);

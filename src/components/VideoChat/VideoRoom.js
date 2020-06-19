@@ -7,16 +7,15 @@ import {AuthUserContext} from "../Session";
 import {
     Alert,
     Button,
-    Collapse,
-    Form, List,
+    Form,
     message,
     notification,
+    Popconfirm,
     Select,
     Skeleton,
-    Spin, Switch,
+    Spin,
     Tag,
     Tooltip,
-    Popconfirm,
     Typography
 } from "antd";
 import './VideoChat.css';
@@ -45,8 +44,6 @@ import ReportToModsButton from "./ReportToModsButton";
 import {SyncOutlined} from '@ant-design/icons'
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import AboutModal from "../SignIn/AboutModal";
-import UserDescriptor from "./UserDescriptor";
-import {NavLink} from "react-router-dom";
 
 const {Paragraph} = Typography;
 
@@ -67,7 +64,7 @@ class VideoRoom extends Component {
 
     componentWillUnmount() {
         console.log("Unmounting video room")
-        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general" });
+        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null });
     }
     async joinCallFromProps(){
         if (!this.props.match) {
@@ -75,7 +72,7 @@ class VideoRoom extends Component {
         }
 
         if(!this.props.authContext.user || this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName")){
-            this.props.authContext.refreshUser(null, this.props.match.params.conf).then((u)=>{
+            this.props.authContext.refreshUser(this.props.match.params.conf).then((u)=>{
                 this.joinCallFromPropsWithCurrentUser()
             })
         }
@@ -240,8 +237,8 @@ class VideoRoom extends Component {
 
     handleLogout() {
 
-        console.log("Video room log out")
-        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: "#general"});
+        // console.log("Video room log out")
+        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null});
         this.props.history.push(ROUTES.LOBBY_SESSION);
     }
 
@@ -268,20 +265,20 @@ class VideoRoom extends Component {
                 if(!this.state.members.find(v=>v.id == member.id)){
                     //new member appeared
                     hadChange = true;
-                    if (this.state.members.length > 0 && this.props.authContext.userProfile.id != member.id)
-                        notification.info({
-                            message: member.get("displayName") + " has joined this room",
-                            placement: 'topLeft',
-                        });
+                    // if (this.state.members.length > 0 && this.props.authContext.userProfile.id != member.id)
+                    //     notification.info({
+                    //         message: member.get("displayName") + " has joined this room",
+                    //         placement: 'topLeft',
+                    //     });
                 }
             }
             for(let member of this.state.members){
                 if(this.props.authContext.userProfile.id != member.id && !this.state.room.get("members").find(v=>v.id == member.id)){
                     hadChange = true;
-                    notification.info({
-                        message: member.get("displayName") + " has left this room",
-                        placement: 'topLeft',
-                    });
+                    // notification.info({
+                    //     message: member.get("displayName") + " has left this room",
+                    //     placement: 'topLeft',
+                    // });
                 }
             }
             if(hadChange)
@@ -498,9 +495,19 @@ class VideoRoom extends Component {
                 <MuiThemeProvider theme={theme}>
                     <AppStateProvider meeting={this.state.meetingName} token={this.state.token}
                                       isEmbedded={true}
+                        onConnect={(room,videoContext)=>{
+                            if(this.state.room.get("mode") == "group") {
+                                let localTracks = videoContext.localTracks;
+                                const audioTrack = localTracks.find(track => track.kind === 'audio');
+                                audioTrack.disable();
+                            }
+
+                        }
+                    }
                                       onDisconnect={this.handleLogout.bind(this)}>
                         <VideoProvider onError={this.onError.bind(this)} isEmbedded={true} meeting={this.state.meetingName}
                                        options={connectionOptions}
+
                                        token={this.state.token} onDisconnect={this.handleLogout.bind(this)}>
                             <div style={{display:"flex"}}>
                                 <div style={{flex:1}}>
@@ -511,8 +518,9 @@ class VideoRoom extends Component {
                                                 if(desc) {
                                                     desc = desc[0].toUpperCase() + desc.slice(1);
                                                     let color = "red";
-                                                    if(desc == "Connected")
+                                                    if(desc == "Connected"){
                                                         color = "#87d068";
+                                                    }
                                                     return <Tag color={color}>{desc}</Tag>
                                                 }
                                                 else{
@@ -553,7 +561,7 @@ class VideoRoom extends Component {
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             <div>
-                                {(this.state.room.get("mode") == "group" ? "This is a big group room. It supports up to 50 participants, but will only show the video of the 8 most active participants. Click a participant to pin them to always show their video." :
+                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the 4 most active participants. Click a participant to pin them to always show their video. <b>You are muted by default in this room, please unmute yourself if you want to talk.</b></span> :
                                     this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
                             </div>
                         <div className={"videoEmbed"}>
@@ -623,7 +631,7 @@ class RoomVisibilityController extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {users: [], loading: true, selected: null, hasChange: false}
+        this.state = {users: [],  hasChange: false, loadedUsers: false}
     }
 
     handleChange(value) {
@@ -644,17 +652,12 @@ class RoomVisibilityController extends React.Component {
 
     async componentDidMount() {
         let selected = Object.keys(this.props.acl.permissionsById).filter(v=>!v.startsWith("role"));
-        // let selected = await selectedQuery.find();
-        this.props.authContext.helpers.getUsers();
         let profiles = await this.props.authContext.helpers.getUserProfilesFromUserIDs(selected);
         let selectedIDs = profiles.map(p=>p.get("user").id);
-        this.setState({selected: selectedIDs, loading: this.props.authContext.users == undefined, users: this.props.authContext.users});
+        this.setState({selected: selectedIDs, users: profiles});
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(prevProps.authContext.users != this.props.authContext.users){
-            this.setState({users: this.props.authContext.users, loadingUsers: false});
-        }
         if(prevProps.acl.permissionsById != this.props.acl.permissionsById){
             if (this.aclSelector)
             {
@@ -697,6 +700,15 @@ class RoomVisibilityController extends React.Component {
 
     }
 
+    async handleSearch(value){
+        if (!this.triggeredUserLoad) {
+            this.setState({loading: true})
+            this.triggeredUserLoad = true;
+            let users = await this.props.authContext.helpers.getUsers();
+            this.setState({loading: false, users: users});
+        }
+    }
+
     render() {
         if(!this.state.users || !this.state.selected)
             return <Skeleton />;
@@ -733,6 +745,7 @@ class RoomVisibilityController extends React.Component {
                 <Select
                     loading={this.state.loading}
                     mode="multiple" style={{width: '100%'}} placeholder="Users"
+                    onSearch={this.handleSearch.bind(this)}
                     filterOption={(input,option)=>option.label.toLowerCase().includes(input.toLowerCase())}
                     options={options}
                     onChange={this.handleChange.bind(this)}>

@@ -10,7 +10,7 @@ class SignOut extends Component {
     }
     componentDidMount() {
         Parse.User.logOut().then(() => {
-            this.props.refreshUser().then(()=>{
+            this.props.refreshUser(null, true).then(()=>{
                 this.props.history.push(ROUTES.LANDING);
             });
         }).catch((err)=>{
