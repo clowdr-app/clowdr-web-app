@@ -240,6 +240,11 @@ class App extends Component {
                 </div>
             }
         }
+        let topHeight = 0;
+        let topElement = document.getElementById("top-content");
+        if (topElement)
+            topHeight = topElement.clientHeight;
+
 
         let isLoggedIn = this.props.authContext.user != null;
         return (
@@ -265,7 +270,9 @@ class App extends Component {
                                 {/*<div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>*/}
 
                                 <SocialTab collapsed={this.state.socialCollapsed} setWidth={this.setLobbyWidth.bind(this)}/>
-                                <Content style={{margin: '24px 16px 0', overflow: 'initial',
+                                <Content style={{
+                                    marginTop: topHeight,
+                                    overflow: 'initial',
                                     paddingRight: this.state.chatWidth,
                                     paddingLeft: this.state.lobbyWidth
                                 }}>
@@ -280,10 +287,10 @@ class App extends Component {
                         </div>
                     </Layout>
                     </div>
-                    {/*<BottomChat style={{*/}
-                    {/*    right: this.state.chatWidth,*/}
-                    {/*    left: this.state.lobbyWidth*/}
-                    {/*}}/>*/}
+                    <BottomChat style={{
+                        right: this.state.chatWidth,
+                        left: this.state.lobbyWidth
+                    }}/>
                     {/* <div style={{position:
                     "sticky", bottom: 0}}>
                         <Chat />

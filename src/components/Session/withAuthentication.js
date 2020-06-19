@@ -33,6 +33,7 @@ const withAuthentication = Component => {
 
             let exports ={
                 getUsers: this.getUsers.bind(this),
+                createOrOpenDM: this.createOrOpenDM.bind(this),
                 getRoleByName: this.getRoleByName.bind(this),
                 setActiveConference: this.setActiveConference.bind(this),
                 populateMembers: this.populateMembers.bind(this),
@@ -70,6 +71,27 @@ const withAuthentication = Component => {
 
             };
             this.fetchingUsers = false;
+        }
+
+        async createOrOpenDM(profileOfUserToDM){
+            if(profileOfUserToDM == this.state.userProfile.id)
+                return
+            //Look to see if we already have a chat set up with this person
+            let channels = this.state.chatClient.joinedChannels;
+            let found = channels.find((chan) => chan.attributes.mode == "directMessage" &&
+                chan.members[0] == profileOfUserToDM.id)
+            console.log(found);
+            if(found){
+                this.state.chatClient.openChat(found.channel.sid);
+                return;
+            }
+
+            let res = await Parse.Cloud.run("chat-createDM", {
+                confID: this.state.currentConference.id,
+                conversationName: profileOfUserToDM.get("displayName"),
+                messageWith: profileOfUserToDM.id
+            });
+            this.state.chatClient.openChat(res.sid);
         }
 
         ifPermission(permission, jsxElement, elseJsx){
@@ -219,6 +241,7 @@ const withAuthentication = Component => {
             this.getUserProfilesFromUserProfileIDs(Object.keys(presenceByProfile));
             this.setState({presences: presenceByProfile});
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
+            console.log(this.socialSpaceSubscription);
             this.socialSpaceSubscription.on('create',(presence)=>{
                 this.setState(
                     (prevState)=>({
@@ -265,6 +288,8 @@ const withAuthentication = Component => {
                 )
             })
             this.socialSpaceSubscription.on('update',(presence)=>{
+                console.log("Update presence:");
+                console.log(presence);
                 this.setState(
                     (prevState)=>({
                         presences: {
@@ -505,6 +530,7 @@ const withAuthentication = Component => {
                             spacesByName[space.get("name")] = space;
                         }
                         let currentConference = _this.state.currentConference;
+                        _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile)
                         await _this.createSocialSpaceSubscription(spacesByName["Lobby"], user, activeProfile);
                         console.log("RefreshUser called, setting chat channel for some reason?")
                         let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
@@ -530,14 +556,15 @@ const withAuthentication = Component => {
                         return userWithRelations;
                     } catch (err) {
                         console.log(err);
-                        try {
-                            _this.setState({loading: false, user: null});
-                            await Parse.User.logOut();
-                        }catch(err2){
-                            console.log(err2);
-                        }
-                        if(_this.props.history)
-                        _this.props.history.push("/signin")
+                        //TODO uncomment
+                        // try {
+                        //     _this.setState({loading: false, user: null});
+                        //     await Parse.User.logOut();
+                        // }catch(err2){
+                        //     console.log(err2);
+                        // }
+                        // if(_this.props.history)
+                        // _this.props.history.push("/signin")
                         return null;
                     }
                 } else {
