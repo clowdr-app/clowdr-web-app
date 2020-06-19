@@ -50,7 +50,7 @@ class Rooms extends React.Component {
     }
 
     onDelete(value) {
-        console.log("Deleting " + value + " " + value.get("id1"));
+        console.log("Deleting " + value + " " + value.get("name"));
         // Delete the watchers first
         
         value.destroy().then(()=>{
@@ -83,9 +83,6 @@ class Rooms extends React.Component {
         let room = this.state.rooms.find(r => r.id == values.objectId);
 
         if (room) {
-            let token = this.props.auth.user.getSessionToken();
-            console.log(token);
-
             room.set("name", values.name);
             room.set("src1", values.src1);
             room.set("id1", values.id1);
