@@ -262,7 +262,7 @@ class App extends Component {
                         {/*    /!*</Badge>*!/*/}
                         {/*    </Header>*/}
                         </div>
-                        <div>
+                        <div className="main-area">
                             <Layout>
                                 {/*<div className="lobbySessionTab" style={{left: (this.state.socialCollapsed?"0px":"250px")}}><Button onClick={this.toggleLobbySider.bind(this)}  size="small">Breakout Rooms {(this.state.socialCollapsed? ">":"x")}</Button> </div>*/}
                                 {/*<div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>*/}

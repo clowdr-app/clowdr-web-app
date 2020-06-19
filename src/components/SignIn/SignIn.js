@@ -66,9 +66,10 @@ class SignIn extends Component {
     };
 
     async forgotPassword(){
+        console.log(process.env)
         let res = await Parse.Cloud.run("reset-password", {
             email: this.state.email,
-            confID: this.props.authContext.currentConference.id
+            confID: process.env.REACT_APP_DEFAULT_CONFERENCE
         });
         if(res.status == "error")
             message.error(res.message);

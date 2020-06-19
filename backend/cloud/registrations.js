@@ -28,10 +28,8 @@ Parse.Cloud.define("registrations-upload", (request) => {
 
 var conferenceInfoCache = {};
 
-async function getConferenceInfoForMailer(confID) {
-    if (!conferenceInfoCache[confID]) {
-        let conf = new ClowdrInstance();
-        conf.id = confID;
+async function getConferenceInfoForMailer(conf) {
+    if (!conferenceInfoCache[conf.id]) {
         let keyQuery = new Parse.Query(InstanceConfig);
         keyQuery.equalTo("instance", conf);
         keyQuery.equalTo("key", "SENDGRID_API_KEY");
@@ -59,9 +57,9 @@ async function getConferenceInfoForMailer(confID) {
             sendgrid: sgKey,
             frontendURL: frontendURL
         };
-        conferenceInfoCache[confID] = info;
+        conferenceInfoCache[conf.id] = info;
     }
-    return conferenceInfoCache[confID];
+    return conferenceInfoCache[conf.id];
 }
 function generateRandomString(length) {
     return new Promise((resolve, reject) => {
@@ -111,13 +109,16 @@ Parse.Cloud.define("reset-password", async (request) => {
     userQ.equalTo("email", email);
     let profileQ = new Parse.Query(UserProfile);
     profileQ.matchesQuery("user", userQ);
-    let conf = new ClowdrInstance();
-    conf.id = confID;
+
+    let confQ = new Parse.Query(ClowdrInstance);
+    confQ.equalTo("conferenceName", confID);
+    let conf = await confQ.first();
+    console.log(conf)
     profileQ.equalTo("conference", conf);
     profileQ.include("user");
     profileQ.include("conference");
     let profile = await profileQ.first({useMasterKey: true});
-    let config = await getConferenceInfoForMailer(confID);
+    let config = await getConferenceInfoForMailer(conf);
     if(profile){
         var fromEmail = new sgMail.Email('welcome@clowdr.org');
 
@@ -127,6 +128,7 @@ Parse.Cloud.define("reset-password", async (request) => {
         user.set("loginExpires", moment().add("1", "hour").toDate());
         await user.save({},{useMasterKey: true});
 
+        console.log(config);
         let link = joinURL(config.frontendURL, "/resetPassword/" + user.id + "/" + authKey);
         var toEmail = new sgMail.Email(user.getEmail());
         var subject = 'Password reset for ' + config.conference.get("conferenceName");
