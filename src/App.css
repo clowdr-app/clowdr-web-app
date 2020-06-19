@@ -408,3 +408,39 @@ div.availabilityOptionsOpen  span.availabilityOption{
 .bottomChatClose{
 
 }
+
+.programContainer{
+    display: flex;
+    flex-direction: column;
+}
+.program-programDay .day{
+    min-width: 100px;
+}
+.program-programDay .timebands{
+    /*display: flex;*/
+}
+.programContainer .program-programDay{
+    display: flex;
+    flex-direction: row;
+}
+.programContainer .sessionTimeBandContainer{
+    display: flex;
+    flex-direction: row;
+}
+/*.program-programDay .session{*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*}*/
+.programContainer .programSession{
+    display: flex;
+    flex-direction: row;
+}
+td.ant-table-cell.program-table-date{
+    white-space: nowrap
+}
+td.ant-table-cell.program-table-timeBand{
+    white-space: nowrap
+}
+ td.ant-table-cell.program-table-programItem{
+    padding: 2px;
+}

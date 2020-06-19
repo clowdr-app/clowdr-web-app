@@ -129,6 +129,7 @@ async function loadProgram() {
 
     let acl = new Parse.ACL();
     acl.setPublicWriteAccess(false);
+    acl.setPublicReadAccess(true);
     acl.setRoleWriteAccess(conf.id+"-manager", true);
     acl.setRoleWriteAccess(conf.id+"-admin", true);
 
@@ -137,7 +138,7 @@ async function loadProgram() {
     let ProgramTrack = Parse.Object.extend('ProgramTrack');
     var qt = new Parse.Query(ProgramTrack);
     qt.equalTo("conference", conf);
-    qt.limit(100);
+    qt.limit(1000);
     var existingTracks = await qt.find();
     for (let [name, count] of Object.entries(tracks)) {
         if (existingTracks.find(t => t.get('name') == name)) {
@@ -164,7 +165,7 @@ async function loadProgram() {
     let ProgramRoom = Parse.Object.extend('ProgramRoom');
     var qr = new Parse.Query(ProgramRoom);
     qr.equalTo("conference", conf);
-    qr.limit(100);
+    qr.limit(1000);
     var existingRooms = await qr.find();
     for (let [name, count] of Object.entries(rooms)) {
         if (existingRooms.find(r => r.get('name') == name)) {
@@ -251,10 +252,11 @@ async function loadProgram() {
         if (allSessions[ses.Key])
             continue;
         let startTime = ses.Time.substring(0, ses.Time.indexOf('-'));
+        let endTime = ses.Time.substring(ses.Time.indexOf('-'));
         let dateTime = ses.Day + " " + startTime;
-        //console.log(">" + dateTime)
+        console.log(">" + startTime + "-" + endTime)
         var start = moment(dateTime, "YYYY-MM-DD HH:mm");
-        var end = moment(dateTime, "YYYY-MM-DD HH:mm");
+        var end = moment(ses.Day + " "+ endTime, "YYYY-MM-DD HH:mm");
         // start = mockDate(start).toDate();
         // end = mockDate(end).toDate();
 
