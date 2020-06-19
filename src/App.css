@@ -120,7 +120,7 @@
     background-color: white;
 }
 #top-content{
-    position:fixed;
+    position:sticky;
     top:0;
     left: 0;
     right: 0;
@@ -291,6 +291,8 @@ background-color:#97a7b7;
 
 }
 .App{
+    display: flex;
+    flex-direction: column;
     height: 100vh;
 }
 span.availabilityOption{

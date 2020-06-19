@@ -157,10 +157,10 @@ class PresenceForm extends React.Component {
                     </div>
                 )}
             >
-                <Select.Option value="isLookingForConversation"><Badge status="processing" color="green" /><span className="availabilityOption">Looking for conversation</span></Select.Option>
-                <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation; but come
+                <Select.Option value="isLookingForConversation"><Badge status="processing" color="green" /><span className="availabilityOption">Available for conversation</span></Select.Option>
+                <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation; come
                     join if you like</span></Select.Option>
-                <Select.Option value="isDND"><Badge color="orange"/><span className="availabilityOption">Busy / Do Not Disturb</span></Select.Option>
+                <Select.Option value="isDND"><Badge color="orange"/><span className="availabilityOption">Busy / do not disturb</span></Select.Option>
                 <Select.Option value="isDNT"><Badge status="default"/><span className="availabilityOption">Do not show others
                     my presence/status</span></Select.Option>
 
