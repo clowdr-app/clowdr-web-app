@@ -17,10 +17,6 @@ q.first().then(version => {
         exec(cmd, (err, stdout, stderr) => {
             if (err) {
                 console.log(`stderr: ${stderr}`);
-                return;
-            }
-            else {
-                console.log('DB import succeeded!');
                 const versionSchema = new Parse.Schema('Version');
                 versionSchema.addNumber('version');
                 versionSchema.save().then (result => {
@@ -31,6 +27,9 @@ q.first().then(version => {
                     });
                 }).catch(err => console.log('Version schema save: ' + err));
                 addRequiredData();
+            }
+            else {
+                console.log('DB import succeeded!');
             }
         });
     }
@@ -53,7 +52,7 @@ q.first().then(version => {
     
 }).catch(err => console.log(err));
 
-function addRequiredData() {
+async function addRequiredData() {
     console.log('Adding required data');
     let Instance = Parse.Object.extend('ClowdrInstance');
     let instance = new Instance();
@@ -93,11 +92,9 @@ function addRequiredData() {
 
                     let roles = [role1, role2];
 
-                    try{
-                        await Parse.Object.saveAll(roles);
-                    } catch(err){
-                        console.log('Roles saved: ' + err);
-                    }
+                    Parse.Object.saveAll(roles)
+                        .then(res => console.log('Roles created successfully'))
+                        .catch(err => console.log('Roles saved: ' + err));
 
                 }).catch(err => {console.log('User saved (again):' + err)}); 
             }).catch(err => console.log('UserProfile saved:' + err));    
