@@ -16,7 +16,7 @@ const withAuthentication = Component => {
             this.authCallbacks = [];
             this.isLoggedIn = false;
             this.loadingProfiles = {};
-            this.profiles = {};
+            this.userProfiles = {};
             this.chatWaiters = [];
             this.livegneChannel = null;
             this.channelChangeListeners = [];
@@ -33,11 +33,14 @@ const withAuthentication = Component => {
 
             let exports ={
                 getUsers: this.getUsers.bind(this),
+                createOrOpenDM: this.createOrOpenDM.bind(this),
                 getRoleByName: this.getRoleByName.bind(this),
                 setActiveConference: this.setActiveConference.bind(this),
                 populateMembers: this.populateMembers.bind(this),
                 setGlobalState: this.setState.bind(this),//well that seems dangerous...
                 getUserProfilesFromUserIDs: this.getUserProfilesFromUserIDs.bind(this),
+                getUserProfilesFromUserProfileIDs: this.getUserProfilesFromUserProfileIDs.bind(this),
+                getUserProfilesFromUserProfileID: this.getUserProfilesFromUserProfileID.bind(this),
                 ifPermission: this.ifPermission.bind(this),
                 getUserRecord: this.getUserRecord.bind(this)
             }
@@ -48,7 +51,6 @@ const withAuthentication = Component => {
                 roles: [],
                 currentRoom: null,
                 refreshUser: this.refreshUser.bind(this),
-                getUserProfile: this.getUserProfile.bind(this),
                 getChatClient: this.getChatClient.bind(this),
                 setSocialSpace: this.setSocialSpace.bind(this),
                 getConferenceBySlackName: this.getConferenceBySlackName.bind(this),
@@ -71,6 +73,27 @@ const withAuthentication = Component => {
             this.fetchingUsers = false;
         }
 
+        async createOrOpenDM(profileOfUserToDM){
+            if(profileOfUserToDM == this.state.userProfile.id)
+                return
+            //Look to see if we already have a chat set up with this person
+            let channels = this.state.chatClient.joinedChannels;
+            let found = channels.find((chan) => chan.attributes.mode == "directMessage" &&
+                chan.members[0] == profileOfUserToDM.id)
+            console.log(found);
+            if(found){
+                this.state.chatClient.openChat(found.channel.sid);
+                return;
+            }
+
+            let res = await Parse.Cloud.run("chat-createDM", {
+                confID: this.state.currentConference.id,
+                conversationName: profileOfUserToDM.get("displayName"),
+                messageWith: profileOfUserToDM.id
+            });
+            this.state.chatClient.openChat(res.sid);
+        }
+
         ifPermission(permission, jsxElement, elseJsx){
             if(this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
@@ -89,33 +112,35 @@ const withAuthentication = Component => {
         }
 
 
-        async getUsers() {
-            if ((this.state.users && Object.keys(this.state.users).length > 0) || this.fetchingUsers)
-                return;
-            this.fetchingUsers = true;
-            let parseUserQ = new Parse.Query(UserProfile)
-            parseUserQ.equalTo("conference", this.state.currentConference);
-            parseUserQ.limit(1000);
-            parseUserQ.withCount();
-            let nRetrieved = 0;
-            let {count, results} = await parseUserQ.find();
-            nRetrieved = results.length;
-            let allUsers = [];
-            allUsers = allUsers.concat(results);
-            while (nRetrieved < count) {
-                let parseUserQ = new Parse.Query(UserProfile)
-                parseUserQ.skip(nRetrieved);
-                parseUserQ.equalTo("conference", this.state.currentConference);
-                parseUserQ.limit(1000);
-                let results = await parseUserQ.find();
-                // results = dat.results;
-                nRetrieved += results.length;
-                if (results)
+        getUsers() {
+            if (!this.usersPromise)
+                this.usersPromise = new Promise(async (resolve, reject) => {
+                    let parseUserQ = new Parse.Query(UserProfile)
+                    parseUserQ.equalTo("conference", this.state.currentConference);
+                    parseUserQ.limit(1000);
+                    parseUserQ.withCount();
+                    let nRetrieved = 0;
+                    let {count, results} = await parseUserQ.find();
+                    nRetrieved = results.length;
+                    let allUsers = [];
                     allUsers = allUsers.concat(results);
-            }
-            let usersByID = {};
-            allUsers.forEach((u)=>usersByID[u.id]=u);
-            this.setState({users: usersByID});
+                    while (nRetrieved < count) {
+                        let parseUserQ = new Parse.Query(UserProfile)
+                        parseUserQ.skip(nRetrieved);
+                        parseUserQ.equalTo("conference", this.state.currentConference);
+                        parseUserQ.limit(1000);
+                        let results = await parseUserQ.find();
+                        // results = dat.results;
+                        nRetrieved += results.length;
+                        if (results)
+                            allUsers = allUsers.concat(results);
+                    }
+                    let usersByID = {};
+                    allUsers.forEach((u)=>usersByID[u.id]=u);
+                    resolve(usersByID);
+                });
+            return this.usersPromise;
+
         }
 
 
@@ -135,7 +160,7 @@ const withAuthentication = Component => {
             }
         }
         async setActiveConference(conf) {
-            this.refreshUser(conf);
+            this.refreshUser(conf, true);
         }
 
         async getRoleByName(role) {
@@ -168,7 +193,7 @@ const withAuthentication = Component => {
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("conferenceName", confName);
             let res = await confQ.first();
-            this.refreshUser(res);
+            this.refreshUser(res, true);
             return res;
         }
         async getConferenceBySlackName(teamId) {
@@ -211,8 +236,12 @@ const withAuthentication = Component => {
             for(let presence of presences){
                 presenceByProfile[presence.get("user").id] = presence;
             }
+            console.log("Fetching presences")
+            //trigger a big fetch of all of the profiles at once
+            this.getUserProfilesFromUserProfileIDs(Object.keys(presenceByProfile));
             this.setState({presences: presenceByProfile});
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
+            console.log(this.socialSpaceSubscription);
             this.socialSpaceSubscription.on('create',(presence)=>{
                 this.setState(
                     (prevState)=>({
@@ -259,6 +288,8 @@ const withAuthentication = Component => {
                 )
             })
             this.socialSpaceSubscription.on('update',(presence)=>{
+                console.log("Update presence:");
+                console.log(presence);
                 this.setState(
                     (prevState)=>({
                         presences: {
@@ -286,52 +317,107 @@ const withAuthentication = Component => {
 
 
 
-        async getUserProfilesFromUserIDs(ids) {
+        async getUserProfilesFromUserProfileID(id) {
             let q = new Parse.Query(UserProfile);
             let users = [];
-            for (let id of ids) {
-                let u = new Parse.User();
-                u.id = id;
-                users.push(u);
+            let toFetch = [];
+            if (this.userProfiles[id]) {
+                let p = await this.userProfiles[id];
+                return p;
             }
-            q.containedIn("user", users);
-            q.equalTo("conference", this.state.currentConference);
-            return await q.find();
-
+            this.userProfiles[id] = new Promise(async (resolve, reject) => {
+                if (this.userProfiles[id]) {
+                    let p = await this.userProfiles[id];
+                    resolve(p);
+                }
+                if (this.loadingProfiles[id]) {
+                    reject("Assertion failure?")
+                }
+                this.loadingProfiles[id] = resolve;
+            });
+            console.log("Manual fetch: " + id)
+            let userProfielQ = new Parse.Query(UserProfile);
+            let u;
+            try{
+                u = await userProfielQ.get(id);
+            }catch(err){
+                console.log("Error on " + id)
+                console.log(err);
+                return null;
+                // u = p;
+                // p.set("displayName", id);
+            }
+            console.log(u)
+            this.userProfiles[id] = new Promise((resolve) => (resolve(u)));
+            if (this.loadingProfiles[id]) {
+                this.loadingProfiles[id](u);
+                this.loadingProfiles[id] = null;
+            }
+            return await this.userProfiles[id];
         }
 
-        getUserProfile(authorID, callback) {
-            //DEPRECATEDgetUserRecord is deprecated and probably broken")
-            if (!this.profiles[authorID]) {
-                if (this.loadingProfiles[authorID]) {
-                    this.loadingProfiles[authorID].push(callback);
-                } else {
-                    this.loadingProfiles[authorID] = [callback];
-                    const query = new Parse.Query(Parse.User);
-                    let _this = this;
-                    return query.get(authorID).then((u) => {
-                        _this.profiles[authorID] = u;
-                        this.loadingProfiles[authorID].forEach(cb => cb(u));
-                    }).catch(err => {
-                        //no such user
+        async getUserProfilesFromUserIDs(ids){
+            //TODO: worth caching?
+            let toFetch = [];
+            for(let id of ids){
+                let u = new Parse.User();
+                u.id = id;
+                toFetch.push(u)
+            }
+            let q = new Parse.Query(UserProfile);
+            q.containedIn("user", toFetch);
+            q.equalTo("conference", this.state.currentConference);
+            let ret = await q.find();
+            console.log(ret)
+            return ret;
+        }
+        async getUserProfilesFromUserProfileIDs(ids) {
+            let q = new Parse.Query(UserProfile);
+            let users = [];
+            let toFetch = [];
+            for (let id of ids) {
+                if(this.userProfiles[id]){
+                    users.push(this.userProfiles[id]);
+                }
+                else{
+                    let u = new UserProfile();
+                    u.id = id;
+                    toFetch.push(u);
+                    this.userProfiles[id] = new Promise(async(resolve,reject)=>{
+                        if(this.userProfiles[id]){
+                            resolve(this.userProfiles[id]);
+                        }
+                        if(this.loadingProfiles[id]){
+                            reject("Assertion failure?")
+                        }
+                        this.loadingProfiles[id] = resolve;
                     });
                 }
             }
-            if (this.profiles[authorID]) {
-                setTimeout(() => {
-                    callback(this.profiles[authorID])
-                }, 0);
+            let res = await Parse.Object.fetchAll(toFetch);
+            for(let u of res){
+                this.userProfiles[u.id] = new Promise((resolve)=>(resolve(u)));
+                if(this.loadingProfiles[u.id]){
+                    this.loadingProfiles[u.id](u);
+                    this.loadingProfiles[u.id] = null;
+                }else{
+                    console.log("No callback for "+ u.id);
+                }
             }
+            return await Promise.all(users);
         }
+
+
         async getUserRecord(uid){
-            if(this.state.users && this.state.users[uid])
-                return this.state.users[uid];
+            if(this.userProfiles && this.userProfiles[uid])
+                return this.userProfiles[uid];
             else{
+                console.log("Fetching single user record:" + uid);
                 try {
-                    let uq = new Parse.Query(UserProfile);
-                    let ret = await uq.get(uid);
-                    this.state.users[uid] = ret;
-                    return ret;
+                    // let uq = new Parse.Query(UserProfile);
+                    // let ret = await uq.get(uid);
+                    // this.state.users[uid] = ret;
+                    // return ret;
                 }catch(err){
                     return null;
                 }
@@ -354,13 +440,22 @@ const withAuthentication = Component => {
             }
             return breakoutRoom;
         }
-        async refreshUser(preferredConference) {
+        refreshUser(preferredConference, forceRefresh){
+            if(!this.refreshUserPromise || forceRefresh){
+                this.refreshUserPromise = new Promise(async (resolve)=>{
+                    let user = await this._refreshUser(preferredConference);
+                    resolve(user);
+                });
+            }
+            return this.refreshUserPromise;
+        }
+        async _refreshUser(preferredConference) {
 
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
                 if (user) {
                     const query = new Parse.Query(Parse.User);
-                    query.include(["tags.label", "tags.color", "roles.name"]);
+                    query.include(["tags"]);
                     try {
                         let userWithRelations = await query.get(user.id);
 
@@ -435,6 +530,7 @@ const withAuthentication = Component => {
                             spacesByName[space.get("name")] = space;
                         }
                         let currentConference = _this.state.currentConference;
+                        _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile)
                         await _this.createSocialSpaceSubscription(spacesByName["Lobby"], user, activeProfile);
                         console.log("RefreshUser called, setting chat channel for some reason?")
                         let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
@@ -453,7 +549,6 @@ const withAuthentication = Component => {
                             roles: roles
                         }));
 
-                        _this.getUsers();
                         if(currentConference && currentConference.id != conf.id){
                             window.location.reload(false);
                         }
@@ -461,14 +556,15 @@ const withAuthentication = Component => {
                         return userWithRelations;
                     } catch (err) {
                         console.log(err);
-                        try {
-                            _this.setState({loading: false, user: null});
-                            await Parse.User.logOut();
-                        }catch(err2){
-                            console.log(err2);
-                        }
-                        if(_this.props.history)
-                        _this.props.history.push("/signin")
+                        //TODO uncomment
+                        // try {
+                        //     _this.setState({loading: false, user: null});
+                        //     await Parse.User.logOut();
+                        // }catch(err2){
+                        //     console.log(err2);
+                        // }
+                        // if(_this.props.history)
+                        // _this.props.history.push("/signin")
                         return null;
                     }
                 } else {

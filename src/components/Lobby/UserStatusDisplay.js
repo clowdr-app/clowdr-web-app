@@ -1,5 +1,5 @@
 import React from "react";
-import {Badge, Card, Popover, Skeleton, Tooltip} from "antd";
+import {Badge, Button, Card, Popover, Skeleton, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
@@ -13,7 +13,9 @@ class UserStatusDisplay extends React.Component{
 
     async componentDidMount() {
         this.mounted = true;
-        let profile = await this.props.auth.helpers.getUserRecord(this.state.id);
+        let profile = await this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id);
+        if(!this.mounted)
+            return;
         let userStatus = this.props.auth.presences[this.state.id];
         this.setState({profile: profile, presence: userStatus})
     }
@@ -22,10 +24,9 @@ class UserStatusDisplay extends React.Component{
         if(this.props.auth.presences[this.state.id] != this.state.presence){
             this.setState({presence: this.props.auth.presences[this.state.id]});
         }
-
-        if(this.props.auth.users[this.state.id] != this.state.profile){
-            this.setState({profile: this.props.auth.users[this.state.id]});
-        }
+    }
+    openDM(){
+        this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
 
     render() {
@@ -59,24 +60,28 @@ class UserStatusDisplay extends React.Component{
                 badgeStyle = "default"
                 dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
             }
-            let statusDesc = <><b>Status:</b> {this.state.presence.get("status")}</>;
-            if(!this.state.presence.get("status") || this.state.presence.get('status').length == 0){
-                statusDesc = <i>No status set</i>
+            let statusDesc = <i>{this.state.presence.get("status")}</i>;
+            let dmButton = <></>
+            if(this.props.auth.userProfile.id != this.state.profile.id){
+                dmButton = <Button onClick={this.openDM.bind(this)} type="primary">Message</Button>
             }
+            let popoverContent = <span>{dmButton}</span>
             if (this.props.popover)
                 return <div className="userDisplay" style={this.props.style}>
                     <Popover title={this.state.profile.get("displayName") + "'s availability is: " + presenceDesc}
                              content={<div>{statusDesc} {dntWaiver}</div>}>
                         <Badge status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Popover>
                 </div>
-            else return <Card
+            else return <div
                 key={this.state.profile.id}
-                size="small"
                 className="userTag"
-                title={<><Tooltip title={this.state.profile.get("displayName") +"'s availability is: " + presenceDesc}><Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Tooltip></>}>
-                {statusDesc}
-                {dntWaiver}
-            </Card>
+                title=
+                {dntWaiver}>
+                <Popover
+                    title={presenceDesc}
+                content={popoverContent}>
+                    <Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")} {statusDesc}</Popover>
+            </div>
         }
 
     }

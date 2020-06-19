@@ -295,14 +295,14 @@ class Lobby extends React.Component {
                 <List grid={{ gutter: 16,
                     xs: 1,
                     sm: 1,
-                    md: 2,
-                    lg: 3,
-                    xl: 4,
-                    xxl: 5,
+                    md: 1,
+                    lg: 2,
+                    xl: 2,
+                    xxl: 3,
                 }}
                       dataSource={Object.keys(this.state.presences).sort((a,b)=>(compareDates(a,
                           b) ))}
-                      renderItem={item => (<List.Item><UserStatusDisplay key={item} onlyShowWithPresence={true} profileID={item} popover={false}/></List.Item>
+                      renderItem={item => (<List.Item style={{marginBottom: 0}}><UserStatusDisplay key={item} onlyShowWithPresence={true} profileID={item} popover={false}/></List.Item>
                           )}>
 
                 </List>

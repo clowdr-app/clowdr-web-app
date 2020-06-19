@@ -29,6 +29,8 @@ import VideoChat from "./components/VideoChat";
 //
 import LiveVideosList from "./components/Admin/LiveVideos";
 import Registrations from "./components/Admin/Registrations";
+import Rooms from "./components/Admin/Program/Rooms";
+import Tracks from "./components/Admin/Program/Tracks";
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 //import Chat from "./components/Chat";
@@ -39,6 +41,7 @@ import About from "./components/About";
 import Help from "./components/Help";
 import SidebarChat from "./components/SocialTab/SidebarChat";
 import {withRouter} from "react-router";
+import BottomChat from "./components/SocialTab/BottomChat";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -141,6 +144,7 @@ class App extends Component {
     componentDidMount() {
         if (this.props.authContext.currentConference)
             this.refreshConferenceInformation();
+
     }
 
     refreshConferenceInformation() {
@@ -200,6 +204,8 @@ class App extends Component {
             {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
             <Route exact path='/admin/livevideos' component={LiveVideosList}/>
             <Route exact path='/admin/registrations' component={Registrations}/>
+            <Route exact path='/admin/program/rooms' component={Rooms}/>
+            <Route exact path='/admin/program/tracks' component={Tracks}/>
         </div>)
     }
 
@@ -212,7 +218,9 @@ class App extends Component {
 
     setChatWidth(w){
         this.setState({chatWidth: w});
-
+    }
+    setLobbyWidth(w){
+        this.setState({lobbyWidth: w});
     }
     render() {
         if (this.state.isMagicLogin) {
@@ -234,10 +242,16 @@ class App extends Component {
                 </div>
             }
         }
+        let topHeight = 0;
+        let topElement = document.getElementById("top-content");
+        if (topElement)
+            topHeight = topElement.clientHeight;
+
 
         let isLoggedIn = this.props.authContext.user != null;
         return (
                 <div className="App">
+                    <div>
                     <Layout className="site-layout">
                         <div id="top-content">
                             {this.siteHeader()}
@@ -257,19 +271,28 @@ class App extends Component {
                                 {/*<div className="lobbySessionTab" style={{left: (this.state.socialCollapsed?"0px":"250px")}}><Button onClick={this.toggleLobbySider.bind(this)}  size="small">Breakout Rooms {(this.state.socialCollapsed? ">":"x")}</Button> </div>*/}
                                 {/*<div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>*/}
 
-                                <SocialTab collapsed={this.state.socialCollapsed}/>
-                                <Content style={{margin: '24px 16px 0', overflow: 'initial',
-                                    paddingRight: this.state.chatWidth
+                                <SocialTab collapsed={this.state.socialCollapsed} setWidth={this.setLobbyWidth.bind(this)}/>
+                                <Content style={{
+                                    marginTop: topHeight,
+                                    overflow: 'initial',
+                                    paddingRight: this.state.chatWidth,
+                                    paddingLeft: this.state.lobbyWidth
                                 }}>
                                     <div className="site-layout-background" style={{padding: 24}}>
                                         {this.routes()}
                                     </div>
+
                                 </Content>
+
                                 <SidebarChat collapsed={this.state.chatCollapsed} setWidth={this.setChatWidth.bind(this)}/>
                             </Layout>
                         </div>
                     </Layout>
-
+                    </div>
+                    <BottomChat style={{
+                        right: this.state.chatWidth,
+                        left: this.state.lobbyWidth
+                    }}/>
                     {/* <div style={{position:
                     "sticky", bottom: 0}}>
                         <Chat />
