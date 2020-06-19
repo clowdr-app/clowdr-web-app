@@ -557,14 +557,14 @@ const withAuthentication = Component => {
                     } catch (err) {
                         console.log(err);
                         //TODO uncomment
-                        // try {
-                        //     _this.setState({loading: false, user: null});
-                        //     await Parse.User.logOut();
-                        // }catch(err2){
-                        //     console.log(err2);
-                        // }
-                        // if(_this.props.history)
-                        // _this.props.history.push("/signin")
+                        try {
+                            _this.setState({loading: false, user: null});
+                            await Parse.User.logOut();
+                        }catch(err2){
+                            console.log(err2);
+                        }
+                        if(_this.props.history)
+                        _this.props.history.push("/signin")
                         return null;
                     }
                 } else {
