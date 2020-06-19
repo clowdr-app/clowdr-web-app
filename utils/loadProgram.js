@@ -202,8 +202,7 @@ async function loadProgram() {
     // Create People next
     let ProgramPerson = Parse.Object.extend("ProgramPerson");
     let qp = new Parse.Query(ProgramPerson);
-    qp.equalTo("conference", conf);
-    qp.limit(5000);
+    qp.limit(10000);
     let people = await qp.find();
     people.forEach((person) => {
         allPeople[person.get("confKey")] = person;
@@ -221,7 +220,6 @@ async function loadProgram() {
         newPerson.set("confKey", person.Key);
         newPerson.set("URL", person.URL);
         newPerson.set("URLPhoto", person.URLPhoto);
-        newPerson.set("conference", conf);
         newPerson.setACL(acl);
         newPeople.push(newPerson);
         allPeople[newPerson.get("confKey")] = newPerson;
