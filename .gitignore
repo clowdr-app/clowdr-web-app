@@ -25,3 +25,5 @@ yarn-error.log*
 
 # BCP -- I think this should be ignored??
 react-app-env.d.ts
+db/.env-db
+.env-dbref
