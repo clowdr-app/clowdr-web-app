@@ -17,19 +17,15 @@ q.first().then(version => {
         exec(cmd, (err, stdout, stderr) => {
             if (err) {
                 console.log(`stderr: ${stderr}`);
-                const versionSchema = new Parse.Schema('Version');
-                versionSchema.addNumber('version');
-                versionSchema.save().then (result => {
-                    version = new Version();
-                    version.set("version", 0);
-                    version.save().then(res => {
-                        console.log("Schema version set to 0");
-                    });
-                }).catch(err => console.log('Version schema save: ' + err));
-                addRequiredData();
             }
             else {
                 console.log('DB import succeeded!');
+                version = new Version();
+                version.set("version", 0);
+                version.save().then(res => {
+                    console.log("Schema version set to 0");
+                });
+                addRequiredData();
             }
         });
     }
@@ -69,6 +65,7 @@ async function addRequiredData() {
         let user = new Parse.User();
         user.set('username', 'admin');
         user.set('password', 'admin');
+        user.set('email', 'admin@localhost')
         user.save().then(u => {
             let UserProfile = Parse.Object.extend('UserProfile');
             let userprofile = new UserProfile();

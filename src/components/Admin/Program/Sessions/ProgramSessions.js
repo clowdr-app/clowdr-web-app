@@ -13,45 +13,40 @@ const IconText = ({icon, text}) => (
     </Space>
 );
 
-let Liveitemsources = [];
+const Livesessionsources = ['', 'YouTube', 'Twitch', 'Facebook', 'iQIYI', 'ZoomUS', 'ZoomCN'];
 
-class ProgramItems extends React.Component {
+class ProgramSessions extends React.Component {
     constructor(props) {
         super(props);
         console.log(this.props);
         this.state = {
             loading: false, 
-            items: [],
-            tracks: [],
+            sessions: [],
+            rooms: [],
             editing: false,
-            edt_item: undefined
+            edt_session: undefined
         };
     }
 
     onCreate(values) {
         var _this = this;
-        // Create the item record
-        var item = Parse.Object.extend("ProgramItem");
-        var item = new item();
-        item.set("name", values.name);
-        item.set("src1", values.location);
-        item.set("id1", values.id1);
-        item.set("pwd1", values.pwd1);
-        item.set("src2", values.src2);
-        item.set("id2", values.id2);
-        item.set("pwd2", values.pwd2);
-        item.set("qa", values.qa);
-        item.save().then((val) => {
+        // Create the session record
+        var session = Parse.Object.extend("ProgramSession");
+        var session = new session();
+        session.set("title", values.title);
+        session.set("startTime", values.startTime);
+        session.set("endTime", values.endTime);
+        session.set("room", values.room);
+        session.save().then((val) => {
             _this.setState({visible: false})
             _this.refreshList();
-            _this.createWatchers(item);
         }).catch(err => {
             console.log(err);
         });
     }
 
     onDelete(value) {
-        console.log("Deleting " + value + " " + value.get("name"));
+        console.log("Deleting " + value + " " + value.get("title"));
         // Delete the watchers first
         
         value.destroy().then(()=>{
@@ -59,40 +54,32 @@ class ProgramItems extends React.Component {
         });
     }
 
-    onEdit(item) {
-        console.log("Editing " + item.get("name") + " " + item.id);
+    onEdit(session) {
+        console.log("Editing " + session.get("title") + " " + session.id);
         this.setState({
             visible: true, 
             editing: true, 
-            edt_item: {
-                objectId: item.id,
-                name: item.get("name"),
-                src1: item.get("src1"),
-                pwd1: item.get("pwd1"),
-                id1: item.get("id1"),
-                src2: item.get("src2"),
-                id2: item.get("id2"),
-                pwd2: item.get("pwd2"),
-                qa: item.get("qa"),
+            edt_session: {
+                objectId: session.id,
+                title: session.get("title"),
+                startTime: session.get("startTime"),
+                endTime: session.get("endTime"),
+                room: session.get("room").get('name')
             }
         });
     }
 
     onUpdate(values) {
         var _this = this;
-        console.log("Updating " + values.id1 + "; " + values.objectId);
-        let item = this.state.items.find(r => r.id == values.objectId);
+        console.log("Updating session " + values.title);
+        let session = this.state.sessions.find(r => r.id == values.objectId);
 
-        if (item) {
-            item.set("name", values.name);
-            item.set("src1", values.src1);
-            item.set("id1", values.id1);
-            item.set("pwd1", values.pwd1);
-            item.set("src2", values.src2);
-            item.set("id2", values.id2);
-            item.set("pwd2", values.pwd2);
-            item.set("qa", values.qa);
-            item.save().then((val) => {
+        if (session) {
+            session.set("title", values.title);
+            session.set("startTime", values.startTime);
+            session.set("endTime", values.endTime);
+            session.set("room", values.room);
+            session.save().then((val) => {
                 _this.setState({visible: false, editing: false});
                 _this.refreshList();
             }).catch(err => {
@@ -100,7 +87,7 @@ class ProgramItems extends React.Component {
             })
         }
         else {
-            console.log("item not found: " + values.id1);
+            console.log("Program session not found: " + values.title);
         }
     }
 
@@ -109,13 +96,13 @@ class ProgramItems extends React.Component {
     }
 
     componentDidMount() {
-        // Get the tracks
-        let query = new Parse.Query("ProgramTrack");
+        // Get the rooms
+        let query = new Parse.Query("ProgramRoom");
         query.equalTo("conference", this.props.auth.currentConference);
-        query.find().then(res=>{
-            console.log('Found tracks ' + res.length);
+        query.find().then(res => {
+            console.log('Found rooms ' + res.length);
             this.setState({
-                tracks: res
+                rooms: res
             });
         })
 
@@ -127,14 +114,17 @@ class ProgramItems extends React.Component {
     }
 
     refreshList(){
-        let query = new Parse.Query("ProgramItem");
+        let query = new Parse.Query("ProgramSession");
+//        console.log(this.props.auth);
+//        let token = this.props.auth.user.getSessionToken();
+//        console.log(token);
         console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
         query.equalTo("conference", this.props.auth.currentConference);
-        query.limit(5000);
+        query.limit(1000);
         query.find().then(res=>{
-            console.log('Found items ' + res.length);
+            console.log('Found sessions ' + res.length);
             this.setState({
-                items: res,
+                sessions: res,
                 loading: false
             });
         })
@@ -142,20 +132,6 @@ class ProgramItems extends React.Component {
     componentWillUnmount() {
         // this.sub.unsubscribe();
     }
-
-    // getAuthorsNames(item) {
-    //     let people = record.get("authors");
-    //     let ProgramPerson = Parse.Object.extend('ProgramPerson');
-    //     let qlist = [];
-    //     people.map(p => {
-    //         let qq = new Parse.Query(ProgramPerson);
-    //         qq.equalTo('objectId', p.id);
-    //         qlist.push(qq);
-    //     });
-    //     let q = Parse.Query.or(qlist);
-    //     let authors = await q.find();
-    //     return authors;
-    // }
 
     render() {
         const columns = [
@@ -166,19 +142,31 @@ class ProgramItems extends React.Component {
                 render: (text, record) => <span>{record.get("title")}</span>,
             },
             {
-                title: 'Track',
-                dataIndex: 'track',
-                render: (text,record) => <span>{record.get("track").get('name')}</span>,
-                key: 'track',
+                title: 'Start Time',
+                dataIndex: 'start',
+                render: (text,record) => <span>{record.get("startTime").toString()}</span>,
+                key: 'start',
+            },
+            {
+                title: 'End Time',
+                dataIndex: 'end',
+                render: (text,record) => <span>{record.get("endTime").toString()}</span>,
+                key: 'end',
+            },
+            {
+                title: 'Room',
+                dataIndex: 'room',
+                render: (text,record) => <span>{record.get("room").get('name')}</span>,
+                key: 'room',
             },
             {
                 title: 'Action',
                 key: 'action',
                 render: (text, record) => (
                     <Space size="small">
-                        <a href="#" item={record} onClick={() => this.onEdit(record)}>Edit</a>
+                        <a href="#" session={record} onClick={() => this.onEdit(record)}>Edit</a>
                         <Popconfirm
-                            title="Are you sure delete this item?"
+                            title="Are you sure delete this session?"
                             onConfirm={()=>this.onDelete(record)}
                             okText="Yes"
                             cancelText="No"
@@ -199,19 +187,20 @@ class ProgramItems extends React.Component {
             return (
                 <Fragment>
                     <CollectionEditForm
-                        title="Edit Item"
+                        title="Edit Session"
                         visible={this.state.visible}
-                        data={this.state.edt_item}
+                        data={this.state.edt_session}
                         onAction={this.onUpdate.bind(this)}
                         onCancel={() => {
                             this.setVisible(false);
                             this.setState({editing: false});
                         }}
                         onSelectPullDown1={(value) => {
-                            this.setState({src1: value});
+                            this.setState({room: value});
                         }}
+                        rooms={this.state.rooms}
                     />
-                <Table columns={columns} dataSource={this.state.items} rowKey={(i)=>(i.id)}>
+                <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
                 </Table>
             </Fragment>
             )
@@ -222,20 +211,21 @@ class ProgramItems extends React.Component {
                     this.setVisible(true);
                 }}
             >
-                New item
+                New session
             </Button>
             <CollectionEditForm
-                title="Add Item"
+                title="Add Session"
                 visible={this.state.visible}
                 onAction={this.onCreate.bind(this)}
                 onCancel={() => {
                     this.setVisible(false);
                 }}
                 onSelectPullDown1={(value) => {
-                    this.setState({src1: value});
+                    this.setState({room: value});
                 }}
+                rooms={this.state.rooms}
             />
-            <Table columns={columns} dataSource={this.state.items} rowKey={(i)=>(i.id)}>
+            <Table columns={columns} dataSource={this.state.sessions} rowKey={(r)=>(r.id)}>
             </Table>
         </div>
     }
@@ -245,13 +235,13 @@ class ProgramItems extends React.Component {
 const AuthConsumer = (props) => (
     <AuthUserContext.Consumer>
         {value => (
-            <ProgramItems {...props} auth={value}/>
+            <ProgramSessions {...props} auth={value}/>
         )}
     </AuthUserContext.Consumer>
 )
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1}) => {
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, rooms}) => {
     const [form] = Form.useForm();
     return (
         <Modal
@@ -290,58 +280,39 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                 <Form.Item name="objectId" noStyle>
                     <Input type="text" type="hidden" />
                 </Form.Item>
+
                 <Form.Item
                     name="title"
+                    label="Title"
                     rules={[
                         {
                             required: true,
-                            message: 'Please input the title of the item!',
+                            message: 'Please input the title of the session!',
                         },
                     ]}
                 >
                     <Input placeholder="Name"/>
                 </Form.Item>
-                <Form.Item name="stream1">
+
+                <Form.Item name="dates">
                     <Input.Group compact>
-                        <Form.Item name="src1">
-                            <Select placeholder="Main Source" style={{ width: 120 }} onChange={onSelectPullDown1}>
-                                {Liveitemsources.map(src => (
-                                    <Option key={src}>{src}</Option>
-                                ))}
-                            </Select>
+                        <Form.Item name="start" label="Start time">
+                            <DatePicker showTime/>
                         </Form.Item>
-                        <Form.Item name="id1">
-                            <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
-                        </Form.Item>
-                        <Form.Item name="pwd1">
-                            <Input style={{ width: '100%' }} type="textarea" placeholder="Encrypted Password (Optional)"/>
+                        <Form.Item name="end" label="End time">
+                            <DatePicker showTime/>
                         </Form.Item>
                     </Input.Group>
                 </Form.Item>
-                <Form.Item name="stream2">
-                    <Input.Group compact>
-                        <Form.Item name="src2" >
-                            <Select placeholder="Alt. Source" style={{ width: 120 }} onChange={onSelectPullDown1}>
-                                {Liveitemsources.map(src => (
-                                    <Option key={src}>{src}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item name="id2" rules={[
-                            {
-                                required: false
-                            },
-                        ]}>
-                            <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
-                        </Form.Item>
-                        <Form.Item name="pwd2">
-                            <Input style={{ width: '100%' }} type="textarea" placeholder="Encrypted Password (Optional)"/>
-                        </Form.Item>
-                    </Input.Group>
+
+                <Form.Item name="room" label="Room">
+                    <Select placeholder="Chose the room" style={{ width: 400 }} onChange={onSelectPullDown1}>
+                        {rooms.map(r => (
+                            <Option key={r.id}>{r.get('name')}</Option>
+                        ))}
+                    </Select>
                 </Form.Item>
-                <Form.Item name="qa">
-                    <Input placeholder="Q&A tool link"/>
-                </Form.Item>
+
             </Form>
         </Modal>
     );
