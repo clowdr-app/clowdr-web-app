@@ -2,6 +2,7 @@ import React, {Fragment} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
+import moment from 'moment';
 
 const { Option } = Select;
 
@@ -62,8 +63,8 @@ class ProgramSessions extends React.Component {
             edt_session: {
                 objectId: session.id,
                 title: session.get("title"),
-                startTime: session.get("startTime"),
-                endTime: session.get("endTime"),
+                startTime: moment(session.get("startTime")),
+                endTime: moment(session.get("endTime")),
                 room: session.get("room").get('name')
             }
         });
@@ -76,9 +77,12 @@ class ProgramSessions extends React.Component {
 
         if (session) {
             session.set("title", values.title);
-            session.set("startTime", values.startTime);
-            session.set("endTime", values.endTime);
-            session.set("room", values.room);
+            session.set("startTime", values.startTime.toDate());
+            session.set("endTime", values.endTime.toDate());
+            let room = this.state.rooms.find(r => r.id == values.room);
+            if (!room)
+                console.log('Invalid room ' + values.room);
+            session.set("room", room);
             session.save().then((val) => {
                 _this.setState({visible: false, editing: false});
                 _this.refreshList();
@@ -156,7 +160,7 @@ class ProgramSessions extends React.Component {
             {
                 title: 'Room',
                 dataIndex: 'room',
-                render: (text,record) => <span>{record.get("room").get('name')}</span>,
+                render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : ""}</span>,
                 key: 'room',
             },
             {
@@ -195,9 +199,6 @@ class ProgramSessions extends React.Component {
                             this.setVisible(false);
                             this.setState({editing: false});
                         }}
-                        onSelectPullDown1={(value) => {
-                            this.setState({room: value});
-                        }}
                         rooms={this.state.rooms}
                     />
                 <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
@@ -220,9 +221,6 @@ class ProgramSessions extends React.Component {
                 onCancel={() => {
                     this.setVisible(false);
                 }}
-                onSelectPullDown1={(value) => {
-                    this.setState({room: value});
-                }}
                 rooms={this.state.rooms}
             />
             <Table columns={columns} dataSource={this.state.sessions} rowKey={(r)=>(r.id)}>
@@ -241,7 +239,7 @@ const AuthConsumer = (props) => (
 )
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, rooms}) => {
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) => {
     const [form] = Form.useForm();
     return (
         <Modal
@@ -296,17 +294,17 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
 
                 <Form.Item name="dates">
                     <Input.Group compact>
-                        <Form.Item name="start" label="Start time">
+                        <Form.Item name="startTime" label="Start time">
                             <DatePicker showTime/>
                         </Form.Item>
-                        <Form.Item name="end" label="End time">
+                        <Form.Item name="endTime" label="End time">
                             <DatePicker showTime/>
                         </Form.Item>
                     </Input.Group>
                 </Form.Item>
 
                 <Form.Item name="room" label="Room">
-                    <Select placeholder="Chose the room" style={{ width: 400 }} onChange={onSelectPullDown1}>
+                    <Select placeholder="Chose the room" style={{ width: 400 }} >
                         {rooms.map(r => (
                             <Option key={r.id}>{r.get('name')}</Option>
                         ))}
