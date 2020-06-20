@@ -39,8 +39,6 @@ class LinkMenu extends React.Component {
                 adminTools = <SubMenu key="/admin" title={<span><ToolOutlined/><span>Administration</span></span>}>
                     <Menu.Item key='/admin/liveVideos' icon={<VideoCameraAddOutlined/>}><NavLink to="/admin/liveVideos">
                         Live Sessions</NavLink></Menu.Item>
-                    <Menu.Item key='/admin/schedule' icon={<CalendarOutlined/>}><NavLink to="/admin/schedule">
-                        Schedule</NavLink></Menu.Item>
 
                     <Menu.Item key='/admin/program/rooms' icon={<SolutionOutlined/>}><NavLink to="/admin/program/rooms">
                         Virtual Rooms</NavLink></Menu.Item>
@@ -50,6 +48,9 @@ class LinkMenu extends React.Component {
 
                     <Menu.Item key='/admin/program/items' icon={<SolutionOutlined/>}><NavLink to="/admin/program/items">
                     Program Items</NavLink></Menu.Item>
+
+                    <Menu.Item key='/admin/program/sessions' icon={<CalendarOutlined/>}><NavLink to="/admin/program/sessions">
+                    Program Sessions</NavLink></Menu.Item>
 
                     <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
                         Users</NavLink></Menu.Item>

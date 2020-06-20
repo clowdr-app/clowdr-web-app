@@ -32,6 +32,7 @@ import Registrations from "./components/Admin/Registrations";
 import Rooms from "./components/Admin/Program/Rooms";
 import Tracks from "./components/Admin/Program/Tracks";
 import ProgramItems from "./components/Admin/Program/Items";
+import ProgramSessions from "./components/Admin/Program/Sessions";
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 //import Chat from "./components/Chat";
@@ -208,6 +209,7 @@ class App extends Component {
             <Route exact path='/admin/program/rooms' component={Rooms}/>
             <Route exact path='/admin/program/tracks' component={Tracks}/>
             <Route exact path='/admin/program/items' component={ProgramItems}/>
+            <Route exact path='/admin/program/sessions' component={ProgramSessions}/>
         </div>)
     }
 

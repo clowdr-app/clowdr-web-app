@@ -43,7 +43,6 @@ class Rooms extends React.Component {
         room.save().then((val) => {
             _this.setState({visible: false})
             _this.refreshList();
-            _this.createWatchers(room);
         }).catch(err => {
             console.log(err);
         });
