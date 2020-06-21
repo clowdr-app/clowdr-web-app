@@ -30,6 +30,7 @@ class ProgramSessions extends React.Component {
             editing: false,
             edt_session: undefined
         };
+
         console.log('[Admin/Sessions]: downloaded? ' + this.props.downloaded);
 
         // Call to download program
@@ -44,8 +45,8 @@ class ProgramSessions extends React.Component {
     onCreate(values) {
         var _this = this;
         // Create the session record
-        var session = Parse.Object.extend("ProgramSession");
-        var session = new session();
+        var Session = Parse.Object.extend("ProgramSession");
+        var session = new Session();
         session.set('conference', this.props.auth.currentConference);
         session.set("title", values.title);
         session.set("startTime", values.startTime.toDate());
@@ -55,7 +56,9 @@ class ProgramSessions extends React.Component {
             console.log('Invalid room ' + values.room);
         session.set("room", room);
         session.save().then((val) => {
-            _this.setState({visible: false, sessions: [session, ...this.state.sessions]})
+            let sortedSessions = [...this.state.sessions, session];
+            sortedSessions.sort((s1, s2) => s1.get("startTime") - s2.get("startTime"));
+            _this.setState({visible: false, sessions: sortedSessions})
         }).catch(err => {
             console.log(err);
         });
