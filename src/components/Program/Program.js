@@ -3,6 +3,9 @@ import {Select, Spin, Table} from 'antd';
 import Parse from "parse";
 import {AuthUserContext} from "../Session";
 import Form from "antd/lib/form/Form";
+import withProgram from './withProgram';
+import ProgramContext from './context';
+import { ContactlessOutlined } from '@material-ui/icons';
 
 var moment = require('moment');
 function  groupBy(list, keyGetter) {
@@ -21,8 +24,23 @@ function  groupBy(list, keyGetter) {
 class Program extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {sessions: [], loading: true,
-        formatTime: (dateTimeStr)=>moment(dateTimeStr).format("LT")}
+        this.state = {
+            sessions: [], 
+            loading: true,
+            gotTracks: false,
+            gotRooms: false,
+            forItems: false,
+            gotSessions: false,
+            formatTime: (dateTimeStr)=>moment(dateTimeStr).format("LT")
+        }
+
+        console.log('[Program]: downloaded? ' + this.props.downloaded);
+
+        // Call to download program
+        if (!this.props.downloaded) 
+            this.props.onDown(this.props);
+        else
+            this.state.sessions = this.props.sessions;
     }
 
     formatSessionsIntoTable(sessions){
@@ -41,17 +59,19 @@ class Program extends React.Component {
                 for (let session of sessions) {
                     let sessionHeader = {label: session.get("title"), rowSpan: 0};
                     row.session = sessionHeader;
-                    for (let programItem of session.get("items")) {
-                        row.key = programItem.id;
-                        row.programItem = programItem.get("title");
-                        table.push(row);
-                        row = {};
-                        row.session = {};
-                        row.timeBand = {};
-                        row.date = {};
-                        dateHeader.rowSpan++;
-                        timeBandHeader.rowSpan++;
-                        sessionHeader.rowSpan++;
+                    if (session.get("items")) {
+                        for (let programItem of session.get("items")) {
+                            row.key = programItem.id;
+                            row.programItem = programItem.get("title");
+                            table.push(row);
+                            row = {};
+                            row.session = {};
+                            row.timeBand = {};
+                            row.date = {};
+                            dateHeader.rowSpan++;
+                            timeBandHeader.rowSpan++;
+                            sessionHeader.rowSpan++;
+                        }
                     }
                 }
             }
@@ -60,34 +80,37 @@ class Program extends React.Component {
         return table;
     }
 
-    async componentDidMount() {
+    componentDidUpdate(prevProps) {
+        console.log("[Program]: Something changed");
 
-        let trackQ = new Parse.Query("ProgramTrack");
-        trackQ.equalTo("conference", this.props.auth.currentConference);
-        trackQ.exists("displayName")
-        let tracks = await trackQ.find();
-        let trackOptions = tracks.map(t => ({label: t.get("displayName"), value: t.id}));
-        let query = new Parse.Query("ProgramSession");
-        query.include(["items"]);
-        query.equalTo("conference", this.props.auth.currentConference)
-        query.addAscending("startTime");
-        query.find().then(res => {
-            // let groupedByDate = groupBy(res,
-            //     (item)=>moment(item.get("startTime")).format("ddd MMM D"))
-
-            // let sessionTable = this.formatSessionsIntoTable(res);
+        if (this.state.loading && this.state.gotTracks && this.state.gotRooms && this.state.gotItems && this.state.gotSessions) {
+            console.log('[Program]: Program download complete');
             this.setState({
                 // sessions: groupedByDate,
-                sessions: res,
+                sessions: this.props.sessions,
                 loading: false,
                 // tracks: trackOptions
             });
-
-        })
-        let query2 = new Parse.Query("LiveVideo");
-        query2.first().then(video => {
-            this.setState({dummyVideo: video});
-        })
+        }
+        else {
+            console.log('[Program]: Program still downloading...');
+            if (prevProps.tracks.length != this.props.tracks.length) {
+                this.setState({gotTracks: true});
+                console.log('[Program]: got tracks');
+            }
+            if (prevProps.rooms.length != this.props.rooms.length) {
+                this.setState({gotRooms: true})
+                console.log('[Program]: got rooms');
+            }
+            if (prevProps.items.length != this.props.items.length) {
+                this.setState({gotItems: true})
+                console.log('[Program]: got items');
+            }
+            if (prevProps.sessions.length != this.props.sessions.length) {
+                this.setState({gotSessions: true})
+                console.log('[Program]: got sessions');
+            }
+        }
     }
 
 
@@ -209,11 +232,15 @@ class ProgramItem extends React.Component {
 }
 const
     AuthConsumer = (props) => (
-        <AuthUserContext.Consumer>
-            {value => (
-                <Program {...props} auth={value} />
+        <ProgramContext.Consumer>
+            {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+                <AuthUserContext.Consumer>
+                    {value => (
+                        <Program {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                    )}
+                </AuthUserContext.Consumer>
             )}
-        </AuthUserContext.Consumer>
+        </ProgramContext.Consumer>
 
     );
 export default AuthConsumer;

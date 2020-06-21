@@ -2,6 +2,7 @@ import React, {Fragment} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
+import {ProgramContext} from "../../../Program";
 
 const { Option } = Select;
 
@@ -18,11 +19,22 @@ class Tracks extends React.Component {
         super(props);
         console.log(this.props);
         this.state = {
-            loading: false, 
+            loading: true, 
             tracks: [],
+            gotTracks: false,
             editing: false,
             edt_track: undefined
         };
+
+        console.log('[Admin/Tracks]: downloaded? ' + this.props.downloaded);
+
+        // Call to download program
+        if (!this.props.downloaded) 
+            this.props.onDown(this.props);
+        else {
+            this.state.tracks = this.props.tracks;
+        }
+
     }
 
     onCreate(values) {
@@ -33,9 +45,7 @@ class Tracks extends React.Component {
         track.set("name", values.name);
         track.set("displayName", values.displayName);
         track.save().then((val) => {
-            _this.setState({visible: false})
-            _this.refreshList();
-            _this.createWatchers(track);
+            _this.setState({visible: false, tracks: [track, ...this.state.tracks]})
         }).catch(err => {
             console.log(err);
         });
@@ -73,7 +83,6 @@ class Tracks extends React.Component {
             track.set("displayName", values.displayName);
             track.save().then((val) => {
                 _this.setState({visible: false, editing: false});
-                _this.refreshList();
             }).catch(err => {
                 console.log(err + ": " + values.objectId);
             })
@@ -88,8 +97,32 @@ class Tracks extends React.Component {
     }
 
     componentDidMount() {
-        this.refreshList();
     }
+
+    componentDidUpdate(prevProps) {
+        console.log("[Admin/Tracks]: Something changed");
+
+        if (this.state.loading) {
+            if (this.state.gotTracks) {
+                console.log('[Admin/Tracks]: Program download complete');
+                this.setState({
+                    tracks: this.props.tracks,
+                    loading: false
+                });
+            }
+            else {
+                console.log('[Admin/Tracks]: Program still downloading...');
+                if (prevProps.tracks.length != this.props.tracks.length) {
+                    this.setState({gotTracks: true});
+                    console.log('[Admin/Tracks]: got tracks');
+                }
+            }
+        }
+        else 
+            console.log('[Admin/Tracks]: Program cached');
+
+    }
+
 
     refreshList(){
         let query = new Parse.Query("ProgramTrack");
@@ -104,7 +137,6 @@ class Tracks extends React.Component {
         })
     }
     componentWillUnmount() {
-        // this.sub.unsubscribe();
     }
 
     render() {
@@ -140,7 +172,7 @@ class Tracks extends React.Component {
             },
         ];
 
-        if (this.state.loading)
+        if (!this.props.downloaded)
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -187,12 +219,17 @@ class Tracks extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <AuthUserContext.Consumer>
-        {value => (
-            <Tracks {...props} auth={value}/>
+    <ProgramContext.Consumer>
+        {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+            <AuthUserContext.Consumer>
+                {value => (
+                    <Tracks {...props} auth={value} tracks={tracks} onDown={onDownload} downloaded={downloaded}/>
+                )}
+            </AuthUserContext.Consumer>
         )}
-    </AuthUserContext.Consumer>
-)
+    </ProgramContext.Consumer>
+
+);
 export default AuthConsumer;
 
 const CollectionEditForm = ({title, visible, data, onAction, onCancel}) => {

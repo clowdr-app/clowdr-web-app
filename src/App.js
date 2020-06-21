@@ -12,11 +12,12 @@ import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
 import Moderation from "./components/Moderation";
 
-import Program from "./components/Program";
+import {Program} from "./components/Program";
 import VideoRoom from "./components/VideoChat/VideoRoom"
 import SlackToVideo from "./components/Slack/slackToVideo"
 
 import {withAuthentication} from "./components/Session";
+import {withProgram} from "./components/Program"
 
 import LiveStreaming from "./components/LiveStreaming";
 import Parse from "parse";
@@ -309,4 +310,4 @@ class ClowdrApp extends React.Component{
    }
 }
 
-export default withAuthentication(ClowdrApp);
+export default withProgram(withAuthentication(ClowdrApp));
