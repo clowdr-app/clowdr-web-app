@@ -34,10 +34,14 @@ class ProgramSessions extends React.Component {
         // Create the session record
         var session = Parse.Object.extend("ProgramSession");
         var session = new session();
+        session.set('conference', this.props.auth.currentConference);
         session.set("title", values.title);
-        session.set("startTime", values.startTime);
-        session.set("endTime", values.endTime);
-        session.set("room", values.room);
+        session.set("startTime", values.startTime.toDate());
+        session.set("endTime", values.endTime.toDate());
+        let room = this.state.rooms.find(r => r.id == values.room);
+        if (!room)
+            console.log('Invalid room ' + values.room);
+        session.set("room", room);
         session.save().then((val) => {
             _this.setState({visible: false})
             _this.refreshList();
@@ -294,16 +298,37 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) =
 
                 <Form.Item name="dates">
                     <Input.Group compact>
-                        <Form.Item name="startTime" label="Start time">
+                        <Form.Item name="startTime" label="Start time" 
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: 'Required!',
+                                    },
+                                ]}
+                        >
                             <DatePicker showTime/>
                         </Form.Item>
-                        <Form.Item name="endTime" label="End time">
+                        <Form.Item name="endTime" label="End time"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: 'Required!',
+                                    },
+                                ]}
+                        >
                             <DatePicker showTime/>
                         </Form.Item>
                     </Input.Group>
                 </Form.Item>
 
-                <Form.Item name="room" label="Room">
+                <Form.Item name="room" label="Room"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: 'Please input the room the session!',
+                                },
+                            ]}
+                >
                     <Select placeholder="Chose the room" style={{ width: 400 }} >
                         {rooms.map(r => (
                             <Option key={r.id}>{r.get('name')}</Option>
