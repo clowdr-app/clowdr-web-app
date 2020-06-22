@@ -166,6 +166,16 @@ class ProgramSessions extends React.Component {
         // this.sub.unsubscribe();
     }
 
+    formatTime(time) {
+        var word = time.split(" ");
+        var displayTime = "";
+        displayTime += word[3] + "-" + word[1] + "-" + word[2] + " "
+                        + word[4].substr(0, 5) + " "
+                        + word[6].charAt(1) + word[7].charAt(0) + word[8].charAt(0);
+        return displayTime;
+        // return time;
+    }
+
     render() {
         const columns = [
             {
@@ -177,13 +187,13 @@ class ProgramSessions extends React.Component {
             {
                 title: 'Start Time',
                 dataIndex: 'start',
-                render: (text,record) => <span>{record.get("startTime").toString()}</span>,
+                render: (text,record) => <span>{this.formatTime(record.get("startTime").toString())}</span>,
                 key: 'start',
             },
             {
                 title: 'End Time',
                 dataIndex: 'end',
-                render: (text,record) => <span>{record.get("endTime").toString()}</span>,
+                render: (text,record) => <span>{this.formatTime(record.get("endTime").toString())}</span>,
                 key: 'end',
             },
             {
