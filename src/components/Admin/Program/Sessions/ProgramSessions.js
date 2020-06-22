@@ -83,7 +83,8 @@ class ProgramSessions extends React.Component {
                 title: session.get("title"),
                 startTime: moment(session.get("startTime")),
                 endTime: moment(session.get("endTime")),
-                room: session.get("room")
+                room: session.get("room").get('name'), 
+                roomId: session.get('room').id
             }
         });
     }
@@ -97,7 +98,7 @@ class ProgramSessions extends React.Component {
             session.set("title", values.title);
             session.set("startTime", values.startTime.toDate());
             session.set("endTime", values.endTime.toDate());
-            let room = this.state.rooms.find(r => r.id == values.room);
+            let room = this.state.rooms.find(r => r.id == values.roomId);
             if (!room)
                 console.log('Invalid room ' + values.room);
             session.set("room", room);
@@ -310,6 +311,10 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) =
                 }}
             >
                 <Form.Item name="objectId" noStyle>
+                    <Input type="text" type="hidden" />
+                </Form.Item>
+
+                <Form.Item name="roomId" noStyle>
                     <Input type="text" type="hidden" />
                 </Form.Item>
 
