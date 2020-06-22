@@ -2,6 +2,7 @@ import React, {Fragment} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
+import {ProgramContext} from "../../../Program";
 
 const { Option } = Select;
 
@@ -18,13 +19,24 @@ let Liveitemsources = [];
 class ProgramItems extends React.Component {
     constructor(props) {
         super(props);
-        console.log(this.props);
+        console.log("[Admin/Items]: program downloaded?" + this.props.downloaded);
         this.state = {
-            loading: false, 
+            loading: true, 
             items: [],
+            tracks: [],
+            gotItems: false,
+            gotTracks: false,
             editing: false,
             edt_item: undefined
         };
+
+        // Call to download program
+        if (!this.props.downloaded) 
+            this.props.onDown(this.props);
+        else {
+            this.state.items = this.props.items;
+            this.state.tracks = this.props.tracks;
+        }
     }
 
     onCreate(values) {
@@ -41,9 +53,8 @@ class ProgramItems extends React.Component {
         item.set("pwd2", values.pwd2);
         item.set("qa", values.qa);
         item.save().then((val) => {
-            _this.setState({visible: false})
-            _this.refreshList();
-            _this.createWatchers(item);
+            _this.setState({visible: false, items: [item, ...this.state.items]})
+//            _this.refreshList();
         }).catch(err => {
             console.log(err);
         });
@@ -93,7 +104,7 @@ class ProgramItems extends React.Component {
             item.set("qa", values.qa);
             item.save().then((val) => {
                 _this.setState({visible: false, editing: false});
-                _this.refreshList();
+//                _this.refreshList();
             }).catch(err => {
                 console.log(err + ": " + values.objectId);
             })
@@ -108,17 +119,43 @@ class ProgramItems extends React.Component {
     }
 
     componentDidMount() {
-        this.refreshList();
-        // this.sub = this.props.parseLive.subscribe(query);
-        // this.sub.on('create', vid=>{
-        //     console.log(vid);
-        // })
     }
+
+
+    componentDidUpdate(prevProps) {
+        console.log("[Admin/Items]: Something changed");
+
+        if (this.state.loading) {
+            if (this.state.gotTracks && this.state.gotItems) {
+                console.log('[Admin/Items]: Program download complete');
+                this.setState({
+                    items: this.props.items,
+                    tracks: this.props.tracks,
+                    loading: false,
+                });
+            }
+            else {
+                console.log('[Admin/Items]: Program still downloading...');
+                if (prevProps.tracks.length != this.props.tracks.length) {
+                    this.setState({gotTracks: true});
+                    console.log('[Admin/Items]: got tracks');
+                }
+                if (prevProps.items.length != this.props.items.length) {
+                    this.setState({gotItems: true})
+                    console.log('[Admin/Items]: got items');
+                }
+            }
+        }
+        else 
+            console.log('[Admin/Items]: Program cached');
+    }
+
 
     refreshList(){
         let query = new Parse.Query("ProgramItem");
         console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
         query.equalTo("conference", this.props.auth.currentConference);
+        query.limit(5000);
         query.find().then(res=>{
             console.log('Found items ' + res.length);
             this.setState({
@@ -131,6 +168,20 @@ class ProgramItems extends React.Component {
         // this.sub.unsubscribe();
     }
 
+    // getAuthorsNames(item) {
+    //     let people = record.get("authors");
+    //     let ProgramPerson = Parse.Object.extend('ProgramPerson');
+    //     let qlist = [];
+    //     people.map(p => {
+    //         let qq = new Parse.Query(ProgramPerson);
+    //         qq.equalTo('objectId', p.id);
+    //         qlist.push(qq);
+    //     });
+    //     let q = Parse.Query.or(qlist);
+    //     let authors = await q.find();
+    //     return authors;
+    // }
+
     render() {
         const columns = [
             {
@@ -138,12 +189,6 @@ class ProgramItems extends React.Component {
                 dataIndex: 'title',
                 key: 'title',
                 render: (text, record) => <span>{record.get("title")}</span>,
-            },
-            {
-                title: 'Authors',
-                dataIndex: 'authors',
-                render: (text,record) => <span>{record.get("authors")}</span>,
-                key: 'authors',
             },
             {
                 title: 'Track',
@@ -170,7 +215,7 @@ class ProgramItems extends React.Component {
             },
         ];
 
-        if (this.state.loading)
+        if (!this.props.downloaded)
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -222,13 +267,20 @@ class ProgramItems extends React.Component {
 
 }
 
-const AuthConsumer = (props) => (
-    <AuthUserContext.Consumer>
-        {value => (
-            <ProgramItems {...props} auth={value}/>
-        )}
-    </AuthUserContext.Consumer>
-)
+const
+    AuthConsumer = (props) => (
+        <ProgramContext.Consumer>
+            {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+                <AuthUserContext.Consumer>
+                    {value => (
+                        <ProgramItems {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                    )}
+                </AuthUserContext.Consumer>
+            )}
+        </ProgramContext.Consumer>
+
+    );
+
 export default AuthConsumer;
 
 const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1}) => {

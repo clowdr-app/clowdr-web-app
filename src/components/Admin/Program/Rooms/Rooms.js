@@ -2,6 +2,7 @@ import React, {Fragment} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
+import {ProgramContext} from "../../../Program";
 
 const { Option } = Select;
 
@@ -18,13 +19,22 @@ const LiveroomSources = ['', 'YouTube', 'Twitch', 'Facebook', 'iQIYI', 'ZoomUS',
 class Rooms extends React.Component {
     constructor(props) {
         super(props);
-        console.log(this.props);
         this.state = {
-            loading: false, 
+            loading: true, 
             rooms: [],
+            gotRooms: false,
             editing: false,
             edt_room: undefined
         };
+
+        console.log('[Admin/Rooms]: downloaded? ' + this.props.downloaded);
+
+        // Call to download program
+        if (!this.props.downloaded) 
+            this.props.onDown(this.props);
+        else
+            this.state.rooms = this.props.rooms;
+
     }
 
     onCreate(values) {
@@ -41,9 +51,7 @@ class Rooms extends React.Component {
         room.set("pwd2", values.pwd2);
         room.set("qa", values.qa);
         room.save().then((val) => {
-            _this.setState({visible: false})
-            _this.refreshList();
-            _this.createWatchers(room);
+            _this.setState({visible: false, rooms: [room, ...this.state.rooms]})
         }).catch(err => {
             console.log(err);
         });
@@ -93,7 +101,6 @@ class Rooms extends React.Component {
             room.set("qa", values.qa);
             room.save().then((val) => {
                 _this.setState({visible: false, editing: false});
-                _this.refreshList();
             }).catch(err => {
                 console.log(err + ": " + values.objectId);
             })
@@ -108,12 +115,32 @@ class Rooms extends React.Component {
     }
 
     componentDidMount() {
-        this.refreshList();
-        // this.sub = this.props.parseLive.subscribe(query);
-        // this.sub.on('create', vid=>{
-        //     console.log(vid);
-        // })
     }
+
+    componentDidUpdate(prevProps) {
+        console.log("[Admin/Rooms]: Something changed");
+
+        if (this.state.loading) {
+            if (this.state.gotRooms) {
+                console.log('[Admin/Rooms]: Program download complete');
+                this.setState({
+                    rooms: this.props.rooms,
+                    loading: false
+                });
+            }
+            else {
+                console.log('[Admin/Rooms]: Program still downloading...');
+                if (prevProps.rooms.length != this.props.rooms.length) {
+                    this.setState({gotRooms: true});
+                    console.log('[Admin/Rooms]: got rooms');
+                }
+            }
+        }
+        else 
+            console.log('[Admin/Rooms]: Program cached');
+
+    }
+
 
     refreshList(){
         let query = new Parse.Query("ProgramRoom");
@@ -203,7 +230,7 @@ class Rooms extends React.Component {
             },
         ];
 
-        if (this.state.loading)
+        if (!this.props.downloaded)
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -262,12 +289,18 @@ class Rooms extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <AuthUserContext.Consumer>
-        {value => (
-            <Rooms {...props} auth={value}/>
+    <ProgramContext.Consumer>
+        {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+            <AuthUserContext.Consumer>
+                {value => (
+                    <Rooms {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                )}
+            </AuthUserContext.Consumer>
         )}
-    </AuthUserContext.Consumer>
-)
+    </ProgramContext.Consumer>
+
+);
+
 export default AuthConsumer;
 
 const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, onSelectPullDown2}) => {

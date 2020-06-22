@@ -78,12 +78,21 @@ const withAuthentication = Component => {
                 return
             //Look to see if we already have a chat set up with this person
             let channels = this.state.chatClient.joinedChannels;
-            let found = channels.find((chan) => chan.attributes.mode == "directMessage" &&
-                chan.members[0] == profileOfUserToDM.id)
-            console.log(found);
-            if(found){
-                this.state.chatClient.openChat(found.channel.sid);
-                return;
+            if (channels) {
+                let found = Object.values(channels).find((chan) => {
+                    if(!chan || !chan.conversation)
+                        return false;
+                    let convo = chan.conversation;
+                    if(convo.get("isDM") == true &&
+                        (convo.get("member2").id == profileOfUserToDM.id ||
+                        convo.get("member1").id == profileOfUserToDM.id))
+                        return true;
+                })
+                if (found) {
+                    console.log(found.channel.sid)
+                    this.state.chatClient.openChat(found.channel.sid);
+                    return;
+                }
             }
 
             let res = await Parse.Cloud.run("chat-createDM", {
