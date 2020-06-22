@@ -37,13 +37,17 @@ class LiveStreaming extends Component {
 
     getLiveRooms() {
         let now = Date.now();
-        let currentSessions = this.props.sessions.filter(s => now >= s.get("startTime").getTime() && now <= s.get("endTime").getTime());
+        let currentSessions = this.props.sessions.filter(s => 
+            now >= moment(s.get("startTime")).subtract(30, 'm').toDate().getTime() && 
+            now <= moment(s.get("endTime")).add(30, 'm').toDate().getTime()
+        );
         let liveRooms = [];
         if (currentSessions) {
             currentSessions.map(s => liveRooms.push(s.get("room")));
         }
         else
             console.log('No current sessions');
+        liveRooms = Array.from(new Set(liveRooms)); // remove duplicates
         liveRooms.map(r => console.log('Live @ ' + r.get('name')));
         return liveRooms;
     }
