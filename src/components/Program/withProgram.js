@@ -31,6 +31,9 @@ const withProgram = Component => {
                     trackQ.find().then(res => {
                         this.setState({tracks: res});
                         console.log('Tracks downloaded: ' + res.length);
+                    }).catch(err => {
+                        console.log('[withProgram]: Unable to dowload tracks: ' + err);
+                        this.setState({tracks: []});
                     });
 
                     let roomQ = new Parse.Query("ProgramRoom");
@@ -38,6 +41,9 @@ const withProgram = Component => {
                     roomQ.find().then(res => {
                         this.setState({rooms: res});
                         console.log('Rooms downloaded: ' + res.length);
+                    }).catch(err => {
+                        console.log('[withProgram]: Unable to dowload rooms: ' + err);
+                        this.setState({rooms: []});
                     });
 
                     let itemQ = new Parse.Query("ProgramItem");
@@ -46,6 +52,9 @@ const withProgram = Component => {
                     itemQ.find().then(res => {
                         this.setState({items: res});
                         console.log('Items downloaded: ' + res.length);
+                    }).catch(err => {
+                        console.log('[withProgram]: Unable to dowload items: ' + err);
+                        this.setState({items: []});
                     });
 
                     let sessionQ = new Parse.Query("ProgramSession");
@@ -55,6 +64,9 @@ const withProgram = Component => {
                     sessionQ.find().then(res => {
                         this.setState({sessions: res});
                         console.log('Sessions downloaded: ' + res.length);
+                    }).catch(err => {
+                        console.log('[withProgram]: Unable to dowload sessions: ' + err);
+                        this.setState({sessions: []});
                     });
 
                     this.setState({
