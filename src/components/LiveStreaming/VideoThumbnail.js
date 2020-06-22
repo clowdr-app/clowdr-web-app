@@ -57,12 +57,6 @@ class VideoThumbnail extends React.Component {
     }
 
     render() {
-        if (!this.props.geoloc) {
-            return (
-                <Spin tip="Loading...">
-                </Spin>)
-    
-        }
 
         let isLight = false;
         let link = "#";
@@ -78,7 +72,7 @@ class VideoThumbnail extends React.Component {
         let thumbnail = <ReactPlayer playing playsinline light={isLight} controls={true} playIcon={<img src="preview-unavailable.png" width={260}/>} 
                         muted={true} volume={1} width={360} height={180} url={this.video_url}/>
 
-        return <Card title={this.props.video.get('title')} size="small" extra={<a href={link} target={target} rel={rel}>Watch</a>} onClick={this.toggleExpanded.bind(this)}>
+        return <Card title={this.props.video.get('name')} size="small" extra={<a href={link} target={target} rel={rel}>Watch</a>} onClick={this.toggleExpanded.bind(this)}>
                     {thumbnail}
                     <div>Watching now: {this.state.count}</div>
                 </Card>
@@ -94,4 +88,5 @@ const GeoLocationLiveVideoThumbnail = (props) => (
 );
 
 
-export default GeoLocationLiveVideoThumbnail;
+//export default GeoLocationLiveVideoThumbnail;
+export default VideoThumbnail;

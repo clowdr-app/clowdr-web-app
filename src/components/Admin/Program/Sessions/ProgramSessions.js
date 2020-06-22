@@ -83,7 +83,7 @@ class ProgramSessions extends React.Component {
                 title: session.get("title"),
                 startTime: moment(session.get("startTime")),
                 endTime: moment(session.get("endTime")),
-                room: session.get("room").get('name')
+                room: session.get("room")
             }
         });
     }
