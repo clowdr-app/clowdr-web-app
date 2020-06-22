@@ -1,6 +1,25 @@
 # Ideas for short-term tasks
 
-- "raise hand" feature
+- First question: How hard would it be to include Sli.do functionality in
+  the talk chat?  I think we'd need, at at minimum, (1) to be able to add an
+  annotation to a post marking it as a question for the speaker, (2) a way
+  for other people to "upvote" questions (by adding a thumbs up or
+  something), and (3) a way for session hosts (and maybe everybody) to
+  filter and sort posts to see only questions.
+  
+  However, having said this, I am actually beginning to wonder whether we
+  need this sort of functionality at all in Clowdr.  After all, the plan (at
+  least for ICSE, I believe) is to have essentially all the talks
+  pre-recorded.  So authors themselves are going to be watching the chat
+  stream and either they or session chairs can choose which questions and
+  comments to respond to live.
+  
+  To make the platform flexible, we may well want to support easy
+  integration with sli.do and other such tools, but perhaps this is as easy
+  as a generic "embed such-and-such URL in an iframe when this talk is going
+  on." 
+
+- "raise hand" feature for talks?
 
 - should chat logs be logged somewhere so that, for example, allegations of
   misconduct can be investigated?  (Or should there be, for example, an
