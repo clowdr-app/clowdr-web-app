@@ -1,70 +1,63 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Clowdr
 
-## Available Scripts
+Clowdr is a project bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-In the project directory, you can run:
+## Installation
 
-### `npm start`
+#### Install all dependencies
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Use npm to install all dependencies after cloning.
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+```bash
+npm install
+```
 
-(BCP: You may need to run `npm install` before `npm start`!)
+#### Set Up a Backend
 
-### `npm test`
+Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/) as the backend. The fastest way of getting this set up is to sign up for free app hosting in [Back4App](https://www.back4app.com/). The instructions here assume you do so.
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Create an account on [Back4App](https://www.back4app.com/) and create an app space for Clowdr with any name you like.
 
-### `npm run build`
+Set up your own configurations in ./.env file and ./db/.env-db file according to the ./.env-example and ./db/.env-db-example, respectively. 
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The configuration parameters can be found from your created app in Back4App: Server Settings -> Core Settings
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+Additionally, download and install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/) and start the server.
+Note that installing MongoDB is used for calling the `mongodbrestore` command. You do not have to run MongoDB when using Back4App.
+You can find the MongoDB Database URI there. xxx is the password, yyy is the database ID in the following example.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+`mongodb://admin:xxx@mongodb.back4app.com:27017/yyy?ssl=true`
 
-### `npm run eject`
+#### Populate the Database
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Run the following script to add initialized a minimal database:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm run init-app
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+You should be able to see all tables being added with some essential data stored in the database.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+#### Set Up Hosting and Live Query
 
-## Learn More
+From the app created in back4app, turn on live queries for the following tables: LiveVideos /LiveVideoWatchers /BreakoutRoom, by going to Server Settings -> Web Hosting and Live Query
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Usage
 
-### Code Splitting
+After all installation, start the application by executing
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+```bash
+npm start
+```
 
-### Analyzing the Bundle Size
+It will pop up a tab in your default browser and from there you can log into the website.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+When you want to exit, enter `ctrl + c`.
 
-### Making a Progressive Web App
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+Join us on the Slack [CLOWDR](clowdr.slack.com) workspace!
 
-### Advanced Configuration
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify

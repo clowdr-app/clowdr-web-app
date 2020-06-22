@@ -1,4 +1,10 @@
 import Program from './Program';
+import ProgramContext from './context';
+import withProgram from './withProgram';
 
-export default Program;
+export {
+    Program,
+    ProgramContext,
+    withProgram,
+};
 

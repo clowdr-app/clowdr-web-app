@@ -1,122 +1,246 @@
 import React from 'react';
-import {Timeline} from 'antd';
+import {Select, Spin, Table} from 'antd';
 import Parse from "parse";
 import {AuthUserContext} from "../Session";
-import LiveVideoPanel from "../LiveStreaming/LiveVideoPanel";
+import Form from "antd/lib/form/Form";
+import withProgram from './withProgram';
+import ProgramContext from './context';
+import { ContactlessOutlined } from '@material-ui/icons';
 
 var moment = require('moment');
-
+function  groupBy(list, keyGetter) {
+    const map = new Map();
+    list.forEach((item) => {
+        const key = keyGetter(item);
+        const collection = map.get(key);
+        if (!collection) {
+            map.set(key, [item]);
+        } else {
+            collection.push(item);
+        }
+    });
+    return map;
+}
 class Program extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {sessions: [], loading: true}
+        this.state = {
+            sessions: [], 
+            loading: true,
+            gotTracks: false,
+            gotRooms: false,
+            forItems: false,
+            gotSessions: false,
+            formatTime: (dateTimeStr)=>moment(dateTimeStr).format("LT")
+        }
+
+        console.log('[Program]: downloaded? ' + this.props.downloaded);
+
+        // Call to download program
+        if (!this.props.downloaded) 
+            this.props.onDown(this.props);
+        else
+            this.state.sessions = this.props.sessions;
     }
 
-    componentDidMount() {
-        let query = new Parse.Query("ProgramSession");
-        query.include(["items.title"]);
-        query.addAscending("startTime");
-        query.find().then(res => {
-            this.setState({
-                sessions: res,
-                loading: false
-            });
-            //TODO live subscription
-            // this.sub = this.props.parseLive.subscribe(query);
-            // this.sub.on('create', newItem => {
-            //     this.setState((prevState) => ({
-            //         rooms: [newItem, ...prevState.rooms]
-            //     }))
-            // })
-            // this.sub.on('update', newItem => {
-            //     this.setState((prevState) => ({
-            //         rooms: prevState.rooms.map(room => room.id == newItem.id ? newItem : room)
-            //     }))
-            // })
-            // this.sub.on("delete", vid => {
-            //     this.setState((prevState) => ({
-            //         rooms: prevState.rooms.filter((v) => (
-            //             v.id != vid.id
-            //         ))
-            //     }));
-            // });
-        })
-        let query2 = new Parse.Query("LiveVideo");
-        query2.first().then(video => {
-            this.setState({dummyVideo: video});
-        })
-    }
+    formatSessionsIntoTable(sessions){
+        let groupedByDate = groupBy(sessions,
+            (item)=>moment(item.get("startTime")).format("ddd MMM D"))
+        let table = [];
+        for(const [date, rawSessions] of groupedByDate){
+            let row = {};
+            let dateHeader = {label: date, rowSpan: 0};
+            row.date = dateHeader;
+            let timeBands = groupBy(rawSessions,(session)=>(this.state.formatTime(session.get("startTime"))+ " - ") + this.state.formatTime(session.get('endTime')))
 
-    groupBy(list, keyGetter) {
-        const map = new Map();
-        list.forEach((item) => {
-            const key = keyGetter(item);
-            const collection = map.get(key);
-            if (!collection) {
-                map.set(key, [item]);
-            } else {
-                collection.push(item);
+            for(const [time, sessions ] of timeBands){
+                let timeBandHeader = {label: time, rowSpan: 0};
+                row.timeBand = timeBandHeader;
+                for (let session of sessions) {
+                    let sessionHeader = {label: session.get("title"), rowSpan: 0};
+                    row.session = sessionHeader;
+                    if (session.get("items")) {
+                        for (let programItem of session.get("items")) {
+                            row.key = programItem.id;
+                            row.programItem = programItem.get("title");
+                            table.push(row);
+                            row = {};
+                            row.session = {};
+                            row.timeBand = {};
+                            row.date = {};
+                            dateHeader.rowSpan++;
+                            timeBandHeader.rowSpan++;
+                            sessionHeader.rowSpan++;
+                        }
+                    }
+                }
             }
-        });
-        return map;
+        }
+        console.log(table)
+        return table;
     }
+
+    componentDidUpdate(prevProps) {
+        console.log("[Program]: Something changed");
+
+        if (this.state.loading && this.state.gotTracks && this.state.gotRooms && this.state.gotItems && this.state.gotSessions) {
+            console.log('[Program]: Program download complete');
+            this.setState({
+                // sessions: groupedByDate,
+                sessions: this.props.sessions,
+                loading: false,
+                // tracks: trackOptions
+            });
+        }
+        else {
+            console.log('[Program]: Program still downloading...');
+            if (prevProps.tracks.length != this.props.tracks.length) {
+                this.setState({gotTracks: true});
+                console.log('[Program]: got tracks');
+            }
+            if (prevProps.rooms.length != this.props.rooms.length) {
+                this.setState({gotRooms: true})
+                console.log('[Program]: got rooms');
+            }
+            if (prevProps.items.length != this.props.items.length) {
+                this.setState({gotItems: true})
+                console.log('[Program]: got items');
+            }
+            if (prevProps.sessions.length != this.props.sessions.length) {
+                this.setState({gotSessions: true})
+                console.log('[Program]: got sessions');
+            }
+        }
+    }
+
+
     render() {
-        let firstDate = moment(moment().format("YYYY-MM-DD"));
-        let lastDate = firstDate.clone();
-        lastDate.add(1, "days")
-        let groupedByDate = this.groupBy(this.state.sessions,(item)=>moment(item.get("startTime"),"ddd "))
-        // console.log(firstDate.toDate())
-        // console.log(lastDate.toDate())
-        // console.log(this.state.sessions)
+        if(!this.state.sessions){
+            return <Spin></Spin>
+        }
+        let days = [];
+        // for(const [date, program] of this.state.sessions){
+        //     days.push(<ProgramDay date={date} program={program} key={date} formatTime={this.state.formatTime} />)
+        // }
+        let cols = [{
+            title: 'date',
+            className:"program-table-date",
+            dataIndex: 'date',
+            render: (value, row, index) => {
+                const obj = {
+                    children: value.label,
+                    props: {}
+                }
+                if (value && value.rowSpan)
+                    obj.props.rowSpan = value.rowSpan;
+                else
+                    obj.props.rowSpan = 0;
+                return obj;
+            }
+        },{  title: 'Time',
+            dataIndex: 'timeBand',
+            className:"program-table-timeBand",
+            render: (value, row, index) => {
+                const obj = {
+                    children: value.label,
+                    props: {}
+                }
+                if (value && value.rowSpan)
+                    obj.props.rowSpan = value.rowSpan;
+                else
+                    obj.props.rowSpan = 0;
+                return obj;
+            }
+        },{  title: 'Session',
+            className:"program-table-session",
+            dataIndex: 'session',
+            render: (value, row, index) => {
+                const obj = {
+                    children: value.label,
+                    props: {}
+                }
+                if (value && value.rowSpan)
+                    obj.props.rowSpan = value.rowSpan;
+                else
+                    obj.props.rowSpan = 0;
+                return obj;
+            }
+        },
+            {
+                title: "Content",
+                className:"program-table-programItem",
+                dataIndex: "programItem"
+            }
+        ];
         return <div>
-            <h4>Today's Program:</h4>
-            <Timeline mode="left">
-                {this.state.sessions
-                    // .sort((a, b) => (a.get("startTime") > b.get("startTime") ? 1 : -1))
-                    .filter((session) => moment(session.get("endTime")).isBetween(firstDate, lastDate)).map(
-                        (value => {
-                            let isCurrent = moment().isBetween(moment(value.get("startTime")), moment(value.get("endTime")));
-                            let isPast = moment().isAfter(value.get("endTime"));
-                            let isFuture = moment().isBefore(value.get("startTime"));
-
-                            var color = "blue";
-                            if (isCurrent)
-                                color = "green";
-                            if (isPast)
-                                color = "gray";
-                            let video = ""
-                            if (this.state.expandedSession == value.id) {
-                                video = <div>
-                                    <Timeline>
-                                        {value.get("items").map(i=>{
-                                            return <Timeline.Item>{i.get("title")}</Timeline.Item>
-                                        })}
-                                    </Timeline>
-                                    <LiveVideoPanel video={this.state.dummyVideo}/>
-                                </div>
-                            }
-                            return <Timeline.Item color={color} label={moment(value.get("startTime")).calendar()}> <a
-                                onClick={() => {
-                                    this.setState({expandedSession: (value.id == this.state.expandedSession ? null : value.id)});
-                                    return false;
-                                }} href="#">{value.get("title")}</a>
-                                {video}
-                            </Timeline.Item>
-
-                        })
-                    )}
-            </Timeline>
+            <h4>Program Overview:</h4>
+            <div className="programPage">
+                <div className="programFilters">
+                   {/*<Form>*/}
+                   {/*    <Form.Item label={"Track"}>*/}
+                   {/*        <Select mode="multiple" placeholder="Filter by track" options={this.state.tracks}/>*/}
+                   {/*    </Form.Item>*/}
+                   {/*</Form>*/}
+                </div>
+                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.sessions)}></Table>
+            </div>
+        </div>
+    }
+}
+class ProgramDay extends React.Component{
+    constructor(props) {
+        super(props);
+        //organize into time bands
+        let timeBands = groupBy(this.props.program,(session)=>(this.props.formatTime(session.get("startTime"))+ " - ") + this.props.formatTime(session.get('endTime')))
+        this.state = {
+            timeBands : timeBands
+        }
+    }
+    render(){
+        let timeBands = [];
+        for(const[timeBand, sessions] of this.state.timeBands){
+            timeBands.push(<div key={timeBand} className="sessionTimeBandContainer"><div className="timeBand">{timeBand}</div>
+            <div className="sessionContainer">{sessions.map(s=><ProgramSession key={s.id} session={s}/>)}</div></div>)
+        }
+        return <div className="program-programDay" key={this.props.date}>
+            <div className="day">{this.props.date}</div>
+            <div className="timebands">{timeBands}</div>
         </div>
     }
 }
 
+class ProgramSession extends React.Component {
+    render() {
+        let items = this.props.session.get("items");
+        return <div className="programSession" >
+            <div className="sessionTitle">{this.props.session.get("title")}</div>
+            <div className="sessionContents">
+                {items.map(i => <ProgramItem key={i.id} item={i}/>)}
+            </div>
+        </div>
+    }
+}
+
+class ProgramItem extends React.Component {
+    render() {
+        return (
+            <div className="programItem" key={this.props.item.id}>
+                {this.props.item.get("title")}
+            </div>
+        );
+    }
+}
 const
     AuthConsumer = (props) => (
-        <AuthUserContext.Consumer>
-            {value => (
-                <Program {...props} auth={value} />
+        <ProgramContext.Consumer>
+            {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+                <AuthUserContext.Consumer>
+                    {value => (
+                        <Program {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                    )}
+                </AuthUserContext.Consumer>
             )}
-        </AuthUserContext.Consumer>
+        </ProgramContext.Consumer>
 
     );
 export default AuthConsumer;

@@ -350,7 +350,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     /*position: relative;*/
     /*bottom:40px;*/
     /*max-height: 30px;*/
-    flex-grow: 2;
+    flex-grow: 100;
     /*position: fixed;*/
     /*bottom: 50px;*/
 }
@@ -391,9 +391,10 @@ div.availabilityOptionsOpen  span.availabilityOption{
 
     border-bottom: 1px solid #6666;
     display: flex;
-    flex: 1 1 5%;
+    /*flex: 1 1 5%;*/
     min-height: 2em;
-    max-height: 2em;
+    flex-grow: 1;
+    /*max-height: 2em;*/
 }
 .bottomEmbeddedChatFrame{
 
@@ -406,4 +407,40 @@ div.availabilityOptionsOpen  span.availabilityOption{
 }
 .bottomChatClose{
 
+}
+
+.programContainer{
+    display: flex;
+    flex-direction: column;
+}
+.program-programDay .day{
+    min-width: 100px;
+}
+.program-programDay .timebands{
+    /*display: flex;*/
+}
+.programContainer .program-programDay{
+    display: flex;
+    flex-direction: row;
+}
+.programContainer .sessionTimeBandContainer{
+    display: flex;
+    flex-direction: row;
+}
+/*.program-programDay .session{*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*}*/
+.programContainer .programSession{
+    display: flex;
+    flex-direction: row;
+}
+td.ant-table-cell.program-table-date{
+    white-space: nowrap
+}
+td.ant-table-cell.program-table-timeBand{
+    white-space: nowrap
+}
+ td.ant-table-cell.program-table-programItem{
+    padding: 2px;
 }

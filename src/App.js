@@ -12,11 +12,12 @@ import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
 import Moderation from "./components/Moderation";
 
-import Program from "./components/Program";
+import {Program} from "./components/Program";
 import VideoRoom from "./components/VideoChat/VideoRoom"
 import SlackToVideo from "./components/Slack/slackToVideo"
 
 import {withAuthentication} from "./components/Session";
+import {withProgram} from "./components/Program"
 
 import LiveStreaming from "./components/LiveStreaming";
 import Parse from "parse";
@@ -32,6 +33,7 @@ import Registrations from "./components/Admin/Registrations";
 import Rooms from "./components/Admin/Program/Rooms";
 import Tracks from "./components/Admin/Program/Tracks";
 import ProgramItems from "./components/Admin/Program/Items";
+import ProgramSessions from "./components/Admin/Program/Sessions";
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 //import Chat from "./components/Chat";
@@ -208,6 +210,7 @@ class App extends Component {
             <Route exact path='/admin/program/rooms' component={Rooms}/>
             <Route exact path='/admin/program/tracks' component={Tracks}/>
             <Route exact path='/admin/program/items' component={ProgramItems}/>
+            <Route exact path='/admin/program/sessions' component={ProgramSessions}/>
         </div>)
     }
 
@@ -307,4 +310,4 @@ class ClowdrApp extends React.Component{
    }
 }
 
-export default withAuthentication(ClowdrApp);
+export default withProgram(withAuthentication(ClowdrApp));

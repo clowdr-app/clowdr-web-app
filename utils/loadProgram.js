@@ -93,7 +93,7 @@ async function buildUsersArray(authors) {
     }
 }
 
-let allUsers = {};
+let allPeople = {};
 let allItems = {};
 let allSessions = {};
 let daysTillStart = moment("2020-10-06", "YYYY-MM-DD").subtract(moment(moment().format("YYYY-MM-DD")));
@@ -122,6 +122,18 @@ data.Sessions.forEach (session => {
         rooms[session.Location] = 1;
 });
 
+function getAuthors(authorKeys) {
+    let authors = [];
+    authorKeys.map(key => {
+        author = allPeople[key];
+        if (author)
+            authors.push(author);
+        else
+            console.log(`Warning: author ${key} not found`)
+    })
+    return authors;
+}
+
 async function loadProgram() {
     let confQ = new Parse.Query("ClowdrInstance")
     confQ.equalTo("conferenceName", conferenceName);
@@ -129,6 +141,7 @@ async function loadProgram() {
 
     let acl = new Parse.ACL();
     acl.setPublicWriteAccess(false);
+    acl.setPublicReadAccess(true);
     acl.setRoleWriteAccess(conf.id+"-manager", true);
     acl.setRoleWriteAccess(conf.id+"-admin", true);
 
@@ -187,6 +200,39 @@ async function loadProgram() {
     }
     console.log('Rooms saved: ' + newrooms.length);
 
+    // Create People next
+    let ProgramPerson = Parse.Object.extend("ProgramPerson");
+    let qp = new Parse.Query(ProgramPerson);
+    qp.limit(10000);
+    let people = await qp.find();
+    people.forEach((person) => {
+        allPeople[person.get("confKey")] = person;
+    })
+    let newPeople = [];
+    for (const person of data.People) {
+        if (newPeople[person.Key]) {
+            continue
+        }
+
+        let newPerson = new ProgramPerson();
+        newPerson.set("name", person.Name);
+        newPerson.set("bio", person.Bio);
+        newPerson.set("affiliation", person.Affiliation);
+        newPerson.set("confKey", person.Key);
+        newPerson.set("URL", person.URL);
+        newPerson.set("URLPhoto", person.URLPhoto);
+        newPerson.setACL(acl);
+        newPeople.push(newPerson);
+        allPeople[newPerson.get("confKey")] = newPerson;
+    }
+    try {
+        await Parse.Object.saveAll(newPeople);
+    } catch(err){
+        console.log(err);
+    }
+    console.log("People saved: " + newPeople.length);
+
+
     let ProgramItem = Parse.Object.extend("ProgramItem");
     let q = new Parse.Query(ProgramItem);
     q.equalTo("conference", conf);
@@ -195,13 +241,6 @@ async function loadProgram() {
     items.forEach((item) => {
         allItems[item.get("confKey")] = item;
     })
-    q = new Parse.Query(Parse.User);
-    q.limit(10000);
-    let usersArray = await q.find();
-    console.log("Found " + usersArray.length);
-    usersArray.forEach((u) => {
-        allUsers[u.get("displayname")] = u
-    });
 
     let newItems = [];
     for (const item of data.Items) {
@@ -224,8 +263,9 @@ async function loadProgram() {
         newItem.set("confKey", item.Key);
         newItem.set('track', track);
         newItem.setACL(acl);
-        //find affiliated users
-        newItem.set("authors", item.Authors);
+        // get authors pointers
+        let authors = getAuthors(item.Authors);
+        newItem.set("authors", authors);
         newItems.push(newItem);
         allItems[newItem.get("confKey")] = newItem;
     }
@@ -246,17 +286,18 @@ async function loadProgram() {
 
     let toSave = [];
     for (const ses of data.Sessions) {
-        // if (i > 1)
-        //     continue;
         if (allSessions[ses.Key])
             continue;
-        let startTime = ses.Time.substring(0, ses.Time.indexOf('-'));
-        let dateTime = ses.Day + " " + startTime;
-        //console.log(">" + dateTime)
-        var start = moment(dateTime, "YYYY-MM-DD HH:mm");
-        var end = moment(dateTime, "YYYY-MM-DD HH:mm");
-        // start = mockDate(start).toDate();
-        // end = mockDate(end).toDate();
+
+        var start = Date.now(), end = Date.now();
+        let times = ses.Time.split('-');
+        if (times.length >= 2) {
+            let startTime = ses.Day + ' ' + times[0];
+            let endTime = ses.Day + ' ' + times[1];
+            start = moment.utc(startTime, "YYYY-MM-DD HH:mm");
+            end = moment.utc(endTime, "YYYY-MM-DD HH:mm");
+//            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
+        }
 
         let session = new ProgramSession();
         session.set("title", ses.Title);
@@ -264,6 +305,7 @@ async function loadProgram() {
         session.set("type", ses.Type);
         session.set("startTime", start.toDate());
         session.set("endTime", end.toDate());
+        session.set("location", ses.Location);
         session.set("confKey", ses.Key);
         session.set("conference", conf);
         session.setACL(acl);
@@ -284,16 +326,9 @@ async function loadProgram() {
                 else
                     console.log("Could not find item: " + k);
             });
-            // await programRef.child("sessions").child(item.Key).child("items").set(items);
         }
         session.set("items", items);
         toSave.push(session);
-        // promises.push(session.save({},{useMasterKey: true}));
-        // Object.keys(categories).forEach(async (v)=>{
-        //     await programRef.child("categories").child("members").child(v).child(item.Key).set(true);
-        // })
-        // console.log(categories);
-        // console.log(item);
         i++;
     }
     try{
@@ -302,19 +337,6 @@ async function loadProgram() {
         console.log(err);
     }
     console.log("Done");
-// data.People.forEach((person)=>{
-//     if(person.URLphoto) {
-//         // usersRef.child("demo" + i).set({
-//         //     email: "demo@no-reply.com",
-//         //     username: person.Name,
-//         //     photoURL: person.URLphoto
-//         // });
-//
-//         statusRef.child("demo"+i).child("last_changed").set(100+i);
-//         i++;
-//     }
-//
-// })
 
 }
 
