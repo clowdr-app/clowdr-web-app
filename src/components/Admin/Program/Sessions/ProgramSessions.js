@@ -2,6 +2,7 @@ import React, {Fragment} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
+import {ProgramContext} from "../../../Program";
 import moment from 'moment';
 
 const { Option } = Select;
@@ -21,19 +22,31 @@ class ProgramSessions extends React.Component {
         super(props);
         console.log(this.props);
         this.state = {
-            loading: false, 
+            loading: true, 
             sessions: [],
             rooms: [],
+            gotSessions: false,
+            gotRooms: false,
             editing: false,
             edt_session: undefined
         };
+
+        console.log('[Admin/Sessions]: downloaded? ' + this.props.downloaded);
+
+        // Call to download program
+        if (!this.props.downloaded) 
+            this.props.onDown(this.props);
+        else {
+            this.state.rooms = this.props.rooms;
+            this.state.sessions = this.props.sessions;
+        }
     }
 
     onCreate(values) {
         var _this = this;
         // Create the session record
-        var session = Parse.Object.extend("ProgramSession");
-        var session = new session();
+        var Session = Parse.Object.extend("ProgramSession");
+        var session = new Session();
         session.set('conference', this.props.auth.currentConference);
         session.set("title", values.title);
         session.set("startTime", values.startTime.toDate());
@@ -43,8 +56,9 @@ class ProgramSessions extends React.Component {
             console.log('Invalid room ' + values.room);
         session.set("room", room);
         session.save().then((val) => {
-            _this.setState({visible: false})
-            _this.refreshList();
+            let sortedSessions = [...this.state.sessions, session];
+            sortedSessions.sort((s1, s2) => s1.get("startTime") - s2.get("startTime"));
+            _this.setState({visible: false, sessions: sortedSessions})
         }).catch(err => {
             console.log(err);
         });
@@ -69,7 +83,7 @@ class ProgramSessions extends React.Component {
                 title: session.get("title"),
                 startTime: moment(session.get("startTime")),
                 endTime: moment(session.get("endTime")),
-                room: session.get("room").get('name')
+                room: session.get("room")
             }
         });
     }
@@ -89,7 +103,6 @@ class ProgramSessions extends React.Component {
             session.set("room", room);
             session.save().then((val) => {
                 _this.setState({visible: false, editing: false});
-                _this.refreshList();
             }).catch(err => {
                 console.log(err + ": " + values.objectId);
             })
@@ -104,28 +117,39 @@ class ProgramSessions extends React.Component {
     }
 
     componentDidMount() {
-        // Get the rooms
-        let query = new Parse.Query("ProgramRoom");
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.find().then(res => {
-            console.log('Found rooms ' + res.length);
-            this.setState({
-                rooms: res
-            });
-        })
+    }
 
-        this.refreshList();
-        // this.sub = this.props.parseLive.subscribe(query);
-        // this.sub.on('create', vid=>{
-        //     console.log(vid);
-        // })
+    componentDidUpdate(prevProps) {
+        console.log("[Admin/Sessions]: Something changed");
+
+        if (this.state.loading) {
+            if (this.state.gotRooms && this.state.gotSessions) {
+                console.log('[Admin/Sessions]: Program download complete');
+                this.setState({
+                    rooms: this.props.rooms,
+                    sessions: this.props.sessions,
+                    loading: false
+                });
+            }
+            else {
+                console.log('[Admin/Sessions]: Program still downloading...');
+                if (prevProps.rooms.length != this.props.rooms.length) {
+                    this.setState({gotRooms: true});
+                    console.log('[Admin/Sessions]: got rooms');
+                }
+                if (prevProps.sessions.length != this.props.sessions.length) {
+                    this.setState({gotSessions: true});
+                    console.log('[Admin/Sessions]: got sessions');
+                }
+            }
+        }
+        else 
+            console.log('[Admin/Sessions]: Program cached');
+
     }
 
     refreshList(){
         let query = new Parse.Query("ProgramSession");
-//        console.log(this.props.auth);
-//        let token = this.props.auth.user.getSessionToken();
-//        console.log(token);
         console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
         query.equalTo("conference", this.props.auth.currentConference);
         query.limit(1000);
@@ -137,6 +161,7 @@ class ProgramSessions extends React.Component {
             });
         })
     }
+
     componentWillUnmount() {
         // this.sub.unsubscribe();
     }
@@ -186,7 +211,7 @@ class ProgramSessions extends React.Component {
             },
         ];
 
-        if (this.state.loading)
+        if (!this.props.downloaded)
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -235,12 +260,17 @@ class ProgramSessions extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <AuthUserContext.Consumer>
-        {value => (
-            <ProgramSessions {...props} auth={value}/>
+    <ProgramContext.Consumer>
+        {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+            <AuthUserContext.Consumer>
+                {value => (
+                    <ProgramSessions {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                )}
+            </AuthUserContext.Consumer>
         )}
-    </AuthUserContext.Consumer>
-)
+    </ProgramContext.Consumer>
+
+);
 export default AuthConsumer;
 
 const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) => {
