@@ -51,7 +51,8 @@ After all installation, start the application by executing
 npm start
 ```
 
-It will pop up a tab in your default browser and from there you can log into the website.
+It will pop up a tab in your default browser and from there you can log into the website using the login credentials:
+admin@localhost / admin
 
 When you want to exit, enter `ctrl + c`.
 
