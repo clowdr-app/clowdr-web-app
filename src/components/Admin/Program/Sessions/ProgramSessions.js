@@ -4,6 +4,10 @@ import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
 import moment from 'moment';
+import {
+    DeleteOutlined,
+    EditOutlined
+} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -23,6 +27,7 @@ class ProgramSessions extends React.Component {
         console.log(this.props);
         this.state = {
             loading: true, 
+            toggle: false,
             sessions: [],
             rooms: [],
             gotSessions: false,
@@ -42,8 +47,14 @@ class ProgramSessions extends React.Component {
         }
     }
 
+
     onCreate(values) {
+        console.log("OnCreate! " + values.title)
         var _this = this;
+        let room = this.state.rooms.find(r => r.id == values.room);
+        if (!room)
+            console.log('Invalid room ' + values.room);
+
         // Create the session record
         var Session = Parse.Object.extend("ProgramSession");
         var session = new Session();
@@ -51,25 +62,35 @@ class ProgramSessions extends React.Component {
         session.set("title", values.title);
         session.set("startTime", values.startTime.toDate());
         session.set("endTime", values.endTime.toDate());
-        let room = this.state.rooms.find(r => r.id == values.room);
-        if (!room)
-            console.log('Invalid room ' + values.room);
         session.set("room", room);
+        session.set("confKey", Math.floor(Math.random() * 10000000).toString());
         session.save().then((val) => {
-            let sortedSessions = [...this.state.sessions, session];
-            sortedSessions.sort((s1, s2) => s1.get("startTime") - s2.get("startTime"));
-            _this.setState({visible: false, sessions: sortedSessions})
+            _this.setState({visible: false /*, sessions: sortedSessions*/})
         }).catch(err => {
-            console.log(err);
+            console.log(err + " " + session.id);
         });
+
+        // let data = {
+        //     conference: this.props.auth.currentConference.id,
+        //     title: values.title,
+        //     startTime: values.startTime.toDate(),
+        //     endTime: values.endTime.toDate(),
+        //     room: room.id
+        // }
+        // Parse.Cloud.run("newProgramSession", data).then(() => {
+        //     console.log('[ProgramSession]: sent request to create new session ' + data.title);
+        // });
+
     }
 
     onDelete(value) {
         console.log("Deleting " + value + " " + value.get("title"));
         // Delete the watchers first
         
-        value.destroy().then(()=>{
-            this.refreshList();
+        value.destroy().then(() => {
+            this.setState({
+                sessions: [...this.state.sessions]
+            });
         });
     }
 
@@ -144,9 +165,20 @@ class ProgramSessions extends React.Component {
                 }
             }
         }
-        else 
+        else {
             console.log('[Admin/Sessions]: Program cached');
+            if (prevProps.rooms.length != this.props.rooms.length) {
+                this.setState({rooms: this.props.rooms});
+                console.log('[Admin/Sessions]: changes in rooms');
+            }
+            if (prevProps.sessions.length != this.props.sessions.length) {
+                let sortedSessions = [...this.props.sessions];
+                sortedSessions.sort((s1, s2) => s1.get("startTime") - s2.get("startTime"));
 
+                this.setState({sessions: sortedSessions});
+                console.log('[Admin/Sessions]: changes in sessions');
+            }
+        }
     }
 
     refreshList(){
@@ -202,14 +234,14 @@ class ProgramSessions extends React.Component {
                 key: 'action',
                 render: (text, record) => (
                     <Space size="small">
-                        <a href="#" session={record} onClick={() => this.onEdit(record)}>Edit</a>
+                        <a href="#" title="Edit" session={record} onClick={() => this.onEdit(record)}>{<EditOutlined />}</a>
                         <Popconfirm
                             title="Are you sure delete this session?"
                             onConfirm={()=>this.onDelete(record)}
                             okText="Yes"
                             cancelText="No"
                         >
-                        <a href="#">Delete</a>
+                        <a href="#" title="Delete">{<DeleteOutlined />}</a>
                         </Popconfirm>
                     </Space>
                 ),
@@ -257,7 +289,7 @@ class ProgramSessions extends React.Component {
                 }}
                 rooms={this.state.rooms}
             />
-            <Table columns={columns} dataSource={this.state.sessions} rowKey={(r)=>(r.id)}>
+            <Table columns={columns} dataSource={this.state.sessions} rowKey={r => r.id}>
             </Table>
         </div>
     }

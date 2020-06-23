@@ -83,32 +83,56 @@ class Program extends React.Component {
     componentDidUpdate(prevProps) {
         console.log("[Program]: Something changed");
 
-        if (this.state.loading && this.state.gotTracks && this.state.gotRooms && this.state.gotItems && this.state.gotSessions) {
-            console.log('[Program]: Program download complete');
-            this.setState({
-                // sessions: groupedByDate,
-                sessions: this.props.sessions,
-                loading: false,
-                // tracks: trackOptions
-            });
+        if (this.state.loading) {
+            if (this.state.gotTracks && this.state.gotRooms && this.state.gotItems && this.state.gotSessions) {
+                console.log('[Program]: Program download complete');
+                this.setState({
+                    // sessions: groupedByDate,
+                    sessions: this.props.sessions,
+                    loading: false
+                    // tracks: trackOptions
+                });
+            }
+            else {
+                console.log('[Program]: Program still downloading...');
+                if (prevProps.tracks.length != this.props.tracks.length) {
+                    this.setState({gotTracks: true});
+                    console.log('[Program]: got tracks');
+                }
+                if (prevProps.rooms.length != this.props.rooms.length) {
+                    this.setState({gotRooms: true})
+                    console.log('[Program]: got rooms');
+                }
+                if (prevProps.items.length != this.props.items.length) {
+                    this.setState({gotItems: true})
+                    console.log('[Program]: got items');
+                }
+                if (prevProps.sessions.length != this.props.sessions.length) {
+                    this.setState({gotSessions: true})
+                    console.log('[Program]: got sessions');
+                }
+            }
         }
         else {
-            console.log('[Program]: Program still downloading...');
+            console.log('[Program]: Program cached');
             if (prevProps.tracks.length != this.props.tracks.length) {
-                this.setState({gotTracks: true});
-                console.log('[Program]: got tracks');
+                this.setState({tracks: this.props.tracks});
+                console.log('[Program]: changes in tracks');
             }
             if (prevProps.rooms.length != this.props.rooms.length) {
-                this.setState({gotRooms: true})
-                console.log('[Program]: got rooms');
+                this.setState({rooms: this.props.rooms});
+                console.log('[Program]: changes in rooms');
             }
             if (prevProps.items.length != this.props.items.length) {
-                this.setState({gotItems: true})
-                console.log('[Program]: got items');
+                this.setState({items: this.props.items});
+                console.log('[Program]: changes in items');
             }
             if (prevProps.sessions.length != this.props.sessions.length) {
-                this.setState({gotSessions: true})
-                console.log('[Program]: got sessions');
+                // let sortedSessions = [...this.props.sessions];
+                // sortedSessions.sort((s1, s2) => s1.get("startTime") - s2.get("startTime"));
+
+                this.setState({sessions: this.props.sessions});
+                console.log('[Program]: changes in sessions');
             }
         }
     }
