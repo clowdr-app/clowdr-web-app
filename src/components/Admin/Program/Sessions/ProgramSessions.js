@@ -200,10 +200,6 @@ class ProgramSessions extends React.Component {
         // this.sub.unsubscribe();
     }
 
-    formatDate(time) {      
-        return time.toString("d-MMM-yyyy");
-    }
-
     render() {
         const columns = [
             {
