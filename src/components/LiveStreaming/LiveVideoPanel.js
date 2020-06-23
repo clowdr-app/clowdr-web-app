@@ -55,16 +55,14 @@ class LiveVideoPanel extends React.Component {
     render() {
 
         let videopanel = <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
-                                      url={this.video_url}/>
+                                    width='900px' height='506px' url={this.video_url}/>
 
         let qa = "";
         const q_url = this.props.video.get("qa");
         if (q_url) {
             qa = <div className={"col-sm"}>
-                    <div className={"embed-responsive-item"} >
-                        <iframe title={this.props.title} src={q_url} style={{"minWidth":"360px", "height":"720px"}}
+                        <iframe title={this.props.title} src={q_url} style={{"height":"720px"}}
                         allowFullScreen/>
-                    </div>
                 </div>
         }
 
@@ -81,18 +79,15 @@ class LiveVideoPanel extends React.Component {
                     <div className={"col-sm"}>
                         <div className={"container"}>
                             <div className={"row"}>
-                                <div className={"embed-responsive-item"} >
                                     {videopanel}
-                                </div>
+                                    {qa} 
                             </div>
                             <div className={"row"}>
-                                <div className={"embed-responsive-item"}>
                                     Watching now: {count}
-                                </div>
                             </div>
                         </div>
                     </div>
-                    {qa} 
+                    
                 </div>
             </div>
         )
