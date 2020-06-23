@@ -58,7 +58,7 @@ class LiveVideoPanel extends React.Component {
                                       url={this.video_url}/>
 
         let qa = "";
-        const q_url = this.props.video.get("slido");
+        const q_url = this.props.video.get("qa");
         if (q_url) {
             qa = <div className={"col-sm"}>
                     <div className={"embed-responsive-item"} >
