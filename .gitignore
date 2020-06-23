@@ -27,3 +27,4 @@ yarn-error.log*
 react-app-env.d.ts
 db/.env-db
 .env-dbref
+data/confero-icse.json
