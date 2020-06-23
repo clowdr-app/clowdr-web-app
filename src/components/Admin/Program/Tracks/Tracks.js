@@ -3,6 +3,10 @@ import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin,
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
+import {
+    DeleteOutlined,
+    EditOutlined
+} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -158,14 +162,14 @@ class Tracks extends React.Component {
                 key: 'action',
                 render: (text, record) => (
                     <Space size="small">
-                        <a href="#" track={record} onClick={() => this.onEdit(record)}>Edit</a>
+                        <a href="#" title="Edit" track={record} onClick={() => this.onEdit(record)}>{<EditOutlined/>}</a>
                         <Popconfirm
                             title="Are you sure delete this track?"
                             onConfirm={()=>this.onDelete(record)}
                             okText="Yes"
                             cancelText="No"
                         >
-                        <a href="#">Delete</a>
+                        <a href="#" title="Delete">{<DeleteOutlined/>}</a>
                         </Popconfirm>
                     </Space>
                 ),
