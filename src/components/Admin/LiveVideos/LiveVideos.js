@@ -2,6 +2,10 @@ import React, {Fragment} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
+import {
+    DeleteOutlined,
+    EditOutlined
+} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -186,14 +190,14 @@ class LiveVideos extends React.Component {
                 key: 'action',
                 render: (text, record) => (
                     <Space size="small">
-                        <a href="#" video={record} onClick={() => this.onEdit(record)}>Edit</a>
+                        <a href="#" title="Edit" video={record} onClick={() => this.onEdit(record)}>{<EditOutlined/>}</a>
                         <Popconfirm
                             title="Are you sure delete this video?"
                             onConfirm={()=>this.onDelete(record)}
                             okText="Yes"
                             cancelText="No"
                         >
-                        <a href="#">Delete</a>
+                        <a href="#" title="Delete">{<DeleteOutlined/>}</a>
                         </Popconfirm>
                     </Space>
                 ),
