@@ -48,6 +48,8 @@ class LiveStreaming extends Component {
         else
             console.log('No current sessions');
         liveRooms = Array.from(new Set(liveRooms)); // remove duplicates
+        liveRooms.sort((a, b) => a.get('name').localCompare(b.get('name')));
+
         liveRooms.map(r => console.log('Live @ ' + r.get('name')));
         return liveRooms;
     }
