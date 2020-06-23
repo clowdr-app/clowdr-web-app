@@ -3,6 +3,10 @@ import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin,
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
+import {
+    DeleteOutlined,
+    EditOutlined
+} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -216,14 +220,14 @@ class Rooms extends React.Component {
                 key: 'action',
                 render: (text, record) => (
                     <Space size="small">
-                        <a href="#" room={record} onClick={() => this.onEdit(record)}>Edit</a>
+                        <a href="#" title="Edit" room={record} onClick={() => this.onEdit(record)}>{<EditOutlined/>}</a>
                         <Popconfirm
                             title="Are you sure delete this room?"
                             onConfirm={()=>this.onDelete(record)}
                             okText="Yes"
                             cancelText="No"
                         >
-                        <a href="#">Delete</a>
+                        <a href="#" title="Delete">{<DeleteOutlined/>}</a>
                         </Popconfirm>
                     </Space>
                 ),

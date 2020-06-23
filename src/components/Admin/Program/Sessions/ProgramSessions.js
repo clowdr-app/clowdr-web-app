@@ -4,6 +4,10 @@ import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
 import moment from 'moment';
+import {
+    DeleteOutlined,
+    EditOutlined
+} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -226,14 +230,14 @@ class ProgramSessions extends React.Component {
                 key: 'action',
                 render: (text, record) => (
                     <Space size="small">
-                        <a href="#" session={record} onClick={() => this.onEdit(record)}>Edit</a>
+                        <a href="#" title="Edit" session={record} onClick={() => this.onEdit(record)}>{<EditOutlined />}</a>
                         <Popconfirm
                             title="Are you sure delete this session?"
                             onConfirm={()=>this.onDelete(record)}
                             okText="Yes"
                             cancelText="No"
                         >
-                        <a href="#">Delete</a>
+                        <a href="#" title="Delete">{<DeleteOutlined />}</a>
                         </Popconfirm>
                     </Space>
                 ),
