@@ -12,12 +12,12 @@
     display: flex;
     align-item: flex-start;
     flex-wrap: wrap;
-    background: #141414;
+    background: #fff;
 }
 
 .space-align-block {
     margin: 8px 4px;
-    border: 1px solid #40a9ff;
+    border: 1px solid #fff;
     padding: 4px;
     flex: none;
 }
@@ -41,6 +41,11 @@
 .videoEmbed h4 {
     color: black;
 }
+
+.player-wrapper {
+    position: relative;
+    padding-top: 56.25% /* Player ratio: 100 / (1280 / 720) */
+  }
 
 .ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel > .ant-collapse-header {
     padding: 4px 0 4px 5px;
