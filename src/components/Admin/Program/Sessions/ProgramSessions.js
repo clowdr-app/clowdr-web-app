@@ -229,15 +229,17 @@ class ProgramSessions extends React.Component {
             {
                 title: 'Items',
                 dataIndex: 'items',
-                render: (text,record) =>
+                render: (text,record) => {
                     // console.log(record);
-                    <ul>{
-                        record.get("items").map(item => (
-                            <li key={item.toString()}>
-                                {item.get('title')}
-                            </li>
-                        ))
-                    }</ul>,
+                    if (record.get("items")) {
+                        return <ul>{
+                            record.get("items").map(item => (
+                                <li key={item.toString()}>
+                                    {item.get('title')}
+                                </li>
+                            ))
+                        }</ul>}
+                    },
                 key: 'items',
             },
             {
