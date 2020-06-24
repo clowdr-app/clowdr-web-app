@@ -9,6 +9,7 @@ import {
     DeleteOutlined,
     EditOutlined
 } from '@ant-design/icons';
+import { List, Select as AntSelect } from 'antd';
 
 const { Option } = Select;
 
@@ -31,8 +32,10 @@ class ProgramSessions extends React.Component {
             toggle: false,
             sessions: [],
             rooms: [],
+            items: [],
             gotSessions: false,
             gotRooms: false,
+            gotItems: false,
             editing: false,
             edt_session: undefined
         };
@@ -44,6 +47,7 @@ class ProgramSessions extends React.Component {
             this.props.onDown(this.props);
         else {
             this.state.rooms = this.props.rooms;
+            this.state.items = this.props.items;
             this.state.sessions = this.props.sessions;
         }
     }
@@ -106,9 +110,14 @@ class ProgramSessions extends React.Component {
                 startTime: moment(session.get("startTime")),
                 endTime: moment(session.get("endTime")),
                 room: session.get("room").get('name'), 
-                roomId: session.get('room').id
+                roomId: session.get('room').id,
+                items: session.get("items"),
+                newItems: undefined
             }
         });
+        session.get("items").map(item => {
+            console.log("Items for this session: " + item.get('title'));
+        })
     }
 
     onUpdate(values) {
@@ -120,6 +129,7 @@ class ProgramSessions extends React.Component {
             session.set("title", values.title);
             session.set("startTime", values.startTime.toDate());
             session.set("endTime", values.endTime.toDate());
+            session.set("items", values.items);
             let room = this.state.rooms.find(r => r.id == values.roomId);
             if (!room)
                 console.log('Invalid room ' + values.room);
@@ -146,11 +156,12 @@ class ProgramSessions extends React.Component {
         console.log("[Admin/Sessions]: Something changed");
 
         if (this.state.loading) {
-            if (this.state.gotRooms && this.state.gotSessions) {
+            if (this.state.gotRooms && this.state.gotSessions && this.state.gotItems) {
                 console.log('[Admin/Sessions]: Program download complete');
                 this.setState({
                     rooms: this.props.rooms,
                     sessions: this.props.sessions,
+                    items: this.props.items,
                     loading: false
                 });
             }
@@ -163,6 +174,9 @@ class ProgramSessions extends React.Component {
                 if (prevProps.sessions.length != this.props.sessions.length) {
                     this.setState({gotSessions: true});
                     console.log('[Admin/Sessions]: got sessions');
+                }
+                if (prevProps.items.length != this.props.items.length) {
+                    this.setState({gotItems: true});
                 }
             }
         }
@@ -178,6 +192,10 @@ class ProgramSessions extends React.Component {
 
                 this.setState({sessions: sortedSessions});
                 console.log('[Admin/Sessions]: changes in sessions');
+            }
+            if (prevProps.items.length != this.props.items.length) {
+                this.setState({items: this.props.items});
+                console.log('[Admin/Sessions]: changes in items')
             }
         }
     }
@@ -230,11 +248,10 @@ class ProgramSessions extends React.Component {
                 title: 'Items',
                 dataIndex: 'items',
                 render: (text,record) => {
-                    // console.log(record);
                     if (record.get("items")) {
                         return <ul>{
                             record.get("items").map(item => (
-                                <li key={item.toString()}>
+                                <li key={item.get('title')}>
                                     {item.get('title')}
                                 </li>
                             ))
@@ -279,6 +296,7 @@ class ProgramSessions extends React.Component {
                             this.setState({editing: false});
                         }}
                         rooms={this.state.rooms}
+                        items={this.state.items}
                     />
                 <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
                 </Table>
@@ -301,6 +319,7 @@ class ProgramSessions extends React.Component {
                     this.setVisible(false);
                 }}
                 rooms={this.state.rooms}
+                items={this.state.items}
             />
             <Table columns={columns} dataSource={this.state.sessions} rowKey={r => r.id}>
             </Table>
@@ -323,8 +342,10 @@ const AuthConsumer = (props) => (
 );
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) => {
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, items, myItems}) => {
     const [form] = Form.useForm();
+    const ITEM_OPTIONS = [];
+    items.map(item => ITEM_OPTIONS.push(item.get('title')));
     return (
         <Modal
             visible={visible}
@@ -353,6 +374,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) =
                         .then(values => {
                             form.resetFields();
                             onAction(values);
+                            console.log("form value is: " + values);
                         })
                         .catch(info => {
                             console.log('Validate Failed:', info);
@@ -403,6 +425,25 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) =
                             <DatePicker showTime/>
                         </Form.Item>
                     </Input.Group>
+                </Form.Item>
+
+                <Form.Item
+                    name="items"
+                    label="Items"
+                >
+                    <Input placeholder="Name"/>
+                </Form.Item>
+
+                <Form.Item label="Add new items"
+                >
+                    <AntSelect placeholder="Choose new items" style={{ width: 400 }} >
+                        defaultValue={[]}
+                        mode="multiple"
+                        options=ITEM_OPTIONS
+                        {/*{items.map(i => (*/}
+                        {/*    <Option key={i.id}>{i.get('title')}</Option>*/}
+                        {/*))}*/}
+                    </AntSelect>
                 </Form.Item>
 
                 <Form.Item name="room" label="Room"
