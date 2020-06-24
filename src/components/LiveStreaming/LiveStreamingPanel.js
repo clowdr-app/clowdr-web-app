@@ -70,6 +70,11 @@ class LiveStreamingPanel extends Component {
                         <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
                                     width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>
                     </div>
+                    <div>
+                        {this.props.mysessions.map(s => {
+                            return <div key={s.id}>{s.get("title")}</div>
+                        })}
+                    </div>
                 </div>
     }
 }
