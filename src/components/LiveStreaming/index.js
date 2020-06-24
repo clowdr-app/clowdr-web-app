@@ -1,9 +1,8 @@
 import React, {Component} from "react";
 import {Button, Space, Spin} from 'antd';
 import moment from 'moment';
-import LiveVideoThumbnail from "./VideoThumbnail";
-import LiveVideoPanel from "./LiveVideoPanel";
-import Parse from "parse";
+import LiveStreamingPanel from "./LiveStreamingPanel";
+import ZoomPanel from "./ZoomPanel";
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
 
@@ -48,75 +47,13 @@ class LiveStreaming extends Component {
         else
             console.log('No current sessions');
         liveRooms = Array.from(new Set(liveRooms)); // remove duplicates
-        liveRooms.sort((a, b) => a.get('name').localCompare(b.get('name')));
+        liveRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
 
         liveRooms.map(r => console.log('Live @ ' + r.get('name')));
         return liveRooms;
     }
     
     componentDidMount() {
-        // let query = new Parse.Query("LiveVideo");
-        // query.find().then(res => {
-        //     this.setState({
-        //         videos: res,
-        //         loading: false
-        //     });
-        // });
-        // query.subscribe().then(sub => {
-        //     this.sub = sub;
-        //     this.sub.on('create', vid => {
-        //         console.log("Video created " + JSON.stringify(vid) + " " + vid.get("title") + " " + vid.title);
-        //         this.setState((prevState) => ({
-        //                 videos: [...prevState.videos, vid]
-        //         }))
-        //     })
-        //     this.sub.on('delete', vid=>{
-        //         console.log("Video deleted " + vid.get("title"));
-        //         this.setState((prevState)=> ({
-        //             videos: prevState.videos.filter((v)=>(
-        //                 v.id != vid.id
-        //             ))
-        //         }));
-        //     });
-        //     this.sub.on('update', vid=>{
-        //         console.log("Video updated " + vid.get("title"));
-        //         const found = this.state.videos.find(v => v.objectId === vid.objectId);
-        //         if (found) {
-        //             console.log("Found video " + found.title);
-        //             found.set("title", vid.get("title"));
-        //             found.set("src1", vid.get("src1"));
-        //             found.set("id1", vid.get("id1"));
-        //             found.set("src2", vid.get("src2"));
-        //             found.set("id2", vid.get("id2"));
-        //         }
-        //     });
-        // });
-
-        // let q = new Parse.Query("LiveVideoWatchers");
-        // q.find().then(res => {
-        //     // console.log("WATCHERS: " + JSON.stringify(res));
-        //     this.setState({
-        //         watchers: res
-        //     });
-        // });
-        // q.subscribe().then(subscription => {
-        //     this.wactherSubscription = subscription;
-
-        //     this.wactherSubscription.on('create', watchRecord => {
-        //         console.log("New watcher " + JSON.stringify(watchRecord) + " " + watchRecord.get("user") + " " + watchRecord.get("video"));
-        //         this.setState((prevState) => ({
-        //                 watchers: [...prevState.watchers, watchRecord]
-        //         }));
-        //     })
-        //     this.wactherSubscription.on('delete', watchRecord => {
-        //         console.log("Watcher deleted " + watchRecord.get("user") + " " + watchRecord.get("video"));
-        //         this.setState((prevState) => ({
-        //             watchers: prevState.watchers.filter((w)=>(
-        //                 w.id != watchRecord.id
-        //             ))
-        //         }));
-        //     });
-        // });
     }
 
     componentWillUnmount() {
@@ -127,10 +64,10 @@ class LiveStreaming extends Component {
     }
 
     toggleExpanded(vid) {
-        console.log('--> ' + this.state.expanded);
+        console.log('[Live]: --> ' + this.state.expanded);
         this.setState({
             expanded: !this.state.expanded,
-            expanded_video: vid
+            expanded_video: (this.state.expanded ? undefined: vid)
         });
     }
 
@@ -165,25 +102,32 @@ class LiveStreaming extends Component {
     
     render() {
         if (this.props.downloaded) {
-            if (!this.state.expanded) {
-                return <div className={"space-align-container"}>
+
+            return <div className={"space-align-container"}>
                     {this.state.liveRooms.map((room) => {
-                        // let w = this.state.watchers.filter(w => w.video === video.id)
-                        return <div className={"space-align-block"} key={room.id}>
-                            <Space align={"center"}>
-                                <LiveVideoThumbnail auth={this.props.auth} video={room} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
-                            </Space></div>
+                        let qa = "";
+                        let width = 0;
+                        if (!this.state.expanded) width = 320;
+                        if (this.state.expanded && room.id == this.state.expanded_video.id) {
+                            width = 1000;
+                            const q_url = this.state.expanded_video.get("qa");
+                            qa = <iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/>            
+                        }
+                        
+                        if (room.get("src1").includes("Zoom")) {
+                            return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                                <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} watchers={this.state.watchers} />
+                            </div>
+                        }
+
+                        return <React.Fragment>
+                                <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                                    <LiveStreamingPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
+                                </div>
+                                <div className={"space-align-block"}>{qa}</div>   
+                                </React.Fragment> 
                     })}
-                </div>
-            }
-            else {
-                return <div>
-                    <Button type="link" href="#" onClick={this.toggleExpanded.bind(this)}>Go Back</Button>
-                    <LiveVideoPanel video={this.state.expanded_video} watchers={this.state.watchers} auth={this.props.auth} geoloc={this.props.geoloc}/>
-                    </div>
-            }
-        
-            
+                </div> 
         }
         return (
             <Spin tip="Loading...">

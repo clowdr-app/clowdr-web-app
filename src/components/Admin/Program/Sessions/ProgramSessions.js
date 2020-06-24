@@ -4,6 +4,7 @@ import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
 import moment from 'moment';
+import * as timezone from 'moment-timezone';
 import {
     DeleteOutlined,
     EditOutlined
@@ -210,13 +211,13 @@ class ProgramSessions extends React.Component {
             {
                 title: 'Start Time',
                 dataIndex: 'start',
-                render: (text,record) => <span>{record.get("startTime").toString()}</span>,
+                render: (text,record) => <span>{timezone(record.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'start',
             },
             {
                 title: 'End Time',
                 dataIndex: 'end',
-                render: (text,record) => <span>{record.get("endTime").toString()}</span>,
+                render: (text,record) => <span>{timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'end',
             },
             {
@@ -228,15 +229,17 @@ class ProgramSessions extends React.Component {
             {
                 title: 'Items',
                 dataIndex: 'items',
-                render: (text,record) =>
+                render: (text,record) => {
                     // console.log(record);
-                    <ul>{
-                        record.get("items").map(item => (
-                            <li key={item.toString()}>
-                                {item.get('title')}
-                            </li>
-                        ))
-                    }</ul>,
+                    if (record.get("items")) {
+                        return <ul>{
+                            record.get("items").map(item => (
+                                <li key={item.toString()}>
+                                    {item.get('title')}
+                                </li>
+                            ))
+                        }</ul>}
+                    },
                 key: 'items',
             },
             {
