@@ -192,12 +192,14 @@ class ProgramItems extends React.Component {
                 title: 'Title',
                 dataIndex: 'title',
                 key: 'title',
+                //sorter: (a, b) => a.get("title").localeCompare(b.get("title")),
                 render: (text, record) => <span>{record.get("title")}</span>,
             },
             {
                 title: 'Track',
                 dataIndex: 'track',
-                render: (text,record) => <span>{record.get("track").get('name')}</span>,
+                //sorter: (a, b) => a.get("track").get('name').localeCompare(b.get("track").get('name')),
+                render: (text,record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>,
                 key: 'track',
             },
             {
