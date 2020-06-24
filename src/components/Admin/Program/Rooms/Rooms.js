@@ -171,55 +171,67 @@ class Rooms extends React.Component {
                 title: 'Name',
                 dataIndex: 'name',
                 key: 'name',
-                sorter: (a, b) => a.get("name").localeCompare(b.get("name")),
+                sorter: (a, b) => {
+                    var nameA = a.get("name") ? a.get("name") : "";
+                    var nameB = b.get("name") ? b.get("name") : "";
+                    return nameA.localeCompare(nameB);
+                },
                 render: (text, record) => <span>{record.get("name")}</span>,
             },
             {
                 title: 'Main Media Source',
                 dataIndex: 'src1',
-                sorter: (a, b) => a.get("src1").localeCompare(b.get("src1")),
+                sorter: (a, b) => {
+                    var srcA = a.get("src1") ? a.get("src1") : "";
+                    var srcB = b.get("src1") ? b.get("src1") : "";
+                    return srcA.localeCompare(srcB);
+                },
                 render: (text,record) => <span>{record.get("src1")}</span>,
                 key: 'roomsrc1',
             },
             {
                 title: 'Media ID',
                 dataIndex: 'id1',
-                sorter: (a, b) => a.get("id1").localeCompare(b.get("id1")),
                 render: (text,record) => <span>{record.get("id1")}</span>,
                 key: 'roomid1',
             },
             {
                 title: 'Password',
                 dataIndex: 'pwd1',
-                sorter: (a, b) => a.get("pwd1").localeCompare(b.get("pwd1")),
                 render: (text,record) => <span>{record.get("pwd1")}</span>,
                 key: 'pwd1',
             },
             {
                 title: 'Alt Media Source',
                 dataIndex: 'src2',
-                sorter: (a, b) => a.get("src2").localeCompare(b.get("src2")),
+                sorter: (a, b) => {
+                    var srcA = a.get("src2") ? a.get("src2") : "";
+                    var srcB = b.get("src2") ? b.get("src2") : "";
+                    return srcA.localeCompare(srcB);
+                },
                 render: (text,record) => <span>{record.get("src2")}</span>,
                 key: 'roomsrc2',
             },
             {
                 title: 'Alt Media ID',
                 dataIndex: 'id2',
-                sorter: (a, b) => a.get("id2").localeCompare(b.get("id2")),
                 render: (text,record) => <span>{record.get("id2")}</span>,
                 key: 'roomid2',
             },
             {
                 title: 'Password',
                 dataIndex: 'pwd2',
-                sorter: (a, b) => a.get("pwd2").localeCompare(b.get("pwd2")),
                 render: (text,record) => <span>{record.get("pwd2")}</span>,
                 key: 'pwd2',
             },
             {
                 title: 'Q&A',
                 dataIndex: 'qa',
-                sorter: (a, b) => a.get("qa").localeCompare(b.get("qa")),
+                // sorter: (a, b) => {
+                //     var qaA = a.get("qa") ? a.get("qa") : "";
+                //     var qaB = b.get("qa") ? b.get("qa") : "";
+                //     return qaA.localeCompare(qaB);
+                // },
                 render: (text,record) => <span>{record.get("qa")}</span>,
                 key: 'qa',
             },
