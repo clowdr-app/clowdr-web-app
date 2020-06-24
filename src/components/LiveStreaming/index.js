@@ -32,6 +32,29 @@ class LiveStreaming extends Component {
             this.state.sessions = this.props.sessions;
             this.state.liveRooms = this.getLiveRooms()
         }
+
+        // Run every 15 minutes that the user is on this page
+        this.timerId = setInterval(() => {
+//            console.log('TICK!');
+            let rooms = this.getLiveRooms();
+            if (!this.arraysEqual(rooms, this.state.liveRooms))
+                this.setState({liveRooms: this.getLiveRooms()});
+        }, 60000*1);
+    }
+
+    arraysEqual(arr1,arr2) { // Assumes they are already sorted
+        if (!Array.isArray(arr1) || ! Array.isArray(arr2) || arr1.length !== arr2.length)
+          return false;    
+        // var arr1 = _arr1.concat().sort();
+        // var arr2 = _arr2.concat().sort();
+    
+        for (var i = 0; i < arr1.length; i++) {
+            if (arr1[i] !== arr2[i])
+                return false;    
+        }
+    
+        return true;
+    
     }
 
     getLiveRooms() {
@@ -57,10 +80,7 @@ class LiveStreaming extends Component {
     }
 
     componentWillUnmount() {
-        if (this.sub)
-            this.sub.unsubscribe();
-        if (this.wactherSubscription)
-            this.wactherSubscription.unsubscribe();
+        clearInterval(this.timerId);
     }
 
     toggleExpanded(vid) {
@@ -120,7 +140,7 @@ class LiveStreaming extends Component {
                             </div>
                         }
 
-                        return <React.Fragment>
+                        return <React.Fragment key={room.id}>
                                 <div className={"space-align-block"} key={room.id} style={{width:width}}>
                                     <LiveStreamingPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
                                 </div>
