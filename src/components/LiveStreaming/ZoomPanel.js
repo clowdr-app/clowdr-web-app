@@ -45,22 +45,25 @@ class ZoomPanel extends Component {
             return <div></div>
         }
         
+        let roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
+                        <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
+
         let navigation = <a href={this.video_url} target={"_blank"} rel="noopener noreferrer">Join</a>
 
         return  <div>
-                    <div><strong>{this.props.video.get('name')}</strong></div>
-                    <div className="player-wrapper" >
-                        <ReactPlayer playing playsinline light={true} playIcon={<img src="zoom.png" />} 
-                                    width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>
-                    </div>
                     <table style={{width:"100%"}}>
                         <tbody>
                         <tr >
-                            <td style={{"textAlign":"left"}}>Watching: {this.state.count}</td>
+                            <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>
+                            <td style={{"textAlign":"center"}}>Viewers: {this.state.count}</td>
                             <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>
                         </tr>
                         </tbody>
                     </table>
+                    <div className="player-wrapper" >
+                        <ReactPlayer playing playsinline light={true} playIcon={<img src="zoom.png" />} 
+                                    width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>
+                    </div>
                 </div>
     }
 }
