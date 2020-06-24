@@ -149,13 +149,21 @@ class Tracks extends React.Component {
                 title: 'Name',
                 dataIndex: 'name',
                 key: 'name',
-                sorter: (a, b) => a.get("name").localeCompare(b.get("name")),
+                sorter: (a, b) => {
+                    var nameA = a.get("name") ? a.get("name"): "";
+                    var nameB = b.get("name") ? b.get("name") : "";
+                    return nameA.localeCompare(nameB);
+                },
                 render: (text, record) => <span>{record.get("name")}</span>,
             },
             {
                 title: 'Display Name',
                 dataIndex: 'displayName',
-                sorter: (a, b) => a.get("displayName").localeCompare(b.get("displayName")),
+                sorter: (a, b) => {
+                    var displayNameA = a.get("displayName") ? a.get("track").get("name") : "";
+                    var displayNameB = b.get("displayName") ? b.get("track").get("name") : "";
+                    return displayNameA.localeCompare(displayNameB);
+                },
                 render: (text,record) => <span>{record.get("displayName")}</span>,
                 key: 'dname',
             },
