@@ -23,6 +23,7 @@
     "gh-pages": "^2.2.0",
     "googleapis": "^51.0.0",
     "moment": "^2.26.0",
+    "moment-timezone": "^0.5.31",
     "ngrok": "^3.2.7",
     "parse": "^2.13.0",
     "react": "^16.13.1",
