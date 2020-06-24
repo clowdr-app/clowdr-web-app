@@ -91,7 +91,7 @@ class LinkMenu extends React.Component {
                 Home</NavLink></Menu.Item>
             <Menu.Item key='/live' icon={<VideoCameraOutlined/>}><NavLink to="/live">Live Sessions</NavLink></Menu.Item>
 
-            <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Recorded Videos</NavLink></Menu.Item>
+            <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Past Sessions</NavLink></Menu.Item>
             {userTools}
         </Menu>;
     }

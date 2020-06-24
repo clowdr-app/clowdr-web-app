@@ -60,10 +60,12 @@ class LiveStreamingPanel extends Component {
                                     width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>
                     </div>
                     <table style={{width:"100%"}}>
+                        <tbody>
                         <tr >
-                            <td style={{"text-align":"left"}}>Watching: {this.state.count}</td>
-                            <td style={{"text-align":"right"}}><strong>{navigation}</strong></td>
+                            <td style={{"textAlign":"left"}}>Watching: {this.state.count}</td>
+                            <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>
                         </tr>
+                        </tbody>
                     </table>
                 </div>
     }
