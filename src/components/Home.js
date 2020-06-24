@@ -1,4 +1,3 @@
-import LiveVideoPanel from "./LiveStreaming/LiveVideoPanel"
 import React, { Component } from 'react';
 
 import Landing from './Landing';
