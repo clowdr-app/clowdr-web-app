@@ -1,4 +1,4 @@
 require("./registrations")
 require("./presence")
 require("./chat")
-require("./program-notrim")
+require("./program")
