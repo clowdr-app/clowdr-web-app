@@ -47,6 +47,7 @@ import Help from "./components/Help";
 import SidebarChat from "./components/SocialTab/SidebarChat";
 import {withRouter} from "react-router";
 import BottomChat from "./components/SocialTab/BottomChat";
+import ProgramItem from "./components/ProgramItem";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -184,6 +185,7 @@ class App extends Component {
         return (<div>
             {baseRoutes}
             <Route exact path="/" component={Home}/>
+            <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem}/>
             <Route exact path="/live" component={LiveVideosArea}/>
             <Route exact path="/program" component={Program}/>
 
