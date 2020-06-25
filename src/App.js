@@ -21,6 +21,7 @@ import {withProgram} from "./components/Program"
 
 import LiveVideosArea from "./components/LiveStreaming";
 import Posters from "./components/Exhibits/Posters";
+import SRCPosters from "./components/Exhibits/SRCPosters";
 
 import Parse from "parse";
 import ForgotPassword from "./components/Account/ForgotPassword";
@@ -187,6 +188,7 @@ class App extends Component {
             <Route exact path="/program" component={Program}/>
 
             <Route exact path="/exhibits/posters" component={Posters}/>
+            <Route exact path="/exhibits/srcposters" component={SRCPosters}/>
 
             <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
             <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
