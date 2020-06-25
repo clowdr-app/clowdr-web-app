@@ -66,7 +66,7 @@ class ProgramItem extends React.Component {
             <div className="programItemMetadata">
                 <h3>{this.state.programItem.get('title')}</h3>
                 <p><b>Abstract: </b> {this.state.programItem.get("abstract")}</p>
-                <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.programItem.get("breakoutRoom")}/></div>
+                {this.state.programItem.get("breakoutRoom") ? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.programItem.get("breakoutRoom")}/></div> : <></>}
             </div>
         </div>
     }
