@@ -54,6 +54,7 @@ class Rooms extends React.Component {
         room.set("id2", values.id2);
         room.set("pwd2", values.pwd2);
         room.set("qa", values.qa);
+        room.set("conference", this.props.auth.currentConference);
         room.save().then((val) => {
             _this.setState({visible: false, rooms: [room, ...this.state.rooms]})
         }).catch(err => {

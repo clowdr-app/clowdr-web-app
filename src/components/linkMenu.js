@@ -7,6 +7,7 @@ import {
 import {
     BankOutlined,
     BarsOutlined,
+    BorderOutlined,
     CalendarOutlined,
     CloseSquareOutlined,
     ContainerOutlined,
@@ -21,6 +22,7 @@ import {
     UserOutlined,
     VideoCameraAddOutlined,
     VideoCameraOutlined,
+    WechatOutlined,
     YoutubeOutlined
 } from '@ant-design/icons';
 import SubMenu from "antd/es/menu/SubMenu";
@@ -63,11 +65,21 @@ class LinkMenu extends React.Component {
             }
             userTools =
                 [
-                    <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">
-                        Program</NavLink></Menu.Item>,
-                    <Menu.Item key='/lobby' icon={<TeamOutlined/>}><NavLink to="/lobby">Lobby</NavLink></Menu.Item>,
-                    <Menu.Item key='/account' icon={<UserOutlined/>}><NavLink to="/account">
-                        My Account</NavLink></Menu.Item>,
+                    <Menu.Item key='/live' icon={<VideoCameraOutlined/>}><NavLink to="/live">Live Sessions</NavLink></Menu.Item>,
+
+                    <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Past Sessions</NavLink></Menu.Item>,
+
+                    <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">Program</NavLink></Menu.Item>,
+
+                    <SubMenu key="/exhibits" title={<span><TeamOutlined/><span>Exhibit Hall</span></span>}>
+                        <Menu.Item key='/exhibits/posters' icon={<BorderOutlined/>}><NavLink to="/exhibits/posters">Posters</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/demos' icon={<DesktopOutlined/>}><NavLink to="/exhibits/demos">Demos</NavLink></Menu.Item>
+                    </SubMenu>,
+
+                    <Menu.Item key='/lobby' icon={<WechatOutlined/>}><NavLink to="/lobby">Lobby</NavLink></Menu.Item>,
+
+                    <Menu.Item key='/account' icon={<UserOutlined/>}><NavLink to="/account">My Account</NavLink></Menu.Item>,
+
                     <SubMenu key="conf-select" title="Select Conference">
                         {
                             this.props.authContext.validConferences.map((conf)=><Menu.Item key={conf.id} onClick={this.props.authContext.helpers.setActiveConference.bind(this,conf)}>{conf.get("conferenceName")}</Menu.Item>)
@@ -75,26 +87,22 @@ class LinkMenu extends React.Component {
                     </SubMenu>
                     ];
             userTools.push(adminTools);
-            userTools.push(<Menu.Item key='/signout' icon={<CloseSquareOutlined/>}><NavLink to="/signout">Sign
-                Out</NavLink></Menu.Item>);
+            userTools.push(<Menu.Item key='/signout' icon={<CloseSquareOutlined/>}><NavLink to="/signout">Sign Out</NavLink></Menu.Item>);
             ;
 
         } else {
             userTools =
-                [<Menu.Item key='/signup' icon={<SmileOutlined/>}><NavLink to="/signup">Sign Up</NavLink></Menu.Item>,
-                    <Menu.Item key='/signin' icon={<DesktopOutlined/>}><NavLink to="/signin">Sign
-                        In</NavLink></Menu.Item>
-                ]
-        }
-        return <Menu theme={"dark"} mode={"inline"} selectedKeys={[this.props.location.pathname]}
-                     mode="horizontal"
-                     >
-            <Menu.Item key='/' icon={<HomeOutlined/>}><NavLink to="/">
-                Home</NavLink></Menu.Item>
-            <Menu.Item key='/live' icon={<VideoCameraOutlined/>}><NavLink to="/live">Live Sessions</NavLink></Menu.Item>
+                [
+                <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">Program</NavLink></Menu.Item>,
 
-            <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Past Sessions</NavLink></Menu.Item>
-            {userTools}
+//                <Menu.Item key='/signup' icon={<SmileOutlined/>}><NavLink to="/signup">Sign Up</NavLink></Menu.Item>,
+
+                <Menu.Item key='/signin' icon={<DesktopOutlined/>}><NavLink to="/signin">Sign In</NavLink></Menu.Item>
+                ];
+        }
+        return <Menu theme={"dark"} mode={"inline"} selectedKeys={[this.props.location.pathname]} mode="horizontal">
+                <Menu.Item key='/' icon={<HomeOutlined/>}><NavLink to="/">Home</NavLink></Menu.Item>
+                {userTools}
         </Menu>;
     }
 }

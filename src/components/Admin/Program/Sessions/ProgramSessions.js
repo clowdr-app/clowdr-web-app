@@ -114,13 +114,13 @@ class ProgramSessions extends React.Component {
     onUpdate(values) {
         var _this = this;
         console.log("Updating session " + values.title);
-        let session = this.state.sessions.find(r => r.id == values.objectId);
+        let session = this.state.sessions.find(s => s.id == values.objectId);
 
         if (session) {
             session.set("title", values.title);
             session.set("startTime", values.startTime.toDate());
             session.set("endTime", values.endTime.toDate());
-            let room = this.state.rooms.find(r => r.id == values.roomId);
+            let room = this.state.rooms.find(r => r.id == values.room);
             if (!room)
                 console.log('Invalid room ' + values.room);
             session.set("room", room);

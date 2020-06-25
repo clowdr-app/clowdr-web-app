@@ -82,7 +82,9 @@ class LiveStreaming extends Component {
         }
         else
             console.log('No current sessions');
-        liveRooms = Array.from(new Set(liveRooms)); // remove duplicates
+
+        liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
+
         liveRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
 
         liveRooms.map(r => console.log('Live @ ' + r.get('name')));
@@ -140,7 +142,10 @@ class LiveStreaming extends Component {
 
             return <div className={"space-align-container"}>
                     {this.state.liveRooms.map((room) => {
-                        let mySessions = this.state.currentSessions.filter(s => s.get("room") === room);
+                        if (!room.get("src1")) {
+                            return <div></div>
+                        }
+                        let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
                         let qa = "";
                         let width = 0;
                         if (!this.state.expanded) width = 320;

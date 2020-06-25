@@ -48,6 +48,8 @@ class Tracks extends React.Component {
         var track = new Track();
         track.set("name", values.name);
         track.set("displayName", values.displayName);
+        track.set("conference", this.props.auth.currentConference);
+
         track.save().then((val) => {
             _this.setState({visible: false, tracks: [track, ...this.state.tracks]})
         }).catch(err => {
