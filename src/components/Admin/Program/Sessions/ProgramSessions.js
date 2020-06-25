@@ -7,9 +7,9 @@ import moment from 'moment';
 import * as timezone from 'moment-timezone';
 import {
     DeleteOutlined,
-    EditOutlined
+    EditOutlined,
+    MinusCircleOutlined
 } from '@ant-design/icons';
-import { List, Select as AntSelect } from 'antd';
 
 const { Option } = Select;
 
@@ -297,6 +297,7 @@ class ProgramSessions extends React.Component {
                         }}
                         rooms={this.state.rooms}
                         items={this.state.items}
+                        myItems={this.state.edt_session.items}
                     />
                 <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
                 </Table>
@@ -320,6 +321,7 @@ class ProgramSessions extends React.Component {
                 }}
                 rooms={this.state.rooms}
                 items={this.state.items}
+                myItems={[]}
             />
             <Table columns={columns} dataSource={this.state.sessions} rowKey={r => r.id}>
             </Table>
@@ -344,8 +346,11 @@ export default AuthConsumer;
 
 const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, items, myItems}) => {
     const [form] = Form.useForm();
-    const ITEM_OPTIONS = [];
-    items.map(item => ITEM_OPTIONS.push(item.get('title')));
+    const myItemTitles = [];
+    myItems.map(item => {
+        myItemTitles.push(item.get('title'));
+    })
+    console.log("myItemTitle are: " + myItemTitles);
     return (
         <Modal
             visible={visible}
@@ -428,22 +433,61 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
                 </Form.Item>
 
                 <Form.Item
-                    name="items"
-                    label="Items"
+                    label="Current items"
                 >
-                    <Input placeholder="Name"/>
+                    <Space>
+                        <Select
+                            placeholder="Choose a current item"
+                            style={{ width: 400 }}
+                            defaultValue={[]}
+                        >
+                            {myItems.map(item => (
+                                <Option
+                                    key={item.id}
+                                    value={item.get('title')}
+                                    label = {item.get('title').length > 5 ? item.get('title').substring(0, 5)+"..." : item.get('title')}>
+                                    {item.get('title')}
+                                </Option>
+                            ))}
+                        </Select>
+                        <a href="#" title="Edit" onClick={() => {
+
+                        }}>{<EditOutlined />}</a>
+
+                        <Popconfirm
+                            title="Are you sure delete this item?"
+                            // onConfirm={()=> myItems}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <a href="#" title="Delete">{<DeleteOutlined />}</a>
+                        </Popconfirm>
+                    </Space>
+
                 </Form.Item>
 
-                <Form.Item label="Add new items"
+                <Form.Item
+                    label="Add new items"
                 >
-                    <AntSelect placeholder="Choose new items" style={{ width: 400 }} >
+                    <Select
+                        placeholder="Choose new items"
+                        style={{ width: 400 }}
                         defaultValue={[]}
                         mode="multiple"
-                        options=ITEM_OPTIONS
-                        {/*{items.map(i => (*/}
-                        {/*    <Option key={i.id}>{i.get('title')}</Option>*/}
-                        {/*))}*/}
-                    </AntSelect>
+                        optionLabelProp="label"
+                    >
+                        {items.map(item => {
+                            console.log("mytitlesssssssss: " + myItemTitles);
+                            if (!myItemTitles.includes(item.get('item'))) {
+                                return <Option
+                                    key={item.id}
+                                    value={item.get('title')}
+                                    label = {item.get('title').length > 5 ? item.get('title').substring(0, 5)+"..." : item.get('title')}>
+                                    {item.get('title')}
+                                </Option>
+                            }
+                        })}
+                    </Select>
                 </Form.Item>
 
                 <Form.Item name="room" label="Room"
