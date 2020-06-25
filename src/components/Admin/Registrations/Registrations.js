@@ -4,8 +4,6 @@ import {MailOutlined, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
 import moment from "moment";
-import {timezone} from 'moment-timezone';
-
 
 const { Option } = Select;
 
@@ -16,6 +14,7 @@ const IconText = ({icon, text}) => (
         {text}
     </Space>
 );
+
 function validateEmail(email) {
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());

@@ -5,9 +5,13 @@ import {
     AuthUserContext,
 } from './Session';
 import {
+    BankOutlined,
+    BarsOutlined,
     CalendarOutlined,
     CloseSquareOutlined,
+    ContainerOutlined,
     DesktopOutlined,
+    IdcardOutlined,
     HomeOutlined,
     SmileOutlined,
     ScheduleOutlined,
@@ -37,26 +41,24 @@ class LinkMenu extends React.Component {
         if (this.props.authContext.user) {
             if(this.props.authContext.isAdmin) {
                 adminTools = <SubMenu key="/admin" title={<span><ToolOutlined/><span>Administration</span></span>}>
-                    <Menu.Item key='/admin/liveVideos' icon={<VideoCameraAddOutlined/>}><NavLink to="/admin/liveVideos">
-                        Live Sessions</NavLink></Menu.Item>
-
-                    <Menu.Item key='/admin/program/rooms' icon={<SolutionOutlined/>}><NavLink to="/admin/program/rooms">
+                    <Menu.Item key='/admin/program/rooms' icon={<BankOutlined/>}><NavLink to="/admin/program/rooms">
                         Virtual Rooms</NavLink></Menu.Item>
 
-                    <Menu.Item key='/admin/program/tracks' icon={<SolutionOutlined/>}><NavLink to="/admin/program/tracks">
+                    <Menu.Item key='/admin/program/tracks' icon={<ContainerOutlined/>}><NavLink to="/admin/program/tracks">
                     Conference Tracks</NavLink></Menu.Item>
 
-                    <Menu.Item key='/admin/program/items' icon={<SolutionOutlined/>}><NavLink to="/admin/program/items">
+                    <Menu.Item key='/admin/program/items' icon={<BarsOutlined/>}><NavLink to="/admin/program/items">
                     Program Items</NavLink></Menu.Item>
 
                     <Menu.Item key='/admin/program/sessions' icon={<CalendarOutlined/>}><NavLink to="/admin/program/sessions">
                     Program Sessions</NavLink></Menu.Item>
 
-                    <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
-                        Users</NavLink></Menu.Item>
-
-                    <Menu.Item key='/admin/registrations' icon={<SolutionOutlined/>}><NavLink to="/admin/registrations">
+                    <Menu.Item key='/admin/registrations' icon={<IdcardOutlined/>}><NavLink to="/admin/registrations">
                         Registrations</NavLink></Menu.Item>
+
+                    <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
+                    Users</NavLink></Menu.Item>
+
                 </SubMenu>
             }
             userTools =
