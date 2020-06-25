@@ -20,11 +20,53 @@ Parse.Cloud.define("registrations-upload", (request) => {
     console.log('Request to upload registration data');
     const data = request.params.content;
     const conferenceID = request.params.conference;
-    rows = Papa.parse(data, {header: true});
-    rows.data.forEach(element => {
-        addRow(element, conferenceID);
-    });
+
+    var Registration = Parse.Object.extend("Registration");
+    var rquery = new Parse.Query(Registration);
+    rquery.equalTo("conference", conferenceID);
+    rquery.limit(10000);
+    rquery.find().then(existing => {
+        let toSave = [];
+        
+        rows = Papa.parse(data, {header: true});
+        rows.data.forEach(element => {
+            addRow(element, conferenceID, existing, toSave);
+        });
+
+        Parse.Object.saveAll(toSave)
+        .then (res => console.log("[Registrations]: Done saving all registrations"))
+        .catch(err => console.log(err))
+        
+    }).catch(err => console.log('[Registrations]: Problem fetching registrations ' + err));
+
 });
+
+function addRow(row, conferenceID, existing, toSave) {
+    if (row.R_Email) {
+        if (validateEmail(row.R_Email)) {
+            if (!existing.find(r => r.get("email") == row.R_Email)) {
+                var Registration = Parse.Object.extend("Registration");
+                var reg = new Registration();
+                reg.set("email", row.R_Email);
+                reg.set("name", row["R_First Name"] + " " + row["R_Last Name"]);
+                reg.set("passcode", row.Code);
+                reg.set("affiliation", row.R_Company);
+                reg.set("country", row.R_Country);
+                reg.set("conference", conferenceID);
+                toSave.push(reg);
+            }
+            else
+                console.log('[Registrations]: Skipping existing registration for ' + row.R_Email);
+        }
+        else
+            console.log("[Registrations]: Invalid email " + row.R_Email);
+    }
+}
+
+function validateEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
 
 var conferenceInfoCache = {};
 
@@ -102,6 +144,7 @@ Parse.Cloud.define("login-fromToken", async (request) => {
     }
 
 });
+
 Parse.Cloud.define("reset-password", async (request) => {
     let email = request.params.email;
     let confID = request.params.confID;
@@ -163,10 +206,10 @@ Parse.Cloud.define("reset-password", async (request) => {
                 " make sure that you are using the email address that you used to register for " + config.conference.get("conferenceName")+"."}
     }
 });
+
 Parse.Cloud.define("registrations-inviteUser", async (request) => {
     let regIDs = request.params.registrations;
     let confID = request.params.conference;
-
 
     let regQ = new Parse.Query("Registration");
     regQ.containedIn("objectId", regIDs);
@@ -287,17 +330,3 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     return {status: "OK"};
 });
 
-function addRow(row, conferenceID) {
-    console.log("row--> " + JSON.stringify(row));
-    if (row.Email) {
-        var Registrations = Parse.Object.extend("Registration");
-        var reg = new Registrations();
-        reg.set("email", row.Email);
-        reg.set("name", row.Name);
-        reg.set("passcode", row.Password);
-        reg.set("affiliation", row.Affiliation);
-        reg.set("country", row.Country);
-        reg.set("conference", conferenceID);
-        reg.save({}, {useMasterKey: true});
-    }
-}

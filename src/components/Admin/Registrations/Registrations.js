@@ -1,6 +1,6 @@
 import React, {Fragment} from 'react';
-import {Button, DatePicker, Form, Input, message, Modal, Select, Space, Spin, Table, Tabs, Upload} from "antd";
-import { UploadOutlined } from '@ant-design/icons';
+import {Button, DatePicker, Form, Input, message, Modal, Select, Space, Spin, Table, Tabs, Tooltip, Upload} from "antd";
+import {MailOutlined, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
 import moment from "moment";
@@ -55,16 +55,27 @@ class Registrations extends React.Component {
         }
         reader.readAsText(file);
         return false;
-    }        
+    } 
 
-    refreshList(){
+    refreshList(value) {
         let query = new Parse.Query("Registration");
-        query.find().then(res=>{
+        query.equalTo("conference", this.props.auth.currentConference.id);
+        // if (value) { // THIS DOESN"T WANT TO WORK
+        //     query.greaterThan('createdAt', Date.parse(value.startTime));
+        // }
+        query.limit(10000);
+        query.find().then(res => {
+            let regs = res;
+            if (value)
+            {
+                regs = res.filter(r => r.get("createdAt") >= value.startTime)
+                console.log('Filtering ' + regs.length);
+            }
             this.setState({
-                regs: res,
+                regs: regs,
                 loading: false
             });
-        })
+        }).catch(err => console.log('[Registration]: error: ' + err));
     }
 
     componentWillUnmount() {
@@ -82,6 +93,20 @@ class Registrations extends React.Component {
             console.log(err);
         }
     }
+
+    async sendInvitations(){
+        try {
+            await Parse.Cloud.run("registrations-inviteUser", {
+                conference: this.currentConference.id,
+                registrations: this.state.regs.map(r => r.id)
+            });
+            this.refreshList();
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+
     render() {
         const columns = [
             {
@@ -109,7 +134,7 @@ class Registrations extends React.Component {
                 key: 'country',
             },
             {
-                title: 'Invitation Sent',
+                title: 'Invitation',
                 dataIndex: 'invitationSent',
                 render: (text,record) => {
                     if(record.get("invitationSentDate"))
@@ -128,11 +153,38 @@ class Registrations extends React.Component {
                 </Spin>)
 
         return <div>
-                <Upload accept=".txt, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
-                    <Button>
-                        <UploadOutlined /> Click to upload registration data
-                    </Button>
-                </Upload>
+                <table style={{width:"100%"}}>
+                    <tbody>
+                        <tr>
+                            <td><Upload accept=".txt, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
+                                <Button>
+                                    <UploadOutlined /> Upload registration data
+                                </Button>
+                            </Upload></td>
+
+                            <td><Form layout="inline" name="form_in_reg" id="RetrieveByDate" onFinish={this.refreshList.bind(this)}>
+                                <Form.Item name="startTime" >
+                                            <DatePicker placeholder="Uploaded since..." showTime/>
+                                </Form.Item>
+                                <Form.Item >
+                                    <Button type="primary" htmlType="submit">
+                                    Submit
+                                    </Button>
+                                </Form.Item>
+
+                                </Form>
+                            </td>
+
+                            <td style={{"textAlign":"right"}}> <Tooltip title="Send Invitation to ALL selected"> 
+                                    <Button danger icon={<MailOutlined />} onClick={this.sendInvitations.bind(this)}>Send All</Button>
+                                </Tooltip></td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td><td>&nbsp;</td>
+                            <td style={{"textAlign":"right"}}>Current filter: {this.state.regs.length}</td>
+                        </tr>
+                    </tbody>
+                </table>
             <Table columns={columns} dataSource={this.state.regs} rowKey={(r)=>(r.id)}/>
         </div>
     }
@@ -147,4 +199,5 @@ const AuthConsumer = (props) => (
     </AuthUserContext.Consumer>
 )
 export default AuthConsumer;
+
 
