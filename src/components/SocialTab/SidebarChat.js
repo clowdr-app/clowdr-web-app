@@ -72,9 +72,16 @@ class SidebarChat extends React.Component {
         let isDifferentUser = this.user != this.props.auth.user;
         this.user = this.props.auth.user;
         let isDifferentChannel = this.props.auth.chatChannel != this.state.channel;
+        console.log("CDU " + this.props.auth.chatChannel + " " + this.state.channel)
 
+        if(this.props.auth.forceChatOpen && this.state.siderWidth == 0){
+            this.setState({siderWidth: 250});
+            this.props.auth.helpers.setGlobalState({forceChatOpen: false})
+        }
         if (isDifferentChannel || isDifferentUser) {
-            if(!isDifferentUser && this.props.auth.chatChannel == null && this.props.auth.activeSpace && this.props.auth.activeSpace.get("chatChannel") == this.state.channel){
+            if(!isDifferentUser && this.props.auth.chatChannel == null &&
+                this.props.auth.activeSpace && !this.props.auth.chatChannel &&
+                this.props.auth.activeSpace.get("chatChannel") == this.state.channel){
                 return;
             }
             let newChannel = this.props.auth.chatChannel;
@@ -82,6 +89,7 @@ class SidebarChat extends React.Component {
                 //fall back to the current social space
                 newChannel = this.props.auth.activeSpace.get("chatChannel");
             }
+            console.log("New channel: " + newChannel)
             if (this.desiredChannel == newChannel)
                 return;
             this.desiredChannel = newChannel;
