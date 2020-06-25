@@ -43,7 +43,7 @@ class LiveStreaming extends Component {
             if (!this.arraysEqual(current[0], this.state.liveRooms)) {
                 this.setState({liveRooms: current[0], currentSessions: current[1]});
             }
-        }, 60000*1);
+        }, 60000*15);
     }
 
     arraysEqual(arr1,arr2) { // Assumes they are already sorted
