@@ -5,6 +5,7 @@ const ProgramContext = React.createContext({
     tracks: [],
     items: [],
     sessions: [],
+    people: [],
     onDownload: () => {},
     downloaded: false
 });

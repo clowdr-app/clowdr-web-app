@@ -13,6 +13,7 @@ console.log('Uploading program for ' + conferenceName);
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
 Parse.serverURL = 'https://parseapi.back4app.com/'
+//Parse.serverURL = "http://localhost:1337/parse"
 Parse.Cloud.useMasterKey();
 
 
@@ -208,6 +209,7 @@ async function loadProgram() {
     people.forEach((person) => {
         allPeople[person.get("confKey")] = person;
     })
+
     let newPeople = [];
     for (const person of data.People) {
         if (allPeople[person.Key]) {
@@ -231,7 +233,6 @@ async function loadProgram() {
         console.log(err);
     }
     console.log("People saved: " + newPeople.length);
-
 
     let ProgramItem = Parse.Object.extend("ProgramItem");
     let q = new Parse.Query(ProgramItem);
@@ -321,24 +322,40 @@ async function loadProgram() {
         let items = [];
         if (ses.Items) {
             ses.Items.forEach((k) => {
-                if(allItems[k])
+                if(allItems[k]){
                     items.push(allItems[k]);
+                }
                 else
                     console.log("Could not find item: " + k);
             });
         }
         session.set("items", items);
-        allSessions[session.get("confKey")] = session;
-        newSessions.push(session);
+        toSave.push(session);
+        allSessions[ses.Key] = session;
         i++;
     }
-    try{
-        await Parse.Object.saveAll(newSessions);
-    } catch(err){
+    try {
+        await Parse.Object.saveAll(toSave);
+        toSave = [];
+        for (const ses of data.Sessions) {
+            if (ses.Items) {
+                ses.Items.forEach((k) => {
+                    if(allItems[k]){
+                        console.log(allItems[k].get("proram"))
+                        if(!allItems[k].get("programSession")){
+                            allItems[k].set("programSession", allSessions[ses.Key])
+                            toSave.push(allItems[k]);
+                        }
+                    }
+                    else
+                        console.log("Could not find item: " + k);
+                });
+            }
+        }
+        await Parse.Object.saveAll(toSave);
+    } catch (err) {
         console.log(err);
     }
-    console.log("Done");
-
 }
 
 loadProgram().then(() => {
