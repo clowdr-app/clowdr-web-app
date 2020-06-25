@@ -1,14 +1,11 @@
 import React, {Fragment} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
+import {Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
 import moment from 'moment';
 import * as timezone from 'moment-timezone';
-import {
-    DeleteOutlined,
-    EditOutlined
-} from '@ant-design/icons';
+import {DeleteOutlined, EditOutlined} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -34,8 +31,9 @@ class ProgramSessions extends React.Component {
             items: [],
             gotSessions: false,
             gotRooms: false,
+            gotItems: false,
             editing: false,
-            edt_session: undefined
+            edt_session: undefined,
         };
 
         console.log('[Admin/Sessions]: downloaded? ' + this.props.downloaded);
@@ -45,13 +43,13 @@ class ProgramSessions extends React.Component {
             this.props.onDown(this.props);
         else {
             this.state.rooms = this.props.rooms;
-            this.state.items = this.props.items;
             this.state.sessions = this.props.sessions;
+            this.state.session = this.props.items;
         }
     }
 
 
-    onCreate(values) {
+    async onCreate(values) {
         console.log("OnCreate! " + values.title)
         var _this = this;
         let room = this.state.rooms.find(r => r.id == values.room);
@@ -66,12 +64,26 @@ class ProgramSessions extends React.Component {
         session.set("startTime", values.startTime.toDate());
         session.set("endTime", values.endTime.toDate());
         session.set("room", room);
+        session.set("items", values.items)
         session.set("confKey", Math.floor(Math.random() * 10000000).toString());
-        session.save().then((val) => {
-            _this.setState({visible: false /*, sessions: sortedSessions*/})
-        }).catch(err => {
-            console.log(err + " " + session.id);
-        });
+
+        let acl = new Parse.ACL();
+        acl.setPublicWriteAccess(false);
+        acl.setPublicReadAccess(true);
+        acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
+        acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
+        session.setACL(acl);
+        try {
+            session = await session.save();
+            this.setState({visible: false /*, sessions: sortedSessions*/})
+        } catch (err) {
+            console.log(err)
+            console.log("@" + session.id)
+        }
+
+
+
+
 
         // let data = {
         //     conference: this.props.auth.currentConference.id,
@@ -121,6 +133,8 @@ class ProgramSessions extends React.Component {
         let session = this.state.sessions.find(s => s.id == values.objectId);
 
         if (session) {
+            console.log(session);
+
             session.set("title", values.title);
             session.set("startTime", values.startTime.toDate());
             session.set("endTime", values.endTime.toDate());
@@ -145,6 +159,7 @@ class ProgramSessions extends React.Component {
     }
 
     componentDidMount() {
+
     }
 
     componentDidUpdate(prevProps) {
@@ -267,7 +282,7 @@ class ProgramSessions extends React.Component {
                     if (record.get("items")) {
                         return <ul>{
                             record.get("items").map(item => (
-                                <li key={item.toString()}>
+                                <li key={item.id}>
                                     {item.get('title')}
                                 </li>
                             ))
