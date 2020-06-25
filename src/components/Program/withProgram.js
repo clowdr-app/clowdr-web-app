@@ -15,6 +15,7 @@ const withProgram = Component => {
                 tracks: [],
                 items: [],
                 sessions: [],
+                people: [],
                 onDownload: this.downloadProgram.bind(this),
                 downloaded: false
             };
@@ -72,6 +73,16 @@ const withProgram = Component => {
                         this.setState({sessions: []});
                     });
                     this.subscribeToLiveQuery(sessionQ, 'sessions');
+
+                    let peopleQ = new Parse.Query("ProgramPerson");
+                    peopleQ.limit(10000);
+                    peopleQ.find().then(res => {
+                        this.setState({people: res});
+                        console.log('[withProgram]: People downloaded: ' + res.length);
+                    }).catch(err => {
+                        console.log('[withProgram]: Unable to dowload people: ' + err);
+                        this.setState({people: []});
+                    });
 
                     this.setState({
                         downloaded: true
