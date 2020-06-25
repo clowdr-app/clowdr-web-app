@@ -321,19 +321,38 @@ async function loadProgram() {
         let items = [];
         if (ses.Items) {
             ses.Items.forEach((k) => {
-                if(allItems[k])
+                if(allItems[k]){
                     items.push(allItems[k]);
+                }
                 else
                     console.log("Could not find item: " + k);
             });
         }
         session.set("items", items);
         toSave.push(session);
+        allSessions[ses.Key] = session;
         i++;
     }
-    try{
+    try {
         await Parse.Object.saveAll(toSave);
-    } catch(err){
+        toSave = [];
+        for (const ses of data.Sessions) {
+            if (ses.Items) {
+                ses.Items.forEach((k) => {
+                    if(allItems[k]){
+                        console.log(allItems[k].get("proram"))
+                        if(!allItems[k].get("programSession")){
+                            allItems[k].set("programSession", allSessions[ses.Key])
+                            toSave.push(allItems[k]);
+                        }
+                    }
+                    else
+                        console.log("Could not find item: " + k);
+                });
+            }
+        }
+        await Parse.Object.saveAll(toSave);
+    } catch (err) {
         console.log(err);
     }
     console.log("Done");

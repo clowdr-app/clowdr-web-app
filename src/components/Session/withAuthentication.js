@@ -310,7 +310,9 @@ const withAuthentication = Component => {
             })
         }
         async setSocialSpace(spaceName) {
+            console.log("1Set social " + spaceName)
             await this.createSocialSpaceSubscription(this.state.spaces[spaceName]);
+            console.log("2Set social " + spaceName)
             this.setState({
                 activeSpace: this.state.spaces[spaceName],
                 chatChannel: this.state.spaces[spaceName].get("chatChannel")
@@ -541,9 +543,14 @@ const withAuthentication = Component => {
                         let currentConference = _this.state.currentConference;
                         _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile)
                         await _this.createSocialSpaceSubscription(spacesByName["Lobby"], user, activeProfile);
-                        console.log("RefreshUser called, setting chat channel for some reason?")
+                        console.log("RefreshUser called, setting chat channel for some reason?" + _this.state.chatChannel)
                         let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
-                        _this.setState((prevState) => ({
+
+                        let finishedStateFn = null;
+                        let stateSetPromise = new Promise((resolve)=>{
+                            finishedStateFn = resolve;
+                        });
+                        _this.setState((prevState) => { return ({
                             spaces: spacesByName,
                             activeSpace: prevState.activeSpace ? prevState.activeSpace : spacesByName['Lobby'],
                             chatChannel: prevState.chatChannel ? prevState.chatChannel : cchann,
@@ -556,8 +563,11 @@ const withAuthentication = Component => {
                             currentConference: conf,
                             loading: false,
                             roles: roles
-                        }));
+                        })}, ()=>{
+                            console.log("Done updating state");
+                            finishedStateFn()});
 
+                        await stateSetPromise;
                         if(currentConference && currentConference.id != conf.id){
                             window.location.reload(false);
                         }

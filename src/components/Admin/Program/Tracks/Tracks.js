@@ -1,5 +1,5 @@
 import React, {Fragment} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
+import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, Checkbox} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
@@ -25,6 +25,8 @@ class Tracks extends React.Component {
         this.state = {
             loading: true, 
             tracks: [],
+            socialSpaces: [],
+            socialSpacesLoading: true,
             gotTracks: false,
             editing: false,
             edt_track: undefined
@@ -48,6 +50,13 @@ class Tracks extends React.Component {
         var track = new Track();
         track.set("name", values.name);
         track.set("displayName", values.displayName);
+        let acl = new Parse.ACL();
+        acl.setPublicWriteAccess(false);
+        acl.setPublicReadAccess(true);
+        acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
+        acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
+        track.setACL(acl);
+
         track.save().then((val) => {
             _this.setState({visible: false, tracks: [track, ...this.state.tracks]})
         }).catch(err => {
@@ -72,7 +81,9 @@ class Tracks extends React.Component {
             edt_track: {
                 objectId: track.id,
                 name: track.get("name"),
-                displayName: track.get("displayName")
+                displayName: track.get("displayName"),
+                perProgramItemChat: track.get("perProgramItemChat"),
+                perProgramItemVideo: track.get("perProgramItemVideo"),
             }
         });
     }
@@ -80,12 +91,28 @@ class Tracks extends React.Component {
     onUpdate(values) {
         var _this = this;
         console.log("Updating " + values.name + "; " + values.objectId);
+        console.log(values);
         let track = this.state.tracks.find(t => t.id == values.objectId);
 
         if (track) {
             track.set("name", values.name);
             track.set("displayName", values.displayName);
-            track.save().then((val) => {
+            track.set("perProgramItemChat", values.perProgramItemChat);
+            track.set("perProgramItemVideo", values.perProgramItemVideo);
+            if(values.socialSpace != "new"){
+                if (values.socialSpace == "none" || !values.socialSpace) {
+                    track.set("socialSpace", null);
+                } else
+                    track.set("socialSpace", values.socialSpace);
+            }
+            track.save().then(async (val) => {
+                if (values.socialSpace == "new") {
+                    let newSocialSpace = await Parse.Cloud.run("social-socialSpaceForTrack", {
+                        programTrack: track.id
+                    });
+                    track.set("socialSpace", newSocialSpace);
+                    await track.save();
+                }
                 _this.setState({visible: false, editing: false});
             }).catch(err => {
                 console.log(err + ": " + values.objectId);
@@ -100,7 +127,11 @@ class Tracks extends React.Component {
         this.setState({'visible': !this.state.visible});
     }
 
-    componentDidMount() {
+    async componentDidMount() {
+        let socialSpaceQ = new Parse.Query("SocialSpace");
+        socialSpaceQ.equalTo("conference", this.props.auth.currentConference);
+        let spaces = await socialSpaceQ.find();
+        this.setState({socialSpaces: spaces, spacesLoading: false});
     }
 
     componentDidUpdate(prevProps) {
@@ -204,7 +235,7 @@ class Tracks extends React.Component {
                             this.setState({editing: false});
                         }}
                     />
-                <Table columns={columns} dataSource={this.state.tracks} rowKey={(t)=>(t.id)}>
+                <Table columns={columns} dataSource={this.state.tracks} rowKey={(t)=>(t.id)}  pagination={{showSizeChanger: true}}>
                 </Table>
             </Fragment>
             )
@@ -225,7 +256,7 @@ class Tracks extends React.Component {
                     this.setVisible(false);
                 }}
             />
-            <Table columns={columns} dataSource={this.state.tracks} rowKey={(t)=>(t.id)}>
+            <Table columns={columns} dataSource={this.state.tracks} rowKey={(t)=>(t.id)} pagination={{showSizeChanger: true}}>
             </Table>
         </div>
     }
@@ -246,7 +277,7 @@ const AuthConsumer = (props) => (
 );
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel}) => {
+const CollectionEditForm = ({title, visible, data, onAction, onCancel }) => {
     const [form] = Form.useForm();
     return (
         <Modal
@@ -298,6 +329,16 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel}) => {
                 </Form.Item>
                 <Form.Item name="displayName">
                     <Input style={{ width: '100%' }} type="textarea" placeholder="Display Name"/>
+                </Form.Item>
+                <Form.Item name="perProgramItemChat" valuePropName="checked">
+                    <Checkbox>
+                        Create a chat channel for each program item
+                    </Checkbox>
+                </Form.Item>
+                <Form.Item name="perProgramItemVideo" valuePropName="checked">
+                    <Checkbox>
+                        Create a video room for each program item
+                    </Checkbox>
                 </Form.Item>
             </Form>
         </Modal>

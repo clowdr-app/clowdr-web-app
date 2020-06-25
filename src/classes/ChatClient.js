@@ -166,7 +166,9 @@ export default class ChatClient{
         twilio.on("channelJoined", async (channel) => {
             let channelInfo = await this.getChannelInfo(channel);
             if(channelInfo){
-                this.openChat(channel.sid);
+                if(channelInfo.attributes.mode == "directMessage"){
+                    this.openChat(channel.sid);
+                }
                 this.subscribeToChannel(channel.sid);
             }
             // this.channelListeners.forEach(v => v.channelJoined(channel));

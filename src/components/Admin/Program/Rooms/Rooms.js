@@ -277,6 +277,9 @@ class Rooms extends React.Component {
                         onSelectPullDown2={(value) => {
                             this.setState({src2: value});
                         }}
+
+                        socialSpaces={this.state.socialSpaces}
+                        socialSpacesLoading={this.state.socialSpacesLoading}
                     />
                 <Table columns={columns} dataSource={this.state.rooms} rowKey={(r)=>(r.get('name'))}>
                 </Table>
@@ -304,6 +307,9 @@ class Rooms extends React.Component {
                 onSelectPullDown2={(value) => {
                     this.setState({src2: value});
                 }}
+
+                socialSpaces={this.state.socialSpaces}
+                socialSpacesLoading={this.state.socialSpacesLoading}
             />
             <Table columns={columns} dataSource={this.state.rooms} rowKey={(r)=>(r.id)}>
             </Table>
@@ -327,7 +333,7 @@ const AuthConsumer = (props) => (
 
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, onSelectPullDown2}) => {
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, onSelectPullDown2, socialSpaces, socialSpacesLoading}) => {
     const [form] = Form.useForm();
     return (
         <Modal

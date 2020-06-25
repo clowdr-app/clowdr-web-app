@@ -14,8 +14,6 @@ class BottomChat extends React.Component {
     }
 
     openChat(sid) {
-        console.log("Opening chat: "+ sid)
-        console.trace();
         this.registerChatSubscriptions(sid);
         this.setState((prevState) => {
             let found = prevState.chats.find((c) => c== sid);

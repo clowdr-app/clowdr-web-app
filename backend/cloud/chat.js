@@ -32,6 +32,39 @@ async function getConfig(conference){
     }
     return config;
 }
+Parse.Cloud.define("chat-getSIDForProgramItem", async (request) => {
+    let programItemID = request.params.programItem;
+    let itemQ = new Parse.Query("ProgramItem");
+    itemQ.include("track");
+    let item = await itemQ.get(programItemID, {useMasterKey: true});
+    if(item.get("track").get("perProgramItemChat") && !item.get("chatSID")){
+        //Create room
+        let config = await getConfig(item.get("conference"));
+        let attributes = {
+            category: "programItem",
+            programItemID: programItemID
+        }
+        try{
+            let chatRoom = await config.twilioChat.channels.create(
+                {friendlyName: item.get('title'),
+                    uniqueName: 'programItem-'+item.id,
+                    type: 'public',
+                    attributes: JSON.stringify(attributes)});
+            item.set("chatSID", chatRoom.sid);
+            await item.save({}, {useMasterKey: true});
+        }
+        catch(err){
+            console.log(err);
+            //Raced with another client creating the chat room
+            let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
+            // item.set("chatSID", chatRoom.sid);
+            // await item.save({}, {useMasterKey: true});
+
+            return chatRoom.sid;
+        }
+    }
+    return item.get("chatSID");
+});
 Parse.Cloud.define("chat-destroy", async (request) => {
 
 });
