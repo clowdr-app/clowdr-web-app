@@ -114,13 +114,13 @@ class ProgramSessions extends React.Component {
     onUpdate(values) {
         var _this = this;
         console.log("Updating session " + values.title);
-        let session = this.state.sessions.find(r => r.id == values.objectId);
+        let session = this.state.sessions.find(s => s.id == values.objectId);
 
         if (session) {
             session.set("title", values.title);
             session.set("startTime", values.startTime.toDate());
             session.set("endTime", values.endTime.toDate());
-            let room = this.state.rooms.find(r => r.id == values.roomId);
+            let room = this.state.rooms.find(r => r.id == values.room);
             if (!room)
                 console.log('Invalid room ' + values.room);
             session.set("room", room);
@@ -206,23 +206,43 @@ class ProgramSessions extends React.Component {
                 title: 'Title',
                 dataIndex: 'title',
                 key: 'title',
+                sorter: (a, b) => {
+                    var titleA = a.get("title") ? a.get("title") : "";
+                    var titleB = b.get("title") ? b.get("title") : "";
+                    return titleA.localeCompare(titleB);
+                },
                 render: (text, record) => <span>{record.get("title")}</span>,
             },
             {
                 title: 'Start Time',
                 dataIndex: 'start',
+                sorter: (a, b) => {
+                    var timeA = a.get("startTime") ? a.get("startTime") : new Date();
+                    var timeB = b.get("startTime") ? b.get("startTime") : new Date();
+                    return timeA > timeB;
+                },
                 render: (text,record) => <span>{timezone(record.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'start',
             },
             {
                 title: 'End Time',
                 dataIndex: 'end',
+                sorter: (a, b) => {
+                    var timeA = a.get("endTime") ? a.get("endTime") : new Date();
+                    var timeB = b.get("endTime") ? b.get("endTime") : new Date();
+                    return timeA > timeB;
+                }, 
                 render: (text,record) => <span>{timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'end',
             },
             {
                 title: 'Room',
                 dataIndex: 'room',
+                sorter: (a, b) => {
+                    var roomA = a.get("room") ? a.get("room").get("name") : "";
+                    var roomB = b.get("room") ? b.get("room").get("name") : "";
+                    return roomA.localeCompare(roomB);
+                }, 
                 render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : ""}</span>,
                 key: 'room',
             },

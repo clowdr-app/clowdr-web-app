@@ -19,7 +19,8 @@ class LiveStreaming extends Component {
             rooms: [],
             gotSessions: false,
             gotRooms: false,
-            liveRooms: []
+            liveRooms: [],
+            currentSessions: []
         };
 
         console.log('[Live]: downloaded? ' + this.props.downloaded);
@@ -30,37 +31,71 @@ class LiveStreaming extends Component {
         else {
             this.state.rooms = this.props.rooms;
             this.state.sessions = this.props.sessions;
-            this.state.liveRooms = this.getLiveRooms()
+            let current = this.getLiveRooms();
+            this.state.liveRooms = current[0];
+            this.state.currentSessions = current[1];
         }
+
+        // Run every 15 minutes that the user is on this page
+        this.timerId = setInterval(() => {
+//            console.log('TICK!');
+            let current = this.getLiveRooms();
+            if (!this.arraysEqual(current[0], this.state.liveRooms)) {
+                this.setState({liveRooms: current[0], currentSessions: current[1]});
+            }
+        }, 60000*15);
+    }
+
+    arraysEqual(arr1,arr2) { // Assumes they are already sorted
+        if (!Array.isArray(arr1) || ! Array.isArray(arr2) || arr1.length !== arr2.length)
+          return false;    
+        // var arr1 = _arr1.concat().sort();
+        // var arr2 = _arr2.concat().sort();
+    
+        for (var i = 0; i < arr1.length; i++) {
+            if (arr1[i] !== arr2[i])
+                return false;    
+        }
+    
+        return true;
+    
+    }
+
+    dateSorter(a, b) {
+        var timeA = a.get("startTime") ? a.get("startTime") : new Date();
+        var timeB = b.get("startTime") ? b.get("startTime") : new Date();
+        return timeA > timeB;
     }
 
     getLiveRooms() {
         let now = Date.now();
-        let currentSessions = this.props.sessions.filter(s => 
-            now >= moment(s.get("startTime")).subtract(30, 'm').toDate().getTime() && 
-            now <= moment(s.get("endTime")).add(30, 'm').toDate().getTime()
-        );
+        let currentSessions = this.props.sessions.filter(s => {
+            var timeS = s.get("startTime") ? s.get("startTime") : new Date();
+            var timeE = s.get("endTime") ? s.get("endTime") : new Date();
+            return (now >= moment(timeS).subtract(30, 'm').toDate().getTime() && 
+                    now <= moment(timeE).add(30, 'm').toDate().getTime())
+        }).sort(this.dateSorter);
+
         let liveRooms = [];
         if (currentSessions) {
             currentSessions.map(s => liveRooms.push(s.get("room")));
         }
         else
             console.log('No current sessions');
-        liveRooms = Array.from(new Set(liveRooms)); // remove duplicates
+
+        liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
+
         liveRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
 
         liveRooms.map(r => console.log('Live @ ' + r.get('name')));
-        return liveRooms;
+        return [liveRooms, currentSessions];
     }
     
     componentDidMount() {
     }
 
     componentWillUnmount() {
-        if (this.sub)
-            this.sub.unsubscribe();
-        if (this.wactherSubscription)
-            this.wactherSubscription.unsubscribe();
+        clearInterval(this.timerId);
     }
 
     toggleExpanded(vid) {
@@ -77,10 +112,12 @@ class LiveStreaming extends Component {
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
                 console.log('[Live]: Program download complete');
+                let current = this.getLiveRooms();
                 this.setState({
                     rooms: this.props.rooms,
                     sessions: this.props.sessions,
-                    liveRooms: this.getLiveRooms(),
+                    liveRooms: current[0],
+                    currentSessions: current[1],
                     loading: false
                 });
             }
@@ -105,6 +142,10 @@ class LiveStreaming extends Component {
 
             return <div className={"space-align-container"}>
                     {this.state.liveRooms.map((room) => {
+                        if (!room.get("src1")) {
+                            return <div></div>
+                        }
+                        let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
                         let qa = "";
                         let width = 0;
                         if (!this.state.expanded) width = 320;
@@ -116,13 +157,13 @@ class LiveStreaming extends Component {
                         
                         if (room.get("src1").includes("Zoom")) {
                             return <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} watchers={this.state.watchers} />
+                                <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
                             </div>
                         }
 
-                        return <React.Fragment>
+                        return <React.Fragment key={room.id}>
                                 <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                    <LiveStreamingPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
+                                    <LiveStreamingPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
                                 </div>
                                 <div className={"space-align-block"}>{qa}</div>   
                                 </React.Fragment> 

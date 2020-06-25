@@ -56,6 +56,7 @@ class ProgramItems extends React.Component {
         item.set("id2", values.id2);
         item.set("pwd2", values.pwd2);
         item.set("qa", values.qa);
+        item.set("conference", this.props.auth.currentConference);
         item.save().then((val) => {
             _this.setState({visible: false, items: [item, ...this.state.items]})
 //            _this.refreshList();
@@ -106,6 +107,7 @@ class ProgramItems extends React.Component {
             item.set("id2", values.id2);
             item.set("pwd2", values.pwd2);
             item.set("qa", values.qa);
+            item.set("conference", this.props.auth.currentConference);
             item.save().then((val) => {
                 _this.setState({visible: false, editing: false});
 //                _this.refreshList();
@@ -192,12 +194,22 @@ class ProgramItems extends React.Component {
                 title: 'Title',
                 dataIndex: 'title',
                 key: 'title',
+                sorter: (a, b) => {
+                    var titleA = a.get("title") ? a.get("title") : "";
+                    var titleB = b.get("title") ? b.get("title") : "";
+                    return titleA.localeCompare(titleB);
+                }, 
                 render: (text, record) => <span>{record.get("title")}</span>,
             },
             {
                 title: 'Track',
                 dataIndex: 'track',
-                render: (text,record) => <span>{record.get("track").get('name')}</span>,
+                sorter: (a, b) => {
+                    var trackA = a.get("track") ? a.get("track").get("name") : "";
+                    var trackB = b.get("track") ? b.get("track").get("name") : "";
+                    return trackA.localeCompare(trackB);
+                },   
+                render: (text,record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>,
                 key: 'track',
             },
             {

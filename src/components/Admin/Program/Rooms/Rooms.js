@@ -54,6 +54,7 @@ class Rooms extends React.Component {
         room.set("id2", values.id2);
         room.set("pwd2", values.pwd2);
         room.set("qa", values.qa);
+        room.set("conference", this.props.auth.currentConference);
         room.save().then((val) => {
             _this.setState({visible: false, rooms: [room, ...this.state.rooms]})
         }).catch(err => {
@@ -171,11 +172,21 @@ class Rooms extends React.Component {
                 title: 'Name',
                 dataIndex: 'name',
                 key: 'name',
+                sorter: (a, b) => {
+                    var nameA = a.get("name") ? a.get("name") : "";
+                    var nameB = b.get("name") ? b.get("name") : "";
+                    return nameA.localeCompare(nameB);
+                },
                 render: (text, record) => <span>{record.get("name")}</span>,
             },
             {
                 title: 'Main Media Source',
                 dataIndex: 'src1',
+                sorter: (a, b) => {
+                    var srcA = a.get("src1") ? a.get("src1") : "";
+                    var srcB = b.get("src1") ? b.get("src1") : "";
+                    return srcA.localeCompare(srcB);
+                },
                 render: (text,record) => <span>{record.get("src1")}</span>,
                 key: 'roomsrc1',
             },
@@ -194,6 +205,11 @@ class Rooms extends React.Component {
             {
                 title: 'Alt Media Source',
                 dataIndex: 'src2',
+                sorter: (a, b) => {
+                    var srcA = a.get("src2") ? a.get("src2") : "";
+                    var srcB = b.get("src2") ? b.get("src2") : "";
+                    return srcA.localeCompare(srcB);
+                },
                 render: (text,record) => <span>{record.get("src2")}</span>,
                 key: 'roomsrc2',
             },
@@ -212,6 +228,11 @@ class Rooms extends React.Component {
             {
                 title: 'Q&A',
                 dataIndex: 'qa',
+                // sorter: (a, b) => {
+                //     var qaA = a.get("qa") ? a.get("qa") : "";
+                //     var qaB = b.get("qa") ? b.get("qa") : "";
+                //     return qaA.localeCompare(qaB);
+                // },
                 render: (text,record) => <span>{record.get("qa")}</span>,
                 key: 'qa',
             },
