@@ -56,7 +56,11 @@ class VideoRoom extends Component {
 
     async componentDidMount() {
         try {
-            await this.joinCallFromProps();
+            if(this.props.room){
+                await this.joinCallEmbedded(this.props.room, this.props.conference);
+            }else{
+                await this.joinCallFromProps();
+            }
         }catch(err){
             console.log(err);
         }
@@ -78,6 +82,62 @@ class VideoRoom extends Component {
         }
         else{
             this.joinCallFromPropsWithCurrentUser();
+        }
+    }
+
+    async joinCallEmbedded(room, conf) {
+        let user = this.props.authContext.user;
+
+        this.setState({loadingMeeting: 'true', room: room})
+
+        let _this = this;
+        if (user) {
+            let idToken = user.getSessionToken();
+            const data = fetch(
+                `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
+                , {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        room: room.id,
+                        identity: idToken,
+                        conf: conf.get("slackWorkspace")
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(res => {
+                if (res.status == 500) {
+                    console.log("Error")
+                    this.setState({
+                        error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a
+                            href="mailto:help@clowdr.org">help@clowdr.org</a></span>
+                    });
+
+                } else {
+
+                    res.json().then((data) => {
+                        localStorage.setItem("videoReloads", 0);
+                        localStorage.setItem("videoLoadTimeout", 0);
+                        _this.setState(
+                            {
+                                error: undefined,
+                                meeting: room.id,
+                                token: data.token,
+                                loadingMeeting: false,
+                                meetingName: room.get("title")
+                            }
+                        )
+                        if (_this.loadingMessage) {
+                            _this.loadingMessage();
+                        }
+                        _this.loadingVideo = false;
+                    })
+                }
+            }).catch((err) => {
+                console.log("Error")
+                this.loadingVideo = false;
+                this.setState({error: "authentication"});
+            });
         }
     }
     async deleteRoom(){
@@ -236,28 +296,33 @@ class VideoRoom extends Component {
     }
 
     handleLogout() {
-
-        // console.log("Video room log out")
-        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null});
-        this.props.history.push(ROUTES.LOBBY_SESSION);
+        if(this.props.onHangup){
+            this.props.onHangup();
+        }
+        else{
+            // console.log("Video room log out")
+            this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null});
+            this.props.history.push(ROUTES.LOBBY_SESSION);
+        }
     }
 
 
     async componentDidUpdate(prevProps, prevState, snapshot) {
-        let conf = this.props.match.params.conf;
-        let roomID = this.props.match.params.roomName;
-        if (this.props.authContext.user != prevProps.authContext.user || conf != this.state.conf || roomID !=this.state.meetingName){
-            let confName = this.props.match.params.conf;
+        if(!this.props.room){
+            let conf = this.props.match.params.conf;
             let roomID = this.props.match.params.roomName;
-            if((confName != this.confName || roomID != this.roomID) &&(!this.state.error || this.roomID != roomID))
-            {
-                console.log("Clearing state...")
-                this.confName = null;
-                this.roomID = null;
-                this.setState({conf: conf, meetingName: roomID, token: null, error: null});
+            if (this.props.authContext.user != prevProps.authContext.user || conf != this.state.conf || roomID !=this.state.meetingName){
+                let confName = this.props.match.params.conf;
+                let roomID = this.props.match.params.roomName;
+                if((confName != this.confName || roomID != this.roomID) &&(!this.state.error || this.roomID != roomID))
+                {
+                    console.log("Clearing state...")
+                    this.confName = null;
+                    this.roomID = null;
+                    this.setState({conf: conf, meetingName: roomID, token: null, error: null});
                     await this.joinCallFromProps();
+                }
             }
-
         }
         if(this.state.room && this.state.room.get("members")){
             let hadChange = false;
@@ -300,7 +365,7 @@ class VideoRoom extends Component {
 
     onError(err) {
         message.error({content: "Unable to join room. " + err.toString()})
-        this.props.history.push(ROUTES.LOBBY_SESSION);
+        // this.props.history.push(ROUTES.LOBBY_SESSION);
     }
     async toggleWatch(){
         this.setState({watchLoading: true})
@@ -511,7 +576,24 @@ class VideoRoom extends Component {
                                        token={this.state.token} onDisconnect={this.handleLogout.bind(this)}>
                             <div style={{display:"flex"}}>
                                 <div style={{flex:1}}>
-                                    <h3>{this.state.meetingName} <VideoContext.Consumer>
+                                    {this.props.hideInfo? (<VideoContext.Consumer>
+                                        {
+                                            videoContext => {
+                                                let desc = videoContext.room.state;
+                                                if(desc) {
+                                                    desc = desc[0].toUpperCase() + desc.slice(1);
+                                                    let color = "red";
+                                                    if(desc == "Connected"){
+                                                        color = "#87d068";
+                                                    }
+                                                    return <Tag color={color}>{desc}</Tag>
+                                                }
+                                                else{
+                                                    return <Tag color={"warning"} icon={<SyncOutlined spin />}>Connecting...</Tag>
+                                                }
+                                            }
+                                        }
+                                    </VideoContext.Consumer>) :(<h3>{this.state.meetingName} <VideoContext.Consumer>
                                         {
                                             videoContext => {
                                                 let desc = videoContext.room.state;
@@ -533,7 +615,8 @@ class VideoRoom extends Component {
                                         this.state.room.get("mode") + " room with a capacity of " +
                                         this.state.room.get("capacity") +", there's currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
                                         {fullLabel}{visibilityDescription}
-                                        {privacyDescription}</h3>
+                                        {privacyDescription}</h3>)}
+
 
                                     {/*<div style={{width: "100%", display:"flex"}}>*/}
                                     {/*    <Collapse style={{flexGrow: 1}}>*/}
@@ -557,13 +640,13 @@ class VideoRoom extends Component {
 
                                 {ACLdescription}
 
-                            {(this.props.authContext.user && this.props.authContext.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
+                            {(this.props.authContext.user && !this.props.hideInfo && this.props.authContext.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
-                            <div>
+                            {!this.props.hideInfo ? <div>
                                 {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the 4 most active participants. Click a participant to pin them to always show their video. <b>You are muted by default in this room, please unmute yourself if you want to talk.</b></span> :
                                     this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
-                            </div>
+                            </div> :<></>}
                         <div className={"videoEmbed"}>
                             <EmbeddedVideoWrapper />
                         </div></VideoProvider>

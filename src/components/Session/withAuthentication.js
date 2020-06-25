@@ -225,6 +225,9 @@ const withAuthentication = Component => {
             if(this.socialSpaceSubscription){
                 this.socialSpaceSubscription.unsubscribe();
             }
+            if(!space){
+                console.log("Error: no space?")
+            }
             if(!user)
                 user = this.state.user;
             if(!userProfile)

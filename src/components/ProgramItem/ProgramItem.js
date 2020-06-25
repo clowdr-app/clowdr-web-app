@@ -3,6 +3,7 @@ import {AuthUserContext} from "../Session";
 import withAuthentication from "../Session/withAuthentication";
 import Parse from "parse"
 import {Alert, Spin} from "antd";
+import ProgramVideoChat from "../VideoChat/ProgramVideoChat";
 
 class ProgramItem extends React.Component {
     constructor(props) {
@@ -21,6 +22,7 @@ class ProgramItem extends React.Component {
         pq.include("programSession")
         pq.include("programSession.room")
         pq.include("programSession.room.socialSpace")
+        pq.include("breakoutRoom");
         let res = await pq.first();
         if (!res) {
             this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
@@ -29,11 +31,8 @@ class ProgramItem extends React.Component {
                 if(res.get("programSession") && res.get("programSession").get("room") && res.get("programSession").get("room").get("socialSpace")){
                     //set the social space...
                     let ss = res.get("programSession").get("room").get("socialSpace");
-                    console.log(ss);
                     this.props.auth.setSocialSpace(ss.get("name"));
-                }
-                if (res.get("track").get("perProgramItemVideo")) {
-                    //Ask for a token to join the video room
+                    this.props.auth.helpers.setGlobalState({forceChatOpen: true});
                 }
                 if (res.get("track").get("perProgramItemChat")) {
                     //Join the chat room
@@ -43,20 +42,10 @@ class ProgramItem extends React.Component {
                             programItem: res.id
                         });
                     }
-                    this.props.auth.helpers.setGlobalState((prevState) => {
-                        console.log(prevState)
-                        return {
-                        currentRoom: null,
-                        forceChatOpen: true,
-                        chatChannel: chatSID
-                    }},()=>{
-                        console.log("Set chat channel to " + chatSID)
-                        console.log(this.props.auth.chatChannel)
-                    });
-
+                    this.props.auth.chatClient.openChatAndJoinIfNeeded(chatSID);
                 }
             }
-            this.setState({loading: false, error: null, programItem: res});
+            this.setState({loading: false, error: null, programItem: res, inBreakoutRoom: false});
         }
     }
     componentWillUnmount() {
@@ -77,6 +66,7 @@ class ProgramItem extends React.Component {
             <div className="programItemMetadata">
                 <h3>{this.state.programItem.get('title')}</h3>
                 <p><b>Abstract: </b> {this.state.programItem.get("abstract")}</p>
+                <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.programItem.get("breakoutRoom")}/></div>
             </div>
         </div>
     }

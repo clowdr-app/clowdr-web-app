@@ -12,7 +12,8 @@ let conferenceName = process.argv[2];
 console.log('Uploading program for ' + conferenceName);
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
-Parse.serverURL = 'https://parseapi.back4app.com/'
+// Parse.serverURL = 'https://parseapi.back4app.com/'
+Parse.serverURL = "http://localhost:1337/parse"
 Parse.Cloud.useMasterKey();
 
 
@@ -208,29 +209,29 @@ async function loadProgram() {
     people.forEach((person) => {
         allPeople[person.get("confKey")] = person;
     })
-    let newPeople = [];
-    for (const person of data.People) {
-        if (newPeople[person.Key]) {
-            continue
-        }
-
-        let newPerson = new ProgramPerson();
-        newPerson.set("name", person.Name);
-        newPerson.set("bio", person.Bio);
-        newPerson.set("affiliation", person.Affiliation);
-        newPerson.set("confKey", person.Key);
-        newPerson.set("URL", person.URL);
-        newPerson.set("URLPhoto", person.URLPhoto);
-        newPerson.setACL(acl);
-        newPeople.push(newPerson);
-        allPeople[newPerson.get("confKey")] = newPerson;
-    }
-    try {
-        await Parse.Object.saveAll(newPeople);
-    } catch(err){
-        console.log(err);
-    }
-    console.log("People saved: " + newPeople.length);
+    // let newPeople = [];
+    // for (const person of data.People) {
+    //     if (newPeople[person.Key]) {
+    //         continue
+    //     }
+    //
+    //     let newPerson = new ProgramPerson();
+    //     newPerson.set("name", person.Name);
+    //     newPerson.set("bio", person.Bio);
+    //     newPerson.set("affiliation", person.Affiliation);
+    //     newPerson.set("confKey", person.Key);
+    //     newPerson.set("URL", person.URL);
+    //     newPerson.set("URLPhoto", person.URLPhoto);
+    //     newPerson.setACL(acl);
+    //     newPeople.push(newPerson);
+    //     allPeople[newPerson.get("confKey")] = newPerson;
+    // }
+    // try {
+    //     await Parse.Object.saveAll(newPeople);
+    // } catch(err){
+    //     console.log(err);
+    // }
+    // console.log("People saved: " + newPeople.length);
 
 
     let ProgramItem = Parse.Object.extend("ProgramItem");

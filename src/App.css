@@ -331,10 +331,12 @@ div.availabilityOptionsOpen  span.availabilityOption{
 }
 
 .chatButtonCollapsed{
-
+    width: 238px;
+    overflow: hidden;
 }
 .chatButtonExpanded{
     width: 238px;
+    overflow: hidden;
 }
 .embeddedChatFrame{
     background-color: #FAFAFA;

@@ -38,11 +38,12 @@ async function getConfig(conference){
 Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
     let room = request.object;
     let socialSpace = room.get("socialSpace");
+    let roomName = request.object.get("name").replace("Virtual | ","");
     if(!socialSpace) {
         //create a social spac
         let socialSpace = new SocialSpace();
         socialSpace.set("conference", room.get("conference"));
-        socialSpace.set("name", room.get("name"));
+        socialSpace.set("name", roomName);
         //Create a chat channel
         let acl = new Parse.ACL();
         acl.setPublicWriteAccess(false);
@@ -60,7 +61,7 @@ Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
         try {
             let chatRoom = await config.twilioChat.channels.create(
                 {
-                    friendlyName: "Room: " + room.get('name'),
+                    friendlyName: roomName,
                     uniqueName: 'socialSpace-' + socialSpace.id,
                     type: 'public',
                     attributes: JSON.stringify(attributes)
@@ -68,8 +69,7 @@ Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
             socialSpace.set("chatChannel", chatRoom.sid);
             await socialSpace.save({}, {useMasterKey: true});
             room.set("socialSpace", socialSpace);
-            await room.save({}, {useMasterKey: true});
-            return socialSpace;
+            return room;
         } catch (err) {
             console.log(err);
 
@@ -77,15 +77,14 @@ Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
         }
     }else{
         socialSpace = await socialSpace.fetch({useMasterKey: true});
-        if(socialSpace.get("name") != request.object.get("name")){
+        if(socialSpace.get("name") != roomName){
             let config = await getConfig(room.get("conference"));
 
             //update name
-            socialSpace.set("name", request.object.get("name"));
-            console.log(socialSpace.get("chatChannel"))
-            let twilioUpdate = config.twilioChat.channels(socialSpace.get("chatChannel")).update({friendlyName: 'Room: ' + room.get('name')});
+            socialSpace.set("name", roomName);
+            let twilioUpdate = config.twilioChat.channels(socialSpace.get("chatChannel")).update({friendlyName: roomName});
             await Promise.all([twilioUpdate, socialSpace.save({},{useMasterKey: true})]);
-            return socialSpace;
+            return room;
         }
     }
 });
