@@ -19,7 +19,9 @@ import SlackToVideo from "./components/Slack/slackToVideo"
 import {withAuthentication} from "./components/Session";
 import {withProgram} from "./components/Program"
 
-import LiveStreaming from "./components/LiveStreaming";
+import LiveVideosArea from "./components/LiveStreaming";
+import Posters from "./components/Exhibits/Posters";
+
 import Parse from "parse";
 import ForgotPassword from "./components/Account/ForgotPassword";
 
@@ -28,7 +30,6 @@ import VideoChat from "./components/VideoChat";
 // import ScheduleList from "./components/Admin/Schedule";
 // import UsersList from "./components/Admin/Users";
 //
-import LiveVideosList from "./components/Admin/LiveVideos";
 import Registrations from "./components/Admin/Registrations";
 import Rooms from "./components/Admin/Program/Rooms";
 import Tracks from "./components/Admin/Program/Tracks";
@@ -183,10 +184,11 @@ class App extends Component {
         return (<div>
             {baseRoutes}
             <Route exact path="/" component={Home}/>
-            <Route exact path="/live" component={LiveStreaming}/>
             <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem}/>
+            <Route exact path="/live" component={LiveVideosArea}/>
             <Route exact path="/program" component={Program}/>
 
+            <Route exact path="/exhibits/posters" component={Posters}/>
 
             <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
             <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
@@ -200,7 +202,7 @@ class App extends Component {
             <Route exact path="/videoChat/:roomId" component={VideoChat}/>
             <Route exact path="/lobby" component={Lobby}/>
             <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
-            <Route exact path="/signup" component={SignUp}/>
+            {/* <Route exact path="/signup" component={SignUp}/> */}
             <Route exact path="/signin" component={SignIn}/>
             <Route exact path="/signout" component={SignOut}/>
             <Route exact path="/admin" component={(props)=><SignIn {...props} dontBounce={true}/>} />
@@ -208,7 +210,6 @@ class App extends Component {
             {/*<Route exact path='/admin/schedule' component={withAuthentication(ScheduleList)} />*/}
             {/*<Route exact path='/admin/users' component={withAuthentication(UsersList)} />*/}
             {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
-            <Route exact path='/admin/livevideos' component={LiveVideosList}/>
             <Route exact path='/admin/registrations' component={Registrations}/>
             <Route exact path='/admin/program/rooms' component={Rooms}/>
             <Route exact path='/admin/program/tracks' component={Tracks}/>

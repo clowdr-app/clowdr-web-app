@@ -56,6 +56,7 @@ class Tracks extends React.Component {
         acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
         acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
         track.setACL(acl);
+        track.set("conference", this.props.auth.currentConference);
 
         track.save().then((val) => {
             _this.setState({visible: false, tracks: [track, ...this.state.tracks]})
