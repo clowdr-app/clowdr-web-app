@@ -146,7 +146,7 @@ async function loadProgram() {
     acl.setRoleWriteAccess(conf.id+"-admin", true);
 
     // Create the tracks first
-    let newtracks = [];
+    let newTracks = [];
     let ProgramTrack = Parse.Object.extend('ProgramTrack');
     var qt = new Parse.Query(ProgramTrack);
     qt.equalTo("conference", conf);
@@ -161,19 +161,19 @@ async function loadProgram() {
         newtrack.set('name', name);
         newtrack.set('conference', conf);
         newtrack.setACL(acl);
-        newtracks.push(newtrack);
+        newTracks.push(newtrack);
         existingTracks.push(newtrack);
     }
 
     try {
-        await Parse.Object.saveAll(newtracks);
+        await Parse.Object.saveAll(newTracks);
     } catch(err){
         console.log(err);
     }
-    console.log('Tracks saved: ' + newtracks.length);
+    console.log('Tracks saved: ' + newTracks.length);
 
     // Create the rooms next
-    let newrooms = [];
+    let newRooms = [];
     let ProgramRoom = Parse.Object.extend('ProgramRoom');
     var qr = new Parse.Query(ProgramRoom);
     qr.equalTo("conference", conf);
@@ -189,16 +189,16 @@ async function loadProgram() {
         newroom.set('location', 'TBD');
         newroom.set('conference', conf);
         newroom.setACL(acl);
-        newrooms.push(newroom);
+        newRooms.push(newroom);
         existingRooms.push(newroom);
     }
 
     try {
-        await Parse.Object.saveAll(newrooms);
+        await Parse.Object.saveAll(newRooms);
     } catch(err){
         console.log(err);
     }
-    console.log('Rooms saved: ' + newrooms.length);
+    console.log('Rooms saved: ' + newRooms.length);
 
     // Create People next
     let ProgramPerson = Parse.Object.extend("ProgramPerson");
@@ -210,7 +210,7 @@ async function loadProgram() {
     })
     let newPeople = [];
     for (const person of data.People) {
-        if (newPeople[person.Key]) {
+        if (allPeople[person.Key]) {
             continue
         }
 
@@ -284,7 +284,7 @@ async function loadProgram() {
         allSessions[session.get("confKey")] = session;
     })
 
-    let toSave = [];
+    let newSessions = [];
     for (const ses of data.Sessions) {
         if (allSessions[ses.Key])
             continue;
@@ -328,11 +328,12 @@ async function loadProgram() {
             });
         }
         session.set("items", items);
-        toSave.push(session);
+        allSessions[session.get("confKey")] = session;
+        newSessions.push(session);
         i++;
     }
     try{
-        await Parse.Object.saveAll(toSave);
+        await Parse.Object.saveAll(newSessions);
     } catch(err){
         console.log(err);
     }
