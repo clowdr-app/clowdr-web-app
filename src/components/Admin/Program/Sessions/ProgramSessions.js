@@ -31,7 +31,6 @@ class ProgramSessions extends React.Component {
             toggle: false,
             sessions: [],
             rooms: [],
-            items: [],
             gotSessions: false,
             gotRooms: false,
             editing: false,
@@ -45,7 +44,6 @@ class ProgramSessions extends React.Component {
             this.props.onDown(this.props);
         else {
             this.state.rooms = this.props.rooms;
-            this.state.items = this.props.items;
             this.state.sessions = this.props.sessions;
         }
     }
@@ -108,9 +106,7 @@ class ProgramSessions extends React.Component {
                 startTime: moment(session.get("startTime")),
                 endTime: moment(session.get("endTime")),
                 room: session.get("room").get('name'),
-                roomId: session.get('room').id,
-                items: session.get("items"),
-                newItems: undefined
+                roomId: session.get('room').id
             }
         });
     }
@@ -124,7 +120,6 @@ class ProgramSessions extends React.Component {
             session.set("title", values.title);
             session.set("startTime", values.startTime.toDate());
             session.set("endTime", values.endTime.toDate());
-            session.set("items", values.items);
             let room = this.state.rooms.find(r => r.id == values.room);
             if (!room)
                 console.log('Invalid room ' + values.room);
@@ -156,7 +151,6 @@ class ProgramSessions extends React.Component {
                 this.setState({
                     rooms: this.props.rooms,
                     sessions: this.props.sessions,
-                    items: this.props.items,
                     loading: false
                 });
             }
@@ -169,9 +163,6 @@ class ProgramSessions extends React.Component {
                 if (prevProps.sessions.length != this.props.sessions.length) {
                     this.setState({gotSessions: true});
                     console.log('[Admin/Sessions]: got sessions');
-                }
-                if (prevProps.items.length != this.props.items.length) {
-                    this.setState({gotItems: true});
                 }
             }
         }
@@ -187,10 +178,6 @@ class ProgramSessions extends React.Component {
 
                 this.setState({sessions: sortedSessions});
                 console.log('[Admin/Sessions]: changes in sessions');
-            }
-            if (prevProps.items.length != this.props.items.length) {
-                this.setState({items: this.props.items});
-                console.log('[Admin/Sessions]: changes in items')
             }
         }
     }
@@ -244,7 +231,7 @@ class ProgramSessions extends React.Component {
                     var timeA = a.get("endTime") ? a.get("endTime") : new Date();
                     var timeB = b.get("endTime") ? b.get("endTime") : new Date();
                     return timeA > timeB;
-                }, 
+                },
                 render: (text,record) => <span>{timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'end',
             },
@@ -255,7 +242,7 @@ class ProgramSessions extends React.Component {
                     var roomA = a.get("room") ? a.get("room").get("name") : "";
                     var roomB = b.get("room") ? b.get("room").get("name") : "";
                     return roomA.localeCompare(roomB);
-                }, 
+                },
                 render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : ""}</span>,
                 key: 'room',
             },
@@ -312,8 +299,6 @@ class ProgramSessions extends React.Component {
                             this.setState({editing: false});
                         }}
                         rooms={this.state.rooms}
-                        items={this.state.items}
-                        myItems={this.state.edt_session.items}
                     />
                     <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
                     </Table>
@@ -336,8 +321,6 @@ class ProgramSessions extends React.Component {
                     this.setVisible(false);
                 }}
                 rooms={this.state.rooms}
-                items={this.state.items}
-                myItems={[]}
             />
             <Table columns={columns} dataSource={this.state.sessions} rowKey={r => r.id}>
             </Table>
@@ -360,13 +343,8 @@ const AuthConsumer = (props) => (
 );
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, items, myItems}) => {
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) => {
     const [form] = Form.useForm();
-    const myItemTitles = [];
-    myItems.map(item => {
-        myItemTitles.push(item.get('title'));
-    })
-    console.log("myItemTitle are: " + myItemTitles);
     return (
         <Modal
             visible={visible}
@@ -445,62 +423,6 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
                             <DatePicker showTime/>
                         </Form.Item>
                     </Input.Group>
-                </Form.Item>
-
-                <Form.Item
-                    label="Current items"
-                >
-                    <Space>
-                        <Select
-                            placeholder="Choose a current item"
-                            style={{ width: 400 }}
-                            defaultValue={myItemTitles.length > 0 ? myItemTitles[0]: []}
-                        >
-                            {myItems.map(item => (
-                                <Option
-                                    key={item.id}
-                                    value={item.get('title')}
-                                >
-                                    {item.get('title')}
-                                </Option>
-                            ))}
-                        </Select>
-                        <a href="#" title="Edit" onClick={() => {
-
-                        }}>{<EditOutlined />}</a>
-
-                        <Popconfirm
-                            title="Are you sure to delete this item?"
-                            okText="Yes"
-                            cancelText="No"
-                        >
-                            <a href="#" title="Delete">{<DeleteOutlined />}</a>
-                        </Popconfirm>
-                    </Space>
-
-                </Form.Item>
-
-                <Form.Item
-                    label="Add new items"
-                >
-                    <Select
-                        placeholder="Choose new items"
-                        style={{ width: 400 }}
-                        defaultValue={[]}
-                        mode="multiple"
-                        optionLabelProp="label"
-                    >
-                        {items.map(item => {
-                            if (!myItemTitles.includes(item.get('title'))) {
-                                return <Option
-                                    key={item.id}
-                                    value={item.get('title')}
-                                    label = {item.get('title').length > 5 ? item.get('title').substring(0, 5)+"..." : item.get('title')}>
-                                    {item.get('title')}
-                                </Option>
-                            }
-                        })}
-                    </Select>
                 </Form.Item>
 
                 <Form.Item name="room" label="Room"
