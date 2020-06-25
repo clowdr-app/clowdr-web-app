@@ -439,13 +439,13 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
                         <Select
                             placeholder="Choose a current item"
                             style={{ width: 400 }}
-                            defaultValue={[]}
+                            defaultValue={myItemTitles.length > 0 ? myItemTitles[0]: []}
                         >
                             {myItems.map(item => (
                                 <Option
                                     key={item.id}
                                     value={item.get('title')}
-                                    label = {item.get('title').length > 5 ? item.get('title').substring(0, 5)+"..." : item.get('title')}>
+                                    >
                                     {item.get('title')}
                                 </Option>
                             ))}
@@ -455,8 +455,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
                         }}>{<EditOutlined />}</a>
 
                         <Popconfirm
-                            title="Are you sure delete this item?"
-                            // onConfirm={()=> myItems}
+                            title="Are you sure to delete this item?"
                             okText="Yes"
                             cancelText="No"
                         >
@@ -477,8 +476,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
                         optionLabelProp="label"
                     >
                         {items.map(item => {
-                            console.log("mytitlesssssssss: " + myItemTitles);
-                            if (!myItemTitles.includes(item.get('item'))) {
+                            if (!myItemTitles.includes(item.get('title'))) {
                                 return <Option
                                     key={item.id}
                                     value={item.get('title')}
@@ -498,7 +496,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
                                 },
                             ]}
                 >
-                    <Select placeholder="Chose the room" style={{ width: 400 }} >
+                    <Select placeholder="Choose the room" style={{ width: 400 }} >
                         {rooms.map(r => (
                             <Option key={r.id}>{r.get('name')}</Option>
                         ))}
