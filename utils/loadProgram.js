@@ -12,8 +12,8 @@ let conferenceName = process.argv[2];
 console.log('Uploading program for ' + conferenceName);
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
-// Parse.serverURL = 'https://parseapi.back4app.com/'
-Parse.serverURL = "http://localhost:1337/parse"
+Parse.serverURL = 'https://parseapi.back4app.com/'
+//Parse.serverURL = "http://localhost:1337/parse"
 Parse.Cloud.useMasterKey();
 
 
@@ -147,7 +147,7 @@ async function loadProgram() {
     acl.setRoleWriteAccess(conf.id+"-admin", true);
 
     // Create the tracks first
-    let newtracks = [];
+    let newTracks = [];
     let ProgramTrack = Parse.Object.extend('ProgramTrack');
     var qt = new Parse.Query(ProgramTrack);
     qt.equalTo("conference", conf);
@@ -162,19 +162,19 @@ async function loadProgram() {
         newtrack.set('name', name);
         newtrack.set('conference', conf);
         newtrack.setACL(acl);
-        newtracks.push(newtrack);
+        newTracks.push(newtrack);
         existingTracks.push(newtrack);
     }
 
     try {
-        await Parse.Object.saveAll(newtracks);
+        await Parse.Object.saveAll(newTracks);
     } catch(err){
         console.log(err);
     }
-    console.log('Tracks saved: ' + newtracks.length);
+    console.log('Tracks saved: ' + newTracks.length);
 
     // Create the rooms next
-    let newrooms = [];
+    let newRooms = [];
     let ProgramRoom = Parse.Object.extend('ProgramRoom');
     var qr = new Parse.Query(ProgramRoom);
     qr.equalTo("conference", conf);
@@ -190,16 +190,16 @@ async function loadProgram() {
         newroom.set('location', 'TBD');
         newroom.set('conference', conf);
         newroom.setACL(acl);
-        newrooms.push(newroom);
+        newRooms.push(newroom);
         existingRooms.push(newroom);
     }
 
     try {
-        await Parse.Object.saveAll(newrooms);
+        await Parse.Object.saveAll(newRooms);
     } catch(err){
         console.log(err);
     }
-    console.log('Rooms saved: ' + newrooms.length);
+    console.log('Rooms saved: ' + newRooms.length);
 
     // Create People next
     let ProgramPerson = Parse.Object.extend("ProgramPerson");
@@ -209,30 +209,30 @@ async function loadProgram() {
     people.forEach((person) => {
         allPeople[person.get("confKey")] = person;
     })
-    // let newPeople = [];
-    // for (const person of data.People) {
-    //     if (newPeople[person.Key]) {
-    //         continue
-    //     }
-    //
-    //     let newPerson = new ProgramPerson();
-    //     newPerson.set("name", person.Name);
-    //     newPerson.set("bio", person.Bio);
-    //     newPerson.set("affiliation", person.Affiliation);
-    //     newPerson.set("confKey", person.Key);
-    //     newPerson.set("URL", person.URL);
-    //     newPerson.set("URLPhoto", person.URLPhoto);
-    //     newPerson.setACL(acl);
-    //     newPeople.push(newPerson);
-    //     allPeople[newPerson.get("confKey")] = newPerson;
-    // }
-    // try {
-    //     await Parse.Object.saveAll(newPeople);
-    // } catch(err){
-    //     console.log(err);
-    // }
-    // console.log("People saved: " + newPeople.length);
 
+    let newPeople = [];
+    for (const person of data.People) {
+        if (allPeople[person.Key]) {
+            continue
+        }
+
+        let newPerson = new ProgramPerson();
+        newPerson.set("name", person.Name);
+        newPerson.set("bio", person.Bio);
+        newPerson.set("affiliation", person.Affiliation);
+        newPerson.set("confKey", person.Key);
+        newPerson.set("URL", person.URL);
+        newPerson.set("URLPhoto", person.URLPhoto);
+        newPerson.setACL(acl);
+        newPeople.push(newPerson);
+        allPeople[newPerson.get("confKey")] = newPerson;
+    }
+    try {
+        await Parse.Object.saveAll(newPeople);
+    } catch(err){
+        console.log(err);
+    }
+    console.log("People saved: " + newPeople.length);
 
     let ProgramItem = Parse.Object.extend("ProgramItem");
     let q = new Parse.Query(ProgramItem);
@@ -285,7 +285,7 @@ async function loadProgram() {
         allSessions[session.get("confKey")] = session;
     })
 
-    let toSave = [];
+    let newSessions = [];
     for (const ses of data.Sessions) {
         if (allSessions[ses.Key])
             continue;
@@ -356,8 +356,6 @@ async function loadProgram() {
     } catch (err) {
         console.log(err);
     }
-    console.log("Done");
-
 }
 
 loadProgram().then(() => {
