@@ -163,7 +163,7 @@ class ContextualActiveUsers extends Component {
 
                     <div><PresenceForm /></div>
                     <Divider>
-                        Available Rooms and Users
+                       {this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : ""}
                     </Divider>
                     <div style={{textAlign: 'center'}}>
                         <NewRoomForm type="secondary" text="Create New Room" />

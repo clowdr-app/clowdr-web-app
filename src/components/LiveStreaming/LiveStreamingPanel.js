@@ -17,8 +17,7 @@ class LiveStreamingPanel extends Component {
         let src = this.props.video.get("src1");
         let id = this.props.video.get("id1");
         let pwd = this.props.video.get("pwd1");
-        this.video_url = videoURLFromData(src, id, pwd);
-
+        this.video_url = src ? videoURLFromData(src, id, pwd): "";
     }
     
     componentDidMount() {
@@ -81,7 +80,7 @@ class LiveStreamingPanel extends Component {
 
 const LiveVideosArea = (props) => (
     <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
                     <LiveStreamingPanel {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>

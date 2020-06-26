@@ -2,7 +2,7 @@ import React from "react";
 import {AuthUserContext} from "../Session";
 import {Button, Skeleton, Tooltip} from "antd"
 import ChatFrame from "../Chat/ChatFrame";
-import {CloseOutlined, PlusOutlined} from "@ant-design/icons"
+import {CloseOutlined, PlusOutlined, MinusOutlined} from "@ant-design/icons"
 
 class BottomChat extends React.Component {
     constructor(props) {
@@ -14,8 +14,6 @@ class BottomChat extends React.Component {
     }
 
     openChat(sid) {
-        console.log("Opening chat: "+ sid)
-        console.trace();
         this.registerChatSubscriptions(sid);
         this.setState((prevState) => {
             let found = prevState.chats.find((c) => c== sid);
@@ -128,9 +126,11 @@ class BottomChatWindow extends React.Component{
             if(profileID == this.props.auth.userProfile.id)
                 profileID = p2.id;
             this.props.auth.helpers.getUserProfilesFromUserProfileID(profileID).then((profile) => {
-                console.log(profile);
                 this.setState({title: profile.get("displayName")})
             })
+        }
+        else if(chat.attributes.category == "programItem") {
+            return chat.channel.friendlyName;
         }
         return chat.channel.sid;
     }
@@ -165,23 +165,31 @@ class BottomChatWindow extends React.Component{
         let header = <div className="bottomChatHeader">
             <div className="bottomChatIdentity">{this.state.title}</div>
             <div className="bottomChatClose">
-                <Tooltip title="Add someone to this chat">
+                <Tooltip title="Add someone to this chat (not yet implemented)">
                     <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}  icon={<PlusOutlined />}
                                                               onClick={this.addUser.bind(this)}
                 /></Tooltip>
-                <Tooltip title="Minimize this window"><Button size="small" type="primary" shape="circle"
+                <Tooltip title="Leave this chat"><Button size="small" type="primary" shape="circle"
                                                               style={{minWidth: "initial"}}  icon={<CloseOutlined />}
             onClick={
                 // this.props.toggleOpen
                 this.destroyChat.bind(this)
             }
             /></Tooltip>
+                <Tooltip title="Minimize this window"><Button size="small" type="primary" shape="circle"
+                                                              style={{minWidth: "initial"}}  icon={<MinusOutlined />}
+                                                              onClick={
+                                                                  this.props.toggleOpen
+                                                              }
+                /></Tooltip>
+
             </div>
         </div>
         chatWindow = <div className={windowClass} >
             <ChatFrame sid={this.state.sid} width="240px" header={header}/>
         </div>
-        return <div className="bottomChatWindowContainer"><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}>{this.state.title}</Button>{chatWindow}</div>
+        return <div className="bottomChatWindowContainer">
+            <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}>{this.state.title}</Button></Tooltip>{chatWindow}</div>
     }
 }
 const AuthConsumer = (props) => (

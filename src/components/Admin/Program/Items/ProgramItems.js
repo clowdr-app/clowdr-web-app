@@ -313,7 +313,7 @@ class ProgramItems extends React.Component {
 const
     AuthConsumer = (props) => (
         <ProgramContext.Consumer>
-            {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+            {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
                 <AuthUserContext.Consumer>
                     {value => (
                         <ProgramItems {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
