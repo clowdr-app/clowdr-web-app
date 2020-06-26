@@ -6,6 +6,7 @@ import Form from "antd/lib/form/Form";
 import withProgram from './withProgram';
 import ProgramContext from './context';
 import { ContactlessOutlined } from '@material-ui/icons';
+import {NavLink} from "react-router-dom";
 
 var moment = require('moment');
 function  groupBy(list, keyGetter) {
@@ -63,6 +64,7 @@ class Program extends React.Component {
                         for (let programItem of session.get("items")) {
                             row.key = programItem.id;
                             row.programItem = programItem.get("title");
+                            row.confKey = programItem.get("confKey");
                             table.push(row);
                             row = {};
                             row.session = {};
@@ -193,7 +195,10 @@ class Program extends React.Component {
             {
                 title: "Content",
                 className:"program-table-programItem",
-                dataIndex: "programItem"
+                dataIndex: "programItem",
+                render: (value, row, index)=>{
+                    return <NavLink to={"/program/"+row.confKey}>{value}</NavLink>
+                }
             }
         ];
         return <div>
@@ -257,10 +262,10 @@ class ProgramItem extends React.Component {
 const
     AuthConsumer = (props) => (
         <ProgramContext.Consumer>
-            {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+            {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
                 <AuthUserContext.Consumer>
                     {value => (
-                        <Program {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                        <Program {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
                     )}
                 </AuthUserContext.Consumer>
             )}

@@ -288,34 +288,40 @@ class Rooms extends React.Component {
                         onSelectPullDown2={(value) => {
                             this.setState({src2: value});
                         }}
+
+                        socialSpaces={this.state.socialSpaces}
+                        socialSpacesLoading={this.state.socialSpacesLoading}
                     />
                 <Table columns={columns} dataSource={this.state.rooms} rowKey={(r)=>(r.get('name'))}>
                 </Table>
             </Fragment>
             )
         return <div>
-                    <Button
-                        type="primary"
-                        onClick={() => {
-                            this.setVisible(true);
-                        }}
-                    >
-                        New Room
-                    </Button>
-                    <CollectionEditForm
-                        title="Add Room"
-                        visible={this.state.visible}
-                        onAction={this.onCreate.bind(this)}
-                        onCancel={() => {
-                            this.setVisible(false);
-                        }}
-                        onSelectPullDown1={(value) => {
-                            this.setState({src1: value});
-                        }}
-                        onSelectPullDown2={(value) => {
-                            this.setState({src2: value});
-                        }}
-                    />
+                <Button
+                    type="primary"
+                    onClick={() => {
+                        this.setVisible(true);
+                    }}
+                >
+                    New Room
+                </Button>
+                <CollectionEditForm
+                    title="Add Room"
+                    visible={this.state.visible}
+                    onAction={this.onCreate.bind(this)}
+                    onCancel={() => {
+                        this.setVisible(false);
+                    }}
+                    onSelectPullDown1={(value) => {
+                        this.setState({src1: value});
+                    }}
+                    onSelectPullDown2={(value) => {
+                        this.setState({src2: value});
+                    }}
+    
+                    socialSpaces={this.state.socialSpaces}
+                    socialSpacesLoading={this.state.socialSpacesLoading}
+                />
                     <Input.Search
                         allowClear
                         onSearch={key => {
@@ -352,7 +358,7 @@ class Rooms extends React.Component {
 
 const AuthConsumer = (props) => (
     <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
                     <Rooms {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
@@ -365,7 +371,7 @@ const AuthConsumer = (props) => (
 
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, onSelectPullDown2}) => {
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, onSelectPullDown2, socialSpaces, socialSpacesLoading}) => {
     const [form] = Form.useForm();
     return (
         <Modal

@@ -1,14 +1,11 @@
 import React, {Fragment} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
+import {Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
 import moment from 'moment';
 import * as timezone from 'moment-timezone';
-import {
-    DeleteOutlined,
-    EditOutlined
-} from '@ant-design/icons';
+import {DeleteOutlined, EditOutlined} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -27,12 +24,14 @@ class ProgramSessions extends React.Component {
         super(props);
         console.log(this.props);
         this.state = {
-            loading: true, 
+            loading: true,
             toggle: false,
             sessions: [],
             rooms: [],
+            items: [],
             gotSessions: false,
             gotRooms: false,
+            gotItems: false,
             editing: false,
             edt_session: undefined,
             searched: false,
@@ -42,16 +41,17 @@ class ProgramSessions extends React.Component {
         console.log('[Admin/Sessions]: downloaded? ' + this.props.downloaded);
 
         // Call to download program
-        if (!this.props.downloaded) 
+        if (!this.props.downloaded)
             this.props.onDown(this.props);
         else {
             this.state.rooms = this.props.rooms;
             this.state.sessions = this.props.sessions;
+            this.state.items = this.props.items;
         }
     }
 
 
-    onCreate(values) {
+    async onCreate(values) {
         console.log("OnCreate! " + values.title)
         var _this = this;
         let room = this.state.rooms.find(r => r.id == values.room);
@@ -66,12 +66,22 @@ class ProgramSessions extends React.Component {
         session.set("startTime", values.startTime.toDate());
         session.set("endTime", values.endTime.toDate());
         session.set("room", room);
+        session.set("items", values.items)
         session.set("confKey", Math.floor(Math.random() * 10000000).toString());
-        session.save().then((val) => {
-            _this.setState({visible: false /*, sessions: sortedSessions*/})
-        }).catch(err => {
-            console.log(err + " " + session.id);
-        });
+
+        let acl = new Parse.ACL();
+        acl.setPublicWriteAccess(false);
+        acl.setPublicReadAccess(true);
+        acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
+        acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
+        session.setACL(acl);
+        try {
+            session = await session.save();
+            this.setState({visible: false /*, sessions: sortedSessions*/})
+        } catch (err) {
+            console.log(err)
+            console.log("@" + session.id)
+        }
 
         // let data = {
         //     conference: this.props.auth.currentConference.id,
@@ -89,7 +99,7 @@ class ProgramSessions extends React.Component {
     onDelete(value) {
         console.log("Deleting " + value + " " + value.get("title"));
         // Delete the watchers first
-        
+
         value.destroy().then(() => {
             this.setState({
                 sessions: [...this.state.sessions]
@@ -100,15 +110,17 @@ class ProgramSessions extends React.Component {
     onEdit(session) {
         console.log("Editing " + session.get("title") + " " + session.id);
         this.setState({
-            visible: true, 
-            editing: true, 
+            visible: true,
+            editing: true,
             edt_session: {
                 objectId: session.id,
                 title: session.get("title"),
                 startTime: moment(session.get("startTime")),
                 endTime: moment(session.get("endTime")),
-                room: session.get("room").get('name'), 
-                roomId: session.get('room').id
+                room: session.get("room").get('name'),
+                roomId: session.get('room').id,
+                items: session.get("items"),
+                newItems: undefined
             }
         });
     }
@@ -119,9 +131,12 @@ class ProgramSessions extends React.Component {
         let session = this.state.sessions.find(s => s.id == values.objectId);
 
         if (session) {
+            console.log(session);
+
             session.set("title", values.title);
             session.set("startTime", values.startTime.toDate());
             session.set("endTime", values.endTime.toDate());
+            session.set("items", values.items);
             let room = this.state.rooms.find(r => r.id == values.room);
             if (!room)
                 console.log('Invalid room ' + values.room);
@@ -142,17 +157,19 @@ class ProgramSessions extends React.Component {
     }
 
     componentDidMount() {
+
     }
 
     componentDidUpdate(prevProps) {
         console.log("[Admin/Sessions]: Something changed");
 
         if (this.state.loading) {
-            if (this.state.gotRooms && this.state.gotSessions) {
+            if (this.state.gotRooms && this.state.gotSessions && this.state.gotItems) {
                 console.log('[Admin/Sessions]: Program download complete');
                 this.setState({
                     rooms: this.props.rooms,
                     sessions: this.props.sessions,
+                    items: this.props.items,
                     loading: false
                 });
             }
@@ -165,6 +182,9 @@ class ProgramSessions extends React.Component {
                 if (prevProps.sessions.length != this.props.sessions.length) {
                     this.setState({gotSessions: true});
                     console.log('[Admin/Sessions]: got sessions');
+                }
+                if (prevProps.items.length != this.props.items.length) {
+                    this.setState({gotItems: true});
                 }
             }
         }
@@ -180,6 +200,10 @@ class ProgramSessions extends React.Component {
 
                 this.setState({sessions: sortedSessions});
                 console.log('[Admin/Sessions]: changes in sessions');
+            }
+            if (prevProps.items.length != this.props.items.length) {
+                this.setState({items: this.props.items});
+                console.log('[Admin/Sessions]: changes in items')
             }
         }
     }
@@ -236,7 +260,7 @@ class ProgramSessions extends React.Component {
                     var timeA = a.get("endTime") ? a.get("endTime") : new Date();
                     var timeB = b.get("endTime") ? b.get("endTime") : new Date();
                     return timeA > timeB;
-                }, 
+                },
                 render: (text,record) => <span>{timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'end',
             },
@@ -248,7 +272,7 @@ class ProgramSessions extends React.Component {
                     var roomA = a.get("room") ? a.get("room").get("name") : "";
                     var roomB = b.get("room") ? b.get("room").get("name") : "";
                     return roomA.localeCompare(roomB);
-                }, 
+                },
                 render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : ""}</span>,
                 key: 'room',
             },
@@ -256,16 +280,15 @@ class ProgramSessions extends React.Component {
                 title: 'Items',
                 dataIndex: 'items',
                 render: (text,record) => {
-                    // console.log(record);
                     if (record.get("items")) {
                         return <ul>{
                             record.get("items").map(item => (
-                                <li key={item.toString()}>
+                                <li key={item.id}>
                                     {item.get('title')}
                                 </li>
                             ))
                         }</ul>}
-                    },
+                },
                 key: 'items',
             },
             {
@@ -280,7 +303,7 @@ class ProgramSessions extends React.Component {
                             okText="Yes"
                             cancelText="No"
                         >
-                        <a href="#" title="Delete">{<DeleteOutlined />}</a>
+                            <a href="#" title="Delete">{<DeleteOutlined />}</a>
                         </Popconfirm>
                     </Space>
                 ),
@@ -305,10 +328,12 @@ class ProgramSessions extends React.Component {
                             this.setState({editing: false});
                         }}
                         rooms={this.state.rooms}
+                        items={this.state.items}
+                        myItems={this.state.edt_session.items}
                     />
-                <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
-                </Table>
-            </Fragment>
+                    <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
+                    </Table>
+                </Fragment>
             )
         return <div>
             <Button
@@ -327,6 +352,8 @@ class ProgramSessions extends React.Component {
                     this.setVisible(false);
                 }}
                 rooms={this.state.rooms}
+                items={this.state.items}
+                myItems={[]}
             />
             <Input.Search
                 allowClear
@@ -360,7 +387,7 @@ class ProgramSessions extends React.Component {
 
 const AuthConsumer = (props) => (
     <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
                     <ProgramSessions {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
@@ -372,8 +399,13 @@ const AuthConsumer = (props) => (
 );
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) => {
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, items, myItems}) => {
     const [form] = Form.useForm();
+    const myItemTitles = [];
+    myItems.map(item => {
+        myItemTitles.push(item.get('title'));
+    })
+    console.log("total number of items is: " + items.length);
     return (
         <Modal
             visible={visible}
@@ -431,38 +463,92 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms}) =
 
                 <Form.Item name="dates">
                     <Input.Group compact>
-                        <Form.Item name="startTime" label="Start time" 
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: 'Required!',
-                                    },
-                                ]}
+                        <Form.Item name="startTime" label="Start time"
+                                   rules={[
+                                       {
+                                           required: true,
+                                           message: 'Required!',
+                                       },
+                                   ]}
                         >
                             <DatePicker showTime/>
                         </Form.Item>
                         <Form.Item name="endTime" label="End time"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: 'Required!',
-                                    },
-                                ]}
+                                   rules={[
+                                       {
+                                           required: true,
+                                           message: 'Required!',
+                                       },
+                                   ]}
                         >
                             <DatePicker showTime/>
                         </Form.Item>
                     </Input.Group>
                 </Form.Item>
 
-                <Form.Item name="room" label="Room"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: 'Please input the room the session!',
-                                },
-                            ]}
+                <Form.Item
+                    label="Current items"
                 >
-                    <Select placeholder="Chose the room" style={{ width: 400 }} >
+                    <Space>
+                        <Select
+                            placeholder="Choose a current item"
+                            style={{ width: 400 }}
+                            defaultValue={myItemTitles.length > 0 ? myItemTitles[0]: []}
+                        >
+                            {myItems.map(item => (
+                                <Option
+                                    key={item.id}
+                                    value={item.get('title')}
+                                >
+                                    {item.get('title')}
+                                </Option>
+                            ))}
+                        </Select>
+                        <a href="#" title="Edit" >{<EditOutlined />}</a>
+
+                        <Popconfirm
+                            title="Are you sure to delete this item?"
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <a href="#" title="Delete">{<DeleteOutlined />}</a>
+                        </Popconfirm>
+                    </Space>
+
+                </Form.Item>
+
+                <Form.Item
+                    label="Add new items"
+                >
+                    <Select
+                        placeholder="Choose new items"
+                        style={{ width: 400 }}
+                        defaultValue={[]}
+                        mode="multiple"
+                        optionLabelProp="label"
+                    >
+                        {items.map(item => {
+                            if (!myItemTitles.includes(item.get('title'))) {
+                                return <Option
+                                    key={item.id}
+                                    value={item.get('title')}
+                                    label = {item.get('title').length > 5 ? item.get('title').substring(0, 5)+"..." : item.get('title')}>
+                                    {item.get('title')}
+                                </Option>
+                            }
+                        })}
+                    </Select>
+                </Form.Item>
+
+                <Form.Item name="room" label="Room"
+                           rules={[
+                               {
+                                   required: true,
+                                   message: 'Please input the room the session!',
+                               },
+                           ]}
+                >
+                    <Select placeholder="Choose the room" style={{ width: 400 }} >
                         {rooms.map(r => (
                             <Option key={r.id}>{r.get('name')}</Option>
                         ))}

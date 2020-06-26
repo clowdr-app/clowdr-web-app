@@ -15,6 +15,18 @@ export default class ChatClient{
         console.log("Created a chatclient")
     }
 
+    async openChatAndJoinIfNeeded(sid){
+        let channels = this.joinedChannels;
+        let found = channels[sid];
+        if (!found) {
+            found = await this.joinAndGetChannel(sid);
+        }
+        this.openChat(sid);
+
+    }
+    async closeChatAndLeave(sid){
+
+    }
     async getJoinedChannel(sid){
         let chan = this.joinedChannels[sid];
         if(!chan)
@@ -30,6 +42,9 @@ export default class ChatClient{
         return chan.channel;
     }
     async joinAndGetChannel(uniqueName) {
+        if(!this.twilio){
+            await this.chatClientPromise;
+        }
         let channel = await this.twilio.getChannelByUniqueName(uniqueName);
         let chan = this.joinedChannels[channel.sid];
         if(chan){
@@ -44,6 +59,7 @@ export default class ChatClient{
         this.chatBar = chatBar;
         chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes.mode == "directMessage").map(c=>c.channel.sid)});
     }
+
     initChatClient(user, conference, userProfile) {
         this.userProfile = userProfile;
         if (!this.chatClientPromise) {
@@ -72,14 +88,11 @@ export default class ChatClient{
         ret.attributes = await channel.getAttributes();
         let convoQ = new Parse.Query("Conversation");
         let shouldHaveParseConvo  = ret.attributes.category == "userCreated";
-        console.log(shouldHaveParseConvo)
         if(shouldHaveParseConvo) {
-            console.log(ret.attributes.parseID)
             if(!ret.attributes.parseID)
                 return;
             try {
                 ret.conversation = await convoQ.get(ret.attributes.parseID);
-                console.log(ret.conversation)
             }catch(err){
                 //phantom chats leftover from testing, should be deleted...
                 return;
@@ -90,9 +103,7 @@ export default class ChatClient{
         ret.channel  =channel;
 
         this.joinedChannels[channel.sid] = ret;
-        console.log("joined: "+ channel.sid)
         if(this.channelWaiters[channel.sid]){
-            console.log("Resolving: " + ret.channel)
             this.channelWaiters[channel.sid](ret.channel);
             this.channelWaiters[channel.sid] = undefined;
         }
@@ -166,7 +177,9 @@ export default class ChatClient{
         twilio.on("channelJoined", async (channel) => {
             let channelInfo = await this.getChannelInfo(channel);
             if(channelInfo){
-                this.openChat(channel.sid);
+                if(channelInfo.attributes.mode == "directMessage"){
+                    this.openChat(channel.sid);
+                }
                 this.subscribeToChannel(channel.sid);
             }
             // this.channelListeners.forEach(v => v.channelJoined(channel));
