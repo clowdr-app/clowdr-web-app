@@ -158,8 +158,8 @@ class Posters extends React.Component {
                         if (this.state.myposter.id == poster.id)
                             tool = <span title="Looks like you're an author. Replace the image? Use 3x2 ratio.">
                                         <Upload accept=".png, .jpg" name='poster' beforeUpload={this.onImageUpload.bind(this)}>
-                                        <Button>
-                                            <UploadOutlined />Upload image
+                                        <Button type="primary">
+                                            <UploadOutlined />Upload
                                         </Button>
                                         </Upload>
                                     </span>;
@@ -169,7 +169,6 @@ class Posters extends React.Component {
                             img = poster.get("image");
 
                         return <div className={"space-align-block"} key={poster.id} >
-                                    {tool}
                                     <NavLink to={"/program/" + poster.get("confKey")}>
                                         <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{width:300, height:200 }} 
                                             src={img} 
@@ -179,6 +178,7 @@ class Posters extends React.Component {
                                             </Tooltip>
                                         </Card>
                                     </NavLink>
+                                    {tool}
                                 </div>
                     })}
                 </div> 
