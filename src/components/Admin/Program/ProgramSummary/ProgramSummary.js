@@ -2,6 +2,7 @@ import React, {Fragment} from 'react';
 import { Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, message, Upload } from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
+import {ProgramContext} from "../../../Program";
 
 import {
     UploadOutlined
@@ -18,24 +19,35 @@ const IconText = ({icon, text}) => (
 );
 
 
-let cols = {'key': '1'};
-cols['sessions'] = 0;
-cols['items'] = 0;
-cols['tracks'] = 0;
-cols['rooms'] = 0;
-
-
 class ProgramSummary extends React.Component {
     constructor(props) {
         super(props); // has props.auth
-        console.log("Registrations starting " + this.props);
         this.state = {
             loading: true,
-            regs: []
+            gotTracks: false,
+            gotRooms: false,
+            gotItems: false,
+            gotSessions: false,
+            gotPeople: false,
+            counts: [
+                {key: 1, 
+                sessions_c: this.props.sessions.length, 
+                items_c: this.props.items.length, 
+                tracks_c: this.props.tracks.length, 
+                rooms_c: this.props.rooms.length, 
+                people_c: this.props.people.length}
+            ]
         };
         // this.currentConference = "XYZ";
         this.currentConference = this.props.auth.currentConference;
-        console.log("Current conference is " + this.currentConference);
+
+        console.log('[Admin/Program]: downloaded? ' + this.props.downloaded);
+
+        // Call to download program
+        if (!this.props.downloaded) 
+            this.props.onDown(this.props);
+        else
+            this.state.loading = false;
     }
 
     onChange(info) {
@@ -55,8 +67,52 @@ class ProgramSummary extends React.Component {
     }
 
     componentDidMount() {
-        this.refreshList();
     }
+
+    componentDidUpdate(prevProps) {
+        console.log("[Admin/Program]: Something changed");
+
+        if (this.state.loading) {
+            if (this.state.gotRooms && this.state.gotSessions && this.state.gotTracks && this.state.gotItems && this.state.gotPeople) {
+                console.log('[Admin/Program]: Program download complete');
+                this.refreshList();
+            }
+            else {
+                console.log('[Admin/Program]: Program still downloading...');
+                if (prevProps.tracks.length != this.props.tracks.length) {
+                    this.setState({gotTracks: true});
+                    console.log('[Admin/Program]: got tracks');
+                }
+                if (prevProps.rooms.length != this.props.rooms.length) {
+                    this.setState({gotRooms: true});
+                    console.log('[Admin/Program]: got rooms');
+                }
+                if (prevProps.sessions.length != this.props.sessions.length) {
+                    this.setState({gotSessions: true});
+                    console.log('[Admin/Program]: got sessions');
+                }
+                if (prevProps.items.length != this.props.items.length) {
+                    this.setState({gotItems: true});
+                    console.log('[Admin/Program]: got items');
+                }
+                if (prevProps.people.length != this.props.people.length) {
+                    this.setState({gotPeople: true});
+                    console.log('[Admin/Program]: got people');
+                }
+            }
+        }
+        else {
+            console.log('[Admin/Program]: Program cached ' + this.state.loading);
+            if ((prevProps.rooms.length != this.props.rooms.length) || (prevProps.sessions.length != this.props.sessions.length) ||
+                (prevProps.tracks.length != this.props.tracks.length) || (prevProps.items.length != this.props.items.length) ||
+                (prevProps.people.length != this.props.people.length))
+            {
+                console.log('[Admin/Program]: changes in something');
+                this.refreshList();
+            }
+        }
+    }
+
 
     beforeUpload(file, fileList) {
         const reader = new FileReader();
@@ -65,8 +121,9 @@ class ProgramSummary extends React.Component {
             Parse.Cloud.run("program-upload", data)
                 .then((res) => {
                     console.log("Upload successfully!!!" + JSON.stringify(res));
-                    this.getResult(res);
-                    this.refreshList();
+                    this.setState({
+                        counts: [res.sessions.length, res.items.length, res.tracks.length, res.rooms.length, res.people.length]
+                    });            
                 })
                 .catch(err => console.log('Upload failed: ' + err));
         }
@@ -74,21 +131,17 @@ class ProgramSummary extends React.Component {
         return false;
     }
 
-    getResult(res) {
-        this.columns = res;
-    }
-    refreshList(){
-        console.log(JSON.stringify(this.columns))
-        let ans = [];
-        if (this.columns) {
-            cols = this.columns
-            ans.push(cols);
-        } else {
-            ans.push(cols);
-        }
+    refreshList(counts){
         this.setState({
             loading: false,
-            regs: ans
+            counts: [
+                {key: 1, 
+                sessions_c: this.props.sessions.length, 
+                items_c: this.props.items.length, 
+                tracks_c: this.props.tracks.length, 
+                rooms_c: this.props.rooms.length, 
+                people_c: this.props.people.length}
+            ]
         });
     }
 
@@ -96,23 +149,28 @@ class ProgramSummary extends React.Component {
         const columns = [
             {
                 title: 'Sessions',
-                dataIndex: 'sessions',
+                dataIndex: 'sessions_c',
                 key: 'sessions',
             },
             {
                 title: 'Items',
-                dataIndex: 'items',
+                dataIndex: 'items_c',
                 key: 'items',
             },
             {
                 title: 'Tracks',
-                dataIndex: 'tracks',
+                dataIndex: 'tracks_c',
                 key: 'tracks',
             },
             {
                 title: 'Rooms',
-                dataIndex: 'rooms',
+                dataIndex: 'rooms_c',
                 key: 'rooms',
+            },
+            {
+                title: 'People',
+                dataIndex: 'people_c',
+                key: 'people',
             }
         ];
 
@@ -128,17 +186,23 @@ class ProgramSummary extends React.Component {
                         <UploadOutlined /> Click to upload program data
                     </Button>
                 </Upload>
-                <Table columns={columns} dataSource={this.state.regs} rowKey={(r)=>(r.id)}/>
+                <Table columns={columns} dataSource={this.state.counts} rowKey={(r)=>(r.key)}/>
             </div>
         )
     }
 }
 
 const AuthConsumer = (props) => (
-    <AuthUserContext.Consumer>
-        {value => (
-            <ProgramSummary {...props} />
+    <ProgramContext.Consumer>
+        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
+            <AuthUserContext.Consumer>
+                {value => (
+                    <ProgramSummary {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
+                )}
+            </AuthUserContext.Consumer>
         )}
-    </AuthUserContext.Consumer>
-)
+    </ProgramContext.Consumer>
+
+);
+
 export default AuthConsumer;

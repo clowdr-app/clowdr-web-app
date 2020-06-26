@@ -260,9 +260,9 @@ Parse.Cloud.define("program-upload", async (request) => {
         'sessions': Object.keys(allSessions).length,
         'items': Object.keys(allItems).length,
         'tracks': existingTracks.length,
-        'rooms': existingRooms.length
+        'rooms': existingRooms.length,
+        'people': Object.keys(allPeople.length)
     };
-    console.log("Done");
 });
 
 //=======
