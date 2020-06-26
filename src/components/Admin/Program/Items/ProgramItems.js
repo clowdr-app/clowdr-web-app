@@ -41,7 +41,6 @@ class ProgramItems extends React.Component {
             this.props.onDown(this.props);
         else {
             this.state.items = this.props.items;
-            this.state.dataSource = this.props.items
             this.state.tracks = this.props.tracks;
         }
     }
@@ -257,8 +256,12 @@ class ProgramItems extends React.Component {
                             this.setState({src1: value});
                         }}
                     />
-                <Table columns={columns} dataSource={this.state.dataSource} rowKey={(i)=>(i.id)}>
-                </Table>
+                    <Input.Search/>
+                    <Table 
+                        columns={columns} 
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
+                        rowKey={(i)=>(i.id)}>
+                    </Table>
             </Fragment>
             )
         return <div>

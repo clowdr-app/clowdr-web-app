@@ -292,8 +292,12 @@ class Rooms extends React.Component {
                         socialSpaces={this.state.socialSpaces}
                         socialSpacesLoading={this.state.socialSpacesLoading}
                     />
-                <Table columns={columns} dataSource={this.state.rooms} rowKey={(r)=>(r.get('name'))}>
-                </Table>
+                    <Input.Search/>
+                    <Table 
+                        columns={columns} 
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.rooms} 
+                        rowKey={(t)=>(t.id)}>
+                    </Table>
             </Fragment>
             )
         return <div>

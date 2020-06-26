@@ -240,7 +240,12 @@ class Tracks extends React.Component {
                             this.setState({editing: false});
                         }}
                     />
-                <Table columns={columns} dataSource={this.state.tracks} rowKey={(t)=>(t.id)}  pagination={{showSizeChanger: true}}>
+                <Input.Search/>
+                <Table 
+                    columns={columns} 
+                    dataSource={this.state.searched ? this.state.searchResult : this.state.tracks} 
+                    rowKey={(t)=>(t.id)}
+                    pagination={{showSizeChanger: true}}>
                 </Table>
             </Fragment>
             )

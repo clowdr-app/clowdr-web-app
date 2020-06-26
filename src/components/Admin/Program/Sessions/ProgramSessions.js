@@ -331,7 +331,11 @@ class ProgramSessions extends React.Component {
                         items={this.state.items}
                         myItems={this.state.edt_session.items}
                     />
-                    <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
+                    <Input.Search/>
+                    <Table 
+                        columns={columns} 
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.sessions} 
+                        rowKey={(t)=>(t.id)}>
                     </Table>
                 </Fragment>
             )
