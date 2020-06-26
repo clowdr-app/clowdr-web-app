@@ -44,7 +44,7 @@ class ProgramSessions extends React.Component {
         else {
             this.state.rooms = this.props.rooms;
             this.state.sessions = this.props.sessions;
-            this.state.session = this.props.items;
+            this.state.items = this.props.items;
         }
     }
 
@@ -80,10 +80,6 @@ class ProgramSessions extends React.Component {
             console.log(err)
             console.log("@" + session.id)
         }
-
-
-
-
 
         // let data = {
         //     conference: this.props.auth.currentConference.id,
@@ -166,7 +162,7 @@ class ProgramSessions extends React.Component {
         console.log("[Admin/Sessions]: Something changed");
 
         if (this.state.loading) {
-            if (this.state.gotRooms && this.state.gotSessions) {
+            if (this.state.gotRooms && this.state.gotSessions && this.state.gotItems) {
                 console.log('[Admin/Sessions]: Program download complete');
                 this.setState({
                     rooms: this.props.rooms,
@@ -278,7 +274,6 @@ class ProgramSessions extends React.Component {
                 title: 'Items',
                 dataIndex: 'items',
                 render: (text,record) => {
-                    // console.log(record);
                     if (record.get("items")) {
                         return <ul>{
                             record.get("items").map(item => (
@@ -381,7 +376,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
     myItems.map(item => {
         myItemTitles.push(item.get('title'));
     })
-    console.log("myItemTitle are: " + myItemTitles);
+    console.log("total number of items is: " + items.length);
     return (
         <Modal
             visible={visible}
@@ -480,9 +475,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
                                 </Option>
                             ))}
                         </Select>
-                        <a href="#" title="Edit" onClick={() => {
-
-                        }}>{<EditOutlined />}</a>
+                        <a href="#" title="Edit" >{<EditOutlined />}</a>
 
                         <Popconfirm
                             title="Are you sure to delete this item?"
@@ -526,7 +519,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
                                },
                            ]}
                 >
-                    <Select placeholder="Chose the room" style={{ width: 400 }} >
+                    <Select placeholder="Choose the room" style={{ width: 400 }} >
                         {rooms.map(r => (
                             <Option key={r.id}>{r.get('name')}</Option>
                         ))}
