@@ -1,5 +1,5 @@
 import React from 'react';
-import {Card, Spin} from 'antd';
+import {Card, Spin, Tooltip} from 'antd';
 import {AuthUserContext} from "../../Session";
 import {ProgramContext} from "../../Program";
 import placeholder from '../placeholder.png';
@@ -14,6 +14,7 @@ class Posters extends React.Component {
             posters: [],
             gotTracks: false,
             gotItems: false,
+            gotPeople: false,
             loading: true
         }
 
@@ -39,11 +40,6 @@ class Posters extends React.Component {
         else
             console.log('[Posters]: track not found ' + TRACK);
 
-        // // Get the authors, an array of arrays
-        // let authors = []; 
-        // posters.foreach(poster => {
-
-        // })
         return posters;
     }
 
@@ -54,7 +50,7 @@ class Posters extends React.Component {
         console.log("[Posters]: Something changed");
 
         if (this.state.loading) {
-            if (this.state.gotItems && this.state.gotTracks) {
+            if (this.state.gotItems && this.state.gotTracks && this.state.gotPeople) {
                 console.log('[Posters]: Program download complete');
 
                 this.setState({
@@ -72,6 +68,10 @@ class Posters extends React.Component {
                     this.setState({gotTracks: true});
                     console.log('[Posters]: got tracks');
                 }
+                if (prevProps.people.length != this.props.people.length) {
+                    this.setState({gotPeople: true});
+                    console.log('[Posters]: got people');
+                }
             }
         }
         else {
@@ -83,14 +83,17 @@ class Posters extends React.Component {
     render() {
 
         const { Meta } = Card;
-        
+
         if (this.props.downloaded) {
             return <div className={"space-align-container"}>
                     {this.state.posters.map((poster) => {
-                        let width = 0;
+                        let authors = poster.get("authors");
+                        let authorstr = authors.map(a => a.get('name')).join(", ");
                         return <div className={"space-align-block"} key={poster.id} >
                                     <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{width:300, height:200 }} src={placeholder} />}>
-                                        <Meta title={poster.get('title')} description="Authors" />
+                                        <Tooltip placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
+                                            <Meta title={poster.get('title')} description={authorstr} />
+                                        </Tooltip>
                                     </Card>
                                 </div>
                     })}
@@ -105,10 +108,10 @@ class Posters extends React.Component {
 
 const PostersWithAuth = (props) => (
     <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <Posters {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                    <Posters {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
                 )}
             </AuthUserContext.Consumer>
         )}

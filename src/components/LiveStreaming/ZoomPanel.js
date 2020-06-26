@@ -75,7 +75,7 @@ class ZoomPanel extends Component {
 
 const LiveVideosArea = (props) => (
     <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, onDownload, downloaded}) => (
+        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
                     <ZoomPanel {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
