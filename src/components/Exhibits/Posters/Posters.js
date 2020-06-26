@@ -1,5 +1,7 @@
 import React from 'react';
+import {NavLink} from "react-router-dom";
 import {Card, Spin, Tooltip} from 'antd';
+import {EditOutlined, EllipsisOutlined, SettingOutlined} from '@ant-design/icons';
 import {AuthUserContext} from "../../Session";
 import {ProgramContext} from "../../Program";
 import placeholder from '../placeholder.png';
@@ -90,11 +92,19 @@ class Posters extends React.Component {
                         let authors = poster.get("authors");
                         let authorstr = authors.map(a => a.get('name')).join(", ");
                         return <div className={"space-align-block"} key={poster.id} >
-                                    <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{width:300, height:200 }} src={placeholder} />}>
-                                        <Tooltip placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
-                                            <Meta title={poster.get('title')} description={authorstr} />
-                                        </Tooltip>
-                                    </Card>
+                                    <NavLink to={"/program/"+poster.get("confKey")}>
+                                        <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{width:300, height:200 }} 
+                                            extra="Hello"
+                                            src={placeholder} 
+                                            actions={[
+                                                <SettingOutlined key="setting" onClick={this.getPosters.bind(this)}/>, <EditOutlined key="edit" />, <EllipsisOutlined  key="more"/>
+                                              ]}
+                                        />}>
+                                            <Tooltip placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
+                                                <Meta title={poster.get('title')} description={authorstr} />
+                                            </Tooltip>
+                                        </Card>
+                                    </NavLink>
                                 </div>
                     })}
                 </div> 
