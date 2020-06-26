@@ -7,8 +7,6 @@ import {AuthUserContext} from "../../Session";
 import {ProgramContext} from "../../Program";
 import placeholder from '../placeholder.png';
 
-let TRACK = "icse-2020-poster";
-
 class Posters extends React.Component {
     constructor(props) {
         super(props);
@@ -34,14 +32,12 @@ class Posters extends React.Component {
         if (!this.props.downloaded) 
             this.props.onDown(this.props);
         else {
-            this.state.posters = this.getPosters(this.props.items, this.props.tracks);
-            this.state.myposter = this.getUserPoster(this.state.posters);
             this.state.waitForProgram = false;
         }        
         
     }
 
-    getPosters(items, tracks) {
+    getPosters(TRACK, items, tracks) {
         let posters = [];
         let track = tracks.find(t => t.get('name') == TRACK);
         if (track) {
@@ -71,7 +67,22 @@ class Posters extends React.Component {
         return myposter;
     }
 
-    componentDidMount() {
+    async componentDidMount() {
+        //For social features, we need to wait for the login to complete before doing anything
+        let user = await this.props.auth.refreshUser();
+        this.setState({loading: false})
+    }
+
+    initializePosters(track) {
+        console.log(`[Posters]: track ${track}`);
+
+        let posters = this.getPosters(track, this.props.items, this.props.tracks);
+        this.setState({
+            posters: posters,
+            myposter: this.getUserPoster(posters),
+            waitForProgram: false
+        });
+
     }
 
     componentDidUpdate(prevProps) {
@@ -80,12 +91,7 @@ class Posters extends React.Component {
         if (this.state.waitForProgram) {
             if (this.state.gotItems && this.state.gotTracks && this.state.gotPeople) {
                 console.log('[Posters]: Program download complete');
-                let posters = this.getPosters(this.props.items, this.props.tracks);
-                this.setState({
-                    posters: posters,
-                    myposter: this.getUserPoster(posters),
-                    waitForProgram: false
-                });
+                this.initializePosters(this.props.match.params.track)
             }
             else {
                 console.log('[Posters]: Program still downloading...');
@@ -105,6 +111,10 @@ class Posters extends React.Component {
         }
         else {
             console.log('[Posters]: Program cached');
+        }
+
+        if (prevProps.match.params.track !== this.props.match.params.track) {
+            this.initializePosters(this.props.match.params.track);
         }
     }
 
@@ -140,22 +150,18 @@ class Posters extends React.Component {
 
         const { Meta } = Card;
 
+        if (this.state.loading)
+            return <Spin/>
+
         if (this.props.downloaded) {
 
             return <div className={"space-align-container"}>
                     {this.state.posters.map((poster) => {
                         let authors = poster.get("authors");
                         let authorstr = authors.map(a => a.get('name')).join(", ");
-
-                        // let author = authors.find(a => {
-                        //     let fl = a.get('name') ? a.get('name').split() : ["-", "-"];
-                        //     if (fl.length > 2) 
-                        //         fl = [fl[0], fl[1]];
-                        //     return fl[0] === this.first_last[0] && fl[1] == this.first_last[1];
-                        // });
-
+                        
                         let tool = "";
-                        if (this.state.myposter.id == poster.id)
+                        if (this.state.myposter && (this.state.myposter.id == poster.id))
                             tool = <span title="Looks like you're an author. Replace the image? Use 3x2 ratio.">
                                         <Upload accept=".png, .jpg" name='poster' beforeUpload={this.onImageUpload.bind(this)}>
                                         <Button type="primary">
