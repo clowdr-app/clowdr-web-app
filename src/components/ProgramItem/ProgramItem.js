@@ -62,11 +62,18 @@ class ProgramItem extends React.Component {
                 type="error"
             />
         }
+        let img = ""
+        if (this.state.programItem.get("image")) {
+            img = <img src={this.state.programItem.get("image")} />
+        }
         return <div className="programItemContainer">
             <div className="programItemMetadata">
                 <h3>{this.state.programItem.get('title')}</h3>
                 <p><b>Abstract: </b> {this.state.programItem.get("abstract")}</p>
                 {this.state.programItem.get("breakoutRoom") ? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.programItem.get("breakoutRoom")}/></div> : <></>}
+            </div>
+            <div className="fill">
+                {img}
             </div>
         </div>
     }

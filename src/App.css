@@ -55,6 +55,9 @@
     background-color: #dddfe2;
 }
 
+.fill img {
+    width: 100%;
+}
 /*.ant-collapse > .ant-collapse-item.ant-collapse-no-arrow.chat-list-panel .ant-badge{*/
 /*  padding-right: 2px;*/
 /*}*/

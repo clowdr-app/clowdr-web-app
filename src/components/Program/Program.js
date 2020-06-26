@@ -30,7 +30,7 @@ class Program extends React.Component {
             loading: true,
             gotTracks: false,
             gotRooms: false,
-            forItems: false,
+            gotItems: false,
             gotSessions: false,
             formatTime: (dateTimeStr)=>moment(dateTimeStr).format("LT")
         }
