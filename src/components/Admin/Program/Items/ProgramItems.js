@@ -32,8 +32,8 @@ class ProgramItems extends React.Component {
             gotTracks: false,
             editing: false,
             edt_item: undefined,
-            nameSearch: "",
-            dataSource: ""
+            seached: false,
+            searchResult: ""
         };
 
         // Call to download program
@@ -197,6 +197,7 @@ class ProgramItems extends React.Component {
                 title: 'Title',
                 dataIndex: 'title',
                 key: 'title',
+                width: '70%',
                 sorter: (a, b) => {
                     var titleA = a.get("title") ? a.get("title") : "";
                     var titleB = b.get("title") ? b.get("title") : "";
@@ -207,6 +208,7 @@ class ProgramItems extends React.Component {
             {
                 title: 'Track',
                 dataIndex: 'track',
+                width: '30%',
                 sorter: (a, b) => {
                     var trackA = a.get("track") ? a.get("track").get("name") : "";
                     var trackB = b.get("track") ? b.get("track").get("name") : "";
@@ -281,14 +283,28 @@ class ProgramItems extends React.Component {
             />
             <Input.Search
                 allowClear
-                onSearch={key =>
-                    this.setState({
-                        dataSource: this.state.items.filter(item => item.get('title').includes(key) || (item.get('track') && item.get('track').get("name").includes(key)))
-                    })
+                onSearch={key => {
+                        if (key == "") {
+                            this.setState({searched: false});
+                        }
+                        else {
+                            this.setState({searched: true});
+                            this.setState({
+                                searchResult: this.state.items.filter(
+                                    item => 
+                                        (item.get('title') && item.get('title').toLowerCase().includes(key.toLowerCase()))
+                                        || (item.get('track') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
+                                    )
+                            })
+                        }
+                    }
                 }
             />
-            <Table columns={columns} dataSource={this.state.dataSource == "" ? this.state.items : this.state.dataSource} rowKey={(i)=>(i.id)}>
-             </Table>
+            <Table 
+                columns={columns} 
+                dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
+                rowKey={(i)=>(i.id)}>
+            </Table>
         </div>
     }
 

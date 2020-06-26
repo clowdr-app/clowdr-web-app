@@ -27,7 +27,9 @@ class Tracks extends React.Component {
             tracks: [],
             gotTracks: false,
             editing: false,
-            edt_track: undefined
+            edt_track: undefined,
+            searched: false,
+            searchResult: ""
         };
 
         console.log('[Admin/Tracks]: downloaded? ' + this.props.downloaded);
@@ -151,6 +153,7 @@ class Tracks extends React.Component {
                 title: 'Name',
                 dataIndex: 'name',
                 key: 'name',
+                width: '50%',
                 sorter: (a, b) => {
                     var nameA = a.get("name") ? a.get("name"): "";
                     var nameB = b.get("name") ? b.get("name") : "";
@@ -161,9 +164,10 @@ class Tracks extends React.Component {
             {
                 title: 'Display Name',
                 dataIndex: 'displayName',
+                width: '50%',
                 sorter: (a, b) => {
-                    var displayNameA = a.get("displayName") ? a.get("track").get("name") : "";
-                    var displayNameB = b.get("displayName") ? b.get("track").get("name") : "";
+                    var displayNameA = a.get("displayName") ? a.get("displayName") : "";
+                    var displayNameB = b.get("displayName") ? b.get("displayName") : "";
                     return displayNameA.localeCompare(displayNameB);
                 },
                 render: (text,record) => <span>{record.get("displayName")}</span>,
@@ -227,7 +231,28 @@ class Tracks extends React.Component {
                     this.setVisible(false);
                 }}
             />
-            <Table columns={columns} dataSource={this.state.tracks} rowKey={(t)=>(t.id)}>
+            <Input.Search
+                allowClear
+                onSearch={key => {
+                        if (key == "") {
+                            this.setState({searched: false});
+                        }
+                        else {
+                            this.setState({searched: true});
+                            this.setState({
+                                searchResult: this.state.tracks.filter(
+                                    track => 
+                                        (track.get('name') && track.get('name').toLowerCase().includes(key.toLowerCase())) 
+                                        || (track.get('displayName') && track.get('displayName').toLowerCase().includes(key.toLowerCase())))
+                            })
+                        }
+                    }
+                }
+            />      
+            <Table 
+                columns={columns} 
+                dataSource={this.state.searched ? this.state.searchResult : this.state.tracks} 
+                rowKey={(t)=>(t.id)}>
             </Table>
         </div>
     }
