@@ -21,6 +21,7 @@ import {withProgram} from "./components/Program"
 
 import LiveVideosArea from "./components/LiveStreaming";
 import Posters from "./components/Exhibits/Posters";
+import SRCPosters from "./components/Exhibits/SRCPosters";
 
 import Parse from "parse";
 import ForgotPassword from "./components/Account/ForgotPassword";
@@ -31,6 +32,7 @@ import VideoChat from "./components/VideoChat";
 // import UsersList from "./components/Admin/Users";
 //
 import Registrations from "./components/Admin/Registrations";
+import ProgramSummary from "./components/Admin/Program/ProgramSummary";
 import Rooms from "./components/Admin/Program/Rooms";
 import Tracks from "./components/Admin/Program/Tracks";
 import ProgramItems from "./components/Admin/Program/Items";
@@ -189,6 +191,7 @@ class App extends Component {
             <Route exact path="/program" component={Program}/>
 
             <Route exact path="/exhibits/posters" component={Posters}/>
+            <Route exact path="/exhibits/srcposters" component={SRCPosters}/>
 
             <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
             <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
@@ -215,6 +218,7 @@ class App extends Component {
             <Route exact path='/admin/program/tracks' component={Tracks}/>
             <Route exact path='/admin/program/items' component={ProgramItems}/>
             <Route exact path='/admin/program/sessions' component={ProgramSessions}/>
+            <Route exact path='/admin/program/programSummary' component={ProgramSummary}/>
         </div>)
     }
 
