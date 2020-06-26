@@ -59,12 +59,17 @@ class SidebarChat extends React.Component {
     }
 
     async componentDidMount() {
-        if(this.props.auth.user){
+        if(this.props.auth.user && this.props.auth.user.get('passwordSet')){
             this.user = this.props.auth.user;
             // this.changeChannel("#general");
             this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
+            this.props.setWidth(this.state.siderWidth)
         }
-        this.props.setWidth(this.state.siderWidth)
+        else{
+            this.setState({chatDisabled: true})
+            this.props.setWidth(0);
+
+        }
     }
 
 
@@ -72,8 +77,10 @@ class SidebarChat extends React.Component {
         let isDifferentUser = this.user != this.props.auth.user;
         this.user = this.props.auth.user;
         let isDifferentChannel = this.props.auth.chatChannel != this.state.channel;
-        console.log("CDU " + this.props.auth.chatChannel + " " + this.state.channel)
 
+        if(this.state.chatDisabled && this.props.auth.user && this.props.auth.user.get("passwordSet")){
+            this.setState({chatDisabled: false})
+        }
         if(this.props.auth.forceChatOpen && this.state.siderWidth == 0){
             this.setState({siderWidth: 250});
             this.props.auth.helpers.setGlobalState({forceChatOpen: false})
