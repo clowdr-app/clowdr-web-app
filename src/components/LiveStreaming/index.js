@@ -142,9 +142,6 @@ class LiveStreaming extends Component {
 
             return <div className={"space-align-container"}>
                     {this.state.liveRooms.map((room) => {
-                        if (!room.get("src1")) {
-                            return <div></div>
-                        }
                         let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
                         let qa = "";
                         let width = 0;
@@ -152,10 +149,10 @@ class LiveStreaming extends Component {
                         if (this.state.expanded && room.id == this.state.expanded_video.id) {
                             width = 1000;
                             const q_url = this.state.expanded_video.get("qa");
-                            qa = <iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/>            
+                            qa = q_url ? <iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> : "";     
                         }
                         
-                        if (room.get("src1").includes("Zoom")) {
+                        if (room.get("src1") && room.get("src1").includes("Zoom")) {
                             return <div className={"space-align-block"} key={room.id} style={{width:width}}>
                                 <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
                             </div>
