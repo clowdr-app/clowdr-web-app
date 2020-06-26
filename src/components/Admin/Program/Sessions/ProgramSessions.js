@@ -338,12 +338,11 @@ class ProgramSessions extends React.Component {
                             this.setState({searched: true});
                             this.setState({
                                 searchResult: this.state.sessions.filter(
-                                    session => 
-                                        (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase())) 
+                                    session => (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase())) 
                                         || (session.get('startTime') && timezone(session.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase())) 
                                         || (session.get('endTime') && timezone(session.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase())) 
-                                        || (session.get('room') && session.get('room').get('name').toLowerCase().includes(key.toLowerCase()))
-                                        || (session.get('items') && session.get('items').findIndex(element => element.toString().includes(key))))
+                                        || (session.get('items') && session.get('items').some((element) => element.get('title').includes(key)))
+                                        || (session.get('room') && session.get('room').get('name').toLowerCase().includes(key.toLowerCase())))      
                             })
                         }
                     }         
