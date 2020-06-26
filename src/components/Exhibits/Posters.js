@@ -3,11 +3,11 @@ import {NavLink} from "react-router-dom";
 import Parse from "parse";
 import {Card, Spin, Tooltip, Button, Input, Upload} from 'antd';
 import {DownloadOutlined, SettingOutlined, UploadOutlined} from '@ant-design/icons';
-import {AuthUserContext} from "../../Session";
-import {ProgramContext} from "../../Program";
-import placeholder from '../placeholder.png';
+import {AuthUserContext} from "../Session";
+import {ProgramContext} from "../Program";
+import placeholder from './placeholder.png';
 
-class Posters extends React.Component {
+class Exhibits extends React.Component {
     constructor(props) {
         super(props);
         console.log('Made it to posters');
@@ -201,7 +201,7 @@ const PostersWithAuth = (props) => (
         {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <Posters {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
+                    <Exhibits {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
                 )}
             </AuthUserContext.Consumer>
         )}

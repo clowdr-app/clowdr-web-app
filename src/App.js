@@ -20,8 +20,7 @@ import {withAuthentication} from "./components/Session";
 import {withProgram} from "./components/Program"
 
 import LiveVideosArea from "./components/LiveStreaming";
-import Posters from "./components/Exhibits/Posters";
-import SRCPosters from "./components/Exhibits/SRCPosters";
+import Exhibits from "./components/Exhibits";
 
 import Parse from "parse";
 import ForgotPassword from "./components/Account/ForgotPassword";
@@ -190,7 +189,7 @@ class App extends Component {
             <Route exact path="/live" component={LiveVideosArea}/>
             <Route exact path="/program" component={Program}/>
 
-            <Route exact path="/exhibits/posters/:track" component={Posters}/>
+            <Route exact path="/exhibits/:track" component={Exhibits}/>
             {/* <Route exact path="/exhibits/srcposters" component={SRCPosters}/> */}
 
             <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
