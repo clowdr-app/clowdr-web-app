@@ -31,7 +31,9 @@ class ProgramItems extends React.Component {
             gotItems: false,
             gotTracks: false,
             editing: false,
-            edt_item: undefined
+            edt_item: undefined,
+            nameSearch: "",
+            dataSource: ""
         };
 
         // Call to download program
@@ -39,6 +41,7 @@ class ProgramItems extends React.Component {
             this.props.onDown(this.props);
         else {
             this.state.items = this.props.items;
+            this.state.dataSource = this.props.items
             this.state.tracks = this.props.tracks;
         }
     }
@@ -252,7 +255,7 @@ class ProgramItems extends React.Component {
                             this.setState({src1: value});
                         }}
                     />
-                <Table columns={columns} dataSource={this.state.items} rowKey={(i)=>(i.id)}>
+                <Table columns={columns} dataSource={this.state.dataSource} rowKey={(i)=>(i.id)}>
                 </Table>
             </Fragment>
             )
@@ -276,8 +279,16 @@ class ProgramItems extends React.Component {
                     this.setState({src1: value});
                 }}
             />
-            <Table columns={columns} dataSource={this.state.items} rowKey={(i)=>(i.id)}>
-            </Table>
+            <Input.Search
+                allowClear
+                onSearch={key =>
+                    this.setState({
+                        dataSource: this.state.items.filter(item => item.get('title').includes(key) || (item.get('track') && item.get('track').get("name").includes(key)))
+                    })
+                }
+            />
+            <Table columns={columns} dataSource={this.state.dataSource == "" ? this.state.items : this.state.dataSource} rowKey={(i)=>(i.id)}>
+             </Table>
         </div>
     }
 
