@@ -143,8 +143,8 @@ class Lobby extends React.Component {
             // const data = {spaceID:'TOCVe54R2j', confID: this.props.auth.currentConference.id};
             // Parse.Cloud.run("presence-addToPage", data);
 
+            this.props.auth.setSocialSpace("Lobby");
             this.setState({presences: this.props.auth.presences});
-            await this.props.auth.subscribeToVideoRoomState();
             //subscribe to membership here too
             if (this.mounted){
 

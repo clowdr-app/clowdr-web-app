@@ -1,15 +1,12 @@
 import {AuthUserContext} from "../Session";
-import Meta from "antd/lib/card/Meta";
 
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Card, Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip} from 'antd';
+import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import {CloseOutlined} from "@material-ui/icons";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
@@ -31,7 +28,8 @@ const INITIAL_STATE = {
     loadingChannels: true,
     chatHeight: "400px",
     groupedMessages: [],
-    newMessage: ''
+    newMessage: '',
+    lastConsumedMessageIndex: -1,
 };
 
 class ChatFrame extends React.Component {
@@ -44,7 +42,8 @@ class ChatFrame extends React.Component {
             ...INITIAL_STATE,
             hasMoreMessages: false,
             loadingMessages: true,
-            numMessagesDisplayed: 0
+            numMessagesDisplayed: 0,
+            visible: this.props.visible
         }
         this.form = React.createRef();
     }
@@ -56,12 +55,13 @@ class ChatFrame extends React.Component {
     async componentDidMount() {
         if (this.props.auth.user) {
             this.user = this.props.auth.user;
+            this.sid = this.props.sid;
             this.changeChannel(this.props.sid);
         }
     }
 
     async changeChannel(sid) {
-        console.log(sid);
+        console.log("Chagne channel: " + sid)
         let user = this.props.auth.user;
         if (!sid) {
             this.setState({chatDisabled: true});
@@ -113,14 +113,15 @@ class ChatFrame extends React.Component {
                     return;
                 this.messagesLoaded(this.activeChannel, messages)
             });
+
+            //Load the unread counts.
             this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
             this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
             this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
             let stateUpdate = {
                 chatLoading: false,
-                activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName)
+                activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName),
             }
-            console.log("Changing active channel name to: " + stateUpdate.activeChannelName + " aka " + sid + " vs " + this.currentSID)
             if (this.currentSID != sid) {
                 return;//raced with another update
             }
@@ -142,6 +143,20 @@ class ChatFrame extends React.Component {
 
     }
 
+    updateUnreadCount(lastConsumed, lastTotal) {
+        if (lastConsumed != this.lastConsumedMessageIndex || lastTotal != this.lastSeenMessageIndex) {
+            console.log(this.sid + " Chat updated:" + lastConsumed + " vs " + this.lastConsumedMessageIndex)
+            let unread = lastTotal - lastConsumed;
+            if (unread != this.unread) {
+                if (this.props.setUnreadCount)
+                    this.props.setUnreadCount(unread);
+            }
+            this.lastConsumedMessageIndex = lastConsumed;
+            this.lastSeenMessageIndex = lastTotal;
+            this.unread = unread;
+        }
+    }
+
     groupMessages(messages) {
         let ret = [];
         let lastMessage = undefined;
@@ -149,12 +164,14 @@ class ChatFrame extends React.Component {
             return undefined;
         let _this = this;
         let lastSID;
+        let lastIndex;
 
         let authorIDs = {};
         for (let message of messages) {
             if (lastSID && lastSID == message.sid)
                 continue;
             lastSID = message.sid;
+            lastIndex = message.index;
             if (!lastMessage || message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5) {
                 if (lastMessage)
                     ret.push(lastMessage);
@@ -172,6 +189,17 @@ class ChatFrame extends React.Component {
         }
         if (lastMessage)
             ret.push(lastMessage);
+        if(this.props.visible){
+            this.activeChannel.setAllMessagesConsumed();
+            this.updateUnreadCount(lastIndex, lastIndex);
+        }else if(!this.props.visible){
+            let lastConsumed = this.lastConsumedMessageIndex;
+            if(lastConsumed < 0){
+                lastConsumed = this.activeChannel.lastConsumedMessageIndex;
+            }
+            if(lastConsumed !== undefined)
+            this.updateUnreadCount(lastConsumed, lastIndex);
+        }
         this.props.auth.helpers.getUserProfilesFromUserProfileIDs(Object.keys(authorIDs));
 
         this.setState({groupedMessages: ret});
@@ -258,9 +286,18 @@ class ChatFrame extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        let isDifferentChannel = this.props.sid != this.state.sid;
+        let isDifferentChannel = this.props.sid != this.sid;
 
+        if(this.state.visible!= this.props.visible){
+            if(this.props.visible && this.unread){
+                //update unreads...
+                this.activeChannel.setAllMessagesConsumed();
+                this.updateUnreadCount(this.lastSeenMessageIndex, this.lastSeenMessageIndex);
+            }
+            this.setState({visible: this.props.visible});
+        }
         if (isDifferentChannel) {
+            this.sid = this.props.sid;
             this.setState({sid: this.props.sid});
             this.changeChannel(this.props.sid);
         }

@@ -1,6 +1,6 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
-import {Button, Skeleton, Tooltip} from "antd"
+import {Badge, Button, Skeleton, Tooltip} from "antd"
 import ChatFrame from "../Chat/ChatFrame";
 import {CloseOutlined, PlusOutlined, MinusOutlined} from "@ant-design/icons"
 
@@ -186,10 +186,10 @@ class BottomChatWindow extends React.Component{
             </div>
         </div>
         chatWindow = <div className={windowClass} >
-            <ChatFrame sid={this.state.sid} width="240px" header={header}/>
+            <ChatFrame sid={this.state.sid} width="240px" header={header} visible={this.state.open} setUnreadCount={(c)=>{this.setState({unreadCount: c})}}/>
         </div>
         return <div className="bottomChatWindowContainer">
-            <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}>{this.state.title}</Button></Tooltip>{chatWindow}</div>
+            <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} offset={[10,0]}>{this.state.title}</Badge></Button></Tooltip>{chatWindow}</div>
     }
 }
 const AuthConsumer = (props) => (

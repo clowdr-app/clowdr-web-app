@@ -72,6 +72,8 @@ class ProgramItem extends React.Component {
 
     componentWillUnmount() {
         this.props.auth.helpers.setGlobalState({chatChannel: null, forceChatOpen: false});
+        this.props.auth.setSocialSpace("Lobby");
+
     }
     
     componentDidUpdate(prevProps) {
