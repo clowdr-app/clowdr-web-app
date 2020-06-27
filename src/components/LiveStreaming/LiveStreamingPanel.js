@@ -77,7 +77,6 @@ class LiveStreamingPanel extends Component {
                         p.get("socialSpace").id === this.props.video.get("socialSpace").id);
             });
             viewers = pplInThisRoom.length;
-            console.log('--> total presences: ' + presences.length + "; in this room: " + viewers);
         }
         return  <div>
                     <table style={{width:"100%"}}>
