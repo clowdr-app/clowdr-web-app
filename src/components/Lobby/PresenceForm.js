@@ -45,8 +45,6 @@ class PresenceForm extends React.Component {
             myStatus = presence;
             this.props.auth.userProfile.set("presence", presence);
             await Parse.Object.saveAll([this.props.auth.userProfile, presence]);
-        } else {
-            await myStatus.save();
         }
         this.setState({presence: myStatus, isShowWelcome: isShowNewStatus});
     }
