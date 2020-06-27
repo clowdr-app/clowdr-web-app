@@ -1,6 +1,5 @@
 import React, {Component} from "react";
-import {Button, Card, Space, Spin} from 'antd';
-import {StopOutlined} from "@ant-design/icons";
+import {Spin} from 'antd';
 import moment from 'moment';
 import LiveStreamingPanel from "./LiveStreamingPanel";
 import ZoomPanel from "./ZoomPanel";

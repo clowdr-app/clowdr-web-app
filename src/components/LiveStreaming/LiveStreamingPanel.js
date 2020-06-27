@@ -41,8 +41,8 @@ class LiveStreamingPanel extends Component {
         if (!this.state.expanded) // about to expand
             this.changeSocialSpace();
         else
-            this.props.auth.helpers.setGlobalState({chatChannel: null, forceChatOpen: false});
-            
+            this.props.auth.setSocialSpace("Lobby");
+
         this.setState({
             expanded: !this.state.expanded
         });
@@ -68,7 +68,12 @@ class LiveStreamingPanel extends Component {
             navigation = <a href="#" onClick={this.toggleExpanded.bind(this)}>Join</a>
             roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
-}
+        }
+        let viewers = 0;
+        if (this.props.auth.presences) {
+            viewers = this.props.auth.presences.length;
+
+        }
         return  <div>
                     <table style={{width:"100%"}}>
                         <tbody>
@@ -92,16 +97,4 @@ class LiveStreamingPanel extends Component {
     }
 }
 
-const LiveVideosArea = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <LiveStreamingPanel {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
-                )}
-            </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
-);
-
-export default LiveVideosArea;
+export default LiveStreamingPanel;

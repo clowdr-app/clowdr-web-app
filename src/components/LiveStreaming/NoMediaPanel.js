@@ -55,12 +55,4 @@ class NoMediaPanel extends Component {
     }
 }
 
-const NoMediaArea = (props) => (
-    <AuthUserContext.Consumer>
-        {value => (
-            <NoMediaPanel {...props} auth={value} />
-        )}
-    </AuthUserContext.Consumer>
-);
-
-export default NoMediaArea;
+export default NoMediaPanel;
