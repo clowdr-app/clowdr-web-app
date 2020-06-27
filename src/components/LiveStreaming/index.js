@@ -136,6 +136,9 @@ class LiveStreaming extends Component {
     }
     
     render() {
+        if (!this.props.auth.user) {
+            return <div>You don't have access to this page.</div>
+        }
         if (this.props.downloaded) {
 
             return <div className={"space-align-container"}>
