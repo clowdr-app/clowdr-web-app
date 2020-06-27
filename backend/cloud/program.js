@@ -1,6 +1,25 @@
 var moment = require('moment');
 const Twilio = require("twilio");
 
+Parse.Cloud.define("poster-upload", (request) => {
+    console.log('Request to upload a poster image');
+    const imgData = request.params.content;
+    const conferenceId = request.params.conferenceId;
+    const posterId = request.params.posterId;
+
+    var ProgramItem = Parse.Object.extend("ProgramItem");
+    var query = new Parse.Query(ProgramItem);
+    // query.equalTo("conference", conference);
+    query.get(posterId, {useMasterKey: true}).then(poster => {
+        poster.set("image", imgData);
+        poster.save({}, {useMasterKey: true})
+        .then (res => console.log("[Program]: Poster image saved"))
+        .catch(err => console.log(`[Program]: ${posterId}:` + err))
+        
+    }).catch(err => console.log(`[Program]: Problem fetching poster ${posterId}` + err));
+});
+
+
 let allPeople = {};
 let allItems = {};
 let allSessions = {};
@@ -17,6 +36,8 @@ function getAuthors(authorKeys) {
     })
     return authors;
 }
+
+
 
 let i = 0;
 

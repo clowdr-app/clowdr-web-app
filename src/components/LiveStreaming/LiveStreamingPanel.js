@@ -17,10 +17,19 @@ class LiveStreamingPanel extends Component {
         let src = this.props.video.get("src1");
         let id = this.props.video.get("id1");
         let pwd = this.props.video.get("pwd1");
-        this.video_url = videoURLFromData(src, id, pwd);
-
+        this.video_url = src ? videoURLFromData(src, id, pwd): "";
     }
     
+    changeSocialSpace() {
+        if(this.props.video.get("socialSpace")) {
+            //set the social space...
+            let ss = this.props.video.get("socialSpace");
+            this.props.auth.setSocialSpace(ss.get("name"));
+            this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+        }        
+
+    }
+
     componentDidMount() {
     }
 
@@ -29,6 +38,11 @@ class LiveStreamingPanel extends Component {
 
     toggleExpanded() {
 //        console.log('--> ' + this.state.expanded);
+        if (!this.state.expanded) // about to expand
+            this.changeSocialSpace();
+        else
+            this.props.auth.helpers.setGlobalState({chatChannel: null, forceChatOpen: false});
+            
         this.setState({
             expanded: !this.state.expanded
         });
@@ -36,7 +50,6 @@ class LiveStreamingPanel extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Live]: Something changed");
     }
     
     render() {

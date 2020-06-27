@@ -75,9 +75,9 @@ class LinkMenu extends React.Component {
                     <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">Program</NavLink></Menu.Item>,
 
                     <SubMenu key="/exhibits" title={<span><TeamOutlined/><span>Exhibit Hall</span></span>}>
-                        <Menu.Item key='/exhibits/demos' icon={<DesktopOutlined/>}><NavLink to="/exhibits/demos">Demos</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/posters' icon={<BorderOutlined/>}><NavLink to="/exhibits/posters">Posters</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/srcposters' icon={<BorderOutlined/>}><NavLink to="/exhibits/srcposters">SRC Posters</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/demos' icon={<DesktopOutlined/>}><NavLink to="/exhibits/Demonstrations">Demos</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/icse-2020-poster' icon={<BorderOutlined/>}><NavLink to="/exhibits/icse-2020-poster">Posters</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/src-posters' icon={<BorderOutlined/>}><NavLink to="/exhibits/icse-2020-ACM-Student-Research-Competition">SRC Posters</NavLink></Menu.Item>
                     </SubMenu>,
 
                     <Menu.Item key='/lobby' icon={<WechatOutlined/>}><NavLink to="/lobby">Lobby</NavLink></Menu.Item>,

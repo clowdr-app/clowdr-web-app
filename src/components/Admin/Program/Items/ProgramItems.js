@@ -31,7 +31,9 @@ class ProgramItems extends React.Component {
             gotItems: false,
             gotTracks: false,
             editing: false,
-            edt_item: undefined
+            edt_item: undefined,
+            seached: false,
+            searchResult: ""
         };
 
         // Call to download program
@@ -170,6 +172,7 @@ class ProgramItems extends React.Component {
             });
         })
     }
+    
     componentWillUnmount() {
         // this.sub.unsubscribe();
     }
@@ -194,6 +197,7 @@ class ProgramItems extends React.Component {
                 title: 'Title',
                 dataIndex: 'title',
                 key: 'title',
+                width: '70%',
                 sorter: (a, b) => {
                     var titleA = a.get("title") ? a.get("title") : "";
                     var titleB = b.get("title") ? b.get("title") : "";
@@ -204,6 +208,7 @@ class ProgramItems extends React.Component {
             {
                 title: 'Track',
                 dataIndex: 'track',
+                width: '30%',
                 sorter: (a, b) => {
                     var trackA = a.get("track") ? a.get("track").get("name") : "";
                     var trackB = b.get("track") ? b.get("track").get("name") : "";
@@ -252,8 +257,12 @@ class ProgramItems extends React.Component {
                             this.setState({src1: value});
                         }}
                     />
-                <Table columns={columns} dataSource={this.state.items} rowKey={(i)=>(i.id)}>
-                </Table>
+                    <Input.Search/>
+                    <Table 
+                        columns={columns} 
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
+                        rowKey={(i)=>(i.id)}>
+                    </Table>
             </Fragment>
             )
         return <div>
@@ -276,7 +285,29 @@ class ProgramItems extends React.Component {
                     this.setState({src1: value});
                 }}
             />
-            <Table columns={columns} dataSource={this.state.items} rowKey={(i)=>(i.id)}>
+            <Input.Search
+                allowClear
+                onSearch={key => {
+                        if (key == "") {
+                            this.setState({searched: false});
+                        }
+                        else {
+                            this.setState({searched: true});
+                            this.setState({
+                                searchResult: this.state.items.filter(
+                                    item => 
+                                        (item.get('title') && item.get('title').toLowerCase().includes(key.toLowerCase()))
+                                        || (item.get('track') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
+                                    )
+                            })
+                        }
+                    }
+                }
+            />
+            <Table 
+                columns={columns} 
+                dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
+                rowKey={(i)=>(i.id)}>
             </Table>
         </div>
     }
