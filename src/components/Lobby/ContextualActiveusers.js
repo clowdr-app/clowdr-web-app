@@ -123,6 +123,8 @@ class ContextualActiveUsers extends Component {
         else{
             allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
         }
+
+        allActiveRooms = allActiveRooms.filter(r => !r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id)
         //Also make a fake rom for the lobby.
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 
