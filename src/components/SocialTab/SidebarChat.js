@@ -3,7 +3,7 @@ import {AuthUserContext} from "../Session";
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Layout, Popconfirm, Popover, Tooltip} from 'antd';
+import {Badge, Layout, Popconfirm, Popover, Tooltip} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -30,7 +30,8 @@ const INITIAL_STATE = {
     loadingChannels: true,
     chatHeight: "400px",
     groupedMessages: [],
-    newMessage: ''
+    newMessage: '',
+    unreadCount: 0
 };
 
 class SidebarChat extends React.Component {
@@ -96,9 +97,9 @@ class SidebarChat extends React.Component {
                 //fall back to the current social space
                 newChannel = this.props.auth.activeSpace.get("chatChannel");
             }
-            console.log("New channel: " + newChannel)
             if (this.desiredChannel == newChannel)
                 return;
+            console.log("New channel: " + newChannel)
             this.desiredChannel = newChannel;
             this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
             //check to make sure we are a member
@@ -156,7 +157,7 @@ class SidebarChat extends React.Component {
             containerStyle.width="10px";
         }
         return <div className="chatTab" style={containerStyle}>
-            <ChatFrame sid={this.state.sid} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
+            <ChatFrame sid={this.state.sid} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
 
                 <div className="dragIconMiddleRight"
                      onClick={()=>{
@@ -169,7 +170,11 @@ class SidebarChat extends React.Component {
                     {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
                 </div>
 
-                <div className="roomDraggerRight" onMouseDown={e => handleMouseDown(e)} ></div>
+                <div className="roomDraggerRight" onMouseDown={e => handleMouseDown(e)} ><Badge count={this.state.unreadCount} offset={[-20,0]}  overflowCount={99} onClick={()=>{
+                    localStorage.setItem("chatWidth", this.state.siderWidth == 0 ? 250 : -1);
+                    this.props.setWidth((this.state.siderWidth == 0 ? 250 : 10));
+                    this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
+                }} /></div>
 
                 {/*<div className="dragIconBottom" onMouseDown={e => handleMouseDown(e)}></div>*/}
 

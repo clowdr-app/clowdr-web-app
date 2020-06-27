@@ -26,6 +26,7 @@ class PresenceForm extends React.Component {
             isShowNewStatus = true;
             //Create a new one...
             let presence = new UserPresence();
+            console.log("Creating presence with user "+ this.props.auth.userProfile.id)
             presence.set("user", this.props.auth.userProfile);
             presence.set("isAvailable", true);
             presence.set("isDND", false);
