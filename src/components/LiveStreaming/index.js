@@ -108,7 +108,6 @@ class LiveStreaming extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Live]: Something changed");
 
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
@@ -134,8 +133,6 @@ class LiveStreaming extends Component {
                 }
             }
         }
-        else 
-            console.log('[Live]: Program cached');
     }
     
     render() {

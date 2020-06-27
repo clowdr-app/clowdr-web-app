@@ -71,15 +71,20 @@ class LiveStreamingPanel extends Component {
         }
         let viewers = 0;
         if (this.props.auth.presences) {
-            viewers = this.props.auth.presences.length;
-
+            let presences = Object.values(this.props.auth.presences);
+            let pplInThisRoom = presences.filter(p => {
+                return (p.get("socialSpace") && this.props.video.get("socialSpace") &&
+                        p.get("socialSpace").id === this.props.video.get("socialSpace").id);
+            });
+            viewers = pplInThisRoom.length;
+            console.log('--> total presences: ' + presences.length + "; in this room: " + viewers);
         }
         return  <div>
                     <table style={{width:"100%"}}>
                         <tbody>
                         <tr >
                             <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>
-                            <td style={{"textAlign":"center"}}>Viewers: {this.state.count}</td>
+                            <td style={{"textAlign":"center"}}>Viewers: {viewers}</td>
                             <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>
                         </tr>
                         </tbody>
