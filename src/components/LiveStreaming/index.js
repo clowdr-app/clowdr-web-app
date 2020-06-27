@@ -32,7 +32,7 @@ class LiveStreaming extends Component {
         else {
             this.state.rooms = this.props.rooms;
             this.state.sessions = this.props.sessions;
-            let current = this.getLiveRooms();
+            let current = this.getLiveRooms(this.props.match.params.when);
             this.state.liveRooms = current[0];
             this.state.currentSessions = current[1];
         }
@@ -40,7 +40,7 @@ class LiveStreaming extends Component {
         // Run every 15 minutes that the user is on this page
         this.timerId = setInterval(() => {
 //            console.log('TICK!');
-            let current = this.getLiveRooms();
+            let current = this.getLiveRooms(this.props.match.params.when);
             if (!this.arraysEqual(current[0], this.state.liveRooms)) {
                 this.setState({liveRooms: current[0], currentSessions: current[1]});
             }
@@ -68,13 +68,19 @@ class LiveStreaming extends Component {
         return timeA > timeB;
     }
 
-    getLiveRooms() {
+    getLiveRooms(when) {
         let now = Date.now();
+
         let currentSessions = this.props.sessions.filter(s => {
             var timeS = s.get("startTime") ? s.get("startTime") : new Date();
             var timeE = s.get("endTime") ? s.get("endTime") : new Date();
-            return (now >= moment(timeS).subtract(30, 'm').toDate().getTime() && 
-                    now <= moment(timeE).add(30, 'm').toDate().getTime())
+            if (when == "past") {
+                return (now >= moment(timeE).add(10, 'm').toDate().getTime());
+            }
+            else { // live sessions
+                return (now >= moment(timeS).subtract(30, 'm').toDate().getTime() && 
+                        now <= moment(timeE).add(10, 'm').toDate().getTime());
+            }
         }).sort(this.dateSorter);
 
         let liveRooms = [];
@@ -112,7 +118,7 @@ class LiveStreaming extends Component {
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
                 console.log('[Live]: Program download complete');
-                let current = this.getLiveRooms();
+                let current = this.getLiveRooms(this.props.match.params.when);
                 this.setState({
                     rooms: this.props.rooms,
                     sessions: this.props.sessions,
@@ -133,6 +139,14 @@ class LiveStreaming extends Component {
                 }
             }
         }
+        if (prevProps.match.params.when != this.props.match.params.when) {
+            let current = this.getLiveRooms(this.props.match.params.when);
+            this.setState({
+                liveRooms: current[0],
+                currentSessions: current[1],
+            })
+        }
+
     }
     
     render() {

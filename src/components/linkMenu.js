@@ -17,11 +17,13 @@ import {
     SmileOutlined,
     ScheduleOutlined,
     SolutionOutlined,
+    SyncOutlined,
     TeamOutlined,
     ToolOutlined,
     UserOutlined,
     VideoCameraAddOutlined,
     VideoCameraOutlined,
+    VideoCameraTwoTone,
     WechatOutlined,
     YoutubeOutlined
 } from '@ant-design/icons';
@@ -68,9 +70,10 @@ class LinkMenu extends React.Component {
             }
             userTools =
                 [
-                    <Menu.Item key='/live' icon={<VideoCameraOutlined/>}><NavLink to="/live">Live Sessions</NavLink></Menu.Item>,
-
-                    <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Past Sessions</NavLink></Menu.Item>,
+                    <SubMenu key="/live" title={<span><VideoCameraOutlined/><span>Sessions</span></span>}>
+                        <Menu.Item key='/live/now' icon={<VideoCameraTwoTone twoToneColor="red"/>}><NavLink to="/live/now">Live Sessions</NavLink></Menu.Item>,
+                        <Menu.Item key='/live/past' icon={<YoutubeOutlined/>}><NavLink to="/live/past">Past Sessions</NavLink></Menu.Item>
+                    </SubMenu>,
 
                     <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">Program</NavLink></Menu.Item>,
 

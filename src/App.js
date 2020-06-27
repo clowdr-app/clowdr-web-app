@@ -188,7 +188,7 @@ class App extends Component {
             {baseRoutes}
             <Route exact path="/" component={Home}/>
             <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem}/>
-            <Route exact path="/live" component={LiveVideosArea}/>
+            <Route exact path="/live/:when" component={LiveVideosArea}/>
             <Route exact path="/program" component={Program}/>
 
             <Route exact path="/exhibits/:track" component={Exhibits}/>
