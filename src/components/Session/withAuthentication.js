@@ -299,12 +299,10 @@ const withAuthentication = Component => {
         Provide either the spaceName or the space object.
          */
         async setSocialSpace(spaceName, space, user, userProfile) {
-            if (!this.state.user) // user is not logged in
+            if (!this.state.user && !user) // user is not logged in
                 return
             if(space)
                 spaceName = space.get("name");
-            console.log(user);
-            console.log(userProfile)
             if (!this.state.activeSpace || spaceName != this.state.activeSpace.get("name")) {
                 if(!user)
                     user = this.state.user;
