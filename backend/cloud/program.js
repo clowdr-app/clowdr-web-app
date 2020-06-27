@@ -316,6 +316,7 @@ async function createBreakoutRoomForProgramItem(programItem){
     parseRoom.set("persistence", "persistent");
     parseRoom.set("mode", mode);
     parseRoom.set("capacity", maxParticipants);
+    parseRoom.set("programItem", programItem);
     let acl = new Parse.ACL();
     acl.setPublicReadAccess(false);
     acl.setPublicWriteAccess(false);

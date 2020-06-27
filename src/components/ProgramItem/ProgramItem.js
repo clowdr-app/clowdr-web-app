@@ -80,19 +80,19 @@ class ProgramItem extends React.Component {
 
         if (this.state.waitForProgram) {
             if (this.state.gotItems) {
-                console.log('[ProgramItem]: Program download complete');
+                // console.log('[ProgramItem]: Program download complete');
                 this.setState({items: this.props.items, waitingForProgram: false});
             }
             else {
-                console.log('[ProgramItem]: Program still downloading...');
+                // console.log('[ProgramItem]: Program still downloading...');
                 if (prevProps.items.length != this.props.items.length) {
                     this.setState({gotItems: true});
-                    console.log('[ProgramItem]: got items');
+                    // console.log('[ProgramItem]: got items');
                 }
             }
         }
         else {
-            console.log('[ProgramItem]: Program cached');
+            // console.log('[ProgramItem]: Program cached');
         }
     }
 

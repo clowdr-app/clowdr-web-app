@@ -84,20 +84,22 @@ class ContextualActiveUsers extends Component {
     }
 
     joinCall(room) {
-        console.log(this.props)
-        this.props.history.push("/video/" + this.props.auth.currentConference.get('conferenceName') + "/" + room.get("title"));
-        this.props.auth.setActiveRoom(room.get("title"));
+        if(room.get("programItem")){
+            this.props.history.push("/program/"+room.get("programItem").get("confKey"))
+        }
+        else{
+            this.props.history.push("/video/" + this.props.auth.currentConference.get('conferenceName') + "/" + room.get("title"));
+            this.props.auth.setActiveRoom(room.get("title"));
+        }
     }
 
 
     filterList(value) {
         let roomID = value;
-        console.log(value)
         let userID = null;
         if(value && value.includes("@")){
             roomID = value.substring(value.indexOf("@")+1);
             userID = value.substring(0, value.indexOf("@"));
-            console.log(userID);
         }
         this.setState({filteredRoom: roomID, filteredUser: userID});
     }
@@ -132,7 +134,18 @@ class ContextualActiveUsers extends Component {
 
         let lobbyMembers = [];
         if (this.state.presences && this.state.activeSpace)
-            lobbyMembers = Object.values(this.state.presences).filter(p => p && p.get("socialSpace") && p.get("socialSpace").id == this.state.activeSpace.id).map(p => p.get("user"));
+            lobbyMembers = Object.values(this.state.presences)
+                .filter(p =>
+                    p
+                    && p.get("socialSpace")
+                    && p.get("socialSpace").id == this.state.activeSpace.id
+                    && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
+                ).sort((i1, i2) => {
+                return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
+            }).map(p => p.get("user"));
+        for(let u of lobbyMembers){
+            searchOptions.push({label: "@"+u.get("displayName"), value: u.id+"@-lobby"});
+        }
 
         for (let room of allActiveRooms) {
             searchOptions.push({label: "#" + room.get("title"), value: room.id});
@@ -159,37 +172,6 @@ class ContextualActiveUsers extends Component {
                 <div>
 
                     <div><PresenceForm /></div>
-                    <Divider>
-                       {this.props.auth.activeSpace.get("name")}
-                        <Menu mode="inline"
-                              className="activeRoomsList"
-                            // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
-                              style={{
-                                  // height: "100%",
-                                  // overflow: 'auto',
-                                  // display: 'flex',
-                                  // flexDirection: 'column-reverse',
-                                  border: '1px solid #FAFAFA'
-
-                              }}
-                              forceSubMenuRender={true}
-                              expandIcon={null}
-                        >
-
-                            {lobbyMembers.map((user) => {
-                                let className = "personHoverable";
-                                if (this.state.filteredUser == user.id)
-                                    className += " personFiltered"
-                                return <Menu.Item key={user.id} className={className}>
-                                    <UserStatusDisplay popover={true} profileID={user.id}/>
-                                </Menu.Item>
-                            })
-                            }
-                        </Menu>
-                    </Divider>
-                    <div style={{textAlign: 'center'}}>
-                        <NewRoomForm type="secondary" text="Create New Video Room" />
-                    </div>
                     <Select style={{width: "100%"}} showSearch
                             allowClear={true}
                             onChange={this.filterList.bind(this)}
@@ -202,29 +184,70 @@ class ContextualActiveUsers extends Component {
                             }}
 
                             options={searchOptions} placeholder="Search"></Select>
+                    <Divider>
+                       {this.props.auth.activeSpace.get("name")}
+                    </Divider>
+
+                        <Menu mode="inline"
+                              className="activeRoomsList"
+                            // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
+                              style={{
+                                  // height: "100%",
+                                  // overflow: 'auto',
+                                  // display: 'flex',
+                                  // flexDirection: 'column-reverse',
+                                  border: '1px solid #FAFAFA'
+
+                              }}
+                              selectedKeys={selectedKeys}
+                              defaultOpenKeys={['firstUsers']}
+                              forceSubMenuRender={true}
+                              expandIcon={null}
+                        >
+                            <Menu.SubMenu key="firstUsers" expandIcon={<span></span>}>
+
+                            {lobbyMembers.slice(0,10).map((user) => {
+                                let className = "personHoverable";
+                                if (this.state.filteredUser == user.id)
+                                    className += " personFiltered"
+                                return <Menu.Item key={user.id} className={className}>
+                                    <UserStatusDisplay popover={true} profileID={user.id}/>
+                                </Menu.Item>
+                            })
+                            }
+                            </Menu.SubMenu>{
+                            lobbyMembers.length > 10 ?
+                            <Menu.SubMenu key="restUsers" title={<div className="overflowHelper">{lobbyMembers.length-10} more</div>}>
+
+                                {lobbyMembers.slice(10).map((user) => {
+                                    let className = "personHoverable";
+                                    if (this.state.filteredUser == user.id)
+                                        className += " personFiltered"
+                                    return <Menu.Item key={user.id} className={className}>
+                                        <UserStatusDisplay popover={true} profileID={user.id}/>
+                                    </Menu.Item>
+                                })
+                                }
+                            </Menu.SubMenu>
+                                :<></>}
+                        </Menu>
+
+                    <div style={{textAlign: 'center'}}>
+                        <NewRoomForm type="secondary" text="Create New Video Room" />
+                    </div>
+
                 </div>
+                <Divider>Breakout Rooms</Divider>
                 <Menu mode="inline"
                       className="activeRoomsList"
-                      // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
                     style={{
-                        // height: "100%",
-                        // overflow: 'auto',
-                        // display: 'flex',
-                        // flexDirection: 'column-reverse',
                         border: '1px solid #FAFAFA'
-
                     }}
                       forceSubMenuRender={true}
                       openKeys={allActiveRooms.map(r=>r.id)}
                       expandIcon={null}
                       selectedKeys={selectedKeys}
                 >
-
-                             {/*defaultActiveKey={this.props.auth.currentRoom ? [this.props.auth.currentRoom.id] : []}*/}
-                             {/*style={{backgroundColor: "#f8f8f8"}}>*/}
-                {/*<List*/}
-                {/*    dataSource={this.state.activeRooms}*/}
-                {/*renderItem={item => {*/}
                 {allActiveRooms ? allActiveRooms.sort((i1, i2) => {
                     return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
                 }).map((item) => {
@@ -238,15 +261,15 @@ class ContextualActiveUsers extends Component {
                     }
                     let tag, joinInfo;
                     if(item.get("mode") == "group"){
-                        tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
+                    //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
                         joinInfo = "Join this big group room, '"+item.get("title")+"'. Big group rooms support up to 50 callers, but you can only see the video of up to 4 other callers at once."
                     }
                     else if(item.get("mode") == "peer-to-peer"){
-                        tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
+                    //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
                         joinInfo ="Join this peer-to-peer room, '"+item.get("title")+"'. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
                     }
                     else if(item.get("mode") == "group-small"){
-                        tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
+                    //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
                         joinInfo = "Join this small group room, '"+item.get("title")+"'. Small group rooms support only up to 4 callers, but provide the best quality experience."
                     }
 
@@ -313,7 +336,7 @@ class ContextualActiveUsers extends Component {
                                 </Menu.Item>
                             }) //}>
                         else
-                            list = <Menu.Item disabled={true}>Empty</Menu.Item>
+                            list = <></>
                         return (
                             // <Menu.Item key={item.id}>
                             //     {header}
@@ -325,12 +348,6 @@ class ContextualActiveUsers extends Component {
                         )
                     }
                 ) : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
-                {/*{this.state.loading && this.state.hasMore && (*/}
-                {/*    <div className="demo-loading-container">*/}
-                {/*        <Spin/>*/}
-                {/*    </div>*/}
-                {/*)}*/}
-
                 </Menu>
             </div>
         }

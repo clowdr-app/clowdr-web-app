@@ -32,20 +32,18 @@ class UserStatusDisplay extends React.Component{
     render() {
         if (!this.state.profile)
             return <Skeleton.Input active style={{width: '100px', height: '1em'}}/>
-        if (!this.state.presence){
-
-            if(this.props.onlyShowWithPresence)
-                return <div></div>
-            return <div className="userDisplay">{this.state.profile.get("displayName")}
-            </div>
-        }
-        else{
 
             let presenceDesc = "";
             let badgeColor = "";
             let badgeStyle = "success";
             let dntWaiver = "";
-            if (this.state.presence.get("isLookingForConversation")) {
+            if(!this.state.presence){
+                if(this.props.onlyShowWithPresence)
+                    return <div></div>
+                badgeStyle = "default";
+                presenceDesc = "Offline";
+            }
+            else if (this.state.presence.get("isLookingForConversation")) {
                 presenceDesc = "Available for conversation";
                 badgeColor = "green";
                 badgeStyle = "processing";
@@ -60,14 +58,14 @@ class UserStatusDisplay extends React.Component{
                 badgeStyle = "default"
                 dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
             }
-            let statusDesc = <i>{this.state.presence.get("status")}</i>;
-            let dmButton = <></>
+            let statusDesc = (this.state.presence ? <i>{this.state.presence.get("status")}</i> : <></>);
+            let onClick = ()=>{};
             if(this.props.auth.userProfile.id != this.state.profile.id){
-                dmButton = <Button onClick={this.openDM.bind(this)} type="primary">Message</Button>
+                onClick = this.openDM.bind(this);
             }
-            let popoverContent = <span>{dmButton}</span>
+            let popoverContent = <span></span>
             if (this.props.popover)
-                return <div className="userDisplay" style={this.props.style}>
+                return <div className="userDisplay" style={this.props.style} onClick={onClick}>
                     <Popover title={this.state.profile.get("displayName") + "'s availability is: " + presenceDesc}
                              content={<div>{statusDesc} {dntWaiver}</div>}>
                         <Badge status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Popover>
@@ -75,6 +73,7 @@ class UserStatusDisplay extends React.Component{
             else return <div
                 key={this.state.profile.id}
                 className="userTag"
+                onClick={onClick}
                 title=
                 {dntWaiver}>
                 <Popover
@@ -82,7 +81,6 @@ class UserStatusDisplay extends React.Component{
                 content={popoverContent}>
                     <Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")} {statusDesc}</Popover>
             </div>
-        }
 
     }
 }

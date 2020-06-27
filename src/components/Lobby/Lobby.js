@@ -175,27 +175,27 @@ class Lobby extends React.Component {
         if(this.props.auth.presences != this.state.presences){
             this.setState({presences: this.props.auth.presences});
         }
-        if (this.props.auth.videoRoomsLoaded != this.state.videoRoomsLoaded) {
-            this.setState({videoRoomsLoaded: this.props.auth.videoRoomsLoaded});
-        }
-        if (!this.areEqualID(this.props.auth.currentConference, prevProps.auth.currentConference) || !this.areEqualID(prevProps.auth.user, this.props.auth.user)) {
-            if (this.props.auth.user) {
-                this.props.auth.subscribeToVideoRoomState();
-
-                this.setState({loggedIn: true});
-            }
-        }
-        if(this.props.auth.activePrivateVideoRooms != this.state.activePrivateVideoRooms)
-        {
-            this.setState({activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms})
-        }
-        if(this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms){
-            this.setState({activePublicVideoRooms: this.props.auth.activePublicVideoRooms})
-        }
-        if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
-            this.setState({currentRoom: this.props.auth.currentRoom})
-        }
-        this.mounted = true;
+        // if (this.props.auth.videoRoomsLoaded != this.state.videoRoomsLoaded) {
+        //     this.setState({videoRoomsLoaded: this.props.auth.videoRoomsLoaded});
+        // }
+        // if (!this.areEqualID(this.props.auth.currentConference, prevProps.auth.currentConference) || !this.areEqualID(prevProps.auth.user, this.props.auth.user)) {
+        //     if (this.props.auth.user) {
+        //         this.props.auth.subscribeToVideoRoomState();
+        //
+        //         this.setState({loggedIn: true});
+        //     }
+        // }
+        // if(this.props.auth.activePrivateVideoRooms != this.state.activePrivateVideoRooms)
+        // {
+        //     this.setState({activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms})
+        // }
+        // if(this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms){
+        //     this.setState({activePublicVideoRooms: this.props.auth.activePublicVideoRooms})
+        // }
+        // if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
+        //     this.setState({currentRoom: this.props.auth.currentRoom})
+        // }
+        // this.mounted = true;
     }
 
     async onCreate(values) {

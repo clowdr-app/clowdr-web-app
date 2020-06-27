@@ -46,6 +46,7 @@ class ChatFrame extends React.Component {
             visible: this.props.visible
         }
         this.form = React.createRef();
+        this.lastConsumedMessageIndex= -1;
     }
 
     formatTime(timestamp) {
@@ -61,7 +62,6 @@ class ChatFrame extends React.Component {
     }
 
     async changeChannel(sid) {
-        console.log("Chagne channel: " + sid)
         let user = this.props.auth.user;
         if (!sid) {
             this.setState({chatDisabled: true});
@@ -145,7 +145,6 @@ class ChatFrame extends React.Component {
 
     updateUnreadCount(lastConsumed, lastTotal) {
         if (lastConsumed != this.lastConsumedMessageIndex || lastTotal != this.lastSeenMessageIndex) {
-            console.log(this.sid + " Chat updated:" + lastConsumed + " vs " + this.lastConsumedMessageIndex)
             let unread = lastTotal - lastConsumed;
             if (unread != this.unread) {
                 if (this.props.setUnreadCount)
@@ -164,7 +163,7 @@ class ChatFrame extends React.Component {
             return undefined;
         let _this = this;
         let lastSID;
-        let lastIndex;
+        let lastIndex = 0;
 
         let authorIDs = {};
         for (let message of messages) {

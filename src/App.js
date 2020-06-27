@@ -86,6 +86,7 @@ class App extends Component {
             let headerImage = this.state.conference.get("headerImage");
             let headerText = this.state.conference.get("headerText");
             let confSwitcher;
+            let clowdrActionButtons;
             if(this.props.authContext.validConferences && this.props.authContext.validConferences.length > 1 && this.isSlackAuthOnly()){
                 confSwitcher = <Select
                                        placeholder="Change conference"
@@ -98,13 +99,14 @@ class App extends Component {
                             <Select.Option key={i}>{conf.get("conferenceName")}</Select.Option>)
                     }
                 </Select>
-            }
-            let clowdrActionButtons = <span>
+                clowdrActionButtons = <span>
                 {(this.props.authContext.user && this.props.authContext.permissions.includes("moderator") ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
-                <Tooltip title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
+                    <Tooltip title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
                 <Tooltip title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
                 <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
                 </span>
+            }
+
             if(confSwitcher){
                 confSwitcher = <span style={{float: "right"}}>{confSwitcher} {clowdrActionButtons}</span>
             }

@@ -99,7 +99,6 @@ class SidebarChat extends React.Component {
             }
             if (this.desiredChannel == newChannel)
                 return;
-            console.log("New channel: " + newChannel)
             this.desiredChannel = newChannel;
             this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
             //check to make sure we are a member
@@ -107,7 +106,6 @@ class SidebarChat extends React.Component {
             let found = channels[newChannel];
             if (!found) {
                 found = await this.props.auth.chatClient.joinAndGetChannel(newChannel);
-                console.log("Found/jkoined " + found)
                 if (this.desiredChannel != newChannel)
                     return;
             }

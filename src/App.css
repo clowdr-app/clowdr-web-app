@@ -236,6 +236,9 @@ background-color:#97a7b7;
     width: 5px;
     height: 20px;
 }
+.overflowHelper{
+    text-align: right;
+}
 
 .dragIconMiddleRight svg{
     position: absolute;
@@ -386,9 +389,9 @@ div.availabilityOptionsOpen  span.availabilityOption{
 .embeddedChatMessageEntry{
     /*position: relative;*/
     /*bottom: 0;*/
+    min-height: 30px;
     width: 100%;
     display: flex;
-    background-color: green;
 }
 .chatMessageContainer{
     flex-direction: column-reverse;

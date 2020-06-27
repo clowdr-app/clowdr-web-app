@@ -59,6 +59,7 @@ const withAuthentication = Component => {
                 helpers: exports,
                 chatClient: new ChatClient(this.setState.bind(this)),
                 parseLive: parseLive,
+                presences: {},
                 // video: {
                 videoRoomsLoaded: false,
                     liveVideoRoomMembers: 0,
@@ -352,7 +353,6 @@ const withAuthentication = Component => {
                 }
                 this.loadingProfiles[id] = resolve;
             });
-            console.log("Manual fetch: " + id)
             let userProfielQ = new Parse.Query(UserProfile);
             let u;
             try{
@@ -364,7 +364,6 @@ const withAuthentication = Component => {
                 // u = p;
                 // p.set("displayName", id);
             }
-            console.log(u)
             this.userProfiles[id] = new Promise((resolve) => (resolve(u)));
             if (this.loadingProfiles[id]) {
                 this.loadingProfiles[id](u);
@@ -546,13 +545,13 @@ const withAuthentication = Component => {
                         for(let space of spaces){
                             spacesByName[space.get("name")] = space;
                         }
-                        let currentConference = _this.state.currentConference;
+                        let priorConference = _this.state.currentConference;
+                        _this.currentConference = conf;
+                        _this.user = userWithRelations;
+                        _this.userProfile = activeProfile;
                         _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile)
-                        console.log(user);
-                        console.log(activeProfile);
                         await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
                         await _this.createSocialSpaceSubscription(user, activeProfile);
-                        console.log("RefreshUser called, setting chat channel for some reason?" + _this.state.chatChannel)
                         let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
 
 
@@ -576,7 +575,7 @@ const withAuthentication = Component => {
                             finishedStateFn()});
 
                         await stateSetPromise;
-                        if(currentConference && currentConference.id != conf.id){
+                        if(priorConference && priorConference.id != conf.id){
                             window.location.reload(false);
                         }
                         _this.forceUpdate();
@@ -628,12 +627,13 @@ const withAuthentication = Component => {
             });
         }
         async subscribeToPublicRooms() {
-            if(!this.state.currentConference){
+            if(!this.currentConference){
                 throw "Not logged in"
             }
             let query = new Parse.Query("BreakoutRoom");
-            query.equalTo("conference", this.state.currentConference);
+            query.equalTo("conference", this.currentConference);
             query.include("members");
+            query.include("programItem");
             query.equalTo("isPrivate", false);
             // query.greaterThanOrEqualTo("updatedAt",date);
             query.find().then(res => {
@@ -649,7 +649,7 @@ const withAuthentication = Component => {
                 if (this.parseLivePublicVideosSub) {
                     this.parseLivePublicVideosSub.unsubscribe();
                 }
-                this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.state.user.getSessionToken());
+                this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.user.getSessionToken());
                 this.parseLivePublicVideosSub.on('create', async (vid) => {
                     vid = await this.populateMembers(vid);
                     this.setState((prevState) => ({
@@ -674,12 +674,12 @@ const withAuthentication = Component => {
             })
 
             let queryForPrivateActivity = new Parse.Query("LiveActivity");
-            queryForPrivateActivity.equalTo("conference", this.state.currentConference);
+            queryForPrivateActivity.equalTo("conference", this.currentConference);
             // queryForPrivateActivity.equalTo("topic", "privateBreakoutRooms");
-            queryForPrivateActivity.equalTo("user", this.state.user);
+            queryForPrivateActivity.equalTo("user", this.user);
             this.setState({videoRoomsLoaded: true});
             await this.subscribeToNewPrivateRooms();
-            this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.state.user.getSessionToken());
+            this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.user.getSessionToken());
             this.parseLiveActivitySub.on('create', this.handleNewParseLiveActivity.bind(this));
             this.parseLiveActivitySub.on("update", this.handleNewParseLiveActivity.bind(this));
         }
@@ -737,7 +737,7 @@ const withAuthentication = Component => {
                 return;
             let currentlySubscribedTo = [];
             let newRoomsQuery = new Parse.Query("BreakoutRoom");
-            newRoomsQuery.equalTo("conference", this.state.currentConference);
+            newRoomsQuery.equalTo("conference", this.currentConference);
             newRoomsQuery.include("members");
             newRoomsQuery.equalTo("isPrivate", true)
             newRoomsQuery.limit(100);
@@ -758,7 +758,7 @@ const withAuthentication = Component => {
                 fetchedIDs.push(room.id);
             }
 
-            this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.state.user.getSessionToken());
+            this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.user.getSessionToken());
             this.parseLivePrivateVideosSub.on("update", async (newItem) => {
                 newItem = await this.populateMembers(newItem);
                 this.notifyUserOfChanges(newItem);
