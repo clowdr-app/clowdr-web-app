@@ -32,6 +32,9 @@ class Exhibits extends React.Component {
         if (!this.props.downloaded) 
             this.props.onDown(this.props);
         else {
+            let posters = this.getPosters(this.props.match.params.track, this.props.items, this.props.tracks);
+            this.state.posters = posters;
+            this.state.myposter = this.getUserPoster(posters);
             this.state.waitForProgram = false;
         }        
         
@@ -113,7 +116,7 @@ class Exhibits extends React.Component {
             console.log('[Posters]: Program cached');
         }
 
-        if (prevProps.match.params.track !== this.props.match.params.track) {
+        if (prevProps.match.params.track != this.props.match.params.track) {
             this.initializePosters(this.props.match.params.track);
         }
     }
