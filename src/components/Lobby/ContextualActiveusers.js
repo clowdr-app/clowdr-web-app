@@ -131,7 +131,7 @@ class ContextualActiveUsers extends Component {
 
 
         let lobbyMembers = [];
-        if (this.state.presences)
+        if (this.state.presences && this.state.activeSpace)
             lobbyMembers = Object.values(this.state.presences).filter(p => p && p.get("socialSpace") && p.get("socialSpace").id == this.state.activeSpace.id).map(p => p.get("user"));
 
         for (let room of allActiveRooms) {

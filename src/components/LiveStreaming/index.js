@@ -108,7 +108,6 @@ class LiveStreaming extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Live]: Something changed");
 
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
@@ -134,11 +133,12 @@ class LiveStreaming extends Component {
                 }
             }
         }
-        else 
-            console.log('[Live]: Program cached');
     }
     
     render() {
+        if (!this.props.auth.user) {
+            return <div>You don't have access to this page.</div>
+        }
         if (this.props.downloaded) {
 
             return <div className={"space-align-container"}>

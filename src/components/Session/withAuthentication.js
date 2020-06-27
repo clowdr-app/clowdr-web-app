@@ -225,7 +225,7 @@ const withAuthentication = Component => {
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
             this.socialSpaceSubscription.on('create',(presence)=>{
-                console.log("create:" + presence.id);
+                console.log("[UserPresence]: create:" + presence.id);
                 this.setState(
                     (prevState)=>({
                         presences: {
@@ -235,8 +235,8 @@ const withAuthentication = Component => {
                     })
                 )
             })
-            this.socialSpaceSubscription.on('enter',(presence)=>{
-                console.log("Enter:" + presence.id);
+            this.socialSpaceSubscription.on('update',(presence)=>{
+                console.log("[UserPresence]: update: user" + presence.get('user').id + "entered ss: " + presence.get("socialSpace").id);
                 this.setState(
                     (prevState)=>({
                         presences: {
@@ -301,6 +301,8 @@ const withAuthentication = Component => {
         Provide either the spaceName or the space object.
          */
         async setSocialSpace(spaceName, space, user, userProfile) {
+            if (!this.state.user) // user is not logged in
+                return
             if(space)
                 spaceName = space.get("name");
             console.log(user);

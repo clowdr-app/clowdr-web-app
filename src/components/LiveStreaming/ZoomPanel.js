@@ -35,7 +35,6 @@ class ZoomPanel extends Component {
 //     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Zoom]: Something changed");
     }
     
     render() {
