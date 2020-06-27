@@ -19,6 +19,8 @@ class Exhibits extends React.Component {
             gotTracks: false,
             gotItems: false,
             gotPeople: false,
+            gotSessions: false,
+            gotRooms: false,
             waitForProgram: true
         }
 
@@ -36,8 +38,21 @@ class Exhibits extends React.Component {
             this.state.posters = posters;
             this.state.myposter = this.getUserPoster(posters);
             this.state.waitForProgram = false;
+            this.changeChatPanel(posters);
         }        
         
+    }
+
+    changeChatPanel(posters) {
+        if (posters.length > 0) {
+            let poster = posters.find(p => p.get("programSession"));
+            if(poster.get("programSession") && poster.get("programSession").get("room") && poster.get("programSession").get("room").get("socialSpace")){
+                //set the social space...
+                let ss = poster.get("programSession").get("room").get("socialSpace");
+                this.props.auth.setSocialSpace(ss.get("name"));
+                this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+            }
+        }
     }
 
     getPosters(TRACK, items, tracks) {
@@ -85,16 +100,16 @@ class Exhibits extends React.Component {
             myposter: this.getUserPoster(posters),
             waitForProgram: false
         });
-
+        this.changeChatPanel(posters);
     }
 
     componentDidUpdate(prevProps) {
         console.log("[Posters]: Something changed");
 
         if (this.state.waitForProgram) {
-            if (this.state.gotItems && this.state.gotTracks && this.state.gotPeople) {
+            if (this.state.gotItems && this.state.gotTracks && this.state.gotPeople && this.state.gotSessions && this.state.gotRooms) {
                 console.log('[Posters]: Program download complete');
-                this.initializePosters(this.props.match.params.track)
+                this.initializePosters(this.props.match.params.track);
             }
             else {
                 console.log('[Posters]: Program still downloading...');
@@ -109,6 +124,14 @@ class Exhibits extends React.Component {
                 if (prevProps.people.length != this.props.people.length) {
                     this.setState({gotPeople: true});
                     console.log('[Posters]: got people');
+                }
+                if (prevProps.sessions.length != this.props.sessions.length) {
+                    this.setState({gotSessions: true});
+                    console.log('[Posters]: got sessions');
+                }
+                if (prevProps.rooms.length != this.props.rooms.length) {
+                    this.setState({gotRooms: true});
+                    console.log('[Posters]: got rooms');
                 }
             }
         }

@@ -172,6 +172,7 @@ class ProgramItems extends React.Component {
             });
         })
     }
+    
     componentWillUnmount() {
         // this.sub.unsubscribe();
     }

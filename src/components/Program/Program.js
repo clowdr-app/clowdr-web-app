@@ -78,7 +78,6 @@ class Program extends React.Component {
                 }
             }
         }
-        console.log(table)
         return table;
     }
 
