@@ -75,13 +75,12 @@ class ProgramSessions extends React.Component {
         acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
         acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
         session.setACL(acl);
-        try {
-            session = await session.save();
-            this.setState({visible: false /*, sessions: sortedSessions*/})
-        } catch (err) {
-            console.log(err)
-            console.log("@" + session.id)
-        }
+        session.save()
+        .then(session => this.setState({visible: false /*, sessions: sortedSessions*/}))
+        .catch(err => {
+            console.log(err);
+            console.log("@" + session.id);
+        });
 
         // let data = {
         //     conference: this.props.auth.currentConference.id,
@@ -329,7 +328,7 @@ class ProgramSessions extends React.Component {
                         }}
                         rooms={this.state.rooms}
                         items={this.state.items}
-                        myItems={this.state.edt_session.items}
+                        myItems={this.state.edt_session.items ? this.state.edt_session.items : []}
                     />
                     <Input.Search/>
                     <Table 
