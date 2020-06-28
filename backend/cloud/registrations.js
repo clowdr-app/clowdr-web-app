@@ -212,6 +212,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     let regIDs = request.params.registrations;
     let confID = request.params.conference;
 
+    console.log('--> ' + JSON.stringify(regIDs));
     let regQ = new Parse.Query("Registration");
     regQ.containedIn("objectId", regIDs);
     regQ.withCount();
@@ -312,6 +313,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                         "you can use your existing credentials to login or reset your password here: " + joinURL(config.frontendURL, "/signin");
             } else if (user.get("passwordSet")){
                 //Don't do anything, they already have an account.
+                console.log(`[Registrations]: user ${registrant.get("name")} already has an account`);
                 continue;
             }
             var toEmail = new sgMail.Email(registrant.get("email"));
