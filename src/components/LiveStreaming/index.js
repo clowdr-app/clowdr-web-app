@@ -21,30 +21,10 @@ class LiveStreaming extends Component {
             gotSessions: false,
             gotRooms: false,
             liveRooms: [],
-            currentSessions: []
+            currentSessions: [],
+            loggedIn: (this.props.auth.user ? true : false)
         };
 
-        console.log('[Live]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded) 
-            this.props.onDown(this.props);
-        else {
-            this.state.rooms = this.props.rooms;
-            this.state.sessions = this.props.sessions;
-            let current = this.getLiveRooms(this.props.match.params.when);
-            this.state.liveRooms = current[0];
-            this.state.currentSessions = current[1];
-        }
-
-        // Run every 15 minutes that the user is on this page
-        this.timerId = setInterval(() => {
-//            console.log('TICK!');
-            let current = this.getLiveRooms(this.props.match.params.when);
-            if (!this.arraysEqual(current[0], this.state.liveRooms)) {
-                this.setState({liveRooms: current[0], currentSessions: current[1]});
-            }
-        }, 60000*15);
     }
 
     arraysEqual(arr1,arr2) { // Assumes they are already sorted
@@ -98,7 +78,42 @@ class LiveStreaming extends Component {
         return [liveRooms, currentSessions];
     }
     
-    componentDidMount() {
+    async componentDidMount() {
+        let user = undefined;
+        if (!this.state.loggedIn) {
+            user = await this.props.auth.refreshUser();
+            if (user) {
+                this.setState({
+                    loggedIn: true
+                }); 
+            }
+        }
+
+        if (this.props.auth.user) {
+            console.log('[Live]: downloaded? ' + this.props.downloaded);
+
+            // Call to download program
+            if (!this.props.downloaded) 
+                this.props.onDown(this.props);
+            else {
+                let current = this.getLiveRooms(this.props.match.params.when);
+                this.setState({
+                    liveRooms: current[0],
+                    currentSessions: current[1],
+                    loading: false
+                });
+            }
+    
+            // Run every 15 minutes that the user is on this page
+            this.timerId = setInterval(() => {
+    //            console.log('TICK!');
+                let current = this.getLiveRooms(this.props.match.params.when);
+                if (!this.arraysEqual(current[0], this.state.liveRooms)) {
+                    this.setState({liveRooms: current[0], currentSessions: current[1]});
+                }
+            }, 60000*15);
+    
+        }
     }
 
     componentWillUnmount() {
@@ -150,9 +165,10 @@ class LiveStreaming extends Component {
     }
     
     render() {
-        if (!this.props.auth.user) {
+        if (!this.state.loggedIn) {
             return <div>You don't have access to this page.</div>
         }
+
         if (this.props.downloaded) {
 
             return <div className={"space-align-container"}>

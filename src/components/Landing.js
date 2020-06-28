@@ -11,9 +11,9 @@ class Landing extends Component {
             <div> We are using two main tools to connect everyone:
                 <ul>
                     <li>This Web app, CLOWDR, where you can view all the <a href="/live/now">live</a> and <a href="/live/past">past</a> sessions,
-                        ask questions during the live talks, engage in session-specific text chats, view the <a href="/exhibits/icse-2020-poster">posters</a>,  
-                        the <a href="/exhibits/icse-2020-ACM-Student-Research-Competition">Student Research Competition</a>, and the <a href="/exhibits/Demonstrations">demos</a>, and talk their authors,
-                        and meetup with peers in the <a href="/lobby">Lobby</a> for video chats.</li>
+                        ask questions during the live talks, engage in session-specific and paper-specific chats, view the <a href="/exhibits/icse-2020-poster">posters</a>,  
+                        the <a href="/exhibits/icse-2020-ACM-Student-Research-Competition">Student Research Competition</a>, and the <a href="/exhibits/Demonstrations">demos</a>, 
+                        and talk to their authors, and meetup with peers in the <a href="/lobby">Lobby</a> for video chats.</li>
                     <li>The ICSE 2020 Slack channel, where you can get <a href="https://icse-2020.slack.com/app_redirect?channel=help" rel="noopener noreferrer" target="_blank">#help</a>, 
                         volunteer for <a href="https://icse-2020.slack.com/app_redirect?channel=mentoring" rel="noopener noreferrer" target="_blank">#mentoring</a>, and organize your own
                         coffee breaks or BYOB in <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.

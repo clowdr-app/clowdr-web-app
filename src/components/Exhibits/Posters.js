@@ -21,25 +21,9 @@ class Exhibits extends React.Component {
             gotPeople: false,
             gotSessions: false,
             gotRooms: false,
-            waitForProgram: true
+            waitForProgram: true,
+            loggedIn: (this.props.auth.user ? true : false)
         }
-
-        // Who am I? Very lightweight security
-        this.first_last = this.props.auth.userProfile.get("displayName") ? this.props.auth.userProfile.get("displayName").split() : ["", ""];
-        if (this.first_last.length > 2) {
-            this.first_last = [this.first_last[0], this.first_last[1]]; // Just first and last names
-        }
-        
-        // Call to download program
-        if (!this.props.downloaded) 
-            this.props.onDown(this.props);
-        else {
-            let posters = this.getPosters(this.props.match.params.track, this.props.items, this.props.tracks);
-            this.state.posters = posters;
-            this.state.myposter = this.getUserPoster(posters);
-            this.state.waitForProgram = false;
-            this.changeChatPanel(posters);
-        }        
         
     }
 
@@ -87,8 +71,40 @@ class Exhibits extends React.Component {
 
     async componentDidMount() {
         //For social features, we need to wait for the login to complete before doing anything
-        let user = await this.props.auth.refreshUser();
-        this.setState({loading: false})
+        let user = undefined;
+        if (!this.state.loggedIn) {
+            user = await this.props.auth.refreshUser();
+            if (user) {
+                this.setState({
+                    loggedIn: true
+                }); 
+            }
+        }
+
+        if (this.props.auth.user) {
+            // Who am I? Very lightweight security
+            this.first_last = this.props.auth.userProfile.get("displayName") ? this.props.auth.userProfile.get("displayName").split() : ["", ""];
+            if (this.first_last.length > 2) {
+                this.first_last = [this.first_last[0], this.first_last[1]]; // Just first and last names
+            }
+            
+            // Call to download program
+            if (!this.props.downloaded) 
+                this.props.onDown(this.props);
+            else {
+                let posters = this.getPosters(this.props.match.params.track, this.props.items, this.props.tracks);
+                this.changeChatPanel(posters);
+                this.setState({
+                    posters: posters,
+                    myposter: this.getUserPoster(posters),
+                    waitForProgram: false
+                });
+            } 
+            
+        }
+        this.setState({
+            loading: false
+        });
     }
 
     initializePosters(track) {
@@ -104,7 +120,6 @@ class Exhibits extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Posters]: Something changed");
 
         if (this.state.waitForProgram) {
             if (this.state.gotItems && this.state.gotTracks && this.state.gotPeople && this.state.gotSessions && this.state.gotRooms) {
@@ -176,48 +191,47 @@ class Exhibits extends React.Component {
 
         const { Meta } = Card;
 
-        if (this.state.loading)
-            return <Spin/>
+        if (!this.state.loggedIn)
+            return <div>You are not allowed to see this content</div>
 
-        if (this.props.downloaded) {
+        if (this.state.loading || !this.props.downloaded)
+            return (
+                <Spin tip="Loading...">
+                </Spin>)
 
-            return <div className={"space-align-container"}>
-                    {this.state.posters.map((poster) => {
-                        let authors = poster.get("authors");
-                        let authorstr = authors.map(a => a.get('name')).join(", ");
-                        
-                        let tool = "";
-                        if (this.state.myposter && (this.state.myposter.id == poster.id))
-                            tool = <span title="Looks like you're an author. Replace the image? Use 3x2 ratio.">
-                                        <Upload accept=".png, .jpg" name='poster' beforeUpload={this.onImageUpload.bind(this)}>
-                                        <Button type="primary">
-                                            <UploadOutlined />Upload
-                                        </Button>
-                                        </Upload>
-                                    </span>;
+        return <div className={"space-align-container"}>
+                {this.state.posters.map((poster) => {
+                    let authors = poster.get("authors");
+                    let authorstr = authors.map(a => a.get('name')).join(", ");
+                    
+                    let tool = "";
+                    if (this.state.myposter && (this.state.myposter.id == poster.id))
+                        tool = <span title="Looks like you're an author. Replace the image? Use 3x2 ratio.">
+                                    <Upload accept=".png, .jpg" name='poster' beforeUpload={this.onImageUpload.bind(this)}>
+                                    <Button type="primary">
+                                        <UploadOutlined />Upload
+                                    </Button>
+                                    </Upload>
+                                </span>;
 
-                        let img = placeholder;
-                        if (poster.get("image"))
-                            img = poster.get("image");
+                    let img = placeholder;
+                    if (poster.get("image"))
+                        img = poster.get("image");
 
-                        return <div className={"space-align-block"} key={poster.id} >
-                                    <NavLink to={"/program/" + poster.get("confKey")}>
-                                        <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{width:300, height:200 }} 
-                                            src={img} 
-                                        />}>
-                                            <Tooltip placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
-                                                <Meta title={poster.get('title')} description={authorstr} />
-                                            </Tooltip>
-                                        </Card>
-                                    </NavLink>
-                                    {tool}
-                                </div>
-                    })}
-                </div> 
-        }
-        return (
-            <Spin tip="Loading...">
-            </Spin>)
+                    return <div className={"space-align-block"} key={poster.id} >
+                                <NavLink to={"/program/" + poster.get("confKey")}>
+                                    <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{width:300, height:200 }} 
+                                        src={img} 
+                                    />}>
+                                        <Tooltip placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
+                                            <Meta title={poster.get('title')} description={authorstr} />
+                                        </Tooltip>
+                                    </Card>
+                                </NavLink>
+                                {tool}
+                            </div>
+                })}
+            </div> 
 
     }
 }
