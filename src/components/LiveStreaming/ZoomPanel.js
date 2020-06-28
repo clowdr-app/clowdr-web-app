@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Card} from 'antd';
+import {Button} from 'antd';
 import moment from 'moment';
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
@@ -48,7 +48,7 @@ class ZoomPanel extends Component {
         let roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
 
-        let navigation = <a href={this.video_url} target={"_blank"} rel="noopener noreferrer">Join</a>
+        let navigation = <a href={this.video_url} target={"_blank"} rel="noopener noreferrer"><Button type="primary" >Enter</Button></a>
 
         return  <div>
                     <table style={{width:"100%"}}>

@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Card} from 'antd';
+import {Button} from 'antd';
 import moment from 'moment';
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
@@ -62,10 +62,10 @@ class LiveStreamingPanel extends Component {
         let navigation="";
         let roomName = this.props.video.get('name');
         if (this.state.expanded) {
-            navigation = <a href="#" onClick={this.toggleExpanded.bind(this)}>Go Back</a>
+            navigation = <Button type="primary" onClick={this.toggleExpanded.bind(this)}>Go Back</Button>
         }
         else {
-            navigation = <a href="#" onClick={this.toggleExpanded.bind(this)}>Join</a>
+            navigation = <Button type="primary" onClick={this.toggleExpanded.bind(this)}>Enter</Button>
             roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
         }
@@ -83,7 +83,7 @@ class LiveStreamingPanel extends Component {
                         <tbody>
                         <tr >
                             <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>
-                            <td style={{"textAlign":"center"}}>Viewers: {viewers}</td>
+                            <td style={{"textAlign":"left"}}>Viewers: {viewers}</td>
                             <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>
                         </tr>
                         </tbody>
