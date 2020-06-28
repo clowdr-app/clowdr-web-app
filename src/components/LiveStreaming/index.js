@@ -94,7 +94,7 @@ class LiveStreaming extends Component {
 
         liveRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
 
-        liveRooms.map(r => console.log('Live @ ' + r.get('name')));
+//         liveRooms.map(r => console.log('Sessions @ ' + r.get('name')));
         return [liveRooms, currentSessions];
     }
     
