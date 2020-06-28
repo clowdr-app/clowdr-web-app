@@ -8,7 +8,7 @@ class Landing extends Component {
             <h2>ICSE 2020 LIVE @ CLOWDR</h2>
             <p><strong>Welcome to Virtual ICSE 2020!</strong> 
             </p>
-            <p> We are using two main tools to connect everyone:
+            <div> We are using two main tools to connect everyone:
                 <ul>
                     <li>This Web app, CLOWDR, where you can view all the <a href="/live/now">live</a> and <a href="/live/past">past</a> sessions,
                         ask questions during the live talks, engage in session-specific text chats, view the <a href="/exhibits/icse-2020-poster">posters</a>,  
@@ -20,15 +20,15 @@ class Landing extends Component {
                         If you are a presenter, you will also use Slack for meeting up with the live streaming team before the session, so pay
                         attention to them calling you there!</li>
                 </ul>
-            </p>
-            <p><strong>Code of Conduct</strong>: Remember to adhere to 
+            </div>
+            <div><strong>Code of Conduct</strong>: Remember to adhere to
             the <a href="https://www.acm.org/special-interest-groups/volunteer-resources/officers-manual/policy-against-discrimination-and-harassment" rel="noopener noreferrer" target="_blank">
                 ACM Policy Against Harassment</a> at all times. If you observe or are subject to innapropriate conduct, call it out:
                 <ul>
                     <li>Use the red "report" icon in video chats</li>
                     <li>Send a direct message to @Crista Lopes</li>
                 </ul>
-            </p>
+            </div>
             <h3>THANK YOU TO OUR SPONSORS!</h3>
 <center> <font size={6}> Sponsors </font> </center>
 
