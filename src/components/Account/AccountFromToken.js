@@ -54,7 +54,8 @@ class SlackToVideo extends React.Component {
             slackLinkQ.equalTo("instance", conf);
             slackLinkQ.equalTo("key", "SLACK_INVITE_LINk");
             slackLinkQ.first().then((res) => {
-                this.setState({slackLink: res.get("value")});
+                if (res)
+                    this.setState({slackLink: res.get("value")});
             })
         } catch (err) {
             console.log(err);

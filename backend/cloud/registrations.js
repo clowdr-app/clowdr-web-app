@@ -222,6 +222,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     while (nRetrieved < count) {
         // totalCount = count;
         let regQ = new Parse.Query("Registration");
+        regQ.containedIn("objectId", regIDs);
         regQ.limit(1000);
         regQ.skip(nRetrieved);
         let results = await regQ.find({useMasterKey: true});

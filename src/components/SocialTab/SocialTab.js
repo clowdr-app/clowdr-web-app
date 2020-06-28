@@ -29,6 +29,12 @@ class SocialTab extends Component {
             }
         })
     }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")){
+            this.setState({visible: true});
+            this.props.setWidth(250);
+        }
+    }
 
     setDrawerWidth(width){
         this.setState({siderWidth: width})

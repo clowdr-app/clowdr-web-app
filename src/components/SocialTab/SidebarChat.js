@@ -79,6 +79,10 @@ class SidebarChat extends React.Component {
         this.user = this.props.auth.user;
         let isDifferentChannel = this.props.auth.chatChannel != this.state.channel;
 
+        if(!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")){
+            this.setState({visible: true});
+            this.props.setWidth(250);
+        }
         if(this.state.chatDisabled && this.props.auth.user && this.props.auth.user.get("passwordSet")){
             this.setState({chatDisabled: false})
         }
