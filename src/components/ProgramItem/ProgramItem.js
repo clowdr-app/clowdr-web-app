@@ -110,9 +110,13 @@ class ProgramItem extends React.Component {
         if (this.state.programItem.get("image")) {
             img = <img src={this.state.programItem.get("image")} />
         }
+        let authors = this.state.programItem.get("authors") ? this.state.programItem.get("authors") : [];
+        let authorstr = authors.map(a => a.get('name')).join(", ");
+
         return <div className="programItemContainer">
             <div className="programItemMetadata">
                 <h3>{this.state.programItem.get('title')}</h3>
+                <p><i>{authorstr}</i></p>
                 <p><b>Abstract: </b> {this.state.programItem.get("abstract")}</p>
                 {this.props.auth.user  && this.state.programItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.programItem.get("breakoutRoom")}/></div> : <></>}
             </div>
