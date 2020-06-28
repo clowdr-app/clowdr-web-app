@@ -87,7 +87,7 @@ class Landing extends Component {
 <center> <font size={4}> Bronze level </font> </center>
 <center>
 <a href="http://www.naver.com/">
-<img src="https://conf.researchr.org/getLogo/c9a1a424-3007-4f74-b206-8aac2f4bba05?1576480808000" width={200}/></a>&nbsp&nbsp 
+<img src="https://conf.researchr.org/getLogo/c9a1a424-3007-4f74-b206-8aac2f4bba05?1576480808000" width={200}/></a>&nbsp;&nbsp;
 <a href="http://www.hitachi.com/">
 <img src="https://conf.researchr.org/getLogo/c5793109-b7d6-4b1d-bb48-c229cdf7f39b?1577152682000" width={200}/></a>
 <a href="http://www.google.com/">
