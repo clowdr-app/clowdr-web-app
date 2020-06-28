@@ -121,7 +121,6 @@ class LiveStreaming extends Component {
     }
 
     toggleExpanded(vid) {
-        console.log('[Live]: --> ' + this.state.expanded);
         this.setState({
             expanded: !this.state.expanded,
             expanded_video: (this.state.expanded ? undefined: vid)
@@ -129,7 +128,6 @@ class LiveStreaming extends Component {
     }
 
     componentDidUpdate(prevProps) {
-
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
                 console.log('[Live]: Program download complete');
@@ -155,6 +153,9 @@ class LiveStreaming extends Component {
             }
         }
         if (prevProps.match.params.when != this.props.match.params.when) {
+            if (this.state.expanded) {
+                this.toggleExpanded();
+            }
             let current = this.getLiveRooms(this.props.match.params.when);
             this.setState({
                 liveRooms: current[0],

@@ -10,7 +10,6 @@ import placeholder from './placeholder.png';
 class Exhibits extends React.Component {
     constructor(props) {
         super(props);
-        console.log('Made it to posters');
         this.state = {
             dirty: false,
             loading: true,
