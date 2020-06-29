@@ -309,7 +309,7 @@ const withAuthentication = Component => {
                     user = this.state.user;
                 if(!userProfile)
                     userProfile = this.state.userProfile;
-                if(!space){
+                if(!space && this.state.spaces){
                     space = this.state.spaces[spaceName];
                 }
                 if (userProfile.get("presence") &&
@@ -321,7 +321,7 @@ const withAuthentication = Component => {
                 }
                 this.setState({
                     activeSpace: space,
-                    chatChannel: space.get("chatChannel")
+                    chatChannel: space ? space.get("chatChannel") : undefined
                 });
             }
         }
