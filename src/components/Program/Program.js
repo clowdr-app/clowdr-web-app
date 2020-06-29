@@ -30,7 +30,7 @@ class Program extends React.Component {
             loading: true,
             gotTracks: false,
             gotRooms: false,
-            forItems: false,
+            gotItems: false,
             gotSessions: false,
             formatTime: (dateTimeStr)=>moment(dateTimeStr).format("LT")
         }
@@ -40,8 +40,10 @@ class Program extends React.Component {
         // Call to download program
         if (!this.props.downloaded) 
             this.props.onDown(this.props);
-        else
+        else{
             this.state.sessions = this.props.sessions;
+            this.state.loading = false;
+        }
     }
 
     formatSessionsIntoTable(sessions){
@@ -78,7 +80,6 @@ class Program extends React.Component {
                 }
             }
         }
-        console.log(table)
         return table;
     }
 
@@ -211,7 +212,7 @@ class Program extends React.Component {
                    {/*    </Form.Item>*/}
                    {/*</Form>*/}
                 </div>
-                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.sessions)}></Table>
+                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.sessions)} loading={this.state.loading}></Table>
             </div>
         </div>
     }

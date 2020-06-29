@@ -14,12 +14,26 @@ class SocialTab extends Component {
             siderWidth = 250;
         else if(siderWidth == -1)
             siderWidth = 0;
-        this.state = {siderCollapsed: this.props.collapsed, siderWidth: siderWidth}
+        this.state = {siderCollapsed: this.props.collapsed, siderWidth: siderWidth, visible: false}
     }
     componentWillUnmount() {
     }
     componentDidMount() {
         this.props.setWidth(this.state.siderWidth);
+        this.props.auth.refreshUser().then((u)=>{
+            if(u && u.get("passwordSet")){
+                this.setState({visible: true});
+            }
+            else{
+                this.props.setWidth(0)
+            }
+        })
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")){
+            this.setState({visible: true});
+            this.props.setWidth(250);
+        }
     }
 
     setDrawerWidth(width){
@@ -34,6 +48,9 @@ class SocialTab extends Component {
         if(topElement)
             topHeight = topElement.clientHeight;
 
+        if(!this.state.visible){
+            return <div></div>
+        }
         const handleMouseDown = e => {
             document.addEventListener("mouseup", handleMouseUp, true);
             document.addEventListener("mousemove", handleMouseMove, true);

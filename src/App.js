@@ -20,8 +20,7 @@ import {withAuthentication} from "./components/Session";
 import {withProgram} from "./components/Program"
 
 import LiveVideosArea from "./components/LiveStreaming";
-import Posters from "./components/Exhibits/Posters";
-import SRCPosters from "./components/Exhibits/SRCPosters";
+import Exhibits from "./components/Exhibits";
 
 import Parse from "parse";
 import ForgotPassword from "./components/Account/ForgotPassword";
@@ -87,6 +86,7 @@ class App extends Component {
             let headerImage = this.state.conference.get("headerImage");
             let headerText = this.state.conference.get("headerText");
             let confSwitcher;
+            let clowdrActionButtons;
             if(this.props.authContext.validConferences && this.props.authContext.validConferences.length > 1 && this.isSlackAuthOnly()){
                 confSwitcher = <Select
                                        placeholder="Change conference"
@@ -99,13 +99,14 @@ class App extends Component {
                             <Select.Option key={i}>{conf.get("conferenceName")}</Select.Option>)
                     }
                 </Select>
-            }
-            let clowdrActionButtons = <span>
+                clowdrActionButtons = <span>
                 {(this.props.authContext.user && this.props.authContext.permissions.includes("moderator") ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
-                <Tooltip title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
+                    <Tooltip title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
                 <Tooltip title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
                 <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
                 </span>
+            }
+
             if(confSwitcher){
                 confSwitcher = <span style={{float: "right"}}>{confSwitcher} {clowdrActionButtons}</span>
             }
@@ -187,10 +188,10 @@ class App extends Component {
             {baseRoutes}
             <Route exact path="/" component={Home}/>
             <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem}/>
-            <Route exact path="/live" component={LiveVideosArea}/>
+            <Route exact path="/live/:when" component={LiveVideosArea}/>
             <Route exact path="/program" component={Program}/>
 
-            <Route exact path="/exhibits/posters" component={Posters}/>
+            <Route exact path="/exhibits/:track/:style" component={Exhibits}/>
             {/* <Route exact path="/exhibits/srcposters" component={SRCPosters}/> */}
 
             <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>

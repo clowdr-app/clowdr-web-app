@@ -3,7 +3,7 @@ import {AuthUserContext} from "../Session";
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Layout, Popconfirm, Popover, Tooltip} from 'antd';
+import {Badge, Layout, Popconfirm, Popover, Tooltip} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -30,7 +30,8 @@ const INITIAL_STATE = {
     loadingChannels: true,
     chatHeight: "400px",
     groupedMessages: [],
-    newMessage: ''
+    newMessage: '',
+    unreadCount: 0
 };
 
 class SidebarChat extends React.Component {
@@ -59,12 +60,17 @@ class SidebarChat extends React.Component {
     }
 
     async componentDidMount() {
-        if(this.props.auth.user){
+        if(this.props.auth.user && this.props.auth.user.get('passwordSet')){
             this.user = this.props.auth.user;
             // this.changeChannel("#general");
             this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
+            this.props.setWidth(this.state.siderWidth)
         }
-        this.props.setWidth(this.state.siderWidth)
+        else{
+            this.setState({chatDisabled: true})
+            this.props.setWidth(0);
+
+        }
     }
 
 
@@ -72,8 +78,14 @@ class SidebarChat extends React.Component {
         let isDifferentUser = this.user != this.props.auth.user;
         this.user = this.props.auth.user;
         let isDifferentChannel = this.props.auth.chatChannel != this.state.channel;
-        console.log("CDU " + this.props.auth.chatChannel + " " + this.state.channel)
 
+        if(!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")){
+            this.setState({visible: true});
+            this.props.setWidth(250);
+        }
+        if(this.state.chatDisabled && this.props.auth.user && this.props.auth.user.get("passwordSet")){
+            this.setState({chatDisabled: false})
+        }
         if(this.props.auth.forceChatOpen && this.state.siderWidth == 0){
             this.setState({siderWidth: 250});
             this.props.auth.helpers.setGlobalState({forceChatOpen: false})
@@ -89,7 +101,6 @@ class SidebarChat extends React.Component {
                 //fall back to the current social space
                 newChannel = this.props.auth.activeSpace.get("chatChannel");
             }
-            console.log("New channel: " + newChannel)
             if (this.desiredChannel == newChannel)
                 return;
             this.desiredChannel = newChannel;
@@ -99,7 +110,6 @@ class SidebarChat extends React.Component {
             let found = channels[newChannel];
             if (!found) {
                 found = await this.props.auth.chatClient.joinAndGetChannel(newChannel);
-                console.log("Found/jkoined " + found)
                 if (this.desiredChannel != newChannel)
                     return;
             }
@@ -149,7 +159,7 @@ class SidebarChat extends React.Component {
             containerStyle.width="10px";
         }
         return <div className="chatTab" style={containerStyle}>
-            <ChatFrame sid={this.state.sid} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
+            <ChatFrame sid={this.state.sid} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
 
                 <div className="dragIconMiddleRight"
                      onClick={()=>{
@@ -162,7 +172,11 @@ class SidebarChat extends React.Component {
                     {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
                 </div>
 
-                <div className="roomDraggerRight" onMouseDown={e => handleMouseDown(e)} ></div>
+                <div className="roomDraggerRight" onMouseDown={e => handleMouseDown(e)} ><Badge count={this.state.unreadCount} offset={[-20,0]}  overflowCount={99} onClick={()=>{
+                    localStorage.setItem("chatWidth", this.state.siderWidth == 0 ? 250 : -1);
+                    this.props.setWidth((this.state.siderWidth == 0 ? 250 : 10));
+                    this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
+                }} /></div>
 
                 {/*<div className="dragIconBottom" onMouseDown={e => handleMouseDown(e)}></div>*/}
 

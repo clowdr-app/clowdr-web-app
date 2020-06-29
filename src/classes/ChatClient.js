@@ -142,21 +142,13 @@ export default class ChatClient{
     }
 
     async _initChatClient(user, conference){
-        console.log("Init chat client:")
-        console.log(this.twilio);
-        console.log(this.conference)
-        console.log(conference);
-        console.log(this.chatUser)
-        console.log(user);
         if (this.twilio && this.chatUser && this.chatUser.id == user.id && this.conference && this.conference.id == conference.id) {
             return this.twilio;
         } else if (this.twilio) {
             await this.cleanup();
         }
-        console.log("Doing the ini")
         let token = await this.getToken(user, conference);
         let twilio = await Chat.create(token);
-        console.log(this.twilio)
         let paginator = await twilio.getSubscribedChannels();
         let promises = [];
         for (let channel of paginator.items) {

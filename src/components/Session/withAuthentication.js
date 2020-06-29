@@ -21,8 +21,6 @@ const withAuthentication = Component => {
             this.livegneChannel = null;
             this.channelChangeListeners = [];
 
-            this.subscribedToVideoRoomState = false;
-            this.videoRoomListeners = [];
 
             var parseLive = new Parse.LiveQueryClient({
                 applicationId: process.env.REACT_APP_PARSE_APP_ID,
@@ -61,7 +59,7 @@ const withAuthentication = Component => {
                 helpers: exports,
                 chatClient: new ChatClient(this.setState.bind(this)),
                 parseLive: parseLive,
-                subscribeToVideoRoomState: this.subscribeToVideoRoomState.bind(this),
+                presences: {},
                 // video: {
                 videoRoomsLoaded: false,
                     liveVideoRoomMembers: 0,
@@ -111,15 +109,6 @@ const withAuthentication = Component => {
             return <></>
 
         }
-
-        async subscribeToVideoRoomState(caller) {
-            this.videoRoomListeners.push(caller);
-            if (this.subscribedToVideoRoomState)
-                return;
-            this.subscribedToVideoRoomState = true;
-            this.subscribeToPublicRooms();
-        }
-
 
         getUsers() {
             if (!this.usersPromise)
@@ -221,39 +210,21 @@ const withAuthentication = Component => {
         //     }
         // }
 
-        async createSocialSpaceSubscription(space, user, userProfile){
+        async createSocialSpaceSubscription(user, userProfile){
             if(this.socialSpaceSubscription){
                 this.socialSpaceSubscription.unsubscribe();
-            }
-            if(!space){
-                console.log("Error: no space?")
             }
             if(!user)
                 user = this.state.user;
             if(!userProfile)
                 userProfile = this.state.userProfile;
-            if (userProfile.get("presence") &&
-                (!userProfile.get("presence").get("socialSpace") ||
-                    userProfile.get('presence').get('socialSpace').id != space.id)) {
-                let presence = userProfile.get("presence");
-                presence.set("socialSpace", space);
-                presence.save();
-            }
+            this.subscribeToPublicRooms()
 
 
             let query  =new Parse.Query("UserPresence");
-            query.equalTo("socialSpace", space);
-            let presences = await query.find();
-            let presenceByProfile = {};
-            for(let presence of presences){
-                presenceByProfile[presence.get("user").id] = presence;
-            }
-            console.log("Fetching presences")
-            //trigger a big fetch of all of the profiles at once
-            this.getUserProfilesFromUserProfileIDs(Object.keys(presenceByProfile));
-            this.setState({presences: presenceByProfile});
+            query.equalTo("isOnline", true);
+
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
-            console.log(this.socialSpaceSubscription);
             this.socialSpaceSubscription.on('create',(presence)=>{
                 this.setState(
                     (prevState)=>({
@@ -275,33 +246,30 @@ const withAuthentication = Component => {
                 )
             })
             this.socialSpaceSubscription.on('delete',(presence)=>{
-
-                console.log("Leave")
-                console.log(presence)
                 this.setState(
                     (prevState)=>({
-                        presences: {
-                            ...prevState.presences,
-                            [presence.get("user").id]: undefined
-                        }
+                        presences: Object.keys(prevState.presences).
+                            filter(key=> key!=presence.get("user").id)
+                            .reduce((obj,key)=>{
+                                obj[key] = prevState.presences[key]
+                                return obj;
+                            },{})
                     })
                 )
             })
             this.socialSpaceSubscription.on('leave',(presence)=>{
-                console.log("Leave")
-                console.log(presence)
                 this.setState(
                     (prevState)=>({
-                        presences: {
-                            ...prevState.presences,
-                            [presence.get("user").id]: undefined
-                        }
+                        presences: Object.keys(prevState.presences).
+                        filter(key=> key!=presence.get("user").id)
+                            .reduce((obj,key)=>{
+                                obj[key] = prevState.presences[key]
+                                return obj;
+                            },{})
                     })
                 )
             })
             this.socialSpaceSubscription.on('update',(presence)=>{
-                console.log("Update presence:");
-                console.log(presence);
                 this.setState(
                     (prevState)=>({
                         presences: {
@@ -311,15 +279,51 @@ const withAuthentication = Component => {
                     })
                 )
             })
+            let presences = await query.find();
+            let presenceByProfile = {};
+            for(let presence of presences){
+                presenceByProfile[presence.get("user").id] = presence;
+            }
+            //trigger a big fetch of all of the profiles at once
+            this.getUserProfilesFromUserProfileIDs(Object.keys(presenceByProfile));
+            this.setState((prevState) => ({
+                presences: {
+                    ...prevState.presences,
+                    ...presenceByProfile
+                }
+            }));
         }
-        async setSocialSpace(spaceName) {
-            console.log("1Set social " + spaceName)
-            await this.createSocialSpaceSubscription(this.state.spaces[spaceName]);
-            console.log("2Set social " + spaceName)
-            this.setState({
-                activeSpace: this.state.spaces[spaceName],
-                chatChannel: this.state.spaces[spaceName].get("chatChannel")
-            });
+
+
+        /*
+        Call this to set the user's current social space.
+        Provide either the spaceName or the space object.
+         */
+        async setSocialSpace(spaceName, space, user, userProfile) {
+            if (!this.state.user && !user) // user is not logged in
+                return
+            if(space)
+                spaceName = space.get("name");
+            if (!this.state.activeSpace || spaceName != this.state.activeSpace.get("name")) {
+                if(!user)
+                    user = this.state.user;
+                if(!userProfile)
+                    userProfile = this.state.userProfile;
+                if(!space){
+                    space = this.state.spaces[spaceName];
+                }
+                if (userProfile.get("presence") &&
+                    (!userProfile.get("presence").get("socialSpace") ||
+                        userProfile.get('presence').get('socialSpace').id != space.id)) {
+                    let presence = userProfile.get("presence");
+                    presence.set("socialSpace", space);
+                    presence.save();
+                }
+                this.setState({
+                    activeSpace: space,
+                    chatChannel: space.get("chatChannel")
+                });
+            }
         }
 
         getChatClient(callback) {
@@ -349,7 +353,6 @@ const withAuthentication = Component => {
                 }
                 this.loadingProfiles[id] = resolve;
             });
-            console.log("Manual fetch: " + id)
             let userProfielQ = new Parse.Query(UserProfile);
             let u;
             try{
@@ -361,7 +364,6 @@ const withAuthentication = Component => {
                 // u = p;
                 // p.set("displayName", id);
             }
-            console.log(u)
             this.userProfiles[id] = new Promise((resolve) => (resolve(u)));
             if (this.loadingProfiles[id]) {
                 this.loadingProfiles[id](u);
@@ -543,11 +545,15 @@ const withAuthentication = Component => {
                         for(let space of spaces){
                             spacesByName[space.get("name")] = space;
                         }
-                        let currentConference = _this.state.currentConference;
+                        let priorConference = _this.state.currentConference;
+                        _this.currentConference = conf;
+                        _this.user = userWithRelations;
+                        _this.userProfile = activeProfile;
                         _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile)
-                        await _this.createSocialSpaceSubscription(spacesByName["Lobby"], user, activeProfile);
-                        console.log("RefreshUser called, setting chat channel for some reason?" + _this.state.chatChannel)
+                        await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
+                        await _this.createSocialSpaceSubscription(user, activeProfile);
                         let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
+
 
                         let finishedStateFn = null;
                         let stateSetPromise = new Promise((resolve)=>{
@@ -555,8 +561,6 @@ const withAuthentication = Component => {
                         });
                         _this.setState((prevState) => { return ({
                             spaces: spacesByName,
-                            activeSpace: prevState.activeSpace ? prevState.activeSpace : spacesByName['Lobby'],
-                            chatChannel: prevState.chatChannel ? prevState.chatChannel : cchann,
                             user: userWithRelations,
                             userProfile: activeProfile,
                             teamID: session.get("activeTeam"),
@@ -571,7 +575,7 @@ const withAuthentication = Component => {
                             finishedStateFn()});
 
                         await stateSetPromise;
-                        if(currentConference && currentConference.id != conf.id){
+                        if(priorConference && priorConference.id != conf.id){
                             window.location.reload(false);
                         }
                         _this.forceUpdate();
@@ -623,12 +627,13 @@ const withAuthentication = Component => {
             });
         }
         async subscribeToPublicRooms() {
-            if(!this.state.currentConference){
+            if(!this.currentConference){
                 throw "Not logged in"
             }
             let query = new Parse.Query("BreakoutRoom");
-            query.equalTo("conference", this.state.currentConference);
+            query.equalTo("conference", this.currentConference);
             query.include("members");
+            query.include("programItem");
             query.equalTo("isPrivate", false);
             // query.greaterThanOrEqualTo("updatedAt",date);
             query.find().then(res => {
@@ -644,7 +649,7 @@ const withAuthentication = Component => {
                 if (this.parseLivePublicVideosSub) {
                     this.parseLivePublicVideosSub.unsubscribe();
                 }
-                this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.state.user.getSessionToken());
+                this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.user.getSessionToken());
                 this.parseLivePublicVideosSub.on('create', async (vid) => {
                     vid = await this.populateMembers(vid);
                     this.setState((prevState) => ({
@@ -669,12 +674,12 @@ const withAuthentication = Component => {
             })
 
             let queryForPrivateActivity = new Parse.Query("LiveActivity");
-            queryForPrivateActivity.equalTo("conference", this.state.currentConference);
+            queryForPrivateActivity.equalTo("conference", this.currentConference);
             // queryForPrivateActivity.equalTo("topic", "privateBreakoutRooms");
-            queryForPrivateActivity.equalTo("user", this.state.user);
+            queryForPrivateActivity.equalTo("user", this.user);
             this.setState({videoRoomsLoaded: true});
             await this.subscribeToNewPrivateRooms();
-            this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.state.user.getSessionToken());
+            this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.user.getSessionToken());
             this.parseLiveActivitySub.on('create', this.handleNewParseLiveActivity.bind(this));
             this.parseLiveActivitySub.on("update", this.handleNewParseLiveActivity.bind(this));
         }
@@ -732,7 +737,7 @@ const withAuthentication = Component => {
                 return;
             let currentlySubscribedTo = [];
             let newRoomsQuery = new Parse.Query("BreakoutRoom");
-            newRoomsQuery.equalTo("conference", this.state.currentConference);
+            newRoomsQuery.equalTo("conference", this.currentConference);
             newRoomsQuery.include("members");
             newRoomsQuery.equalTo("isPrivate", true)
             newRoomsQuery.limit(100);
@@ -753,7 +758,7 @@ const withAuthentication = Component => {
                 fetchedIDs.push(room.id);
             }
 
-            this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.state.user.getSessionToken());
+            this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.user.getSessionToken());
             this.parseLivePrivateVideosSub.on("update", async (newItem) => {
                 newItem = await this.populateMembers(newItem);
                 this.notifyUserOfChanges(newItem);
@@ -788,26 +793,9 @@ const withAuthentication = Component => {
         componentDidMount() {
             this.refreshUser();
             this.mounted = true;
-            console.log("Installing before ulnload")
-            window.addEventListener("beforeunload", this.disconnectPresence.bind(this));
-
         }
 
-        disconnectPresence(){
-
-            console.log("Want to disconnect...")
-            console.log(this.state.userProfile)
-            if(this.state.userProfile && this.state.userProfile.get("presence")){
-                let presence = this.state.userProfile.get("presence");
-                if(presence.get("socialSpace")){
-                    presence.set("socialSpace", null);
-                    presence.save();
-                }
-            }
-        }
         componentWillUnmount() {
-            window.removeEventListener("beforeunload", this.disconnectPresence.bind(this));
-            this.disconnectPresence();
             this.mounted = false;
             if (this.parseLivePublicVideosSub) {
                 this.parseLivePublicVideosSub.unsubscribe();

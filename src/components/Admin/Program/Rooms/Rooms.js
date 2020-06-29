@@ -49,7 +49,7 @@ class Rooms extends React.Component {
         var Room = Parse.Object.extend("ProgramRoom");
         var room = new Room();
         room.set("name", values.name);
-        room.set("src1", values.location);
+        room.set("src1", values.src1);
         room.set("id1", values.id1);
         room.set("pwd1", values.pwd1);
         room.set("src2", values.src2);

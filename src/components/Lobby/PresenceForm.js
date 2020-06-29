@@ -26,11 +26,13 @@ class PresenceForm extends React.Component {
             isShowNewStatus = true;
             //Create a new one...
             let presence = new UserPresence();
+            console.log("Creating presence with user "+ this.props.auth.userProfile.id)
             presence.set("user", this.props.auth.userProfile);
             presence.set("isAvailable", true);
             presence.set("isDND", false);
             presence.set("isDNT", false);
             presence.set("isLookingForConversation", false);
+            presence.set("isOnline", true);
             presence.set("socialSpace", this.props.auth.activeSpace);
 
             let presenceACL = new Parse.ACL();
@@ -43,8 +45,6 @@ class PresenceForm extends React.Component {
             myStatus = presence;
             this.props.auth.userProfile.set("presence", presence);
             await Parse.Object.saveAll([this.props.auth.userProfile, presence]);
-        } else {
-            await myStatus.save();
         }
         this.setState({presence: myStatus, isShowWelcome: isShowNewStatus});
     }

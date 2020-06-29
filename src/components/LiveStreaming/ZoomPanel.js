@@ -1,10 +1,11 @@
 import React, {Component} from "react";
-import {Card} from 'antd';
+import {Button} from 'antd';
 import moment from 'moment';
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
 import ReactPlayer from "react-player";
 import {videoURLFromData} from './utils';
+import zoomImg from './zoom.png';
 
 class ZoomPanel extends Component {
     constructor(props) {
@@ -35,7 +36,6 @@ class ZoomPanel extends Component {
 //     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Zoom]: Something changed");
     }
     
     render() {
@@ -48,22 +48,20 @@ class ZoomPanel extends Component {
         let roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
 
-        let navigation = <a href={this.video_url} target={"_blank"} rel="noopener noreferrer">Join</a>
+        let navigation = <a href={this.video_url} target={"_blank"} rel="noopener noreferrer"><Button type="primary" >Enter</Button></a>
 
         return  <div>
                     <table style={{width:"100%"}}>
                         <tbody>
                         <tr >
                             <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>
-                            <td style={{"textAlign":"center"}}>Viewers: {this.state.count}</td>
+                            <td style={{"textAlign":"center"}}>&nbsp;</td>
                             <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>
                         </tr>
                         </tbody>
                     </table>
-                    <div className="player-wrapper" >
-                        <ReactPlayer playing playsinline light={true} playIcon={<img src="zoom.png" />} 
-                                    width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>
-                    </div>
+                    <img alt="poster" style={{width:311, height:175 }} src={zoomImg}  />
+
                     <div>
                         {this.props.mysessions.map(s => {
                             return <div key={s.id}>{s.get("title")}</div>
@@ -73,16 +71,4 @@ class ZoomPanel extends Component {
     }
 }
 
-const LiveVideosArea = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <ZoomPanel {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
-                )}
-            </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
-);
-
-export default LiveVideosArea;
+export default ZoomPanel;
