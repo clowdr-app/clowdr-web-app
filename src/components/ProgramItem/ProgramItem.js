@@ -12,6 +12,7 @@ class ProgramItem extends React.Component {
         this.state = {
             loading: true,
             gotItems: false,
+            itemKey: null,
             items: [],
             waitingForProgram: true
         };
@@ -27,10 +28,12 @@ class ProgramItem extends React.Component {
     }
 
     async componentDidMount() {
+        let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
+        this.setState({itemKey: itemKey});
+
         //For social features, we need to wait for the login to complete before doing anything
         let user = await this.props.auth.refreshUser();
 
-        let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
 
         let item = this.props.items ? this.props.items.find(item => item.get("confKey") == itemKey) : undefined;
 
@@ -71,12 +74,16 @@ class ProgramItem extends React.Component {
     }
 
     componentWillUnmount() {
+        this.maybeCloseChat();
         this.props.auth.helpers.setGlobalState({chatChannel: null, forceChatOpen: false});
         this.props.auth.setSocialSpace("Lobby");
+    }
+
+    maybeCloseChat(){
+        this.props.auth.chatClient.closeChatAndLeaveIfUnused(this.state.chatSID);
 
     }
-    
-    componentDidUpdate(prevProps) {
+    async componentDidUpdate(prevProps) {
 
         if (this.state.waitForProgram) {
             if (this.state.gotItems) {
@@ -87,12 +94,55 @@ class ProgramItem extends React.Component {
                 // console.log('[ProgramItem]: Program still downloading...');
                 if (prevProps.items.length != this.props.items.length) {
                     this.setState({gotItems: true});
-                    // console.log('[ProgramItem]: got items');
+                    console.log('[ProgramItem]: got items');
                 }
             }
         }
         else {
             // console.log('[ProgramItem]: Program cached');
+        }
+        let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
+        if(this.state.itemKey != itemKey){
+            this.maybeCloseChat();
+            this.setState({itemKey: itemKey, loading: true});
+            let item = this.props.items ? this.props.items.find(item => item.get("confKey") == itemKey) : undefined;
+
+            if (!item) {
+                let pq = new Parse.Query("ProgramItem");
+                pq.equalTo("confKey", itemKey);
+                pq.include("track");
+                pq.include("programSession")
+                pq.include("programSession.room")
+                pq.include("programSession.room.socialSpace")
+                pq.include("breakoutRoom");
+                item = await pq.first();
+            }
+
+            if (!item) {
+                this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
+            } else {
+                let chatSID = undefined;
+                if (this.props.auth.user) {
+                    if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
+                        //set the social space...
+                        let ss = item.get("programSession").get("room").get("socialSpace");
+                        this.props.auth.setSocialSpace(ss.get("name"));
+                        this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+                    }
+                    if (item.get("track").get("perProgramItemChat")) {
+                        //Join the chat room
+                        chatSID = item.get("chatSID");
+                        if (!chatSID) {
+                            chatSID = await Parse.Cloud.run("chat-getSIDForProgramItem", {
+                                programItem: item.id
+                            });
+                        }
+                        this.props.auth.chatClient.openChatAndJoinIfNeeded(chatSID);
+                    }
+                }
+                this.setState({loading: false, error: null, programItem: item, inBreakoutRoom: false, chatSID: chatSID});
+            }
+
         }
     }
 

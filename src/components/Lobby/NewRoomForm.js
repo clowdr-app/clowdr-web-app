@@ -40,10 +40,15 @@ class NewRoomForm extends React.Component {
         let buttonType= (this.props.type ? this.props.type : "primary");
 
         let selectOptions = [];
-        if (this.state.categories)
-            selectOptions = this.state.categories.map(c => {
-                return {label: c.get("description"), value: c.id }
+        let defaultSpace;
+        if(this.props.auth.activeSpace){
+            defaultSpace = this.props.auth.activeSpace.id;
+        }
+        if (this.props.auth.spaces){
+            selectOptions = Object.values(this.props.auth.spaces).map(c => {
+                return {label: c.get("name"), value: c.id }
             });
+        }
         return this.props.auth.helpers.ifPermission("createVideoRoom",
             <div>
                 <Button type={buttonType} onClick={this.showModal} style={this.props.style}>
@@ -79,6 +84,7 @@ class NewRoomForm extends React.Component {
                             visibility: 'listed',
                             // category: 'general',
                             // mode: 'group-small',
+                            socialSpace: defaultSpace,
                             mode: 'peer-to-peer',
                             persistence: 'ephemeral'
                         }}
@@ -135,13 +141,14 @@ class NewRoomForm extends React.Component {
                         >
                             <Input/>
                         </Form.Item>
-                        {/*<Form.Item*/}
-                        {/*    name="category"*/}
-                        {/*    label="Category"*/}
-                        {/*>*/}
-                        {/*    <Select options={selectOptions}>*/}
-                        {/*    </Select>*/}
-                        {/*</Form.Item>*/}
+                        <Form.Item
+                            name="socialSpace"
+                            label="Parent Room"
+                            extra="Help attendees find your breakout room by associating it with an existing room"
+                        >
+                            <Select options={selectOptions}>
+                            </Select>
+                        </Form.Item>
                         <Form.Item
                             name="persistence"
                             label="Persistence"
