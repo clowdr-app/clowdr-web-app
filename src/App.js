@@ -191,7 +191,7 @@ class App extends Component {
             <Route exact path="/live/:when" component={LiveVideosArea}/>
             <Route exact path="/program" component={Program}/>
 
-            <Route exact path="/exhibits/:track" component={Exhibits}/>
+            <Route exact path="/exhibits/:track/:style" component={Exhibits}/>
             {/* <Route exact path="/exhibits/srcposters" component={SRCPosters}/> */}
 
             <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>

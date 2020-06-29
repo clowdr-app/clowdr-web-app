@@ -28,12 +28,22 @@ class Exhibits extends React.Component {
 
     changeChatPanel(posters) {
         if (posters.length > 0) {
-            let poster = posters.find(p => p.get("programSession"));
-            if(poster.get("programSession") && poster.get("programSession").get("room") && poster.get("programSession").get("room").get("socialSpace")){
-                //set the social space...
-                let ss = poster.get("programSession").get("room").get("socialSpace");
-                this.props.auth.setSocialSpace(ss.get("name"));
-                this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+            let sessions = posters.map(p => p.get("programSession"));
+            let rooms = sessions.map(s => s ? s.get("room") : undefined);
+            rooms = rooms.reduce((acc, r) => {
+                if (r && !acc.find(rm => rm.id == r.id))
+                    return [...acc, r]
+                else
+                    return acc
+            }, []);
+            if ((rooms.length == 1) && rooms[0].get("socialSpace")) {
+                    //set the social space...
+                    let ss = rooms[0].get("socialSpace");
+                    this.props.auth.setSocialSpace(ss.get("name"));
+                    this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+            }
+            else {
+                this.props.auth.setSocialSpace("Lobby");
             }
         }
     }
@@ -149,9 +159,9 @@ class Exhibits extends React.Component {
                 }
             }
         }
-        else {
-            console.log('[Posters]: Program cached');
-        }
+        // else {
+        //     console.log('[Posters]: Program cached');
+        // }
 
         if (prevProps.match.params.track != this.props.match.params.track) {
             this.initializePosters(this.props.match.params.track);
@@ -198,7 +208,30 @@ class Exhibits extends React.Component {
                 <Spin tip="Loading...">
                 </Spin>)
 
-        return <div className={"space-align-container"}>
+        let track = this.props.tracks.find(t => t.get("name") == this.props.match.params.track)
+        let trackName = track ? track.get("displayName") : this.props.match.params.track;
+
+        if (this.props.match.params.style == "list") {
+
+            return <div id="papers-list">
+                    <h2>{trackName}</h2>
+                    {this.state.posters.map((poster) => {
+                        let authors = poster.get("authors");
+                        let authorstr = authors.map(a => a.get('name')).join(", ");
+                        
+                        return <p key={poster.id}>
+                                <NavLink to={"/program/" + poster.get("confKey")}>
+                                    <strong>{poster.get("title")}</strong> <i>{authorstr}</i>
+                                </NavLink>
+                                </p>
+                    })}
+                </div> 
+
+        }
+
+        return <div> 
+            <h2>{trackName}</h2>
+            <div className={"space-align-container"}>
                 {this.state.posters.map((poster) => {
                     let authors = poster.get("authors");
                     let authorstr = authors.map(a => a.get('name')).join(", ");
@@ -231,7 +264,7 @@ class Exhibits extends React.Component {
                             </div>
                 })}
             </div> 
-
+            </div>
     }
 }
 
