@@ -6,15 +6,15 @@ class Landing extends Component {
     render() {
         return <div>
             <h2>ICSE 2020 LIVE @ CLOWDR</h2>
-            <p><strong>Welcome to Virtual ICSE 2020!</strong> 
+            <p><strong>Welcome to Virtual ICSE 2020!</strong>
             </p>
             <div> We are using two main tools to connect everyone:
                 <ul>
                     <li>This Web app, CLOWDR, where you can view all the <a href="/live/now">live</a> and <a href="/live/past">past</a> sessions,
-                        ask questions during the live talks, engage in session-specific and paper-specific chats, view the <a href="/exhibits/icse-2020-poster">posters</a>,  
-                        the <a href="/exhibits/icse-2020-ACM-Student-Research-Competition">Student Research Competition</a>, and the <a href="/exhibits/Demonstrations">demos</a>, 
+                        ask questions during the live talks, engage in session-specific and paper-specific chats, view the <a href="/exhibits/icse-2020-poster">posters</a>,
+                        the <a href="/exhibits/icse-2020-ACM-Student-Research-Competition">Student Research Competition</a>, and the <a href="/exhibits/Demonstrations">demos</a>,
                         and talk to their authors, and meetup with peers in the <a href="/lobby">Lobby</a> for video chats.</li>
-                    <li>The ICSE 2020 Slack channel, where you can get <a href="https://icse-2020.slack.com/app_redirect?channel=help" rel="noopener noreferrer" target="_blank">#help</a>, 
+                    <li>The ICSE 2020 Slack channel, where you can get <a href="https://icse-2020.slack.com/app_redirect?channel=help" rel="noopener noreferrer" target="_blank">#help</a>,
                         volunteer for <a href="https://icse-2020.slack.com/app_redirect?channel=mentoring" rel="noopener noreferrer" target="_blank">#mentoring</a>, and organize your own
                         coffee breaks or BYOB in <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.
                         If you are a presenter, you will also use Slack for meeting up with the live streaming team before the session, so pay
@@ -26,7 +26,7 @@ class Landing extends Component {
                 ACM Policy Against Harassment</a> at all times. If you observe or are subject to innapropriate conduct, call it out:
                 <ul>
                     <li>Use the red "report" icon in video chats</li>
-                    <li>Send a direct message to <a href="slack://user?team=T012LF0AWLV&id=U01274MVDC7" target="_blank">@Crista Lopes</a></li>
+                    <li>Send a direct Slack message to <a href="slack://user?team=T012LF0AWLV&id=U01274MVDC7" target="_blank">@Crista Lopes</a></li>
                 </ul>
             </div>
             <h3>THANK YOU TO OUR SPONSORS!</h3>

@@ -172,8 +172,6 @@ class ContextualActiveUsers extends Component {
                 selectedKeys.push(this.state.filteredUser);
             tabs = <div>
                 <div>
-
-                    <div><PresenceForm /></div>
                     <Select style={{width: "100%"}} showSearch
                             allowClear={true}
                             onChange={this.filterList.bind(this)}
@@ -186,6 +184,8 @@ class ContextualActiveUsers extends Component {
                             }}
 
                             options={searchOptions} placeholder="Search"></Select>
+                    <div><PresenceForm /></div>
+
                     <Divider>
                        {this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : ""}
                     </Divider>
@@ -233,10 +233,6 @@ class ContextualActiveUsers extends Component {
                             </Menu.SubMenu>
                                 :<></>}
                         </Menu>
-
-                    <div style={{textAlign: 'center'}}>
-                        <NewRoomForm type="secondary" text="Create New Video Room" />
-                    </div>
 
                 </div>
                 <Divider>Breakout Rooms</Divider>
@@ -351,6 +347,11 @@ class ContextualActiveUsers extends Component {
                     }
                 ) : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
                 </Menu>
+
+                <div style={{textAlign: 'center', position: 'fixed', bottom: '0px'}}>
+                    <NewRoomForm type="secondary" text="Create New Video Room" />
+                </div>
+
             </div>
         }
         return (
