@@ -98,19 +98,19 @@ const withProgram = Component => {
         }    
 
         subscribeToLiveQuery(query, ppart) {
-            console.log('[withProgram]: subscribing to live query for ' + ppart);
+            // console.log('[withProgram]: subscribing to live query for ' + ppart);
             query.subscribe().then(sub => {
                 this.sub = sub;
                 this.sub.on('create', obj => {
-                    console.log("[withProgram]: object created " + (obj.get('name') ? obj.get('name') : obj.get('title')));
+                    // console.log("[withProgram]: object created " + (obj.get('name') ? obj.get('name') : obj.get('title')));
                     this.setState((prevState) => prevState[ppart] = [...prevState[ppart], obj]);
                 })
                 this.sub.on('delete', obj => {
-                    console.log("[withProgram]: object deleted " + (obj.get('name') ? obj.get('name') : obj.get('title')));
+                    // console.log("[withProgram]: object deleted " + (obj.get('name') ? obj.get('name') : obj.get('title')));
                     this.setState((prevState) => (prevState[ppart] = prevState[ppart].filter(v => v.id != obj.id)));
                 });
                 this.sub.on('update', obj => {
-                    console.log("[withProgram]: object updated " + (obj.get('name') ? obj.get('name') : obj.get('title')));
+                    // console.log("[withProgram]: object updated " + (obj.get('name') ? obj.get('name') : obj.get('title')));
                 });
             });
         }

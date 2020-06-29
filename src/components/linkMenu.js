@@ -14,14 +14,17 @@ import {
     DesktopOutlined,
     IdcardOutlined,
     HomeOutlined,
+    ReadOutlined,
     SmileOutlined,
     ScheduleOutlined,
     SolutionOutlined,
+    SyncOutlined,
     TeamOutlined,
     ToolOutlined,
     UserOutlined,
     VideoCameraAddOutlined,
     VideoCameraOutlined,
+    VideoCameraTwoTone,
     WechatOutlined,
     YoutubeOutlined
 } from '@ant-design/icons';
@@ -68,16 +71,23 @@ class LinkMenu extends React.Component {
             }
             userTools =
                 [
-                    <Menu.Item key='/live' icon={<VideoCameraOutlined/>}><NavLink to="/live">Live Sessions</NavLink></Menu.Item>,
-
-                    <Menu.Item key='/channelList' icon={<YoutubeOutlined/>}><NavLink to="/channelList">Past Sessions</NavLink></Menu.Item>,
-
                     <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">Program</NavLink></Menu.Item>,
 
+                    <SubMenu key="/live" title={<span><VideoCameraOutlined/><span>Sessions</span></span>}>
+                        <Menu.Item key='/live/now' icon={<VideoCameraTwoTone twoToneColor="red"/>}><NavLink to="/live/now">Live Sessions</NavLink></Menu.Item>,
+                        <Menu.Item key='/live/past' icon={<YoutubeOutlined/>}><NavLink to="/live/past">Past Sessions</NavLink></Menu.Item>
+                    </SubMenu>,
+
                     <SubMenu key="/exhibits" title={<span><TeamOutlined/><span>Exhibit Hall</span></span>}>
-                        <Menu.Item key='/exhibits/demos' icon={<DesktopOutlined/>}><NavLink to="/exhibits/demos">Demos</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/posters' icon={<BorderOutlined/>}><NavLink to="/exhibits/posters">Posters</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/srcposters' icon={<BorderOutlined/>}><NavLink to="/exhibits/srcposters">SRC Posters</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/research-papers' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-papers/list">Research Papers</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/nier' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-New-Ideas-and-Emerging-Results/list">NIER</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/jf' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-Journal-First/list">Journal First</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/seet' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-Software-Engineering-Education-and-Training/list">SEET</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/seip' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-Software-Engineering-in-Practice/list">SEIP</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/seis' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-Software-Engineering-in-Society/list">SEIS</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/demos' icon={<DesktopOutlined/>}><NavLink to="/exhibits/Demonstrations/grid">Demos</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/icse-2020-poster' icon={<BorderOutlined/>}><NavLink to="/exhibits/icse-2020-poster/grid">Posters</NavLink></Menu.Item>
+                        <Menu.Item key='/exhibits/src-posters' icon={<BorderOutlined/>}><NavLink to="/exhibits/icse-2020-ACM-Student-Research-Competition/grid">SRC Posters</NavLink></Menu.Item>
                     </SubMenu>,
 
                     <Menu.Item key='/lobby' icon={<WechatOutlined/>}><NavLink to="/lobby">Lobby</NavLink></Menu.Item>,

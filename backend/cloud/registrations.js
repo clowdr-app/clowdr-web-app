@@ -72,6 +72,7 @@ var conferenceInfoCache = {};
 
 async function getConferenceInfoForMailer(conf) {
     if (!conferenceInfoCache[conf.id]) {
+        console.log(conf)
         let keyQuery = new Parse.Query(InstanceConfig);
         keyQuery.equalTo("instance", conf);
         keyQuery.equalTo("key", "SENDGRID_API_KEY");
@@ -211,6 +212,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     let regIDs = request.params.registrations;
     let confID = request.params.conference;
 
+    console.log('--> ' + JSON.stringify(regIDs));
     let regQ = new Parse.Query("Registration");
     regQ.containedIn("objectId", regIDs);
     regQ.withCount();
@@ -221,6 +223,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     while (nRetrieved < count) {
         // totalCount = count;
         let regQ = new Parse.Query("Registration");
+        regQ.containedIn("objectId", regIDs);
         regQ.limit(1000);
         regQ.skip(nRetrieved);
         let results = await regQ.find({useMasterKey: true});
@@ -233,7 +236,9 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
 
     let promises = [];
 
-    let config = await getConferenceInfoForMailer(confID);
+    let fauxConf = new ClowdrInstance();
+    fauxConf.id = confID;
+    let config = await getConferenceInfoForMailer(fauxConf);
     var fromEmail = new sgMail.Email('welcome@clowdr.org');
 
     const roleQuery = new Parse.Query(Parse.Role);
@@ -270,6 +275,14 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 instructionsText = "The link below will let you set a password and finish creating your account " +
                     "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + confID + "/" + authKey);
             }
+            else if(!user.get("passwordSet")){
+                let authKey = await generateRandomString(48);
+                user.set("loginKey", authKey);
+                user.set("loginExpires", moment().add("60", "days").toDate());
+                await user.save({},{useMasterKey: true})
+                instructionsText = "The link below will let you set a password and finish creating your account " +
+                    "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + confID + "/" + authKey);
+            }
             let userProfileQ = new Parse.Query(UserProfile);
             userProfileQ.equalTo("user", user);
             userProfileQ.equalTo("conference", config.conference);
@@ -298,8 +311,9 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 if (!createdNewUser)
                     instructionsText = "We matched your email address (" + registrant.get("email") + ") to your existing Clowdr.org account - " +
                         "you can use your existing credentials to login or reset your password here: " + joinURL(config.frontendURL, "/signin");
-            } else {
+            } else if (user.get("passwordSet")){
                 //Don't do anything, they already have an account.
+                console.log(`[Registrations]: user ${registrant.get("name")} already has an account`);
                 continue;
             }
             var toEmail = new sgMail.Email(registrant.get("email"));

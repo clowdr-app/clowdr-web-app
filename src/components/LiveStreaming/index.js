@@ -1,8 +1,9 @@
 import React, {Component} from "react";
-import {Button, Space, Spin} from 'antd';
+import {Spin} from 'antd';
 import moment from 'moment';
 import LiveStreamingPanel from "./LiveStreamingPanel";
 import ZoomPanel from "./ZoomPanel";
+import NoMediaPanel from "./NoMediaPanel";
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
 
@@ -20,30 +21,10 @@ class LiveStreaming extends Component {
             gotSessions: false,
             gotRooms: false,
             liveRooms: [],
-            currentSessions: []
+            currentSessions: [],
+            loggedIn: (this.props.auth.user ? true : false)
         };
 
-        console.log('[Live]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded) 
-            this.props.onDown(this.props);
-        else {
-            this.state.rooms = this.props.rooms;
-            this.state.sessions = this.props.sessions;
-            let current = this.getLiveRooms();
-            this.state.liveRooms = current[0];
-            this.state.currentSessions = current[1];
-        }
-
-        // Run every 15 minutes that the user is on this page
-        this.timerId = setInterval(() => {
-//            console.log('TICK!');
-            let current = this.getLiveRooms();
-            if (!this.arraysEqual(current[0], this.state.liveRooms)) {
-                this.setState({liveRooms: current[0], currentSessions: current[1]});
-            }
-        }, 60000*15);
     }
 
     arraysEqual(arr1,arr2) { // Assumes they are already sorted
@@ -67,13 +48,19 @@ class LiveStreaming extends Component {
         return timeA > timeB;
     }
 
-    getLiveRooms() {
+    getLiveRooms(when) {
         let now = Date.now();
+
         let currentSessions = this.props.sessions.filter(s => {
             var timeS = s.get("startTime") ? s.get("startTime") : new Date();
             var timeE = s.get("endTime") ? s.get("endTime") : new Date();
-            return (now >= moment(timeS).subtract(30, 'm').toDate().getTime() && 
-                    now <= moment(timeE).add(30, 'm').toDate().getTime())
+            if (when == "past") {
+                return (now >= moment(timeE).add(10, 'm').toDate().getTime());
+            }
+            else { // live sessions
+                return (now >= moment(timeS).subtract(30, 'm').toDate().getTime() && 
+                        now <= moment(timeE).add(10, 'm').toDate().getTime());
+            }
         }).sort(this.dateSorter);
 
         let liveRooms = [];
@@ -87,11 +74,45 @@ class LiveStreaming extends Component {
 
         liveRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
 
-        liveRooms.map(r => console.log('Live @ ' + r.get('name')));
+//         liveRooms.map(r => console.log('Sessions @ ' + r.get('name')));
         return [liveRooms, currentSessions];
     }
     
-    componentDidMount() {
+    async componentDidMount() {
+        let user = undefined;
+        if (!this.state.loggedIn) {
+            user = await this.props.auth.refreshUser();
+            if (user) {
+                this.setState({
+                    loggedIn: true
+                }); 
+            }
+        }
+
+        if (this.props.auth.user) {
+
+            // Call to download program
+            if (!this.props.downloaded) 
+                this.props.onDown(this.props);
+            else {
+                let current = this.getLiveRooms(this.props.match.params.when);
+                this.setState({
+                    liveRooms: current[0],
+                    currentSessions: current[1],
+                    loading: false
+                });
+            }
+    
+            // Run every 15 minutes that the user is on this page
+            this.timerId = setInterval(() => {
+    //            console.log('TICK!');
+                let current = this.getLiveRooms(this.props.match.params.when);
+                if (!this.arraysEqual(current[0], this.state.liveRooms)) {
+                    this.setState({liveRooms: current[0], currentSessions: current[1]});
+                }
+            }, 60000*15);
+    
+        }
     }
 
     componentWillUnmount() {
@@ -99,7 +120,6 @@ class LiveStreaming extends Component {
     }
 
     toggleExpanded(vid) {
-        console.log('[Live]: --> ' + this.state.expanded);
         this.setState({
             expanded: !this.state.expanded,
             expanded_video: (this.state.expanded ? undefined: vid)
@@ -107,12 +127,10 @@ class LiveStreaming extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Live]: Something changed");
-
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
                 console.log('[Live]: Program download complete');
-                let current = this.getLiveRooms();
+                let current = this.getLiveRooms(this.props.match.params.when);
                 this.setState({
                     rooms: this.props.rooms,
                     sessions: this.props.sessions,
@@ -133,11 +151,24 @@ class LiveStreaming extends Component {
                 }
             }
         }
-        else 
-            console.log('[Live]: Program cached');
+        if (prevProps.match.params.when != this.props.match.params.when) {
+            if (this.state.expanded) {
+                this.toggleExpanded();
+            }
+            let current = this.getLiveRooms(this.props.match.params.when);
+            this.setState({
+                liveRooms: current[0],
+                currentSessions: current[1],
+            })
+        }
+
     }
     
     render() {
+        if (!this.state.loggedIn) {
+            return <div>You don't have access to this page.</div>
+        }
+
         if (this.props.downloaded) {
 
             return <div className={"space-align-container"}>
@@ -146,13 +177,21 @@ class LiveStreaming extends Component {
                         let qa = "";
                         let width = 0;
                         if (!this.state.expanded) width = 320;
-                        if (this.state.expanded && room.id == this.state.expanded_video.id) {
+                        if (this.state.expanded && room.id == this.state.expanded_video.id && this.props.match.params.when =="now") {
                             width = 1000;
                             const q_url = this.state.expanded_video.get("qa");
-                            qa = q_url ? <iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> : "";     
+                            qa = q_url ? <table><tbody><tr><td style={{"textAlign":"center"}}><strong>Live questions to the speakers</strong></td></tr>
+                                <tr><td><iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> </td></tr>  
+                                </tbody></table> : "";
                         }
                         
-                        if (room.get("src1") && room.get("src1").includes("Zoom")) {
+                        if (!room.get("src1")) {
+                            return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                                <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
+                        </div>
+                        }
+
+                        if (room.get("src1").includes("Zoom")) {
                             return <div className={"space-align-block"} key={room.id} style={{width:width}}>
                                 <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
                             </div>

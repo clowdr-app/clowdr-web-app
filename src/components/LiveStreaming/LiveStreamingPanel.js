@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Card} from 'antd';
+import {Button} from 'antd';
 import moment from 'moment';
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
@@ -20,6 +20,16 @@ class LiveStreamingPanel extends Component {
         this.video_url = src ? videoURLFromData(src, id, pwd): "";
     }
     
+    changeSocialSpace() {
+        if(this.props.video.get("socialSpace")) {
+            //set the social space...
+            let ss = this.props.video.get("socialSpace");
+            this.props.auth.setSocialSpace(ss.get("name"));
+            this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+        }        
+
+    }
+
     componentDidMount() {
     }
 
@@ -28,6 +38,11 @@ class LiveStreamingPanel extends Component {
 
     toggleExpanded() {
 //        console.log('--> ' + this.state.expanded);
+        if (!this.state.expanded) // about to expand
+            this.changeSocialSpace();
+        else
+            this.props.auth.setSocialSpace("Lobby");
+
         this.setState({
             expanded: !this.state.expanded
         });
@@ -35,7 +50,6 @@ class LiveStreamingPanel extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Live]: Something changed");
     }
     
     render() {
@@ -48,19 +62,28 @@ class LiveStreamingPanel extends Component {
         let navigation="";
         let roomName = this.props.video.get('name');
         if (this.state.expanded) {
-            navigation = <a href="#" onClick={this.toggleExpanded.bind(this)}>Go Back</a>
+            navigation = <Button type="primary" onClick={this.toggleExpanded.bind(this)}>Go Back</Button>
         }
         else {
-            navigation = <a href="#" onClick={this.toggleExpanded.bind(this)}>Join</a>
+            navigation = <Button type="primary" onClick={this.toggleExpanded.bind(this)}>Enter</Button>
             roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
-}
+        }
+        let viewers = 0;
+        if (this.props.auth.presences) {
+            let presences = Object.values(this.props.auth.presences);
+            let pplInThisRoom = presences.filter(p => {
+                return (p.get("socialSpace") && this.props.video.get("socialSpace") &&
+                        p.get("socialSpace").id === this.props.video.get("socialSpace").id);
+            });
+            viewers = pplInThisRoom.length;
+        }
         return  <div>
                     <table style={{width:"100%"}}>
                         <tbody>
                         <tr >
                             <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>
-                            <td style={{"textAlign":"center"}}>Viewers: {this.state.count}</td>
+                            <td style={{"textAlign":"left"}}>Viewers: {viewers}</td>
                             <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>
                         </tr>
                         </tbody>
@@ -78,16 +101,4 @@ class LiveStreamingPanel extends Component {
     }
 }
 
-const LiveVideosArea = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <LiveStreamingPanel {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
-                )}
-            </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
-);
-
-export default LiveVideosArea;
+export default LiveStreamingPanel;

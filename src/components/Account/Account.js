@@ -275,7 +275,7 @@ class Account extends React.Component {
                 {/*    />*/}
                 {/*</Form.Item>*/}
 
-                <Form.Item label="Flair" name="flair">
+                <Form.Item label="Flair" name="flair" extra="Add tags that will be visible to other attendees when they see your virtual badge">
                     <Select
                         mode="multiple"
                         tagRender={this.tagRender.bind(this)}

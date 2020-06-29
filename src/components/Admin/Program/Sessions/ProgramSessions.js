@@ -34,6 +34,8 @@ class ProgramSessions extends React.Component {
             gotItems: false,
             editing: false,
             edt_session: undefined,
+            searched: false,
+            searchResult: ""
         };
 
         console.log('[Admin/Sessions]: downloaded? ' + this.props.downloaded);
@@ -73,13 +75,12 @@ class ProgramSessions extends React.Component {
         acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
         acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
         session.setACL(acl);
-        try {
-            session = await session.save();
-            this.setState({visible: false /*, sessions: sortedSessions*/})
-        } catch (err) {
-            console.log(err)
-            console.log("@" + session.id)
-        }
+        session.save()
+        .then(session => this.setState({visible: false /*, sessions: sortedSessions*/}))
+        .catch(err => {
+            console.log(err);
+            console.log("@" + session.id);
+        });
 
         // let data = {
         //     conference: this.props.auth.currentConference.id,
@@ -230,6 +231,7 @@ class ProgramSessions extends React.Component {
                 title: 'Title',
                 dataIndex: 'title',
                 key: 'title',
+                width: '20%',
                 sorter: (a, b) => {
                     var titleA = a.get("title") ? a.get("title") : "";
                     var titleB = b.get("title") ? b.get("title") : "";
@@ -240,6 +242,7 @@ class ProgramSessions extends React.Component {
             {
                 title: 'Start Time',
                 dataIndex: 'start',
+                width: '12%',
                 sorter: (a, b) => {
                     var timeA = a.get("startTime") ? a.get("startTime") : new Date();
                     var timeB = b.get("startTime") ? b.get("startTime") : new Date();
@@ -251,6 +254,7 @@ class ProgramSessions extends React.Component {
             {
                 title: 'End Time',
                 dataIndex: 'end',
+                width: '12%',
                 sorter: (a, b) => {
                     var timeA = a.get("endTime") ? a.get("endTime") : new Date();
                     var timeB = b.get("endTime") ? b.get("endTime") : new Date();
@@ -262,6 +266,7 @@ class ProgramSessions extends React.Component {
             {
                 title: 'Room',
                 dataIndex: 'room',
+                width: '12%',
                 sorter: (a, b) => {
                     var roomA = a.get("room") ? a.get("room").get("name") : "";
                     var roomB = b.get("room") ? b.get("room").get("name") : "";
@@ -323,9 +328,13 @@ class ProgramSessions extends React.Component {
                         }}
                         rooms={this.state.rooms}
                         items={this.state.items}
-                        myItems={this.state.edt_session.items}
+                        myItems={this.state.edt_session.items ? this.state.edt_session.items : []}
                     />
-                    <Table columns={columns} dataSource={this.state.sessions} rowKey={(s)=>(s.id)}>
+                    <Input.Search/>
+                    <Table 
+                        columns={columns} 
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.sessions} 
+                        rowKey={(t)=>(t.id)}>
                     </Table>
                 </Fragment>
             )
@@ -349,7 +358,30 @@ class ProgramSessions extends React.Component {
                 items={this.state.items}
                 myItems={[]}
             />
-            <Table columns={columns} dataSource={this.state.sessions} rowKey={r => r.id}>
+            <Input.Search
+                allowClear
+                onSearch={key => {
+                        if (key == "") {
+                            this.setState({searched: false});
+                        }
+                        else {
+                            this.setState({searched: true});
+                            this.setState({
+                                searchResult: this.state.sessions.filter(
+                                    session => (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase())) 
+                                        || (session.get('startTime') && timezone(session.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase())) 
+                                        || (session.get('endTime') && timezone(session.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase())) 
+                                        || (session.get('items') && session.get('items').some((element) => element.get('title').toLowerCase().includes(key)))
+                                        || (session.get('room') && session.get('room').get('name').toLowerCase().includes(key.toLowerCase())))      
+                            })
+                        }
+                    }         
+                }
+            />      
+            <Table 
+                columns={columns} 
+                dataSource={this.state.searched ? this.state.searchResult : this.state.sessions} 
+                rowKey={(t)=>(t.id)}>
             </Table>
         </div>
     }

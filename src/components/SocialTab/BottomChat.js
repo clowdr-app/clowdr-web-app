@@ -1,6 +1,6 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
-import {Button, Skeleton, Tooltip} from "antd"
+import {Badge, Button, Skeleton, Tooltip} from "antd"
 import ChatFrame from "../Chat/ChatFrame";
 import {CloseOutlined, PlusOutlined, MinusOutlined} from "@ant-design/icons"
 
@@ -96,21 +96,11 @@ class BottomChatWindow extends React.Component{
             chat: this.props.chatClient.joinedChannels[this.props.sid]
         // channel: this.props.chatClient.getJoinedChannel(this.props.sid)
         }
-        console.log(this.props.sid)
-        console.log(this.props.chatClient.joinedChannels)
-        console.log(this.props.chatClient.joinedChannels[this.props.sid])
-        console.log(this.state.chat)
     }
 
     async componentDidMount() {
-        console.log("Moutned " + this.state.sid)
-        console.log(this.state.chat)
         if(!this.state.chat){
-            //TODO
             let res = await this.props.chatClient.getJoinedChannel(this.props.sid);
-            console.log("waited for")
-            console.log(res);
-            console.log(this.props.chatClient.joinedChannels[this.props.sid])
             this.setState({chat: this.props.chatClient.joinedChannels[this.props.sid]})
         }
         this.setState({title: this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid])})
@@ -186,10 +176,10 @@ class BottomChatWindow extends React.Component{
             </div>
         </div>
         chatWindow = <div className={windowClass} >
-            <ChatFrame sid={this.state.sid} width="240px" header={header}/>
+            <ChatFrame sid={this.state.sid} width="240px" header={header} visible={this.state.open} setUnreadCount={(c)=>{this.setState({unreadCount: c})}}/>
         </div>
         return <div className="bottomChatWindowContainer">
-            <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}>{this.state.title}</Button></Tooltip>{chatWindow}</div>
+            <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} offset={[-5,-10]}/>{this.state.title}</Button></Tooltip>{chatWindow}</div>
     }
 }
 const AuthConsumer = (props) => (
