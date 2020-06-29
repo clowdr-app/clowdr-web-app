@@ -187,7 +187,7 @@ class ContextualActiveUsers extends Component {
 
                             options={searchOptions} placeholder="Search"></Select>
                     <Divider>
-                       {this.props.auth.activeSpace.get("name")}
+                       {this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : ""}
                     </Divider>
 
                         <Menu mode="inline"
