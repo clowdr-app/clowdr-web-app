@@ -16,11 +16,9 @@ class BottomChat extends React.Component {
     openChat(sid) {
         this.registerChatSubscriptions(sid);
         this.setState((prevState) => {
-            let found = prevState.chats.find((c) => c== sid);
             let stateUpdate = {};
-            if (!found) {
-                stateUpdate.chats = [sid, ...prevState.chats];
-            }
+            stateUpdate.chats = prevState.chats.filter(c =>c!=sid);
+            stateUpdate.chats = [sid, ...stateUpdate.chats];
             stateUpdate[sid] = true;
             return stateUpdate;
         });
@@ -98,14 +96,6 @@ class BottomChatWindow extends React.Component{
         }
     }
 
-    async componentDidMount() {
-        if(!this.state.chat){
-            let res = await this.props.chatClient.getJoinedChannel(this.props.sid);
-            this.setState({chat: this.props.chatClient.joinedChannels[this.props.sid]})
-        }
-        this.setState({title: this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid])})
-    }
-
     getChatTitle(chat) {
         if(!chat)
             return <Skeleton.Input active style={{width: '20px', height: '1em'}}/>;
@@ -123,6 +113,14 @@ class BottomChatWindow extends React.Component{
             return chat.channel.friendlyName;
         }
         return chat.channel.sid;
+    }
+
+    async componentDidMount() {
+        if(!this.state.chat){
+            let res = await this.props.chatClient.getJoinedChannel(this.props.sid);
+            this.setState({chat: this.props.chatClient.joinedChannels[this.props.sid]})
+        }
+        this.setState({title: this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid])})
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -176,10 +174,14 @@ class BottomChatWindow extends React.Component{
             </div>
         </div>
         chatWindow = <div className={windowClass} >
-            <ChatFrame sid={this.state.sid} width="240px" header={header} visible={this.state.open} setUnreadCount={(c)=>{this.setState({unreadCount: c})}}/>
+            <ChatFrame sid={this.state.sid} width="240px" header={header} visible={this.state.open} setUnreadCount={(c)=>{
+                this.setState({unreadCount: c})
+                this.props.auth.chatClient.setUnreadCount(this.state.sid, c)
+            }
+            }/>
         </div>
         return <div className="bottomChatWindowContainer">
-            <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} offset={[-5,-10]}/>{this.state.title}</Button></Tooltip>{chatWindow}</div>
+            <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} overflowCount={9} offset={[-5,-10]}/>{this.state.title}</Button></Tooltip>{chatWindow}</div>
     }
 }
 const AuthConsumer = (props) => (

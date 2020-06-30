@@ -6,7 +6,7 @@ Clowdr is a project bootstrapped with [Create React App](https://github.com/face
 
 #### Install all dependencies
 
-Use npm to install all dependencies after cloning.
+Use npm to install (or upgrade) all dependencies after cloning.
 
 ```bash
 npm install
@@ -18,7 +18,7 @@ Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/) as th
 
 Create an account on [Back4App](https://www.back4app.com/) and create an app space for Clowdr with any name you like.
 
-Set up your own configurations in ./.env file and ./db/.env-db file according to the ./.env-example and ./db/.env-db-example, respectively. 
+Set up your own configurations in ./.env file and ./db/.env-db file according to the ./.env-example and ./db/.env-db-example, respectively.
 
 The configuration parameters can be found from your created app in Back4App: Server Settings -> Core Settings
 
@@ -60,5 +60,3 @@ When you want to exit, enter `ctrl + c`.
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Join us on the Slack [CLOWDR](clowdr.slack.com) workspace!
-
-

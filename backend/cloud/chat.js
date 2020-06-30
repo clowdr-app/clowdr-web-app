@@ -110,13 +110,13 @@ Parse.Cloud.define("chat-createDM", async (request) => {
                 console.log(member)
             }
 
-            if (!members.find(m => m.identity == messageWith)) {
-                let member = await config.twilioChat.channels(convo.get('sid')).members.create({
-                    identity: messageWith,
-                    roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE
-                });
-                console.log(member)
-            }
+            // if (!members.find(m => m.identity == messageWith)) {
+            //     let member = await config.twilioChat.channels(convo.get('sid')).members.create({
+            //         identity: messageWith,
+            //         roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE
+            //     });
+            //     console.log(member)
+            // }
             console.log("Found existing chat room")
             return {"status": "ok", sid: convo.get("sid")};
         }
@@ -154,8 +154,8 @@ Parse.Cloud.define("chat-createDM", async (request) => {
         let member = await config.twilioChat.channels(chatRoom.sid).members.create({identity: profile.id,
         roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
 
-        let member2 = await config.twilioChat.channels(chatRoom.sid).members.create({identity: messageWith,
-            roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
+        // let member2 = await config.twilioChat.channels(chatRoom.sid).members.create({identity: messageWith,
+        //     roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
 
 
         convo.set("sid", chatRoom.sid);

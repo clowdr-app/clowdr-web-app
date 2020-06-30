@@ -132,7 +132,7 @@ class PresenceForm extends React.Component {
         if(!this.state.presence)
             return <Skeleton.Input />
         return <div>
-            <Divider>Your Availability</Divider>
+            <Divider>My Availability</Divider>
             <Form layout="inline"
                   ref={this.form}
                   id="statusForm"
@@ -142,7 +142,7 @@ class PresenceForm extends React.Component {
                   }
                   }>
                 <Tooltip defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
-                    it easier for other participants to know when to contact you.">
+                    it easier for other participants to know when it's OK to contact you.">
                     <Form.Item name="availability">
 
             <Select
@@ -157,7 +157,7 @@ class PresenceForm extends React.Component {
                     </div>
                 )}
             >
-                <Select.Option value="isLookingForConversation"><Badge status="processing" color="green" /><span className="availabilityOption">Available for conversation</span></Select.Option>
+                <Select.Option value="isLookingForConversation"><Badge status="processing" color="green" /><span className="availabilityOption">Looking for conversation</span></Select.Option>
                 <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation; come
                     join if you like</span></Select.Option>
                 <Select.Option value="isDND"><Badge color="orange"/><span className="availabilityOption">Busy / do not disturb</span></Select.Option>
@@ -168,7 +168,7 @@ class PresenceForm extends React.Component {
                     </Form.Item>
                 </Tooltip>
                 <Form.Item name="status">
-                    <Input placeholder="Share a status message for other attendees to see at a glance" onBlur={this.updatePresence.bind(this)} onPressEnter={this.updatePresence.bind(this)}
+                    <Input placeholder="Status message" onBlur={this.updatePresence.bind(this)} onPressEnter={this.updatePresence.bind(this)}
                            autoComplete="off"
                            disabled={this.state.saving} />
                 </Form.Item>

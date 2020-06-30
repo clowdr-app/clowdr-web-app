@@ -24,6 +24,7 @@ class LiveStreamingPanel extends Component {
         if(this.props.video.get("socialSpace")) {
             //set the social space...
             let ss = this.props.video.get("socialSpace");
+            // console.log('--> SS ' + ss)
             this.props.auth.setSocialSpace(ss.get("name"));
             this.props.auth.helpers.setGlobalState({forceChatOpen: true});
         }        
@@ -56,7 +57,7 @@ class LiveStreamingPanel extends Component {
 
         let qa = "";
         if (this.props.vid && this.props.vid.id !== this.props.video.id) { // It's not us! Unmount!
-            return <div></div>
+            return ""
         }
         
         let navigation="";

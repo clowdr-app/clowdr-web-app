@@ -197,12 +197,16 @@ class LiveStreaming extends Component {
                             </div>
                         }
 
-                        return <React.Fragment key={room.id}>
+                        if (this.state.expanded && room.id !== this.state.expanded_video.id)
+                            return ""
+                        else
+                            return <React.Fragment key={room.id}>
                                 <div className={"space-align-block"} key={room.id} style={{width:width}}>
                                     <LiveStreamingPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
                                 </div>
                                 <div className={"space-align-block"}>{qa}</div>   
                                 </React.Fragment> 
+                            
                     })}
                 </div> 
         }

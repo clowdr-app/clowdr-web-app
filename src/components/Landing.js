@@ -6,15 +6,15 @@ class Landing extends Component {
     render() {
         return <div>
             <h2>ICSE 2020 LIVE @ CLOWDR</h2>
-            <p><strong>Welcome to Virtual ICSE 2020!</strong> 
+            <p><strong>Welcome to Virtual ICSE 2020!</strong>
             </p>
             <div> We are using two main tools to connect everyone:
                 <ul>
                     <li>This Web app, CLOWDR, where you can view all the <a href="/live/now">live</a> and <a href="/live/past">past</a> sessions,
-                        ask questions during the live talks, engage in session-specific and paper-specific chats, view the <a href="/exhibits/icse-2020-poster">posters</a>,  
-                        the <a href="/exhibits/icse-2020-ACM-Student-Research-Competition">Student Research Competition</a>, and the <a href="/exhibits/Demonstrations">demos</a>, 
+                        ask questions during the live talks, engage in session-specific and paper-specific chats, view the <a href="/exhibits/icse-2020-poster">posters</a>,
+                        the <a href="/exhibits/icse-2020-ACM-Student-Research-Competition">Student Research Competition</a>, and the <a href="/exhibits/Demonstrations">demos</a>,
                         and talk to their authors, and meetup with peers in the <a href="/lobby">Lobby</a> for video chats.</li>
-                    <li>The ICSE 2020 Slack channel, where you can get <a href="https://icse-2020.slack.com/app_redirect?channel=help" rel="noopener noreferrer" target="_blank">#help</a>, 
+                    <li>The ICSE 2020 Slack channel, where you can get <a href="https://icse-2020.slack.com/app_redirect?channel=help" rel="noopener noreferrer" target="_blank">#help</a>,
                         volunteer for <a href="https://icse-2020.slack.com/app_redirect?channel=mentoring" rel="noopener noreferrer" target="_blank">#mentoring</a>, and organize your own
                         coffee breaks or BYOB in <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.
                         If you are a presenter, you will also use Slack for meeting up with the live streaming team before the session, so pay
@@ -26,26 +26,26 @@ class Landing extends Component {
                 ACM Policy Against Harassment</a> at all times. If you observe or are subject to innapropriate conduct, call it out:
                 <ul>
                     <li>Use the red "report" icon in video chats</li>
-                    <li>Send a direct message to <a href="slack://user?team=T012LF0AWLV&id=U01274MVDC7" target="_blank">@Crista Lopes</a></li>
+                    <li>Send a direct Slack message to <a href="slack://user?team=T012LF0AWLV&id=U01274MVDC7" target="_blank">@Crista Lopes</a></li>
                 </ul>
             </div>
             <h3>THANK YOU TO OUR SPONSORS!</h3>
 <center> <font size={6}> Sponsors </font> </center>
 
 <center>
-<a href="https://www.acm.org/">
+<a href="https://www.acm.org/" target="_blank">
 <img src="https://conf.researchr.org/getLogo/036e8246-6b79-4da5-a41d-b2548815d79f?1523626085000" width={300} /> 
 </a>
-  <a href="http://www.sigsoft.org/index.html">
+  <a href="http://www.sigsoft.org/index.html" taget="_blank">
   <img src="https://conf.researchr.org/getLogo/ebbb2b60-9730-42f4-9d46-4125ba39cb8f?1573234724000" width={200} />
 </a>
-  <a href="https://www.computer.org/">
+  <a href="https://www.computer.org/" target="_blank">
 <img src="https://conf.researchr.org/getLogo/8006ac99-8c6b-4ccc-b72e-c1edde8a3d69?1581694289000" width={250} />
 </a>&nbsp;&nbsp;
-  <a href="http://www.cs-tcse.org/">
+  <a href="http://www.cs-tcse.org/" target="_blank">
   <img src="https://conf.researchr.org/getLogo/1cffa2e5-761e-49d8-b4b1-3274de2a712c?1523626456000" width={200} />
 </a>&nbsp;
-  <a href="http://www.kiise.or.kr/academyEng/main/main.faEng">
+  <a href="http://www.kiise.or.kr/academyEng/main/main.faEng" target="_blank">
   <img src="https://conf.researchr.org/getLogo/585d2505-b77a-4ea9-be85-f4d0d79c5f26?1523626420000" width={200} />
 </a>
 </center>
