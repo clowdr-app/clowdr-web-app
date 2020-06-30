@@ -23,12 +23,11 @@ class CollapsedChatDisplay extends React.Component{
             let profileID = p1.id;
             if(profileID == this.props.auth.userProfile.id)
                 profileID = p2.id;
-            console.log("Looking for DM " + profileID)
             this.props.auth.helpers.getUserProfilesFromUserProfileID(profileID).then((profile) => {
-                console.log("Found ");
-                console.log(profile);
                 this.setState({title: profile.get("displayName")})
             })
+        } else if (chat.attributes.category == "announcements-global") {
+            this.setState({title: "Announcements"});
         }
         else if(chat.attributes.category == "programItem") {
             this.setState({title: chat.channel.friendlyName});

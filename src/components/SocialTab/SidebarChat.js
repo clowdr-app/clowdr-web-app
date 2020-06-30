@@ -116,7 +116,7 @@ class SidebarChat extends React.Component {
             else{
                 found = found.channel;
             }
-            this.setState({sid: newChannel, channel: found});
+            this.setState({sid: found.sid, channel: found});
         }
     }
 
