@@ -200,6 +200,7 @@ class ContextualActiveUsers extends Component {
                 selectedKeys.push(this.state.filteredUser);
             tabs = <div>
                 <div>
+                    <div><PresenceForm /></div>
                     <Select style={{width: "100%"}} showSearch
                             allowClear={true}
                             onChange={this.filterList.bind(this)}
