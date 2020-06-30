@@ -1,5 +1,7 @@
 var moment = require('moment');
 const Twilio = require("twilio");
+const Papa = require('./papaparse.min');
+const { response } = require('express');
 
 Parse.Cloud.define("poster-upload", (request) => {
     console.log('Request to upload a poster image');
@@ -19,6 +21,97 @@ Parse.Cloud.define("poster-upload", (request) => {
     }).catch(err => console.log(`[Program]: Problem fetching poster ${posterId}` + err));
 });
 
+Parse.Cloud.define("rooms-upload", async (request) => {
+    console.log('Request to upload rooms data');
+    const data = request.params.content;
+    const conferenceID = request.params.conference;
+
+    var Conference = Parse.Object.extend("ClowdrInstance");
+    var q = new Parse.Query(Conference);
+    let conference = await q.get(conferenceID);
+
+    if (!conference) {
+        response.error("Bad conference ID");
+        return;
+    }
+    
+    var Room = Parse.Object.extend("ProgramRoom");
+    var rquery = new Parse.Query(Room);
+    rquery.equalTo("conference", conference);
+    rquery.limit(1000);
+    rquery.find().then(existing => {
+        let toSave = [];
+        let acl = new Parse.ACL();
+        acl.setPublicWriteAccess(false);
+        acl.setPublicReadAccess(true);
+        acl.setRoleWriteAccess(conferenceID+"-manager", true);
+        acl.setRoleWriteAccess(conferenceID+"-admin", true);
+    
+        rows = Papa.parse(data, {header: true});
+        rows.data.forEach(element => {
+            addRow(element, conference, existing, toSave, acl);
+        });
+        console.log(`--> Saving ${toSave.length} rooms`)
+
+        Parse.Object.saveAll(toSave, {useMasterKey: true})
+        .then(res => console.log("[Rooms]: Done saving all rooms "))
+        .catch(err => console.log('[Rooms]: error: ' + err));
+    }).catch(err => console.log('[Rooms]: Problem fetching rooms ' + err));
+
+});
+
+function getIDAndPwd(str) {
+    let url = new URL(str)
+    let id = "";
+    let pwd ="";
+    if (url.pathname) {
+        let parts = url.pathname.split('/');
+        id = parts[parts.length-1];
+    }
+    if (url.searchParams) {
+        pwd = url.searchParams.get('pwd');
+    }
+    return [id, pwd];
+}
+
+function addRow(row, conference, existing, toSave, acl) {
+    if (row.Name) {
+        let name = row.Name.trim();
+        if (!existing.find(r => r.get("name").trim() == name)) {
+            var Room = Parse.Object.extend("ProgramRoom");
+            var room = new Room();
+            room.set("conference", conference);
+            room.set("name", name);
+            room.setACL(acl);
+            if (row.YouTube) {
+                let data = getIDAndPwd(row.YouTube);
+                room.set("src1", "YouTube")
+                room.set("id1", data[0]);
+                if (row.iQIYI) {
+                    room.set("src2", "iQYI")
+                    room.set("id2", data[0]);
+
+                }
+                room.set("qa", (row.QA ? row.QA : ""));
+            }
+            else if (row.Zoom) {
+                room.set("src1", "ZoomUS")
+                room.set("src2", "ZoomCN")
+                let data = getIDAndPwd(row.Zoom);
+                room.set("id1", data[0]);
+                room.set('pwd1', data[1]);
+                room.set("id2", data[0]);
+                room.set('pwd2', data[1]);
+            }
+            else
+                return
+
+            toSave.push(room);
+        }
+        else
+            console.log('[Rooms]: Skipping existing room ' + row.Name);
+    }
+}
 
 let allPeople = {};
 let allItems = {};

@@ -1,3 +1,99 @@
+# Little things to do right away
+
+- Add "Status: " before the dot
+- Add a new kind of status color, with a label like "Default"
+- Try to rename the "End call" button to "Back to lobby"
+- dntWaiver = "Only you can see this status. Others will still see your
+  presence in public rooms, but won't see a status" -- ... But this is the
+  only status that will be displayed as blank, so won't people be able to
+  infer it?
+- presenceDesc = "In a conversation; come join if you like"; -- have we made
+  it possible / obvious how to go to where someone else is??
+- need to think about screen real estate on small (laptop, ipad) screens --
+  e.g.
+       - the title bar across the top uses a lot of space
+       - the "live questions to the speakers" goes entirely off the bottom
+- The pop-up for someone's name in the lobby does not include their textual
+  status (or profile); the one on the left sidebar does
+
+# Notes from SCW
+
+Just talking with Richard and he mentioned two ideas for Clowdr:
+
+- "Random" social event.  Everyone who signs up gets placed in a random room
+  for a short meet & greet. I guess this is similar to Zoom's breakout room
+  feature, but we should look into how many people this could support at
+  once. A better option would be to let people specify/select a few topics
+  when they sign up that they are interested to increase the chance that the
+  interactions go well.
+
+- Q&A specific video room. Only three video streams allowed at a time:
+  author, current question asker and moderator. Any one who wants to ask a
+  question needs to join the queue and wait for their turn. Any number of
+  people can observe the discussion
+
+# Notes from / PLMW debrief
+
+- Lots of disagreement about whether lurking is a good thing.  Roopsha
+  observed that shy people may have a lot of trouble goijng from lurking to
+  participating mode.  She would actually prefer that there NOT be this
+  lurking mode that we've discussed.  As she said, perhaops all we need to
+  do is to socialize people so that popping into and out of rooms is
+  considered acceptable, not rude.
+
+  This also makes me wonder about different mechanisms for making it easy
+  for people to join rooms.  E.g., we could mark rooms when they are created
+  (and indicate when we show them) whether they are "manual join only" or
+  "random join allowed."  And then we make a "join a random room" button.
+
+  We might need to have a "block this person" feature where, for example,
+  "take me to a random room" would never take me to a room where this person
+  is currently present.  Or maybe this is inventing too much mechanism to
+  deal with problems that we don't udnerstand yet.
+
+- Create a “How to get the most out of this virtual experience” document for
+  attendees? Our tips/lessons learned to stay engaged
+     - Quiet space, write on slack, engage in Disco to actually meet people, …
+     - Clear out other meetings: you are attending PLMW, trying to do your
+       day job  at the same time doesn’t work
+     - Popping into and out of rooms is fine
+
+- Scheduling: Both the official and especially the unofficial parts of a
+  conference are a gigantic constraint solving problem.  It's not so bad
+  when people are onsite because there's a global structure that lots of
+  little things can happen within, serendipitiously.  Less good if many
+  more, even informal, things need to be scheduled.  We could build some
+  technology to help with this, but I wonder if there is some kind of
+  third-party scheduling tool that we could integrate... Surely this is a
+  common problem?
+
+- What about live captioning (as an eventual feature).
+
+___________
+
+More comments from the SPLASH SC meeting
+
+- With a little more thought, the interaction issues seem solvable.
+
+- The 1-1 mentoring part of PLDI was great.
+
+- Eelco really enjoyed his tutorial after PLDI!
+
+_______________
+More notes:
+  - a button to make a public room temporarily private (and then it goes
+    back to public when everybody leaves)
+
+  - layout nit: Put video on the very top of the screen, near the camera!
+
+  - if we added a couple of small features to a slack-like chat channel,
+    maybe we could get away without slido.
+       - Thumbs-up button (like slack)
+       - This-is-a-question-for-the-speaker button
+       - Display only questions from this channel, sorted by
+         most-thumbs-first.
+
+
 # Ideas for short-term tasks
 
 - First question: How hard would it be to include Sli.do functionality in
@@ -6,18 +102,18 @@
   for other people to "upvote" questions (by adding a thumbs up or
   something), and (3) a way for session hosts (and maybe everybody) to
   filter and sort posts to see only questions.
-  
+
   However, having said this, I am actually beginning to wonder whether we
   need this sort of functionality at all in Clowdr.  After all, the plan (at
   least for ICSE, I believe) is to have essentially all the talks
   pre-recorded.  So authors themselves are going to be watching the chat
   stream and either they or session chairs can choose which questions and
   comments to respond to live.
-  
+
   To make the platform flexible, we may well want to support easy
   integration with sli.do and other such tools, but perhaps this is as easy
   as a generic "embed such-and-such URL in an iframe when this talk is going
-  on." 
+  on."
 
 - "raise hand" feature for talks?
 

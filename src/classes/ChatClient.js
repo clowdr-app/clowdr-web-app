@@ -1,10 +1,12 @@
 import Chat from "twilio-chat";
 import Parse from "parse";
+import React from "react";
 
 export default class ChatClient{
     constructor(setGlobalState) {
         this.channelListeners = [];
         this.channels = [];
+        this.channelsThatWeHaventMessagedIn = [];
         this.joinedChannels = {};
         this.chatUser = null;
         this.twilio = null;
@@ -12,7 +14,6 @@ export default class ChatClient{
         this.channelListeners = {};
         this.channelPromises ={};
         this.channelWaiters = {};
-        console.log("Created a chatclient")
     }
 
     async openChatAndJoinIfNeeded(sid){
@@ -21,11 +22,17 @@ export default class ChatClient{
         if (!found) {
             found = await this.joinAndGetChannel(sid);
         }
-        this.openChat(sid);
+        this.openChat(found.sid);
 
     }
-    async closeChatAndLeave(sid){
+    closeChatAndLeaveIfUnused(sid){
+       if(this.channelsThatWeHaventMessagedIn.includes(sid))
+           this.closeChatAndLeave(sid);
+    }
 
+    async closeChatAndLeave(sid) {
+        if (this.joinedChannels[sid])
+            this.joinedChannels[sid].channel.leave();
     }
     async getJoinedChannel(sid){
         let chan = this.joinedChannels[sid];
@@ -47,21 +54,57 @@ export default class ChatClient{
         }
         let channel = await this.twilio.getChannelByUniqueName(uniqueName);
         let chan = this.joinedChannels[channel.sid];
+        this.channelsThatWeHaventMessagedIn.push(channel.sid);
         if(chan){
             return chan.channel;
         }
-        let membership = await channel.join();
-        await this.getChannelInfo(membership);
-        return membership;
+        try{
+            let membership = await channel.join();
+            await this.getChannelInfo(membership);
+            return membership;
+        }catch(err){
+            if(err.code ==50403) {
+                this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
+                let res = await Parse.Cloud.run("chat-getBondedChannelForSID", {
+                    conference: this.conference.id,
+                    sid: channel.sid
+                });
+                this.channelsThatWeHaventMessagedIn.push(res);
+                channel = await this.twilio.getChannelByUniqueName(res);
+                let membership = await channel.join();
+                await this.getChannelInfo(membership);
+                return membership;
+            }
+            else{
+                console.log(err);
+            }
+        }
+    }
+
+    setUnreadCount(sid, count){
+        if(this.chatList){
+            this.chatList.setUnreadCount(sid, count);
+        }
     }
 
     initBottomChatBar(chatBar){
         this.chatBar = chatBar;
-        chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes.mode == "directMessage").map(c=>c.channel.sid)});
+        chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes && c.attributes.category != "socialSpace").map(c=>c.channel.sid)});
+        chatBar.setState({Initialchats: Object.values(this.joinedChannels).filter(c=>c.attributes && c.attributes.category != "socialSpace").map(c=>c.channel.sid)});
     }
+
+    initJoinedChatList(chatList){
+        this.chatList = chatList;
+        console.log("Init joined chat list" + Object.keys(this.joinedChannels))
+        chatList.setState({chats: Object.values(this.joinedChannels)
+                .filter(c=>c.attributes && c.attributes.category != "socialSpace")
+                .map(c=>c.channel.sid)});
+    }
+
 
     initChatClient(user, conference, userProfile) {
         this.userProfile = userProfile;
+        this.conference = conference;
         if (!this.chatClientPromise) {
             this.chatClientPromise = new Promise(async (resolve) => {
                 let ret = await this._initChatClient(user, conference);
@@ -72,15 +115,24 @@ export default class ChatClient{
         return this.chatClientPromise;
     }
 
-    openChat(chatSID) {
-        this.chats.push(chatSID);
+    openChat(chatSID, isInitialLoad) {
+        if(!chatSID){
+            console.log("No chat sid!")
+            console.trace();
+        }
+        if(!this.chats.includes(chatSID))
+            this.chats.push(chatSID);
         if (this.chatBar)
-            this.chatBar.openChat(chatSID);
+            this.chatBar.openChat(chatSID, isInitialLoad);
+        if(this.chatList)
+            this.chatList.addChannel(chatSID);
     }
     leaveChat(chatSID){
         this.chats = this.chats.filter(c=>c != chatSID);
         if(this.chatBar)
             this.chatBar.removeChannel(chatSID);
+        if(this.chatList)
+            this.chatList.removeChannel(chatSID);
     }
     async getChannelInfo(channel){
 
@@ -117,9 +169,7 @@ export default class ChatClient{
         }
         const updateMembers = async ()=>{
             let container = this.joinedChannels[sid];
-            console.log("Updated " + sid)
             let members = await container.channel.getMembers();
-            console.log(members)
             let membersWithoutUs = members.map(m=>m.identity).filter(m=>m!= this.userProfile.id);
             this.joinedChannels[sid].members = membersWithoutUs;
             if(this.chatBar){
@@ -154,7 +204,22 @@ export default class ChatClient{
         for (let channel of paginator.items) {
             promises.push(this.getChannelInfo(channel));
         }
-        let channelsArray  =await Promise.all(promises);
+        let channelsArray = await Promise.all(promises);
+
+        //Make sure that the bottom chat bar and chat list have everything we have so far
+        if (this.chatList)
+            this.chatList.setState({
+                    chats: Object.values(this.joinedChannels)
+                        .filter(c => c.attributes && c.attributes.category != "socialSpace")
+                        .map(c => c.channel.sid)
+            });
+        if (this.chatBar)
+            this.chatBar.setState({
+                chats: Object.values(this.joinedChannels)
+                    .filter(c => c.attributes && c.attributes.category != "socialSpace")
+                    .map(c => c.channel.sid)
+            });
+
         twilio.on("channelAdded", (channel)=>{
             this.channels.push(channel);
             // this.channelListeners.forEach(v=> v.channelAdded(channel));
@@ -169,8 +234,8 @@ export default class ChatClient{
         twilio.on("channelJoined", async (channel) => {
             let channelInfo = await this.getChannelInfo(channel);
             if(channelInfo){
-                if(channelInfo.attributes.mode == "directMessage"){
-                    this.openChat(channel.sid);
+                if(channelInfo.attributes.category != "socialSpace"){
+                    this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
                 }
                 this.subscribeToChannel(channel.sid);
             }
@@ -183,6 +248,13 @@ export default class ChatClient{
             this.unSubscribeToChannel(channel);
             // this.channelListeners.forEach(v => v.channelLeft(channel));
         });
+        //Do we already have the announcements channel?
+        let announcements = Object.values(this.joinedChannels).find(chan => chan.attributes.category == 'announcements-global');
+        if(!announcements){
+            let res = await Parse.Cloud.run("join-announcements-channel", {
+                conference: this.conference.id
+            });
+        }
         this.twilio = twilio;
         return this.twilio;
     }

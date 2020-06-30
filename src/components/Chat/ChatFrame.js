@@ -1,9 +1,10 @@
 import {AuthUserContext} from "../Session";
+import Parse from "parse";
 
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip} from 'antd';
+import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -18,7 +19,6 @@ const {Header, Content, Footer, Sider} = Layout;
 
 var moment = require('moment');
 const INITIAL_STATE = {
-    expanded: true,
     chatLoading: true,
     token: '',
     chatReady: false,
@@ -91,6 +91,9 @@ class ChatFrame extends React.Component {
                 this.activeChannel.removeAllListeners("messageAdded");
                 this.activeChannel.removeAllListeners("messageRemoved");
                 this.activeChannel.removeAllListeners("messageUpdated");
+                this.activeChannel.removeAllListeners("memberJoined");
+                this.activeChannel.removeAllListeners("memberLeft");
+
                 //we never actually leave a private channel because it's very hard to get back in
                 // - we need to be invited by the server, and that's a pain...
                 //we kick users out when they lose their privileges to private channels.
@@ -118,10 +121,42 @@ class ChatFrame extends React.Component {
             this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
             this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
             this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
+            this.members = [];
+            this.activeChannel.getMembers().then(members => this.members = members);
+            this.activeChannel.on("memberLeft", (member)=> this.members = this.members.filter(m=>m.sid != member.sid));
+            this.activeChannel.on("memberJoined", (member)=> this.members.push(member));
+
+            let chanInfo = this.props.auth.chatClient.joinedChannels[sid];
+            this.dmOtherUser = null;
+            if(chanInfo.attributes.mode == "directMessage"){
+                let p1 = chanInfo.conversation.get("member1").id;
+                let p2 = chanInfo.conversation.get("member2").id;
+                this.dmOtherUser = p1;
+                if(p1 == this.props.auth.userProfile.id)
+                   this.dmOtherUser = p2;
+            }
             let stateUpdate = {
                 chatLoading: false,
                 activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName),
             }
+            this.isAnnouncements = false;
+            if(chanInfo.attributes.category == "announcements-global"){
+                this.isAnnouncements = true;
+                //find out if we are able to write to this.
+                const accesToConf = new Parse.Query('InstancePermission');
+                accesToConf.equalTo("conference", this.props.auth.currentConference);
+                let actionQ = new Parse.Query("PrivilegedAction");
+                actionQ.equalTo("action","announcement-global");
+                accesToConf.matchesQuery("action", actionQ);
+                const hasAccess = await accesToConf.first();
+                if(!hasAccess){
+                    console.log("read only")
+                    stateUpdate.readOnly = true;
+                }
+
+            }
+
+
             if (this.currentSID != sid) {
                 return;//raced with another update
             }
@@ -142,9 +177,20 @@ class ChatFrame extends React.Component {
         }
 
     }
+    componentWillUnmount() {
+        if(this.activeChannel) {
+            this.activeChannel.removeAllListeners("messageAdded");
+            this.activeChannel.removeAllListeners("messageRemoved");
+            this.activeChannel.removeAllListeners("messageUpdated");
+            this.activeChannel.removeAllListeners("memberJoined");
+            this.activeChannel.removeAllListeners("memberLeft");
+        }
+    }
 
     updateUnreadCount(lastConsumed, lastTotal) {
-        if (lastConsumed != this.lastConsumedMessageIndex || lastTotal != this.lastSeenMessageIndex) {
+        if (lastConsumed != this.lastConsumedMessageIndex || lastTotal > this.lastSeenMessageIndex) {
+            if(lastTotal < 0)
+                lastTotal = this.lastSeenMessageIndex;
             let unread = lastTotal - lastConsumed;
             if (unread != this.unread) {
                 if (this.props.setUnreadCount)
@@ -192,6 +238,7 @@ class ChatFrame extends React.Component {
             this.activeChannel.setAllMessagesConsumed();
             this.updateUnreadCount(lastIndex, lastIndex);
         }else if(!this.props.visible){
+            //TODO lastConsumedMessageIndex is wrong, not actually last seen
             let lastConsumed = this.lastConsumedMessageIndex;
             if(lastConsumed < 0){
                 lastConsumed = this.activeChannel.lastConsumedMessageIndex;
@@ -216,6 +263,28 @@ class ChatFrame extends React.Component {
     messageAdded = (channel, message) => {
         this.messages[channel.sid].push(message);
         this.groupMessages(this.messages[channel.sid]);
+        if(this.isAnnouncements){
+            //get the sender
+            this.props.auth.helpers.getUserProfilesFromUserProfileID(message.author).then((profile)=>{
+                const args = {
+                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
+                    description:
+                    <ReactMarkdown source={message.body} renderers={{
+                        text: emojiSupport,
+                        link: linkRenderer
+                    }}/>,
+                    placement: 'topLeft',
+                    onClose: ()=>{
+                        if(message.index > this.lastConsumedMessageIndex){
+                            this.updateUnreadCount(message.index, -1);
+                            channel.advanceLastConsumedMessageIndex(message.index)
+                        }
+                    },
+                    duration: 600,
+                };
+                notification.info(args);
+            })
+        }
 
     };
 
@@ -240,8 +309,16 @@ class ChatFrame extends React.Component {
             if (message)
                 message = message.replace(/\n/g, "  \n");
             this.activeChannel.sendMessage(message);
+            if(!this.clearedTempFlag){
+                this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c=>c!=this.activeChannel.sid);
+                this.clearedTempFlag = true;
+            }
             if (this.form && this.form.current)
                 this.form.current.resetFields();
+
+            if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
+                this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
+            }
         }
     };
 
@@ -430,29 +507,33 @@ class ChatFrame extends React.Component {
                             </List>
                             {/*</InfiniteScroll>*/}
                         </div>
-                        <div
-                            className={"embeddedChatMessageEntry"}
-                            // style={{
-                            // padding: "0px 0px 0px 0px",
-                            // backgroundColor: "#f8f8f8",
-                            // position: "fixed",
-                            // bottom: "0px",
-                            // paddingLeft: "10px"
-                            //}}
+            {
+                this.state.readOnly? <></> :  <div
+                    className={"embeddedChatMessageEntry"}
+                    // style={{
+                    // padding: "0px 0px 0px 0px",
+                    // backgroundColor: "#f8f8f8",
+                    // position: "fixed",
+                    // bottom: "0px",
+                    // paddingLeft: "10px"
+                    //}}
                 >
-                            <Form ref={this.form} className="embeddedChatMessageEntry">
-                                <Form.Item style={{width:"100%", marginBottom: "0px"}}>
-                                    <Input.TextArea
-                                        name={"message"}
-                                        className="embeddedChatMessage"
-                                        placeholder={"Send a message"}
-                                        autoSize={{minRows: 1, maxRows: 6}}
-                                        onChange={this.onMessageChanged}
-                                        onPressEnter={this.sendMessage}
-                                        value={this.state.newMessage}/>
-                                </Form.Item>
-                            </Form>
-                        </div>
+                    <Form ref={this.form} className="embeddedChatMessageEntry">
+                        <Form.Item style={{width:"100%", marginBottom: "0px"}}>
+                            <Input.TextArea
+                                disabled={this.state.readOnly}
+                                name={"message"}
+                                className="embeddedChatMessage"
+                                placeholder={this.state.readOnly? "This channel is read-only" : "Send a message"}
+                                autoSize={{minRows: 1, maxRows: 6}}
+                                onChange={this.onMessageChanged}
+                                onPressEnter={this.sendMessage}
+                                value={this.state.newMessage}/>
+                        </Form.Item>
+                    </Form>
+                </div>
+            }
+
                     {/*</Layout>*/}
                 </div>
 

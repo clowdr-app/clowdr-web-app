@@ -232,6 +232,9 @@ class VideoRoom extends Component {
                 // window.location.reload(false);
             }
         }, timeout);
+        if(room.get("socialSpace"))
+            this.props.authContext.setSocialSpace(null,room.get("socialSpace"));
+
         room = await this.props.authContext.helpers.populateMembers(room);
         console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
         this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});

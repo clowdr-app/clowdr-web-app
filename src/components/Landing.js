@@ -1,4 +1,5 @@
 import React, {Component} from "react";
+import {NavLink} from "react-router-dom";
 import LiveStreaming from "./LiveStreaming";
 import {PageHeader} from "antd";
 
@@ -6,46 +7,61 @@ class Landing extends Component {
     render() {
         return <div>
             <h2>ICSE 2020 LIVE @ CLOWDR</h2>
-            <p><strong>Welcome to Virtual ICSE 2020!</strong> 
+            <p><strong>Welcome to Virtual ICSE 2020!</strong> We are using two main tools to connect everyone:
             </p>
-            <div> We are using two main tools to connect everyone:
+            <div> 
                 <ul>
-                    <li>This Web app, CLOWDR, where you can view all the <a href="/live/now">live</a> and <a href="/live/past">past</a> sessions,
-                        ask questions during the live talks, engage in session-specific and paper-specific chats, view the <a href="/exhibits/icse-2020-poster">posters</a>,  
-                        the <a href="/exhibits/icse-2020-ACM-Student-Research-Competition">Student Research Competition</a>, and the <a href="/exhibits/Demonstrations">demos</a>, 
-                        and talk to their authors, and meetup with peers in the <a href="/lobby">Lobby</a> for video chats.</li>
-                    <li>The ICSE 2020 Slack channel, where you can get <a href="https://icse-2020.slack.com/app_redirect?channel=help" rel="noopener noreferrer" target="_blank">#help</a>, 
+                    <li>This Web app, CLOWDR, where you can view all the <NavLink to="/live/now">live</NavLink> and <NavLink to ="/live/past">past</NavLink> sessions,
+                        ask questions during the live talks, engage in session-specific and paper-specific chats, view the <NavLink to="/exhibits/icse-2020-poster/grid">posters</NavLink>,
+                        the <NavLink to="/exhibits/icse-2020-ACM-Student-Research-Competition/grid">Student Research Competition</NavLink>, and the <NavLink to="/exhibits/Demonstrations/grid">demos</NavLink>,
+                        and talk to their authors, and meetup with peers in the <NavLink to="/lobby">Lobby</NavLink> for video chats.</li>
+                    <li>The ICSE 2020 Slack channel, where you can get <a href="https://icse-2020.slack.com/app_redirect?channel=help" rel="noopener noreferrer" target="_blank">#help</a>,
                         volunteer for <a href="https://icse-2020.slack.com/app_redirect?channel=mentoring" rel="noopener noreferrer" target="_blank">#mentoring</a>, and organize your own
                         coffee breaks or BYOB in <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.
                         If you are a presenter, you will also use Slack for meeting up with the live streaming team before the session, so pay
                         attention to them calling you there!</li>
                 </ul>
             </div>
+            <div><strong>What to do during virtual ICSE:</strong> Besides attending the live sessions, you can interact with other participants in many ways!
+            <ul>
+                <li>Chat and ask questions during the talks in the live rooms, and upvote existing questions. Questions will be answered, live, at the end of each talk.
+                    Don't be shy about chatting during the talks: not only it will not be disruptive, but it will make the presenters feel the presence of the audience!
+                </li>
+                <li>Continue the conversation with the presenters by locating the papers in the Exhibit Hall, and using the paper-specific text channels.</li>
+                <li>If you are a presenter, consider starting a video chat in the <NavLink to="/lobby">Lobby</NavLink> right after your session, so others can talk to you.</li>
+                <li>If you are a senior member of the ICSE community, consider volunteering for one-on-one or small group mentoring sessions. Post your availability in 
+                    the <a href="https://icse-2020.slack.com/app_redirect?channel=mentoring" rel="noopener noreferrer" target="_blank">#mentoring</a> channel in Slack,
+                    and meet up with younger people either in a video chat room in the <NavLink to="/lobby">Lobby</NavLink> or in your own video conference. 
+                </li>
+                <li>If you'd like to organize an informal public gathering, create one in the Lobby (give it a meaningful name), and announce it in 
+                    the <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.</li>
+            </ul>
+            </div>
             <div><strong>Code of Conduct</strong>: Remember to adhere to
             the <a href="https://www.acm.org/special-interest-groups/volunteer-resources/officers-manual/policy-against-discrimination-and-harassment" rel="noopener noreferrer" target="_blank">
                 ACM Policy Against Harassment</a> at all times. If you observe or are subject to innapropriate conduct, call it out:
                 <ul>
                     <li>Use the red "report" icon in video chats</li>
-                    <li>Send a direct message to <a href="slack://user?team=T012LF0AWLV&id=U01274MVDC7" target="_blank">@Crista Lopes</a></li>
+                    <li>Send a direct Slack message to <a href="slack://user?team=T012LF0AWLV&id=U01274MVDC7" target="_blank">@Crista Lopes</a></li>
                 </ul>
             </div>
             <h3>THANK YOU TO OUR SPONSORS!</h3>
 <center> <font size={6}> Sponsors </font> </center>
 
 <center>
-<a href="https://www.acm.org/">
+<a href="https://www.acm.org/" target="_blank">
 <img src="https://conf.researchr.org/getLogo/036e8246-6b79-4da5-a41d-b2548815d79f?1523626085000" width={300} /> 
 </a>
-  <a href="http://www.sigsoft.org/index.html">
+  <a href="http://www.sigsoft.org/index.html" taget="_blank">
   <img src="https://conf.researchr.org/getLogo/ebbb2b60-9730-42f4-9d46-4125ba39cb8f?1573234724000" width={200} />
 </a>
-  <a href="https://www.computer.org/">
+  <a href="https://www.computer.org/" target="_blank">
 <img src="https://conf.researchr.org/getLogo/8006ac99-8c6b-4ccc-b72e-c1edde8a3d69?1581694289000" width={250} />
 </a>&nbsp;&nbsp;
-  <a href="http://www.cs-tcse.org/">
+  <a href="http://www.cs-tcse.org/" target="_blank">
   <img src="https://conf.researchr.org/getLogo/1cffa2e5-761e-49d8-b4b1-3274de2a712c?1523626456000" width={200} />
 </a>&nbsp;
-  <a href="http://www.kiise.or.kr/academyEng/main/main.faEng">
+  <a href="http://www.kiise.or.kr/academyEng/main/main.faEng" target="_blank">
   <img src="https://conf.researchr.org/getLogo/585d2505-b77a-4ea9-be85-f4d0d79c5f26?1523626420000" width={200} />
 </a>
 </center>
@@ -96,8 +112,9 @@ class Landing extends Component {
 <img src="https://conf.researchr.org/getLogo/b93c740b-2256-4458-81ba-4e800238db11?1581689394000" width={175}/></a>
 </center>
 
-            <p><b>CLOWDR</b> is a community-driven effort to create a new platform to support
-                <b>C</b>onferences <b>L</b>ocated <b>O</b>nline by using <b>D</b>igital <b>R</b>esources.
+            <p><b>CLOWDR</b> is a community-driven effort to create a new platform to 
+        support <b>C</b>onferences <b>L</b>ocated <b>O</b>nline <b>W</b>ith <b>D</b>igital <b>R</b>esources. (Also, a clowder
+                is <a href="https://www.merriam-webster.com/dictionary/clowder" rel="noopener noreferrer" target="_blank">a group of cats</a> &#128049;)
                 CLOWDR combines the group chat features of Slack or IRC with the simplicity of private chat in
                 social networks like Facebook Messenger or GChat. And, every chat has the option to add video or audio.
                 Aside from chat, CLOWDR contains the entire conference program, and organizes the various events' live

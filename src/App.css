@@ -170,22 +170,29 @@
 .activeBreakoutRoom{
     padding:0;
     line-height: 1;
+    text-overflow: ellipsis;
     /*overflow-y: auto;*/
+    overflow:hidden;
 }
 .activeRoomsList .ant-list-item {
     padding-top: 0;
     padding-bottom: 0;
+    text-overflow: ellipsis;
 }
-
+.chat-unread-count{
+    /*height: 1em;*/
+}
+.personHoverable{
+}
 .personHoverable:hover{
     background-color: white;
 }
 #sidepopoutcontainer .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
-    line-height:1;
+    line-height:1.1;
     height: auto;
 }
 #sidepopoutcontainer .ant-menu-sub.ant-menu-inline > .ant-menu-item{
-    line-height: 1;
+    line-height: 1.1;
     height:auto;
 }
 .dragIconMiddle {
@@ -326,6 +333,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     height: 25px;
 }
 #bottom-chat-button-bar{
+    overflow-x: hidden;
     display: flex;
     flex-direction: row-reverse;
     position: relative;
@@ -337,6 +345,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
 }
 
 .chatButtonCollapsed{
+    text-overflow: ellipsis;
     width: 238px;
     overflow: hidden;
 }
@@ -457,3 +466,6 @@ td.ant-table-cell.program-table-timeBand{
  td.ant-table-cell.program-table-programItem{
     padding: 2px;
 }
+#sidepopoutcontainer .social-sidebar-divider{
+     margin: 0;
+ }

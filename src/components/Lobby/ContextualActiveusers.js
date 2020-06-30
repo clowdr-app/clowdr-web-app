@@ -1,12 +1,13 @@
 import React, {Component} from "react";
 import {AuthUserContext} from "../Session";
-import {Collapse, Divider, Menu, Popconfirm, Select, Skeleton, Tag, Tooltip, Typography} from "antd";
+import {Collapse, Divider, Menu, Popconfirm, Select, Skeleton, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
 import {LockTwoTone} from "@ant-design/icons"
 import NewRoomForm from "./NewRoomForm";
 import UserStatusDisplay from "./UserStatusDisplay";
 import Parse from "parse";
 import PresenceForm from "./PresenceForm";
+import CollapsedChatDisplay from "../Chat/CollapsedChatDisplay";
 
 
 class ContextualActiveUsers extends Component {
@@ -21,7 +22,8 @@ class ContextualActiveUsers extends Component {
             currentSocialSpaceMembers: [],
             user: this.props.auth.user,
             activeSpace: this.props.auth.activeSpace,
-            filterRoom: null
+            filterRoom: null,
+            unread: {}
         };
     }
 
@@ -31,6 +33,7 @@ class ContextualActiveUsers extends Component {
         if (user) {
             this.setState({presences: this.props.auth.presences});
             this.setState({loggedIn: true});
+            this.props.auth.chatClient.initJoinedChatList(this);
         } else {
             this.setState({loggedIn: false});
         }
@@ -83,6 +86,20 @@ class ContextualActiveUsers extends Component {
         this.mounted = false;
     }
 
+    removeChannel(sid) {
+        this.setState(
+            (prevState) => ({
+                chats: prevState.chats.filter(c => c != sid)
+            })
+        )
+    }
+
+    addChannel(sid) {
+        this.setState((prevState) => ({
+            chats: [sid, ...prevState.chats.filter(c => c != sid)]
+        }))
+    }
+
     joinCall(room) {
         if(room.get("programItem")){
             this.props.history.push("/program/"+room.get("programItem").get("confKey"))
@@ -91,6 +108,17 @@ class ContextualActiveUsers extends Component {
             this.props.history.push("/video/" + this.props.auth.currentConference.get('conferenceName') + "/" + room.get("title"));
             this.props.auth.setActiveRoom(room.get("title"));
         }
+    }
+
+    setUnreadCount(sid, count) {
+        this.setState(
+            (prevState) => ({
+                unread: {
+                    ...prevState.unread,
+                    [sid]: count
+                }
+            })
+        )
     }
 
 
@@ -172,7 +200,6 @@ class ContextualActiveUsers extends Component {
                 selectedKeys.push(this.state.filteredUser);
             tabs = <div>
                 <div>
-
                     <div><PresenceForm /></div>
                     <Select style={{width: "100%"}} showSearch
                             allowClear={true}
@@ -186,8 +213,8 @@ class ContextualActiveUsers extends Component {
                             }}
 
                             options={searchOptions} placeholder="Search"></Select>
-                    <Divider>
-                       {this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : ""}
+                    <Divider className="social-sidebar-divider">
+                        <Tooltip title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{this.props.auth.activeSpace.get("name")}</Tooltip>
                     </Divider>
 
                         <Menu mode="inline"
@@ -201,6 +228,8 @@ class ContextualActiveUsers extends Component {
                                   border: '1px solid #FAFAFA'
 
                               }}
+                              inlineIndent={0}
+
                               selectedKeys={selectedKeys}
                               defaultOpenKeys={['firstUsers']}
                               forceSubMenuRender={true}
@@ -234,17 +263,69 @@ class ContextualActiveUsers extends Component {
                                 :<></>}
                         </Menu>
 
-                    <div style={{textAlign: 'center'}}>
-                        <NewRoomForm type="secondary" text="Create New Video Room" />
-                    </div>
-
                 </div>
-                <Divider>Breakout Rooms</Divider>
+                <Divider className="social-sidebar-divider"><Tooltip title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room (e.g. lobby)">Chats</Tooltip></Divider>
+                <Menu mode="inline"
+                      className="activeRoomsList"
+                    // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
+                      style={{
+                          // height: "100%",
+                          // overflow: 'auto',
+                          // display: 'flex',
+                          // flexDirection: 'column-reverse',
+                          border: '1px solid #FAFAFA'
+
+                      }}
+                      inlineIndent={0}
+                      selectedKeys={selectedKeys}
+                      defaultOpenKeys={['firstChats']}
+                      forceSubMenuRender={true}
+                      expandIcon={null}
+                >
+                    <Menu.SubMenu key="firstChats" expandIcon={<span></span>}>
+                        {
+                            this.state.chats.length == 0 ? <Menu.Item className="personHoverable">You are not in any chats</Menu.Item> : <></>
+                        }
+                        {this.state.chats.slice(0,10).map((sid) => {
+                            let className = "personHoverable";
+                            // if (this.state.filteredUser == user.id)
+                            //     className += " personFiltered"
+                            return <Menu.Item key={sid} className={className}>
+                                <CollapsedChatDisplay sid={sid} unread={this.state.unread[sid]}/>
+                                {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
+                            </Menu.Item>
+                        })
+                        }
+                    </Menu.SubMenu>{
+                    this.state.chats.length > 10 ?
+                        <Menu.SubMenu key="restChats" title={<div className="overflowHelper">{this.state.chats.length-10} more</div>}>
+
+                            {this.state.chats.slice(10).map((sid) => {
+                                let className = "personHoverable";
+                                // if (this.state.filteredUser == user.id)
+                                //     className += " personFiltered"
+                                return <Menu.Item key={sid} className={className}>
+                                    <CollapsedChatDisplay sid={sid}  />
+
+                                    {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
+                                </Menu.Item>
+                            })
+                            }
+                        </Menu.SubMenu>
+                        :<></>}
+                </Menu>
+
+
+                <Divider className="social-sidebar-divider"><Tooltip title={"These breakout rooms feature video and chat, and are associated with the room that you are currently in - "
+                + this.props.auth.activeSpace.get("name")}>Breakout (Video) Rooms</Tooltip></Divider>
+
                 <Menu mode="inline"
                       className="activeRoomsList"
                     style={{
                         border: '1px solid #FAFAFA'
                     }}
+                      inlineIndent={0}
+
                       forceSubMenuRender={true}
                       openKeys={allActiveRooms.map(r=>r.id)}
                       expandIcon={null}
@@ -290,8 +371,6 @@ class ContextualActiveUsers extends Component {
                     }
                     let formattedRoom =
                         <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{tag}{privateSymbol}{item.get('title')}</div>
-
-
                     let joinLink = "";
                         if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
                         {
@@ -310,18 +389,11 @@ class ContextualActiveUsers extends Component {
                                     </Popconfirm>
                                     </Tooltip>
                                 </div>;
-
                             }
                             else
                                 joinLink = <div><Tooltip title={joinInfo}><a href="#"
                                                                                          onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                 </div>;
-                                // joinLink=  <Popconfirm
-                                //     title="You are about to join a video call. Are you ready?"
-                                //     onConfirm={this.joinCall.bind(this, item)}
-                                //     okText="Yes"
-                                //     cancelText="No"
-                                // ><a href="#">{formattedRoom}</a></Popconfirm>
                         }
                         else {
                             joinLink = formattedRoom;
@@ -351,6 +423,9 @@ class ContextualActiveUsers extends Component {
                     }
                 ) : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
                 </Menu>
+                <div style={{textAlign: 'center'}}>
+                    <NewRoomForm type="secondary" text="New Breakout Room" />
+                </div>
             </div>
         }
         return (

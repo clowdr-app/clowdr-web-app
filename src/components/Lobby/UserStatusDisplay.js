@@ -44,12 +44,15 @@ class UserStatusDisplay extends React.Component{
                 presenceDesc = "Offline";
             }
             else if (this.state.presence.get("isLookingForConversation")) {
-                presenceDesc = "Available for conversation";
+                presenceDesc = "Looking for conversation";
                 badgeColor = "green";
                 badgeStyle = "processing";
             } else if (this.state.presence.get("isAvailable")) {
                 presenceDesc = "In a conversation; come join if you like";
                 badgeColor = "geekblue";
+            } else if (this.state.presence.get("isOpenToConversation")) {
+                presenceDesc = "Open to conversation";
+                badgeColor = "black";
             } else if (this.state.presence.get("isDND")) {
                 presenceDesc = "Busy / do not disturb";
                 badgeColor = "orange";

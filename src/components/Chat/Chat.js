@@ -412,6 +412,7 @@ class ChatContainer extends Component {
                                                                             cancelText="No"
                                                                         ><a href="#"><VideoCameraAddOutlined /></a></Popconfirm>
                                                                         <Badge
+                                                                            className="chat-unread-count"
                                                            count={_this.state["unread" + item.uniqueName]}/>
                                                            </div></div>
                                                            </div></Popover>

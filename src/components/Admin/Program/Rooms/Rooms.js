@@ -1,5 +1,6 @@
 import React, {Fragment} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
+import {Button, DatePicker, Form, Input, Select, message, Modal, Popconfirm, Space, Spin, Table, Tabs, Upload} from "antd";
+import {UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
@@ -148,6 +149,28 @@ class Rooms extends React.Component {
 
     }
 
+    onChange(info) {
+        console.log("onChange " + info.file.status);
+        if (info.file.status !== 'uploading') {
+          console.log(info.file, info.fileList);
+        }
+        if (info.file.status === 'done') {
+          message.success(`${info.file.name} file uploaded successfully`);
+        } else if (info.file.status === 'error') {
+          message.error(`${info.file.name} file upload failed.`);
+        }
+    }
+
+
+    beforeUpload(file, fileList) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const data = {content: reader.result, conference: this.props.auth.currentConference.id};
+            Parse.Cloud.run("rooms-upload", data).then(() => this.refreshList());
+        }
+        reader.readAsText(file);
+        return false;
+    } 
 
     refreshList(){
         let query = new Parse.Query("ProgramRoom");
@@ -301,55 +324,68 @@ class Rooms extends React.Component {
             </Fragment>
             )
         return <div>
-                <Button
-                    type="primary"
-                    onClick={() => {
-                        this.setVisible(true);
-                    }}
-                >
-                    New Room
-                </Button>
-                <CollectionEditForm
-                    title="Add Room"
-                    visible={this.state.visible}
-                    onAction={this.onCreate.bind(this)}
-                    onCancel={() => {
-                        this.setVisible(false);
-                    }}
-                    onSelectPullDown1={(value) => {
-                        this.setState({src1: value});
-                    }}
-                    onSelectPullDown2={(value) => {
-                        this.setState({src2: value});
-                    }}
-    
-                    socialSpaces={this.state.socialSpaces}
-                    socialSpacesLoading={this.state.socialSpacesLoading}
-                />
-                    <Input.Search
-                        allowClear
-                        onSearch={key => {
-                                if (key == "") {
-                                    this.setState({searched: false});
+                <table style={{width:"100%"}}>
+                    <tbody>
+                        <tr>
+                            <td><Upload accept=".txt, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
+                                <Button>
+                                    <UploadOutlined /> Upload file
+                                </Button>
+                            </Upload></td>
+
+                            <td>
+                            <Button
+                                type="primary"
+                                onClick={() => {
+                                    this.setVisible(true);
+                                }}
+                            >
+                                New Room
+                            </Button>
+                            <CollectionEditForm
+                                title="Add Room"
+                                visible={this.state.visible}
+                                onAction={this.onCreate.bind(this)}
+                                onCancel={() => {
+                                    this.setVisible(false);
+                                }}
+                                onSelectPullDown1={(value) => {
+                                    this.setState({src1: value});
+                                }}
+                                onSelectPullDown2={(value) => {
+                                    this.setState({src2: value});
+                                }}
+                
+                                socialSpaces={this.state.socialSpaces}
+                                socialSpacesLoading={this.state.socialSpacesLoading}
+                            /></td>
+                            <td><Input.Search
+                                allowClear
+                                onSearch={key => {
+                                        if (key == "") {
+                                            this.setState({searched: false});
+                                        }
+                                        else {
+                                            this.setState({searched: true});
+                                            this.setState({
+                                                dataSource: this.state.rooms.filter(
+                                                    room => 
+                                                        (room.get('name') && room.get('name').toLowerCase().includes(key.toLowerCase()))
+                                                        || (room.get('src1') && room.get('src1').toLowerCase().includes(key.toLowerCase()))
+                                                        || (room.get('id1') && room.get('id1').toLowerCase().includes(key.toLowerCase()))
+                                                        || (room.get('pwd1') && room.get('pwd1').toLowerCase().includes(key.toLowerCase()))
+                                                        || (room.get('src2') && room.get('src2').toLowerCase().includes(key.toLowerCase()))
+                                                        || (room.get('id2') && room.get('id2').toLowerCase().includes(key.toLowerCase()))
+                                                        || (room.get('pwd2') && room.get('pwd2').toLowerCase().includes(key.toLowerCase()))
+                                                        || (room.get('qa') && room.get('qa').toLowerCase().includes(key.toLowerCase())))
+                                            })
+                                        }
+                                    }
                                 }
-                                else {
-                                    this.setState({searched: true});
-                                    this.setState({
-                                        dataSource: this.state.rooms.filter(
-                                            room => 
-                                                (room.get('name') && room.get('name').toLowerCase().includes(key.toLowerCase()))
-                                                || (room.get('src1') && room.get('src1').toLowerCase().includes(key.toLowerCase()))
-                                                || (room.get('id1') && room.get('id1').toLowerCase().includes(key.toLowerCase()))
-                                                || (room.get('pwd1') && room.get('pwd1').toLowerCase().includes(key.toLowerCase()))
-                                                || (room.get('src2') && room.get('src2').toLowerCase().includes(key.toLowerCase()))
-                                                || (room.get('id2') && room.get('id2').toLowerCase().includes(key.toLowerCase()))
-                                                || (room.get('pwd2') && room.get('pwd2').toLowerCase().includes(key.toLowerCase()))
-                                                || (room.get('qa') && room.get('qa').toLowerCase().includes(key.toLowerCase())))
-                                    })
-                                }
-                            }
-                        }
-                    />      
+                            /></td>
+                        </tr>
+                    </tbody>
+                </table>
             <Table 
                 columns={columns} 
                 dataSource={this.state.searched ? this.state.searchResult : this.state.rooms} 
