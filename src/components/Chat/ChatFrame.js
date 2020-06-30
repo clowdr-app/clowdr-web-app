@@ -18,7 +18,6 @@ const {Header, Content, Footer, Sider} = Layout;
 
 var moment = require('moment');
 const INITIAL_STATE = {
-    expanded: true,
     chatLoading: true,
     token: '',
     chatReady: false,
@@ -91,6 +90,9 @@ class ChatFrame extends React.Component {
                 this.activeChannel.removeAllListeners("messageAdded");
                 this.activeChannel.removeAllListeners("messageRemoved");
                 this.activeChannel.removeAllListeners("messageUpdated");
+                this.activeChannel.removeAllListeners("memberJoined");
+                this.activeChannel.removeAllListeners("memberLeft");
+
                 //we never actually leave a private channel because it's very hard to get back in
                 // - we need to be invited by the server, and that's a pain...
                 //we kick users out when they lose their privileges to private channels.
@@ -118,6 +120,20 @@ class ChatFrame extends React.Component {
             this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
             this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
             this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
+            this.members = [];
+            this.activeChannel.getMembers().then(members => this.members = members);
+            this.activeChannel.on("memberLeft", (member)=> this.members = this.members.filter(m=>m.sid != member.sid));
+            this.activeChannel.on("memberJoined", (member)=> this.members.push(member));
+
+            let chanInfo = this.props.auth.chatClient.joinedChannels[sid];
+            this.dmOtherUser = null;
+            if(chanInfo.attributes.mode == "directMessage"){
+                let p1 = chanInfo.conversation.get("member1").id;
+                let p2 = chanInfo.conversation.get("member2").id;
+                this.dmOtherUser = p1;
+                if(p1 == this.props.auth.userProfile.id)
+                   this.dmOtherUser = p2;
+            }
             let stateUpdate = {
                 chatLoading: false,
                 activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName),
@@ -192,6 +208,7 @@ class ChatFrame extends React.Component {
             this.activeChannel.setAllMessagesConsumed();
             this.updateUnreadCount(lastIndex, lastIndex);
         }else if(!this.props.visible){
+            //TODO lastConsumedMessageIndex is wrong, not actually last seen
             let lastConsumed = this.lastConsumedMessageIndex;
             if(lastConsumed < 0){
                 lastConsumed = this.activeChannel.lastConsumedMessageIndex;
@@ -240,8 +257,16 @@ class ChatFrame extends React.Component {
             if (message)
                 message = message.replace(/\n/g, "  \n");
             this.activeChannel.sendMessage(message);
+            if(!this.clearedTempFlag){
+                this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c=>c!=this.activeChannel.sid);
+                this.clearedTempFlag = true;
+            }
             if (this.form && this.form.current)
                 this.form.current.resetFields();
+
+            if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
+                this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
+            }
         }
     };
 

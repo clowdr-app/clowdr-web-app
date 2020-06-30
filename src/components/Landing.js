@@ -33,19 +33,19 @@ class Landing extends Component {
 <center> <font size={6}> Sponsors </font> </center>
 
 <center>
-<a href="https://www.acm.org/">
+<a href="https://www.acm.org/" target="_blank">
 <img src="https://conf.researchr.org/getLogo/036e8246-6b79-4da5-a41d-b2548815d79f?1523626085000" width={300} /> 
 </a>
-  <a href="http://www.sigsoft.org/index.html">
+  <a href="http://www.sigsoft.org/index.html" taget="_blank">
   <img src="https://conf.researchr.org/getLogo/ebbb2b60-9730-42f4-9d46-4125ba39cb8f?1573234724000" width={200} />
 </a>
-  <a href="https://www.computer.org/">
+  <a href="https://www.computer.org/" target="_blank">
 <img src="https://conf.researchr.org/getLogo/8006ac99-8c6b-4ccc-b72e-c1edde8a3d69?1581694289000" width={250} />
 </a>&nbsp;&nbsp;
-  <a href="http://www.cs-tcse.org/">
+  <a href="http://www.cs-tcse.org/" target="_blank">
   <img src="https://conf.researchr.org/getLogo/1cffa2e5-761e-49d8-b4b1-3274de2a712c?1523626456000" width={200} />
 </a>&nbsp;
-  <a href="http://www.kiise.or.kr/academyEng/main/main.faEng">
+  <a href="http://www.kiise.or.kr/academyEng/main/main.faEng" target="_blank">
   <img src="https://conf.researchr.org/getLogo/585d2505-b77a-4ea9-be85-f4d0d79c5f26?1523626420000" width={200} />
 </a>
 </center>

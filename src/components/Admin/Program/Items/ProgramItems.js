@@ -135,7 +135,7 @@ class ProgramItems extends React.Component {
 
         if (this.state.loading) {
             if (this.state.gotTracks && this.state.gotItems) {
-                console.log('[Admin/Items]: Program download complete');
+                // console.log('[Admin/Items]: Program download complete');
                 this.setState({
                     items: this.props.items,
                     tracks: this.props.tracks,
@@ -143,14 +143,14 @@ class ProgramItems extends React.Component {
                 });
             }
             else {
-                console.log('[Admin/Items]: Program still downloading...');
+                // console.log('[Admin/Items]: Program still downloading...');
                 if (prevProps.tracks.length != this.props.tracks.length) {
                     this.setState({gotTracks: true});
-                    console.log('[Admin/Items]: got tracks');
+                    // console.log('[Admin/Items]: got tracks');
                 }
                 if (prevProps.items.length != this.props.items.length) {
                     this.setState({gotItems: true})
-                    console.log('[Admin/Items]: got items');
+                    // console.log('[Admin/Items]: got items');
                 }
             }
         }
