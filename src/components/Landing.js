@@ -113,9 +113,8 @@ class Landing extends Component {
 </center>
 
             <p><b>CLOWDR</b> is a community-driven effort to create a new platform to 
-                support <b>C</b>onferences <b>L</b>ocated <b>O</b>nline <b>W</b>ith <b>D</b>igital <b>R</b>esources. (Clowder
-                is <a href="https://www.merriam-webster.com/dictionary/clowder" rel="noopener noreferrer" target="_blank">a group of cats</a>, 
-                which is another suitable meaning of the word here &#128049;)
+        support <b>C</b>onferences <b>L</b>ocated <b>O</b>nline <b>W</b>ith <b>D</b>igital <b>R</b>esources. (Also, a clowder
+                is <a href="https://www.merriam-webster.com/dictionary/clowder" rel="noopener noreferrer" target="_blank">a group of cats</a> &#128049;)
                 CLOWDR combines the group chat features of Slack or IRC with the simplicity of private chat in
                 social networks like Facebook Messenger or GChat. And, every chat has the option to add video or audio.
                 Aside from chat, CLOWDR contains the entire conference program, and organizes the various events' live

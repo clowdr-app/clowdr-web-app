@@ -32,6 +32,7 @@ class PresenceForm extends React.Component {
             presence.set("isDND", false);
             presence.set("isDNT", false);
             presence.set("isLookingForConversation", false);
+            presence.set("isOpenToConversation", false);
             presence.set("isOnline", true);
             presence.set("socialSpace", this.props.auth.activeSpace);
 
@@ -86,6 +87,7 @@ class PresenceForm extends React.Component {
 
             }
             this.state.presence.set("isLookingForConversation", false);
+            this.state.presence.set("isOpenToConversation", false);
             this.state.presence.set("isAvailable", false);
             this.state.presence.set("isDND", false);
             this.state.presence.set("isDNT", false);
@@ -102,6 +104,8 @@ class PresenceForm extends React.Component {
     availabilityByPresence(presence) {
         if (presence.get("isLookingForConversation")) {
             return "isLookingForConversation";
+        } else if (presence.get("isOpenToConversation")) {
+            return "isOpenToConversation";
         } else if (presence.get("isAvailable")) {
             return "isAvailable";
         } else if (presence.get("isDND")) {
@@ -157,7 +161,9 @@ class PresenceForm extends React.Component {
                     </div>
                 )}
             >
+            {/* BCP: Not sure I got this quite right -- I'm not certain what status="processing" does... */}
                 <Select.Option value="isLookingForConversation"><Badge status="processing" color="green" /><span className="availabilityOption">Looking for conversation</span></Select.Option>
+                <Select.Option value="isOpenToConversation"><Badge color="black" /><span className="availabilityOption">Open to conversation</span></Select.Option>
                 <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation; come
                     join if you like</span></Select.Option>
                 <Select.Option value="isDND"><Badge color="orange"/><span className="availabilityOption">Busy / do not disturb</span></Select.Option>
