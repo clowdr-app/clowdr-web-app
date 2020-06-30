@@ -9,6 +9,12 @@
   infer it?
 - presenceDesc = "In a conversation; come join if you like"; -- have we made
   it possible / obvious how to go to where someone else is??
+- need to think about screen real estate on small (laptop, ipad) screens --
+  e.g.
+       - the title bar across the top uses a lot of space
+       - the "live questions to the speakers" goes entirely off the bottom
+- The pop-up for someone's name in the lobby does not include their textual
+  status (or profile); the one on the left sidebar does
 
 # Notes from SCW
 
@@ -26,7 +32,7 @@ Just talking with Richard and he mentioned two ideas for Clowdr:
   question needs to join the queue and wait for their turn. Any number of
   people can observe the discussion
 
-# Notes from / PLMW debried
+# Notes from / PLMW debrief
 
 - Lots of disagreement about whether lurking is a good thing.  Roopsha
   observed that shy people may have a lot of trouble goijng from lurking to

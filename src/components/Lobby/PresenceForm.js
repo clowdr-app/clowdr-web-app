@@ -31,6 +31,7 @@ class PresenceForm extends React.Component {
             presence.set("isAvailable", true);
             presence.set("isDND", false);
             presence.set("isDNT", false);
+            presence.set("isLookingForConversation", false);
             presence.set("isOpenToConversation", false);
             presence.set("isOnline", true);
             presence.set("socialSpace", this.props.auth.activeSpace);
