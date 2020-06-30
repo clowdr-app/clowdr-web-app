@@ -3,6 +3,14 @@
 - Add "Status: " before the dot
 - Add a new kind of status color, with a label like "Default"
 
+# Notes from SCW
+
+Just talking with Richard and he mentioned two ideas for Clowdr:
+
+- "Random" social event.  Everyone who signs up gets placed in a random room for a short meet & greet. I guess this is similar to Zoom's breakout room feature, but we should look into how many people this could support at once. A better option would be to let people specify/select a few topics when they sign up that they are interested to increase the chance that the interactions go well.
+
+- Q&A specific video room. Only three video streams allowed at a time: author, current question asker and moderator. Any one who wants to ask a question needs to join the queue and wait for their turn. Any number of people can observe the discussion.
+
 # Notes from / PLMW debried
 
 - Lots of disagreement about whether lurking is a good thing.  Roopsha
