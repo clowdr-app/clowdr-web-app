@@ -14,10 +14,6 @@ class LiveStreamingPanel extends Component {
             expanded: false,
             count: 0
         };
-        let src = this.props.video.get("src1");
-        let id = this.props.video.get("id1");
-        let pwd = this.props.video.get("pwd1");
-        this.video_url = src ? videoURLFromData(src, id, pwd): "";
     }
     
     changeSocialSpace() {
@@ -31,7 +27,18 @@ class LiveStreamingPanel extends Component {
 
     }
 
-    componentDidMount() {
+    async componentDidMount() {
+        let country = this.props.auth.userProfile.get("country");
+        var src = this.props.video.get("src1");
+        var id = this.props.video.get("id1");
+        var pwd = this.props.video.get("pwd1");
+
+        if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
+            src = this.props.video.get("src2");
+            id = this.props.video.get("id2");
+        }
+        // Where is this user?
+        this.video_url = src ? videoURLFromData(src, id, pwd, country): "";
     }
 
     componentWillUnmount() {
