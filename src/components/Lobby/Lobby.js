@@ -285,8 +285,8 @@ class Lobby extends React.Component {
                 Some say that the most valuable part of an academic conference is the "lobby track" - where
                 colleagues meet, catch up, and share
                 casual conversation. To bring the metaphor into the digital world, the digital lobby session
-                allows you to create a small group video chat, and switch between group chats.
-                    The pane on the left shows the active video chats, and the list below shows the users currently looking for a conversation.
+                allows you to create small group video chats and switch between  chats.
+                    The pane on the left shows the active video chats, and the list below shows the users actively looking for a conversation.
 
                     <NewRoomForm style={{display: "none"}} initialName={this.state.requestedName} visible={this.state.visible} />
                 </Typography.Paragraph>
