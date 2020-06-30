@@ -88,7 +88,7 @@ function addRow(row, conference, existing, toSave, acl) {
                 room.set("src1", "YouTube")
                 room.set("id1", data[0]);
                 if (row.iQIYI) {
-                    room.set("src2", "iQYI")
+                    room.set("src2", "iQIYI")
                     room.set("id2", data[0]);
 
                 }
