@@ -24,6 +24,9 @@ The configuration parameters can be found from your created app in Back4App: Ser
 
 Additionally, download and install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/) and start the server.
 Note that installing MongoDB is used for calling the `mongodbrestore` command. You do not have to run MongoDB when using Back4App.
+
+For windows users, you MUST add environment variable to the PATH and make sure that you could run `mongo` command in your CMD. 
+
 You can find the MongoDB Database URI there. xxx is the password, yyy is the database ID in the following example.
 
 `mongodb://admin:xxx@mongodb.back4app.com:27017/yyy?ssl=true`
