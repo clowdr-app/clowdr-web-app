@@ -296,6 +296,8 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 profile.set("displayName", registrant.get("name"));
                 profile.set("realName", registrant.get("name"));
                 profile.set("affiliation", registrant.get("affiliation"))
+                profile.set("country", registrant.get("country"));
+
                 let profileACL = new Parse.ACL();
                 profileACL.setRoleReadAccess(config.conference.id + "-conference", true);
                 profileACL.setWriteAccess(user, true);
