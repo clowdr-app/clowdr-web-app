@@ -17,7 +17,7 @@ function beforeUpload(file) {
     }
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
-        message.error('Image must smaller than 2MB!');
+        message.error('Image must be smaller than 2MB!');
     }
     return isJpgOrPng && isLt2M;
 }
@@ -35,12 +35,12 @@ class Avatar extends React.Component {
         }
         if (info.file.status === 'done') {
             // Get this url from response in real world.
-            getBase64(info.file.originFileObj, imageUrl =>
-                this.setState({
-                    imageUrl,
-                    loading: false,
-                }),
-            );
+            // getBase64(info.file.originFileObj, imageUrl =>
+            //     this.setState({
+            //         imageUrl,
+            //         loading: false,
+            //     }),
+            // );
         }
     };
 
@@ -58,6 +58,10 @@ class Avatar extends React.Component {
         file.save().then(()=>{
             this.props.userProfile.set("profilePhoto", file);
             this.props.userProfile.save();
+            this.setState({
+                imageUrl: file.url(),
+                loading: false,
+            });
         }).catch((err)=>{
             console.log(err);
         });
