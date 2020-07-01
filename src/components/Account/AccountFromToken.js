@@ -20,6 +20,13 @@ class SlackToVideo extends React.Component {
         let token = this.props.match.params.token;
         try {
             if(this.props.authContext.user){
+                if(userID != this.props.authContext.user.id){
+                    await Parse.User.logOut();
+                    window.location.reload(false);
+
+                    let u = await this.props.authContext.refreshUser();
+                    return;
+                }
                 let currentStep =1;
                 if(this.props.authContext.user.get("passwordSet")){
                     currentStep =2;
