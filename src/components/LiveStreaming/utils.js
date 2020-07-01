@@ -60,7 +60,7 @@ export function videoURLFromData(src, id, pwd) {
     if (LiveVideoSourceMappings[src]) {
         queryVars = Object.keys(LiveVideoSourceMappings[src].vars);
         if (pwd) {
-            queryVars.pwd = pwd;
+            LiveVideoSourceMappings[src].vars.pwd = pwd;
         }
     }
     const video_url = LiveVideoSourceMappings[src].url + id + '?' + queryVars.map(k => `${k}=${LiveVideoSourceMappings[src].vars[k]}&`).join('');
