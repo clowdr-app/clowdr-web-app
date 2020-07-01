@@ -63,6 +63,33 @@ async function getConfig(conference){
     return config;
 }
 
+Parse.Cloud.job("reapInactiveUsers", async (request) => {
+    let confQ = new Parse.Query(ClowdrInstance);
+    return confQ.find({useMasterKey: true}).then(async (confs) => {
+        for (let conf of confs) {
+            let config = await getConfig(conf);
+
+            let activeQ = new Parse.Query("UserPresence");
+            activeQ.include("user");
+            activeQ.equalTo("isOnline", true);
+            let profileQ = new Parse.Query("UserProfile");
+            profileQ.equalTo("conference", conf);
+            activeQ.matchesQuery("user", profileQ);
+            for (let user of await activeQ.find({useMasterKey: true})) {
+                let uid = user.get("user").id;
+                config.twilioChat.users(uid).fetch().then(twilioUser => {
+                    if (!twilioUser.isOnline) {
+                        user.set("isOnline", false);
+                        user.save({}, {useMasterKey: true});
+                    }
+                }).catch(err => {
+                    console.log(err);
+                })
+            }
+        }
+    })
+});
+
 async function getBondedChannel(conf, config, originalChatSID){
     //Look to see if we already started this bonding
     let bondedChanQ = new Parse.Query(BondedChannel);

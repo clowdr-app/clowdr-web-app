@@ -312,6 +312,9 @@ const withAuthentication = Component => {
                 if(!space && this.state.spaces){
                     space = this.state.spaces[spaceName];
                 }
+                if(!space){
+                    throw "You called setSocialSpace but provided no space! Got: " + spaceName + " or "  + space
+                }
                 if (userProfile.get("presence") &&
                     (!userProfile.get("presence").get("socialSpace") ||
                         userProfile.get('presence').get('socialSpace').id != space.id)) {

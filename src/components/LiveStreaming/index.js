@@ -10,6 +10,7 @@ import {ProgramContext} from "../Program";
 class LiveStreaming extends Component {
     constructor(props) {
         // props.parseLive
+        console.log("Created a livestreaming")
         super(props);
         this.state = {
             expanded: false,
@@ -113,6 +114,9 @@ class LiveStreaming extends Component {
             }, 60000*15);
     
         }
+        if(this.props.match && this.props.match.params.roomName && this.props.downloaded){
+            this.expandVideoByName(this.props.match.params.roomName);
+        }
     }
 
     componentWillUnmount() {
@@ -120,16 +124,20 @@ class LiveStreaming extends Component {
     }
 
     toggleExpanded(vid) {
-        this.setState({
-            expanded: !this.state.expanded,
-            expanded_video: (this.state.expanded ? undefined: vid)
-        });
+        // this.setState({
+        //     expanded: !this.state.expanded,
+        //     expanded_video: (this.state.expanded ? undefined: vid)
+        // });
+        if(this.props.match.params.roomName)
+            this.props.history.push("/live/"+this.props.match.params.when)
+        else
+            this.props.history.push("/live/"+this.props.match.params.when+"/"+vid.get("name"))
     }
 
     componentDidUpdate(prevProps) {
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
-                console.log('[Live]: Program download complete');
+                // console.log('[Live]: Program download complete');
                 let current = this.getLiveRooms(this.props.match.params.when);
                 this.setState({
                     rooms: this.props.rooms,
@@ -140,14 +148,14 @@ class LiveStreaming extends Component {
                 });
             }
             else {
-                console.log('[Live]: Program still downloading...');
+                // console.log('[Live]: Program still downloading...');
                 if (prevProps.rooms.length != this.props.rooms.length) {
                     this.setState({gotRooms: true});
-                    console.log('[Live]: got rooms');
+                    // console.log('[Live]: got rooms');
                 }
                 if (prevProps.sessions.length != this.props.sessions.length) {
                     this.setState({gotSessions: true});
-                    console.log('[Live]: got sessions');
+                    // console.log('[Live]: got sessions');
                 }
             }
         }
@@ -162,8 +170,30 @@ class LiveStreaming extends Component {
             })
         }
 
+        if(this.props.downloaded){
+            if(this.props.match && this.props.match.params.roomName){
+                this.expandVideoByName(this.props.match.params.roomName);
+            }else if(this.state.expanded){
+                this.setState({expanded: false, expanded_video: null, expandedRoomName: null})
+                console.log("Deactivating")
+                this.props.auth.setSocialSpace("Lobby");
+
+            }
+        }
     }
-    
+    expandVideoByName(roomName){
+        if(!this.state.expandedRoomName || roomName != this.state.expandedRoomName){
+           let room = this.state.rooms.find(r=>(r.get("name") == roomName));
+            if(!room)
+                room = this.state.liveRooms.find(r=>(r.get("name") == roomName)); //I don't understand why we have rooms vs liveRooms...
+           if(room){
+               console.log("Expanding " + roomName)
+               this.setState({expanded: true, expanded_video: room, expandedRoomName: roomName})
+               window.scrollTo(0, 0);
+
+           }
+        }
+    }
     render() {
         if (!this.state.loggedIn) {
             return <div>You don't have access to this page.</div>
@@ -200,11 +230,14 @@ class LiveStreaming extends Component {
                         }
 
                         if (this.state.expanded && room.id !== this.state.expanded_video.id)
+                        {
                             return ""
+                        }
                         else
                             return <React.Fragment key={room.id}>
                                 <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                    <LiveStreamingPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
+                                    <LiveStreamingPanel auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this,
+                                    room)}/>
                                 </div>
                                 <div className={"space-align-block"}>{qa}</div>   
                                 </React.Fragment> 
