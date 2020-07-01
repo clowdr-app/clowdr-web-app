@@ -13,7 +13,6 @@ import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
 const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
-const linkRenderer = props => <a href={props.href} target="_blank">{props.children}</a>;
 
 const {Header, Content, Footer, Sider} = Layout;
 
@@ -260,6 +259,13 @@ class ChatFrame extends React.Component {
         this.groupMessages(this.messages[channel.sid]);
         this.setState({hasMoreMessages: messagePage.hasPrevPage, loadingMessages: false})
     };
+    linkRenderer = (props) => {
+        let currentDomain = window.location.origin;
+            if(props.href && props.href.startsWith(currentDomain))
+            return <a href="#" onClick={()=>{this.props.auth.history.push(props.href.replace(currentDomain,""))}}>{props.children}</a>;
+        return <a href={props.href} target="_blank">{props.children}</a>;
+    };
+
     messageAdded = (channel, message) => {
         this.messages[channel.sid].push(message);
         this.groupMessages(this.messages[channel.sid]);
@@ -271,7 +277,7 @@ class ChatFrame extends React.Component {
                     description:
                     <ReactMarkdown source={message.body} renderers={{
                         text: emojiSupport,
-                        link: linkRenderer
+                        link: this.linkRenderer
                     }}/>,
                     placement: 'topLeft',
                     onClose: ()=>{
@@ -563,12 +569,12 @@ class ChatFrame extends React.Component {
                 <div ref={(el) => {
                     this.messagesEnd = el;
                 }} className="chatMessage"><ReactMarkdown source={m.body}
-                                                          renderers={{text: emojiSupport, link: linkRenderer}}/></div>
+                                                          renderers={{text: emojiSupport, link: this.linkRenderer}}/></div>
             </Popover>
         return <div key={m.sid} className="chatMessage"><ReactMarkdown source={m.body}
                                                                        renderers={{
                                                                            text: emojiSupport,
-                                                                           link: linkRenderer
+                                                                           link: this.linkRenderer
                                                                        }}/></div>
 
 

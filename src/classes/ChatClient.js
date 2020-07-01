@@ -22,6 +22,9 @@ export default class ChatClient{
         if (!found) {
             found = await this.joinAndGetChannel(sid);
         }
+        else{
+            found = found.channel;
+        }
         this.openChat(found.sid);
 
     }
@@ -40,7 +43,6 @@ export default class ChatClient{
         {
             if(!this.channelPromises[sid] || !this.channelWaiters[sid]){
                 this.channelPromises[sid] = new Promise((resolve)=>{
-                    console.log("Made promise")
                     this.channelWaiters[sid] = resolve;
                 });
             }
@@ -95,7 +97,6 @@ export default class ChatClient{
 
     initJoinedChatList(chatList){
         this.chatList = chatList;
-        console.log("Init joined chat list" + Object.keys(this.joinedChannels))
         chatList.setState({chats: Object.values(this.joinedChannels)
                 .filter(c=>c.attributes && c.attributes.category != "socialSpace")
                 .map(c=>c.channel.sid)});
@@ -108,7 +109,6 @@ export default class ChatClient{
         if (!this.chatClientPromise) {
             this.chatClientPromise = new Promise(async (resolve) => {
                 let ret = await this._initChatClient(user, conference);
-                console.log("Resolving promise:" + ret)
                 resolve(ret);
             });
         }
@@ -269,14 +269,11 @@ export default class ChatClient{
 
     async cleanup() {
         if (this.twilio) {
-            console.log("Removing listeners");
             this.twilio.removeAllListeners("channelAdded");
             this.twilio.removeAllListeners("channelRemoved");
             this.twilio.removeAllListeners("channelJoined");
             this.twilio.removeAllListeners("channelLeft");
-            console.log("Calling shutdown");
             await this.twilio.shutdown();
-            console.log("Shut down")
             this.twilio = null;
         }
     }
