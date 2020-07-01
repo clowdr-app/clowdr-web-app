@@ -177,12 +177,14 @@ class LiveStreaming extends Component {
                         let qa = "";
                         let width = 0;
                         if (!this.state.expanded) width = 320;
-                        if (this.state.expanded && room.id == this.state.expanded_video.id && this.props.match.params.when =="now") {
+                        if (this.state.expanded && room.id == this.state.expanded_video.id) {
                             width = 1000;
-                            const q_url = this.state.expanded_video.get("qa");
-                            qa = q_url ? <table><tbody><tr><td style={{"textAlign":"center"}}><strong>Live questions to the speakers</strong></td></tr>
-                                <tr><td><iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> </td></tr>  
-                                </tbody></table> : "";
+                            if (this.props.match.params.when =="now") {
+                                const q_url = this.state.expanded_video.get("qa");
+                                qa = q_url ? <table><tbody><tr><td style={{"textAlign":"center"}}><strong>Live questions to the speakers</strong></td></tr>
+                                    <tr><td><iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> </td></tr>  
+                                    </tbody></table> : "";
+                            }
                         }
                         
                         if (!room.get("src1")) {

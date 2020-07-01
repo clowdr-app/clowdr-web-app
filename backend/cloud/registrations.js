@@ -42,24 +42,24 @@ Parse.Cloud.define("registrations-upload", (request) => {
 });
 
 function addRow(row, conferenceID, existing, toSave) {
-    if (row.R_Email) {
-        if (validateEmail(row.R_Email)) {
-            if (!existing.find(r => r.get("email") == row.R_Email)) {
+    if (row.email) {
+        if (validateEmail(row.email)) {
+            if (!existing.find(r => r.get("email") == row.email)) {
                 var Registration = Parse.Object.extend("Registration");
                 var reg = new Registration();
-                reg.set("email", row.R_Email);
-                reg.set("name", row["R_First Name"] + " " + row["R_Last Name"]);
-                reg.set("passcode", row.Code);
-                reg.set("affiliation", row.R_Company);
-                reg.set("country", row.R_Country);
+                reg.set("email", row.email);
+                reg.set("name", row["first"] + " " + row["last"]);
+                reg.set("passcode", row.code);
+                reg.set("affiliation", row.affiliation);
+                reg.set("country", row.country);
                 reg.set("conference", conferenceID);
                 toSave.push(reg);
             }
             else
-                console.log('[Registrations]: Skipping existing registration for ' + row.R_Email);
+                console.log('[Registrations]: Skipping existing registration for ' + row.email);
         }
         else
-            console.log("[Registrations]: Invalid email " + row.R_Email);
+            console.log("[Registrations]: Invalid email " + row.email);
     }
 }
 

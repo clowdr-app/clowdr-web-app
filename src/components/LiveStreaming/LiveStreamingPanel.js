@@ -13,7 +13,8 @@ class LiveStreamingPanel extends Component {
         this.state = {
             expanded: false,
             count: 0,
-            video_url: undefined
+            video_url: undefined, 
+            china: false
         };
     }
     
@@ -34,15 +35,17 @@ class LiveStreamingPanel extends Component {
         var id = this.props.video.get("id1");
         var pwd = this.props.video.get("pwd1");
 
+        var inChina = false;
         if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
             src = this.props.video.get("src2");
             id = this.props.video.get("id2");
+            inChina = true;
             console.log('User in China!');
         }
         // else
         //     console.log('User in ' + country ? country : "Unknown");
         // Where is this user?
-        this.setState({video_url: src ? videoURLFromData(src, id, pwd, country): ""});
+        this.setState({video_url: src ? videoURLFromData(src, id, pwd, country): "", china:inChina});
     }
 
     componentWillUnmount() {
@@ -96,6 +99,14 @@ class LiveStreamingPanel extends Component {
         if (!this.state.video_url)
             return <Spin />
 
+        let player = "";
+        if (!this.state.china) {
+            player = <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
+                        width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
+        }
+        else {
+            player = <iframe width="100%" height="100%" style={{position:"absolute", top:0, left:0}} src={this.state.video_url}/>
+        }
         return  <div>
                     <table style={{width:"100%"}}>
                         <tbody>
@@ -106,10 +117,7 @@ class LiveStreamingPanel extends Component {
                         </tr>
                         </tbody>
                     </table>
-                    <div className="player-wrapper" >
-                        <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
-                                    width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
-                    </div>
+                    <div className="player-wrapper" >{player}</div>
                     <div>
                         {this.props.mysessions.map(s => {
                             return <div key={s.id}>{s.get("title")}</div>
