@@ -95,6 +95,7 @@ class Account extends React.Component {
         this.props.auth.userProfile.set("tags", this.state.flairObj.filter((item)=>(values.flair.includes(item.get("label")))));
         this.props.auth.userProfile.set("displayName",values.displayName);
         this.props.auth.userProfile.set("affiliation", values.affiliation);
+        this.props.auth.userProfile.set("country", values.country);
         this.props.auth.userProfile.set("webpage", values.website);
         this.props.auth.userProfile.set("bio", values.bio);
         this.props.auth.userProfile.save().then(() => {
@@ -187,6 +188,7 @@ class Account extends React.Component {
                       displayName: this.props.auth.userProfile.get("displayName"),
                       website: this.props.auth.userProfile.get("webpage"),
                       affiliation: this.props.auth.userProfile.get("affiliation"),
+                      country: this.props.auth.userProfile.get("country"),
                       bio: this.props.auth.userProfile.get("bio"),
                       flair: this.state.selectedFlair
 
@@ -243,6 +245,14 @@ class Account extends React.Component {
                 <Form.Item
                     name="affiliation"
                     label="Affiliation">
+                    <Input
+                        disabled={this.state.updating}
+                        type="text"
+                        />
+                </Form.Item>
+                <Form.Item
+                    name="country"
+                    label="Country">
                     <Input
                         disabled={this.state.updating}
                         type="text"

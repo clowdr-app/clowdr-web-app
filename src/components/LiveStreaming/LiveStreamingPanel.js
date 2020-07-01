@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Button} from 'antd';
+import {Button, Spin} from 'antd';
 import moment from 'moment';
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
@@ -12,7 +12,8 @@ class LiveStreamingPanel extends Component {
         super(props);
         this.state = {
             expanded: false,
-            count: 0
+            count: 0,
+            video_url: undefined
         };
     }
     
@@ -36,9 +37,12 @@ class LiveStreamingPanel extends Component {
         if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
             src = this.props.video.get("src2");
             id = this.props.video.get("id2");
+            console.log('User in China!');
         }
+        // else
+        //     console.log('User in ' + country ? country : "Unknown");
         // Where is this user?
-        this.video_url = src ? videoURLFromData(src, id, pwd, country): "";
+        this.setState({video_url: src ? videoURLFromData(src, id, pwd, country): ""});
     }
 
     componentWillUnmount() {
@@ -86,6 +90,10 @@ class LiveStreamingPanel extends Component {
             });
             viewers = pplInThisRoom.length;
         }
+
+        if (!this.state.video_url)
+            return <Spin />
+
         return  <div>
                     <table style={{width:"100%"}}>
                         <tbody>
@@ -98,7 +106,7 @@ class LiveStreamingPanel extends Component {
                     </table>
                     <div className="player-wrapper" >
                         <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
-                                    width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>
+                                    width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
                     </div>
                     <div>
                         {this.props.mysessions.map(s => {
