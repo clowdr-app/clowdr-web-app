@@ -275,12 +275,14 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                     "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + confID + "/" + authKey);
             }
             else if(!user.get("passwordSet")){
-                let authKey = await generateRandomString(48);
-                user.set("loginKey", authKey);
-                user.set("loginExpires", moment().add("60", "days").toDate());
-                await user.save({},{useMasterKey: true})
+                if(!user.get("loginKey")){
+                    let authKey = await generateRandomString(48);
+                    user.set("loginKey", authKey);
+                    user.set("loginExpires", moment().add("60", "days").toDate());
+                    await user.save({},{useMasterKey: true})
+                }
                 instructionsText = "The link below will let you set a password and finish creating your account " +
-                    "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + confID + "/" + authKey);
+                    "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + confID + "/" + user.get("loginKey"));
             }
             let userProfileQ = new Parse.Query(UserProfile);
             userProfileQ.equalTo("user", user);

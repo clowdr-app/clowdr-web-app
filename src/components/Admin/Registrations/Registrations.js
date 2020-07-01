@@ -114,11 +114,13 @@ class Registrations extends React.Component {
 
     async sendInvitation(record){
         try {
+            this.setState({sending: true})
             await Parse.Cloud.run("registrations-inviteUser", {
                 conference: this.currentConference.id,
                 registrations: [record.id]
             });
             this.refreshList();
+            this.setState({sending: false})
         }catch(err){
             console.log(err);
         }
@@ -126,10 +128,12 @@ class Registrations extends React.Component {
 
     async sendInvitations(){
         try {
+            this.setState({sending: true})
             await Parse.Cloud.run("registrations-inviteUser", {
                 conference: this.currentConference.id,
                 registrations: this.state.regs.map(r => r.id)
             });
+            this.setState({sending: false})
             this.refreshList();
         }catch(err){
             console.log(err);
@@ -248,8 +252,8 @@ class Registrations extends React.Component {
                                 </Form>
                             </td>
 
-                            <td style={{"textAlign":"right"}}> <Tooltip title="Send Invitation to ALL selected"> 
-                                    <Button danger icon={<MailOutlined />} onClick={this.sendInvitations.bind(this)}>Send All</Button>
+                            <td style={{"textAlign":"right"}}> <Tooltip title="Send Invitation to ALL selected">
+                                    <Button danger icon={<MailOutlined />} loading={this.state.sending} onClick={this.sendInvitations.bind(this)}>Send All</Button>
                                 </Tooltip></td>
                         </tr>
                         <tr>
@@ -258,7 +262,7 @@ class Registrations extends React.Component {
                         </tr>
                     </tbody>
                 </table>
-            <Table columns={columns} dataSource={this.state.regs} rowKey={(r)=>(r.id)}/>
+            <Table columns={columns} dataSource={this.state.regs} rowKey={(r)=>(r.id)} pagination={false} />
         </div>
     }
 
