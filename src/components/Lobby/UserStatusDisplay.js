@@ -37,13 +37,12 @@ class UserStatusDisplay extends React.Component{
             let badgeColor = "";
             let badgeStyle = "success";
             let dntWaiver = "";
-            if(!this.state.presence){
+            if (!this.state.presence){
                 if(this.props.onlyShowWithPresence)
                     return <div></div>
                 badgeStyle = "default";
                 presenceDesc = "Offline";
-            }
-            else if (this.state.presence.get("isLookingForConversation")) {
+            } else if (this.state.presence.get("isLookingForConversation")) {
                 presenceDesc = "Looking for conversation";
                 badgeColor = "green";
                 badgeStyle = "processing";
