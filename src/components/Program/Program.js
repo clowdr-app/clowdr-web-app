@@ -1,5 +1,5 @@
 import React from 'react';
-import {Select, Spin, Table} from 'antd';
+import {Select, Spin, Table, Button, Radio} from 'antd';
 import Parse from "parse";
 import {AuthUserContext} from "../Session";
 import Form from "antd/lib/form/Form";
@@ -9,7 +9,9 @@ import { ContactlessOutlined } from '@material-ui/icons';
 import {NavLink} from "react-router-dom";
 
 var moment = require('moment');
-function  groupBy(list, keyGetter) {
+var timezone = require('moment-timezone');
+
+function groupBy(list, keyGetter) {
     const map = new Map();
     list.forEach((item) => {
         const key = keyGetter(item);
@@ -32,7 +34,7 @@ class Program extends React.Component {
             gotRooms: false,
             gotItems: false,
             gotSessions: false,
-            formatTime: (dateTimeStr)=>moment(dateTimeStr).format("LT")
+            timeZone: timezone.tz.guess(),
         }
 
         console.log('[Program]: downloaded? ' + this.props.downloaded);
@@ -48,13 +50,14 @@ class Program extends React.Component {
 
     formatSessionsIntoTable(sessions){
         let groupedByDate = groupBy(sessions,
-            (item)=>moment(item.get("startTime")).format("ddd MMM D"))
+            (item)=>timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D"));
         let table = [];
         for(const [date, rawSessions] of groupedByDate){
             let row = {};
             let dateHeader = {label: date, rowSpan: 0};
             row.date = dateHeader;
-            let timeBands = groupBy(rawSessions,(session)=>(this.state.formatTime(session.get("startTime"))+ " - ") + this.state.formatTime(session.get('endTime')))
+            let timeBands = groupBy(rawSessions,(session)=>
+                (timezone(session.get("startTime")).tz(this.state.timeZone).format("LT") + " - ") + timezone(session.get("endTime")).tz(this.state.timeZone).format("LT"))
 
             for(const [time, sessions ] of timeBands){
                 let timeBandHeader = {label: time, rowSpan: 0};
@@ -140,7 +143,6 @@ class Program extends React.Component {
         }
     }
 
-
     render() {
         if(!this.state.sessions){
             return <Spin></Spin>
@@ -150,7 +152,7 @@ class Program extends React.Component {
         //     days.push(<ProgramDay date={date} program={program} key={date} formatTime={this.state.formatTime} />)
         // }
         let cols = [{
-            title: 'date',
+            title: 'Date',
             className:"program-table-date",
             dataIndex: 'date',
             render: (value, row, index) => {
@@ -204,6 +206,15 @@ class Program extends React.Component {
         ];
         return <div>
             <h4>Program Overview:</h4>
+
+            <Radio.Group defaultValue="timezone.tz.guess()" onChange={e => {this.setState({timeZone: e.target.value})}}>
+                <Radio.Button value="timezone.tz.guess()">Local Time</Radio.Button>
+                <Radio.Button value="UTC">UTC Time</Radio.Button>
+            </Radio.Group>
+
+            <br />
+            <br />
+
             <div className="programPage">
                 <div className="programFilters">
                    {/*<Form>*/}
