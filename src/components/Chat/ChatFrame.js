@@ -1,9 +1,10 @@
 import {AuthUserContext} from "../Session";
+import Parse from "parse";
 
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip} from 'antd';
+import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -138,6 +139,24 @@ class ChatFrame extends React.Component {
                 chatLoading: false,
                 activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName),
             }
+            this.isAnnouncements = false;
+            if(chanInfo.attributes.category == "announcements-global"){
+                this.isAnnouncements = true;
+                //find out if we are able to write to this.
+                const accesToConf = new Parse.Query('InstancePermission');
+                accesToConf.equalTo("conference", this.props.auth.currentConference);
+                let actionQ = new Parse.Query("PrivilegedAction");
+                actionQ.equalTo("action","announcement-global");
+                accesToConf.matchesQuery("action", actionQ);
+                const hasAccess = await accesToConf.first();
+                if(!hasAccess){
+                    console.log("read only")
+                    stateUpdate.readOnly = true;
+                }
+
+            }
+
+
             if (this.currentSID != sid) {
                 return;//raced with another update
             }
@@ -158,9 +177,20 @@ class ChatFrame extends React.Component {
         }
 
     }
+    componentWillUnmount() {
+        if(this.activeChannel) {
+            this.activeChannel.removeAllListeners("messageAdded");
+            this.activeChannel.removeAllListeners("messageRemoved");
+            this.activeChannel.removeAllListeners("messageUpdated");
+            this.activeChannel.removeAllListeners("memberJoined");
+            this.activeChannel.removeAllListeners("memberLeft");
+        }
+    }
 
     updateUnreadCount(lastConsumed, lastTotal) {
-        if (lastConsumed != this.lastConsumedMessageIndex || lastTotal != this.lastSeenMessageIndex) {
+        if (lastConsumed != this.lastConsumedMessageIndex || lastTotal > this.lastSeenMessageIndex) {
+            if(lastTotal < 0)
+                lastTotal = this.lastSeenMessageIndex;
             let unread = lastTotal - lastConsumed;
             if (unread != this.unread) {
                 if (this.props.setUnreadCount)
@@ -233,6 +263,28 @@ class ChatFrame extends React.Component {
     messageAdded = (channel, message) => {
         this.messages[channel.sid].push(message);
         this.groupMessages(this.messages[channel.sid]);
+        if(this.isAnnouncements){
+            //get the sender
+            this.props.auth.helpers.getUserProfilesFromUserProfileID(message.author).then((profile)=>{
+                const args = {
+                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
+                    description:
+                    <ReactMarkdown source={message.body} renderers={{
+                        text: emojiSupport,
+                        link: linkRenderer
+                    }}/>,
+                    placement: 'topLeft',
+                    onClose: ()=>{
+                        if(message.index > this.lastConsumedMessageIndex){
+                            this.updateUnreadCount(message.index, -1);
+                            channel.advanceLastConsumedMessageIndex(message.index)
+                        }
+                    },
+                    duration: 600,
+                };
+                notification.info(args);
+            })
+        }
 
     };
 
@@ -455,29 +507,33 @@ class ChatFrame extends React.Component {
                             </List>
                             {/*</InfiniteScroll>*/}
                         </div>
-                        <div
-                            className={"embeddedChatMessageEntry"}
-                            // style={{
-                            // padding: "0px 0px 0px 0px",
-                            // backgroundColor: "#f8f8f8",
-                            // position: "fixed",
-                            // bottom: "0px",
-                            // paddingLeft: "10px"
-                            //}}
+            {
+                this.state.readOnly? <></> :  <div
+                    className={"embeddedChatMessageEntry"}
+                    // style={{
+                    // padding: "0px 0px 0px 0px",
+                    // backgroundColor: "#f8f8f8",
+                    // position: "fixed",
+                    // bottom: "0px",
+                    // paddingLeft: "10px"
+                    //}}
                 >
-                            <Form ref={this.form} className="embeddedChatMessageEntry">
-                                <Form.Item style={{width:"100%", marginBottom: "0px"}}>
-                                    <Input.TextArea
-                                        name={"message"}
-                                        className="embeddedChatMessage"
-                                        placeholder={"Send a message"}
-                                        autoSize={{minRows: 1, maxRows: 6}}
-                                        onChange={this.onMessageChanged}
-                                        onPressEnter={this.sendMessage}
-                                        value={this.state.newMessage}/>
-                                </Form.Item>
-                            </Form>
-                        </div>
+                    <Form ref={this.form} className="embeddedChatMessageEntry">
+                        <Form.Item style={{width:"100%", marginBottom: "0px"}}>
+                            <Input.TextArea
+                                disabled={this.state.readOnly}
+                                name={"message"}
+                                className="embeddedChatMessage"
+                                placeholder={this.state.readOnly? "This channel is read-only" : "Send a message"}
+                                autoSize={{minRows: 1, maxRows: 6}}
+                                onChange={this.onMessageChanged}
+                                onPressEnter={this.sendMessage}
+                                value={this.state.newMessage}/>
+                        </Form.Item>
+                    </Form>
+                </div>
+            }
+
                     {/*</Layout>*/}
                 </div>
 

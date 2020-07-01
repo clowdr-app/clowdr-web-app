@@ -2,8 +2,37 @@
 
 - Add "Status: " before the dot
 - Add a new kind of status color, with a label like "Default"
+- Try to rename the "End call" button to "Back to lobby"
+- dntWaiver = "Only you can see this status. Others will still see your
+  presence in public rooms, but won't see a status" -- ... But this is the
+  only status that will be displayed as blank, so won't people be able to
+  infer it?
+- presenceDesc = "In a conversation; come join if you like"; -- have we made
+  it possible / obvious how to go to where someone else is??
+- need to think about screen real estate on small (laptop, ipad) screens --
+  e.g.
+       - the title bar across the top uses a lot of space
+       - the "live questions to the speakers" goes entirely off the bottom
+- The pop-up for someone's name in the lobby does not include their textual
+  status (or profile); the one on the left sidebar does
 
-# Notes from / PLMW debried
+# Notes from SCW
+
+Just talking with Richard and he mentioned two ideas for Clowdr:
+
+- "Random" social event.  Everyone who signs up gets placed in a random room
+  for a short meet & greet. I guess this is similar to Zoom's breakout room
+  feature, but we should look into how many people this could support at
+  once. A better option would be to let people specify/select a few topics
+  when they sign up that they are interested to increase the chance that the
+  interactions go well.
+
+- Q&A specific video room. Only three video streams allowed at a time:
+  author, current question asker and moderator. Any one who wants to ask a
+  question needs to join the queue and wait for their turn. Any number of
+  people can observe the discussion
+
+# Notes from / PLMW debrief
 
 - Lots of disagreement about whether lurking is a good thing.  Roopsha
   observed that shy people may have a lot of trouble goijng from lurking to

@@ -92,6 +92,7 @@ class Registrations extends React.Component {
         // if (value) { // THIS DOESN"T WANT TO WORK
         //     query.greaterThan('createdAt', Date.parse(value.startTime));
         // }
+        query.addDescending("updatedAt")
         query.limit(10000);
         query.find().then(res => {
             let regs = res;

@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Button} from 'antd';
+import {Button, Spin} from 'antd';
 import moment from 'moment';
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
@@ -12,12 +12,9 @@ class LiveStreamingPanel extends Component {
         super(props);
         this.state = {
             expanded: false,
-            count: 0
+            count: 0,
+            video_url: undefined
         };
-        let src = this.props.video.get("src1");
-        let id = this.props.video.get("id1");
-        let pwd = this.props.video.get("pwd1");
-        this.video_url = src ? videoURLFromData(src, id, pwd): "";
     }
     
     changeSocialSpace() {
@@ -31,7 +28,21 @@ class LiveStreamingPanel extends Component {
 
     }
 
-    componentDidMount() {
+    async componentDidMount() {
+        let country = this.props.auth.userProfile.get("country");
+        var src = this.props.video.get("src1");
+        var id = this.props.video.get("id1");
+        var pwd = this.props.video.get("pwd1");
+
+        if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
+            src = this.props.video.get("src2");
+            id = this.props.video.get("id2");
+            console.log('User in China!');
+        }
+        // else
+        //     console.log('User in ' + country ? country : "Unknown");
+        // Where is this user?
+        this.setState({video_url: src ? videoURLFromData(src, id, pwd, country): ""});
     }
 
     componentWillUnmount() {
@@ -79,6 +90,10 @@ class LiveStreamingPanel extends Component {
             });
             viewers = pplInThisRoom.length;
         }
+
+        if (!this.state.video_url)
+            return <Spin />
+
         return  <div>
                     <table style={{width:"100%"}}>
                         <tbody>
@@ -91,7 +106,7 @@ class LiveStreamingPanel extends Component {
                     </table>
                     <div className="player-wrapper" >
                         <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
-                                    width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>
+                                    width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
                     </div>
                     <div>
                         {this.props.mysessions.map(s => {

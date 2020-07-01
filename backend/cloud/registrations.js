@@ -172,7 +172,6 @@ Parse.Cloud.define("reset-password", async (request) => {
         user.set("loginExpires", moment().add("1", "hour").toDate());
         await user.save({},{useMasterKey: true});
 
-        console.log(config);
         let link = joinURL(config.frontendURL, "/resetPassword/" + user.id + "/" + authKey);
         var toEmail = new sgMail.Email(user.getEmail());
         var subject = 'Password reset for ' + config.conference.get("conferenceName");
@@ -296,6 +295,8 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 profile.set("displayName", registrant.get("name"));
                 profile.set("realName", registrant.get("name"));
                 profile.set("affiliation", registrant.get("affiliation"))
+                profile.set("country", registrant.get("country"));
+
                 let profileACL = new Parse.ACL();
                 profileACL.setRoleReadAccess(config.conference.id + "-conference", true);
                 profileACL.setWriteAccess(user, true);
@@ -308,7 +309,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 await registrant.save({}, {useMasterKey: true});
 
                 await user.save({}, {useMasterKey: true});
-                if (!createdNewUser)
+                if (!createdNewUser && user.get("passwordSet"))
                     instructionsText = "We matched your email address (" + registrant.get("email") + ") to your existing Clowdr.org account - " +
                         "you can use your existing credentials to login or reset your password here: " + joinURL(config.frontendURL, "/signin");
             } else if (user.get("passwordSet")){

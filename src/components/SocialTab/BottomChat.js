@@ -13,13 +13,13 @@ class BottomChat extends React.Component {
         this.channelSubscriptions = {};
     }
 
-    openChat(sid) {
-        this.registerChatSubscriptions(sid);
+    openChat(sid, dontActuallyOpen) {
         this.setState((prevState) => {
             let stateUpdate = {};
             stateUpdate.chats = prevState.chats.filter(c =>c!=sid);
             stateUpdate.chats = [sid, ...stateUpdate.chats];
-            stateUpdate[sid] = true;
+            if(!dontActuallyOpen)
+                stateUpdate[sid] = true;
             return stateUpdate;
         });
     }
@@ -29,14 +29,12 @@ class BottomChat extends React.Component {
         if(this.props.auth.user){
             this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
             this.props.auth.chatClient.initBottomChatBar(this);
-            // this.openChat('CH283e1041f395495e847c3d25e53606ca')
         }
-        // for(let chat of this.state.chats){
-        //     this.registerChatSubscriptions(chat);
-        // }
+        if(this.props.auth.user && !this.props.auth.user.get("passwordSet")){
+            this.setState({chatDisabled: true});
+        }
     }
     registerChatSubscriptions(sid){
-        // this.props.auth.chatClient.addChannelListener(this);
     }
     componentWillUnmount() {
     }
@@ -62,10 +60,13 @@ class BottomChat extends React.Component {
                 }
             );
         }
+        if(this.state.chatDisabled && this.props.auth.user && this.props.auth.user.get("passwordSet")){
+            this.setState({chatDisabled: false})
+        }
     }
 
     render() {
-        if (this.state.user) {
+        if (this.state.user && !this.state.chatDisabled) {
             return (
                 <div id="bottom-chat-container" style={this.props.style}><div id="bottom-chat-button-bar">{
                     this.state.chats.map((sid)=>
@@ -91,7 +92,7 @@ class BottomChatWindow extends React.Component{
     constructor(props){
         super(props);
         this.state ={open: this.props.open, sid: this.props.sid, unreadCount: 0,
-            chat: this.props.chatClient.joinedChannels[this.props.sid]
+            chat: this.props.chatClient.joinedChannels[this.props.sid],
         // channel: this.props.chatClient.getJoinedChannel(this.props.sid)
         }
     }
@@ -108,6 +109,9 @@ class BottomChatWindow extends React.Component{
             this.props.auth.helpers.getUserProfilesFromUserProfileID(profileID).then((profile) => {
                 this.setState({title: profile.get("displayName")})
             })
+        }
+        else if(chat.attributes.category == "announcements-global"){
+            return "Announcements";
         }
         else if(chat.attributes.category == "programItem") {
             return chat.channel.friendlyName;
@@ -134,7 +138,13 @@ class BottomChatWindow extends React.Component{
         this.setState({addUserVisible: true, addUserLoading: false});
     }
     destroyChat(){
-        this.state.chat.channel.leave();
+        let attr = this.props.chatClient.joinedChannels[this.props.sid].attributes;
+        if(attr.category == "announcements-global"){
+            this.props.toggleOpen();
+        }
+        else{
+            this.state.chat.channel.leave();
+        }
     }
 
     render() {
@@ -180,6 +190,9 @@ class BottomChatWindow extends React.Component{
             }
             }/>
         </div>
+        if(!this.state.open && this.state.chat && this.state.chat.attributes.category == "announcements-global"){
+            return chatWindow
+        }
         return <div className="bottomChatWindowContainer">
             <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} overflowCount={9} offset={[-5,-10]}/>{this.state.title}</Button></Tooltip>{chatWindow}</div>
     }

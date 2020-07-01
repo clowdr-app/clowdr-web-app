@@ -22,7 +22,7 @@ export default class ChatClient{
         if (!found) {
             found = await this.joinAndGetChannel(sid);
         }
-        this.openChat(sid);
+        this.openChat(found.sid);
 
     }
     closeChatAndLeaveIfUnused(sid){
@@ -58,9 +58,27 @@ export default class ChatClient{
         if(chan){
             return chan.channel;
         }
-        let membership = await channel.join();
-        await this.getChannelInfo(membership);
-        return membership;
+        try{
+            let membership = await channel.join();
+            await this.getChannelInfo(membership);
+            return membership;
+        }catch(err){
+            if(err.code ==50403) {
+                this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
+                let res = await Parse.Cloud.run("chat-getBondedChannelForSID", {
+                    conference: this.conference.id,
+                    sid: channel.sid
+                });
+                this.channelsThatWeHaventMessagedIn.push(res);
+                channel = await this.twilio.getChannelByUniqueName(res);
+                let membership = await channel.join();
+                await this.getChannelInfo(membership);
+                return membership;
+            }
+            else{
+                console.log(err);
+            }
+        }
     }
 
     setUnreadCount(sid, count){
@@ -86,6 +104,7 @@ export default class ChatClient{
 
     initChatClient(user, conference, userProfile) {
         this.userProfile = userProfile;
+        this.conference = conference;
         if (!this.chatClientPromise) {
             this.chatClientPromise = new Promise(async (resolve) => {
                 let ret = await this._initChatClient(user, conference);
@@ -96,12 +115,15 @@ export default class ChatClient{
         return this.chatClientPromise;
     }
 
-    openChat(chatSID) {
-        console.log("OC " + chatSID)
+    openChat(chatSID, isInitialLoad) {
+        if(!chatSID){
+            console.log("No chat sid!")
+            console.trace();
+        }
         if(!this.chats.includes(chatSID))
             this.chats.push(chatSID);
         if (this.chatBar)
-            this.chatBar.openChat(chatSID);
+            this.chatBar.openChat(chatSID, isInitialLoad);
         if(this.chatList)
             this.chatList.addChannel(chatSID);
     }
@@ -183,6 +205,7 @@ export default class ChatClient{
             promises.push(this.getChannelInfo(channel));
         }
         let channelsArray = await Promise.all(promises);
+
         //Make sure that the bottom chat bar and chat list have everything we have so far
         if (this.chatList)
             this.chatList.setState({
@@ -212,7 +235,7 @@ export default class ChatClient{
             let channelInfo = await this.getChannelInfo(channel);
             if(channelInfo){
                 if(channelInfo.attributes.category != "socialSpace"){
-                    this.openChat(channel.sid);
+                    this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
                 }
                 this.subscribeToChannel(channel.sid);
             }
@@ -225,6 +248,13 @@ export default class ChatClient{
             this.unSubscribeToChannel(channel);
             // this.channelListeners.forEach(v => v.channelLeft(channel));
         });
+        //Do we already have the announcements channel?
+        let announcements = Object.values(this.joinedChannels).find(chan => chan.attributes.category == 'announcements-global');
+        if(!announcements){
+            let res = await Parse.Cloud.run("join-announcements-channel", {
+                conference: this.conference.id
+            });
+        }
         this.twilio = twilio;
         return this.twilio;
     }
