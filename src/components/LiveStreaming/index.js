@@ -55,11 +55,11 @@ class LiveStreaming extends Component {
             var timeS = s.get("startTime") ? s.get("startTime") : new Date();
             var timeE = s.get("endTime") ? s.get("endTime") : new Date();
             if (when == "past") {
-                return (now >= moment(timeE).add(10, 'm').toDate().getTime());
+                return (s.get("room") && now >= moment(timeE).add(10, 'm').toDate().getTime());
             }
             else { // live sessions
                 return (now >= moment(timeS).subtract(30, 'm').toDate().getTime() && 
-                        now <= moment(timeE).add(10, 'm').toDate().getTime());
+                        now <= moment(timeE).add(10, 'm').toDate().getTime() && s.get("room"));
             }
         }).sort(this.dateSorter);
 
@@ -173,7 +173,8 @@ class LiveStreaming extends Component {
 
             return <div className={"space-align-container"}>
                     {this.state.liveRooms.map((room) => {
-                        let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
+                        
+                        let mySessions = this.state.currentSessions.filter(s => { console.log('--> ' + s.get("room"));; return s.get("room").id === room.id});
                         let qa = "";
                         let width = 0;
                         if (!this.state.expanded) width = 320;
