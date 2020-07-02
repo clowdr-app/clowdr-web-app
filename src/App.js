@@ -113,8 +113,8 @@ class App extends Component {
             else
                 confSwitcher= <span style={{float: "right"}}>{clowdrActionButtons}</span>;
             if (headerImage)
-                return <Header className="site-layout-background" style={{height: "140px", clear: "both"}}>
-                    <img src={headerImage.url()} className="App-logo" height="140"
+                return <Header className="site-layout-background" style={{height: "90px", clear: "both"}}>
+                    <img src={headerImage.url()} className="App-logo" height="90"
                          alt="logo"/><span style={{paddingLeft: "20px"}}><Typography.Title
                     style={{display: "inherit"}}>{headerText}</Typography.Title>{confSwitcher}</span>
                 </Header>
