@@ -5,6 +5,8 @@ import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
 import ReactPlayer from "react-player";
 import {videoURLFromData} from './utils';
+import { CollectionsOutlined } from "@material-ui/icons";
+import { NavLink } from "react-router-dom";
 
 class LiveStreamingPanel extends Component {
     constructor(props) {
@@ -27,6 +29,31 @@ class LiveStreamingPanel extends Component {
             this.props.auth.helpers.setGlobalState({forceChatOpen: true});
         }        
 
+    }
+
+    joinChatChannels() {
+        var items = [];
+        this.props.mysessions.map(session => {
+            if (session.get("items")) 
+                items = items.concat(session.get("items")) 
+        });
+        console.log('--> room: ' + this.props.video.get("name") + ": "+ items.length);
+
+        // items.map(i => console.log("item: " + i.id+ " " + i.get("title") ));
+        let chatChannels = items.map(i => i.get("chatSID"));
+        chatChannels.map(cc => {
+            if (cc) {
+                console.log('[Live]: joining chat channel ' + cc);
+                this.props.auth.chatClient.openChatAndJoinIfNeeded(cc);
+            }
+        })
+    }
+
+    joinChatChannel(sid) {
+        if (sid)
+            this.props.auth.chatClient.openChatAndJoinIfNeeded(sid);
+        else
+            console.log('[Live]: trying to joing chat channel with undef sid. Ignoring.');
     }
 
     async componentDidMount() {
@@ -55,8 +82,10 @@ class LiveStreamingPanel extends Component {
 
     toggleExpanded() {
 //        console.log('--> ' + this.state.expanded);
-        if (!this.state.expanded) // about to expand
+        if (!this.state.expanded) {// about to expand
             this.changeSocialSpace();
+            // this.joinChatChannels();
+        }
         else
             this.props.auth.setSocialSpace("Lobby");
 
@@ -77,14 +106,48 @@ class LiveStreamingPanel extends Component {
         }
         
         let navigation="";
+        let sessionData = "";
         let roomName = this.props.video.get('name');
         if (this.state.expanded) {
             navigation = <Button type="primary" onClick={this.toggleExpanded.bind(this)}>Go Back</Button>
+            let lengths = this.props.mysessions.map(s => (s.get("items") ? s.get("items").length : 0));
+            let nrows = Math.max(...lengths);
+            var rows = [];
+            for (var r = 0; r < nrows; r++) {
+                var row = [];
+                for (var s = 0; s < this.props.mysessions.length; s++) {
+                    let value = "";
+                    let sid = "";
+                    if (this.props.mysessions[s].get("items") &&  r < this.props.mysessions[s].get("items").length) {
+                        value =  this.props.mysessions[s].get("items")[r].get("title");
+                        sid = this.props.mysessions[s].get("items")[r].get("chatSID");
+                    }
+                    row = [...row, [value, sid]];
+                }
+                rows = [...rows, row];
+            }
+            // console.log(JSON.stringify(rows));
+        
+            sessionData = <table><tbody>
+                <tr>{this.props.mysessions.map(s => {
+                            return <td key={s.id}><b>{s.get("title")}</b></td>
+                        })}</tr>
+                        {rows.map(row => {
+                            return <tr>{row.map(pair => {
+                                return <td>{pair[1] ? <a href="#" onClick={this.joinChatChannel.bind(this, pair[1])}>{pair[0]}</a> : pair[0]}</td>
+                            })}</tr>
+                        })}
+                </tbody></table>
         }
         else {
             navigation = <Button type="primary" onClick={this.toggleExpanded.bind(this)}>Enter</Button>
             roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
+
+            sessionData = this.props.mysessions.map(s => {
+                            return <div key={s.id}>{s.get("title")}</div>
+                        })
+
         }
         let viewers = 0;
         if (this.props.auth.presences) {
@@ -119,9 +182,10 @@ class LiveStreamingPanel extends Component {
                     </table>
                     <div className="player-wrapper" >{player}</div>
                     <div>
-                        {this.props.mysessions.map(s => {
+                        {sessionData}
+                        {/* {this.props.mysessions.map(s => {
                             return <div key={s.id}>{s.get("title")}</div>
-                        })}
+                        })} */}
                     </div>
                 </div>
     }
