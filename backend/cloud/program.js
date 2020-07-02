@@ -318,8 +318,9 @@ Parse.Cloud.define("program-upload", async (request) => {
 
     let newSessions = [];
     for (const ses of data.Sessions) {
+        let session = undefined;
         if (allSessions[ses.Key])
-            continue;
+            session = allSessions[ses.Key];
 
         var start = Date.now(), end = Date.now();
         let times = ses.Time.split('-');
@@ -331,24 +332,28 @@ Parse.Cloud.define("program-upload", async (request) => {
 //            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
         }
 
-        let session = new ProgramSession();
-        ses.Title ? session.set("title", ses.Title.trim()) : session.set("title", ses.Title);
-        ses.Abstract ? session.set("abstract", ses.Abstract.trim()) : session.set("abstract", ses.Abstract);
-        // ses.Type ? session.set("type", ses.Type.trim()) : session.set("type", '');
-        session.set("type", ses.Type)
-        session.set("startTime", start.toDate());
-        session.set("endTime", end.toDate());
-        ses.Location ? session.set("location", ses.Location.trim()) : session.set("location", ses.Location);
-        ses.Key ? session.set("confKey", ses.Key.trim()) : session.set("confKey", ses.Key);
-        session.set("conference", conf);
-        session.setACL(acl);
+        if (!session) {
+            session = new ProgramSession();
+            allSessions[session.get("confKey")] = session;
 
-        // Find the pointer to the room
-        let room = existingRooms.find(r => r.get('name') == ses.Location);
-        if (room)
-            session.set("room", room);
-        else
-            console.log(`Warning: room ${ses.Location} not found for session ${ses.Title}`);
+            ses.Title ? session.set("title", ses.Title.trim()) : session.set("title", ses.Title);
+            ses.Abstract ? session.set("abstract", ses.Abstract.trim()) : session.set("abstract", ses.Abstract);
+            // ses.Type ? session.set("type", ses.Type.trim()) : session.set("type", '');
+            session.set("type", ses.Type)
+            session.set("startTime", start.toDate());
+            session.set("endTime", end.toDate());
+            ses.Location ? session.set("location", ses.Location.trim()) : session.set("location", ses.Location);
+            ses.Key ? session.set("confKey", ses.Key.trim()) : session.set("confKey", ses.Key);
+            session.set("conference", conf);
+            session.setACL(acl);
+
+            // Find the pointer to the room
+            let room = existingRooms.find(r => r.get('name') == ses.Location);
+            if (room)
+                session.set("room", room);
+            else
+                console.log(`Warning: room ${ses.Location} not found for session ${ses.Title}`);
+        }
 
         // Find the pointers to the items
         let items = [];
@@ -362,11 +367,28 @@ Parse.Cloud.define("program-upload", async (request) => {
         }
         session.set("items", items);
         newSessions.push(session);
-        allSessions[session.get("confKey")] = session;
         i++;
     }
     try{
         await Parse.Object.saveAll(newSessions, {useMasterKey: true});
+        toSave = [];
+        for (const ses of data.Sessions) {
+            if (ses.Items) {
+                ses.Items.forEach((k) => {
+                    if(allItems[k]){
+                        // console.log(allItems[k].get("program"))
+                        if(!allItems[k].get("programSession")){
+                            allItems[k].set("programSession", allSessions[ses.Key])
+                            toSave.push(allItems[k]);
+                        }
+                    }
+                    else
+                        console.log("Could not find item: " + k);
+                });
+            }
+        }
+        console.log('Resaving items: ' + toSave.length);
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
     } catch(err){
         console.log(err);
     }
