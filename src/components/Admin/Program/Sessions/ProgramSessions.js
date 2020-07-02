@@ -371,7 +371,7 @@ class ProgramSessions extends React.Component {
                                     session => (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase())) 
                                         || (session.get('startTime') && timezone(session.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase())) 
                                         || (session.get('endTime') && timezone(session.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase())) 
-                                        || (session.get('items') && session.get('items').some((element) => element.get('title').toLowerCase().includes(key)))
+                                        || (session.get('items') && session.get('items').some((element) => element.get('title').toLowerCase().includes(key.toLowerCase())))
                                         || (session.get('room') && session.get('room').get('name').toLowerCase().includes(key.toLowerCase())))      
                             })
                         }
