@@ -174,7 +174,7 @@ class LiveStreaming extends Component {
             return <div className={"space-align-container"}>
                     {this.state.liveRooms.map((room) => {
                         
-                        let mySessions = this.state.currentSessions.filter(s => { console.log('--> ' + s.get("room"));; return s.get("room").id === room.id});
+                        let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
                         let qa = "";
                         let width = 0;
                         if (!this.state.expanded) width = 320;
