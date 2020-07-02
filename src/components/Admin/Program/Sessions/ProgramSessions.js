@@ -54,7 +54,7 @@ class ProgramSessions extends React.Component {
     async onCreate(values) {
         console.log("OnCreate! " + values.title)
         var _this = this;
-        let room = this.state.rooms.find(r => r.id == values.room);
+        let room = this.state.rooms.find(r => r.get("name") === values.room);
         if (!room)
             console.log('Invalid room ' + values.room);
 
