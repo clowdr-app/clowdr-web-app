@@ -1,20 +1,43 @@
-# Little things to do right away
+# High-priority small things (for ICSE if possible)
 
 - Make the default status be isOpenToConversation, not isLookingForConversation
-- Add "Status: " before the dot
-- Try to rename the "End call" button to "Back to lobby"
+- The pop-up for someone's name in the lobby does not include their textual
+  status (or profile); the one on the left sidebar does
+
+# Lower-priority small things (after ICSE)
+
 - dntWaiver = "Only you can see this status. Others will still see your
   presence in public rooms, but won't see a status" -- ... But this is the
   only status that will be displayed as blank, so won't people be able to
   infer it?
-- presenceDesc = "In a conversation; come join if you like"; -- have we made
-  it possible / obvious how to go to where someone else is??
+- Try to rename the "End call" button to "Back to lobby"
 - need to think about screen real estate on small (laptop, ipad) screens --
   e.g.
        - the title bar across the top uses a lot of space
        - the "live questions to the speakers" goes entirely off the bottom
 - The pop-up for someone's name in the lobby does not include their textual
   status (or profile); the one on the left sidebar does
+- presenceDesc = "In a conversation; come join if you like"; -- have we made
+  it possible / obvious how to go to where someone else is??
+
+# Design notes for "take me someplace random"
+
+manual version:
+  - Lobby session has ten (or more, if we want) breakout rooms, named
+    something obvious like "Looking for conversation #1", etc.
+  - If you want random conversation, take a look at who is in these rooms
+    and join one if you like.
+  - Otherwise, park yourself in an empty room and wait for other people to
+    show up.
+  - Alternatively, roll a ten-sided die and go to the indicated room.
+  - Done.  :-)
+
+almost manual version:
+  - Same as above, except there's a button at the bottom of the screen when
+    you're in the lobby session that says "Go to a random Looking For
+    Conversation" room.  Press the button and it takes you to one of the
+    rooms with this label (that does not have more than four people in it
+    right now).
 
 # Notes from SCW
 
