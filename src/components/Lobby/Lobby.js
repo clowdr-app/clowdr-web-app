@@ -273,7 +273,29 @@ class Lobby extends React.Component {
             if(!b) return 1;
             a = a.get("updatedAt");
             b = b.get("updatedAt");
-            return (a < b ? 1 : a>b?-1: 0)};
+            return (a < b ? 1 : a>b?-1: 0)
+        };
+        
+
+        const compareNames = (i, j) => {
+            let a = this.state.presences[i];
+            let b = this.state.presences[j];
+            if(!a)
+                return -1;
+            if(!b) return 1;
+            a = a.get("user");
+            b = b.get("user");
+            if(!a)
+                return -1;
+            if(!b) return 1;
+            a = a.get("displayName");
+            b = b.get("displayName");
+            if(!a)
+                return -1;
+            if(!b) return 1;
+            return (a.localeCompare(b))
+        };
+
         return (
             // <Tabs defaultActiveKey="1">
             //     <TabPane tab="Breakout Areas" key="1">
@@ -300,8 +322,7 @@ class Lobby extends React.Component {
                     xl: 2,
                     xxl: 3,
                 }}
-                      dataSource={Object.keys(this.state.presences).sort((a,b)=>(compareDates(a,
-                          b) ))}
+                      dataSource={Object.keys(this.state.presences).sort((a,b)=>(compareNames(a, b) ))}
                       renderItem={item => (<List.Item style={{marginBottom: 0}}><UserStatusDisplay key={item} onlyShowWithPresence={true} profileID={item} popover={false}/></List.Item>
                           )}>
 

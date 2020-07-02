@@ -131,10 +131,22 @@ class ContextualActiveUsers extends Component {
         }
         this.setState({filteredRoom: roomID, filteredUser: userID});
     }
+
+    
     render() {
         if (!this.state.loggedIn) {
             return <div></div>
         }
+
+        const compareNames = (a, b) => {
+            a = a.get("displayName");
+            b = b.get("displayName");
+            if(!a)
+                return -1;
+            if(!b) return 1;
+            return (a.localeCompare(b))
+        };
+
         let topHeight = 0;
         let topElement = document.getElementById("top-content");
         if (topElement)
@@ -172,7 +184,7 @@ class ContextualActiveUsers extends Component {
                     && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
                 ).sort((i1, i2) => {
                 return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
-            }).map(p => p.get("user"));
+            }).map(p => p.get("user")).sort(compareNames);
         for(let u of lobbyMembers){
             searchOptions.push({label: "@"+u.get("displayName"), value: u.id+"@-lobby"});
         }
