@@ -4,6 +4,7 @@ import {MailOutlined, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
 import moment from "moment";
+import * as timezone from 'moment-timezone';
 
 const { Option } = Select;
 
@@ -187,12 +188,9 @@ class Registrations extends React.Component {
                 title: 'Created',
                 dataIndex: 'created',
                 sorter: (a, b) => {
-                    var timeA = a.get("createdAt");
-                    var timeB = b.get("createdAt");
-                    return timeA > timeB;
+                    return moment(a.get("createdAt"))- moment(b.get("createdAt"));
                 },
-                // render: (text,record) => <span>{timezone(record.get("createdAt")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
-                render: (text,record) => <span>{moment(record.get("createdAt")).format("YY-MM-DD HH:MM")}</span>,
+                render: (text,record) => <span>{timezone(record.get("createdAt")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'created',
             },
             {
