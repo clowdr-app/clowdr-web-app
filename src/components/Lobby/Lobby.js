@@ -301,16 +301,19 @@ class Lobby extends React.Component {
             //     <TabPane tab="Breakout Areas" key="1">
             <div>
                 <AboutModal />
-                <Typography.Title level={2}>Lobby Session</Typography.Title>
+                <Typography.Title level={2}>Video Chat Lobby</Typography.Title>
 
                 <Typography.Paragraph>
-                Some say that the most valuable part of an academic conference is the "lobby track" - where
+                Some say that the most valuable part of an academic conference is outside the official sessions, when
                 colleagues meet, catch up, and share
-                casual conversation. To bring the metaphor into the digital world, the digital lobby session
-                allows you to create small group video chats and switch between  chats.
-                    The pane on the left shows the active video chats, and the list below shows the users actively looking for a conversation.
+                casual conversation. To bring the metaphor into the digital world, the Clowdr platform
+                allows you to create small group video chats and switch easily between  chats.
+                    The pane on the left shows the active video chat rooms, and the list below shows the current status of all users on the platform. The search bar on the left can be used to find specific users and rooms.
 
                     <NewRoomForm style={{display: "none"}} initialName={this.state.requestedName} visible={this.state.visible} />
+                </Typography.Paragraph>
+                <Typography.Paragraph>
+                If you are looking for casdual conversation or hoping to meet new people,  you are invited to head over to one of the small-group rooms labeled "Hallway 1", "Hallway 2", etc.  Either join a room at random, or pick an empty room and wait for others to join you there.
                 </Typography.Paragraph>
                 <Space />
 

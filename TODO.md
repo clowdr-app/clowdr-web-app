@@ -1,7 +1,7 @@
 # Little things to do right away
 
+- Make the default status be isOpenToConversation, not isLookingForConversation
 - Add "Status: " before the dot
-- Add a new kind of status color, with a label like "Default"
 - Try to rename the "End call" button to "Back to lobby"
 - dntWaiver = "Only you can see this status. Others will still see your
   presence in public rooms, but won't see a status" -- ... But this is the
