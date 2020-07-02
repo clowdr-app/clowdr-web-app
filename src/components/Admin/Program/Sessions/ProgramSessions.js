@@ -54,7 +54,7 @@ class ProgramSessions extends React.Component {
     async onCreate(values) {
         console.log("OnCreate! " + values.title)
         var _this = this;
-        let room = this.state.rooms.find(r => r.id == values.room);
+        let room = this.state.rooms.find(r => r.get("name") === values.room);
         if (!room)
             console.log('Invalid room ' + values.room);
 
@@ -136,7 +136,7 @@ class ProgramSessions extends React.Component {
             session.set("startTime", values.startTime.toDate());
             session.set("endTime", values.endTime.toDate());
             session.set("items", values.items);
-            let room = this.state.rooms.find(r => r.id == values.room);
+            let room = this.state.rooms.find(r => r.get("name") === values.room);
             if (!room)
                 console.log('Invalid room ' + values.room);
             session.set("room", room);
@@ -371,7 +371,7 @@ class ProgramSessions extends React.Component {
                                     session => (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase())) 
                                         || (session.get('startTime') && timezone(session.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase())) 
                                         || (session.get('endTime') && timezone(session.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase())) 
-                                        || (session.get('items') && session.get('items').some((element) => element.get('title').toLowerCase().includes(key)))
+                                        || (session.get('items') && session.get('items').some((element) => element.get('title').toLowerCase().includes(key.toLowerCase())))
                                         || (session.get('room') && session.get('room').get('name').toLowerCase().includes(key.toLowerCase())))      
                             })
                         }
