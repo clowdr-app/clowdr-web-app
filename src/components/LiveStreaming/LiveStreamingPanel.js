@@ -49,6 +49,8 @@ class LiveStreamingPanel extends Component {
     }
 
     componentWillUnmount() {
+        if (this.state.expanded)
+            this.props.auth.setSocialSpace("Lobby");
     }
 
     toggleExpanded() {
