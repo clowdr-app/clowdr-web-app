@@ -42,7 +42,7 @@ class Landing extends Component {
                 ACM Policy Against Harassment</a> at all times. If you observe or are subject to innapropriate conduct, call it out:
                 <ul>
                     <li>Use the red "report" icon in video chats</li>
-                    <li>Send a direct Slack message to <a href="slack://user?team=T012LF0AWLV&id=U01274MVDC7" target="_blank">@Crista Lopes</a></li>
+                    <li>Send a direct Slack message to @Crista Lopes</li>
                 </ul>
             </div>
             <h3>THANK YOU TO OUR SPONSORS!</h3>

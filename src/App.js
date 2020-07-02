@@ -1,5 +1,8 @@
 import React, {Component} from 'react';
 import {BrowserRouter, NavLink, Route} from 'react-router-dom';
+import BrowserDetection from 'react-browser-detection';
+import { message } from 'antd';
+
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
@@ -311,11 +314,27 @@ class App extends Component {
     }
 }
 
+
 let RouteredApp = withRouter(App);
 class ClowdrApp extends React.Component{
+    okBrowser = ()=><></>;
+    browserHandler = {
+        chrome: this.okBrowser,
+        edge: this.okBrowser,
+        safari: this.okBrowser,
+        default: (browser) => {
+            message.error(<span>The browser that you are using, {browser} is not known to be supported by Clowdr. <br />Clowdr is still in
+                beta mode, and we would suggest using Chrome, Safari, or Edge for the best experience.</span>,0)
+            return <></>
+        }
+    };
+
    render() {
        return <BrowserRouter basename={process.env.PUBLIC_URL}>
-           <RouteredApp authContext={this.props.authContext} />
+           <BrowserDetection>
+               {this.browserHandler}
+           </BrowserDetection>
+               <RouteredApp authContext={this.props.authContext} />
        </BrowserRouter>
    }
 }

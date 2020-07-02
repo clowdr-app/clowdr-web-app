@@ -539,6 +539,7 @@ const withAuthentication = Component => {
                         let permissions =  await privsQuery.find();
 
                         const spacesQ = new Parse.Query("SocialSpace");
+                        spacesQ.limit(1000);
                         spacesQ.equalTo("conference", activeProfile.get("conference"));
                         let spaces = await spacesQ.find();
                         let spacesByName = {};
