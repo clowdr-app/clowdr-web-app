@@ -325,6 +325,8 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
                 "The Clowdr app will organize the conference program, live sessions, networking, and more. "
                 + instructionsText + "\n\n" +
+                "Please note that Chrome, Safari and Edge provide the best compatability with CLOWDR. We are working to improve " +
+                "compatability with other browsers and to continue to add new features to the platform\n\n" +
                 "If you have any problems accessing the conference site, please reply to this email.\n\n" +
                 "Best regards,\n" +
                 "Your Virtual " + config.conference.get("conferenceName") + " team");
