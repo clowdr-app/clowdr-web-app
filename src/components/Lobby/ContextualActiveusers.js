@@ -323,7 +323,8 @@ class ContextualActiveUsers extends Component {
             }
             tabs = <div>
                 <div>
-                    <div><PresenceForm /></div>
+                    <div style={{height:'6px', background:'white'}}/>
+
                     <Select style={{width: "100%"}} showSearch
                             allowClear={true}
                             onChange={this.filterList.bind(this)}
@@ -336,6 +337,13 @@ class ContextualActiveUsers extends Component {
                             }}
 
                             options={searchOptions} placeholder="Search"></Select>
+
+                    <div style={{height:'6px', background:'white'}}/>
+
+                    <div><PresenceForm /></div>
+
+                    <div style={{height:'6px', background:'white'}}/>
+
                     <Divider className="social-sidebar-divider">
                         <Tooltip title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{this.props.auth.activeSpace.get("name")}</Tooltip>
                     </Divider>
@@ -387,6 +395,7 @@ class ContextualActiveUsers extends Component {
                         </Menu>
 
                 </div>
+
                 <Divider className="social-sidebar-divider"><Tooltip title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room (e.g. lobby)">Chats</Tooltip></Divider>
                 <Menu mode="inline"
                       className="activeRoomsList"

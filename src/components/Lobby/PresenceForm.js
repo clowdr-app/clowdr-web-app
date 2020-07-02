@@ -136,7 +136,7 @@ class PresenceForm extends React.Component {
         if(!this.state.presence)
             return <Skeleton.Input />
         return <div>
-            <Divider>My Availability</Divider>
+            My status:
             <Form layout="inline"
                   ref={this.form}
                   id="statusForm"

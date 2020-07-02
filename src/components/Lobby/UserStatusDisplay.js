@@ -68,7 +68,7 @@ class UserStatusDisplay extends React.Component{
             let popoverContent = <span></span>
             if (this.props.popover)
                 return <div className="userDisplay" style={this.props.style} onClick={onClick}>
-                    <Popover title={this.state.profile.get("displayName") + "'s availability is: " + presenceDesc}
+                    <Popover title={this.state.profile.get("displayName") + " is " + presenceDesc}
                              content={<div>{statusDesc} {dntWaiver}</div>}>
                         <Badge status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Popover>
                 </div>

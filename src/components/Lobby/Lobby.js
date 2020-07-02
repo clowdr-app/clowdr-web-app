@@ -306,7 +306,7 @@ class Lobby extends React.Component {
                 <Typography.Paragraph>
                 Some say that the most valuable part of an academic conference is outside the official sessions, when
                 colleagues meet, catch up, and share
-                casual conversation. To bring the metaphor into the digital world, the Clowdr platform
+                casual conversation. To bring the metaphor into the digital world, the CLOWDR platform
                 allows you to create small group video chats and switch easily between  chats.
                     The pane on the left shows the active video chat rooms, and the list below shows the current status of all users on the platform. The search bar on the left can be used to find specific users and rooms.
 
