@@ -37,7 +37,6 @@ class LiveStreamingPanel extends Component {
             if (session.get("items")) 
                 items = items.concat(session.get("items")) 
         });
-        console.log('--> room: ' + this.props.video.get("name") + ": "+ items.length);
 
         // items.map(i => console.log("item: " + i.id+ " " + i.get("title") ));
         let chatChannels = items.map(i => i.get("chatSID"));
@@ -122,7 +121,7 @@ class LiveStreamingPanel extends Component {
                         value =  this.props.mysessions[s].get("items")[r].get("title");
                         sid = this.props.mysessions[s].get("items")[r].get("chatSID");
                     }
-                    row = [...row, [value, sid]];
+                    row = [...row, [value, sid]]; // pairs of titles and sids
                 }
                 rows = [...rows, row];
             }
