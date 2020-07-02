@@ -70,7 +70,7 @@ class LiveStreaming extends Component {
         else
             console.log('No current sessions');
 
-        liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
+        liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r && room && r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
 
         liveRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
 
