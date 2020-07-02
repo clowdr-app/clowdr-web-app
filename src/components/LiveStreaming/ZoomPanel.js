@@ -51,6 +51,10 @@ class ZoomPanel extends Component {
     
     render() {
         
+        if (this.props.vid && this.props.vid.id !== this.props.video.id) { // It's not us! Unmount!
+            return <div></div>
+        }
+
         let roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
 
