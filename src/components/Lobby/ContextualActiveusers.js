@@ -147,12 +147,12 @@ class ContextualActiveUsers extends Component {
             allActiveRooms = this.state.activePublicVideoRooms;
         else if(!this.state.activePublicVideoRooms){
             allActiveRooms = this.state.activePrivateVideoRooms;
-        }
-        else{
+        } else {
             allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
         }
 
-        allActiveRooms = allActiveRooms.filter(r => !r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id)
+        let programRooms = allActiveRooms.filter(r => r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id));
+        allActiveRooms = allActiveRooms.filter(r => !r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id))
         //Also make a fake rom for the lobby.
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 
@@ -198,6 +198,117 @@ class ContextualActiveUsers extends Component {
                 selectedKeys.push(this.state.filteredRoom);
             if(this.state.filteredUser)
                 selectedKeys.push(this.state.filteredUser);
+
+            let programInfo = <></>
+            if(programRooms.length > 0){
+                programInfo = <div>
+                    <Divider className="social-sidebar-divider">Paper/Posters in {this.state.activeSpace.get("name")}</Divider>
+
+                    <Menu mode="inline"
+                          className="activeRoomsList"
+                          style={{
+                              border: '1px solid #FAFAFA'
+                          }}
+                          inlineIndent={0}
+
+                          forceSubMenuRender={true}
+                          openKeys={allActiveRooms.map(r=>r.id)}
+                          expandIcon={null}
+                          selectedKeys={selectedKeys}
+                    >
+                        {programRooms ? programRooms.sort((i1, i2) => {
+                            return (i1 && i2 && i1.get("name") < i2.get("name") ? 1 : -1)
+                        }).map((item) => {
+                                if(!item){
+                                    return <Skeleton />
+                                }
+
+                                let membersCount = 0;
+                                if (item.get("members")) {
+                                    membersCount = item.get("members").length;
+                                }
+                                let tag, joinInfo;
+                                if(item.get("mode") == "group"){
+                                    //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
+                                    joinInfo = "Join this big group room, '"+item.get("title")+"'. Big group rooms support up to 50 callers, but you can only see the video of up to 4 other callers at once."
+                                }
+                                else if(item.get("mode") == "peer-to-peer"){
+                                    //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
+                                    joinInfo ="Join this peer-to-peer room, '"+item.get("title")+"'. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
+                                }
+                                else if(item.get("mode") == "group-small"){
+                                    //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
+                                    joinInfo = "Join this small group room, '"+item.get("title")+"'. Small group rooms support only up to 4 callers, but provide the best quality experience."
+                                }
+
+                                let isModOverride = false;
+                                if(item.get("isPrivate")){
+                                    //check for our uid in the acl
+                                    let acl = item.getACL();
+                                    if(!acl.getReadAccess(this.props.auth.user.id))
+                                        isModOverride = true;
+                                }
+                                let privateSymbol = <></>
+                                if (item.get("isPrivate")) {
+                                    if (isModOverride)
+                                        privateSymbol = <LockTwoTone style={{verticalAlign: 'middle'}} twoToneColor="#eb2f96"/>
+                                    else privateSymbol = <LockTwoTone style={{verticalAlign: 'middle'}}/>
+                                }
+                                let formattedRoom =
+                                    <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{tag}{privateSymbol}{item.get('title')}</div>
+                                let joinLink = "";
+                                if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
+                                {
+                                    if (item.get("members") && item.get("capacity") <= item.get("members").length)
+                                        joinLink = <div><Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
+                                            disabled>{formattedRoom}</Typography.Text></Tooltip></div>
+                                    else if(isModOverride){
+                                        joinLink = <div><Tooltip title={joinInfo}>
+                                            <Popconfirm title={<span style={{width: "250px"}}>You do not have permission to join this room, but can override<br />
+                                        this as a moderator. Please only join this room if you were asked<br /> by a participant
+                                        to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
+                                                        onConfirm={this.joinCall.bind(this,item)}
+                                            >
+                                                <a href="#"
+                                                >{formattedRoom}</a>
+                                            </Popconfirm>
+                                        </Tooltip>
+                                        </div>;
+                                    }
+                                    else
+                                        joinLink = <div><Tooltip title={joinInfo}><a href="#"
+                                                                                     onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
+                                        </div>;
+                                }
+                                else {
+                                    joinLink = formattedRoom;
+                                }
+                                let list;
+                                let header = joinLink;
+                                if (item.get("members") && item.get("members").length > 0)
+                                    list = item.get("members").map(user=>{
+                                        let className = "personHoverable";
+                                        if (this.state.filteredUser == user.id)
+                                            className += " personFiltered"
+                                        return <Menu.Item key={user.id} className={className}>
+                                            <UserStatusDisplay popover={true}profileID={user.id}/>
+                                        </Menu.Item>
+                                    }) //}>
+                                else
+                                    list = <></>
+                                return (
+                                    // <Menu.Item key={item.id}>
+                                    //     {header}
+                                    <Menu.SubMenu key={item.id} popupClassName="activeBreakoutRoom" title={header} expandIcon={<span></span>}>
+
+                                        {list}
+                                    </Menu.SubMenu>
+                                    // </Menu.Item>
+                                )
+                            }
+                        ) : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
+                    </Menu></div>
+            }
             tabs = <div>
                 <div>
                     <div><PresenceForm /></div>
@@ -315,6 +426,7 @@ class ContextualActiveUsers extends Component {
                         :<></>}
                 </Menu>
 
+                {programInfo}
 
                 <Divider className="social-sidebar-divider"><Tooltip title={"These breakout rooms feature video and chat, and are associated with the room that you are currently in - "
                 + this.props.auth.activeSpace.get("name")}>Breakout (Video) Rooms</Tooltip></Divider>

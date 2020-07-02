@@ -115,6 +115,8 @@ class BottomChatWindow extends React.Component{
         }
         else if(chat.attributes.category == "programItem") {
             return chat.channel.friendlyName;
+        }else if(chat.attributes.category == "breakoutRoom"){
+            return chat.channel.friendlyName;
         }
         return chat.channel.sid;
     }

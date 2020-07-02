@@ -13,15 +13,26 @@ class ZoomPanel extends Component {
         super(props);
         this.state = {
             expanded: false,
-            count: 0
+            count: 0, 
+            china: false
         };
-        let src = this.props.video.get("src1");
-        let id = this.props.video.get("id1");
-        let pwd = this.props.video.get("pwd1");
-        this.video_url = src ? videoURLFromData(src, id, pwd) : "";
     }
     
     componentDidMount() {
+        let country = this.props.auth.userProfile.get("country");
+        var src = this.props.video.get("src1");
+        var id = this.props.video.get("id1");
+        var pwd = this.props.video.get("pwd1");
+
+        var inChina = false;
+        if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
+            // Commenting it for now until we get conformation of the Chinese URL
+            // src = this.props.video.get("src2");
+            // id = this.props.video.get("id2");
+            inChina = true;
+            console.log('User in China!');
+        }
+        this.setState({video_url: src ? videoURLFromData(src, id, pwd, country): "", china:inChina});
     }
 
     componentWillUnmount() {
@@ -39,16 +50,11 @@ class ZoomPanel extends Component {
     }
     
     render() {
-
-        let qa = "";
-        if (this.props.vid && this.props.vid.id !== this.props.video.id) { // It's not us! Unmount!
-            return <div></div>
-        }
         
         let roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
 
-        let navigation = <a href={this.video_url} target={"_blank"} rel="noopener noreferrer"><Button type="primary" >Enter</Button></a>
+        let navigation = <a href={this.state.video_url} target={"_blank"} rel="noopener noreferrer"><Button type="primary" >Enter</Button></a>
 
         return  <div>
                     <table style={{width:"100%"}}>
