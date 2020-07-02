@@ -167,12 +167,10 @@ class VideoRoom extends Component {
         }
         let confName = this.props.match.params.conf;
         let roomID = this.props.match.params.roomName;
-        console.log("Current room: " + this.roomID)
         if(confName == this.confName && roomID == this.roomID)
             return;
         if(this.loadingVideo)
             return;
-        console.log(this.loadingVideo)
         this.loadingVideo = true;
         this.confName = confName;
         this.roomID = roomID;
@@ -237,7 +235,7 @@ class VideoRoom extends Component {
 
         room = await this.props.authContext.helpers.populateMembers(room);
         console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
-        this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
+        // this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         let watchedByMe = false;
         if(this.props.authContext.userProfile.get("watchedRooms")){
             watchedByMe = this.props.authContext.userProfile.get("watchedRooms").find(v =>v.id ==room.id);
@@ -247,6 +245,12 @@ class VideoRoom extends Component {
         let user = this.props.authContext.user;
 
         if (user) {
+            this.props.authContext.chatClient.initChatClient(user, this.props.authContext.currentConference, this.props.authContext.userProfile).then(()=>{
+                console.log("Asking to open chat")
+                this.props.authContext.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
+                    console.log(chan);
+                })
+            });
             let idToken = user.getSessionToken();
             const data = fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
@@ -303,9 +307,17 @@ class VideoRoom extends Component {
             this.props.onHangup();
         }
         else{
+            if(this.props.history.length)
+                this.props.history.goBack();
+            else
+                this.props.history.push(ROUTES.LOBBY_SESSION);
+            // console.log(this.props.history)
+            // if(this.state.room.get("socialSpace")){
+            //     if(this.state.room.get("socialSpace").get("name") == "Lobby")
+            //         this.props.history.push(ROUTES.LOBBY_SESSION);
+            // }
             // console.log("Video room log out")
             this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null});
-            this.props.history.push(ROUTES.LOBBY_SESSION);
         }
     }
 

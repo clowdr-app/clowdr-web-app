@@ -51,6 +51,7 @@ class ProgramItem extends React.Component {
         if (!item) {
             this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
         } else {
+            let stateUpdate = {loading: false, error: null, programItem: item, inBreakoutRoom: false};
             if (user) {
                 if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
                     //set the social space...
@@ -66,10 +67,12 @@ class ProgramItem extends React.Component {
                             programItem: item.id
                         });
                     }
-                    this.props.auth.chatClient.openChatAndJoinIfNeeded(chatSID);
+                    if(chatSID)
+                        this.props.auth.chatClient.openChatAndJoinIfNeeded(chatSID);
+                    stateUpdate.chatSID = chatSID;
                 }
             }
-            this.setState({loading: false, error: null, programItem: item, inBreakoutRoom: false});
+            this.setState(stateUpdate);
         }
     }
 
