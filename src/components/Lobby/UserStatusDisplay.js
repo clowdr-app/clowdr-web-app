@@ -32,57 +32,56 @@ class UserStatusDisplay extends React.Component{
     render() {
         if (!this.state.profile)
             return <Skeleton.Input active style={{width: '100px', height: '1em'}}/>
-
-            let presenceDesc = "";
-            let badgeColor = "";
-            let badgeStyle = "success";
-            let dntWaiver = "";
-            if (!this.state.presence){
-                if(this.props.onlyShowWithPresence)
-                    return <div></div>
-                badgeStyle = "default";
-                presenceDesc = "Offline";
-            } else if (this.state.presence.get("isLookingForConversation")) {
-                presenceDesc = "Looking for conversation";
-                badgeColor = "green";
-                badgeStyle = "processing";
-            } else if (this.state.presence.get("isAvailable")) {
-                presenceDesc = "In a conversation: come join if you like";
-                badgeColor = "geekblue";
-            } else if (this.state.presence.get("isOpenToConversation")) {
-                presenceDesc = "Open to conversation";
-                badgeColor = "black";
-            } else if (this.state.presence.get("isDND")) {
-                presenceDesc = "Busy: do not disturb";
-                badgeColor = "orange";
-            } else if(this.state.presence.get("isDNT")){
-                presenceDesc = "Do not track"
-                badgeStyle = "default"
-                dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
-            }
-            let statusDesc = (this.state.presence ? <i>{this.state.presence.get("status")}</i> : <></>);
-            let onClick = ()=>{};
-            if(this.props.auth.userProfile.id != this.state.profile.id){
-                onClick = this.openDM.bind(this);
-            }
-            let popoverContent = <span></span>
-            if (this.props.popover)
-                return <div className="userDisplay" style={this.props.style} onClick={onClick}>
-                    <Popover title={this.state.profile.get("displayName") + " is " + presenceDesc}
-                             content={<div>{statusDesc} {dntWaiver}</div>}>
-                        <Badge status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Popover>
-                </div>
-            else return <div
-                key={this.state.profile.id}
-                className="userTag"
-                onClick={onClick}
-                title=
-                {dntWaiver}>
-                <Popover
-                    title={presenceDesc}
-                content={popoverContent}>
-                    <Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")} {statusDesc}</Popover>
+        let presenceDesc = "";
+        let badgeColor = "";
+        let badgeStyle = "success";
+        let dntWaiver = "";
+        if (!this.state.presence){
+            if(this.props.onlyShowWithPresence)
+                return <div></div>
+            badgeStyle = "default";
+            presenceDesc = "Offline";
+        } else if (this.state.presence.get("isLookingForConversation")) {
+            presenceDesc = "Looking for conversation";
+            badgeColor = "green";
+            badgeStyle = "processing";
+        } else if (this.state.presence.get("isAvailable")) {
+            presenceDesc = "In a conversation: come join if you like";
+            badgeColor = "geekblue";
+        } else if (this.state.presence.get("isOpenToConversation")) {
+            presenceDesc = "Open to conversation";
+            badgeColor = "black";
+        } else if (this.state.presence.get("isDND")) {
+            presenceDesc = "Busy: do not disturb";
+            badgeColor = "orange";
+        } else if(this.state.presence.get("isDNT")){
+            presenceDesc = "Do not track"
+            badgeStyle = "default"
+            dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
+        }
+        let statusDesc = (this.state.presence ? <i>{this.state.presence.get("status")}</i> : <></>);
+        let onClick = ()=>{};
+        if(this.props.auth.userProfile.id != this.state.profile.id){
+            onClick = this.openDM.bind(this);
+        }
+        let popoverContent = <span></span>
+        if (this.props.popover)
+            return <div className="userDisplay" style={this.props.style} onClick={onClick}>
+                <Popover title={this.state.profile.get("displayName") + " is " + presenceDesc}
+                         content={<div>{statusDesc} {dntWaiver}</div>}>
+                    <Badge status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Popover>
             </div>
+        else return <div
+            key={this.state.profile.id}
+            className="userTag"
+            onClick={onClick}
+            title=
+            {dntWaiver}>
+            <Popover
+                title={presenceDesc}
+            content={popoverContent}>
+                <Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")} {statusDesc}</Popover>
+        </div>
 
     }
 }
