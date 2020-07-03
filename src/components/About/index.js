@@ -30,7 +30,7 @@ class About extends Component {
                 but hiding your email from everyone. We need your email to provide single-signon support from Slack (which requires a paid workspace to
                 use OAuth). Moderators can access any room (including private rooms). We do not store any chat messages and do not record any video calls.
                 Twilio, however, keeps a record of the video rooms that you have been in and chat messages that you have sent (Twilio can only map
-                this information to your unique ID on Clowdr, and never gets your name or email).
+                this information to your unique ID on CLOWDR, and never gets your name or email).
                 Twilio treats this data as protected personal information, and guarantees destruction within 120 days.
                 Only the conference organizers have access to call logs.
             </p>

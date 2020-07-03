@@ -14,7 +14,7 @@ class Landing extends Component {
                     <li>This Web app, CLOWDR, where you can view all the <NavLink to="/live/now">live</NavLink> and <NavLink to ="/live/past">past</NavLink> sessions,
                         ask questions during the live talks, engage in session-specific and paper-specific chats, view the <NavLink to="/exhibits/icse-2020-poster/grid">posters</NavLink>,
                         the <NavLink to="/exhibits/icse-2020-ACM-Student-Research-Competition/grid">Student Research Competition</NavLink>, and the <NavLink to="/exhibits/Demonstrations/grid">demos</NavLink>,
-                        and talk to their authors, and meetup with peers in the <NavLink to="/lobby">Lobby</NavLink> for video chats.</li>
+                        and talk to their authors, and meet up with peers in the <NavLink to="/lobby">Video Chat</NavLink> rooms.</li>
                     <li>The ICSE 2020 Slack channel, where you can get <a href="https://icse-2020.slack.com/app_redirect?channel=help" rel="noopener noreferrer" target="_blank">#help</a>,
                         volunteer for <a href="https://icse-2020.slack.com/app_redirect?channel=mentoring" rel="noopener noreferrer" target="_blank">#mentoring</a>, and organize your own
                         coffee breaks or BYOB in <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.
@@ -28,13 +28,14 @@ class Landing extends Component {
                     Don't be shy about chatting during the talks: not only it will not be disruptive, but it will make the presenters feel the presence of the audience!
                 </li>
                 <li>Continue the conversation with the presenters by locating the papers in the Exhibit Hall, and using the paper-specific text channels.</li>
-                <li>If you are a presenter, consider starting a video chat in the <NavLink to="/lobby">Lobby</NavLink> right after your session, so others can talk to you.</li>
-                <li>If you are a senior member of the ICSE community, consider volunteering for one-on-one or small group mentoring sessions. Post your availability in 
+                <li>If you are a presenter, consider starting a video chat right after your session, so others can talk to you.</li>
+                <li>If you are a senior member of the ICSE community, consider volunteering for one-on-one or small group mentoring sessions. Post your availability in
                     the <a href="https://icse-2020.slack.com/app_redirect?channel=mentoring" rel="noopener noreferrer" target="_blank">#mentoring</a> channel in Slack,
-                    and meet up with younger people either in a video chat room in the <NavLink to="/lobby">Lobby</NavLink> or in your own video conference. 
+                    and meet up with younger people either in one of the existing video chat rooms or in your own video room.
                 </li>
-                <li>If you'd like to organize an informal public gathering, create one in the Lobby (give it a meaningful name), and announce it in 
+                <li>If you'd like to organize an informal public gathering, create one using the New Breakout Room button (please give it a meaningful name!), and announce it in 
                     the <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.</li>
+            <li> If you're just looking for casual conversation, feel free to drop into one of the hallway track rooms (Hallway 1, Hallway 2, ...) anytime. Or head to an empty Hallway room and see who else shows up.  You can also set your status to let people know what you're up to.</li>
             </ul>
             </div>
             <div><strong>Code of Conduct</strong>: Remember to adhere to
