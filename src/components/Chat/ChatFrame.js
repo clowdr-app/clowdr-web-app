@@ -489,7 +489,7 @@ class ChatFrame extends React.Component {
                                                       >
 
                                                               <div>
-                                                                  <UserStatusDisplay style={{display: "inline"}}
+                                                                  <UserStatusDisplay
                                                                                      popover={true}
                                                                                      profileID={item.author}/>&nbsp;
                                                                   <span

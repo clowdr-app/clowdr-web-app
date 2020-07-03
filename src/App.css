@@ -418,8 +418,14 @@ div.availabilityOptionsOpen  span.availabilityOption{
     flex-grow: 1;
     /*max-height: 2em;*/
 }
+.presenceDesc{
+
+}
 .bottomEmbeddedChatFrame{
 
+}
+.userPopover{
+    max-width: 250px;
 }
 .bottomChatIdentity{
     color: white;
