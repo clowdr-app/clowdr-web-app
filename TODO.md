@@ -2,6 +2,9 @@
 
 ## High-priority small things (for ICSE if possible)
 
+- Consider making the default status display look blank!!
+     - correct "is" when no status
+- Search for users and rooms (and delete from instructions)
 - Why is Jon's name not showing up in the sidebar??
 - Display people's status messages on the Lobby page (not just the popover)
      - also, put less whitespace on this page!
@@ -23,6 +26,10 @@
   have hover text
 - Rephrase the Report button hover-over text: "Report a user or ban them
   from this room" or something
+
+BCP-specific tasks:
+  - read about </Typography.Paragraph>
+  - <Space />
 
 ## Lower-priority small things (after ICSE)
 

@@ -42,24 +42,26 @@ class UserStatusDisplay extends React.Component{
             badgeStyle = "default";
             presenceDesc = "Offline";
         } else if (this.state.presence.get("isLookingForConversation")) {
-            presenceDesc = "Looking for conversation";
+            presenceDesc = "looking for conversation";
             badgeColor = "green";
             badgeStyle = "processing";
         } else if (this.state.presence.get("isAvailable")) {
-            presenceDesc = "In a conversation: come join if you like";
-            badgeColor = "geekblue";
+            // presenceDesc = "In a conversation: come join if you like";
+            presenceDesc = "";
+            badgeColor = "lightgray";
         } else if (this.state.presence.get("isOpenToConversation")) {
-            presenceDesc = "Open to conversation";
-            badgeColor = "black";
+            presenceDesc = "open to conversation";
+            badgeColor = "geekBlue";
         } else if (this.state.presence.get("isDND")) {
-            presenceDesc = "Busy: do not disturb";
+            presenceDesc = "busy: do not disturb";
             badgeColor = "orange";
         } else if (this.state.presence.get("isDNT")){
             presenceDesc = "Do not track"
             badgeStyle = "default"
             dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
         }
-        let statusDesc = (this.state.presence ? <i>{this.state.presence.get("status")}</i> : <></>);
+        // BCP: We should really do the italic styling and color in a style sheet!
+        let statusDesc = (this.state.presence ? <i><span style={{color:"gray"}}>{this.state.presence.get("status")}</span></i> : <></>);
         let onClick = ()=>{};
         if (this.props.auth.userProfile.id != this.state.profile.id){
             onClick = this.openDM.bind(this);
@@ -69,7 +71,9 @@ class UserStatusDisplay extends React.Component{
         if ("" + this.state.profile.get("affiliation") != "undefined") {
             affiliation = "" + this.state.profile.get("affiliation");
         }
-        let popoverTitle = this.state.profile.get("displayName") + " is " + presenceDesc;
+        let popoverTitle = this.state.profile.get("displayName");
+        if (presenceDesc != "")
+            popoverTitle = popoverTitle + " is " + presenceDesc;
         let webpage = "";
         if ("" + this.state.profile.get("webpage") != "undefined") {
             webpage = <div>
@@ -103,6 +107,7 @@ class UserStatusDisplay extends React.Component{
                           content={popoverContent} >
                     <Badge status={badgeStyle} color={badgeColor} />
                     {this.state.profile.get("displayName")}
+                    {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
                  </Popover>
               </div>
 /*
