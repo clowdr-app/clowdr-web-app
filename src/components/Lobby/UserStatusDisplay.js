@@ -54,35 +54,71 @@ class UserStatusDisplay extends React.Component{
         } else if (this.state.presence.get("isDND")) {
             presenceDesc = "Busy: do not disturb";
             badgeColor = "orange";
-        } else if(this.state.presence.get("isDNT")){
+        } else if (this.state.presence.get("isDNT")){
             presenceDesc = "Do not track"
             badgeStyle = "default"
             dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
         }
         let statusDesc = (this.state.presence ? <i>{this.state.presence.get("status")}</i> : <></>);
         let onClick = ()=>{};
-        if(this.props.auth.userProfile.id != this.state.profile.id){
+        if (this.props.auth.userProfile.id != this.state.profile.id){
             onClick = this.openDM.bind(this);
         }
+        let affiliation = "";
+        // This way of writing the tests is certainly suboptimal!
+        if ("" + this.state.profile.get("affiliation") != "undefined") {
+            affiliation = "" + this.state.profile.get("affiliation");
+        }
+        let popoverTitle = this.state.profile.get("displayName") + " is " + presenceDesc;
+        let webpage = "";
+        if ("" + this.state.profile.get("webpage") != "undefined") {
+            webpage = <div>
+                <a href={this.state.profile.get("webpage")} target="_blank">
+                    {this.state.profile.get("webpage")}</a>
+                </div>;
+        }
+        let bio = "";
+        if ("" + this.state.profile.get("bio") != "undefined") {
+            bio = <div>
+                {"" + this.state.profile.get("bio")}
+                </div>;
+        }
+        let tags = "";
+        if (this.state.profile.get("tags")) {
+            tags = this.state.profile.get("tags").toString;
+        }
+        // BCP: Not quite right -- needs some spaces after non-empty elements, and some vertical space after the first line if the whole first line is nonempty:
+        let firstLine = <div> {tags} {statusDesc} {dntWaiver} </div>;
+        // BCP: And this needs a bit more vertical spacing between non-empty elements too:
+        let popoverContent = <div> {firstLine} {affiliation} {bio} {webpage} </div>;
+/*
         let popoverContent = <span></span>
+        // BCP: Not clear to me why we treat these popovers differently
+        // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
-            return <div className="userDisplay" style={this.props.style} onClick={onClick}>
-                <Popover title={this.state.profile.get("displayName") + " is " + presenceDesc}
-                         content={<div>{statusDesc} {dntWaiver}</div>}>
-                    <Badge status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Popover>
-            </div>
-        else return <div
-            key={this.state.profile.id}
-            className="userTag"
-            onClick={onClick}
-            title=
-            {dntWaiver}>
-            <Popover
-                title={presenceDesc}
+*/
+        return <div className="userDisplay" style={this.props.style}
+                    onClick={onClick}>
+                 <Popover title={popoverTitle}
+                          content={popoverContent} >
+                    <Badge status={badgeStyle} color={badgeColor} />
+                    {this.state.profile.get("displayName")}
+                 </Popover>
+              </div>
+/*
+    else return <div
+        key={this.state.profile.id}
+        className="userTag"
+        onClick={onClick}
+        title=
+        {dntWaiver}>
+        <Popover
+            title={presenceDesc}
             content={popoverContent}>
-                <Badge  status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")} {statusDesc}</Popover>
-        </div>
-
+        <Badge  status={badgeStyle} color={badgeColor} />
+           {this.state.profile.get("displayName")} {statusDesc}</Popover>
+    </div>
+*/
     }
 }
 
