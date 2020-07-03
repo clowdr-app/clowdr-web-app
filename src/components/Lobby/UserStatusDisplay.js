@@ -20,11 +20,18 @@ class UserStatusDisplay extends React.Component{
         this.setState({profile: profile, presence: userStatus})
     }
 
+    componentWillUnmount() {
+        this.mounted = false;
+    }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!this.mounted)
+            return;
         if(this.props.auth.presences[this.state.id] != this.state.presence){
             this.setState({presence: this.props.auth.presences[this.state.id]});
         }
     }
+    
     openDM(){
         this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
