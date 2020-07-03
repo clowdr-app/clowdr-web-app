@@ -2,6 +2,7 @@
 
 ## High-priority small things (for ICSE if possible)
 
+- Display people's status messages on the Lobby page
 - Synchronize this file with GitHub planning area
 - Documentation
     - people also wondered what kind of web analytics is happening when you're
