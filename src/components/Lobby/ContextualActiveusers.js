@@ -396,7 +396,7 @@ class ContextualActiveUsers extends Component {
 
                 </div>
 
-                <Divider className="social-sidebar-divider"><Tooltip title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room (e.g. lobby)">Chats</Tooltip></Divider>
+                <Divider className="social-sidebar-divider"><Tooltip title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room">Chats</Tooltip></Divider>
                 <Menu mode="inline"
                       className="activeRoomsList"
                     // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
