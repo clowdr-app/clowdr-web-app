@@ -136,7 +136,7 @@ class PresenceForm extends React.Component {
         if(!this.state.presence)
             return <Skeleton.Input />
         return <div>
-            <Divider>My Availability</Divider>
+            My status:
             <Form layout="inline"
                   ref={this.form}
                   id="statusForm"
@@ -164,9 +164,9 @@ class PresenceForm extends React.Component {
             {/* BCP: Not sure I got this quite right -- I'm not certain what status="processing" does... */}
                 <Select.Option value="isLookingForConversation"><Badge status="processing" color="green" /><span className="availabilityOption">Looking for conversation</span></Select.Option>
                 <Select.Option value="isOpenToConversation"><Badge color="black" /><span className="availabilityOption">Open to conversation</span></Select.Option>
-                <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation; come
+            <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation: come
                     join if you like</span></Select.Option>
-                <Select.Option value="isDND"><Badge color="orange"/><span className="availabilityOption">Busy / do not disturb</span></Select.Option>
+            <Select.Option value="isDND"><Badge color="orange"/><span className="availabilityOption">Busy: do not disturb</span></Select.Option>
                 <Select.Option value="isDNT"><Badge status="default"/><span className="availabilityOption">Do not show others
                     my presence/status</span></Select.Option>
 

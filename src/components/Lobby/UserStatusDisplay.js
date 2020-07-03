@@ -37,24 +37,23 @@ class UserStatusDisplay extends React.Component{
             let badgeColor = "";
             let badgeStyle = "success";
             let dntWaiver = "";
-            if(!this.state.presence){
+            if (!this.state.presence){
                 if(this.props.onlyShowWithPresence)
                     return <div></div>
                 badgeStyle = "default";
                 presenceDesc = "Offline";
-            }
-            else if (this.state.presence.get("isLookingForConversation")) {
+            } else if (this.state.presence.get("isLookingForConversation")) {
                 presenceDesc = "Looking for conversation";
                 badgeColor = "green";
                 badgeStyle = "processing";
             } else if (this.state.presence.get("isAvailable")) {
-                presenceDesc = "In a conversation; come join if you like";
+                presenceDesc = "In a conversation: come join if you like";
                 badgeColor = "geekblue";
             } else if (this.state.presence.get("isOpenToConversation")) {
                 presenceDesc = "Open to conversation";
                 badgeColor = "black";
             } else if (this.state.presence.get("isDND")) {
-                presenceDesc = "Busy / do not disturb";
+                presenceDesc = "Busy: do not disturb";
                 badgeColor = "orange";
             } else if(this.state.presence.get("isDNT")){
                 presenceDesc = "Do not track"
@@ -69,7 +68,7 @@ class UserStatusDisplay extends React.Component{
             let popoverContent = <span></span>
             if (this.props.popover)
                 return <div className="userDisplay" style={this.props.style} onClick={onClick}>
-                    <Popover title={this.state.profile.get("displayName") + "'s availability is: " + presenceDesc}
+                    <Popover title={this.state.profile.get("displayName") + " is " + presenceDesc}
                              content={<div>{statusDesc} {dntWaiver}</div>}>
                         <Badge status={badgeStyle} color={badgeColor} /> {this.state.profile.get("displayName")}</Popover>
                 </div>
