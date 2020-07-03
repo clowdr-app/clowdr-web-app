@@ -2,8 +2,10 @@
 
 ## High-priority small things (for ICSE if possible)
 
-- Consider making the default status display look blank!!
-     - correct "is" when no status
+- Try more tweaking on status coloring!!
+     - Default status color is black
+     - Busy status color is gray
+     - Names appear in gray too when busy
 - Search for users and rooms (and delete from instructions)
 - Why is Jon's name not showing up in the sidebar??
 - Display people's status messages on the Lobby page (not just the popover)
