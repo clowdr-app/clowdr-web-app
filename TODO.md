@@ -2,6 +2,7 @@
 
 ## High-priority small things (for ICSE if possible)
 
+- Why is Jon's name not showing up in the sidebar??
 - Display people's status messages on the Lobby page (not just the popover)
      - also, put less whitespace on this page!
 - Synchronize this file with GitHub planning area
