@@ -76,16 +76,39 @@ class SlackToVideo extends React.Component {
         this.props.authContext.user.set("passwordSet",true);
         await this.props.authContext.user.save();
         this.setState({updating: false, step: 2});
+    }
+    async resendInvitation(){
+        this.setState({resendingInvitation: true})
+        try{
+            let userID = this.props.match.params.userID;
+            let res = await Parse.Cloud.run("login-resendInvite", {
+                userID: userID,
+                confID: process.env.REACT_APP_DEFAULT_CONFERENCE
 
+            });
+        }catch(err){
+            console.log(err);
+            this.setState({error: err.toString(), unableToSend: true});
+        }
+        this.setState({resendingInvitation: false, invitationSent: true})
     }
 
     render() {
         if (this.state.error) {
-            return <Alert message="Invalid magic link." description={this.state.error} type="error"/>
+            let button = <div>Sign up links expire after one click. <Button onClick={this.resendInvitation.bind(this)}
+                                                                            type="primary"
+                                                                            disabled={this.state.invitationSent}
+                                                                            loading={this.state.resendingInvitation}>{this.state.invitationSent ? "Sign-up link resent, please check your email" : "Request a new magic link"}</Button>
+            </div>
+            if (this.state.unableToSend)
+                button = <></>
+            return <div><Alert message="Invalid magic link." description={this.state.error} type="error"/>
+                {button}
+            </div>
         }
-        const antIcon = <LoadingOutlined color="white" style={{ fontSize: 96 }} spin />;
+        const antIcon = <LoadingOutlined color="white" style={{fontSize: 96}} spin/>;
 
-        if(this.props.authContext.user){
+        if (this.props.authContext.user) {
             let action = <></>
             if(this.state.step == 1){
                 let password1Rules = [

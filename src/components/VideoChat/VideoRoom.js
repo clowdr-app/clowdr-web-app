@@ -68,14 +68,13 @@ class VideoRoom extends Component {
 
     componentWillUnmount() {
         console.log("Unmounting video room")
-        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null });
+        this.props.authContext.helpers.setGlobalState({currentRoom: null});
     }
     async joinCallFromProps(){
         if (!this.props.match) {
             return;
         }
-
-        if(!this.props.authContext.user || this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName")){
+        if(!this.props.authContext.user || (this.props.match.params.conf && this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName"))){
             this.props.authContext.refreshUser(this.props.match.params.conf).then((u)=>{
                 this.joinCallFromPropsWithCurrentUser()
             })
@@ -161,13 +160,15 @@ class VideoRoom extends Component {
         })
     }
     async joinCallFromPropsWithCurrentUser() {
+        console.log("Joining")
 
         if (!this.props.match) {
             return;
         }
         let confName = this.props.match.params.conf;
         let roomID = this.props.match.params.roomName;
-        if(confName == this.confName && roomID == this.roomID)
+        let parseRoomID = this.props.match.params.parseRoomID;
+        if(confName && (confName == this.confName && roomID == this.roomID))
             return;
         if(this.loadingVideo)
             return;
@@ -179,15 +180,21 @@ class VideoRoom extends Component {
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
         let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 
-        let slackQuery = new Parse.Query(ClowdrInstance);
-        slackQuery.equalTo("conferenceName", confName)
-        let roomQuery = new Parse.Query(BreakoutRoom);
-        roomQuery.matchesQuery("conference", slackQuery)
-        roomQuery.equalTo("title", roomID);
-        roomQuery.include("members");
-        roomQuery.include("conference");
+        let room;
+        if(parseRoomID){
+            let roomQuery = new Parse.Query(BreakoutRoom);
+            room = await roomQuery.get(parseRoomID);
+        }else{
+            let slackQuery = new Parse.Query(ClowdrInstance);
+            slackQuery.equalTo("conferenceName", confName)
+            let roomQuery= new Parse.Query(BreakoutRoom);
+            roomQuery.matchesQuery("conference", slackQuery)
+            roomQuery.equalTo("title", roomID);
+            roomQuery.include("members");
+            roomQuery.include("conference");
+            room = await roomQuery.first();
+        }
 
-        let room = await roomQuery.first();
         if (!room) {
             this.setState({error: "invalidRoom"})
             this.loadingVideo = false;
@@ -245,10 +252,9 @@ class VideoRoom extends Component {
         let user = this.props.authContext.user;
 
         if (user) {
+            if(room.get("twilioChatID"))
             this.props.authContext.chatClient.initChatClient(user, this.props.authContext.currentConference, this.props.authContext.userProfile).then(()=>{
-                console.log("Asking to open chat")
                 this.props.authContext.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
-                    console.log(chan);
                 })
             });
             let idToken = user.getSessionToken();
@@ -303,21 +309,11 @@ class VideoRoom extends Component {
     }
 
     handleLogout() {
-        if(this.props.onHangup){
+        if (this.props.onHangup) {
             this.props.onHangup();
-        }
-        else{
-            if(this.props.history.length)
-                this.props.history.goBack();
-            else
-                this.props.history.push(ROUTES.LOBBY_SESSION);
-            // console.log(this.props.history)
-            // if(this.state.room.get("socialSpace")){
-            //     if(this.state.room.get("socialSpace").get("name") == "Lobby")
-            //         this.props.history.push(ROUTES.LOBBY_SESSION);
-            // }
-            // console.log("Video room log out")
-            this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null});
+        } else {
+            this.props.history.push(ROUTES.LOBBY_SESSION);
+            this.props.authContext.helpers.setGlobalState({currentRoom: null});
         }
     }
 
@@ -331,7 +327,6 @@ class VideoRoom extends Component {
                 let roomID = this.props.match.params.roomName;
                 if((confName != this.confName || roomID != this.roomID) &&(!this.state.error || this.roomID != roomID))
                 {
-                    console.log("Clearing state...")
                     this.confName = null;
                     this.roomID = null;
                     this.setState({conf: conf, meetingName: roomID, token: null, error: null});

@@ -146,6 +146,57 @@ Parse.Cloud.define("login-fromToken", async (request) => {
 
 });
 
+Parse.Cloud.define("login-resendInvite", async (request) => {
+    let userID = request.params.userID;
+    let userQ = new Parse.Query(Parse.User);
+    let confID = request.params.confID;
+    let confQ = new Parse.Query(ClowdrInstance);
+    confQ.equalTo("conferenceName", confID);
+    let conf = await confQ.first();
+
+    let user = await userQ.get(userID, {useMasterKey: true});
+    if (!user.get("passwordSet")) {
+        if(!user.get("loginKey")){
+            let authKey = await generateRandomString(48);
+            user.set("loginKey", authKey);
+            user.set("loginExpires", moment().add("60", "days").toDate());
+            await user.save({},{useMasterKey: true})
+        }
+        var fromEmail = new sgMail.Email('welcome@clowdr.org');
+        let config = await getConferenceInfoForMailer(conf);
+
+        let instructionsText = "The link below will let you set a password and finish creating your account " +
+            "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + conf.id + "/" + user.get("loginKey"));
+
+        var toEmail = new sgMail.Email(user.get("email"));
+        var subject = 'Account signup link for ' + config.conference.get("conferenceName");
+        var content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayname") + ",\n" +
+            config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
+            "The Clowdr app will organize the conference program, live sessions, networking, and more. "
+            + instructionsText + "\n\n" +
+            "Please note that Chrome, Safari and Edge provide the best compatability with CLOWDR. We are working to improve " +
+            "compatability with other browsers and to continue to add new features to the platform\n\n" +
+            "If you have any problems accessing the conference site, please reply to this email.\n\n" +
+            "Best regards,\n" +
+            "Your Virtual " + config.conference.get("conferenceName") + " team");
+        var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
+
+        var sg = require('sendgrid')(config.sendgrid);
+        var request = sg.emptyRequest({
+            method: 'POST',
+            path: '/v3/mail/send',
+            body: mail.toJSON()
+        });
+        sg.API(request);
+
+        return {
+            status: "OK"
+        };
+    } else {
+        throw "Your account has already been set up. Please sign in with your email and password.";
+    }
+
+});
 Parse.Cloud.define("reset-password", async (request) => {
     let email = request.params.email;
     let confID = request.params.confID;
