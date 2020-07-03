@@ -24,13 +24,14 @@ function validateEmail(email) {
 class Registrations extends React.Component {
     constructor(props) {
         super(props); // has props.auth
-        console.log("Registrations starting " + this.props);
+        console.log("Registrations starting " );
         this.state = {
             loading: true, 
-            regs: []
+            regs: [],
+            filteredRegs : []
         };
         this.currentConference = props.auth.currentConference;
-        console.log("Current conference is " + this.currentConference);
+        console.log("Current conference is " + this.currentConference.get("conferenceName"));
     }
 
     onChange(info) {
@@ -61,8 +62,13 @@ class Registrations extends React.Component {
             reg.set("affiliation", values.affiliation);
             reg.set("country", values.country);
             reg.save().then((val) => {
-                _this.setState({visible: false})
-                _this.refreshList();
+                // Make local changes
+                let newRegs = this.state.regs.unshift(reg);
+                _this.setState({
+                    visible: false,
+                    regs: newRegs,
+                    filteredRegs: newRegs
+                });
             }).catch(err => {
                 console.log(err + " " + reg.id);
             });
@@ -74,7 +80,7 @@ class Registrations extends React.Component {
     }
 
     componentDidMount() {
-        this.refreshList();
+        this.download();
     }
 
     beforeUpload(file, fileList) {
@@ -87,26 +93,31 @@ class Registrations extends React.Component {
         return false;
     } 
 
-    refreshList(value) {
+    download() {
         let query = new Parse.Query("Registration");
         query.equalTo("conference", this.props.auth.currentConference.id);
-        // if (value) { // THIS DOESN"T WANT TO WORK
-        //     query.greaterThan('createdAt', Date.parse(value.startTime));
-        // }
         query.addDescending("updatedAt")
         query.limit(10000);
         query.find().then(res => {
-            let regs = res;
-            if (value)
-            {
-                regs = res.filter(r => r.get("createdAt") >= value.startTime)
-                console.log('Filtering ' + regs.length);
-            }
             this.setState({
-                regs: regs,
+                regs: res,
+                filteredRegs: res,
                 loading: false
             });
         }).catch(err => console.log('[Registration]: error: ' + err));
+    }
+
+    refreshList(value) {
+        let regs = this.state.regs;
+        if (value)
+        {
+            regs = regs.filter(r => r.get("createdAt") >= value.startTime)
+            console.log('Filtering ' + regs.length);
+        }
+        this.setState({
+            filteredRegs: regs,
+            loading: false
+        });
     }
 
     componentWillUnmount() {
@@ -132,10 +143,10 @@ class Registrations extends React.Component {
             this.setState({sending: true})
             await Parse.Cloud.run("registrations-inviteUser", {
                 conference: this.currentConference.id,
-                registrations: this.state.regs.map(r => r.id)
+                registrations: this.state.filteredRegs.map(r => r.id)
             });
+            console.log('REAL SEND TO ' + this.state.filteredRegs.length)
             this.setState({sending: false})
-            this.refreshList();
         }catch(err){
             console.log(err);
         }
@@ -256,11 +267,11 @@ class Registrations extends React.Component {
                         </tr>
                         <tr>
                             <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-                            <td style={{"textAlign":"right"}}>Current filter: {this.state.regs.length}</td>
+                                    <td style={{"textAlign":"right"}}>Current filter: {this.state.filteredRegs.length} / {this.state.regs.length}</td>
                         </tr>
                     </tbody>
                 </table>
-            <Table columns={columns} dataSource={this.state.regs} rowKey={(r)=>(r.id)} pagination={false} />
+            <Table columns={columns} dataSource={this.state.filteredRegs} rowKey={(r)=>(r.id)} pagination={false} />
         </div>
     }
 

@@ -47,12 +47,20 @@ function addRow(row, conferenceID, existing, toSave) {
             if (!existing.find(r => r.get("email") == row.email)) {
                 var Registration = Parse.Object.extend("Registration");
                 var reg = new Registration();
+                // Two required fields: email and conference ID
                 reg.set("email", row.email);
-                reg.set("name", row["first"] + " " + row["last"]);
-                reg.set("passcode", row.code);
-                reg.set("affiliation", row.affiliation);
-                reg.set("country", row.country);
                 reg.set("conference", conferenceID);
+                // Everything else is optional
+                if (row.first && row.last)
+                    reg.set("name", row.first + " " + row.last);
+                else if (row.name)
+                    reg.set("name", row.name);
+                if (row.code)
+                    reg.set("passcode", row.code);
+                if (row.affiliation) 
+                    reg.set("affiliation", row.affiliation);
+                if (row.country)
+                    reg.set("country", row.country);
                 toSave.push(reg);
             }
             else
