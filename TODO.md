@@ -1,26 +1,96 @@
-# High-priority small things (for ICSE if possible)
+# Things to do
 
+## High-priority small things (for ICSE if possible)
+
+- How to print stuff
+- How to make JS comments
+- Integrate user profiles
+- Put the sidebar user list back to most-recent-first
+- Documentation
+    - people also wondered what kind of web analytics is happening when you're
+      running this in your browser
+- Synchronize this file with GitHub planning area
+- make hover text show up after a short delay (1/2 second?)
 - Make the default status be isOpenToConversation, not isLookingForConversation
 - The pop-up for someone's name in the lobby does not include their textual
   status (or profile); the one on the left sidebar does
+- If I close the chat box for the room that I'm in, how do I get it back
+  (e.g., to post something)?
+- add hover text for the maximize and other buttons -- make sure all buttons
+  have hover text
+- Rephrase the Report button hover-over text: "Report a user or ban them
+  from this room" or something
 
-# Lower-priority small things (after ICSE)
+
+## Lower-priority small things (after ICSE)
+
+- Consider (optionally) sorting participant list by
+    - whether I've designated them as a friend
+    - their topics / research interests
+    - do they want to be visible at all
+- room lists could be sorted the same way, BTW -- or, e.g., color all the
+  type theory people green, and show green dots on the rooms where they are
+  hanging out
+
+- What about a button to make a public room temporarily private (and then it goes
+  back to public when everybody leaves)
+
+- layout nit: Put video on the very top of the screen, near the camera!
+
+- if we added a couple of small features to a slack-like chat channel,
+  maybe we could get away without slido.
+     - Thumbs-up button (like slack)
+     - This-is-a-question-for-the-speaker button
+     - Display only questions from this channel, sorted by
+       most-thumbs-first.
 
 - dntWaiver = "Only you can see this status. Others will still see your
   presence in public rooms, but won't see a status" -- ... But this is the
   only status that will be displayed as blank, so won't people be able to
   infer it?
+
 - Try to rename the "End call" button to "Back to lobby"
+
 - need to think about screen real estate on small (laptop, ipad) screens --
   e.g.
        - the title bar across the top uses a lot of space
        - the "live questions to the speakers" goes entirely off the bottom
+
 - The pop-up for someone's name in the lobby does not include their textual
   status (or profile); the one on the left sidebar does
+
 - presenceDesc = "In a conversation; come join if you like"; -- have we made
   it possible / obvious how to go to where someone else is??
 
-# Design notes for "take me someplace random"
+- should there be a visual indication of which rooms are small/large/P2P?
+
+## Larger things to think about post-ICSE
+
+- integration with Researchr for #LIVE "go to what's happening now"
+
+- What about watching multiple channels at the same time?
+
+- Mobile friendliness
+- Logging in from multiple devices??
+
+- Implement Jon's "Post a 'come to me' button in a chat" feature
+
+- What about live captioning (as an eventual feature).
+
+- should chat logs be logged somewhere so that, for example, allegations of
+  misconduct can be investigated?  (Or should there be, for example, an
+  option to include the chat log in what gets sent to a moderator? or?)
+  More generally, what information do moderators need to do their job?
+
+## Random fun features
+
+- Snarky reviewer #3 bots
+
+
+# --------------------------------------------------
+# Design notes
+
+## Design alternatives for "take me someplace random"
 
 manual version:
   - Lobby session has ten (or more, if we want) breakout rooms, named
@@ -39,7 +109,28 @@ almost manual version:
     rooms with this label (that does not have more than four people in it
     right now).
 
-# Notes from SCW
+## Thoughts about Sli.do
+
+- First question: How hard would it be to include Sli.do functionality in
+  the talk chat?  I think we'd need, at at minimum, (1) to be able to add an
+  annotation to a post marking it as a question for the speaker, (2) a way
+  for other people to "upvote" questions (by adding a thumbs up or
+  something), and (3) a way for session hosts (and maybe everybody) to
+  filter and sort posts to see only questions.
+
+  However, having said this, I am actually beginning to wonder whether we
+  need this sort of functionality at all in Clowdr.  After all, the plan (at
+  least for ICSE, I believe) is to have essentially all the talks
+  pre-recorded.  So authors themselves are going to be watching the chat
+  stream and either they or session chairs can choose which questions and
+  comments to respond to live.
+
+  To make the platform flexible, we may well want to support easy
+  integration with sli.do and other such tools, but perhaps this is as easy
+  as a generic "embed such-and-such URL in an iframe when this talk is going
+  on."
+
+## Design ideas from SCW
 
 Just talking with Richard and he mentioned two ideas for Clowdr:
 
@@ -55,7 +146,7 @@ Just talking with Richard and he mentioned two ideas for Clowdr:
   question needs to join the queue and wait for their turn. Any number of
   people can observe the discussion
 
-# Notes from / PLMW debrief
+## Design notes from / PLMW debrief
 
 - Lots of disagreement about whether lurking is a good thing.  Roopsha
   observed that shy people may have a lot of trouble goijng from lurking to
@@ -90,176 +181,7 @@ Just talking with Richard and he mentioned two ideas for Clowdr:
   third-party scheduling tool that we could integrate... Surely this is a
   common problem?
 
-- What about live captioning (as an eventual feature).
-
-___________
-
-More comments from the SPLASH SC meeting
-
-- With a little more thought, the interaction issues seem solvable.
-
-- The 1-1 mentoring part of PLDI was great.
-
-- Eelco really enjoyed his tutorial after PLDI!
-
-_______________
-More notes:
-  - a button to make a public room temporarily private (and then it goes
-    back to public when everybody leaves)
-
-  - layout nit: Put video on the very top of the screen, near the camera!
-
-  - if we added a couple of small features to a slack-like chat channel,
-    maybe we could get away without slido.
-       - Thumbs-up button (like slack)
-       - This-is-a-question-for-the-speaker button
-       - Display only questions from this channel, sorted by
-         most-thumbs-first.
-
-
-# Ideas for short-term tasks
-
-- First question: How hard would it be to include Sli.do functionality in
-  the talk chat?  I think we'd need, at at minimum, (1) to be able to add an
-  annotation to a post marking it as a question for the speaker, (2) a way
-  for other people to "upvote" questions (by adding a thumbs up or
-  something), and (3) a way for session hosts (and maybe everybody) to
-  filter and sort posts to see only questions.
-
-  However, having said this, I am actually beginning to wonder whether we
-  need this sort of functionality at all in Clowdr.  After all, the plan (at
-  least for ICSE, I believe) is to have essentially all the talks
-  pre-recorded.  So authors themselves are going to be watching the chat
-  stream and either they or session chairs can choose which questions and
-  comments to respond to live.
-
-  To make the platform flexible, we may well want to support easy
-  integration with sli.do and other such tools, but perhaps this is as easy
-  as a generic "embed such-and-such URL in an iframe when this talk is going
-  on."
-
-- "raise hand" feature for talks?
-
-- should chat logs be logged somewhere so that, for example, allegations of
-  misconduct can be investigated?  (Or should there be, for example, an
-  option to include the chat log in what gets sent to a moderator? or?)
-  More generally, what information do moderators need to do their job?
-
-- should rooms have "owners" or "moderators" who can do things like mute
-  participants?
-
-- should there be a visual indication of which rooms are small/large/P2P?
-
-- What does "Lobby Session" mean and why are we spending so much screen real
-  estate on it. :-)
-
-- Make the “lobby session” channels also show up in the slack-like
-  interface.  So people can discover them that way too.
-
-- Rephrase the Report button hover-over text: "Report a user or ban them
-  from this room" or something
-- add hover text for the maximize and other buttons
-
-- add an option to invite people into channels
-
-- integration with Researchr for #LIVE "go to what's happening now"
-
-- What about watching multiple channels at the same time?
-
-- Mobile friendliness??
-
-- Logging in from multiple devices??
-
-- Sorting participant list by
-    - whether I've designated them as a friend
-    - their topics / research interests
-    - do they want to be visible at all
-- room lists could be sorted the same way, BTW -- or, e.g., color all the
-  type theory people green, and show green dots on the rooms where they are
-  hanging out
-
-- make max people in room be a parameter when you create the room (maybe
-  correlated with what type of room)
-
-- people also wondered what kind of web analytics is happening when you're
-  running this in your browser
-
-# Notes and observatoons from PLDI 2020
-
-- Slack is problematic for structuring discussion about many talks: e.g. for
-  REMS-DeepSpec, there was one slack channel and the organizers sent a
-  message for each talk, which people were asked to use to ask questions.
-  This worked sort-of OK, but as the day wore on it became increasingly hard
-  to find the pinned talk threads.
-
-- In the top-level Lobby view, each room says "No data" under the title.
-
-- It's a bit weird to arrive at an empty room and notice that I can view the
-  transcript of earlier conversations in that space in the chat. The video
-  and chat modalities raise conflicting expectations.
-
-- Using a Slack DM to get someone's attention in Clowdr doesn't always work
-  very well!  More generally, there is (expectedly) a big problem with focus
-  of attention!
-
-- It would be so helpful to have a timezone converter constantly visible
-  (e.g., a little clock in the corner displaying the current time in the
-  "conference timezone").  Yes, people can set up their own, but I think it
-  might also help lend a sense of cohesion to the program.
-
-# Notes from the 6/12 stress test
-
-- Change "Not following" to "Follow"
-
-- Names don't display for audio-only participants
-
-- Sound quality is not fantastic -- lots of crackling, distortion, dropouts,
-  etc.  (Zoom has spoiled us, I'm afraid.)  Also, the "speaker override"
-  feature seems quite heavy. Rooms with very many people did not work well.
-
-- When I join a room I seem to get a huge dump of notifications for that
-  room.
-
-- The activity notification is way too distracting
-
-- GUI jumps all over the place when people come and go.  And I think the
-  sound disruptions tend to happen then too.
-
-- Room contents in the list on the left should definitely be minimized by
-  default
-
-- We need a way of garbage collecting persistent rooms; otherwise there are
-  going to be hundreds of them!
-
-- I wasn't sure what the connection quality indicator meant.  Maybe we
-  should try to use the semi-circular wifi icon?
-
-- People with bad connections sounded _WAY_ worse than they do on Zoom.
-
-- Lots of people got the Insufficient Bandwidth thing
-
-- Could not figure out how to get back to the top-level lobby (with all the
-  rooms displayed in the middle of the screen) except at the very beginning
-  when I arrive from slack.  (And why didn't I arrive in the foo room if I
-  said "/video foo" to slack?)
-
-- The current speaker should be identified visually (especially if they are
-  audio-only).
-
-- Different aspect-ratio videos get displayed in different size thumbnails
-  (this is distracting)
-
-- What's the recommended procedure for creating a new room and inviting
-  someone to go there.
-
-- maybe we can make the little photo thumbnails smaller to conserve vertical
-  real estate when the list of rooms and people in rooms gets longer?
-
-# Random fun features
-
-- Snarky reviewer #3 bots
-
-# Design notes and conversations
+## Further design notes and conversations
 
 - There could be multiple ways of using user profile / list of topics /
   micro-CV information. The obvious one is for search: show a score next to
@@ -332,9 +254,83 @@ More notes:
   also visible (to all), but a bit grayed out (or smaller, or something),
   and not audible.
 
-# Notes on other systems
 
-## Gather / Online town
+# --------------------------------------------------
+# Miscellaneous notes
+## Notes and observations from PLDI 2020
+
+- Slack is problematic for structuring discussion about many talks: e.g. for
+  REMS-DeepSpec, there was one slack channel and the organizers sent a
+  message for each talk, which people were asked to use to ask questions.
+  This worked sort-of OK, but as the day wore on it became increasingly hard
+  to find the pinned talk threads.
+
+- In the top-level Lobby view, each room says "No data" under the title.
+
+- It's a bit weird to arrive at an empty room and notice that I can view the
+  transcript of earlier conversations in that space in the chat. The video
+  and chat modalities raise conflicting expectations.
+
+- Using a Slack DM to get someone's attention in Clowdr doesn't always work
+  very well!  More generally, there is (expectedly) a big problem with focus
+  of attention!
+
+- It would be so helpful to have a timezone converter constantly visible
+  (e.g., a little clock in the corner displaying the current time in the
+  "conference timezone").  Yes, people can set up their own, but I think it
+  might also help lend a sense of cohesion to the program.
+
+## Notes from the 6/12 stress test
+
+- Change "Not following" to "Follow"
+
+- Names don't display for audio-only participants
+
+- Sound quality is not fantastic -- lots of crackling, distortion, dropouts,
+  etc.  (Zoom has spoiled us, I'm afraid.)  Also, the "speaker override"
+  feature seems quite heavy. Rooms with very many people did not work well.
+
+- When I join a room I seem to get a huge dump of notifications for that
+  room.
+
+- The activity notification is way too distracting
+
+- GUI jumps all over the place when people come and go.  And I think the
+  sound disruptions tend to happen then too.
+
+- Room contents in the list on the left should definitely be minimized by
+  default
+
+- We need a way of garbage collecting persistent rooms; otherwise there are
+  going to be hundreds of them!
+
+- I wasn't sure what the connection quality indicator meant.  Maybe we
+  should try to use the semi-circular wifi icon?
+
+- People with bad connections sounded _WAY_ worse than they do on Zoom.
+
+- Lots of people got the Insufficient Bandwidth thing
+
+- Could not figure out how to get back to the top-level lobby (with all the
+  rooms displayed in the middle of the screen) except at the very beginning
+  when I arrive from slack.  (And why didn't I arrive in the foo room if I
+  said "/video foo" to slack?)
+
+- The current speaker should be identified visually (especially if they are
+  audio-only).
+
+- Different aspect-ratio videos get displayed in different size thumbnails
+  (this is distracting)
+
+- What's the recommended procedure for creating a new room and inviting
+  someone to go there.
+
+- maybe we can make the little photo thumbnails smaller to conserve vertical
+  real estate when the list of rooms and people in rooms gets longer?
+
+## Notes on other systems
+
+### Gather / Online town
 
 This seems very preliminary!  They seem full of ideas, but not ready for
 prime time.
