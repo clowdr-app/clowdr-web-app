@@ -2,14 +2,14 @@
 
 ## High-priority small things (for ICSE if possible)
 
-- How to print stuff
-- How to make JS comments
-- Integrate user profiles
-- Put the sidebar user list back to most-recent-first
+- Synchronize this file with GitHub planning area
 - Documentation
     - people also wondered what kind of web analytics is happening when you're
       running this in your browser
-- Synchronize this file with GitHub planning area
+- Finish integrating user profiles
+     - Avatars
+     - Tags / flairs
+- Put the sidebar user list back to most-recent-first
 - make hover text show up after a short delay (1/2 second?)
 - Make the default status be isOpenToConversation, not isLookingForConversation
 - The pop-up for someone's name in the lobby does not include their textual
@@ -20,7 +20,6 @@
   have hover text
 - Rephrase the Report button hover-over text: "Report a user or ban them
   from this room" or something
-
 
 ## Lower-priority small things (after ICSE)
 
