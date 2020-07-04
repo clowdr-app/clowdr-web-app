@@ -30,6 +30,7 @@
   from this room" or something
 
 BCP-specific tasks:
+  - remove # files from commits!
   - read about </Typography.Paragraph>
   - <Space />
 
