@@ -2,24 +2,30 @@
 
 ## High-priority small things (for ICSE if possible)
 
-- Documentation
+Highest priority:
+    - Documentation
+         - keep writing!
+    - More work on user profile display
+         - Make avatar display larger!?
+         - visually distinguish the parts of the profile popup
+    - Make max width of the the sidebar larger, so that people can expand it
+      when they're using it to view the slido
+    - Did we implement the "mute someone else's mic" feature?  Seems important!
+    - Who can delete rooms (e.g., can BCP?)
 
-- Did we implement the "mute someone else's mic" feature?  Seems important!
+Little UI things
+    - Put the sidebar user list back to most-recent-first
+    - Change number of columns in lobby display depending on screen size
+      (implemented, but needs to be checked with several different sizes)
+    - make sure all controls have hover text
+    - make all popovers take .5 seconds to appear
 
-- More work on user profile display
-     - Make avatar display larger!?
-     - visually distinguish the parts of the profile popup
+- Design issues
+    - I don't like the way going to look at the program, look at My Account,
+      etc. takes me out of whatever conversation I'm in
 
-- make sure all controls have hover text
-
-- Make max width of the the sidebar larger, so that people can expand it
-  when they're using it to view the slido
-
+BCP: 
 - try IntelliJ
-
-- Change number of columns in lobby display depending on screen size
-
-- Put the sidebar user list back to most-recent-first?
 
 ## Lower-priority small things (after ICSE)
 

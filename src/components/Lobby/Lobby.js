@@ -322,8 +322,11 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
                 <Space />
 
-                <div className="lobby-participant-list">
+                <div className="new-breakout-room-button">
+                    <NewRoomForm type="secondary" text="New Breakout Room" />
+                </div>
 
+                <div className="lobby-participant-list">
                 {Object.keys(this.state.presences)
                      .sort((a,b)=>(compareNames(a, b)))
                      .map(item => <div className="lobby-participant-item"><UserStatusDisplay

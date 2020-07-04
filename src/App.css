@@ -544,3 +544,8 @@ td.ant-table-cell.program-table-timeBand{
     min-width: 250px;
     flex: 1;
 }
+
+.new-breakout-room-button {
+    text-align: center;
+    margin-bottom: 20px;
+}
