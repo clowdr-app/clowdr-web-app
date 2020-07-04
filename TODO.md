@@ -5,8 +5,6 @@
 Highest priority:
     - Documentation
          - lots more writing to be done!
-    - More work on user profile display
-         - visually distinguish the parts of the profile popup
     - Did we implement the "mute someone else's mic" feature?  Seems important!
     - Who can delete rooms (e.g., can BCP?)
 
