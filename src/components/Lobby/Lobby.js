@@ -333,8 +333,14 @@ class Lobby extends React.Component {
                       dataSource={Object.keys(this.state.presences).sort((a,b)=>(compareNames(a, b) ))}
                       renderItem={item => (<List.Item style={{marginBottom: 0}}><UserStatusDisplay key={item} onlyShowWithPresence={true} profileID={item} popover={false}/></List.Item>
                           )}>
-
                 </List>
+
+            {/* // BCP's first attempt at a better columnar layout...
+                <div className="lobby-participant-list">
+                Object.keys(this.state.presences).sort((a,b)=>(compareNames(a, b))).map(item => {<div style={{marginBottom: 0}}><UserStatusDisplay key={item} onlyShowWithPresence={true} profileID={item} popover={false}/></div>})
+                </div>
+             */}
+
                 {/*<div style={{maxHeight: "80vh", overflow: 'auto', border: '1px sold #FAFAFA'}}>*/}
                     {/*    /!*<InfiniteScroll*!/*/}
                     {/*    /!*    pageStart={0}*!/*/}

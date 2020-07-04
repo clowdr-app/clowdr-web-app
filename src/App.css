@@ -485,4 +485,9 @@ td.ant-table-cell.program-table-timeBand{
 }
 #sidepopoutcontainer .social-sidebar-divider{
      margin: 0;
- }
+}
+
+.lobby-participant-list {
+    display: flex;
+    flex-flow: column wrap
+}

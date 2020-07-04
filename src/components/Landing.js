@@ -35,7 +35,7 @@ class Landing extends Component {
                 </li>
                 <li>If you'd like to organize an informal public gathering, create one using the New Breakout Room button (please give it a meaningful name!), and announce it in 
                     the <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.</li>
-            <li> If you're just looking for casual conversation, feel free to drop into one of the hallway track rooms (Hallway 1, Hallway 2, ...) anytime. Or head to an empty Hallway room and see who else shows up.  You can also set your status to let people know what you're up to.</li>
+            <li> If you're just looking for casual conversation, feel free to drop into one of the hallway track rooms (Hallway 1, Hallway 2, ...) anytime. Or head to an empty Hallway room and see who else shows up.  You can also set your status to let people know what you're up to. A user-manual-under-contruction can be found <a href="https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOTpHw0BIo/edit#heading=h.dhd7xqg6t0qm">here</a>.  </li>
             </ul>
             </div>
             <div><strong>Code of Conduct</strong>: Remember to adhere to

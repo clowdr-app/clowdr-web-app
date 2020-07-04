@@ -13,8 +13,9 @@
 
 - More work on user profile display
      - Make avatar display larger!?
-     - Get tags / flairs display working
-     - visually distinguish the parts of the profile display
+     - make tags smaller (if Jon hasn't done it already)
+     - visually distinguish the parts of the profile popup
+
 - Why was Jon's name not showing up in the sidebar??
 
 - add hover text for the maximize and other buttons -- make sure all buttons
@@ -22,12 +23,10 @@
 - Rephrase the Report button hover-over text: "Report a user or ban them
   from this room" or something
 
-- make hover text show up after a short delay (1/2 second?)
-    - Add a mouseEnterDelay to the Popover in UserPresenecDisplay
-
-BCP-specific tasks:
-  - read about </Typography.Paragraph>
-  - <Space />
+- Is there a way to make the Lobby screen display a multi-column vertical
+  list, rather than a grid?
+     - The div container that contains the users should be display:flex;
+       flex-flow: column wrap
 
 ## Lower-priority small things (after ICSE)
 
