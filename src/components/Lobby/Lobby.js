@@ -322,6 +322,16 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
                 <Space />
 
+                <div className="lobby-participant-list">
+
+                {Object.keys(this.state.presences)
+                     .sort((a,b)=>(compareNames(a, b)))
+                     .map(item => <div className="lobby-participant-item"><UserStatusDisplay
+                                        key={item} onlyShowWithPresence={true} profileID={item} popover={false}/>
+                                  </div>)}
+                </div>
+
+            {/*
                 <List grid={{ gutter: 6,
                     xs: 1,
                     sm: 1,
@@ -334,6 +344,7 @@ class Lobby extends React.Component {
                       renderItem={item => (<List.Item style={{marginBottom: 0}}><UserStatusDisplay key={item} onlyShowWithPresence={true} profileID={item} popover={false}/></List.Item>
                           )}>
                 </List>
+             */}
 
             {/* // BCP's first attempt at a better columnar layout...
                 <div className="lobby-participant-list">

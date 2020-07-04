@@ -506,6 +506,15 @@ td.ant-table-cell.program-table-timeBand{
 }
 
 .lobby-participant-list {
-    display: flex;
-    flex-flow: column wrap
+ /* display: flex;
+    flex-flow: column wrap; */
+    column-fill: balance;
+    column-count: 4;
+}
+
+.lobby-participant-item {
+    margin-bottom: 0;
+    max-width: 300px;
+    min-width: 300px;
+    flex: 1;
 }

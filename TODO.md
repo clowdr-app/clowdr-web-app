@@ -28,6 +28,8 @@
      - The div container that contains the users should be display:flex;
        flex-flow: column wrap
 
+- try IntelliJ
+
 ## Lower-priority small things (after ICSE)
 
 - Consider (optionally) sorting participant list by
