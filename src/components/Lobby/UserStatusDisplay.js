@@ -84,15 +84,7 @@ class UserStatusDisplay extends React.Component{
         let affiliation = "";
         // BCP: This way of writing the tests is certainly suboptimal!
         if ("" + this.state.profile.get("affiliation") != "undefined") {
-            affiliation = "" + this.state.profile.get("affiliation");
-        }
-        let popoverTitle = <div className="nameAndAvatar">{avatar} {this.state.profile.get("displayName")}</div>;
-        let webpage = "";
-        if ("" + this.state.profile.get("webpage") != "undefined") {
-            webpage = <div>
-                <a href={this.state.profile.get("webpage")} target="_blank">
-                    {this.state.profile.get("webpage")}</a>
-                </div>;
+            affiliation = " (" + this.state.profile.get("affiliation") + ")";
         }
         let bio = "";
         if ("" + this.state.profile.get("bio") != "undefined") {
@@ -122,24 +114,40 @@ class UserStatusDisplay extends React.Component{
                            style={{marginRight: 3}}>{tagToHighlight.get("label")}</Tag>);
         }
 
-        // BCP: Not quite right -- needs some spaces after non-empty elements, and some vertical space after the first line if the whole first line is nonempty:
-        let firstLine = <div><div className="presenceDesc">{presenceDesc}</div> {tags} {statusDesc} {dntWaiver} </div>;
+        let popoverTitle =
+            <div className="nameAndAvatar">
+              {avatar} {this.state.profile.get("displayName")} {affiliation}
+              <span className="presenceDesc">{presenceDesc == "" ? "" : " is " + presenceDesc}</span>
+              <div> {tags} {statusDesc} </div>
+            </div>;
+        let webpage = "";
+        if ("" + this.state.profile.get("webpage") != "undefined") {
+            webpage = <div>
+                <a href={this.state.profile.get("webpage")} target="_blank">
+                    {this.state.profile.get("webpage")}</a>
+                </div>;
+        }
+        let firstLine =
+            <div>
+              {dntWaiver}
+            </div>;
         // BCP: And this needs a bit more vertical spacing between non-empty elements too:
-        let popoverContent = <div className="userPopover"> {firstLine} {affiliation} {bio} {webpage} </div>;
+        let popoverContent = <div className="userPopover"> {firstLine} {bio} {webpage} </div>;
 /*
         let popoverContent = <span></span>
         // BCP: Not clear to me why we were treating these so popovers differently
         // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
 */
-        // The mouseEnterDelay setting doesn't seem to work :-(
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
                     <Popover title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
-                    <Badge status={badgeStyle} color={badgeColor} />
-                     <span style={{color:nameColor}}>{this.state.profile.get("displayName")} <span className="highlightedTags">{tagsToHighlight}</span></span>
-                    {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
-                 </Popover>
+                      <Badge status={badgeStyle} color={badgeColor} />
+                      <span style={{color:nameColor}}>{this.state.profile.get("displayName")}</span>
+                      &nbsp;
+                      <span className="highlightedTags">{tagsToHighlight}</span>
+                      {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
+                    </Popover>
               </div>
 /*
     else return <div

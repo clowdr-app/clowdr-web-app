@@ -434,36 +434,41 @@ div.availabilityOptionsOpen  span.availabilityOption{
     flex-grow: 1;
     /*max-height: 2em;*/
 }
-.highlightedTags > .ant-tag{
+
+.highlightedTags > .ant-tag {
     padding-left: 1px;
     padding-right: 1px;
     line-height: 1.1;
     font-size: 0.75em;
 }
+
 .userDisplay {
     width: 100%;
 }
-.userDisplay:hover{
+
+.userDisplay:hover {
     cursor: pointer;
     background-color: #8cc8ff;
 }
+
 .presenceDesc{
-
 }
+
 .bottomEmbeddedChatFrame{
+}
 
-}
 .userPopover{
-    max-width: 250px;
+    max-width: 700px;
 }
+
 .bottomChatIdentity{
     color: white;
     padding-left: 2px;
     flex-grow: 2;
     font-weight:bolder;
 }
-.bottomChatClose{
 
+.bottomChatClose{
 }
 
 .programContainer{

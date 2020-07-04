@@ -4,19 +4,19 @@
 
 Highest priority:
     - Documentation
-         - keep writing!
-    - More work on user profile display
-         - Make avatar display larger!?
-         - visually distinguish the parts of the profile popup
-    - Make max width of the the sidebar larger, so that people can expand it
-      when they're using it to view the slido
+         - lots more writing to be done!
     - Did we implement the "mute someone else's mic" feature?  Seems important!
     - Who can delete rooms (e.g., can BCP?)
 
-Little UI things
+Little UI things for Jon
+    - Make max width of the the sidebar larger, so that people can expand it
+      when they're using it to view the slido
+    - Make avatars a little larger!
     - Put the sidebar user list back to most-recent-first
     - Change number of columns in lobby display depending on screen size
       (implemented, but needs to be checked with several different sizes)
+
+Little UI things for anybody:
     - make sure all controls have hover text
     - make all popovers take .5 seconds to appear
 
