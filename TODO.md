@@ -2,6 +2,11 @@
 
 ## High-priority small things (for ICSE if possible)
 
+- Try more tweaking on status coloring!!
+     - Default status color is black
+     - Busy status color is gray
+     - Names appear in gray too when busy
+- delete Search from instructions
 - Why is Jon's name not showing up in the sidebar??
 - Display people's status messages on the Lobby page (not just the popover)
      - also, put less whitespace on this page!
@@ -23,6 +28,10 @@
   have hover text
 - Rephrase the Report button hover-over text: "Report a user or ban them
   from this room" or something
+
+BCP-specific tasks:
+  - read about </Typography.Paragraph>
+  - <Space />
 
 ## Lower-priority small things (after ICSE)
 
