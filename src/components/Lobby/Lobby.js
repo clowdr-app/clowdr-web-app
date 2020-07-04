@@ -275,7 +275,7 @@ class Lobby extends React.Component {
             b = b.get("updatedAt");
             return (a < b ? 1 : a>b?-1: 0)
         };
-        
+
 
         const compareNames = (i, j) => {
             let a = this.state.presences[i];
@@ -308,22 +308,27 @@ class Lobby extends React.Component {
                 colleagues meet, catch up, and share
                 casual conversation. To bring the metaphor into the digital world, the CLOWDR platform
                 allows you to create small group video chats and switch easily between  chats.
-                    The pane on the left shows the active video chat rooms, and the list below shows the current status of all users on the platform. The search bar on the left can be used to find specific users and rooms.
+                    The pane on the left shows the active video chat rooms, and the list on this page shows the current status of all users on the platform.
 
                     <NewRoomForm style={{display: "none"}} initialName={this.state.requestedName} visible={this.state.visible} />
                 </Typography.Paragraph>
+
                 <Typography.Paragraph>
                 When you are looking for casual conversation or hoping to meet new people,  head over to one of the small-group rooms labeled "Hallway 1", "Hallway 2", etc.  You can either join a room at random, or pick an empty room and wait for others to join you there.
                 </Typography.Paragraph>
+
+                <Typography.Paragraph>
+                More information on the user interface, suggested social conventions, etc. can be found in the <a href="https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOTpHw0BIo/edit#heading=h.dhd7xqg6t0qm">CLOWDR User Manual</a>.
+                </Typography.Paragraph>
                 <Space />
 
-                <List grid={{ gutter: 16,
+                <List grid={{ gutter: 6,
                     xs: 1,
                     sm: 1,
-                    md: 1,
-                    lg: 2,
-                    xl: 2,
-                    xxl: 3,
+                    md: 2,
+                    lg: 3,
+                    xl: 4,
+                    xxl: 4,
                 }}
                       dataSource={Object.keys(this.state.presences).sort((a,b)=>(compareNames(a, b) ))}
                       renderItem={item => (<List.Item style={{marginBottom: 0}}><UserStatusDisplay key={item} onlyShowWithPresence={true} profileID={item} popover={false}/></List.Item>

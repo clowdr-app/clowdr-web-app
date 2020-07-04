@@ -107,7 +107,7 @@ class ProgramSessions extends React.Component {
     }
 
     onEdit(session) {
-        console.log("Editing " + session.get("title") + " " + session.id);
+        console.log("Editing " + session.get("title") + " " + session.id + " " + session.get('room').get('name'));
         this.setState({
             visible: true,
             editing: true,
@@ -126,7 +126,7 @@ class ProgramSessions extends React.Component {
 
     onUpdate(values) {
         var _this = this;
-        console.log("Updating session " + values.title + " in room " + values.roomId);
+        console.log("Updating session " + values.title + " in room " + values.room + "--" + values.roomId + "--");
         let session = this.state.sessions.find(s => s.id == values.objectId);
 
         if (session) {
@@ -138,14 +138,16 @@ class ProgramSessions extends React.Component {
             if (session.get("endTime") != values.endTime.toDate())
                 session.set("endTime", values.endTime.toDate());
             session.set("items", values.items);
-            if ((session.get("room") && session.get("room").id != values.roomId) || (!session.get("room") && values.roomId)) {
-                let room = this.state.rooms.find(r => r.id == values.roomId);
-                if (!room)
-                    console.log('Invalid room ' + values.roomId);
-                else 
+            if (!session.get("room") || (session.get("room")  && values.room != session.get("room").get("name"))) { // room changed
+                let room = this.state.rooms.find(r => r.id == values.room);
+                if (room) {
+                    console.log('--> Set new room ' + room.get("name"));
                     session.set("room", room);
+                }
+                else
+                    console.log("[Admin/Session]: invalid room " + values.room.id)
             }
-
+                
             session.save().then((val) => {
                 _this.setState({visible: false, editing: false});
             }).catch(err => {
@@ -219,8 +221,7 @@ class ProgramSessions extends React.Component {
         query.find().then(res=>{
             console.log('Found sessions ' + res.length);
             this.setState({
-                sessions: res,
-                loading: false
+                sessions: res
             });
         })
     }

@@ -132,11 +132,10 @@ class UserStatusDisplay extends React.Component{
         // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
 */
+        // The mouseEnterDelay setting doesn't seem to work :-(
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
-                 <Popover title={popoverTitle} content={popoverContent}
-                 mouseEnterDelay={0.5}
-                 >
+                    <Popover title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
                     <Badge status={badgeStyle} color={badgeColor} />
                      <span style={{color:nameColor}}>{this.state.profile.get("displayName")} <span className="highlightedTags">{tagsToHighlight}</span></span>
                     {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
