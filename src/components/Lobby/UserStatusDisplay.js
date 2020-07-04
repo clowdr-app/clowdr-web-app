@@ -1,9 +1,9 @@
 import React from "react";
-import {Avatar, Badge, Button, Card, Popover, Skeleton, Tooltip} from "antd";
+import {Avatar, Badge, Popover, Skeleton, Tag, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
-import {isDNDColor, isDNDNameColor,isAvailableColor, isLookingForConversationColor} from "./LobbyColors.js";
+import {isAvailableColor, isDNDColor, isDNDNameColor, isLookingForConversationColor} from "./LobbyColors.js";
 
 class UserStatusDisplay extends React.Component{
     constructor(props){
@@ -98,11 +98,26 @@ class UserStatusDisplay extends React.Component{
         if ("" + this.state.profile.get("bio") != "undefined") {
             bio = <div>
                 {"" + this.state.profile.get("bio")}
-                </div>;
+            </div>;
         }
         let tags = "";
+        let tagToHighlight;
         if (this.state.profile.get("tags")) {
-            tags = this.state.profile.get("tags").map(t => t.get("label")).join(',');
+            tags = this.state.profile.get("tags").map(t => {
+                    let tag = <Tag key={t.id} color={t.get('color')} closable={false}
+                                   style={{marginRight: 3}}>{t.get("label")}</Tag>
+                    if (!tagToHighlight || t.get("priority") < tagToHighlight.get("priority"))
+                        tagToHighlight = t;
+                    if (t.get("tooltip"))
+                        return <Tooltip title={t.get("tooltip")}>{tag}</Tooltip>
+                    else return tag;
+                }
+            )
+        }
+        if (tagToHighlight) {
+            tagToHighlight = <Tag key={tagToHighlight.id} color={tagToHighlight.get('color')} closable={false}
+                                  className="highlightedTag"
+                           style={{marginRight: 3}}>{tagToHighlight.get("label")}</Tag>
         }
 
         // BCP: Not quite right -- needs some spaces after non-empty elements, and some vertical space after the first line if the whole first line is nonempty:
@@ -120,7 +135,7 @@ class UserStatusDisplay extends React.Component{
                     onClick={onClick}>
                     <Popover title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
                     <Badge status={badgeStyle} color={badgeColor} />
-                    <span style={{color:nameColor}}>{this.state.profile.get("displayName")}</span>
+                    <span style={{color:nameColor}}>{this.state.profile.get("displayName")} {tagToHighlight}</span>
                     {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
                  </Popover>
               </div>
