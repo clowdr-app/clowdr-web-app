@@ -30,6 +30,8 @@
 
 - try IntelliJ
 
+- Change number of columns in lobby display depending on screen size
+
 ## Lower-priority small things (after ICSE)
 
 - Consider (optionally) sorting participant list by

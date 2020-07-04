@@ -509,12 +509,38 @@ td.ant-table-cell.program-table-timeBand{
  /* display: flex;
     flex-flow: column wrap; */
     column-fill: balance;
-    column-count: 4;
+    column-count: 3;
+}
+
+/* For Mobile */
+@media screen and (max-width: 540px) {
+    .lobby-participant-list {
+     /* display: flex;
+        flex-flow: column wrap; */
+        column-fill: balance;
+        column-count: 2;
+    }
+}
+
+/* For Tablets */
+@media screen and (min-width: 540px) and (max-width: 780px) {
+    .lobby-participant-list {
+        column-fill: balance;
+        column-count: 3;
+    }
+}
+
+/* For Bigger screens */
+@media screen and (min-width: 780px) {
+    .lobby-participant-list {
+        column-fill: balance;
+        column-count: 4;
+    }
 }
 
 .lobby-participant-item {
     margin-bottom: 0;
-    max-width: 300px;
-    min-width: 300px;
+    max-width: 400px;
+    min-width: 250px;
     flex: 1;
 }
