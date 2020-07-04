@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Button} from 'antd';
+import {Button, Card} from 'antd';
 import moment from 'moment';
 import AuthUserContext from "../Session/context";
 import {ProgramContext} from "../Program";
@@ -60,24 +60,12 @@ class ZoomPanel extends Component {
 
         let navigation = <a href={this.state.video_url} target={"_blank"} rel="noopener noreferrer"><Button type="primary" >Enter</Button></a>
 
-        return  <div>
-                    <table style={{width:"100%"}}>
-                        <tbody>
-                        <tr >
-                            <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>
-                            <td style={{"textAlign":"center"}}>&nbsp;</td>
-                            <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <img alt="poster" style={{width:311, height:175 }} src={zoomImg}  />
-
-                    <div>
-                        {this.props.mysessions.map(s => {
-                            return <div key={s.id}>{s.get("title")}</div>
-                        })}
-                    </div>
-                </div>
+        return  <Card hoverable cover={<img alt="poster" style={{width:311, height:175 }} src={zoomImg}  />}
+        actions={[navigation]}>
+            <Card.Meta title={roomName} description={this.props.mysessions.map(s => {
+                    return <div key={s.id}>{s.get("title")}</div>
+                })}></Card.Meta>
+                </Card>
     }
 }
 

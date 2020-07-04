@@ -1,8 +1,6 @@
 import React, {Component} from "react";
-import {Button, Spin} from 'antd';
+import {Button, Card, Spin} from 'antd';
 import moment from 'moment';
-import AuthUserContext from "../Session/context";
-import {ProgramContext} from "../Program";
 import ReactPlayer from "react-player";
 import {videoURLFromData} from './utils';
 import { CollectionsOutlined } from "@material-ui/icons";
@@ -20,16 +18,6 @@ class LiveStreamingPanel extends Component {
         };
     }
     
-    changeSocialSpace() {
-        if(this.props.video.get("socialSpace")) {
-            //set the social space...
-            let ss = this.props.video.get("socialSpace");
-            // console.log('--> SS ' + ss)
-            this.props.auth.setSocialSpace(ss.get("name"));
-            this.props.auth.helpers.setGlobalState({forceChatOpen: true});
-        }        
-
-    }
 
     joinChatChannels() {
         var items = [];
@@ -80,13 +68,14 @@ class LiveStreamingPanel extends Component {
     }
 
     toggleExpanded() {
-//        console.log('--> ' + this.state.expanded);
+       // console.log('--> ' + this.state.expanded);
         if (!this.state.expanded) {// about to expand
             this.changeSocialSpace();
             // this.joinChatChannels();
         }
-        else
+        else{
             this.props.auth.setSocialSpace("Lobby");
+        }
 
         this.setState({
             expanded: !this.state.expanded
@@ -95,11 +84,21 @@ class LiveStreamingPanel extends Component {
     }
 
     componentDidUpdate(prevProps) {
+        if(this.state.expanded != this.props.expanded){
+            if(this.props.expanded){
+                this.props.auth.setSocialSpace(null,this.props.video.get("socialSpace"));
+                this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+                this.props.auth.helpers.setExpandedProgramRoom(this.props.video);
+            }
+            else{
+                this.props.auth.helpers.setExpandedProgramRoom(null);
+            }
+            this.setState({expanded: this.props.expanded});
+        }
     }
     
     render() {
 
-        let qa = "";
         if (this.props.vid && this.props.vid.id !== this.props.video.id) { // It's not us! Unmount!
             return ""
         }
@@ -108,7 +107,6 @@ class LiveStreamingPanel extends Component {
         let sessionData = "";
         let roomName = this.props.video.get('name');
         if (this.state.expanded) {
-            navigation = <Button type="primary" onClick={this.toggleExpanded.bind(this)}>Go Back</Button>
             let lengths = this.props.mysessions.map(s => (s.get("items") ? s.get("items").length : 0));
             let nrows = Math.max(...lengths);
             var rows = [];
@@ -133,13 +131,14 @@ class LiveStreamingPanel extends Component {
                         })}</tr>
                         {rows.map(row => {
                             return <tr>{row.map(pair => {
-                                return <td>{pair[1] ? <a href="#" onClick={this.joinChatChannel.bind(this, pair[1])}>{pair[0]}</a> : pair[0]}</td>
+                                return <td key={pair[0]}>{pair[1] ? <div className="chatLink" onClick={this.joinChatChannel.bind(this, pair[1])}>{pair[0]}</div> : pair[0]}</td>
                             })}</tr>
                         })}
                 </tbody></table>
+            navigation = <Button onClick={this.props.onExpand.bind(this)}>Go Back</Button>
         }
         else {
-            navigation = <Button type="primary" onClick={this.toggleExpanded.bind(this)}>Enter</Button>
+            navigation = <Button type="primary" onClick={this.props.onExpand.bind(this)}>Enter</Button>
             roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
 
@@ -163,30 +162,58 @@ class LiveStreamingPanel extends Component {
 
         let player = "";
         if (!this.state.china) {
-            player = <ReactPlayer playing playsinline controls={true} muted={true} volume={1} 
+            player = <ReactPlayer playing playsinline controls={true} muted={true} volume={1}
                         width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
         }
         else {
             player = <iframe width="100%" height="100%" style={{position:"absolute", top:0, left:0}} src={this.state.video_url}/>
         }
-        return  <div>
-                    <table style={{width:"100%"}}>
-                        <tbody>
-                        <tr >
-                            <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>
-                            <td style={{"textAlign":"left"}}>Viewers: {viewers}</td>
-                            <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <div className="player-wrapper" >{player}</div>
+
+        let sessionInfo = this.props.mysessions.map(s => {
+                return <div key={s.id}>{s.get("title")}</div>
+            });
+
+        let description=<div>
+            <div className="video-watchers-count">{viewers} here now</div>
+            <div className="video-room-session-info">
+                {this.props.mysessions.map(s => {
+                    return <div key={s.id}>{moment(s.get("startTime")).format('LT') + ": " + s.get("title")}</div>
+                })}
+            </div>
+        </div>
+        return <Card
+            hoverable={!this.state.expanded}
+                     cover={<div className="player-wrapper" >
+                         {player}
+
+                     </div>
+                     }
+            actions={[
+                navigation
+                // <Button onClick={this.props.onExpand}>Enter</Button>
+            ]}
+        >
+            <Card.Meta title={this.props.video.get("name")} description={description}></Card.Meta>
+            {/*<table style={{width:"100%"}}>*/}
+            {/*    <tbody>*/}
+            {/*    <tr >*/}
+            {/*        <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>*/}
+                    {/*        <td style={{"textAlign":"left"}}>Viewers: {viewers}</td>*/}
+                    {/*        <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>*/}
+                    {/*    </tr>*/}
+                    {/*    </tbody>*/}
+                    {/*</table>*/}
+                    {/*<div className="player-wrapper" >*/}
+                    {/*    <ReactPlayer playing playsinline controls={true} muted={true} volume={1} */}
+                    {/*                width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>*/}
+                    {/*</div>*/}
                     <div>
                         {sessionData}
                         {/* {this.props.mysessions.map(s => {
                             return <div key={s.id}>{s.get("title")}</div>
                         })} */}
                     </div>
-                </div>
+                </Card>
     }
 }
 

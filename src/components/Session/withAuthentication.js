@@ -30,6 +30,7 @@ const withAuthentication = Component => {
             parseLive.open();
 
             let exports ={
+                setExpandedProgramRoom: this.setExpandedProgramRoom.bind(this),
                 getUsers: this.getUsers.bind(this),
                 createOrOpenDM: this.createOrOpenDM.bind(this),
                 getRoleByName: this.getRoleByName.bind(this),
@@ -113,6 +114,12 @@ const withAuthentication = Component => {
 
         }
 
+        setExpandedProgramRoom(programRoom) {
+            this.expandedProgramRoom = programRoom;
+            if (this.state.leftSidebar) {
+                this.state.leftSidebar.setExpandedProgramRoom(programRoom);
+            }
+        }
         getUsers() {
             if (!this.usersPromise)
                 this.usersPromise = new Promise(async (resolve, reject) => {
@@ -314,6 +321,9 @@ const withAuthentication = Component => {
                     userProfile = this.state.userProfile;
                 if(!space && this.state.spaces){
                     space = this.state.spaces[spaceName];
+                }
+                if(!space){
+                    throw "You called setSocialSpace but provided no space! Got: " + spaceName + " or "  + space
                 }
                 if (userProfile.get("presence") &&
                     (!userProfile.get("presence").get("socialSpace") ||

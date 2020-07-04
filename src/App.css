@@ -41,7 +41,11 @@
 .videoEmbed h4 {
     color: black;
 }
-
+.embedded-react-player {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
 .player-wrapper {
     position: relative;
     padding-top: 56.25% /* Player ratio: 100 / (1280 / 720) */
@@ -191,6 +195,18 @@
     line-height:1.1;
     height: auto;
 }
+.chatLink{
+    color:#379FFF;
+}
+.chatLink:hover{
+    cursor: pointer;
+    color: black;
+    background-color: #8cc8ff;
+}
+.slido{
+    height: 500px;
+    width: 250px;
+}
 #sidepopoutcontainer .ant-menu-sub.ant-menu-inline > .ant-menu-item{
     line-height: 1.1;
     height:auto;
@@ -200,7 +216,7 @@
     top: calc(50vh - 20px);
     display: inline-block;
     /*padding: 3px;*/
-    right: -5px;
+    right: -10px;
     padding-top: 1px;
     z-index:101;
     font-family: FontAwesome !important;
@@ -418,9 +434,11 @@ div.availabilityOptionsOpen  span.availabilityOption{
     flex-grow: 1;
     /*max-height: 2em;*/
 }
-.highlightedTag{
-    line-height: 1.2;
-    font-size: 0.9em;
+.highlightedTags > .ant-tag{
+    padding-left: 1px;
+    padding-right: 1px;
+    line-height: 1.1;
+    font-size: 0.75em;
 }
 .userDisplay {
     width: 100%;

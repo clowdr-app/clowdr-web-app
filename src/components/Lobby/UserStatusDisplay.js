@@ -102,22 +102,24 @@ class UserStatusDisplay extends React.Component{
         }
         let tags = "";
         let tagToHighlight;
+        let tagsToHighlight = [];
         if (this.state.profile.get("tags")) {
             tags = this.state.profile.get("tags").map(t => {
                     let tag = <Tag key={t.id} color={t.get('color')} closable={false}
                                    style={{marginRight: 3}}>{t.get("label")}</Tag>
-                    if (!tagToHighlight || t.get("priority") < tagToHighlight.get("priority"))
+                    if (t.get("alwaysShow"))
+                        tagsToHighlight.push(tag);
+                    else if (!tagToHighlight || t.get("priority") < tagToHighlight.get("priority"))
                         tagToHighlight = t;
                     if (t.get("tooltip"))
-                        return <Tooltip title={t.get("tooltip")}>{tag}</Tooltip>
+                        return <Tooltip key={t.id} title={t.get("tooltip")}>{tag}</Tooltip>
                     else return tag;
                 }
             )
         }
         if (tagToHighlight) {
-            tagToHighlight = <Tag key={tagToHighlight.id} color={tagToHighlight.get('color')} closable={false}
-                                  className="highlightedTag"
-                           style={{marginRight: 3}}>{tagToHighlight.get("label")}</Tag>
+            tagsToHighlight.push(<Tag key={tagToHighlight.id} color={tagToHighlight.get('color')} closable={false}
+                           style={{marginRight: 3}}>{tagToHighlight.get("label")}</Tag>);
         }
 
         // BCP: Not quite right -- needs some spaces after non-empty elements, and some vertical space after the first line if the whole first line is nonempty:
@@ -132,9 +134,11 @@ class UserStatusDisplay extends React.Component{
 */
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
-                 <Popover title={popoverTitle} content={popoverContent}>
+                 <Popover title={popoverTitle} content={popoverContent}
+                 mouseEnterDelay={0.5}
+                 >
                     <Badge status={badgeStyle} color={badgeColor} />
-                    <span style={{color:nameColor}}>{this.state.profile.get("displayName")} {tagToHighlight}</span>
+                     <span style={{color:nameColor}}>{this.state.profile.get("displayName")} <span className="highlightedTags">{tagsToHighlight}</span></span>
                     {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
                  </Popover>
               </div>

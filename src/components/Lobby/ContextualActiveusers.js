@@ -23,8 +23,16 @@ class ContextualActiveUsers extends Component {
             user: this.props.auth.user,
             activeSpace: this.props.auth.activeSpace,
             filterRoom: null,
-            unread: {}
+            unread: {},
+            expandedProgramRoom: this.props.auth.expandedProgramRoom
         };
+        this.props.auth.leftSidebar = this;
+    }
+
+
+    setExpandedProgramRoom(programRoom){
+        this.setState({programRoom: programRoom});
+
     }
 
 
@@ -203,6 +211,17 @@ class ContextualActiveUsers extends Component {
         }
 
         if (!this.state.collapsed) {
+
+            let programRoomSpecificContent;
+            if(this.state.programRoom && this.state.programRoom.get("qa")){
+                const q_url = this.state.programRoom.get("qa");
+                programRoomSpecificContent = <div>
+
+                <Divider>Questions for Speaker</Divider>
+                <iframe className="slido" title={this.state.programRoom.get("name")} src={q_url} allowFullScreen/>
+                </div>
+
+            }
             let selectedKeys = [];
             if(this.props.auth.currentRoom)
                 selectedKeys.push(this.props.auth.currentRoom.id);
@@ -396,6 +415,7 @@ class ContextualActiveUsers extends Component {
 
                 </div>
 
+                {programRoomSpecificContent}
                 <Divider className="social-sidebar-divider"><Tooltip title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room">Chats</Tooltip></Divider>
                 <Menu mode="inline"
                       className="activeRoomsList"
