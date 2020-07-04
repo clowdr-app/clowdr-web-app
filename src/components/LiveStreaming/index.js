@@ -173,12 +173,14 @@ class LiveStreaming extends Component {
             })
         }
 
-        if(this.props.downloaded){
+        if (this.props.downloaded) {
             if(this.props.match && this.props.match.params.roomName){
                 this.expandVideoByName(this.props.match.params.roomName);
-            }else if(this.state.expanded){
-                this.setState({expanded: false, expanded_video: null, expandedRoomName: null})
-                console.log("Deactivating")
+            } else {
+                if (this.state.expanded) {
+                    this.setState({expanded: false, expanded_video: null, expandedRoomName: null})
+                    console.log("Deactivating");
+                }
                 this.props.auth.setSocialSpace("Lobby");
 
             }
