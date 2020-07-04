@@ -418,6 +418,17 @@ div.availabilityOptionsOpen  span.availabilityOption{
     flex-grow: 1;
     /*max-height: 2em;*/
 }
+.highlightedTag{
+    line-height: 1.2;
+    font-size: 0.9em;
+}
+.userDisplay {
+    width: 100%;
+}
+.userDisplay:hover{
+    cursor: pointer;
+    background-color: #8cc8ff;
+}
 .presenceDesc{
 
 }
