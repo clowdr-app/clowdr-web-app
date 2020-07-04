@@ -36,7 +36,7 @@ class About extends Component {
             </p>
             <p>CLOWDR is created by <a href="https://jonbell.net">Jonathan Bell</a>, <a href="https://www.ics.uci.edu/~lopes/">Crista Lopes</a> and <a href="https://www.cis.upenn.edu/~bcpierce/">Benjamin Pierce</a>.
                 If you are interested in helping develop CLOWDR or using it for your live event, please <a href="https://github.com/clowdr-app">check out our GitHub</a> or <a href="mailto:hello@clowdr.org">send us an email</a>.
-            Please take note that we have built this tool extremely quickly (starting on May 19, just some 3 weeks before its first trial at PLDI), so please
+            Please take note that we have built this tool extremely quickly (starting on May 19, just some 7 weeks before ICSE...), so please
             be gentle - there are a lot more features that we plan to add, and rough corners to polish.</p>
             <p> CLOWDR is made possible
                 thanks to support by the National Science Foundation

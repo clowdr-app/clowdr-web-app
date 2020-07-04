@@ -313,7 +313,7 @@ class Lobby extends React.Component {
                     <NewRoomForm style={{display: "none"}} initialName={this.state.requestedName} visible={this.state.visible} />
                 </Typography.Paragraph>
                 <Typography.Paragraph>
-                If you are looking for casdual conversation or hoping to meet new people,  you are invited to head over to one of the small-group rooms labeled "Hallway 1", "Hallway 2", etc.  Either join a room at random, or pick an empty room and wait for others to join you there.
+                If you are looking for casual conversation or hoping to meet new people,  you are invited to head over to one of the small-group rooms labeled "Hallway 1", "Hallway 2", etc.  Either join a room at random, or pick an empty room and wait for others to join you there.
                 </Typography.Paragraph>
                 <Space />
 

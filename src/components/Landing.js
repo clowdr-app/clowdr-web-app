@@ -46,6 +46,14 @@ class Landing extends Component {
                     <li>Send a direct Slack message to @Crista Lopes</li>
                 </ul>
             </div>
+            <p><b><a href="https://www.clowdr.org/" target="_blank">CLOWDR</a></b> is a community-driven effort to create a new platform to
+                support <b>C</b>onferences <b>L</b>ocated <b>O</b>nline <b>W</b>ith <b>D</b>igital <b>R</b>esources. (Also, a clowder
+                is <a href="https://www.merriam-webster.com/dictionary/clowder" rel="noopener noreferrer" target="_blank">a group of cats</a> &#128049;).
+                CLOWDR is created by <a href="https://jonbell.net" rel="noopener noreferrer" target="_blank">Jonathan Bell</a>, <a href="https://www.ics.uci.edu/~lopes/" rel="noopener noreferrer" target="_blank">Crista Lopes</a> and <a href="https://www.cis.upenn.edu/~bcpierce/" rel="noopener noreferrer" target="_blank">Benjamin Pierce</a>.
+                If you are interested in helping <a href="https://github.com/clowdr-app/clowdr-web-app"  rel="noopener noreferrer" target="_blank">develop CLOWDR</a> or using it for your live event, please <a href="mailto:hello@clowdr.org">email us</a>.
+                We have built this tool extremely quickly (starting on May 19, just some 7 weeks before ICSE...), so please
+                be gentle - there are a lot more features that we plan to add, and rough corners to polish.
+            </p>
             <h3>THANK YOU TO OUR SPONSORS!</h3>
 <center> <font size={6}> Sponsors </font> </center>
 
@@ -113,23 +121,7 @@ class Landing extends Component {
 <img src="https://conf.researchr.org/getLogo/b93c740b-2256-4458-81ba-4e800238db11?1581689394000" width={175}/></a>
 </center>
 
-            <p><b>CLOWDR</b> is a community-driven effort to create a new platform to 
-        support <b>C</b>onferences <b>L</b>ocated <b>O</b>nline <b>W</b>ith <b>D</b>igital <b>R</b>esources. (Also, a clowder
-                is <a href="https://www.merriam-webster.com/dictionary/clowder" rel="noopener noreferrer" target="_blank">a group of cats</a> &#128049;)
-                CLOWDR combines the group chat features of Slack or IRC with the simplicity of private chat in
-                social networks like Facebook Messenger or GChat. And, every chat has the option to add video or audio.
-                Aside from chat, CLOWDR contains the entire conference program, and organizes the various events' live
-                activities in one place: bringing together YouTube live streams, Twitch video streams, Zoom webinars and others.
-                But it's not just a mash up: since CLOWDR has the entire conference program loaded, it can add much needed context to chat, by automatically
-                showing participants chat channels for the topic that the participant is viewing. For instance: browse to a
-                live ICSE technical track session on testing? The chat channel for testing tools will automatically be visible,
-                showing you all of the other participants in that room. See a colleague's face that you haven't seen in a while?
-                Start a chat with them, and always have the option to switch into video.
-            </p>
-                <p>CLOWDR is created by <a href="https://jonbell.net" rel="noopener noreferrer" target="_blank">Jonathan Bell</a>, <a href="https://www.ics.uci.edu/~lopes/" rel="noopener noreferrer" target="_blank">Crista Lopes</a> and <a href="https://www.cis.upenn.edu/~bcpierce/" rel="noopener noreferrer" target="_blank">Benjamin Pierce</a>.
-                If you are interested in helping <a href="https://github.com/clowdr-app/clowdr-web-app"  rel="noopener noreferrer" target="_blank">develop CLOWDR</a> or using it for your live event, please email us or join 
-                the Clowdr Slack workspace.
-            </p>
+
         </div>
     }
 }

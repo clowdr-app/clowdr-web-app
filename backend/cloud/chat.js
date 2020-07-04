@@ -4,6 +4,8 @@ let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
 let BondedChannel = Parse.Object.extend("BondedChannel");
 let TwilioChannelMirror = Parse.Object.extend("TwilioChannelMirror");
+let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
+let SocialSpace = Parse.Object.extend("SocialSpace");
 
 const Twilio = require("twilio");
 
@@ -19,6 +21,9 @@ async function getConfig(conference){
     config.twilio = Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
     config.twilioChat = config.twilio.chat.services(config.TWILIO_CHAT_SERVICE_SID);
 
+    if (!config.TWILIO_CALLBACK_URL) {
+        config.TWILIO_CALLBACK_URL = "https://clowdr.herokuapp.com/twilio/event"
+    }
     if(!config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE){
         let role = await config.twilioChat.roles.create({
             friendlyName :'clowdrAttendeeManagedChatParticipant',
@@ -157,6 +162,286 @@ Parse.Cloud.define("chat-getBondedChannelForSID", async (request) => {
     }
     return null;
 });
+
+Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
+    let confID = request.params.conference;
+    let userQ = new Parse.Query(UserProfile);
+    let conf = new ClowdrInstance();
+    let sid = request.params.sid;
+    let socialSpaceID = request.params.socialSpaceID;
+    let roomName = request.params.title;
+    let persistence = "ephemeral";
+
+    conf.id = confID;
+    userQ.equalTo("user", request.user);
+    userQ.include("conference");
+    userQ.equalTo("conference", conf);
+
+    let profile = await userQ.first({useMasterKey: true});
+    if(profile) {
+        let config = await getConfig(conf);
+        let originalChannel = await config.twilioChat.channels(sid).fetch();
+        if (originalChannel.attributes.category == 'programItem') {
+            return {
+                status: "ok",
+                room: originalChannel.attributes.breakoutRoom
+            }
+        }
+        if (originalChannel.type == "private") {
+            //Is it a DM or a conversation?
+            let attributes = originalChannel.attributes;
+            if (attributes)
+                attributes = JSON.parse(attributes);
+            if (attributes && (attributes.mode == "directMessage" || attributes.mode == "group")) {
+                let parseID = attributes.parseID;
+                if (parseID) {
+                    //Validate that this user has access to the convo
+                    let convoQ = new Parse.Query(Converation);
+                    let convo = await convoQ.get(parseID, {sessionToken: request.user.getSessionToken()});
+                    if (convo) {
+                        //make a new breakout room in this space, then drop a link into the chat to it.
+                        let mode = "group";
+                        persistence = "persistent";
+                        let maxParticipants = (mode == "peer-to-peer" ? 10 : (mode == "group-small" ? 4 : 50));
+                        try {
+
+                            let twilioRoom = await config.twilio.video.rooms.create({
+                                type: mode,
+                                uniqueName: sid,
+                                // type: conf.config.TWILIO_ROOM_TYPE,
+                                maxParticipants: maxParticipants,
+                                statusCallback: config.TWILIO_CALLBACK_URL
+                            });
+
+                            //Create a new room in the DB
+                            let parseRoom = new BreakoutRoom();
+                            parseRoom.set("title", originalChannel.friendlyName);
+                            parseRoom.set("conference", conf);
+                            parseRoom.set("twilioID", twilioRoom.sid);
+                            parseRoom.set("isPrivate", true);
+                            parseRoom.set("persistence", "persistent");
+                            parseRoom.set("mode", mode);
+                            parseRoom.set("capacity", maxParticipants);
+                            let socialSpace = new SocialSpace();
+                            socialSpace.id = socialSpaceID;
+                            parseRoom.set("socialSpace", socialSpace);
+                            parseRoom.set("conversation", convo);
+                            parseRoom.setACL(convo.getACL(), {useMasterKey: true});
+                            parseRoom.set("twilioChatID", sid);
+                            await parseRoom.save({}, {useMasterKey: true});
+
+                            attributes.breakoutRoom = parseRoom.id;
+                            await config.twilioChat.channels(sid).update({
+                                attributes: JSON.stringify(attributes)
+                            });
+
+                            //send a message to the chat channel that the user spawned off a video chat
+                            config.twilioChat.channels(sid).messages.create({
+                                from: profile.id,
+                                attributes: JSON.stringify({
+                                    linkTo: "breakoutRoom",
+                                    path: "/video/" + parseRoom.id
+                                }),
+                                body: "I just created and joined a video chat",
+                            });
+                            return {
+                                status: "ok",
+                                room: parseRoom.id,
+                            };
+                        }catch(err){
+                            let originalChannel = await config.twilioChat.channels(sid).fetch();
+                            let attributes = originalChannel.attributes;
+                            if (attributes)
+                                attributes = JSON.parse(attributes);
+                            if(attributes && attributes.breakoutRoom){
+                                return {
+                                    status: "ok",
+                                    room: attributes.breakoutRoom
+                                }
+                            }
+                            console.log(err);
+                            return {
+                                status: "error",
+                                message: "There is already a video room with this name (although it may be private, and you can't see it). Please either join the existing room or pick a new name."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            //make a new breakout room in this space, then drop a link into the chat to it.
+            let mode = "group";
+            let maxParticipants = (mode == "peer-to-peer" ? 10 : (mode == "group-small" ? 4 : 50));
+            try {
+
+                let twilioRoom = await config.twilio.video.rooms.create({
+                    type: mode,
+                    uniqueName: roomName,
+                    // type: conf.config.TWILIO_ROOM_TYPE,
+                    maxParticipants: maxParticipants,
+                    statusCallback: config.TWILIO_CALLBACK_URL
+                });
+                let chat = config.twilio.chat.services(config.TWILIO_CHAT_SERVICE_SID);
+
+                //Create a new room in the DB
+                let parseRoom = new BreakoutRoom();
+                parseRoom.set("title", roomName);
+                parseRoom.set("conference", conf);
+                parseRoom.set("twilioID", twilioRoom.sid);
+                parseRoom.set("isPrivate", true);
+                parseRoom.set("persistence", persistence);
+                parseRoom.set("mode", mode);
+                parseRoom.set("capacity", maxParticipants);
+                let socialSpace = new SocialSpace();
+                socialSpace.id = socialSpaceID;
+                parseRoom.set("socialSpace", socialSpace);
+                let acl = new Parse.ACL();
+                acl.setPublicReadAccess(false);
+                acl.setPublicWriteAccess(false);
+                acl.setRoleReadAccess(conf.id + "-conference", true);
+
+                acl.setRoleReadAccess(conf.id + "-moderator", true);
+                parseRoom.setACL(acl, {useMasterKey: true});
+                await parseRoom.save({}, {useMasterKey: true});
+                let attributes = {
+                    category: "breakoutRoom",
+                    roomID: parseRoom.id
+                }
+                let twilioChatRoom = await chat.channels.create({
+                    friendlyName: roomName,
+                    attributes: JSON.stringify(attributes),
+                    type:
+                        "public"
+                });
+                parseRoom.set("twilioChatID", twilioChatRoom.sid);
+                await parseRoom.save({},{useMasterKey: true});
+
+                //send a message to the chat channel that the user spawned off a video chat
+                config.twilioChat.channels(sid).messages.create({
+                    from: profile.id,
+                    attributes: JSON.stringify({
+                        linkTo: "breakoutRoom",
+                        path: "/video/" + profile.get("conference").get("conferenceName") + "/" + roomName
+                    }),
+                    body: "I just created and joined a video chat",
+                });
+                return {
+                   status: "ok",
+                    room: parseRoom.id,
+                };
+            }catch(err){
+                console.log(err);
+                return {
+                    status: "error",
+                    message: "There is already a video room with this name (although it may be private, and you can't see it). Please either join the existing room or pick a new name."
+                }
+            }
+        }
+    }
+    return null;
+});
+
+
+Parse.Cloud.define("chat-addToSID", async (request) => {
+    let confID = request.params.conference;
+    let sid = request.params.sid;
+    let title = request.params.title;
+    let userQ = new Parse.Query(UserProfile);
+    let conf = new ClowdrInstance();
+    conf.id = confID;
+    userQ.equalTo("user", request.user);
+    userQ.equalTo("conference", conf);
+
+    let profile = await userQ.first({useMasterKey: true});
+    if (profile) {
+        //is it a private channel?
+        let config = await getConfig(conf);
+        let originalChannel = await config.twilioChat.channels(sid).fetch();
+        if (originalChannel.type == "private") {
+            //Is it a DM or a conversation?
+            let attributes =  originalChannel.attributes;
+            if(attributes)
+                attributes = JSON.parse(attributes);
+            if(attributes && (attributes.mode == "directMessage" || attributes.mode == "group")){
+                let parseID = attributes.parseID;
+                if(parseID){
+                    //Validate that this user has access to the convo
+                    let convoQ = new Parse.Query(Converation);
+                    let convo  = await convoQ.get(parseID, {sessionToken: request.user.getSessionToken()});
+                    if(convo){
+                        //Now get all of the UIDs from the profileIDs to add
+                        let profilesQ = new Parse.Query(UserProfile);
+                        let profiles = [];
+                        if(request.params.users)
+                            profiles = request.params.users.map(u=>{
+                            let r = new UserProfile();
+                            r.id = u;
+                            return r;
+                        });
+                        profiles= await Parse.Object.fetchAll(profiles, {useMasterKey: true});
+                        let acl = convo.getACL();
+                        let room;
+                        if(attributes.breakoutRoom){
+                            let roomQ = new Parse.Query(BreakoutRoom);
+                            room = await roomQ.get(attributes.breakoutRoom, {useMasterKey: true});
+                        }
+                        for(let profile of profiles){
+                            //Add to ACL
+                            acl.setReadAccess(profile.get("user").id, true);
+                            if(room){
+                                room.getACL().setReadAccess(profile.get("user").id, true);
+                            }
+                        }
+
+                        if (room) {
+                            await room.save({}, {useMasterKey: true});
+                        }
+
+                        if(convo.get("isDM")){
+                            convo.set("isDM", false);
+                            convo.set("friendlyName", title);
+                            attributes.mode='group';
+                            await config.twilioChat.channels(sid).update({friendlyName: title,
+                                attributes: JSON.stringify(attributes)});
+                            console.log("Updated name")
+                        }
+
+                        await convo.save({}, {useMasterKey: true});
+                        let promises = [];
+                        if (request.params.users)
+                            for (let uid of request.params.users) {
+                                console.log("Adding " + uid + " to " + sid)
+                                promises.push(config.twilioChat.channels(sid).members.create({
+                                    identity: uid,
+                                    roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE
+                                }).catch(err => console.log));
+                            }
+                        await Promise.all(promises);
+
+                        return;
+                    }
+                    else{
+                        console.log("User does not have access to convo object")
+                    }
+                }
+            }
+            else{
+                throw "Unable to find ACL for channel!"
+            }
+        }
+        let promises = [];
+        for (let uid of request.params.users) {
+            promises.push(config.twilioChat.channels(sid).members.create({
+                identity: uid
+            }));
+        }
+        await Promise.all(promises);
+
+    }
+    return null;
+});
+
 Parse.Cloud.define("chat-getSIDForProgramItem", async (request) => {
     let programItemID = request.params.programItem;
     let itemQ = new Parse.Query("ProgramItem");
@@ -211,28 +496,27 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
         accesToConf.matchesQuery("action", actionQ);
         const hasAccess = await accesToConf.first({sessionToken: request.user.getSessionToken()});
         let role = config.TWILIO_CHAT_CHANNEL_OBSERVER_ROLE;
-        if(hasAccess){
+        if (hasAccess) {
             role = config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE;
         }
-        // try{
-        //     let member = await config.twilioChat.channels(config.TWILIO_ANNOUNCEMENTS_CHANNEL).members.create({
-        //         identity: profile.id,
-        //         roleSid: role
-        //     });
-        //     console.log(profile.id + " join directly " + config.TWILIO_ANNOUNCEMENTS_CHANNEL);
-        // }catch(err){
-        //     if(err.code ==50403){
+        try {
+            let member = await config.twilioChat.channels(config.TWILIO_ANNOUNCEMENTS_CHANNEL).members.create({
+                identity: profile.id,
+                roleSid: role
+            });
+            console.log(profile.id + " join directly " + config.TWILIO_ANNOUNCEMENTS_CHANNEL);
+        } catch (err) {
+            if (err.code == 50403) {
                 let newChan = await getBondedChannel(conf, config, config.TWILIO_ANNOUNCEMENTS_CHANNEL);
                 let member = await config.twilioChat.channels(newChan).members.create({
                     identity: profile.id,
                     roleSid: role
                 });
                 console.log(profile.id + " join bonded " + newChan);
-            // }
-            // else{
-            //     console.log(err);
-            // }
-        // }
+            } else {
+                console.log(err);
+            }
+        }
 
     }
     return null;
@@ -282,15 +566,6 @@ Parse.Cloud.define("chat-createDM", async (request) => {
                 });
                 console.log(member)
             }
-
-            // if (!members.find(m => m.identity == messageWith)) {
-            //     let member = await config.twilioChat.channels(convo.get('sid')).members.create({
-            //         identity: messageWith,
-            //         roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE
-            //     });
-            //     console.log(member)
-            // }
-            console.log("Found existing chat room")
             return {"status": "ok", sid: convo.get("sid")};
         }
         convo = new Converation();
