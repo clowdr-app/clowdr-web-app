@@ -90,7 +90,7 @@ class LinkMenu extends React.Component {
                         <Menu.Item key='/exhibits/src-posters' icon={<BorderOutlined/>}><NavLink to="/exhibits/icse-2020-ACM-Student-Research-Competition/grid">SRC Posters</NavLink></Menu.Item>
                     </SubMenu>,
 
-                    <Menu.Item key='/lobby' icon={<WechatOutlined/>}><NavLink to="/lobby">Video Chat</NavLink></Menu.Item>,
+                    <Menu.Item key='/lobby' icon={<WechatOutlined/>}><NavLink to="/lobby">Video Chat Lobby</NavLink></Menu.Item>,
 
                     <Menu.Item key='/account' icon={<UserOutlined/>}><NavLink to="/account">My Account</NavLink></Menu.Item>,
 
