@@ -1,5 +1,5 @@
 import React from "react";
-import {Badge, Button, Card, Popover, Skeleton, Tooltip} from "antd";
+import {Avatar, Badge, Button, Card, Popover, Skeleton, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
@@ -20,11 +20,18 @@ class UserStatusDisplay extends React.Component{
         this.setState({profile: profile, presence: userStatus})
     }
 
+    componentWillUnmount() {
+        this.mounted = false;
+    }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!this.mounted)
+            return;
         if(this.props.auth.presences[this.state.id] != this.state.presence){
             this.setState({presence: this.props.auth.presences[this.state.id]});
         }
     }
+    
     openDM(){
         this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
@@ -66,14 +73,16 @@ class UserStatusDisplay extends React.Component{
         if (this.props.auth.userProfile.id != this.state.profile.id){
             onClick = this.openDM.bind(this);
         }
+        let avatar, inlineAvatar;
+        if (this.state.profile && this.state.profile.get("profilePhoto") != null)
+            avatar = <Avatar src={this.state.profile.get("profilePhoto").url()}/>
+
         let affiliation = "";
         // This way of writing the tests is certainly suboptimal!
         if ("" + this.state.profile.get("affiliation") != "undefined") {
             affiliation = "" + this.state.profile.get("affiliation");
         }
-        let popoverTitle = this.state.profile.get("displayName");
-        if (presenceDesc != "")
-            popoverTitle = popoverTitle + " is " + presenceDesc;
+        let popoverTitle = <div className="nameAndAvatar">{avatar} {this.state.profile.get("displayName")}</div>;
         let webpage = "";
         if ("" + this.state.profile.get("webpage") != "undefined") {
             webpage = <div>
@@ -92,9 +101,9 @@ class UserStatusDisplay extends React.Component{
             tags = this.state.profile.get("tags").toString;
         }
         // BCP: Not quite right -- needs some spaces after non-empty elements, and some vertical space after the first line if the whole first line is nonempty:
-        let firstLine = <div> {tags} {statusDesc} {dntWaiver} </div>;
+        let firstLine = <div><div className="presenceDesc">{presenceDesc}</div> {tags} {statusDesc} {dntWaiver} </div>;
         // BCP: And this needs a bit more vertical spacing between non-empty elements too:
-        let popoverContent = <div> {firstLine} {affiliation} {bio} {webpage} </div>;
+        let popoverContent = <div className="userPopover"> {firstLine} {affiliation} {bio} {webpage} </div>;
 /*
         let popoverContent = <span></span>
         // BCP: Not clear to me why we treat these popovers differently

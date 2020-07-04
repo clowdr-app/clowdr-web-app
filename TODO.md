@@ -6,7 +6,7 @@
      - Default status color is black
      - Busy status color is gray
      - Names appear in gray too when busy
-- Search for users and rooms (and delete from instructions)
+- delete Search from instructions
 - Why is Jon's name not showing up in the sidebar??
 - Display people's status messages on the Lobby page (not just the popover)
      - also, put less whitespace on this page!
@@ -30,7 +30,6 @@
   from this room" or something
 
 BCP-specific tasks:
-  - remove # files from commits!
   - read about </Typography.Paragraph>
   - <Space />
 

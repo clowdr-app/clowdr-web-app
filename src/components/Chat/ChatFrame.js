@@ -4,7 +4,7 @@ import Parse from "parse";
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification} from 'antd';
+import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification, Button} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -114,12 +114,13 @@ class ChatFrame extends React.Component {
                 if (this.currentSID != sid)
                     return;
                 this.messagesLoaded(this.activeChannel, messages)
+                //Load the unread counts.
+                this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
+                this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
+                this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
             });
 
-            //Load the unread counts.
-            this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
-            this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
-            this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
+
             this.members = [];
             this.activeChannel.getMembers().then(members => this.members = members);
             this.activeChannel.on("memberLeft", (member)=> this.members = this.members.filter(m=>m.sid != member.sid));
@@ -191,6 +192,8 @@ class ChatFrame extends React.Component {
             if(lastTotal < 0)
                 lastTotal = this.lastSeenMessageIndex;
             let unread = lastTotal - lastConsumed;
+            if(unread < 0)
+                unread = 0;
             if (unread != this.unread) {
                 if (this.props.setUnreadCount)
                     this.props.setUnreadCount(unread);
@@ -215,7 +218,7 @@ class ChatFrame extends React.Component {
             if (lastSID && lastSID == message.sid)
                 continue;
             lastSID = message.sid;
-            lastIndex = message.index;
+            lastIndex = message.index
             if (!lastMessage || message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5) {
                 if (lastMessage)
                     ret.push(lastMessage);
@@ -322,6 +325,7 @@ class ChatFrame extends React.Component {
             if (this.form && this.form.current)
                 this.form.current.resetFields();
 
+            //TODO if no longer a DM (converted to group), don't do this...
             if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
                 this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
             }
@@ -485,7 +489,7 @@ class ChatFrame extends React.Component {
                                                       >
 
                                                               <div>
-                                                                  <UserStatusDisplay style={{display: "inline"}}
+                                                                  <UserStatusDisplay
                                                                                      popover={true}
                                                                                      profileID={item.author}/>&nbsp;
                                                                   <span
@@ -554,6 +558,10 @@ class ChatFrame extends React.Component {
         //     })
         // }}><SmileOutlined/> </a>);
         //
+        let actionButton;
+        if(m.attributes && m.attributes.linkTo){
+            actionButton = <Button onClick={()=>{this.props.auth.history.push(m.attributes.path)}}>Join Video</Button>
+        }
         if (isMyMessage || this.props.auth.permissions.includes("moderator"))
             options.push(<Popconfirm
                 key="delete"
@@ -569,13 +577,13 @@ class ChatFrame extends React.Component {
                 <div ref={(el) => {
                     this.messagesEnd = el;
                 }} className="chatMessage"><ReactMarkdown source={m.body}
-                                                          renderers={{text: emojiSupport, link: this.linkRenderer}}/></div>
+                                                          renderers={{text: emojiSupport, link: this.linkRenderer}}/>{actionButton}</div>
             </Popover>
         return <div key={m.sid} className="chatMessage"><ReactMarkdown source={m.body}
                                                                        renderers={{
                                                                            text: emojiSupport,
                                                                            link: this.linkRenderer
-                                                                       }}/></div>
+                                                                       }}/>{actionButton}</div>
 
 
     }

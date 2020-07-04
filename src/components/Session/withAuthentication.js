@@ -48,6 +48,7 @@ const withAuthentication = Component => {
                 loading: true,
                 roles: [],
                 currentRoom: null,
+                history: this.props.history,
                 refreshUser: this.refreshUser.bind(this),
                 getChatClient: this.getChatClient.bind(this),
                 setSocialSpace: this.setSocialSpace.bind(this),
@@ -81,6 +82,8 @@ const withAuthentication = Component => {
                     if(!chan || !chan.conversation)
                         return false;
                     let convo = chan.conversation;
+                    if(chan.channel.attributes && chan.channel.attributes.mode == "group")
+                        return false;
                     if(convo.get("isDM") == true &&
                         (convo.get("member2").id == profileOfUserToDM.id ||
                         convo.get("member1").id == profileOfUserToDM.id))
@@ -387,28 +390,27 @@ const withAuthentication = Component => {
             console.log(ret)
             return ret;
         }
+
         async getUserProfilesFromUserProfileIDs(ids) {
             let q = new Parse.Query(UserProfile);
             let users = [];
             let toFetch = [];
             for (let id of ids) {
-                if(this.userProfiles[id]){
-                    users.push(this.userProfiles[id]);
-                }
-                else{
+                if (!this.userProfiles[id]) {
                     let u = new UserProfile();
                     u.id = id;
                     toFetch.push(u);
-                    this.userProfiles[id] = new Promise(async(resolve,reject)=>{
-                        if(this.userProfiles[id]){
+                    this.userProfiles[id] = new Promise(async (resolve, reject) => {
+                        if (this.userProfiles[id]) {
                             resolve(this.userProfiles[id]);
                         }
-                        if(this.loadingProfiles[id]){
+                        if (this.loadingProfiles[id]) {
                             reject("Assertion failure?")
                         }
                         this.loadingProfiles[id] = resolve;
                     });
                 }
+                users.push(this.userProfiles[id]);
             }
             let res = await Parse.Object.fetchAll(toFetch);
             for(let u of res){

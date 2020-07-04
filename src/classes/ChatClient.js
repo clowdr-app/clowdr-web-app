@@ -25,7 +25,12 @@ export default class ChatClient{
         else{
             found = found.channel;
         }
-        this.openChat(found.sid);
+        if(!found){
+            console.log("Unable to find chat: " + sid)
+        }
+        else{
+            this.openChat(found.sid);
+        }
 
     }
     closeChatAndLeaveIfUnused(sid){
@@ -151,7 +156,7 @@ export default class ChatClient{
             }
         }
         let members = await channel.getMembers();
-        ret.members = members.map(m=>m.identity).filter(m=>m!= this.userProfile.id);
+        ret.members = members.map(m=>m.identity); //.filter(m=>m!= this.userProfile.id);
         ret.channel  =channel;
 
         this.joinedChannels[channel.sid] = ret;
@@ -170,8 +175,8 @@ export default class ChatClient{
         const updateMembers = async ()=>{
             let container = this.joinedChannels[sid];
             let members = await container.channel.getMembers();
-            let membersWithoutUs = members.map(m=>m.identity).filter(m=>m!= this.userProfile.id);
-            this.joinedChannels[sid].members = membersWithoutUs;
+            members = members.map(m=>m.identity);
+            this.joinedChannels[sid].members = members;
             if(this.chatBar){
                 this.chatBar.membersUpdated(sid);
             }
@@ -205,6 +210,9 @@ export default class ChatClient{
             promises.push(this.getChannelInfo(channel));
         }
         let channelsArray = await Promise.all(promises);
+        for(let sid of Object.keys(this.joinedChannels)){
+            this.subscribeToChannel(sid);
+        }
 
         //Make sure that the bottom chat bar and chat list have everything we have so far
         if (this.chatList)
@@ -234,10 +242,10 @@ export default class ChatClient{
         twilio.on("channelJoined", async (channel) => {
             let channelInfo = await this.getChannelInfo(channel);
             if(channelInfo){
+                this.subscribeToChannel(channel.sid);
                 if(channelInfo.attributes.category != "socialSpace"){
                     this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
                 }
-                this.subscribeToChannel(channel.sid);
             }
             // this.channelListeners.forEach(v => v.channelJoined(channel));
         });

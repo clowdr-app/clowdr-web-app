@@ -422,8 +422,8 @@ async function getConfig(conference){
 async function createBreakoutRoomForProgramItem(programItem){
     let config = await getConfig(programItem.get("conference"));
 
-    let mode = "peer-to-peer";
-    let maxParticipants = 5;
+    let mode = "group";
+    let maxParticipants = 50;
 
     let parseRoom = new BreakoutRoom();
     parseRoom.set("title", programItem.get("title"));

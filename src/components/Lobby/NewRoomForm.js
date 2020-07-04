@@ -124,7 +124,7 @@ class NewRoomForm extends React.Component {
                         <Form.Item
                             name="title"
                             label="Room title"
-                            extra="Shown in slack and on the lobby sidebar in this app"
+                            extra="Shown in sidebar"
                             rules={[
                                 {
                                     required: true,
