@@ -29,3 +29,4 @@ react-app-env.d.ts
 db/.env-db
 .env-dbref
 .idea
+#.*#

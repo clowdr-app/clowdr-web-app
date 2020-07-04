@@ -1,7 +1,9 @@
 import React from "react";
-import {Avatar, Badge, Button, Card, Popover, Skeleton, Tooltip} from "antd";
+import {Avatar, Badge, Popover, Skeleton, Tag, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
+
+import {isAvailableColor, isDNDColor, isDNDNameColor, isLookingForConversationColor} from "./LobbyColors.js";
 
 class UserStatusDisplay extends React.Component{
     constructor(props){
@@ -31,7 +33,7 @@ class UserStatusDisplay extends React.Component{
             this.setState({presence: this.props.auth.presences[this.state.id]});
         }
     }
-    
+
     openDM(){
         this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
@@ -42,6 +44,7 @@ class UserStatusDisplay extends React.Component{
         let presenceDesc = "";
         let badgeColor = "";
         let badgeStyle = "success";
+        let nameColor = "black";
         let dntWaiver = "";
         if (!this.state.presence){
             if(this.props.onlyShowWithPresence)
@@ -49,24 +52,27 @@ class UserStatusDisplay extends React.Component{
             badgeStyle = "default";
             presenceDesc = "Offline";
         } else if (this.state.presence.get("isLookingForConversation")) {
-            presenceDesc = "Looking for conversation";
-            badgeColor = "green";
+            presenceDesc = "looking for conversation";
+            badgeColor = isLookingForConversationColor;
             badgeStyle = "processing";
         } else if (this.state.presence.get("isAvailable")) {
-            presenceDesc = "In a conversation: come join if you like";
-            badgeColor = "geekblue";
+            // presenceDesc = "In a conversation: come join if you like";
+            presenceDesc = "";
+            badgeColor = isAvailableColor;
         } else if (this.state.presence.get("isOpenToConversation")) {
-            presenceDesc = "Open to conversation";
-            badgeColor = "black";
+            presenceDesc = "open to conversation";
+            badgeColor = "geekBlue";
         } else if (this.state.presence.get("isDND")) {
-            presenceDesc = "Busy: do not disturb";
-            badgeColor = "orange";
+            presenceDesc = "busy: do not disturb";
+            badgeColor = isDNDColor;
+            nameColor = isDNDNameColor;
         } else if (this.state.presence.get("isDNT")){
             presenceDesc = "Do not track"
             badgeStyle = "default"
             dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
         }
-        let statusDesc = (this.state.presence ? <i>{this.state.presence.get("status")}</i> : <></>);
+        // BCP: We should really do the italic styling and color in a style sheet!
+        let statusDesc = (this.state.presence ? <i><span style={{color:"gray"}}>{this.state.presence.get("status")}</span></i> : <></>);
         let onClick = ()=>{};
         if (this.props.auth.userProfile.id != this.state.profile.id){
             onClick = this.openDM.bind(this);
@@ -76,7 +82,7 @@ class UserStatusDisplay extends React.Component{
             avatar = <Avatar src={this.state.profile.get("profilePhoto").url()}/>
 
         let affiliation = "";
-        // This way of writing the tests is certainly suboptimal!
+        // BCP: This way of writing the tests is certainly suboptimal!
         if ("" + this.state.profile.get("affiliation") != "undefined") {
             affiliation = "" + this.state.profile.get("affiliation");
         }
@@ -92,11 +98,26 @@ class UserStatusDisplay extends React.Component{
         if ("" + this.state.profile.get("bio") != "undefined") {
             bio = <div>
                 {"" + this.state.profile.get("bio")}
-                </div>;
+            </div>;
         }
         let tags = "";
+        let tagToHighlight;
         if (this.state.profile.get("tags")) {
-            tags = this.state.profile.get("tags").map(t => t.get("label")).join(',');
+            tags = this.state.profile.get("tags").map(t => {
+                    let tag = <Tag key={t.id} color={t.get('color')} closable={false}
+                                   style={{marginRight: 3}}>{t.get("label")}</Tag>
+                    if (!tagToHighlight || t.get("priority") < tagToHighlight.get("priority"))
+                        tagToHighlight = t;
+                    if (t.get("tooltip"))
+                        return <Tooltip title={t.get("tooltip")}>{tag}</Tooltip>
+                    else return tag;
+                }
+            )
+        }
+        if (tagToHighlight) {
+            tagToHighlight = <Tag key={tagToHighlight.id} color={tagToHighlight.get('color')} closable={false}
+                                  className="highlightedTag"
+                           style={{marginRight: 3}}>{tagToHighlight.get("label")}</Tag>
         }
 
         // BCP: Not quite right -- needs some spaces after non-empty elements, and some vertical space after the first line if the whole first line is nonempty:
@@ -105,16 +126,17 @@ class UserStatusDisplay extends React.Component{
         let popoverContent = <div className="userPopover"> {firstLine} {affiliation} {bio} {webpage} </div>;
 /*
         let popoverContent = <span></span>
-        // BCP: Not clear to me why we treat these popovers differently
+        // BCP: Not clear to me why we were treating these so popovers differently
         // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
 */
+        // The mouseEnterDelay setting doesn't seem to work :-(
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
-                 <Popover title={popoverTitle}
-                          content={popoverContent} >
+                    <Popover title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
                     <Badge status={badgeStyle} color={badgeColor} />
-                     {this.state.profile.get("displayName")}
+                    <span style={{color:nameColor}}>{this.state.profile.get("displayName")} {tagToHighlight}</span>
+                    {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
                  </Popover>
               </div>
 /*

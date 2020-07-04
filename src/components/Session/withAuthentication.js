@@ -387,7 +387,6 @@ const withAuthentication = Component => {
             q.containedIn("user", toFetch);
             q.equalTo("conference", this.state.currentConference);
             let ret = await q.find();
-            console.log(ret)
             return ret;
         }
 
@@ -794,6 +793,26 @@ const withAuthentication = Component => {
         }
 
         componentDidMount() {
+            const Flair = Parse.Object.extend("Flair");
+            const query = new Parse.Query(Flair);
+            let _this = this;
+            query.find().then((u)=>{
+                //convert to something that the dom will be happier with
+                let res = [];
+                let flairColors = {};
+                for(let flair of u){
+                    flairColors[flair.get("label")] = {color: flair.get("color"), tooltip: flair.get("tooltip")} ;
+                    res.push({value: flair.get("label"), color: flair.get("color"), id: flair.id, tooltip: flair.get("tooltip"),
+                    priority: flair.get("priority")})
+                }
+                _this.setState({
+                    flairColors: flairColors,
+                    allFlair: res,
+                });
+            }).catch((err)=>{
+
+            });
+
             this.refreshUser();
             this.mounted = true;
         }

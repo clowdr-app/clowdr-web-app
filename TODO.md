@@ -2,27 +2,32 @@
 
 ## High-priority small things (for ICSE if possible)
 
-- Why is Jon's name not showing up in the sidebar??
-- Display people's status messages on the Lobby page (not just the popover)
-     - also, put less whitespace on this page!
-- Synchronize this file with GitHub planning area
 - Documentation
+    - delete Search from instructions on lobby page (and add a link to docs)
+    - put some structure on the user manual
     - people also wondered what kind of web analytics is happening when you're
       running this in your browser
-- Finish integrating user profiles
-     - Avatars
-     - Tags / flairs
+    - maybe link from landing page
 - Put the sidebar user list back to most-recent-first
-- make hover text show up after a short delay (1/2 second?)
-- Make the default status be isOpenToConversation, not isLookingForConversation
-- The pop-up for someone's name in the lobby does not include their textual
-  status (or profile); the one on the left sidebar does
-- If I close the chat box for the room that I'm in, how do I get it back
-  (e.g., to post something)?
+- less whitespace on the lobby page! (narrower columns)
+
+- More work on user profile display
+     - Make avatar display larger!?
+     - Get tags / flairs display working
+     - visually distinguish the parts of the profile display
+- Why was Jon's name not showing up in the sidebar??
+
 - add hover text for the maximize and other buttons -- make sure all buttons
   have hover text
 - Rephrase the Report button hover-over text: "Report a user or ban them
   from this room" or something
+
+- make hover text show up after a short delay (1/2 second?)
+    - Add a mouseEnterDelay to the Popover in UserPresenecDisplay
+
+BCP-specific tasks:
+  - read about </Typography.Paragraph>
+  - <Space />
 
 ## Lower-priority small things (after ICSE)
 

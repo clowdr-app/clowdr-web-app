@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Form, Input, Select, Skeleton, Tag} from "antd";
+import {Button, Form, Input, Select, Skeleton, Tag, Tooltip} from "antd";
 import Avatar from "./Avatar";
 import {AuthUserContext} from "../Session";
 import Parse from "parse";
@@ -33,7 +33,7 @@ class Account extends React.Component {
             let res = [];
             let flairColors = {};
             for(let flair of u){
-                flairColors[flair.get("label")] = flair.get("color");
+                flairColors[flair.get("label")] = {color: flair.get("color"), tooltip: flair.get("tooltip")} ;
                 res.push({value: flair.get("label"), color: flair.get("color"), id: flair.id})
             }
             _this.setState({
@@ -112,11 +112,15 @@ class Account extends React.Component {
 
         if(!this.state.flairColors)
             return <Tag>{value}</Tag>
-        return (
-            <Tag key={id} color={this.state.flairColors[value]} closable={closable} onClose={onClose} style={{ marginRight: 3 }}>
+        let tag = (
+            <Tag key={id} color={this.state.flairColors[value].color} closable={closable} onClose={onClose} style={{ marginRight: 3 }}>
                 {value}
             </Tag>
         );
+        if(this.state.flairColors[value].tooltip)
+            return <Tooltip title={this.state.flairColors[value].tooltip}>{tag}</Tooltip>
+
+        return tag;
     }
 
     topicRender(props) {
@@ -285,7 +289,7 @@ class Account extends React.Component {
                 {/*    />*/}
                 {/*</Form.Item>*/}
 
-                <Form.Item label="Flair" name="flair" extra="Add tags that will be visible to other attendees when they see your virtual badge">
+                <Form.Item label="Flair" name="flair" extra="Add tags that will be visible to other attendees when they see your virtual badge. At most one will be visible wherever your name appears on CLOWDR, and the rest will appear when attendees hover over your name.">
                     <Select
                         mode="multiple"
                         tagRender={this.tagRender.bind(this)}
@@ -297,6 +301,7 @@ class Account extends React.Component {
                         loading={this.state.updating}>
                     Save
                 </Button>
+                <p>Changes to your profile may not be immediately visible to other users.</p>
 
                 {error && <p>{error.message}</p>}
             </Form>);

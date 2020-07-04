@@ -132,7 +132,7 @@ class ContextualActiveUsers extends Component {
         this.setState({filteredRoom: roomID, filteredUser: userID});
     }
 
-    
+
     render() {
         if (!this.state.loggedIn) {
             return <div></div>
@@ -336,7 +336,7 @@ class ContextualActiveUsers extends Component {
                                 return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
                             }}
 
-                            options={searchOptions} placeholder="Search"></Select>
+                            options={searchOptions} placeholder="Search for people and rooms"></Select>
 
                     <div style={{height:'6px', background:'white'}}/>
 
