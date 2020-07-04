@@ -54,7 +54,7 @@ class ProgramSessions extends React.Component {
     async onCreate(values) {
         console.log("OnCreate! " + values.title)
         var _this = this;
-        let room = this.state.rooms.find(r => r.get("name") === values.room);
+        let room = this.props.rooms.find(r => r.id == values.room);
         if (!room)
             console.log('Invalid room ' + values.room);
 
@@ -126,20 +126,26 @@ class ProgramSessions extends React.Component {
 
     onUpdate(values) {
         var _this = this;
-        console.log("Updating session " + values.title);
+        console.log("Updating session " + values.title + " in room " + values.roomId);
         let session = this.state.sessions.find(s => s.id == values.objectId);
 
         if (session) {
-            console.log(session);
 
-            session.set("title", values.title);
-            session.set("startTime", values.startTime.toDate());
-            session.set("endTime", values.endTime.toDate());
+            if (session.get("title") != values.title)
+                session.set("title", values.title);
+            if (session.get("startTime") != values.startTime.toDate())
+                session.set("startTime", values.startTime.toDate());
+            if (session.get("endTime") != values.endTime.toDate())
+                session.set("endTime", values.endTime.toDate());
             session.set("items", values.items);
-            let room = this.state.rooms.find(r => r.get("name") === values.room);
-            if (!room)
-                console.log('Invalid room ' + values.room);
-            session.set("room", room);
+            if ((session.get("room") && session.get("room").id != values.roomId) || (!session.get("room") && values.roomId)) {
+                let room = this.state.rooms.find(r => r.id == values.roomId);
+                if (!room)
+                    console.log('Invalid room ' + values.roomId);
+                else 
+                    session.set("room", room);
+            }
+
             session.save().then((val) => {
                 _this.setState({visible: false, editing: false});
             }).catch(err => {
@@ -160,7 +166,6 @@ class ProgramSessions extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.log("[Admin/Sessions]: Something changed");
 
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions && this.state.gotItems) {
@@ -173,7 +178,7 @@ class ProgramSessions extends React.Component {
                 });
             }
             else {
-                console.log('[Admin/Sessions]: Program still downloading...');
+                console.log('[Admin/Sessions]: Program still downloading...' + this.state.loading);
                 if (prevProps.rooms.length != this.props.rooms.length) {
                     this.setState({gotRooms: true});
                     console.log('[Admin/Sessions]: got rooms');
@@ -188,7 +193,6 @@ class ProgramSessions extends React.Component {
             }
         }
         else {
-            console.log('[Admin/Sessions]: Program cached');
             if (prevProps.rooms.length != this.props.rooms.length) {
                 this.setState({rooms: this.props.rooms});
                 console.log('[Admin/Sessions]: changes in rooms');
@@ -380,6 +384,7 @@ class ProgramSessions extends React.Component {
             />      
             <Table 
                 columns={columns} 
+                pagination={false}
                 dataSource={this.state.searched ? this.state.searchResult : this.state.sessions} 
                 rowKey={(t)=>(t.id)}>
             </Table>
@@ -408,7 +413,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, it
     myItems.map(item => {
         myItemTitles.push(item.get('title'));
     })
-    console.log("total number of items is: " + items.length);
+    // console.log("total number of items is: " + items.length);
     return (
         <Modal
             visible={visible}

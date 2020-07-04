@@ -388,6 +388,7 @@ class Rooms extends React.Component {
                 </table>
             <Table 
                 columns={columns} 
+                pagination={false}
                 dataSource={this.state.searched ? this.state.searchResult : this.state.rooms} 
                 rowKey={(t)=>(t.id)}>
             </Table>
