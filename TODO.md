@@ -6,6 +6,9 @@
      - Default status color is black
      - Busy status color is gray
      - Names appear in gray too when busy
+- Finish integrating user profiles
+     - Make avatars display larger!?
+     - Get tags / flairs display working
 - delete Search from instructions
 - Why is Jon's name not showing up in the sidebar??
 - Display people's status messages on the Lobby page (not just the popover)
@@ -14,9 +17,6 @@
 - Documentation
     - people also wondered what kind of web analytics is happening when you're
       running this in your browser
-- Finish integrating user profiles
-     - Avatars
-     - Tags / flairs
 - Put the sidebar user list back to most-recent-first
 - make hover text show up after a short delay (1/2 second?)
 - Make the default status be isOpenToConversation, not isLookingForConversation

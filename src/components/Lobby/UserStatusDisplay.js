@@ -3,6 +3,8 @@ import {Avatar, Badge, Button, Card, Popover, Skeleton, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
+import {isDNDColor, isDNDNameColor,isAvailableColor, isLookingForConversationColor} from "./LobbyColors.js";
+
 class UserStatusDisplay extends React.Component{
     constructor(props){
         super(props)
@@ -31,7 +33,7 @@ class UserStatusDisplay extends React.Component{
             this.setState({presence: this.props.auth.presences[this.state.id]});
         }
     }
-    
+
     openDM(){
         this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
@@ -42,6 +44,7 @@ class UserStatusDisplay extends React.Component{
         let presenceDesc = "";
         let badgeColor = "";
         let badgeStyle = "success";
+        let nameColor = "black";
         let dntWaiver = "";
         if (!this.state.presence){
             if(this.props.onlyShowWithPresence)
@@ -50,18 +53,19 @@ class UserStatusDisplay extends React.Component{
             presenceDesc = "Offline";
         } else if (this.state.presence.get("isLookingForConversation")) {
             presenceDesc = "looking for conversation";
-            badgeColor = "green";
+            badgeColor = isLookingForConversationColor;
             badgeStyle = "processing";
         } else if (this.state.presence.get("isAvailable")) {
             // presenceDesc = "In a conversation: come join if you like";
             presenceDesc = "";
-            badgeColor = "lightgray";
+            badgeColor = isAvailableColor;
         } else if (this.state.presence.get("isOpenToConversation")) {
             presenceDesc = "open to conversation";
             badgeColor = "geekBlue";
         } else if (this.state.presence.get("isDND")) {
             presenceDesc = "busy: do not disturb";
-            badgeColor = "orange";
+            badgeColor = isDNDColor;
+            nameColor = isDNDNameColor;
         } else if (this.state.presence.get("isDNT")){
             presenceDesc = "Do not track"
             badgeStyle = "default"
@@ -78,7 +82,7 @@ class UserStatusDisplay extends React.Component{
             avatar = <Avatar src={this.state.profile.get("profilePhoto").url()}/>
 
         let affiliation = "";
-        // This way of writing the tests is certainly suboptimal!
+        // BCP: This way of writing the tests is certainly suboptimal!
         if ("" + this.state.profile.get("affiliation") != "undefined") {
             affiliation = "" + this.state.profile.get("affiliation");
         }
@@ -107,16 +111,15 @@ class UserStatusDisplay extends React.Component{
         let popoverContent = <div className="userPopover"> {firstLine} {affiliation} {bio} {webpage} </div>;
 /*
         let popoverContent = <span></span>
-        // BCP: Not clear to me why we treat these popovers differently
+        // BCP: Not clear to me why we were treating these so popovers differently
         // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
 */
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
-                 <Popover title={popoverTitle}
-                          content={popoverContent} >
+                 <Popover title={popoverTitle} content={popoverContent}>
                     <Badge status={badgeStyle} color={badgeColor} />
-                    {this.state.profile.get("displayName")}
+                    <span style={{color:nameColor}}>{this.state.profile.get("displayName")}</span>
                     {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
                  </Popover>
               </div>
