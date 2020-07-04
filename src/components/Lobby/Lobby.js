@@ -318,7 +318,7 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>
-                More information on the user interface, suggested social conventions, etc. can be found in the <a href="https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOTpHw0BIo/edit#heading=h.dhd7xqg6t0qm">CLOWDR User Manual</a>.
+                More information on the user interface, suggested social conventions, etc. can be found in the <a href="https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOTpHw0BIo/edit#heading=h.dhd7xqg6t0qm" target="_blank">CLOWDR User Manual</a>.
                 </Typography.Paragraph>
                 <Space />
 

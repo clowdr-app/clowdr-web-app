@@ -3,34 +3,23 @@
 ## High-priority small things (for ICSE if possible)
 
 - Documentation
-    - delete Search from instructions on lobby page (and add a link to docs)
-    - put some structure on the user manual
-    - people also wondered what kind of web analytics is happening when you're
-      running this in your browser
-    - maybe link from landing page
-- Put the sidebar user list back to most-recent-first
-- less whitespace on the lobby page! (narrower columns)
+
+- Did we implement the "mute someone else's mic" feature?  Seems important!
 
 - More work on user profile display
      - Make avatar display larger!?
-     - make tags smaller (if Jon hasn't done it already)
      - visually distinguish the parts of the profile popup
 
-- Why was Jon's name not showing up in the sidebar??
+- make sure all controls have hover text
 
-- add hover text for the maximize and other buttons -- make sure all buttons
-  have hover text
-- Rephrase the Report button hover-over text: "Report a user or ban them
-  from this room" or something
-
-- Is there a way to make the Lobby screen display a multi-column vertical
-  list, rather than a grid?
-     - The div container that contains the users should be display:flex;
-       flex-flow: column wrap
+- Make max width of the the sidebar larger, so that people can expand it
+  when they're using it to view the slido
 
 - try IntelliJ
 
 - Change number of columns in lobby display depending on screen size
+
+- Put the sidebar user list back to most-recent-first?
 
 ## Lower-priority small things (after ICSE)
 

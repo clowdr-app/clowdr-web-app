@@ -9,7 +9,7 @@ class Landing extends Component {
             <h2>ICSE 2020 LIVE @ CLOWDR</h2>
             <p><strong>Welcome to Virtual ICSE 2020!</strong> We are using two main tools to connect everyone:
             </p>
-            <div> 
+            <div>
                 <ul>
                     <li>This Web app, CLOWDR, where you can view all the <NavLink to="/live/now">live</NavLink> and <NavLink to ="/live/past">past</NavLink> sessions,
                         ask questions during the live talks, engage in session-specific and paper-specific chats, view the <NavLink to="/exhibits/icse-2020-poster/grid">posters</NavLink>,
@@ -33,9 +33,9 @@ class Landing extends Component {
                     the <a href="https://icse-2020.slack.com/app_redirect?channel=mentoring" rel="noopener noreferrer" target="_blank">#mentoring</a> channel in Slack,
                     and meet up with younger people either in one of the existing video chat rooms or in your own video room.
                 </li>
-                <li>If you'd like to organize an informal public gathering, create one using the New Breakout Room button (please give it a meaningful name!), and announce it in 
+                <li>If you'd like to organize an informal public gathering, create one using the New Breakout Room button (please give it a meaningful name!), and announce it in
                     the <a href="https://icse-2020.slack.com/app_redirect?channel=coffee-lounge" rel="noopener noreferrer" target="_blank">#coffee-lounge</a>.</li>
-            <li> If you're just looking for casual conversation, feel free to drop into one of the hallway track rooms (Hallway 1, Hallway 2, ...) anytime. Or head to an empty Hallway room and see who else shows up.  You can also set your status to let people know what you're up to. A user-manual-under-contruction can be found <a href="https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOTpHw0BIo/edit#heading=h.dhd7xqg6t0qm">here</a>.  </li>
+            <li> If you're just looking for casual conversation, feel free to drop into one of the hallway track rooms (Hallway 1, Hallway 2, ...) anytime. Or head to an empty Hallway room and see who else shows up.  You can also set your status to let people know what you're up to. See the <a href="https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOTpHw0BIo/edit#heading=h.dhd7xqg6t0qm">user manual</a> for more.  </li>
             </ul>
             </div>
             <div><strong>Code of Conduct</strong>: Remember to adhere to
@@ -59,7 +59,7 @@ class Landing extends Component {
 
 <center>
 <a href="https://www.acm.org/" target="_blank">
-<img src="https://conf.researchr.org/getLogo/036e8246-6b79-4da5-a41d-b2548815d79f?1523626085000" width={300} /> 
+<img src="https://conf.researchr.org/getLogo/036e8246-6b79-4da5-a41d-b2548815d79f?1523626085000" width={300} />
 </a>
   <a href="http://www.sigsoft.org/index.html" taget="_blank">
   <img src="https://conf.researchr.org/getLogo/ebbb2b60-9730-42f4-9d46-4125ba39cb8f?1573234724000" width={200} />
@@ -75,7 +75,7 @@ class Landing extends Component {
 </a>
 </center>
 
-<center> <font size={6}> Supporters </font> 
+<center> <font size={6}> Supporters </font>
 
 <center> <font size={4}> Platinum level </font> </center>
 <a href="http://www.ncsu.edu">
@@ -92,11 +92,11 @@ class Landing extends Component {
   <img src="https://conf.researchr.org/getImage/icse-2020/orig/nsf1.gif" width={130} /> </a>
 </center>
 
-<center> <font size={4}> Gold level </font> 
+<center> <font size={4}> Gold level </font>
   <a href="https://microsoft.com">  <img src="https://conf.researchr.org/getImage/icse-2020/orig/microsoft.png" width={200} /> </a>
 
-  <a href="https://samsung.com">  
-  <img src="https://conf.researchr.org/getLogo/b15ba186-a38b-49c9-b9d5-f375495e7761?1570543885000" width={200} /> 
+  <a href="https://samsung.com">
+  <img src="https://conf.researchr.org/getLogo/b15ba186-a38b-49c9-b9d5-f375495e7761?1570543885000" width={200} />
   </a>
 <center> <font size={4}> Silver level </font> </center>
   <a href="https://lg.com">
