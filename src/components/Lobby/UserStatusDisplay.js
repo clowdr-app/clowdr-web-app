@@ -96,7 +96,7 @@ class UserStatusDisplay extends React.Component{
         }
         let tags = "";
         if (this.state.profile.get("tags")) {
-            tags = this.state.profile.get("tags").toString();
+            tags = this.state.profile.get("tags").map(t => t.get("label")).join(',');
         }
 
         // BCP: Not quite right -- needs some spaces after non-empty elements, and some vertical space after the first line if the whole first line is nonempty:
