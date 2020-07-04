@@ -127,7 +127,7 @@ class LiveStreamingPanel extends Component {
         
             sessionData = <table><tbody>
                 <tr>{this.props.mysessions.map(s => {
-                            return <td key={s.id}><b>{s.get("title")}</b></td>
+                            return <td key={s.id}><b>{moment(s.get("startTime")).format('LT') + ": " + s.get("title")}</b></td>
                         })}</tr>
                         {rows.map(row => {
                             return <tr>{row.map(pair => {
@@ -143,7 +143,7 @@ class LiveStreamingPanel extends Component {
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
 
             sessionData = this.props.mysessions.map(s => {
-                            return <div key={s.id}>{s.get("title")}</div>
+                            return <div key={s.id}><b>{moment(s.get("startTime")).format('LT') + ": " + s.get("title")}</b></div>
                         })
 
         }
@@ -169,16 +169,10 @@ class LiveStreamingPanel extends Component {
             player = <iframe width="100%" height="100%" style={{position:"absolute", top:0, left:0}} src={this.state.video_url}/>
         }
 
-        let sessionInfo = this.props.mysessions.map(s => {
-                return <div key={s.id}>{s.get("title")}</div>
-            });
-
         let description=<div>
             <div className="video-watchers-count">{viewers} here now</div>
             <div className="video-room-session-info">
-                {this.props.mysessions.map(s => {
-                    return <div key={s.id}>{moment(s.get("startTime")).format('LT') + ": " + s.get("title")}</div>
-                })}
+                {sessionData}
             </div>
         </div>
         return <Card
@@ -194,26 +188,7 @@ class LiveStreamingPanel extends Component {
             ]}
         >
             <Card.Meta title={this.props.video.get("name")} description={description}></Card.Meta>
-            {/*<table style={{width:"100%"}}>*/}
-            {/*    <tbody>*/}
-            {/*    <tr >*/}
-            {/*        <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>*/}
-                    {/*        <td style={{"textAlign":"left"}}>Viewers: {viewers}</td>*/}
-                    {/*        <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>*/}
-                    {/*    </tr>*/}
-                    {/*    </tbody>*/}
-                    {/*</table>*/}
-                    {/*<div className="player-wrapper" >*/}
-                    {/*    <ReactPlayer playing playsinline controls={true} muted={true} volume={1} */}
-                    {/*                width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>*/}
-                    {/*</div>*/}
-                    <div>
-                        {sessionData}
-                        {/* {this.props.mysessions.map(s => {
-                            return <div key={s.id}>{s.get("title")}</div>
-                        })} */}
-                    </div>
-                </Card>
+            </Card>
     }
 }
 
