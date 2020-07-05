@@ -314,7 +314,7 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>
-                When you are looking for casual conversation or hoping to meet new people,  head over to one of the small-group rooms labeled "Hallway 1", "Hallway 2", etc.  You can either join a room at random, or pick an empty room and wait for others to join you there.
+                When you are looking for casual conversation or hoping to meet new people,  head over to one of the small-group rooms labeled "Hallway 1", "Hallway 2", etc.  You can either join a room at random or else pick an empty room and wait for others to join you there.
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>
