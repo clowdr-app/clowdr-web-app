@@ -63,7 +63,7 @@ class SocialTab extends Component {
 
         const handleMouseMove = (e) => {
             const newWidth = e.clientX - document.body.offsetLeft;
-            if (newWidth >= 0 && newWidth <= 300)
+            if (newWidth >= 0 && newWidth <= 600)
                 this.setDrawerWidth(newWidth);
         };
         let containerStyle = {width: this.state.siderWidth, top: topHeight};

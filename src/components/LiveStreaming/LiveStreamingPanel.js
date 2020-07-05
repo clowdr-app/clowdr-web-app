@@ -5,6 +5,7 @@ import ReactPlayer from "react-player";
 import {videoURLFromData} from './utils';
 import { CollectionsOutlined } from "@material-ui/icons";
 import { NavLink } from "react-router-dom";
+var timezone = require('moment-timezone');
 
 class LiveStreamingPanel extends Component {
     constructor(props) {
@@ -127,7 +128,7 @@ class LiveStreamingPanel extends Component {
         
             sessionData = <table><tbody>
                 <tr>{this.props.mysessions.map(s => {
-                            return <td key={s.id}><b>{moment(s.get("startTime")).format('LT') + ": " + s.get("title")}</b></td>
+                            return <td key={s.id}><b>{moment(s.get("startTime")).tz(timezone.tz.guess()).calendar() + ": " + s.get("title")}</b></td>
                         })}</tr>
                         {rows.map(row => {
                             return <tr key={row[0][0]}>{row.map(pair => {
@@ -143,7 +144,7 @@ class LiveStreamingPanel extends Component {
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
 
             sessionData = this.props.mysessions.map(s => {
-                            return <div key={s.id}><b>{moment(s.get("startTime")).format('LT') + ": " + s.get("title")}</b></div>
+                            return <div key={s.id}><b>{moment(s.get("startTime")).tz(timezone.tz.guess()).calendar() + ": " + s.get("title")}</b></div>
                         })
 
         }
@@ -162,7 +163,7 @@ class LiveStreamingPanel extends Component {
 
         let player = "";
         if (!this.state.china) {
-            player = <ReactPlayer playing playsinline controls={true} muted={true} volume={1}
+            player = <ReactPlayer playing={this.props.playing} playsinline controls={true} muted={true} volume={1}
                         width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
         }
         else {

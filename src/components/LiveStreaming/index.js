@@ -83,7 +83,7 @@ class LiveStreaming extends Component {
         if (when == "now") {
             upcomingSessions = this.props.sessions.filter(s => {
                 var timeS = s.get("startTime") ? s.get("startTime") : new Date();
-                let ts_window = moment(timeS).subtract(8, 'h').toDate().getTime();
+                let ts_window = moment(timeS).subtract(30, 'd').toDate().getTime();
                 return (timeS > now && ts_window < now && s.get("room"));
             }).sort(this.dateSorter);
 
@@ -104,7 +104,7 @@ class LiveStreaming extends Component {
                 console.log('No upcoming sessions');
 
             upcomingRooms = upcomingRooms.reduce((acc, room) => acc.find(r => r && room && r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
-            upcomingRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
+            // upcomingRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
             // console.log('--> Upcoming rooms: ' + upcomingRooms.length);
         }
 
@@ -222,7 +222,6 @@ class LiveStreaming extends Component {
             } else {
                 if (this.state.expanded) {
                     this.setState({expanded: false, expanded_video: null, expandedRoomName: null})
-                    console.log("Deactivating");
                 }
                 this.props.auth.setSocialSpace("Lobby");
 
@@ -230,12 +229,13 @@ class LiveStreaming extends Component {
         }
     }
     expandVideoByName(roomName){
-        if(!this.state.expandedRoomName || roomName != this.state.expandedRoomName){
+        if(!this.state.expandedRoomName || !this.state.expanded || roomName != this.state.expandedRoomName){
            let room = this.state.rooms.find(r=>(r.get("name") == roomName));
             if(!room)
                 room = this.state.liveRooms.find(r=>(r.get("name") == roomName)); //I don't understand why we have rooms vs liveRooms...
+            if(!room)
+                room = this.state.upcomingRooms.find(r=>(r.get("name") == roomName));//...?
            if(room){
-               console.log("Expanding " + roomName)
                // if(this.props.match.params.when == "now" && room.get("qa")){
                    this.props.auth.helpers.setExpandedProgramRoom(room);
                // }
@@ -261,9 +261,10 @@ class LiveStreaming extends Component {
                         let mySessions = this.state.upcomingSessions.filter(s => s.get("room").id === room.id);
                         let width = 320;
                         if (!room.get("src1")) {
-                            return <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
-                        </div>
+                            // // return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                            //     <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
+                        // </div>
+                            return "";
                         }
 
                         if (room.get("src1").includes("Zoom")) {
@@ -274,7 +275,9 @@ class LiveStreaming extends Component {
 
                         return <React.Fragment key={room.id}>
                             <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                <LiveStreamingPanel auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when} onExpand={this.toggleExpanded.bind(this,
+                                <LiveStreamingPanel auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when}
+                                                    playing={false}
+                                                    onExpand={this.toggleExpanded.bind(this,
                                 room)}/>
                             </div>
                             </React.Fragment> 
@@ -289,12 +292,16 @@ class LiveStreaming extends Component {
         }
 
         if (this.props.downloaded) {
-
+            let rooms = this.state.liveRooms;
+            if(this.state.expanded)
+                rooms = rooms.concat(this.state.upcomingRooms)
             return <div>{header}
                 <div className={"space-align-container"}>
-                    {this.state.liveRooms.map((room) => {
+                    {rooms.map((room) => {
                         
                         let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
+                        if(mySessions.length == 0)
+                            mySessions = this.state.upcomingSessions.filter(s=>s.get("room").id === room.id); //TODO why are future/current separate datastructures?
                         let qa = "";
                         let width = "100%";
                         if (!this.state.expanded) width = 320;
@@ -308,9 +315,11 @@ class LiveStreaming extends Component {
                         // }
                         
                         if (!room.get("src1")) {
-                            return <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
-                        </div>
+                            // return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                            //     <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
+                        // </div>
+                            return ""
+
                         }
 
                         if (room.get("src1").includes("Zoom")) {
@@ -326,7 +335,9 @@ class LiveStreaming extends Component {
                         else
                             return <React.Fragment key={room.id}>
                                 <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                    <LiveStreamingPanel auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when}  onExpand={this.toggleExpanded.bind(this,
+                                    <LiveStreamingPanel
+                                        playing={true}
+                                        auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when}  onExpand={this.toggleExpanded.bind(this,
                                     room)}/>
                                 </div>
                                 <div className={"space-align-block"}>{qa}</div>   

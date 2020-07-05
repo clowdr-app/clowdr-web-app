@@ -205,7 +205,7 @@
 }
 .slido{
     height: 500px;
-    width: 250px;
+    width: 100%;
 }
 #sidepopoutcontainer .ant-menu-sub.ant-menu-inline > .ant-menu-item{
     line-height: 1.1;
@@ -498,7 +498,8 @@ div.availabilityOptionsOpen  span.availabilityOption{
     flex-direction: row;
 }
 td.ant-table-cell.program-table-date{
-    white-space: nowrap
+    white-space: nowrap;
+    vertical-align: top;
 }
 td.ant-table-cell.program-table-timeBand{
     white-space: nowrap

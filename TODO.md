@@ -3,17 +3,21 @@
 ## High-priority small things (for ICSE if possible)
 
 Highest priority:
+
     - Documentation
          - lots more writing to be done!
          - @Jon and @Crista please take a look if you have time
-         - One specific thing where I need help from one of you is
-    - Who can delete rooms (e.g., can BCP?)
+         - One specific thing where I need help from one of you is who can delete rooms (e.g., can BCP?)
+    		* JB: Right now, just moderators, which includes only Crista and me, but I just added you. We will find out who needs it for ICSE and give them the role. Provisioning access to send announcements is another process, but it's probably best to keep that locked down pretty tightly anyway.
 
 Little UI things for Jon
+
     - Did we implement the "mute someone else's mic and put a message in the
       chat" feature?  Seems important!
+      	* JB: No, unfortuantely didn't get to this. In big-group rooms, the default is now that you join muted. Suggest moving everything to big group rooms (I changed the hallways tracks that you made to big group). 
     - Make max width of the the sidebar larger, so that people can expand it
       when they're using it to view the slido
+      	* JB You can now drag it wider and it will resize slido
     - Make avatars a little larger!
     - Put the sidebar user list back to most-recent-first
     - Change number of columns in lobby display depending on screen size
@@ -23,6 +27,7 @@ Little UI things for Jon
       things from here to there, but on reflection I think this file is a
       better, more flexible way of keeping track of todo items and
       priorities.)
+      	* OK. They are in the "project" - it is a pretty good way to organize things. https://github.com/orgs/clowdr-app/projects/1
 
 Little UI things for anybody:
     - make sure all controls have hover text

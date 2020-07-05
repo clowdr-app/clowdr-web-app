@@ -1,5 +1,5 @@
 import React from 'react';
-import {Select, Spin, Table, Button, Radio} from 'antd';
+import {Select, Spin, Table, Button, Radio, Tooltip} from 'antd';
 import Parse from "parse";
 import {AuthUserContext} from "../Session";
 import Form from "antd/lib/form/Form";
@@ -58,7 +58,8 @@ class Program extends React.Component {
             let dateHeader = {label: date, rowSpan: 0};
             row.date = dateHeader;
             let timeBands = groupBy(rawSessions,(session)=>
-                (timezone(session.get("startTime")).tz(this.state.timeZone).format("LT") + " - ") + timezone(session.get("endTime")).tz(this.state.timeZone).format("LT"))
+                (<Tooltip title={timezone(session.get("startTime")).tz(this.state.timeZone).format("ddd MMM D LT ") +" - "+ timezone(session.get("endTime")).tz(this.state.timeZone).format("LT z")}>
+                    {timezone(session.get("startTime")).tz(this.state.timeZone).format("LT")} - {timezone(session.get("endTime")).tz(this.state.timeZone).format("LT")}</Tooltip>))
 
             for(const [time, sessions ] of timeBands){
                 let timeBandHeader = {label: time, rowSpan: 0};
@@ -152,6 +153,8 @@ class Program extends React.Component {
         // for(const [date, program] of this.state.sessions){
         //     days.push(<ProgramDay date={date} program={program} key={date} formatTime={this.state.formatTime} />)
         // }
+
+
         let cols = [{
             title: 'Date',
             className:"program-table-date",
@@ -166,7 +169,7 @@ class Program extends React.Component {
                 else
                     obj.props.rowSpan = 0;
                 return obj;
-            }
+            },
         },{  title: 'Time',
             dataIndex: 'timeBand',
             className:"program-table-timeBand",
