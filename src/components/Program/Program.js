@@ -205,7 +205,7 @@ class Program extends React.Component {
                 }
             }
         ];
-        const props = {width: 620, zoomWidth: 620,  zoomPosition: "original", img: process.env.PUBLIC_URL + '/program-overview.png'};
+        const props = {width: 700, zoomWidth: 700,  zoomPosition: "original", img: process.env.PUBLIC_URL + '/program-overview.png'};
         return <div>
             <h4>Program Overview:</h4>
             <ReactImageZoom {...props}/>
