@@ -7,6 +7,7 @@ import withProgram from './withProgram';
 import ProgramContext from './context';
 import { ContactlessOutlined } from '@material-ui/icons';
 import {NavLink} from "react-router-dom";
+import ReactImageZoom from 'react-image-zoom';
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -204,9 +205,13 @@ class Program extends React.Component {
                 }
             }
         ];
+        const props = {width: 620, zoomWidth: 620,  zoomPosition: "original", img: process.env.PUBLIC_URL + '/program-overview.png'};
         return <div>
             <h4>Program Overview:</h4>
+            <ReactImageZoom {...props}/>
+            {/* <img style={{width: "100%", height: "100%"}} src={process.env.PUBLIC_URL + '/program-overview.png'} />  */}
 
+            <h4>Details:</h4>
             <Radio.Group defaultValue="timezone.tz.guess()" onChange={e => {this.setState({timeZone: e.target.value})}}>
                 <Radio.Button value="timezone.tz.guess()">Local Time</Radio.Button>
                 <Radio.Button value="UTC">UTC Time</Radio.Button>
