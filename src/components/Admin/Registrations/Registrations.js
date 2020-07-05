@@ -50,6 +50,9 @@ class Registrations extends React.Component {
         var _this = this;
 
         let exists = this.state.regs.find(r => r.get("email") == values.email)
+        if (exists)
+            console.log("[Admin/Registrations]: Email already exists");
+            console.log("[Admin/Registrations]: Valid email? " + validateEmail(values.email));
 
         if (!exists && validateEmail(values.email)) {
             console.log("OnCreate! " + values.name)
@@ -63,14 +66,14 @@ class Registrations extends React.Component {
             reg.set("country", values.country);
             reg.save().then((val) => {
                 // Make local changes
-                let newRegs = this.state.regs.unshift(reg);
+                let newRegs = [reg, ...this.state.regs];
                 _this.setState({
                     visible: false,
                     regs: newRegs,
                     filteredRegs: newRegs
                 });
             }).catch(err => {
-                console.log(err + " " + reg.id);
+                console.log("[Admin/Registrations]: " + err );
             });
         }
     }
