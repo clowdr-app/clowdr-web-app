@@ -205,7 +205,7 @@ class Program extends React.Component {
                 }
             }
         ];
-        const props = {width: 700, zoomWidth: 700,  zoomPosition: "original", img: process.env.PUBLIC_URL + '/program-overview.png'};
+        const props = {width: 700, zoomWidth: 700,  zoomPosition: "original", img: 'https://2020.icse-conferences.org/getImage/orig/ICSE-Schedule.PNG'};
         return <div>
             <h4>Program Overview:</h4>
             <ReactImageZoom {...props}/>
