@@ -5,29 +5,44 @@
 Highest priority:
     - Documentation
          - lots more writing to be done!
-    - Did we implement the "mute someone else's mic" feature?  Seems important!
+         - @Jon and @Crista please take a look if you have time
+         - One specific thing where I need help from one of you is
     - Who can delete rooms (e.g., can BCP?)
 
 Little UI things for Jon
+    - Did we implement the "mute someone else's mic and put a message in the
+      chat" feature?  Seems important!
     - Make max width of the the sidebar larger, so that people can expand it
       when they're using it to view the slido
     - Make avatars a little larger!
     - Put the sidebar user list back to most-recent-first
     - Change number of columns in lobby display depending on screen size
       (implemented, but needs to be checked with several different sizes)
+    - @Jon: I looked for your list of todos on github to integrate them with
+      this file, but did not find them... (I had originally thought I'd move
+      things from here to there, but on reflection I think this file is a
+      better, more flexible way of keeping track of todo items and
+      priorities.)
 
 Little UI things for anybody:
     - make sure all controls have hover text
     - make all popovers take .5 seconds to appear
+    - Try slightly more muted colors for the tags / flairs
 
 - Design issues
     - I don't like the way going to look at the program, look at My Account,
       etc. takes me out of whatever conversation I'm in
-
-BCP: 
-- try IntelliJ
+    - The way chats pop up as you move around (and then stay up after you
+      leave a space) seems suboptimal.  And the full-height chat bar on the
+      right-hand side is using up a lot of screen real estate for (to me)
+      unknown benefit (why do I want to spend that much screen on that
+      particular chat window?).  In general, I don't think our chat
+      interface is quite there yet.
 
 ## Lower-priority small things (after ICSE)
+
+- Screen layout nit: When displaying on a laptop, it would be good to put
+  other people's videos on the very top of the screen, near the camera!
 
 - Consider (optionally) sorting participant list by
     - whether I've designated them as a friend
@@ -39,8 +54,6 @@ BCP:
 
 - What about a button to make a public room temporarily private (and then it goes
   back to public when everybody leaves)
-
-- layout nit: Put video on the very top of the screen, near the camera!
 
 - if we added a couple of small features to a slack-like chat channel,
   maybe we could get away without slido.
