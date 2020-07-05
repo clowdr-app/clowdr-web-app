@@ -274,7 +274,7 @@ class Registrations extends React.Component {
                         </tr>
                     </tbody>
                 </table>
-            <Table columns={columns} dataSource={this.state.filteredRegs} rowKey={(r)=>(r.id)} pagination={false} />
+            <Table columns={columns} dataSource={this.state.filteredRegs} rowKey={(r)=>(r.id)}  pagination={{defaultPageSize:600, position: ['topRight', 'bottomRight']}}/>
         </div>
     }
 
