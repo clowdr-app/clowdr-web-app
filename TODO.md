@@ -22,6 +22,7 @@ Little UI things for Jon
 Little UI things for anybody:
     - make sure all controls have hover text
     - make all popovers take .5 seconds to appear
+    - Try slightly more muted colors for the tags / flairs
 
 - Design issues
     - I don't like the way going to look at the program, look at My Account,
