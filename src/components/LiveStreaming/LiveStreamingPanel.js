@@ -85,7 +85,7 @@ class LiveStreamingPanel extends Component {
 
     componentDidUpdate(prevProps) {
         if(this.state.expanded != this.props.expanded){
-            if(this.props.expanded){
+            if (this.props.expanded && this.props.when == "now"){
                 this.props.auth.setSocialSpace(null,this.props.video.get("socialSpace"));
                 this.props.auth.helpers.setGlobalState({forceChatOpen: true});
                 this.props.auth.helpers.setExpandedProgramRoom(this.props.video);
@@ -130,7 +130,7 @@ class LiveStreamingPanel extends Component {
                             return <td key={s.id}><b>{moment(s.get("startTime")).format('LT') + ": " + s.get("title")}</b></td>
                         })}</tr>
                         {rows.map(row => {
-                            return <tr>{row.map(pair => {
+                            return <tr key={row[0][0]}>{row.map(pair => {
                                 return <td key={pair[0]}>{pair[1] ? <div className="chatLink" onClick={this.joinChatChannel.bind(this, pair[1])}>{pair[0]}</div> : pair[0]}</td>
                             })}</tr>
                         })}
