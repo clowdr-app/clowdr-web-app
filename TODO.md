@@ -18,6 +18,11 @@ Little UI things for Jon
     - Put the sidebar user list back to most-recent-first
     - Change number of columns in lobby display depending on screen size
       (implemented, but needs to be checked with several different sizes)
+    - @Jon: I looked for your list of todos on github to integrate them with
+      this file, but did not find them... (I had originally thought I'd move
+      things from here to there, but on reflection I think this file is a
+      better, more flexible way of keeping track of todo items and
+      priorities.)
 
 Little UI things for anybody:
     - make sure all controls have hover text
