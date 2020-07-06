@@ -50,11 +50,13 @@ class SlackToVideo extends React.Component {
                         this.setState({loading: false, step: currentStep});
                     } else {
                         try {
-                            await this.resendInvitation();
-                            this.setState({error: "Invalid signup link. "});
+                            let resent = await this.resendInvitation();
+                            if(resent)
+                                this.setState({error: "Invalid signup link. "});
                         } catch (err2) {
                             console.log(err2);
-                            this.setState({error: "Invalid signup link. "});
+                            this.setState({error: err2});
+                            return;
                         }
                     }
                 } catch (err) {
@@ -98,8 +100,11 @@ class SlackToVideo extends React.Component {
         }catch(err){
             console.log(err);
             this.setState({error: err.toString(), unableToSend: true});
+            this.setState({resendingInvitation: false, invitationSent: false})
+            return false;
         }
         this.setState({resendingInvitation: false, invitationSent: true})
+        return true;
     }
 
     render() {
