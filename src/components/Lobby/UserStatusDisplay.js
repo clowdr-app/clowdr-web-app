@@ -18,7 +18,7 @@ class UserStatusDisplay extends React.Component{
         let profile = await this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id);
         if(!this.mounted)
             return;
-        let userStatus = this.props.auth.presences[this.state.id];
+        let userStatus = this.props.auth.helpers.presences[this.state.id];
         this.setState({profile: profile, presence: userStatus})
     }
 
@@ -29,8 +29,8 @@ class UserStatusDisplay extends React.Component{
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(!this.mounted)
             return;
-        if(this.props.auth.presences[this.state.id] != this.state.presence){
-            this.setState({presence: this.props.auth.presences[this.state.id]});
+        if(this.props.auth.helpers.presences[this.state.id] != this.state.presence){
+            this.setState({presence: this.props.auth.helpers.presences[this.state.id]});
         }
     }
 

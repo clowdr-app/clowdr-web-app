@@ -388,7 +388,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     /*position: relative;*/
     /*bottom:40px;*/
     /*max-height: 30px;*/
-    flex-grow: 100;
+    flex-grow: 1;
     /*position: fixed;*/
     /*bottom: 50px;*/
 }
@@ -414,9 +414,8 @@ div.availabilityOptionsOpen  span.availabilityOption{
 .embeddedChatMessageEntry{
     /*position: relative;*/
     /*bottom: 0;*/
-    min-height: 30px;
     width: 100%;
-    display: flex;
+    flex-grow: 2;
 }
 .chatMessageContainer{
     flex-direction: column-reverse;
@@ -430,8 +429,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     border-bottom: 1px solid #6666;
     display: flex;
     /*flex: 1 1 5%;*/
-    min-height: initial;
-    flex-grow: 1;
+    flex-grow: 2;
     /*max-height: 2em;*/
 }
 

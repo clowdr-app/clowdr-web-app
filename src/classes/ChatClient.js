@@ -78,9 +78,15 @@ export default class ChatClient{
                 });
                 this.channelsThatWeHaventMessagedIn.push(res);
                 channel = await this.twilio.getChannelByUniqueName(res);
-                let membership = await channel.join();
-                await this.getChannelInfo(membership);
-                return membership;
+                try{
+                    let membership = await channel.join();
+                    await this.getChannelInfo(membership);
+                    return membership;
+                }catch(er2){
+                    //We are in fact already in this channel!
+                    console.log(er2)
+                    return channel;
+                }
             }
             else{
                 console.log(err);
