@@ -43,6 +43,10 @@ class Exhibits extends React.Component {
                     this.props.auth.helpers.setGlobalState({forceChatOpen: true});
             }
             else {
+                console.log("Warning: unexpected program layout")
+                for(let room of rooms){
+                    console.log(room.id + ", " + room.get("name"))
+                }
                 this.props.auth.setSocialSpace("Lobby");
             }
         }

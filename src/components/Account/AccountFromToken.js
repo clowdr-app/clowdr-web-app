@@ -32,22 +32,31 @@ class SlackToVideo extends React.Component {
                     currentStep =2;
                 }
                 this.setState({loading: false, step: currentStep});
-            }
-            else {
+            } else {
                 let res = await Parse.Cloud.run("login-fromToken", {
                     token: token,
                     userID: userID
                 });
                 try {
-                    let u = await Parse.User.become(res.token);
-                    let confQ = new Parse.Query("ClowdrInstance");
-                    let conf = await confQ.get(confID);
-                    await this.props.authContext.refreshUser(conf, true);
-                    let currentStep =1;
-                    if(this.props.authContext.user.get("passwordSet")){
-                        currentStep =2;
+                    if (res && res.token) {
+                        let u = await Parse.User.become(res.token);
+                        let confQ = new Parse.Query("ClowdrInstance");
+                        let conf = await confQ.get(confID);
+                        await this.props.authContext.refreshUser(conf, true);
+                        let currentStep = 1;
+                        if (this.props.authContext.user.get("passwordSet")) {
+                            currentStep = 2;
+                        }
+                        this.setState({loading: false, step: currentStep});
+                    } else {
+                        try {
+                            await this.resendInvitation();
+                            this.setState({error: "Invalid signup link. "});
+                        } catch (err2) {
+                            console.log(err2);
+                            this.setState({error: "Invalid signup link. "});
+                        }
                     }
-                    this.setState({loading: false, step: currentStep});
                 } catch (err) {
                     console.log(err);
                     this.setState({error: "Invalid signup link. "});
@@ -95,6 +104,12 @@ class SlackToVideo extends React.Component {
 
     render() {
         if (this.state.error) {
+            if(this.state.invitationSent){
+                return <div>
+                    <Alert type="info" message="One last step before you can register!" description="The link you clicked on has expired. However, we have automatically generated a *new* link and emailed it to you. Please use that link to complete your signup. Please contact us only
+                    if you don't receive a new signup link in a few minutes, or continue to receive this message, even when clicking on the new link." />
+                </div>
+            }
             let button = <div>Sign up links expire after one click. <Button onClick={this.resendInvitation.bind(this)}
                                                                             type="primary"
                                                                             disabled={this.state.invitationSent}
