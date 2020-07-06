@@ -441,11 +441,12 @@ const withAuthentication = Component => {
             else{
                 console.log("Fetching single user record:" + uid);
                 try {
-                    // let uq = new Parse.Query(UserProfile);
-                    // let ret = await uq.get(uid);
-                    // this.state.users[uid] = ret;
-                    // return ret;
+                    let uq = new Parse.Query(UserProfile);
+                    let ret = await uq.get(uid);
+                    this.state.users[uid] = ret;
+                    return ret;
                 }catch(err){
+                    console.log(err);
                     return null;
                 }
 

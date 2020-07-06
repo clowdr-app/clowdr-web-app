@@ -555,12 +555,14 @@ class ContextualActiveUsers extends Component {
                     let header = joinLink;
                         if (item.get("members") && item.get("members").length > 0)
                             list = item.get("members").map(user=>{
-                                let className = "personHoverable";
-                                if (this.state.filteredUser == user.id)
-                                    className += " personFiltered"
-                                return <Menu.Item key={user.id} className={className}>
-                                    <UserStatusDisplay popover={true}profileID={user.id}/>
-                                </Menu.Item>
+                                if(user) {
+                                    let className = "personHoverable";
+                                    if (this.state.filteredUser == user.id)
+                                        className += " personFiltered"
+                                    return <Menu.Item key={user.id} className={className}>
+                                        <UserStatusDisplay popover={true} profileID={user.id}/>
+                                    </Menu.Item>
+                                }
                             }) //}>
                         else
                             list = <></>
