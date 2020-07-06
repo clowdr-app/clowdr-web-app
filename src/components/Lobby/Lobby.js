@@ -355,8 +355,7 @@ class Lobby extends React.Component {
                  allActiveRooms
                  .sort((i1, i2) => {
                         return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
-                 // r.get("programItem")
-                 // .filter (r => {return true;})  // BCP: Right?
+                 .filter (r => !r.get("programItem"))  // BCP: Right?
                  .map((item) => {
                     if (!item){
                         return <Skeleton />
@@ -430,7 +429,7 @@ class Lobby extends React.Component {
                                     let className = "personHoverable";
                                     if (this.state.filteredUser == user.id)
                                         className += " personFiltered"
-                                    return <UserStatusDisplay popover={true} profileID={user.id}/>
+                                    return <UserStatusDisplay popover={true} profileID={user.id} key={user.id}/>
                                 }
                             }) //}>
                         else
@@ -441,7 +440,7 @@ class Lobby extends React.Component {
                             // <Menu.Item key={item.id}>
                             //     {header}
  // <Menu.SubMenu key={item.id} popupClassName="activeBreakoutRoom" title={header} expandIcon={<span></span>}>
-                                <div> {header} {list} </div>
+                                <div key={item.id}> {header} {list} </div>
                                 // </Menu.SubMenu>
                             // </Menu.Item>
                         )
