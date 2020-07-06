@@ -80,7 +80,6 @@ var conferenceInfoCache = {};
 
 async function getConferenceInfoForMailer(conf) {
     if (!conferenceInfoCache[conf.id]) {
-        console.log(conf)
         let keyQuery = new Parse.Query(InstanceConfig);
         keyQuery.equalTo("instance", conf);
         keyQuery.equalTo("key", "SENDGRID_API_KEY");
@@ -93,9 +92,7 @@ async function getConferenceInfoForMailer(conf) {
         compoundQ.include("instance");
         let config = await compoundQ.find({useMasterKey: true});
         let sgKey = null, confObj = null, frontendURL = null;
-        console.log(config)
         for (let res of config) {
-            console.log(res.get("key"))
             if (res.get("key") == "SENDGRID_API_KEY") {
                 sgKey = res.get("value");
                 confObj = res.get("instance");
@@ -189,13 +186,8 @@ Parse.Cloud.define("login-resendInvite", async (request) => {
             "Your Virtual " + config.conference.get("conferenceName") + " team");
         var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
 
-        var sg = require('sendgrid')(config.sendgrid);
-        var request = sg.emptyRequest({
-            method: 'POST',
-            path: '/v3/mail/send',
-            body: mail.toJSON()
-        });
-        sg.API(request);
+        sendMessage(config, mail, toEmail);
+
 
         return {
             status: "OK"
@@ -205,6 +197,49 @@ Parse.Cloud.define("login-resendInvite", async (request) => {
     }
 
 });
+function isNotWorkingOnSendgrid(email){
+    let domain = email.substring(email.indexOf("@") + 1);
+    if(domain == "jonbell.net" || domain == "outlook.com" || domain == "live.com" || domain == "hotmail.com" || domain == "antfin.com" || domain.endsWith("edu.cn") || domain == "outlook.fr")
+        return true;
+    return false;
+}
+function sendMessage(config, mail, toEmail){
+    // if(process.env.SMTP_PASSWORD && isNotWorkingOnSendgrid(toEmail.email)){
+    //     console.log("Sending message by SMTP to " + toEmail.email+"\nSubject: " + mail.getSubject() +"\n\n"+mail.getContents()[0].value);
+    //     const nodemailer = require("nodemailer");
+    //     let transporter = nodemailer.createTransport({
+    //         host: "smtp.dreamhost.com",
+    //         port: 465,
+    //         secure: true, // true for 465, false for other ports
+    //         auth: {
+    //             user: "welcome@clowdr.org", // generated ethereal user
+    //             pass: process.env.SMTP_PASSWORD
+    //         },
+    //     });
+    //     return transporter.sendMail({
+    //         from: mail.getFrom().email,
+    //         to: toEmail.email,
+    //         subject: mail.getSubject(),
+    //         text: mail.getContents()[0].value,
+    //     });
+    //
+    // }
+    // else{
+        console.log("Sending message by sendgrid to " + toEmail.email+"\nSubject: " + mail.getSubject() +"\n\n"+mail.getContents()[0].value);
+        var sg = require('sendgrid')(config.sendgrid);
+        var request = sg.emptyRequest({
+            method: 'POST',
+            path: '/v3/mail/send',
+            body: mail.toJSON()
+        });
+        return sg.API(request).catch((err)=>{
+            console.log("Unable to send email to " + toEmail.email)
+            console.log(mail.getContents()[0].value);
+            console.log(err);
+        });
+    // }
+
+}
 Parse.Cloud.define("reset-password", async (request) => {
     let email = request.params.email;
     let confID = request.params.confID;
@@ -238,6 +273,7 @@ Parse.Cloud.define("reset-password", async (request) => {
 
             var toEmail = new sgMail.Email(user.get("email"));
             var subject = 'Account signup link for ' + config.conference.get("conferenceName");
+
             var content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayname") + ",\n" +
                 config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
                 "The Clowdr app will organize the conference program, live sessions, networking, and more. "
@@ -249,13 +285,7 @@ Parse.Cloud.define("reset-password", async (request) => {
                 "Your Virtual " + config.conference.get("conferenceName") + " team");
             var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
 
-            var sg = require('sendgrid')(config.sendgrid);
-            var request = sg.emptyRequest({
-                method: 'POST',
-                path: '/v3/mail/send',
-                body: mail.toJSON()
-            });
-            sg.API(request);
+            sendMessage(config, mail, toEmail);
             return {status:"OK", message: "Please check your email for instructions to finish resetting your password."}
         }
         var fromEmail = new sgMail.Email('welcome@clowdr.org');
@@ -277,21 +307,8 @@ Parse.Cloud.define("reset-password", async (request) => {
             "Your Virtual " + config.conference.get("conferenceName") + " team");
         var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
 
-        var sg = require('sendgrid')(config.sendgrid);
-        var request = sg.emptyRequest({
-            method: 'POST',
-            path: '/v3/mail/send',
-            body: mail.toJSON()
-        });
 
-        sg.API(request, function (error, response) {
-            if (error) {
-                console.log('Error response received');
-            }
-            console.log(response.statusCode);
-            console.log(response.body);
-            console.log(response.headers);
-        });
+        sendMessage(config, mail, toEmail);
 
     return {status:"OK", message: "Please check your email for instructions to finish resetting your password."}
     }
@@ -305,27 +322,22 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     let regIDs = request.params.registrations;
     let confID = request.params.conference;
 
-    console.log('--> ' + JSON.stringify(regIDs));
-    let regQ = new Parse.Query("Registration");
-    regQ.containedIn("objectId", regIDs);
-    regQ.withCount();
-    regQ.limit(1000);
-    let {count, results} = await regQ.find();
-    let registrants = results;
-    let nRetrieved = results.length;
-    while (nRetrieved < count) {
-        // totalCount = count;
-        let regQ = new Parse.Query("Registration");
-        regQ.containedIn("objectId", regIDs);
-        regQ.limit(1000);
-        regQ.skip(nRetrieved);
-        let results = await regQ.find({useMasterKey: true});
-        // results = dat.results;
-        nRetrieved += results.length;
-        if (results)
-            registrants = registrants.concat(results);
-    }
+    let nRemaining  =regIDs.length;
+    let sliceStart = 0;
 
+    let registrants = [];
+    console.log('--> ' + JSON.stringify(regIDs));
+    while (nRemaining > 0) {
+        let slice = regIDs.slice(sliceStart, sliceStart + 900);
+        let regQ = new Parse.Query("Registration");
+        regQ.containedIn("objectId", slice);
+        regQ.withCount();
+        regQ.limit(1000);
+        let results = await regQ.find({useMasterKey: true});
+        registrants = registrants.concat(results.results);
+        sliceStart += 900;
+        nRemaining -= 900;
+    }
 
     let promises = [];
 
@@ -338,6 +350,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     roleQuery.equalTo("name", confID + "-conference");
     let role = await roleQuery.first({useMasterKey: true});
 
+    console.log("Request was for " + regIDs.length +", got: " + registrants.length);
     for (let registrant of registrants) {
 
         try {
@@ -424,16 +437,23 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 "If you have any problems accessing the conference site, please reply to this email.\n\n" +
                 "Best regards,\n" +
                 "Your Virtual " + config.conference.get("conferenceName") + " team");
+            // var subject = 'ACTION REQUIRED TO ATTEND ICSE 2020: Account signup link';
+            //
+            // var content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayname") + ",\n" +
+            //     "ICSE 2020 is about to get underway, and you have registered for ICSE but haven't yet activated your CLOWDR account! " +
+            //     config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
+            //     "The Clowdr app will organize the conference program, live sessions, networking, and more. "
+            //     + instructionsText + "\n\n" +
+            //     "Please note that Chrome, Safari and Edge provide the best compatability with CLOWDR. We are working to improve " +
+            //     "compatability with other browsers and to continue to add new features to the platform\n\n" +
+            //     "If you have any problems accessing the conference site, please reply to this email.\n\n" +
+            //     "Best regards,\n" +
+            //     "Your Virtual " + config.conference.get("conferenceName") + " team");
+
             var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
 
-            var sg = require('sendgrid')(config.sendgrid);
-            var request = sg.emptyRequest({
-                method: 'POST',
-                path: '/v3/mail/send',
-                body: mail.toJSON()
-            });
+            promises.push(sendMessage(config, mail, toEmail));
 
-            promises.push(sg.API(request));
         }catch(err){
             console.log(err);
         }
