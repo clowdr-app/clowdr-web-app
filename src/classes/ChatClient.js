@@ -72,6 +72,7 @@ export default class ChatClient{
         }catch(err){
             if(err.code ==50403) {
                 this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
+                console.log("Asking for bonded channel for " + channel.sid)
                 let res = await Parse.Cloud.run("chat-getBondedChannelForSID", {
                     conference: this.conference.id,
                     sid: channel.sid
@@ -265,9 +266,11 @@ export default class ChatClient{
         //Do we already have the announcements channel?
         let announcements = Object.values(this.joinedChannels).find(chan => chan.attributes.category == 'announcements-global');
         if(!announcements){
+            console.log("Trying to join announcements")
             let res = await Parse.Cloud.run("join-announcements-channel", {
                 conference: this.conference.id
             });
+            console.log(res);
         }
         this.twilio = twilio;
         return this.twilio;

@@ -235,19 +235,16 @@ const withAuthentication = Component => {
         }
         updatePresences(){
             if(this.presenceUpdateScheduled){
-                console.log("Skipping update")
                return;
             }
             else{
                 this.presenceUpdateScheduled = true;
-                console.log("SChedulign an update")
                 this.presenceUpdateTimer = setTimeout(()=>{
-                    console.log("Actually doing update presence")
                     for(let presenceWatcher of this.presenceWatchers){
                         presenceWatcher.setState({presences: this.presences});
                     }
                     this.presenceUpdateScheduled = false;
-                }, 5000);
+                }, 10000);
             }
         }
 
@@ -278,7 +275,6 @@ const withAuthentication = Component => {
             this.socialSpaceSubscription.on('enter', (presence) => {
                 this.getUserProfilesFromUserProfileIDs([presence.get("user").id]).then(
                     ()=>{
-                        console.log(this.unwrappedProfiles[presence.get("user").id]);
                         this.presences[presence.get("user").id] = presence;
                         this.updatePresences();
                     }
