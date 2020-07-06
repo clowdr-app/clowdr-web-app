@@ -255,7 +255,7 @@ class Exhibits extends React.Component {
                                     <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{width:300, height:200 }} 
                                         src={img} 
                                     />}>
-                                        <Tooltip placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
+                                        <Tooltip mouseEnterDelay={0.5} placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
                                             <Meta title={poster.get('title')} description={authorstr} />
                                         </Tooltip>
                                     </Card>

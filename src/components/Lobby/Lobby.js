@@ -72,7 +72,7 @@ class MeetingSummary extends React.Component {
         let _this = this;
         return <Card title={item.get('title')} style={{width: "350px", "height": "350px", overflow: "scroll"}}
                      size={"small"}
-                     extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
+                     extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
                          title="You are about to join a video call. Are you ready?"
                          onConfirm={_this.joinMeeting.bind(_this, item)}
                          okText="Yes"

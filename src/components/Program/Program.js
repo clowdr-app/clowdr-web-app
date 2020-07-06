@@ -58,7 +58,7 @@ class Program extends React.Component {
             let dateHeader = {label: date, rowSpan: 0};
             row.date = dateHeader;
             let timeBands = groupBy(rawSessions,(session)=>
-                (<Tooltip title={timezone(session.get("startTime")).tz(this.state.timeZone).format("ddd MMM D LT ") +" - "+ timezone(session.get("endTime")).tz(this.state.timeZone).format("LT z")}>
+                (<Tooltip mouseEnterDelay={0.5} title={timezone(session.get("startTime")).tz(this.state.timeZone).format("ddd MMM D LT ") +" - "+ timezone(session.get("endTime")).tz(this.state.timeZone).format("LT z")}>
                     {timezone(session.get("startTime")).tz(this.state.timeZone).format("LT")} - {timezone(session.get("endTime")).tz(this.state.timeZone).format("LT")}</Tooltip>))
 
             for(const [time, sessions ] of timeBands){

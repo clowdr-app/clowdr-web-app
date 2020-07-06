@@ -3,36 +3,42 @@
 ## High-priority small things (for ICSE if possible)
 
 Highest priority:
-
     - Documentation
          - lots more writing to be done!
          - @Jon and @Crista please take a look if you have time
-         - One specific thing where I need help from one of you is who can delete rooms (e.g., can BCP?)
-    		* JB: Right now, just moderators, which includes only Crista and me, but I just added you. We will find out who needs it for ICSE and give them the role. Provisioning access to send announcements is another process, but it's probably best to keep that locked down pretty tightly anyway.
+    - create some more Hallway rooms, as needed; think about whether they
+      should be big or small
 
 Little UI things for Jon
-
     - Did we implement the "mute someone else's mic and put a message in the
       chat" feature?  Seems important!
-      	* JB: No, unfortuantely didn't get to this. In big-group rooms, the default is now that you join muted. Suggest moving everything to big group rooms (I changed the hallways tracks that you made to big group). 
-    - Make max width of the the sidebar larger, so that people can expand it
-      when they're using it to view the slido
-      	* JB You can now drag it wider and it will resize slido
+        * JB: No, unfortuantely didn't get to this. In big-group rooms, the
+          default is now that you join muted. Suggest moving everything to
+          big group rooms (I changed the hallways tracks that you made to
+          big group).
+        * BCP: Not certain this was a move in the right direction... We do
+          need some bigger rooms, but I was hoping the Hallway rooms would
+          be used for small-group conversations, and the limit of four
+          participants actually seems important for that
     - Make avatars a little larger!
     - Put the sidebar user list back to most-recent-first
-    - Change number of columns in lobby display depending on screen size
-      (implemented, but needs to be checked with several different sizes)
     - @Jon: I looked for your list of todos on github to integrate them with
       this file, but did not find them... (I had originally thought I'd move
       things from here to there, but on reflection I think this file is a
       better, more flexible way of keeping track of todo items and
       priorities.)
-      	* OK. They are in the "project" - it is a pretty good way to organize things. https://github.com/orgs/clowdr-app/projects/1
+        * OK. They are in the "project" - it is a pretty good way to
+          organize things. https://github.com/orgs/clowdr-app/projects/1
 
 Little UI things for anybody:
     - make sure all controls have hover text
-    - make all popovers take .5 seconds to appear
     - Try slightly more muted colors for the tags / flairs
+    - Change number of columns in lobby display depending on screen size
+      (implemented, but needs to be checked with several different sizes)
+    - Should Hallway rooms be large or small??  How many should we create by
+      default?  How should we display them so that (a) people can find a
+      particular one if they want to but (b) people are encouraged to join
+      them randomly? 
 
 - Design issues
     - I don't like the way going to look at the program, look at My Account,
@@ -45,6 +51,9 @@ Little UI things for anybody:
       interface is quite there yet.
 
 ## Lower-priority small things (after ICSE)
+
+- Allow anyone in a room to mute someone else's mic (and put a message in the
+  chat saying who did it).  Important!
 
 - Screen layout nit: When displaying on a laptop, it would be good to put
   other people's videos on the very top of the screen, near the camera!
@@ -60,13 +69,6 @@ Little UI things for anybody:
 - What about a button to make a public room temporarily private (and then it goes
   back to public when everybody leaves)
 
-- if we added a couple of small features to a slack-like chat channel,
-  maybe we could get away without slido.
-     - Thumbs-up button (like slack)
-     - This-is-a-question-for-the-speaker button
-     - Display only questions from this channel, sorted by
-       most-thumbs-first.
-
 - dntWaiver = "Only you can see this status. Others will still see your
   presence in public rooms, but won't see a status" -- ... But this is the
   only status that will be displayed as blank, so won't people be able to
@@ -79,24 +81,32 @@ Little UI things for anybody:
        - the title bar across the top uses a lot of space
        - the "live questions to the speakers" goes entirely off the bottom
 
-- The pop-up for someone's name in the lobby does not include their textual
-  status (or profile); the one on the left sidebar does
-
 - presenceDesc = "In a conversation; come join if you like"; -- have we made
   it possible / obvious how to go to where someone else is??
 
 - should there be a visual indication of which rooms are small/large/P2P?
 
-## Larger things to think about post-ICSE
+## Larger design questions to think about post-ICSE
 
-- integration with Researchr for #LIVE "go to what's happening now"
+- if we added a couple of small features to a slack-like chat channel,
+  maybe we could get away without slido.
+     - Thumbs-up button (like slack)
+     - This-is-a-question-for-the-speaker button
+     - Display only questions from this channel, sorted by
+       most-thumbs-first.
+
+- integration with Researchr for #LIVE "go to what's happening now".
+
+- Integration with Researchr's "my program" feature -- super important for
+  some people
 
 - What about watching multiple channels at the same time?
 
 - Mobile friendliness
 - Logging in from multiple devices??
 
-- Implement Jon's "Post a 'come to me' button in a chat" feature
+- Implement Jon's "Post a 'come to me' button in a chat" feature (maybe this
+  is done?)
 
 - What about live captioning (as an eventual feature).
 

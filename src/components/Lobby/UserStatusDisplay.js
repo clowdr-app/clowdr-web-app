@@ -104,7 +104,7 @@ class UserStatusDisplay extends React.Component{
                     else if (!tagToHighlight || t.get("priority") < tagToHighlight.get("priority"))
                         tagToHighlight = t;
                     if (t.get("tooltip"))
-                        return <Tooltip key={t.id} title={t.get("tooltip")}>{tag}</Tooltip>
+                        return <Tooltip mouseEnterDelay={0.5} key={t.id} title={t.get("tooltip")}>{tag}</Tooltip>
                     else return tag;
                 }
             )
@@ -158,6 +158,7 @@ class UserStatusDisplay extends React.Component{
         {dntWaiver}>
         <Popover
             title={presenceDesc}
+            mouseEnterDelay={0.5}
             content={popoverContent}>
         <Badge  status={badgeStyle} color={badgeColor} />
            {this.state.profile.get("displayName")} {statusDesc}</Popover>

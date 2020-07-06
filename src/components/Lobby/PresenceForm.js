@@ -147,7 +147,7 @@ class PresenceForm extends React.Component {
                       availability: this.availabilityByPresence(this.state.presence)
                   }
                   }>
-                <Tooltip defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
+                <Tooltip mouseEnterDelay={0.5} defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
                     it easier for other participants to know when it's OK to contact you.">
                     <Form.Item name="availability">
 
