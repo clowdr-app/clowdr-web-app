@@ -435,8 +435,8 @@ class Lobby extends React.Component {
                             }) //}>
                         else
                             list = <></>
-                        {console.log("list = ")}
-                        {console.log(JSON.stringify(list))}
+                        // {console.log("list = ")}
+                        // {console.log(JSON.stringify(list))}
                         return (
                             // <Menu.Item key={item.id}>
                             //     {header}
