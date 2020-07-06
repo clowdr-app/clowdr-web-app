@@ -7,6 +7,7 @@ Highest priority:
       relabel the current ones
     - add _all_ rooms to the lobby page  (check how to do modularity in JS,
       and try IntelliJ)
+    - We're not consistent about the words Chat and Breakout
     - Documentation
          - lots more writing to be done!
          - @Jon and @Crista please take a look if you have time
@@ -47,7 +48,23 @@ Little UI things for Jon
     - Do something about all the video rearranging that happens as people come
       and go from rooms (maybe this is better now??)
 
+Pending questions from users:
+    - 1) In the instructions it says presenters should start video chat
+      right after their session, but it wasn’t clear how to do that. Should
+      we go to video chat lobby?
+    - 1.5) In the training for session chairs, we were told that post talk
+      communication will happen via the Exhibit hall /research/paper page?
+      Is there another video chat communication too?
+    - 2) In the sessions tab, there is the practice session/zoom room….but,
+      its not clear how am I supposed to practice there. If there are
+      multiple people practicing won’t it be overlapping? I don’t understand
+      that room and its purpose at all. (I visited the zoom room, found
+      another participant lurking there, so I left the room, since I didn’t
+      want to disturb them)
+
 Little UI things for anybody:
+    - When I use the button in a chat to create a private room and join it,
+      I should not be muted by default!
     - make sure all controls have hover text
     - Try slightly more muted colors for the tags / flairs
     - Change number of columns in lobby display depending on screen size
