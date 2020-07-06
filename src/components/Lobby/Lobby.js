@@ -329,8 +329,8 @@ class Lobby extends React.Component {
                 <div className="lobby-participant-list">
                 {Object.keys(this.state.presences)
                      .sort((a,b)=>(compareNames(a, b)))
-                     .map(item => <div className="lobby-participant-item"><UserStatusDisplay
-                                        key={item} onlyShowWithPresence={true} profileID={item} popover={false}/>
+                     .map(item => <div key={item} className="lobby-participant-item"><UserStatusDisplay
+                                        onlyShowWithPresence={true} profileID={item} popover={false}/>
                                   </div>)}
                 </div>
 
