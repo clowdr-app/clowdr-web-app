@@ -3,8 +3,10 @@
 ## High-priority small things (for ICSE if possible)
 
 Highest priority:
-    - create some more Hallway rooms, as needed; think about whether they
-      should be big or small
+    - create some more Hallway rooms, as needed; some big, some small;
+      relabel the current ones
+    - add _all_ rooms to the lobby page  (check how to do modularity in JS,
+      and try IntelliJ)
     - Documentation
          - lots more writing to be done!
          - @Jon and @Crista please take a look if you have time
@@ -106,7 +108,10 @@ Little UI things for anybody:
 
 ## Larger design questions to think about post-ICSE
 
-- if we added a couple of small features to a slack-like chat channel,
+- We really need some way to replicate / reuse the "starred talks" / "my
+  program" features of Researchr.
+
+- If we added a couple of small features to a slack-like chat channel,
   maybe we could get away without slido.
      - Thumbs-up button (like slack)
      - This-is-a-question-for-the-speaker button
