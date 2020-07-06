@@ -264,7 +264,7 @@ class Registrations extends React.Component {
                                 </Form>
                             </td>
 
-                            <td style={{"textAlign":"right"}}> <Tooltip title="Send Invitation to ALL selected">
+                            <td style={{"textAlign":"right"}}> <Tooltip mouseEnterDelay={0.5} title="Send Invitation to ALL selected">
                                     <Button danger icon={<MailOutlined />} loading={this.state.sending} onClick={this.sendInvitations.bind(this)}>Send All</Button>
                                 </Tooltip></td>
                         </tr>

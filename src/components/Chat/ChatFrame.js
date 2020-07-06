@@ -49,7 +49,7 @@ class ChatFrame extends React.Component {
     }
 
     formatTime(timestamp) {
-        return <Tooltip title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
+        return <Tooltip mouseEnterDelay={0.5} title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
     }
 
     async componentDidMount() {
@@ -276,7 +276,7 @@ class ChatFrame extends React.Component {
             //get the sender
             this.props.auth.helpers.getUserProfilesFromUserProfileID(message.author).then((profile)=>{
                 const args = {
-                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
+                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
                     description:
                     <ReactMarkdown source={message.body} renderers={{
                         text: emojiSupport,
@@ -468,7 +468,7 @@ class ChatFrame extends React.Component {
                                           //         onConfirm={this.deleteMessage.bind(this, item)}
                                           //         okText="Yes"
                                           //         cancelText="No"
-                                          //     ><Tooltip title={"Delete this message"}><a
+                                          //     ><Tooltip mouseEnterDelay={0.5} title={"Delete this message"}><a
                                           //         href="#"><CloseOutlined/></a></Tooltip></Popconfirm>
                                           let initials = "";
                                           let authorID = item.author;
@@ -571,7 +571,7 @@ class ChatFrame extends React.Component {
                 cancelText="No"
             ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
         if (options.length > 0)
-            return <Popover key={m.sid} placement="topRight" content={<div style={{backgroundColor: "white"}}>
+            return <Popover key={m.sid} mouseEnterDelay={0.5} placement="topRight" content={<div style={{backgroundColor: "white"}}>
                 {options}
             </div>}>
                 <div ref={(el) => {
@@ -599,4 +599,3 @@ const AuthConsumer = (props) => (
 
 );
 export default AuthConsumer;
-

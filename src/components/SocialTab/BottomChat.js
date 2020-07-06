@@ -452,29 +452,29 @@ class BottomChatWindow extends React.Component{
 
         let title = this.state.title;
         if(this.state.members){
-            title = <Tooltip title={this.state.members}>{this.state.title} ({this.state.membersCount} members)</Tooltip>
+            title = <Tooltip mouseEnterDelay={0.5} title={this.state.members}>{this.state.title} ({this.state.membersCount} members)</Tooltip>
         }
         let header = <div className="bottomChatHeader">
             <div className="bottomChatIdentity">{title}</div>
             <div className="bottomChatClose">
-                <Tooltip title="Launch a video breakout room from this chat">
+                <Tooltip mouseEnterDelay={0.5} title="Launch a video breakout room from this chat">
                     <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}
                             loading={this.state.newVideoChatLoading}
                             icon={<VideoCameraAddOutlined />}
                             onClick={this.toVideo.bind(this)} />
                 </Tooltip>
-                <Tooltip title="Add someone to this chat">
+                <Tooltip mouseEnterDelay={0.5} title="Add someone to this chat">
                     <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}  icon={<PlusOutlined />}
                                                               onClick={this.props.addUser}
                 /></Tooltip>
-                <Tooltip title="Leave this chat"><Button size="small" type="primary" shape="circle"
+                <Tooltip mouseEnterDelay={0.5} title="Leave this chat"><Button size="small" type="primary" shape="circle"
                                                               style={{minWidth: "initial"}}  icon={<CloseOutlined />}
             onClick={
                 // this.props.toggleOpen
                 this.destroyChat.bind(this)
             }
             /></Tooltip>
-                <Tooltip title="Minimize this window"><Button size="small" type="primary" shape="circle"
+                <Tooltip mouseEnterDelay={0.5} title="Minimize this window"><Button size="small" type="primary" shape="circle"
                                                               style={{minWidth: "initial"}}  icon={<MinusOutlined />}
                                                               onClick={
                                                                   this.props.toggleOpen
@@ -494,7 +494,7 @@ class BottomChatWindow extends React.Component{
             return chatWindow
         }
         return <div className="bottomChatWindowContainer">
-            <Tooltip title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} overflowCount={9} offset={[-5,-10]}/>{this.state.title}</Button></Tooltip>{chatWindow}</div>
+            <Tooltip mouseEnterDelay={0.5} title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} overflowCount={9} offset={[-5,-10]}/>{this.state.title}</Button></Tooltip>{chatWindow}</div>
     }
 }
 const AuthConsumer = (props) => (

@@ -169,7 +169,7 @@ class SidebarChat extends React.Component {
                          this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
                      }}
                 >
-                    {this.state.siderWidth == 0 ? <Tooltip title="Open the chat drawer"><ChevronLeftIcon/></Tooltip>:<Tooltip title="Close the chat drawer"><ChevronRightIcon/></Tooltip>}
+                    {this.state.siderWidth == 0 ? <Tooltip mouseEnterDelay={0.5} title="Open the chat drawer"><ChevronLeftIcon/></Tooltip>:<Tooltip mouseEnterDelay={0.5} title="Close the chat drawer"><ChevronRightIcon/></Tooltip>}
                     {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
                 </div>
 
@@ -203,7 +203,7 @@ class SidebarChat extends React.Component {
                 cancelText="No"
             ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
         if(options.length > 0)
-         return <Popover  key={m.sid} placement="topRight" content={<div style={{backgroundColor:"white"}}>
+         return <Popover  key={m.sid} mouseEnterDelay={0.5} placement="topRight" content={<div style={{backgroundColor:"white"}}>
             {options}
         </div>}><div ref={(el) => { this.messagesEnd = el; }} className="chatMessage"><ReactMarkdown source={m.body} renderers={{ text: emojiSupport, link:linkRenderer}} /></div>
         </Popover>

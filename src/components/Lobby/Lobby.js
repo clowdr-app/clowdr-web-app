@@ -72,7 +72,7 @@ class MeetingSummary extends React.Component {
         let _this = this;
         return <Card title={item.get('title')} style={{width: "350px", "height": "350px", overflow: "scroll"}}
                      size={"small"}
-                     extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
+                     extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
                          title="You are about to join a video call. Are you ready?"
                          onConfirm={_this.joinMeeting.bind(_this, item)}
                          okText="Yes"
@@ -329,8 +329,8 @@ class Lobby extends React.Component {
                 <div className="lobby-participant-list">
                 {Object.keys(this.state.presences)
                      .sort((a,b)=>(compareNames(a, b)))
-                     .map(item => <div className="lobby-participant-item"><UserStatusDisplay
-                                        key={item} onlyShowWithPresence={true} profileID={item} popover={false}/>
+                     .map(item => <div key={item} className="lobby-participant-item"><UserStatusDisplay
+                                        onlyShowWithPresence={true} profileID={item} popover={false}/>
                                   </div>)}
                 </div>
 

@@ -115,7 +115,7 @@ class SocialTab extends Component {
                          this.setState((prevState) => ({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
                      }}
             >
-                {this.state.siderWidth == 0 ? <Tooltip title="Collapse the lobby drawer"><ChevronRightIcon/></Tooltip>:<Tooltip title="Expand the lobby drawer"><ChevronLeftIcon/></Tooltip>}
+                {this.state.siderWidth == 0 ? <Tooltip mouseEnterDelay={0.5} title="Collapse the lobby drawer"><ChevronRightIcon/></Tooltip>:<Tooltip mouseEnterDelay={0.5} title="Expand the lobby drawer"><ChevronLeftIcon/></Tooltip>}
                 {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
             </div>
 

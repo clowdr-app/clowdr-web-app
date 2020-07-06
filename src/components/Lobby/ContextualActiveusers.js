@@ -291,10 +291,10 @@ class ContextualActiveUsers extends Component {
                                 if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
                                 {
                                     if (item.get("members") && item.get("capacity") <= item.get("members").length)
-                                        joinLink = <div><Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
+                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
                                             disabled>{formattedRoom}</Typography.Text></Tooltip></div>
                                     else if(isModOverride){
-                                        joinLink = <div><Tooltip title={joinInfo}>
+                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}>
                                             <Popconfirm title={<span style={{width: "250px"}}>You do not have permission to join this room, but can override<br />
                                         this as a moderator. Please only join this room if you were asked<br /> by a participant
                                         to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
@@ -307,7 +307,7 @@ class ContextualActiveUsers extends Component {
                                         </div>;
                                     }
                                     else
-                                        joinLink = <div><Tooltip title={joinInfo}><a href="#"
+                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
                                                                                      onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                         </div>;
                                 }
@@ -364,7 +364,7 @@ class ContextualActiveUsers extends Component {
                     <div style={{height:'6px', background:'white'}}/>
 
                     <Divider className="social-sidebar-divider">
-                        <Tooltip title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{this.props.auth.activeSpace.get("name")}</Tooltip>
+                        <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{this.props.auth.activeSpace.get("name")}</Tooltip>
                     </Divider>
 
                         <Menu mode="inline"
@@ -416,7 +416,7 @@ class ContextualActiveUsers extends Component {
                 </div>
 
                 {programRoomSpecificContent}
-                <Divider className="social-sidebar-divider"><Tooltip title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room">Chats</Tooltip></Divider>
+                <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room">Chats</Tooltip></Divider>
                 <Menu mode="inline"
                       className="activeRoomsList"
                     // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
@@ -469,7 +469,7 @@ class ContextualActiveUsers extends Component {
 
                 {programInfo}
 
-                <Divider className="social-sidebar-divider"><Tooltip title={"These breakout rooms feature video and chat, and are associated with the room that you are currently in - "
+                <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These breakout rooms feature video and chat, and are associated with the room that you are currently in - "
                 + this.props.auth.activeSpace.get("name")}>Breakout (Video) Rooms</Tooltip></Divider>
 
                 <Menu mode="inline"
@@ -528,10 +528,10 @@ class ContextualActiveUsers extends Component {
                         if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
                         {
                             if (item.get("members") && item.get("capacity") <= item.get("members").length)
-                                joinLink = <div><Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
+                                joinLink = <div><Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
                                     disabled>{formattedRoom}</Typography.Text></Tooltip></div>
                             else if(isModOverride){
-                                joinLink = <div><Tooltip title={joinInfo}>
+                                joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}>
                                     <Popconfirm title={<span style={{width: "250px"}}>You do not have permission to join this room, but can override<br />
                                         this as a moderator. Please only join this room if you were asked<br /> by a participant
                                         to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
@@ -544,7 +544,7 @@ class ContextualActiveUsers extends Component {
                                 </div>;
                             }
                             else
-                                joinLink = <div><Tooltip title={joinInfo}><a href="#"
+                                joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
                                                                                          onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                 </div>;
                         }
