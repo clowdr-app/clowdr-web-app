@@ -153,7 +153,7 @@ class NewRoomForm extends React.Component {
                         <Form.Item
                             name="persistence"
                             label="Persistence"
-                            extra={"Ephemeral rooms disappear 5 minutes after the last participant leaves"}>
+                            extra={"Ephemeral rooms disappear five minutes after the last participant leaves. Please use Ephemeral unless you have a specific reason for wanting this room to persist."}>
                             <Radio.Group buttonStyle="solid">
                                 <Radio.Button value="ephemeral">Ephemeral</Radio.Button>
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-persistent",

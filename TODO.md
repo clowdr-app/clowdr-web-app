@@ -8,6 +8,7 @@ Highest priority:
          - @Jon and @Crista please take a look if you have time
     - create some more Hallway rooms, as needed; think about whether they
       should be big or small
+    - The schedule is missing explicit "go to the Hallway" times!
 
 Little UI things for Jon
     - Did we implement the "mute someone else's mic and put a message in the
@@ -29,6 +30,14 @@ Little UI things for Jon
       priorities.)
         * OK. They are in the "project" - it is a pretty good way to
           organize things. https://github.com/orgs/clowdr-app/projects/1
+        * BCP: Thanks -- not sure why I could not find it yesterday.  We
+          should make a decision about where these things should really live
+          -- while I prefer this file (in part because it gets more text on
+          the screen at the same time, and in part because it seems useful
+          for both larger design notes and smaller todos), I can also work
+          with Github.  Either way, I can synchronize them at some point.
+    - Do something about all the video rearranging that happens as people come
+      and go from rooms (maybe this is better now??)
 
 Little UI things for anybody:
     - make sure all controls have hover text
@@ -38,7 +47,7 @@ Little UI things for anybody:
     - Should Hallway rooms be large or small??  How many should we create by
       default?  How should we display them so that (a) people can find a
       particular one if they want to but (b) people are encouraged to join
-      them randomly? 
+      them randomly?
 
 - Design issues
     - I don't like the way going to look at the program, look at My Account,
