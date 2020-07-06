@@ -144,7 +144,7 @@ class Lobby extends React.Component {
             // Parse.Cloud.run("presence-addToPage", data);
 
             this.props.auth.setSocialSpace("Lobby");
-            this.setState({presences: this.props.auth.presences});
+            this.props.auth.helpers.getPresences(this);
             //subscribe to membership here too
             if (this.mounted){
 
@@ -159,6 +159,7 @@ class Lobby extends React.Component {
         // const data = {spaceID:'TOCVe54R2j', confID: this.props.auth.currentConference.id};
         // Parse.Cloud.run("presence-removeFromPage", data);
         this.mounted = false;
+        this.props.auth.helpers.cancelPresenceSubscription(this);
     }
 
     areEqualID(o1, o2) {
@@ -172,9 +173,6 @@ class Lobby extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(!this.mounted)
             return;
-        if(this.props.auth.presences != this.state.presences){
-            this.setState({presences: this.props.auth.presences});
-        }
         // if (this.props.auth.videoRoomsLoaded != this.state.videoRoomsLoaded) {
         //     this.setState({videoRoomsLoaded: this.props.auth.videoRoomsLoaded});
         // }
@@ -278,21 +276,15 @@ class Lobby extends React.Component {
 
 
         const compareNames = (i, j) => {
-            let a = this.state.presences[i];
-            let b = this.state.presences[j];
-            if(!a)
+            let a = this.props.auth.helpers.unwrappedProfiles[i];
+            let b = this.props.auth.helpers.unwrappedProfiles[j];
+            if(!a || !b)
+                console.log(i+","+j+": " + a+","+b)
+            if (!a)
                 return -1;
-            if(!b) return 1;
-            a = a.get("user");
-            b = b.get("user");
-            if(!a)
-                return -1;
-            if(!b) return 1;
+            if (!b) return 1;
             a = a.get("displayName");
             b = b.get("displayName");
-            if(!a)
-                return -1;
-            if(!b) return 1;
             return (a.localeCompare(b))
         };
 
@@ -329,9 +321,10 @@ class Lobby extends React.Component {
                 <div className="lobby-participant-list">
                 {Object.keys(this.state.presences)
                      .sort((a,b)=>(compareNames(a, b)))
-                     .map(item => <div key={item} className="lobby-participant-item"><UserStatusDisplay
+                     .map(item =>{
+                      return <div key={item} className="lobby-participant-item"><UserStatusDisplay
                                         onlyShowWithPresence={true} profileID={item} popover={false}/>
-                                  </div>)}
+                                  </div>})}
                 </div>
 
             {/*

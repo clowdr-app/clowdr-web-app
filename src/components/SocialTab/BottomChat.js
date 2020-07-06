@@ -455,6 +455,7 @@ class BottomChatWindow extends React.Component{
             title = <Tooltip mouseEnterDelay={0.5} title={this.state.members}>{this.state.title} ({this.state.membersCount} members)</Tooltip>
         }
         let header = <div className="bottomChatHeader">
+            <div className="bottomChatHeaderItems">
             <div className="bottomChatIdentity">{title}</div>
             <div className="bottomChatClose">
                 <Tooltip mouseEnterDelay={0.5} title="Launch a video breakout room from this chat">
@@ -480,7 +481,7 @@ class BottomChatWindow extends React.Component{
                                                                   this.props.toggleOpen
                                                               }
                 /></Tooltip>
-
+            </div>
             </div>
         </div>
         chatWindow = <div className={windowClass} >

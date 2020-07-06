@@ -51,6 +51,9 @@ class Exhibits extends React.Component {
             }
         }
     }
+    componentWillUnmount() {
+        this.props.auth.setSocialSpace("Lobby");
+    }
 
     getPosters(TRACK, items, tracks) {
         let posters = [];

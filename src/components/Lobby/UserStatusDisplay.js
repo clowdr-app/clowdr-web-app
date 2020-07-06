@@ -13,13 +13,15 @@ class UserStatusDisplay extends React.Component{
         }
     }
 
-    async componentDidMount() {
+    componentDidMount() {
         this.mounted = true;
-        let profile = await this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id);
-        if(!this.mounted)
-            return;
-        let userStatus = this.props.auth.presences[this.state.id];
-        this.setState({profile: profile, presence: userStatus})
+
+        this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id).then(profile=>{
+            if(!this.mounted)
+                return;
+            let userStatus = this.props.auth.helpers.presences[this.state.id];
+            this.setState({profile: profile, presence: userStatus})
+        });
     }
 
     componentWillUnmount() {
@@ -29,8 +31,9 @@ class UserStatusDisplay extends React.Component{
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(!this.mounted)
             return;
-        if(this.props.auth.presences[this.state.id] != this.state.presence){
-            this.setState({presence: this.props.auth.presences[this.state.id]});
+        if(this.props.auth.helpers.presences[this.state.id] != this.state.presence){
+            console.log("Triggering re-render of " + this.state.id)
+            this.setState({presence: this.props.auth.helpers.presences[this.state.id]});
         }
     }
 

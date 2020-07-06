@@ -183,7 +183,7 @@ Parse.Cloud.define("chat-getBondedChannelForSID", async (request) => {
     if(profile) {
         let config = await getConfig(conf);
         let newChan = await getBondedChannel(conf, config, request.params.sid);
-        console.log("Returning bonded channel " + newChan+ " for " + request.params.sid)
+        console.log("Returning bonded channel " + newChan+ " for " + request.params.sid + " for "+ profile.id)
         return newChan;
 
     }
