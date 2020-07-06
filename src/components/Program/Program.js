@@ -211,8 +211,8 @@ class Program extends React.Component {
         const props = {width: 700, zoomWidth: 700,  zoomPosition: "original", img: 'https://2020.icse-conferences.org/getImage/orig/ICSE-Schedule.PNG'};
         return <div>
             <h4>Program Overview:</h4>
-            <ReactImageZoom {...props}/>
-            {/* <img style={{width: "100%", height: "100%"}} src={process.env.PUBLIC_URL + '/program-overview.png'} />  */}
+            {/* <ReactImageZoom {...props}/> */}
+            <img style={{width: "100%", height: "100%"}} src={'https://2020.icse-conferences.org/getImage/orig/ICSE-Schedule.PNG'} /> 
 
             <h4>Details:</h4>
             <Radio.Group defaultValue="timezone.tz.guess()" onChange={e => {this.setState({timeZone: e.target.value})}}>
