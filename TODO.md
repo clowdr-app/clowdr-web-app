@@ -3,12 +3,18 @@
 ## High-priority small things (for ICSE if possible)
 
 Highest priority:
+    - create some more Hallway rooms, as needed; think about whether they
+      should be big or small
     - Documentation
          - lots more writing to be done!
          - @Jon and @Crista please take a look if you have time
-    - create some more Hallway rooms, as needed; think about whether they
-      should be big or small
     - The schedule is missing explicit "go to the Hallway" times!
+    - I thought Crista said that it was now easy to embed Zoom rooms in
+      Clowdr.  Is that true?  If so, can we convert some of the big Hallway
+      rooms to Zoom rooms?
+    - Maybe we should ask student volunteers to hang out in the Hallway
+      rooms when they are not doing something else... seems like it would be
+      good for them, good for the conference, and good for us... :-)
 
 Little UI things for Jon
     - Did we implement the "mute someone else's mic and put a message in the
@@ -60,6 +66,9 @@ Little UI things for anybody:
       interface is quite there yet.
 
 ## Lower-priority small things (after ICSE)
+
+- If possible, gray out the names of people that have not been active for a
+  while (> 15 min?)
 
 - Allow anyone in a room to mute someone else's mic (and put a message in the
   chat saying who did it).  Important!
