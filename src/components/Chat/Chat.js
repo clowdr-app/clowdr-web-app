@@ -422,7 +422,7 @@ class ChatContainer extends Component {
                                                 })
                                             }
                                         </Menu>
-                                         : <Spin tip="Loding..." />}
+                                         : <Spin tip="Loading..." />}
                                     </Sider>
                                     <Layout>
                                     <Content style={{backgroundColor:"#FFFFFF", overflow:"auto"}}>

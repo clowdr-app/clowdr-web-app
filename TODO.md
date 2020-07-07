@@ -2,7 +2,7 @@
 
 ## High-priority small things (for ICSE if possible)
 
-Highest priority:
+Social engineering ideas for ICSE:
     - The schedule is missing explicit "go to the Hallway" times!
     - Maybe we should ask student volunteers to hang out in the Hallway
       rooms when they are not doing something else... seems like it would be
@@ -11,7 +11,7 @@ Highest priority:
 Little UI things for Jon
     - (BCP) Not 100% sure what determines elements in the Chats list in
       the sidebar, but if it is the same as the set of blue boxes on
-      the bottom of your screen, that does not seem too useful.
+      the bottom of your screen, that does not seem very useful.  
     - Make avatars a little larger!
     - Put the sidebar user list back to most-recent-first
     - Do something about all the video rearranging that happens as people come
