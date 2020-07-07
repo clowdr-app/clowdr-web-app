@@ -293,8 +293,11 @@ class LiveStreaming extends Component {
 
         if (this.props.downloaded) {
             let rooms = this.state.liveRooms;
-            if(this.state.expanded)
-                rooms = rooms.concat(this.state.upcomingRooms)
+            if(this.state.expanded){
+                rooms = rooms.concat(this.state.upcomingRooms).filter(r=>r.id == this.state.expanded_video.id);
+                if(rooms.length > 1)
+                    rooms = [rooms[0]];
+            }
             return <div>{header}
                 <div className={"space-align-container"}>
                     {rooms.map((room) => {
