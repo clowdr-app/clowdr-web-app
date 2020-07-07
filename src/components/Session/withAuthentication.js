@@ -23,6 +23,7 @@ const withAuthentication = Component => {
             this.channelChangeListeners = [];
             this.presenceWatchers = [];
             this.presences = {};
+            this.newPresences = [];
 
             var parseLive = new Parse.LiveQueryClient({
                 applicationId: process.env.REACT_APP_PARSE_APP_ID,
@@ -239,12 +240,18 @@ const withAuthentication = Component => {
             }
             else{
                 this.presenceUpdateScheduled = true;
-                this.presenceUpdateTimer = setTimeout(()=>{
+                this.presenceUpdateTimer = setTimeout(async ()=>{
+                    let newPresences = this.newPresences;
+                    this.newPresences = [];
+                    this.presenceUpdateScheduled = false;
+                    await this.getUserProfilesFromUserProfileIDs(newPresences.map(p=>p.get("user").id));
+                    for(let presence of newPresences){
+                        this.presences[presence.get("user").id] = presence;
+                    }
                     for(let presenceWatcher of this.presenceWatchers){
                         presenceWatcher.setState({presences: this.presences});
                     }
-                    this.presenceUpdateScheduled = false;
-                }, 10000);
+                }, 10000 + Math.random() * 5000);
             }
         }
 
@@ -265,20 +272,12 @@ const withAuthentication = Component => {
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
             this.socialSpaceSubscription.on('create', (presence) => {
-                this.getUserProfilesFromUserProfileIDs([presence.get("user").id]).then(
-                    ()=>{
-                        this.presences[presence.get("user").id] = presence;
-                        this.updatePresences();
-                    }
-                );
+                this.newPresences.push(presence);
+                this.updatePresences();
             })
             this.socialSpaceSubscription.on('enter', (presence) => {
-                this.getUserProfilesFromUserProfileIDs([presence.get("user").id]).then(
-                    ()=>{
-                        this.presences[presence.get("user").id] = presence;
-                        this.updatePresences();
-                    }
-                );
+                this.newPresences.push(presence);
+                this.updatePresences();
             })
             this.socialSpaceSubscription.on('delete',(presence)=>{
                 delete this.presences[presence.get("user").id];
