@@ -32,7 +32,6 @@ class UserStatusDisplay extends React.Component{
         if(!this.mounted)
             return;
         if(this.props.auth.helpers.presences[this.state.id] != this.state.presence){
-            console.log("Triggering re-render of " + this.state.id)
             this.setState({presence: this.props.auth.helpers.presences[this.state.id]});
         }
     }

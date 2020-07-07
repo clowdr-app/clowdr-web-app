@@ -260,13 +260,13 @@ const withAuthentication = Component => {
 
 
             let query  =new Parse.Query("UserPresence");
+            query.limit(1000);
             query.equalTo("isOnline", true);
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
             this.socialSpaceSubscription.on('create', (presence) => {
                 this.getUserProfilesFromUserProfileIDs([presence.get("user").id]).then(
                     ()=>{
-                        console.log(this.unwrappedProfiles[presence.get("user").id]);
                         this.presences[presence.get("user").id] = presence;
                         this.updatePresences();
                     }
