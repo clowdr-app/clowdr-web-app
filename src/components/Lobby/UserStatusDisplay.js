@@ -144,6 +144,7 @@ class UserStatusDisplay extends React.Component{
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
                     <Popover title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
+                      &nbsp;&nbsp;&nbsp; {/* BCP: Better way to do this? */}
                       <Badge status={badgeStyle} color={badgeColor} />
                       <span style={{color:nameColor}}>{this.state.profile.get("displayName")}</span>
                       &nbsp;

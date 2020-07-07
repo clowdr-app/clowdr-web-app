@@ -40,6 +40,7 @@ Pending questions from users:
       want to disturb them)
 
 Little UI things for anybody:
+    - Notifications for pending chats!!
     - When I use the button in a chat to create a private room and join it,
       I should not be muted by default!
     - reconsider muting people's mics when they enter rooms -- not good for
@@ -53,6 +54,9 @@ Little UI things for anybody:
       default?  How should we display them so that (a) people can find a
       particular one if they want to but (b) people are encouraged to join
       them randomly?
+    - instead of (or in addition to) clicking on a person to open a chat
+      window, how about putting a button in the popover labeled "Open chat
+      window"?
 
 Design issues
     - consider how to make it clear which poster sessions are active (add a
@@ -123,6 +127,8 @@ Comments from #sv-indian
           the screen at the same time, and in part because it seems useful
           for both larger design notes and smaller todos), I can also work
           with Github.  Either way, I can synchronize them at some point.
+
+- deleting a room should make its text chat window go away
 
 - Implement the "mute someone else's mic and put a message in the chat"
   feature?
