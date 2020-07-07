@@ -3,12 +3,10 @@
 ## High-priority small things (for ICSE if possible)
 
 Highest priority:
-    - add _all_ rooms to the lobby page
     - The schedule is missing explicit "go to the Hallway" times!
     - Maybe we should ask student volunteers to hang out in the Hallway
       rooms when they are not doing something else... seems like it would be
       good for them, good for the conference, and good for us... :-)
-    - We're not consistent about how we use the words Chat and Breakout
 
 Little UI things for Jon
     - (BCP) Not 100% sure what determines elements in the Chats list in
@@ -56,7 +54,7 @@ Little UI things for anybody:
       particular one if they want to but (b) people are encouraged to join
       them randomly?
 
-- Design issues
+Design issues
     - consider how to make it clear which poster sessions are active (add a
       list to the Posters page, maybe? and/or to the Lobby page?)
     - The way chats pop up as you move around (and then stay up after you
@@ -76,7 +74,35 @@ Little UI things for anybody:
       *after* the talk.  I wonder if it might not really be better just to
       use the chat for this, especially since
 
+Comments from #sv-indian
+    - People complained about positioning of slido widget, maybe we can
+      share the external links to slido in each room; this depends on
+      whether @Jonathan Bell @Crista Lopes (Virtualization Chair, UC Irvine)
+      are happy with people leaving clowdr
+    - Moving *unanswered* questions from the slido archive to the
+      corresponding should happen after each presentation ends
+    - There is a glitch where the central video panel overlaps with the left
+      side panel
+        - This point should be also made to Crista "I'm a bit concerned
+          about using Clowdr/Slido for questions.  I was in two sessions
+           this morning.  I did not have slido at all for the first session,
+           so could not ask questions. Then, I was chairing second session -
+           slido appeared on lhs (no idea how!).  And, before 3rd talk, it
+           disappeared.  I asked my own questions for last 3 papers."
+        - "to add more to the list for @Jonathan Bell and @Crista Lopes
+          (Virtualization Chair, UC Irvine), José and I just attended a demo,
+          and saw two problems: (1) it's hard to know which of the demos are
+          "active" (where the presenter is, or how many attendees are there),
+          and (2) when you enter one demo, it's hard to make the screen
+          really big (for the video to take the entire screen)"
+
 ## Lower-priority small things (after ICSE)
+
+- We're not consistent about how we use the words Chat and Breakout
+
+- I wonder if we should reconsider the name of the tool.  I like Clowdr, but
+  it seems basically impossible for people to spell: I've seen cloudr,
+  clouder, clowder, crowdr, ...
 
 - Chat:
     - allow editing posts on chats
