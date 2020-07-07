@@ -165,8 +165,8 @@ class ProgramItem extends React.Component {
             />
         }
         let img = ""
-        if (this.state.programItem.get("image")) {
-            img = <img src={this.state.programItem.get("image")} />
+        if (this.state.programItem.get("posterImage")) {
+            img = <img src={this.state.programItem.get("posterImage").url()} />
         }
         let authors = this.state.programItem.get("authors") ? this.state.programItem.get("authors") : [];
         let authorstr = authors.map(a => a.get('name')).join(", ");

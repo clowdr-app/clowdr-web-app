@@ -49,6 +49,7 @@ class LiveStreamingPanel extends Component {
         var src = this.props.video.get("src1");
         var id = this.props.video.get("id1");
         var pwd = this.props.video.get("pwd1");
+        this.props.auth.helpers.getPresences(this);
 
         var inChina = false;
         if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
@@ -66,6 +67,8 @@ class LiveStreamingPanel extends Component {
     componentWillUnmount() {
         if (this.state.expanded)
             this.props.auth.setSocialSpace("Lobby");
+        this.props.auth.helpers.cancelPresenceSubscription(this);
+
     }
 
     toggleExpanded() {
@@ -149,8 +152,8 @@ class LiveStreamingPanel extends Component {
 
         }
         let viewers = 0;
-        if (this.props.auth.presences) {
-            let presences = Object.values(this.props.auth.presences);
+        if (this.state.presences) {
+            let presences = Object.values(this.state.presences);
             let pplInThisRoom = presences.filter(p => {
                 return (p.get("socialSpace") && this.props.video.get("socialSpace") &&
                         p.get("socialSpace").id === this.props.video.get("socialSpace").id);

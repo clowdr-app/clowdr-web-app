@@ -44,6 +44,9 @@ Pending questions from users:
 Little UI things for anybody:
     - When I use the button in a chat to create a private room and join it,
       I should not be muted by default!
+    - reconsider muting people's mics when they enter rooms -- not good for
+      hallways
+    - make chat windows resizeable
     - make sure all controls have hover text
     - Try slightly more muted colors for the tags / flairs
     - Change number of columns in lobby display depending on screen size
@@ -54,16 +57,31 @@ Little UI things for anybody:
       them randomly?
 
 - Design issues
-    - I don't like the way going to look at the program, look at My Account,
-      etc. takes me out of whatever conversation I'm in
+    - consider how to make it clear which poster sessions are active (add a
+      list to the Posters page, maybe? and/or to the Lobby page?)
     - The way chats pop up as you move around (and then stay up after you
       leave a space) seems suboptimal.  And the full-height chat bar on the
       right-hand side is using up a lot of screen real estate for (to me)
       unknown benefit (why do I want to spend that much screen on that
       particular chat window?).  In general, I don't think our chat
       interface is quite there yet.
+    - I don't like the way going to look at the program, look at My Account,
+      etc. takes me out of whatever conversation I'm in.  Relatedly, I'm sad
+      that I can't view a talk *and* see what's happening in the Lobby chat
+      rooms at the same time...  (Or wait, maybe I can!  Apparently I can
+      open multiple tabs on Clowdr.  I thought that was not allowed, but
+      actually it's quite convenient...)
+    - Slido is problematic: besides the "questions disappearing during the
+      talk" issue, there is simply the fact that questions don't persist
+      *after* the talk.  I wonder if it might not really be better just to
+      use the chat for this, especially since
 
 ## Lower-priority small things (after ICSE)
+
+- Chat:
+    - allow editing posts on chats
+    - allow (a) marking a post as a question and (b) filtering the chat to
+      show only questions
 
 - Decide where to keep the list of issues...
     - @Jon: I looked for your list of todos on github to integrate them with

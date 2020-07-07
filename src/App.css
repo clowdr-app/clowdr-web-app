@@ -389,6 +389,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     /*bottom:40px;*/
     /*max-height: 30px;*/
     flex-grow: 100;
+    flex-shrink: 100;
     /*position: fixed;*/
     /*bottom: 50px;*/
 }
@@ -414,23 +415,22 @@ div.availabilityOptionsOpen  span.availabilityOption{
 .embeddedChatMessageEntry{
     /*position: relative;*/
     /*bottom: 0;*/
-    min-height: 30px;
     width: 100%;
-    display: flex;
+    flex-grow: 1;
 }
 .chatMessageContainer{
     flex-direction: column-reverse;
     padding: 5px;
     background-color: #fafafa;
 }
-
+.bottomChatHeaderItems{
+    display: flex;
+}
 .bottomChatHeader{
     background-color: #1890FF;
 
     border-bottom: 1px solid #6666;
-    display: flex;
     /*flex: 1 1 5%;*/
-    min-height: initial;
     flex-grow: 1;
     /*max-height: 2em;*/
 }
@@ -520,7 +520,7 @@ td.ant-table-cell.program-table-timeBand{
 }
 
 /* For Tablets */
-@media screen and (min-width: 540px) and (max-width: 780px) {
+@media screen and (min-width: 540px) and (max-width: 1200px) {
     .lobby-participant-list {
         column-fill: balance;
         column-count: 3;
@@ -528,12 +528,12 @@ td.ant-table-cell.program-table-timeBand{
 }
 
 /* For Bigger screens */
-@media screen and (min-width: 780px) {
-    .lobby-participant-list {
-        column-fill: balance;
-        column-count: 4;
-    }
-}
+/*@media screen and (min-width: 1200px) {*/
+/*    .lobby-participant-list {*/
+/*        column-fill: balance;*/
+/*        column-count: 4;*/
+/*    }*/
+/*}*/
 
 .lobby-participant-item {
     margin-bottom: 0;

@@ -39,7 +39,7 @@ class ContextualActiveUsers extends Component {
     async componentDidMount() {
         let user = this.props.auth.user;
         if (user) {
-            this.setState({presences: this.props.auth.presences});
+            this.props.auth.helpers.getPresences(this);
             this.setState({loggedIn: true});
             this.props.auth.chatClient.initJoinedChatList(this);
         } else {
@@ -58,9 +58,6 @@ class ContextualActiveUsers extends Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         let stateUpdate = {};
-        if(this.props.auth.presences != this.state.presences){
-            stateUpdate.presences = this.props.auth.presences;
-        }
         if(this.props.auth.activeSpace != this.state.activeSpace){
             stateUpdate.activeSpace = this.props.auth.activeSpace;
         }
@@ -91,6 +88,8 @@ class ContextualActiveUsers extends Component {
     }
 
     componentWillUnmount() {
+        this.props.auth.helpers.cancelPresenceSubscription(this);
+
         this.mounted = false;
     }
 

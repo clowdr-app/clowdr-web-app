@@ -307,14 +307,14 @@ class ChatFrame extends React.Component {
     };
 
     onMessageChanged = event => {
-        if (event.target.value != '\n')
-            this.setState({newMessage: event.target.value});
+        // if (event.target.value != '\n')
+        //     this.setState({newMessage: event.target.value});
     };
 
     sendMessage = event => {
+        event.preventDefault();
         if (!event.getModifierState("Shift")) {
-            let message = this.state.newMessage;
-            this.setState({newMessage: ''});
+            let message = this.form.current.getFieldValue("message");
             if (message)
                 message = message.replace(/\n/g, "  \n");
             this.activeChannel.sendMessage(message);
@@ -322,13 +322,18 @@ class ChatFrame extends React.Component {
                 this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c=>c!=this.activeChannel.sid);
                 this.clearedTempFlag = true;
             }
-            if (this.form && this.form.current)
-                this.form.current.resetFields();
+            // if (this.form && this.form.current)
+            //     this.form.current.resetFields();
 
+            let values={message: ""}
+            this.form.current.setFieldsValue(values);
+            // this.form.current.resetFields();
+            // this.form.current.scrollToField("message");
             //TODO if no longer a DM (converted to group), don't do this...
             if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
                 this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
             }
+
         }
     };
 
@@ -528,17 +533,15 @@ class ChatFrame extends React.Component {
                     // paddingLeft: "10px"
                     //}}
                 >
-                    <Form ref={this.form} className="embeddedChatMessageEntry">
-                        <Form.Item style={{width:"100%", marginBottom: "0px"}}>
+                    <Form ref={this.form} className="embeddedChatMessageEntry" name={"chat"+this.props.sid}>
+                        <Form.Item style={{width:"100%", marginBottom: "0px"}} name="message">
                             <Input.TextArea
                                 disabled={this.state.readOnly}
-                                name={"message"}
                                 className="embeddedChatMessage"
                                 placeholder={this.state.readOnly? "This channel is read-only" : "Send a message"}
                                 autoSize={{minRows: 1, maxRows: 6}}
-                                onChange={this.onMessageChanged}
                                 onPressEnter={this.sendMessage}
-                                value={this.state.newMessage}/>
+                            />
                         </Form.Item>
                     </Form>
                 </div>

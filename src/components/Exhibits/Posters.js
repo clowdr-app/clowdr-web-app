@@ -1,7 +1,7 @@
 import React from 'react';
 import {NavLink} from "react-router-dom";
 import Parse from "parse";
-import {Card, Spin, Tooltip, Button, Input, Upload} from 'antd';
+import {Card, Spin, Tooltip, Button, Input, Upload, message} from 'antd';
 import {DownloadOutlined, SettingOutlined, UploadOutlined} from '@ant-design/icons';
 import {AuthUserContext} from "../Session";
 import {ProgramContext} from "../Program";
@@ -51,6 +51,9 @@ class Exhibits extends React.Component {
             }
         }
     }
+    componentWillUnmount() {
+        this.props.auth.setSocialSpace("Lobby");
+    }
 
     getPosters(TRACK, items, tracks) {
         let posters = [];
@@ -68,6 +71,7 @@ class Exhibits extends React.Component {
     }
 
     getUserPoster(posters) {
+        console.log(this.first_last)
         let myposter = posters.find(poster => {
             let authors = poster.get("authors");
             let me = authors.find(a => {
@@ -79,6 +83,7 @@ class Exhibits extends React.Component {
             if (me) return true
             else return false
         });
+        console.log(myposter)
         return myposter;
     }
 
@@ -100,7 +105,7 @@ class Exhibits extends React.Component {
             if (this.first_last.length > 2) {
                 this.first_last = [this.first_last[0], this.first_last[1]]; // Just first and last names
             }
-            
+
             // Call to download program
             if (!this.props.downloaded) 
                 this.props.onDown(this.props);
@@ -172,30 +177,47 @@ class Exhibits extends React.Component {
         }
     }
 
-    onImageUpload(file, fileList) {
-        if (!this.state.myposter) {
-            console.log("[Posters]: attempt to upload poster without poster id");
+    onImageUpload(programItem, file) {
+        // if (!this.state.myposter) {
+        //     console.log("[Posters]: attempt to upload poster without poster id");
+        //     return false;
+        // }
+        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+        if (!isJpgOrPng) {
+            message.error('You can only upload JPG/PNG file!');
+            return false;
+        }
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isLt2M) {
+            message.error('Image must be smaller than 2MB!');
             return false;
         }
 
         const reader = new FileReader();
         reader.onload = () => {
             const data = {
-                content: reader.result, 
+                content: reader.result,
                 conferenceId: this.props.auth.currentConference.id,
-                posterId: this.state.myposter.id
+                posterId: programItem.id
             };
-            
-            Parse.Cloud.run("poster-upload", data).then(() => {
-                this.state.myposter.set("image", reader.result);
+
+            Parse.Cloud.run("poster-upload", data).then(async (res) => {
+                message.info("Success! Your poster has been uploaded.");
+                // this.state.myposter.set("image", reader.result);
+                //ok lets just assume for now live query will work
+                let updatedItemQ = new Parse.Query("ProgramItem");
+                let updatedItem = await updatedItemQ.get(programItem.id);
+
+                programItem.set("posterImage", updatedItem.get("posterImage")); //well that is gross
+                console.log(res);
                 this.setState({dirty: !this.state.dirty});
                 console.log('[Posters]: Poster uploaded successfully');
             });
         }
         reader.readAsDataURL(file);
         return false;
-    } 
-    
+    }
+
     onImageDownload() {
         console.log("[Posters]: onImageDownload");
     }
@@ -243,7 +265,7 @@ class Exhibits extends React.Component {
                     let tool = "";
                     if (this.state.myposter && (this.state.myposter.id == poster.id))
                         tool = <span title="Looks like you're an author. Replace the image? Use 3x2 ratio.">
-                                    <Upload accept=".png, .jpg" name='poster' beforeUpload={this.onImageUpload.bind(this)}>
+                                    <Upload accept=".png, .jpg" name='poster' beforeUpload={this.onImageUpload.bind(this, poster)}>
                                     <Button type="primary">
                                         <UploadOutlined />Upload
                                     </Button>
@@ -251,8 +273,8 @@ class Exhibits extends React.Component {
                                 </span>;
 
                     let img = placeholder;
-                    if (poster.get("image"))
-                        img = poster.get("image");
+                    if (poster.get("posterImage"))
+                        img = poster.get("posterImage").url();
 
                     return <div className={"space-align-block"} key={poster.id} >
                                 <NavLink to={"/program/" + poster.get("confKey")}>
