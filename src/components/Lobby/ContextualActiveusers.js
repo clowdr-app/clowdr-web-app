@@ -398,7 +398,7 @@ class ContextualActiveUsers extends Component {
                             <Menu.SubMenu key="restUsers"
                                           title={<div className="overflowHelper">{lobbyMembers.length} total</div>}>
 
-                                {lobbyMembers.slice(10).map((user) => {
+                                {lobbyMembers.map((user) => {
                                     let className = "personHoverable";
                                     if (this.state.filteredUser == user.id)
                                         className += " personFiltered"
