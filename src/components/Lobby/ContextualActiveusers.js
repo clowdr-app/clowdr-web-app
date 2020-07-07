@@ -189,9 +189,10 @@ class ContextualActiveUsers extends Component {
                     && p.get("socialSpace")
                     && p.get("socialSpace").id == this.state.activeSpace.id
                     && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
-                ).sort((i1, i2) => {
-                return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
-            }).map(p => p.get("user")).sort(compareNames);
+                ).map(p => p.get("user")).sort(compareNames);
+        let latestLobbyMembers = lobbyMembers.sort((i1, i2) => {
+            return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
+        }).slice(0,10);
         for(let u of lobbyMembers){
             searchOptions.push({label: "@"+u.get("displayName"), value: u.id+"@-lobby"});
         }
@@ -386,18 +387,18 @@ class ContextualActiveUsers extends Component {
                         >
                             <Menu.SubMenu key="firstUsers" expandIcon={<span></span>}>
 
-                            {lobbyMembers.slice(0,10).map((user) => {
+                            {latestLobbyMembers.map((user) => {
                                 let className = "personHoverable";
                                 if (this.state.filteredUser == user.id)
                                     className += " personFiltered"
-                                return <Menu.Item key={user.id} className={className}>
+                                return <Menu.Item key={"latest"+user.id} className={className}>
                                     <UserStatusDisplay popover={true} profileID={user.id}/>
                                 </Menu.Item>
                             })
                             }
                             </Menu.SubMenu>{
-                            lobbyMembers.length > 10 ?
-                            <Menu.SubMenu key="restUsers" title={<div className="overflowHelper">{lobbyMembers.length-10} more</div>}>
+                            <Menu.SubMenu key="restUsers"
+                                          title={<div className="overflowHelper">{lobbyMembers.length} total</div>}>
 
                                 {lobbyMembers.slice(10).map((user) => {
                                     let className = "personHoverable";
@@ -409,7 +410,7 @@ class ContextualActiveUsers extends Component {
                                 })
                                 }
                             </Menu.SubMenu>
-                                :<></>}
+                        }
                         </Menu>
 
                 </div>
