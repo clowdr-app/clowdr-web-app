@@ -470,23 +470,39 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
         if (track.get("perProgramItemVideo")) {
             let itemQ = new Parse.Query("ProgramItem");
             itemQ.equalTo("track", track);
+            itemQ.include("breakoutRoom");
             itemQ.include("programSession.room");
+            itemQ.include("programSession.room.socialSpace");
             itemQ.limit(1000);
             let items = await itemQ.find({useMasterKey: true});
             let promises = [];
             for(let item of items){
                 if(!item.get("programSession")){
+                    // let sessionQ = new Parse.Query("ProgramSession");
+                    // sessionQ.include("room");
+                    // let session = await sessionQ.get("S9BI5jmi4O");
+                    // if(!session.get("items"))
+                    //     session.set("items",[]);
+                    // session.get("items").push(item);
+                    // await session.save({},{useMasterKey: true});
+                    // item.set("programSession", session);
+                    // await item.save({},{useMasterKey: true});
                     console.log("No session for item in track: " + item.id)
                     continue;
                 }
-                console.log(item.get("programSession").get("room"))
                 if(!item.get("breakoutRoom")){
                     promises.push(createBreakoutRoomForProgramItem(item, track));
                 }
+                // if(item.get("breakoutRoom") && (!item.get("breakoutRoom").get("socialSpace") || item.get("breakoutRoom").get("socialSpace").id !=
+                // item.get("programSession").get("room").get("socialSpace").id)){
+                //     let breakout = item.get("breakoutRoom");
+                //     breakout.set("socialSpace", item.get("programSession").get("room").get("socialSpace"));
+                //     await breakout.save({},{useMasterKey: true});
+                // }
             }
             await Promise.all(promises);
         } else {
-            // TODO Make sure no tracks have breakout rooms still...
+        //     TODO Make sure no tracks have breakout rooms still...
         }
     }
 

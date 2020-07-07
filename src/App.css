@@ -528,12 +528,12 @@ td.ant-table-cell.program-table-timeBand{
 }
 
 /* For Bigger screens */
-/*@media screen and (min-width: 1200px) {*/
-/*    .lobby-participant-list {*/
-/*        column-fill: balance;*/
-/*        column-count: 4;*/
-/*    }*/
-/*}*/
+@media screen and (min-width: 1200px) {
+    .lobby-participant-list {
+        column-fill: balance;
+        column-count: 3;
+    }
+}
 
 .lobby-participant-item {
     margin-bottom: 0;
