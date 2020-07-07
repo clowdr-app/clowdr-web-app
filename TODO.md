@@ -27,7 +27,23 @@ Little UI things for Jon
       Clowdr.  Is that true?  If so, can we convert some of the big Hallway
       rooms to Zoom rooms?
 
+Pending questions from users:
+    - 1) In the instructions it says presenters should start video chat
+      right after their session, but it wasn’t clear how to do that. Should
+      we go to video chat lobby?
+    - 1.5) In the training for session chairs, we were told that post talk
+      communication will happen via the Exhibit hall /research/paper page?
+      Is there another video chat communication too?
+    - 2) In the sessions tab, there is the practice session/zoom room….but,
+      its not clear how am I supposed to practice there. If there are
+      multiple people practicing won’t it be overlapping? I don’t understand
+      that room and its purpose at all. (I visited the zoom room, found
+      another participant lurking there, so I left the room, since I didn’t
+      want to disturb them)
+
 Little UI things for anybody:
+    - When I use the button in a chat to create a private room and join it,
+      I should not be muted by default!
     - reconsider muting people's mics when they enter rooms -- not good for
       hallways
     - make chat windows resizeable
@@ -41,18 +57,20 @@ Little UI things for anybody:
       them randomly?
 
 - Design issues
-    - I don't like the way going to look at the program, look at My Account,
-      etc. takes me out of whatever conversation I'm in
+    - consider how to make it clear which poster sessions are active (add a
+      list to the Posters page, maybe? and/or to the Lobby page?)
     - The way chats pop up as you move around (and then stay up after you
       leave a space) seems suboptimal.  And the full-height chat bar on the
       right-hand side is using up a lot of screen real estate for (to me)
       unknown benefit (why do I want to spend that much screen on that
       particular chat window?).  In general, I don't think our chat
       interface is quite there yet.
-    - I'm sad that I can't view a talk *and* see what's happening in the
-      Lobby chat rooms at the same time...  (Or wait, maybe I can!
-      Apparently I can open multiple tabs on Clowdr.  I thought that was not
-      allowed, but actually it's quite convenient...)
+    - I don't like the way going to look at the program, look at My Account,
+      etc. takes me out of whatever conversation I'm in.  Relatedly, I'm sad
+      that I can't view a talk *and* see what's happening in the Lobby chat
+      rooms at the same time...  (Or wait, maybe I can!  Apparently I can
+      open multiple tabs on Clowdr.  I thought that was not allowed, but
+      actually it's quite convenient...)
     - Slido is problematic: besides the "questions disappearing during the
       talk" issue, there is simply the fact that questions don't persist
       *after* the talk.  I wonder if it might not really be better just to

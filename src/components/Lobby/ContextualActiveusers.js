@@ -127,8 +127,6 @@ class ContextualActiveUsers extends Component {
             })
         )
     }
-
-
     filterList(value) {
         let roomID = value;
         let userID = null;
@@ -160,7 +158,7 @@ class ContextualActiveUsers extends Component {
             topHeight = topElement.clientHeight;
 
         let tabs = "";
-        let liveMembers = 0
+        let liveMembers = 0   // BCP: Seems not to be used??
         let allActiveRooms = [];
         if(!this.state.activePrivateVideoRooms)
             allActiveRooms = this.state.activePublicVideoRooms;
@@ -231,7 +229,7 @@ class ContextualActiveUsers extends Component {
                 selectedKeys.push(this.state.filteredUser);
 
             let programInfo = <></>
-            if(programRooms.length > 0){
+            if (programRooms.length > 0){
                 programInfo = <div>
                     <Divider className="social-sidebar-divider">Paper/Posters in {this.state.activeSpace.get("name")}</Divider>
 
@@ -470,7 +468,7 @@ class ContextualActiveUsers extends Component {
                 {programInfo}
 
                 <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These breakout rooms feature video and chat, and are associated with the room that you are currently in - "
-                + this.props.auth.activeSpace.get("name")}>Breakout (Video) Rooms</Tooltip></Divider>
+                + this.props.auth.activeSpace.get("name")}>Video Breakout Rooms</Tooltip></Divider>
 
                 <Menu mode="inline"
                       className="activeRoomsList"
@@ -576,7 +574,8 @@ class ContextualActiveUsers extends Component {
                             // </Menu.Item>
                         )
                     }
-                ) : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
+                )
+                : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
                 </Menu>
                 <div style={{textAlign: 'center'}}>
                     <NewRoomForm type="secondary" text="New Breakout Room" />
