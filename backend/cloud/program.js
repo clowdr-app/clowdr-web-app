@@ -3,22 +3,28 @@ const Twilio = require("twilio");
 const Papa = require('./papaparse.min');
 const { response } = require('express');
 
-Parse.Cloud.define("poster-upload", (request) => {
-    console.log('Request to upload a poster image');
+Parse.Cloud.define("poster-upload", async (request) => {
+    console.log('Request to upload a poster image for ' + request.params.posterId);
     const imgData = request.params.content;
     const conferenceId = request.params.conferenceId;
     const posterId = request.params.posterId;
 
-    var ProgramItem = Parse.Object.extend("ProgramItem");
-    var query = new Parse.Query(ProgramItem);
-    // query.equalTo("conference", conference);
-    query.get(posterId, {useMasterKey: true}).then(poster => {
-        poster.set("image", imgData);
-        poster.save({}, {useMasterKey: true})
-        .then (res => console.log("[Program]: Poster image saved"))
-        .catch(err => console.log(`[Program]: ${posterId}:` + err))
-        
-    }).catch(err => console.log(`[Program]: Problem fetching poster ${posterId}` + err));
+    try {
+
+        var ProgramItem = Parse.Object.extend("ProgramItem");
+        var query = new Parse.Query(ProgramItem);
+        // query.equalTo("conference", conference);
+        let poster = await query.get(posterId, {useMasterKey: true});
+        let file = new Parse.File('poster-image', {base64: imgData});
+        await file.save({useMasterKey: true});
+        poster.set("posterImage", file);
+        await poster.save({}, {useMasterKey: true});
+        return {status: "OK", "file": file.url()};
+    } catch (err) {
+        console.log("Unable to update poster " + posterId);
+        console.log(err);
+        throw err;
+    }
 });
 
 Parse.Cloud.define("rooms-upload", async (request) => {
