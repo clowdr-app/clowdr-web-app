@@ -3,47 +3,29 @@
 ## High-priority small things (for ICSE if possible)
 
 Highest priority:
-    - create some more Hallway rooms, as needed; think about whether they
-      should be big or small
-    - Documentation
-         - lots more writing to be done!
-         - @Jon and @Crista please take a look if you have time
+    - add _all_ rooms to the lobby page
     - The schedule is missing explicit "go to the Hallway" times!
-    - I thought Crista said that it was now easy to embed Zoom rooms in
-      Clowdr.  Is that true?  If so, can we convert some of the big Hallway
-      rooms to Zoom rooms?
     - Maybe we should ask student volunteers to hang out in the Hallway
       rooms when they are not doing something else... seems like it would be
       good for them, good for the conference, and good for us... :-)
+    - We're not consistent about how we use the words Chat and Breakout
 
 Little UI things for Jon
-    - Did we implement the "mute someone else's mic and put a message in the
-      chat" feature?  Seems important!
-        * JB: No, unfortuantely didn't get to this. In big-group rooms, the
-          default is now that you join muted. Suggest moving everything to
-          big group rooms (I changed the hallways tracks that you made to
-          big group).
-        * BCP: Not certain this was a move in the right direction... We do
-          need some bigger rooms, but I was hoping the Hallway rooms would
-          be used for small-group conversations, and the limit of four
-          participants actually seems important for that
+    - (BCP) Not 100% sure what determines elements in the Chats list in
+      the sidebar, but if it is the same as the set of blue boxes on
+      the bottom of your screen, that does not seem too useful.
     - Make avatars a little larger!
     - Put the sidebar user list back to most-recent-first
-    - @Jon: I looked for your list of todos on github to integrate them with
-      this file, but did not find them... (I had originally thought I'd move
-      things from here to there, but on reflection I think this file is a
-      better, more flexible way of keeping track of todo items and
-      priorities.)
-        * OK. They are in the "project" - it is a pretty good way to
-          organize things. https://github.com/orgs/clowdr-app/projects/1
-        * BCP: Thanks -- not sure why I could not find it yesterday.  We
-          should make a decision about where these things should really live
-          -- while I prefer this file (in part because it gets more text on
-          the screen at the same time, and in part because it seems useful
-          for both larger design notes and smaller todos), I can also work
-          with Github.  Either way, I can synchronize them at some point.
     - Do something about all the video rearranging that happens as people come
       and go from rooms (maybe this is better now??)
+    - How to recover if I close the chat window for the room that I'm in?
+    - Documentation:
+         - The relation between top-level rooms and breakout rooms within
+           top-level rooms needs to be clarified.  Also the relation between
+           ordinary rooms and posters/exhibits.
+    - I thought Crista said that it was now easy to embed Zoom rooms in
+      Clowdr.  Is that true?  If so, can we convert some of the big Hallway
+      rooms to Zoom rooms?
 
 Little UI things for anybody:
     - make sure all controls have hover text
@@ -66,6 +48,27 @@ Little UI things for anybody:
       interface is quite there yet.
 
 ## Lower-priority small things (after ICSE)
+
+- Decide where to keep the list of issues...
+    - @Jon: I looked for your list of todos on github to integrate them with
+      this file, but did not find them... (I had originally thought I'd move
+      things from here to there, but on reflection I think this file is a
+      better, more flexible way of keeping track of todo items and
+      priorities.)
+        * OK. They are in the "project" - it is a pretty good way to
+          organize things. https://github.com/orgs/clowdr-app/projects/1
+        * BCP: Thanks -- not sure why I could not find it yesterday.  We
+          should make a decision about where these things should really live
+          -- while I prefer this file (in part because it gets more text on
+          the screen at the same time, and in part because it seems useful
+          for both larger design notes and smaller todos), I can also work
+          with Github.  Either way, I can synchronize them at some point.
+
+- Implement the "mute someone else's mic and put a message in the chat"
+  feature?
+
+- Clicking the little mic symbol in the upper right of the video display
+  should mute and unmute you.
 
 - If possible, gray out the names of people that have not been active for a
   while (> 15 min?)
@@ -106,7 +109,10 @@ Little UI things for anybody:
 
 ## Larger design questions to think about post-ICSE
 
-- if we added a couple of small features to a slack-like chat channel,
+- We really need some way to replicate / reuse the "starred talks" / "my
+  program" features of Researchr.
+
+- If we added a couple of small features to a slack-like chat channel,
   maybe we could get away without slido.
      - Thumbs-up button (like slack)
      - This-is-a-question-for-the-speaker button
