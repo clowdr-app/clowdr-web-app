@@ -454,21 +454,9 @@ class Lobby extends React.Component {
             {/* -------------------------------------------------------------- */}
 
                 <div className="lobby-section-header">
-                  Other participants (not currently in a room)
+                    Poster areas
                 </div>
 
-                <div className="lobby-participant-list">
-                {Object.keys(this.state.presences)
-                     .sort((a,b)=>(compareNames(a, b)))
-                     .map(item =>{
-                      return <div key={item} className="lobby-participant-item"><UserStatusDisplay
-                                        onlyShowWithPresence={true} profileID={item} popover={false}/>
-                                  </div>})}
-                </div>
-
-                <div className="lobby-section-header">
-                    Posters Areas
-                </div>
                 <div className="lobby-participant-list">
 
                     {allActiveRooms ?
@@ -570,7 +558,7 @@ class Lobby extends React.Component {
                 </div>
 
                 <div className="lobby-section-header">
-                    Demo Areas
+                    Demo areas
                 </div>
                 <div className="lobby-participant-list">
 
@@ -670,6 +658,19 @@ class Lobby extends React.Component {
                                 }
                             )
                         : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
+                </div>
+
+                <div className="lobby-section-header">
+                  Participants not currently in a room
+                </div>
+
+                <div className="lobby-participant-list">
+                {Object.keys(this.state.presences)
+                     .sort((a,b)=>(compareNames(a, b)))
+                     .map(item =>{
+                      return <div key={item} className="lobby-participant-item"><UserStatusDisplay
+                                        onlyShowWithPresence={true} profileID={item} popover={false}/>
+                                  </div>})}
                 </div>
 
                 {/*
