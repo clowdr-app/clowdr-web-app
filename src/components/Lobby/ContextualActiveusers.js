@@ -188,7 +188,7 @@ class ContextualActiveUsers extends Component {
                     && p.get("socialSpace").id == this.state.activeSpace.id
                     && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
                 ).map(p => p.get("user")).sort(compareNames);
-        let latestLobbyMembers = lobbyMembers.sort((i1, i2) => {
+        let latestLobbyMembers = lobbyMembers.concat().sort((i1, i2) => {
             return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
         }).slice(0,10);
         for(let u of lobbyMembers){
