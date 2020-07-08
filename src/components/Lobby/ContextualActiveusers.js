@@ -440,10 +440,13 @@ class ContextualActiveUsers extends Component {
                             let className = "personHoverable";
                             // if (this.state.filteredUser == user.id)
                             //     className += " personFiltered"
+                            // BCP: Rats -- my attempt to add a Tooltip does not seem to work :-(
+                            // BCP: also BTW, className={className} does not look right
                             return <Menu.Item key={sid} className={className}>
+                                <Tooltip mouseEnterDelay={0.5} title="Click to open messages">
                                 <CollapsedChatDisplay sid={sid} unread={this.state.unread[sid]}/>
                                 {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
-                            </Menu.Item>
+                            </Tooltip></Menu.Item>
                         })
                         }
                     </Menu.SubMenu>{
