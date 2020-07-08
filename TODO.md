@@ -9,21 +9,20 @@ Social engineering ideas for ICSE:
       good for them, good for the conference, and good for us... :-)
 
 Little UI things for Jon
-    - (BCP) Not 100% sure what determines elements in the Chats list in
-      the sidebar, but if it is the same as the set of blue boxes on
-      the bottom of your screen, that does not seem very useful.  
-    - Make avatars a little larger!
-    - Put the sidebar user list back to most-recent-first
-    - Do something about all the video rearranging that happens as people come
-      and go from rooms (maybe this is better now??)
-    - How to recover if I close the chat window for the room that I'm in?
     - Documentation:
          - The relation between top-level rooms and breakout rooms within
            top-level rooms needs to be clarified.  Also the relation between
            ordinary rooms and posters/exhibits.
-    - I thought Crista said that it was now easy to embed Zoom rooms in
-      Clowdr.  Is that true?  If so, can we convert some of the big Hallway
-      rooms to Zoom rooms?
+    - Not 100% sure what determines elements in the Chats list in
+      the sidebar, but if it is the same as the set of blue boxes on
+      the bottom of your screen, that does not seem very useful.
+         - I think what I really want here is to be able to close a chat
+           window at the bottom of my screen but have that not remove that
+           chat from the sidebar — it should persist there until I click a
+           (popup) button on its name on the sidebar to make it close.
+    - See if any more of the user manual can be reflected in popovers
+    - It should be possible to scroll the videos to the very top of the
+      screen.
 
 Pending questions from users:
     - 1) In the instructions it says presenters should start video chat
@@ -40,14 +39,15 @@ Pending questions from users:
       want to disturb them)
 
 Little UI things for anybody:
-    - Notifications for pending chats!!
+    - Make user popovers include a button "Send a message"
     - When I use the button in a chat to create a private room and join it,
-      I should not be muted by default!
+      I should not be muted by default.  Maybe, in fact, we should just
+      turn off the mute-when-join feature entirely.  It seems like it's
+      doing more harm than good.
     - reconsider muting people's mics when they enter rooms -- not good for
       hallways
     - make chat windows resizeable
     - make sure all controls have hover text
-    - Try slightly more muted colors for the tags / flairs
     - Change number of columns in lobby display depending on screen size
       (implemented, but needs to be checked with several different sizes)
     - Should Hallway rooms be large or small??  How many should we create by
@@ -77,6 +77,7 @@ Design issues
       talk" issue, there is simply the fact that questions don't persist
       *after* the talk.  I wonder if it might not really be better just to
       use the chat for this, especially since
+    - The semantics of private rooms is not clear.
 
 Comments from #sv-indian
     - People complained about positioning of slido widget, maybe we can
@@ -101,6 +102,19 @@ Comments from #sv-indian
           really big (for the video to take the entire screen)"
 
 ## Lower-priority small things (after ICSE)
+
+- Try slightly more muted colors for the tags / flairs?
+
+- Label everybody's video with their timezone!
+
+- Make avatars display a little larger in the popup?
+
+- I thought Crista said that it was now easy to embed Zoom rooms in
+  Clowdr.  Is that true?  If so, can we convert some of the big Hallway
+  rooms to Zoom rooms?
+
+- Do something about all the video rearranging that happens as people come
+  and go from rooms (maybe this is better now??)
 
 - We're not consistent about how we use the words Chat and Breakout
 
