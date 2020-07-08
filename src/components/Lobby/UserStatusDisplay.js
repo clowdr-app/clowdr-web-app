@@ -1,5 +1,5 @@
 import React from "react";
-import {Avatar, Badge, Popover, Skeleton, Tag, Tooltip} from "antd";
+import {Avatar, Badge, Button, Popover, Skeleton, Tag, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
@@ -129,12 +129,13 @@ class UserStatusDisplay extends React.Component{
                     {this.state.profile.get("webpage")}</a>
                 </div>;
         }
+        let dmButton = <Button className="dmButton" type="primary" onClick={onClick}>Send a message to {this.state.profile.get("displayName")}</Button>
         let firstLine =
             <div>
               {dntWaiver}
             </div>;
         // BCP: And this needs a bit more vertical spacing between non-empty elements too:
-        let popoverContent = <div className="userPopover"> {firstLine} {bio} {webpage} </div>;
+        let popoverContent = <div className="userPopover"> {firstLine} {bio} {webpage} {dmButton} </div>;
 /*
         let popoverContent = <span></span>
         // BCP: Not clear to me why we were treating these so popovers differently
@@ -144,6 +145,7 @@ class UserStatusDisplay extends React.Component{
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
                     <Popover title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
+                      &nbsp;&nbsp;&nbsp; {/* BCP: Better way to do this? */}
                       <Badge status={badgeStyle} color={badgeColor} />
                       <span style={{color:nameColor}}>{this.state.profile.get("displayName")}</span>
                       &nbsp;

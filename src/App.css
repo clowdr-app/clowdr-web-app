@@ -193,6 +193,7 @@
     line-height: 1;
     padding: 0;
 
+    font-size: 2.2ex;
     text-overflow: ellipsis;
     /*overflow-y: auto;*/
     overflow:hidden;
@@ -577,4 +578,9 @@ td.ant-table-cell.program-table-timeBand{
     text-align: left;
     margin-top: 10px;
     margin-bottom: 10px;
+}
+
+.dmButton {
+    margin-top: 5px;
+    margin-bottom: 3px;
 }
