@@ -8,6 +8,8 @@ Little UI things for anybody:
   - See if any more of the user manual can be reflected in popovers
   - Change number of columns in lobby display depending on screen size
     (implemented, but needs to be checked with several different sizes)
+  - The video chat rooms list in the lobby does not show which rooms are
+    private! 
 
 Design issues
   - consider how to make it clear which poster sessions are active (add a
