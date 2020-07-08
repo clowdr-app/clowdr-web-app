@@ -339,6 +339,10 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
                 <Space />
 
+            <div className="new-breakout-room-button">
+                <NewRoomForm type="secondary" text="New video chat room" />
+            </div>
+
                 <div className="lobby-section-header">
                 Video Chat Rooms
                 </div>
@@ -446,10 +450,6 @@ class Lobby extends React.Component {
                     }
                 )
                 : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
-            </div>
-
-            <div className="new-breakout-room-button">
-                <NewRoomForm type="secondary" text="New video chat room" />
             </div>
 
             {/* -------------------------------------------------------------- */}

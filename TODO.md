@@ -2,23 +2,18 @@
 
 ## High-priority small things (for ICSE if possible)
 
-Now:
-  - Rename "Hallway" to "Public Hangout" 
-
 Little UI things for anybody:
+  - Show the long version of people's presence descriptors (with status
+    text) in the breakout rooms, etc.
   - See if any more of the user manual can be reflected in popovers
   - Change number of columns in lobby display depending on screen size
     (implemented, but needs to be checked with several different sizes)
+  - The video chat rooms list in the lobby does not show which rooms are
+    private! 
 
 Design issues
   - consider how to make it clear which poster sessions are active (add a
     list to the Posters page, maybe? and/or to the Lobby page?)
-  - The way chats pop up as you move around (and then stay up after you
-    leave a space) seems suboptimal.  And the full-height chat bar on the
-    right-hand side is using up a lot of screen real estate for (to me)
-    unknown benefit (why do I want to spend that much screen on that
-    particular chat window?).  In general, I don't think our chat
-    interface is quite there yet.
   - I don't like the way going to look at the program, look at My Account,
     etc. takes me out of whatever conversation I'm in.  Relatedly, I'm sad
     that I can't view a talk *and* see what's happening in the Lobby chat
@@ -28,8 +23,11 @@ Design issues
   - Slido is problematic: besides the "questions disappearing during the
     talk" issue, there is simply the fact that questions don't persist
     *after* the talk.  I wonder if it might not really be better just to
-    use the chat for this, especially since
+    use the chat for this.
   - The semantics of private rooms is not clear.
+  - We need a way to search for anyone anywhere on the site.
+  - There should be a way to send a message to someone who is not connected
+    at the moment.
 
 Pending questions from users:
   - 1) In the instructions it says presenters should start video chat
@@ -70,6 +68,7 @@ Comments from #sv-indian
 ## Lower-priority small things (after ICSE)
 
 Code cleanup
+  - refactor all the code that got duplicated in the heat of the moment :-)
   - switch to Typescript!!
   - global rename Breakout to Chat (but be careful of how "chat" is used
     right now...)
