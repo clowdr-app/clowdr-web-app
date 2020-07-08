@@ -571,11 +571,11 @@ class VideoRoom extends Component {
                     <AppStateProvider meeting={this.state.meetingName} token={this.state.token}
                                       isEmbedded={true}
                         onConnect={(room,videoContext)=>{
-                            if(this.state.room.get("mode") == "group") {
-                                let localTracks = videoContext.localTracks;
-                                const audioTrack = localTracks.find(track => track.kind === 'audio');
-                                audioTrack.disable();
-                            }
+                            // if(this.state.room.get("mode") == "group") {
+                            //     let localTracks = videoContext.localTracks;
+                            //     const audioTrack = localTracks.find(track => track.kind === 'audio');
+                            //     audioTrack.disable();
+                            // }
 
                         }
                     }
@@ -654,7 +654,7 @@ class VideoRoom extends Component {
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             {!this.props.hideInfo ? <div>
-                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the 4 most active participants. Click a participant to pin them to always show their video. <b>You are muted by default in this room, please unmute yourself if you want to talk.</b></span> :
+                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the 4 most active participants. Click a participant to pin them to always show their video. </span> :
                                     this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
                             </div> :<></>}
                         <div className={"videoEmbed"}>

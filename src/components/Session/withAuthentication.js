@@ -681,6 +681,8 @@ const withAuthentication = Component => {
                 });
                 this.parseLivePublicVideosSub.on('update', async (newItem) => {
                     newItem = await this.populateMembers(newItem);
+                    console.log("Update: " + newItem.id)
+                    console.log(newItem.get("members"))
                     this.notifyUserOfChanges(newItem);
                     //Deliver notifications if applicable
                     this.setState((prevState) => ({

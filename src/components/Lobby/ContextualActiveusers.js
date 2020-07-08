@@ -241,7 +241,7 @@ class ContextualActiveUsers extends Component {
                           inlineIndent={0}
 
                           forceSubMenuRender={true}
-                          openKeys={allActiveRooms.map(r=>r.id)}
+                          openKeys={allActiveRooms.concat(programRooms).map(r=>r.id)}
                           expandIcon={null}
                           selectedKeys={selectedKeys}
                     >
@@ -319,6 +319,7 @@ class ContextualActiveUsers extends Component {
                                         let className = "personHoverable";
                                         if (this.state.filteredUser == user.id)
                                             className += " personFiltered"
+                                        console.log(user);
                                         return <Menu.Item key={user.id} className={className}>
                                             <UserStatusDisplay popover={true}profileID={user.id}/>
                                         </Menu.Item>
@@ -398,7 +399,7 @@ class ContextualActiveUsers extends Component {
                             <Menu.SubMenu key="restUsers"
                                           title={<div className="overflowHelper">{lobbyMembers.length} total</div>}>
 
-                                {lobbyMembers.slice(10).map((user) => {
+                                {lobbyMembers.map((user) => {
                                     let className = "personHoverable";
                                     if (this.state.filteredUser == user.id)
                                         className += " personFiltered"
