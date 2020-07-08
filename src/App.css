@@ -581,6 +581,7 @@ td.ant-table-cell.program-table-timeBand{
 }
 
 .dmButton {
-    margin-top: 5px;
+    margin-top: 10px;
+    align: center;
     margin-bottom: 3px;
 }
