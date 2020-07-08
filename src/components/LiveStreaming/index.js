@@ -66,7 +66,6 @@ class LiveStreaming extends Component {
                         now <= moment(timeE).add(10, 'm').toDate().getTime() && s.get("room"));
             }
         }).sort(this.dateSorter);
-
         let liveRooms = [];
         if (currentSessions) {
             currentSessions.map(s => liveRooms.push(s.get("room")));
@@ -75,7 +74,8 @@ class LiveStreaming extends Component {
             console.log('No current sessions');
 
         liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r && room && r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
-        liveRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
+        liveRooms.sort((a, b) => (a.get("name") == "Practice Room" ? 1
+            : b.get("name") == "Practice Room" ? -1 : a.get('name').localeCompare(b.get('name'))));
 
         // Upcoming
         let upcomingSessions = []

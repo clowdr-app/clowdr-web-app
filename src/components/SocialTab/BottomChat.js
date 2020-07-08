@@ -153,10 +153,11 @@ class BottomChat extends React.Component {
                                            sid={sid}
                                            auth={this.props.auth}
                                            parentRef={this}
-                                           addUser={this.addUser.bind(this,sid)}
-                                           toVideo={this.toVideo.bind(this,sid)}
-                                           toggleOpen={()=>{
-                            this.setState((prevState) => ({[sid]: !prevState[sid]}))
+                                           addUser={this.addUser.bind(this, sid)}
+                                           toVideo={this.toVideo.bind(this, sid)}
+                                           closeWindow={() => this.removeChannel(sid)}
+                                           toggleOpen={() => {
+                                               this.setState((prevState) => ({[sid]: !prevState[sid]}))
                         }}
                         chatClient={this.props.auth.chatClient}
                         />)
@@ -386,14 +387,8 @@ class BottomChatWindow extends React.Component{
         }
     }
 
-    destroyChat(){
-        let attr = this.props.chatClient.joinedChannels[this.props.sid].attributes;
-        if(attr.category == "announcements-global"){
-            this.props.toggleOpen();
-        }
-        else{
-            this.state.chat.channel.leave();
-        }
+    closeChat(){
+        this.props.closeWindow();
     }
 
     async toVideo() {
@@ -468,11 +463,10 @@ class BottomChatWindow extends React.Component{
                     <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}  icon={<PlusOutlined />}
                                                               onClick={this.props.addUser}
                 /></Tooltip>
-                <Tooltip mouseEnterDelay={0.5} title="Leave this chat"><Button size="small" type="primary" shape="circle"
+                <Tooltip mouseEnterDelay={0.5} title="Close this chat"><Button size="small" type="primary" shape="circle"
                                                               style={{minWidth: "initial"}}  icon={<CloseOutlined />}
             onClick={
-                // this.props.toggleOpen
-                this.destroyChat.bind(this)
+                this.closeChat.bind(this)
             }
             /></Tooltip>
                 <Tooltip mouseEnterDelay={0.5} title="Minimize this window"><Button size="small" type="primary" shape="circle"
