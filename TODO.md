@@ -39,15 +39,13 @@ Pending questions from users:
       want to disturb them)
 
 Little UI things for anybody:
-    - Make user popovers include a button "Send a message"
+    - Room popovers should include a descriptive message telling people what
+      the room is for and inviting them to join
     - When I use the button in a chat to create a private room and join it,
       I should not be muted by default.  Maybe, in fact, we should just
       turn off the mute-when-join feature entirely.  It seems like it's
       doing more harm than good.
-    - reconsider muting people's mics when they enter rooms -- not good for
-      hallways
     - make chat windows resizeable
-    - make sure all controls have hover text
     - Change number of columns in lobby display depending on screen size
       (implemented, but needs to be checked with several different sizes)
     - Should Hallway rooms be large or small??  How many should we create by
@@ -102,6 +100,8 @@ Comments from #sv-indian
           really big (for the video to take the entire screen)"
 
 ## Lower-priority small things (after ICSE)
+
+- make sure all controls have (good) hover text
 
 - Try slightly more muted colors for the tags / flairs?
 

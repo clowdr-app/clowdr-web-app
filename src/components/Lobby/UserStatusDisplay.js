@@ -129,7 +129,7 @@ class UserStatusDisplay extends React.Component{
                     {this.state.profile.get("webpage")}</a>
                 </div>;
         }
-        let dmButton = <Button type="primary" onClick={onClick}>Send a message to {this.state.profile.get("displayName")}</Button>
+        let dmButton = <Button className="dmButton" type="primary" onClick={onClick}>Send a message to {this.state.profile.get("displayName")}</Button>
         let firstLine =
             <div>
               {dntWaiver}
