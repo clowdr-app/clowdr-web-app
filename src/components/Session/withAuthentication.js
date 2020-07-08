@@ -651,6 +651,7 @@ const withAuthentication = Component => {
             query.include("members");
             query.include("programItem");
             query.equalTo("isPrivate", false);
+            query.limit(1000);
             // query.greaterThanOrEqualTo("updatedAt",date);
             query.find().then(res => {
                 if(!this.state.user){
