@@ -471,8 +471,8 @@ class ContextualActiveUsers extends Component {
 
                 {programInfo}
 
-                <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These breakout rooms feature video and chat, and are associated with the room that you are currently in - "
-                + this.props.auth.activeSpace.get("name")}>Video Breakout Rooms</Tooltip></Divider>
+                <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
+                + this.props.auth.activeSpace.get("name")}>Video chat rooms</Tooltip></Divider>
 
                 <Menu mode="inline"
                       className="activeRoomsList"
@@ -582,7 +582,7 @@ class ContextualActiveUsers extends Component {
                 : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
                 </Menu>
                 <div style={{textAlign: 'center'}}>
-                    <NewRoomForm type="secondary" text="New Breakout Room" />
+                    <NewRoomForm type="secondary" text="New video chat room" />
                 </div>
             </div>
         }

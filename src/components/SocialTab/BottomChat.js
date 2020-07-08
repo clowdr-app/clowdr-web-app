@@ -453,7 +453,7 @@ class BottomChatWindow extends React.Component{
             <div className="bottomChatHeaderItems">
             <div className="bottomChatIdentity">{title}</div>
             <div className="bottomChatClose">
-                <Tooltip mouseEnterDelay={0.5} title="Launch a video breakout room from this chat">
+                <Tooltip mouseEnterDelay={0.5} title="Launch a video chat room">
                     <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}
                             loading={this.state.newVideoChatLoading}
                             icon={<VideoCameraAddOutlined />}

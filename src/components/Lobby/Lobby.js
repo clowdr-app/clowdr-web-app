@@ -331,7 +331,7 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>
-                When you are looking for casual conversation or hoping to meet new people,  head over to one of the small-group rooms labeled "Hallway 1", "Hallway 2", etc.  You can either join a room at random or else pick an empty room and wait for others to join you there.
+                When you are looking for casual conversation or hoping to meet new people,  head over to one of the small-group rooms labeled "Public Hangout 1", "Public Hangout 2", etc.  You can either join a room at random or else pick an empty room and wait for others to join you there.
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>
@@ -339,12 +339,8 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
                 <Space />
 
-                <div className="new-breakout-room-button">
-                    <NewRoomForm type="secondary" text="New Breakout Room" />
-                </div>
-
                 <div className="lobby-section-header">
-                Breakout rooms
+                Viedo chat rooms
                 </div>
 
             {/* --------------------------------------------------------------
@@ -450,6 +446,10 @@ class Lobby extends React.Component {
                     }
                 )
                 : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
+            </div>
+
+            <div className="new-breakout-room-button">
+                <NewRoomForm type="secondary" text="New video chat room" />
             </div>
 
             {/* -------------------------------------------------------------- */}

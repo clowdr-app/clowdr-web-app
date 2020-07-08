@@ -3,7 +3,7 @@
 ## High-priority small things (for ICSE if possible)
 
 Now:
-  - Rename "Hallway" to "Public Hangout"
+  - Rename "Hallway" to "Public Hangout" 
 
 Little UI things for anybody:
   - See if any more of the user manual can be reflected in popovers
@@ -68,6 +68,11 @@ Comments from #sv-indian
         really big (for the video to take the entire screen)"
 
 ## Lower-priority small things (after ICSE)
+
+Code cleanup
+  - switch to Typescript!!
+  - global rename Breakout to Chat (but be careful of how "chat" is used
+    right now...)
 
 Social engineering:
     - The schedule needs very explicit "go to the Hallway" times!
