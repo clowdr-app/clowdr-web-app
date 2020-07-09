@@ -5,29 +5,43 @@
 Little UI things for anybody:
   - Show the long version of people's presence descriptors (with status
     text) in the breakout rooms, etc.
-  - See if any more of the user manual can be reflected in popovers
-  - Change number of columns in lobby display depending on screen size
-    (implemented, but needs to be checked with several different sizes)
+  - See if any more of the user manual can be reflected in popovers -- in
+    general, our goal should be not to have a user manual!
+  - Change the number of columns in lobby display depending on screen size
+    (this is partly implemented, but needs to be checked with several
+    different sizes)
   - The video chat rooms list in the lobby does not show which rooms are
-    private! 
+    private!  And the privacy marker is confusing to people -- it needs at
+    least a tooltip.
+  - If you click on the camera-+ icon in a chat to spin off a new private
+    room for a conversation, the room should be created in Ephemeral mode,
+    not Persistent.  (However, the fact that only one person seems to have
+    created a room in this way -- and that person was following my
+    instructions! -- suggests that this feature is not obvious to people!
+    We should make it easier to find -- at a minimum, choose a more
+    intuitive icon for it.)
 
 Design issues
-  - consider how to make it clear which poster sessions are active (add a
-    list to the Posters page, maybe? and/or to the Lobby page?)
-  - I don't like the way going to look at the program, look at My Account,
-    etc. takes me out of whatever conversation I'm in.  Relatedly, I'm sad
-    that I can't view a talk *and* see what's happening in the Lobby chat
-    rooms at the same time...  (Or wait, maybe I can!  Apparently I can
+  - consider how to make it clear which poster sessions are active at the
+    moment (add a list to the Posters page, maybe? and/or to the Lobby
+    page?)
+  - I (BCP) don't like the way going to look at the program, look at My
+    Account, etc. takes me out of whatever conversation I'm in.  Relatedly,
+    I'm sad that I can't view a talk *and* see what's happening in the Lobby
+    chat rooms at the same time...  (Or wait, maybe I can!  Apparently I can
     open multiple tabs on Clowdr.  I thought that was not allowed, but
-    actually it's quite convenient...)
+    actually it's quite convenient...  We should document it!)
   - Slido is problematic: besides the "questions disappearing during the
     talk" issue, there is simply the fact that questions don't persist
     *after* the talk.  I wonder if it might not really be better just to
-    use the chat for this.
-  - The semantics of private rooms is not clear.
+    use the chat for this.  (Later: We seem to be converging on dumping
+    slido.)
+  - The semantics of private rooms is not clear.  We could add a tooltip
+    that says, e.g., "Private room: you have been granted access by Jane
+    Smith"
   - We need a way to search for anyone anywhere on the site.
   - There should be a way to send a message to someone who is not connected
-    at the moment.
+    to the site at the moment.
 
 Pending questions from users:
   - 1) In the instructions it says presenters should start video chat
