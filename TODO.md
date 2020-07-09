@@ -95,6 +95,9 @@ UI nits:
     the name of the chat)
   - Room popovers should include a descriptive message telling people what
     the room is for and inviting them to join
+  - Push to talk for video rooms
+  - clicking on the blue button for a chat at the bottom of the screen opens
+    it; clicking again should close it
 
 A breakout room should have some descriptive text saying what it is for;
 this should be entered when you create the room, and it should display in

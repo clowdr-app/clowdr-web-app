@@ -344,7 +344,7 @@ class Lobby extends React.Component {
             </div>
 
                 <div className="lobby-section-header">
-                Viedo chat rooms
+                Video chat rooms
                 </div>
 
             {/* --------------------------------------------------------------

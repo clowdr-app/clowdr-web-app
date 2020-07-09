@@ -426,7 +426,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
 .bottomChatWindow{
     position:fixed;
     width: 240px;
-    height: 400px;
+    min-height: 400px;
     bottom: 0;
     border: 2px solid #1890FF;
     display: flex;
