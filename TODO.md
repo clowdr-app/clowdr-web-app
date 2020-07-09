@@ -2,14 +2,22 @@
 
 ## High-priority small things (for ICSE if possible)
 
+reintegrate this with the TODO list on github
+
 Little UI things for anybody:
+  - Feature request for the day: I really want to be able to (a) search for
+    anyone on the platform, not just people in the same top-level room as
+    me, (b) search for anybody registered for the conference, not just
+    people signed on to the platform right now, and (c) send a chat message
+    to anybody I can search for…
+    (JB: This is not hard. The ContextualActiveUsers already gets all of the
+    presences and filters them to the current social space. So, the search
+    bar could be set to search across all of the users.)
+  - The hover text for an empty breakout room should say "(currently empty)"
   - Show the long version of people's presence descriptors (with status
     text) in the breakout rooms, etc.
   - See if any more of the user manual can be reflected in popovers -- in
     general, our goal should be not to have a user manual!
-  - Change the number of columns in lobby display depending on screen size
-    (this is partly implemented, but needs to be checked with several
-    different sizes)
   - The video chat rooms list in the lobby does not show which rooms are
     private!  And the privacy marker is confusing to people -- it needs at
     least a tooltip.
@@ -20,6 +28,10 @@ Little UI things for anybody:
     instructions! -- suggests that this feature is not obvious to people!
     We should make it easier to find -- at a minimum, choose a more
     intuitive icon for it.)
+  - The semantics of private rooms is not clear.  We could add a tooltip
+    that says, e.g., "Private room: you have been granted access by Jane
+    Smith" or "Private room: you are seeing it because you have moderator
+    privileges"
 
 Design issues
   - consider how to make it clear which poster sessions are active at the
@@ -36,12 +48,6 @@ Design issues
     *after* the talk.  I wonder if it might not really be better just to
     use the chat for this.  (Later: We seem to be converging on dumping
     slido.)
-  - The semantics of private rooms is not clear.  We could add a tooltip
-    that says, e.g., "Private room: you have been granted access by Jane
-    Smith"
-  - We need a way to search for anyone anywhere on the site.
-  - There should be a way to send a message to someone who is not connected
-    to the site at the moment.
 
 Pending questions from users:
   - 1) In the instructions it says presenters should start video chat
@@ -105,27 +111,31 @@ Documentation:
 It should be possible to join a video chat without a camera (just audio)
 
 UI nits:
-  - the Xs to close chats should be popovers (they appear if you hover over
-    the name of the chat)
+  - Clicking on the name of a chat in the sidebar currently just OPENS the
+    chat.  It should also MINIMIZE the chat if it happens to be open at the
+    moment. 
+  - Change the number of columns in lobby display depending on screen size
+    (this is partly implemented, but needs to be checked with several
+    different sizes)
+  - the Xs to close chats should be popovers (i.e., they appear if you hover
+    over the name of the chat, but they are not there all the time)
   - Room popovers should include a descriptive message telling people what
     the room is for and inviting them to join
-  - Push to talk for video rooms
+  - "Push to talk" for video rooms
   - clicking on the blue button for a chat at the bottom of the screen opens
     it; clicking again should close it
+  - It should be possible to scroll the videos to the very top of the screen.
+  - make sure all controls have (good) hover text
+  - Label everybody's video with their timezone!
+  - People's names in the headers of video windows should behave the same as
+    everywhere else in the UI (e.g., you should be able to click on them to
+    get a chat window)
 
 A breakout room should have some descriptive text saying what it is for;
 this should be entered when you create the room, and it should display in
 a popup when you hover over the room name.
 
-It should be possible to scroll the videos to the very top of the screen.
-
 make chat windows resizeable -- seems to be not easy :-(
-
-make sure all controls have (good) hover text
-
-Try slightly more muted colors for the tags / flairs?
-
-Label everybody's video with their timezone!
 
 Make avatars display a little larger in the popup?
 
