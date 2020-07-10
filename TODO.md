@@ -4,7 +4,23 @@
 
 reintegrate this with the TODO list on github
 
+comments from the ICSE discussion
+https://docs.google.com/document/d/1m0OoLhmlJNYsCfpd0m993UbABu39UWyOUOa538Yt4iw/edit
+
+random comments from a student:
+   - the virtual clapping soundtrack is excellent!
+   - maybe have the SVs put links to the papers in the chat as they are
+     starting
+   - maybe the lobby chat sidebar should be closed by default
+   - the UI is overwhelming at the beginning -- need an easier onramp
+
 Little UI things for anybody:
+  - Try putting people in "just listening" mode when they first enter a room
+    (with a prominent
+  - To minimize confusion about closing the text chat windows, what about
+    removing the X from the chat window itself and making the -- (minimize)
+    do what the X does now?  I.e., the only way to really close a chat
+    window is from the sidebar?
   - Feature request for the day: I really want to be able to (a) search for
     anyone on the platform, not just people in the same top-level room as
     me, (b) search for anybody registered for the conference, not just
@@ -34,6 +50,14 @@ Little UI things for anybody:
     privileges"
 
 Design issues
+  - What if there were some kind of "meetup matching" service -- each of us
+    tells the system which of the other participants they are interested in
+    talking to.  Then, when one of those people happens to be in a public
+    place / available for conversation, the UI lets me know, and I can go
+    join them.
+  - We really need to get Researhr integrated
+  - Rethink the "single presence" concept -- I (BCP) don't think it really
+    works.
   - consider how to make it clear which poster sessions are active at the
     moment (add a list to the Posters page, maybe? and/or to the Lobby
     page?)
@@ -48,6 +72,8 @@ Design issues
     *after* the talk.  I wonder if it might not really be better just to
     use the chat for this.  (Later: We seem to be converging on dumping
     slido.)
+  - Announcements are really useful for people -- think about how to expand
+    them a bit?
 
 Pending questions from users:
   - 1) In the instructions it says presenters should start video chat
@@ -94,6 +120,14 @@ Code cleanup
     right now...)
 
 Social engineering:
+    - The Lobby chat got used at ICSE for two things: for general
+      announcements by the organizers, and for chat between participants.
+      IMO it would be good to separate them (e.g., use only the announcement
+      mechanism for announcements -- we'll have to make it a bit less
+      intrusive, though!)
+    - We really need a "take me someplace random" button
+    - If we are interested in continuing to use Slack, we should check Zulip
+      as an alternative
     - The schedule needs very explicit "go to the Hallway" times!
     - Maybe we should ask student volunteers to hang out in the Hallway
       rooms when they are not doing something else... seems like it would be
@@ -113,7 +147,7 @@ It should be possible to join a video chat without a camera (just audio)
 UI nits:
   - Clicking on the name of a chat in the sidebar currently just OPENS the
     chat.  It should also MINIMIZE the chat if it happens to be open at the
-    moment. 
+    moment.
   - Change the number of columns in lobby display depending on screen size
     (this is partly implemented, but needs to be checked with several
     different sizes)
