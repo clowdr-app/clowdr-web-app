@@ -2,32 +2,78 @@
 
 ## High-priority small things (for ICSE if possible)
 
+reintegrate this with the TODO list on github
+
+comments from the ICSE discussion
+https://docs.google.com/document/d/1m0OoLhmlJNYsCfpd0m993UbABu39UWyOUOa538Yt4iw/edit
+
+random comments from a student:
+   - the virtual clapping soundtrack is excellent!
+   - maybe have the SVs put links to the papers in the chat as they are
+     starting
+   - maybe the lobby chat sidebar should be closed by default
+   - the UI is overwhelming at the beginning -- need an easier onramp
+
 Little UI things for anybody:
+  - Try putting people in "just listening" mode when they first enter a room
+    (with a prominent
+  - To minimize confusion about closing the text chat windows, what about
+    removing the X from the chat window itself and making the -- (minimize)
+    do what the X does now?  I.e., the only way to really close a chat
+    window is from the sidebar?
+  - Feature request for the day: I really want to be able to (a) search for
+    anyone on the platform, not just people in the same top-level room as
+    me, (b) search for anybody registered for the conference, not just
+    people signed on to the platform right now, and (c) send a chat message
+    to anybody I can search for…
+    (JB: This is not hard. The ContextualActiveUsers already gets all of the
+    presences and filters them to the current social space. So, the search
+    bar could be set to search across all of the users.)
+  - The hover text for an empty breakout room should say "(currently empty)"
   - Show the long version of people's presence descriptors (with status
     text) in the breakout rooms, etc.
-  - See if any more of the user manual can be reflected in popovers
-  - Change number of columns in lobby display depending on screen size
-    (implemented, but needs to be checked with several different sizes)
+  - See if any more of the user manual can be reflected in popovers -- in
+    general, our goal should be not to have a user manual!
   - The video chat rooms list in the lobby does not show which rooms are
-    private! 
+    private!  And the privacy marker is confusing to people -- it needs at
+    least a tooltip.
+  - If you click on the camera-+ icon in a chat to spin off a new private
+    room for a conversation, the room should be created in Ephemeral mode,
+    not Persistent.  (However, the fact that only one person seems to have
+    created a room in this way -- and that person was following my
+    instructions! -- suggests that this feature is not obvious to people!
+    We should make it easier to find -- at a minimum, choose a more
+    intuitive icon for it.)
+  - The semantics of private rooms is not clear.  We could add a tooltip
+    that says, e.g., "Private room: you have been granted access by Jane
+    Smith" or "Private room: you are seeing it because you have moderator
+    privileges"
 
 Design issues
-  - consider how to make it clear which poster sessions are active (add a
-    list to the Posters page, maybe? and/or to the Lobby page?)
-  - I don't like the way going to look at the program, look at My Account,
-    etc. takes me out of whatever conversation I'm in.  Relatedly, I'm sad
-    that I can't view a talk *and* see what's happening in the Lobby chat
-    rooms at the same time...  (Or wait, maybe I can!  Apparently I can
+  - What if there were some kind of "meetup matching" service -- each of us
+    tells the system which of the other participants they are interested in
+    talking to.  Then, when one of those people happens to be in a public
+    place / available for conversation, the UI lets me know, and I can go
+    join them.
+  - We really need to get Researhr integrated
+  - Rethink the "single presence" concept -- I (BCP) don't think it really
+    works.
+  - consider how to make it clear which poster sessions are active at the
+    moment (add a list to the Posters page, maybe? and/or to the Lobby
+    page?)
+  - I (BCP) don't like the way going to look at the program, look at My
+    Account, etc. takes me out of whatever conversation I'm in.  Relatedly,
+    I'm sad that I can't view a talk *and* see what's happening in the Lobby
+    chat rooms at the same time...  (Or wait, maybe I can!  Apparently I can
     open multiple tabs on Clowdr.  I thought that was not allowed, but
-    actually it's quite convenient...)
+    actually it's quite convenient...  We should document it!)
   - Slido is problematic: besides the "questions disappearing during the
     talk" issue, there is simply the fact that questions don't persist
     *after* the talk.  I wonder if it might not really be better just to
-    use the chat for this.
-  - The semantics of private rooms is not clear.
-  - We need a way to search for anyone anywhere on the site.
-  - There should be a way to send a message to someone who is not connected
-    at the moment.
+    use the chat for this.  (Later: We seem to be converging on dumping
+    slido.)
+  - Announcements are really useful for people -- think about how to expand
+    them a bit?
 
 Pending questions from users:
   - 1) In the instructions it says presenters should start video chat
@@ -74,6 +120,14 @@ Code cleanup
     right now...)
 
 Social engineering:
+    - The Lobby chat got used at ICSE for two things: for general
+      announcements by the organizers, and for chat between participants.
+      IMO it would be good to separate them (e.g., use only the announcement
+      mechanism for announcements -- we'll have to make it a bit less
+      intrusive, though!)
+    - We really need a "take me someplace random" button
+    - If we are interested in continuing to use Slack, we should check Zulip
+      as an alternative
     - The schedule needs very explicit "go to the Hallway" times!
     - Maybe we should ask student volunteers to hang out in the Hallway
       rooms when they are not doing something else... seems like it would be
@@ -91,24 +145,31 @@ Documentation:
 It should be possible to join a video chat without a camera (just audio)
 
 UI nits:
-  - the Xs to close chats should be popovers (they appear if you hover over
-    the name of the chat)
+  - Clicking on the name of a chat in the sidebar currently just OPENS the
+    chat.  It should also MINIMIZE the chat if it happens to be open at the
+    moment.
+  - Change the number of columns in lobby display depending on screen size
+    (this is partly implemented, but needs to be checked with several
+    different sizes)
+  - the Xs to close chats should be popovers (i.e., they appear if you hover
+    over the name of the chat, but they are not there all the time)
   - Room popovers should include a descriptive message telling people what
     the room is for and inviting them to join
+  - "Push to talk" for video rooms
+  - clicking on the blue button for a chat at the bottom of the screen opens
+    it; clicking again should close it
+  - It should be possible to scroll the videos to the very top of the screen.
+  - make sure all controls have (good) hover text
+  - Label everybody's video with their timezone!
+  - People's names in the headers of video windows should behave the same as
+    everywhere else in the UI (e.g., you should be able to click on them to
+    get a chat window)
 
 A breakout room should have some descriptive text saying what it is for;
 this should be entered when you create the room, and it should display in
 a popup when you hover over the room name.
 
-It should be possible to scroll the videos to the very top of the screen.
-
 make chat windows resizeable -- seems to be not easy :-(
-
-make sure all controls have (good) hover text
-
-Try slightly more muted colors for the tags / flairs?
-
-Label everybody's video with their timezone!
 
 Make avatars display a little larger in the popup?
 
