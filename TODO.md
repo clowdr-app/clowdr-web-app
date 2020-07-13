@@ -1,5 +1,45 @@
 # Things to do
 
+## Admin Area
+
+# All over
+
+* Make all cells editable
+* Add new "thing" by adding new row in all tables
+* Change default pagination to 500
+
+# Rooms
+
+* Search by name
+* Fix table (goes out of the available space)
+
+# Tracks
+
+# Items
+
+* Show/edit authors and other parts of items
+* Implement change/add new item
+
+# Sessions
+
+# Program
+
+# Registrations
+
+* Search by name
+* Show new registrations after file upload
+
+
+## Posters/Demos Area
+
+## Live Area
+
+## Program
+
+## Chat
+
+## Video Chat
+
 ## High-priority small things (for ICSE if possible)
 
 reintegrate this with the TODO list on github
