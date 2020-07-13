@@ -2,29 +2,29 @@
 
 ## Admin Area
 
-# All over
+### All over
 
 * Make all cells editable
 * Add new "thing" by adding new row in all tables
 * Change default pagination to 500
 
-# Rooms
+### Rooms
 
 * Search by name
 * Fix table (goes out of the available space)
 
-# Tracks
+### Tracks
 
-# Items
+### Items
 
 * Show/edit authors and other parts of items
 * Implement change/add new item
 
-# Sessions
+### Sessions
 
-# Program
+### Program
 
-# Registrations
+### Registrations
 
 * Search by name
 * Show new registrations after file upload
