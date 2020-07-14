@@ -33,54 +33,8 @@ The UI is overwhelming at the beginning -- need an easier onramp
 
 Medium priority
 
-* Small-screen friendliness.  We need to think harder about screen real
-  estate on small (e.g., laptop) screens.  In particular, the logo and title
-  bar across the top use a lot of space.
-
-* Show the long version of people's presence descriptors (with status
-  text) in the breakout rooms, etc.  (right now it is just their name and flairs)
-
-* The video chat rooms list in the lobby does not show which rooms are
-  private!
-
-Unify "video chat rooms," "video chat lobby," etc.  (Semantics of "Lobby" not clear.) 
-
 * If possible, gray out the names of people that have not been active for a
   while (> 15 min?)
-
-UI nits:
-  - [ ] Clicking on the name of a chat in the sidebar currently just OPENS the
-    chat.  It should also MINIMIZE the chat if it happens to be open at the
-    moment.
-  - [ ] Change the number of columns in lobby display depending on screen size
-    (this is partly implemented, but needs to be checked with several
-    different sizes)
-  - [ ] the Xs to close chats should be popovers (i.e., they appear if you hover
-    over the name of the chat, but they are not there all the time)
-  - [ ] Room popovers should include a descriptive message telling people what
-    the room is for and inviting them to join
-  - [ ] "Push to talk" mode for video rooms
-  - [ ] clicking on the blue button for a chat at the bottom of the screen opens
-    it; clicking again should close it
-  - [ ] It should be possible to scroll the videos to the very top of the screen.
-  - [ ] make sure all controls have (good) hover text
-  - [ ] Label everybody's video feed with their timezone!
-  - [ ] People's names in the headers of video windows should behave the same as
-    everywhere else in the UI (e.g., you should be able to click on them to
-    get a chat window)
-
-* A breakout room should have some descriptive text saying what it is for;
-  this should be entered when you create the room, and it should display in
-  a popup when you hover over the room name.
-
-* Make avatars display a little larger in the popup?
-
-* Do something about all the video rearranging that happens as people come
-  and go from rooms (maybe this is better now??)
-
-* Consider (optionally) sorting participant list by
-   - whether I've designated them as a friend
-   - their topics / research interests
 
 dntWaiver = "Only you can see this status. Others will still see your
 presence in public rooms, but won't see a status" -- ... But this is the
@@ -92,25 +46,10 @@ Some kind of scheduling service for participants would be really nice.
 embedded, rather than writing our own.  Perhaps something as dumb as a
 google sheet.  Or perhaps not quite so dumb.)
 
-## Posters/Demos Area
-
-* consider how to make it clear which poster sessions are active at the
-  moment (add a list to the Posters page, maybe? and/or to the Lobby page?)
-
 ## Video Chat
-
-* To minimize confusion about closing the text chat windows, what about
-  removing the X from the chat window itself and making the -- (minimize) do
-  what the X does now?  I.e., the only way to really close a chat window is
-  from the sidebar?
-
-* It should be possible to join a video chat without a camera (just audio)
 
 * Clicking the little mic symbol in the upper right of the video display
   should mute and unmute you.
-
-* Allow anyone in a room to mute someone else's mic (and put a message in
-  the chat saying who did it).  Important!
 
 * rename the "End call" button to "Back to lobby" (BCP: not obvious how to
   do it -- the button seems to come from from a component library)
@@ -124,39 +63,32 @@ google sheet.  Or perhaps not quite so dumb.)
 Are we going to keep the small/large/P2P disctinction?  If so, should there
 be a visual indication of which rooms are which size?
 
-
 ## Social engineering:
-    - The Lobby chat got used at ICSE for two things: for general
-      announcements by the organizers, and for chat between participants.
-      IMO it would be good to separate them (e.g., use only the announcement
-      mechanism for announcements -- we'll have to make it a bit less
-      intrusive, though!)
-    - If we are interested in continuing to use Slack, we should check Zulip
-      as an alternative
-    - The schedule needs very explicit "go to the Hallway" times!
-    - Maybe we should ask student volunteers to hang out in the Hallway
-      rooms when they are not doing something else... seems like it would be
-      good for them, good for the conference, and good for us... :-)
-    - Should Hallway rooms be large or small??  How many should we create by
-      default?  How should we display them so that (a) people can find a
-      particular one if they want to but (b) people are encouraged to join
-      them randomly?
+
+- The Lobby chat got used at ICSE for two things: for general
+  announcements by the organizers, and for chat between participants.
+  IMO it would be good to separate them (e.g., use only the announcement
+  mechanism for announcements -- we'll have to make it a bit less
+  intrusive, though!)
+- The schedule needs very explicit "go to the Hallway" times!
+- Maybe we should ask student volunteers to hang out in the Hallway
+  rooms when they are not doing something else... seems like it would be
+  good for them, good for the conference, and good for us... :-)
+- Should Hallway rooms be large or small??  How many should we create by
+  default?  How should we display them so that (a) people can find a
+  particular one if they want to but (b) people are encouraged to join
+  them randomly?
 
 # --------------------------------------------------------------------
 # Unfiled
 
-* A directory that shows all of the participants, lets you search for participants and “star” them (or add them to a contact list) so that you can easily chat with them throughout the event
-* Better display of the program, looking more like how conf.researchr looks, and including the option to star/favorite talks
-* Enhancements to the breakout rooms so that users can preview the conversation in the breakout room before committing to join the video call.
+If we are interested in continuing to use Slack, we should check Zulip as an alternative
 
 comments from the ICSE discussion
 https://docs.google.com/document/d/1m0OoLhmlJNYsCfpd0m993UbABu39UWyOUOa538Yt4iw/edit
 
 random comments from a student:
    - the virtual clapping soundtrack is excellent!
-
-presenceDesc = "In a conversation; come join if you like"; -- have we made
-it possible / obvious how to go to where someone else is??
 
 # --------------------------------------------------------------------
 # --------------------------------------------------------------------
