@@ -1,103 +1,97 @@
 # Things to do
 
-## High-priority small things (for ICSE if possible)
+## General
 
-- Documentation
-    - delete Search from instructions on lobby page (and add a link to docs)
-    - put some structure on the user manual
-    - people also wondered what kind of web analytics is happening when you're
-      running this in your browser
-    - maybe link from landing page
-- Put the sidebar user list back to most-recent-first
-- less whitespace on the lobby page! (narrower columns)
+High priority:
 
-- More work on user profile display
-     - Make avatar display larger!?
-     - make tags smaller (if Jon hasn't done it already)
-     - visually distinguish the parts of the profile popup
+Reconsider the name of the tool.  Clowdr is good, but it seems basically impossible for people to spell: I've seen cloudr, clouder, clowder, crowdr, ...
 
-- Why was Jon's name not showing up in the sidebar??
+General UI simplification
 
-- add hover text for the maximize and other buttons -- make sure all buttons
-  have hover text
-- Rephrase the Report button hover-over text: "Report a user or ban them
-  from this room" or something
+  - or... what about displaying the last message posted *in* the rectangle
+    that you can click on to expand the chat.  I.e., make minimized chat
+    bottons a bit larger, put their name plus the first few words of the
+    last posting as the button title, and clicking on them maximizes the
+    chat window and shows all the messages?
 
-- Is there a way to make the Lobby screen display a multi-column vertical
-  list, rather than a grid?
-     - The div container that contains the users should be display:flex;
-       flex-flow: column wrap
+The UI is overwhelming at the beginning -- need an easier onramp
+  - maybe more things should be closed by default
+  - making more use of announcements would help (so that e.g., the lobby chat could start closed)
 
-- try IntelliJ
+## Documentation
 
-- Change number of columns in lobby display depending on screen size
+* See if any more of the user manual can be reflected in popovers -- in
+  general, our goal should be not to have a user manual!
 
-## Lower-priority small things (after ICSE)
+* Describe how to use multiple browser windows effectively (or make it obvious)
 
-- Consider (optionally) sorting participant list by
-    - whether I've designated them as a friend
-    - their topics / research interests
-    - do they want to be visible at all
-- room lists could be sorted the same way, BTW -- or, e.g., color all the
-  type theory people green, and show green dots on the rooms where they are
-  hanging out
+* The relation between top-level rooms and breakout rooms within top-level
+  rooms needs to be clarified.  (I [BCP] am still confused about it!)  Also
+  the relation between ordinary rooms and posters/exhibits.
 
-- What about a button to make a public room temporarily private (and then it goes
-  back to public when everybody leaves)
+## General UI / Navigation
 
-- layout nit: Put video on the very top of the screen, near the camera!
+Medium priority
 
-- if we added a couple of small features to a slack-like chat channel,
-  maybe we could get away without slido.
-     - Thumbs-up button (like slack)
-     - This-is-a-question-for-the-speaker button
-     - Display only questions from this channel, sorted by
-       most-thumbs-first.
+* If possible, gray out the names of people that have not been active for a
+  while (> 15 min?)
 
-- dntWaiver = "Only you can see this status. Others will still see your
-  presence in public rooms, but won't see a status" -- ... But this is the
-  only status that will be displayed as blank, so won't people be able to
-  infer it?
+dntWaiver = "Only you can see this status. Others will still see your
+presence in public rooms, but won't see a status" -- ... But this is the
+only status that will be displayed as blank, so won't people be able to
+infer it?
 
-- Try to rename the "End call" button to "Back to lobby"
+Some kind of scheduling service for participants would be really nice.
+(Though I wonder whether there is some third-party tool that could be
+embedded, rather than writing our own.  Perhaps something as dumb as a
+google sheet.  Or perhaps not quite so dumb.)
 
-- need to think about screen real estate on small (laptop, ipad) screens --
-  e.g.
-       - the title bar across the top uses a lot of space
-       - the "live questions to the speakers" goes entirely off the bottom
+## Video Chat
 
-- The pop-up for someone's name in the lobby does not include their textual
-  status (or profile); the one on the left sidebar does
+* Clicking the little mic symbol in the upper right of the video display
+  should mute and unmute you.
 
-- presenceDesc = "In a conversation; come join if you like"; -- have we made
-  it possible / obvious how to go to where someone else is??
+* rename the "End call" button to "Back to lobby" (BCP: not obvious how to
+  do it -- the button seems to come from from a component library)
 
-- should there be a visual indication of which rooms are small/large/P2P?
+* What about live captioning (as an eventual feature)?
 
-## Larger things to think about post-ICSE
+* Screen layout nit: When displaying a video chat room on a laptop, it would
+  be good to put other people's videos on the very top of the screen, near
+  the camera!
 
-- integration with Researchr for #LIVE "go to what's happening now"
+Are we going to keep the small/large/P2P disctinction?  If so, should there
+be a visual indication of which rooms are which size?
 
-- What about watching multiple channels at the same time?
+## Social engineering:
 
-- Mobile friendliness
-- Logging in from multiple devices??
+- The Lobby chat got used at ICSE for two things: for general
+  announcements by the organizers, and for chat between participants.
+  IMO it would be good to separate them (e.g., use only the announcement
+  mechanism for announcements -- we'll have to make it a bit less
+  intrusive, though!)
+- The schedule needs very explicit "go to the Hallway" times!
+- Maybe we should ask student volunteers to hang out in the Hallway
+  rooms when they are not doing something else... seems like it would be
+  good for them, good for the conference, and good for us... :-)
+- Should Hallway rooms be large or small??  How many should we create by
+  default?  How should we display them so that (a) people can find a
+  particular one if they want to but (b) people are encouraged to join
+  them randomly?
 
-- Implement Jon's "Post a 'come to me' button in a chat" feature
+# --------------------------------------------------------------------
+# Unfiled
 
-- What about live captioning (as an eventual feature).
+If we are interested in continuing to use Slack, we should check Zulip as an alternative
 
-- should chat logs be logged somewhere so that, for example, allegations of
-  misconduct can be investigated?  (Or should there be, for example, an
-  option to include the chat log in what gets sent to a moderator? or?)
-  More generally, what information do moderators need to do their job?
+comments from the ICSE discussion
+https://docs.google.com/document/d/1m0OoLhmlJNYsCfpd0m993UbABu39UWyOUOa538Yt4iw/edit
 
-## Random fun features
+random comments from a student:
+   - the virtual clapping soundtrack is excellent!
 
-- Snarky reviewer #3 bots
-
-
-# --------------------------------------------------
+# --------------------------------------------------------------------
+# --------------------------------------------------------------------
 # Design notes
 
 ## Design alternatives for "take me someplace random"
@@ -265,7 +259,7 @@ Just talking with Richard and he mentioned two ideas for Clowdr:
   and not audible.
 
 
-# --------------------------------------------------
+# --------------------------------------------------------------------
 # Miscellaneous notes
 ## Notes and observations from PLDI 2020
 

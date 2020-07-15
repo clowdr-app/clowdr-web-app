@@ -107,7 +107,7 @@ class SignIn extends Component {
                 <Form.Item {...tailLayout}>
                     <Button type="primary" disabled={isInvalid} htmlType="submit">
                         Sign In
-                    </Button> <Tooltip title="If you have forgotten your password, please enter your email address and click this button to receive a link to reset it."><Button disabled={email === ''} onClick={this.forgotPassword.bind(this)}>
+                    </Button> <Tooltip mouseEnterDelay={0.5} title="If you have forgotten your password, please enter your email address and click this button to receive a link to reset it."><Button disabled={email === ''} onClick={this.forgotPassword.bind(this)}>
                     Forgot Password
                 </Button></Tooltip></Form.Item>
 

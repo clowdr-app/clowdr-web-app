@@ -118,7 +118,7 @@ class Account extends React.Component {
             </Tag>
         );
         if(this.state.flairColors[value].tooltip)
-            return <Tooltip title={this.state.flairColors[value].tooltip}>{tag}</Tooltip>
+            return <Tooltip mouseEnterDelay={0.5} title={this.state.flairColors[value].tooltip}>{tag}</Tooltip>
 
         return tag;
     }

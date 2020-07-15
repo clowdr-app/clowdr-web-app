@@ -17,10 +17,13 @@ const withAuthentication = Component => {
             this.isLoggedIn = false;
             this.loadingProfiles = {};
             this.userProfiles = {};
+            this.unwrappedProfiles = {};
             this.chatWaiters = [];
             this.livegneChannel = null;
             this.channelChangeListeners = [];
-
+            this.presenceWatchers = [];
+            this.presences = {};
+            this.newPresences = [];
 
             var parseLive = new Parse.LiveQueryClient({
                 applicationId: process.env.REACT_APP_PARSE_APP_ID,
@@ -30,7 +33,9 @@ const withAuthentication = Component => {
             parseLive.open();
 
             let exports ={
+                unwrappedProfiles: this.unwrappedProfiles,
                 setExpandedProgramRoom: this.setExpandedProgramRoom.bind(this),
+                presences: this.presences,
                 getUsers: this.getUsers.bind(this),
                 createOrOpenDM: this.createOrOpenDM.bind(this),
                 getRoleByName: this.getRoleByName.bind(this),
@@ -41,7 +46,9 @@ const withAuthentication = Component => {
                 getUserProfilesFromUserProfileIDs: this.getUserProfilesFromUserProfileIDs.bind(this),
                 getUserProfilesFromUserProfileID: this.getUserProfilesFromUserProfileID.bind(this),
                 ifPermission: this.ifPermission.bind(this),
-                getUserRecord: this.getUserRecord.bind(this)
+                getUserRecord: this.getUserRecord.bind(this),
+                getPresences: this.getPresences.bind(this),
+                cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this)
             }
             this.state = {
                 user: null,
@@ -220,6 +227,34 @@ const withAuthentication = Component => {
         //     }
         // }
 
+        getPresences(component){
+            this.presenceWatchers.push(component);
+            component.setState({presences: this.presences});
+        }
+        cancelPresenceSubscription(component){
+            this.prsenceWatchers = this.presenceWatchers.filter(v => v!= component);
+        }
+        updatePresences(){
+            if(this.presenceUpdateScheduled){
+               return;
+            }
+            else{
+                this.presenceUpdateScheduled = true;
+                this.presenceUpdateTimer = setTimeout(async ()=>{
+                    let newPresences = this.newPresences;
+                    this.newPresences = [];
+                    this.presenceUpdateScheduled = false;
+                    await this.getUserProfilesFromUserProfileIDs(newPresences.map(p=>p.get("user").id));
+                    for(let presence of newPresences){
+                        this.presences[presence.get("user").id] = presence;
+                    }
+                    for(let presenceWatcher of this.presenceWatchers){
+                        presenceWatcher.setState({presences: this.presences});
+                    }
+                }, 10000 + Math.random() * 5000);
+            }
+        }
+
         async createSocialSpaceSubscription(user, userProfile){
             if(this.socialSpaceSubscription){
                 this.socialSpaceSubscription.unsubscribe();
@@ -232,62 +267,29 @@ const withAuthentication = Component => {
 
 
             let query  =new Parse.Query("UserPresence");
+            query.limit(1000);
             query.equalTo("isOnline", true);
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
-            this.socialSpaceSubscription.on('create',(presence)=>{
-                this.setState(
-                    (prevState)=>({
-                        presences: {
-                            ...prevState.presences,
-                            [presence.get("user").id]: presence
-                        }
-                    })
-                )
+            this.socialSpaceSubscription.on('create', (presence) => {
+                this.newPresences.push(presence);
+                this.updatePresences();
             })
-            this.socialSpaceSubscription.on('enter',(presence)=>{
-                this.setState(
-                    (prevState)=>({
-                        presences: {
-                            ...prevState.presences,
-                            [presence.get("user").id]: presence
-                        }
-                    })
-                )
+            this.socialSpaceSubscription.on('enter', (presence) => {
+                this.newPresences.push(presence);
+                this.updatePresences();
             })
             this.socialSpaceSubscription.on('delete',(presence)=>{
-                this.setState(
-                    (prevState)=>({
-                        presences: Object.keys(prevState.presences).
-                            filter(key=> key!=presence.get("user").id)
-                            .reduce((obj,key)=>{
-                                obj[key] = prevState.presences[key]
-                                return obj;
-                            },{})
-                    })
-                )
+                delete this.presences[presence.get("user").id];
+                this.updatePresences();
             })
             this.socialSpaceSubscription.on('leave',(presence)=>{
-                this.setState(
-                    (prevState)=>({
-                        presences: Object.keys(prevState.presences).
-                        filter(key=> key!=presence.get("user").id)
-                            .reduce((obj,key)=>{
-                                obj[key] = prevState.presences[key]
-                                return obj;
-                            },{})
-                    })
-                )
+                delete this.presences[presence.get("user").id];
+                this.updatePresences();
             })
-            this.socialSpaceSubscription.on('update',(presence)=>{
-                this.setState(
-                    (prevState)=>({
-                        presences: {
-                            ...prevState.presences,
-                            [presence.get("user").id]: presence
-                        }
-                    })
-                )
+            this.socialSpaceSubscription.on('update', (presence)=>{
+                this.presences[presence.get("user").id] = presence;
+                this.updatePresences();
             })
             let presences = await query.find();
             let presenceByProfile = {};
@@ -295,13 +297,11 @@ const withAuthentication = Component => {
                 presenceByProfile[presence.get("user").id] = presence;
             }
             //trigger a big fetch of all of the profiles at once
-            this.getUserProfilesFromUserProfileIDs(Object.keys(presenceByProfile));
-            this.setState((prevState) => ({
-                presences: {
-                    ...prevState.presences,
-                    ...presenceByProfile
-                }
-            }));
+            await this.getUserProfilesFromUserProfileIDs(Object.keys(presenceByProfile));
+            for(let presence of presences){
+                this.presences[presence.get("user").id] = presence;
+            }
+            this.updatePresences();
         }
 
 
@@ -378,6 +378,8 @@ const withAuthentication = Component => {
                 // p.set("displayName", id);
             }
             this.userProfiles[id] = new Promise((resolve) => (resolve(u)));
+            this.unwrappedProfiles[id] = u;
+
             if (this.loadingProfiles[id]) {
                 this.loadingProfiles[id](u);
                 this.loadingProfiles[id] = null;
@@ -401,7 +403,6 @@ const withAuthentication = Component => {
         }
 
         async getUserProfilesFromUserProfileIDs(ids) {
-            let q = new Parse.Query(UserProfile);
             let users = [];
             let toFetch = [];
             for (let id of ids) {
@@ -424,6 +425,7 @@ const withAuthentication = Component => {
             let res = await Parse.Object.fetchAll(toFetch);
             for(let u of res){
                 this.userProfiles[u.id] = new Promise((resolve)=>(resolve(u)));
+                this.unwrappedProfiles[u.id] = u;
                 if(this.loadingProfiles[u.id]){
                     this.loadingProfiles[u.id](u);
                     this.loadingProfiles[u.id] = null;
@@ -441,11 +443,13 @@ const withAuthentication = Component => {
             else{
                 console.log("Fetching single user record:" + uid);
                 try {
-                    // let uq = new Parse.Query(UserProfile);
-                    // let ret = await uq.get(uid);
-                    // this.state.users[uid] = ret;
-                    // return ret;
+                    let uq = new Parse.Query(UserProfile);
+                    let ret = await uq.get(uid);
+                    this.state.users[uid] = ret;
+                    this.unwrappedProfiles[uid] = ret;
+                    return ret;
                 }catch(err){
+                    console.log(err);
                     return null;
                 }
 
@@ -677,6 +681,8 @@ const withAuthentication = Component => {
                 });
                 this.parseLivePublicVideosSub.on('update', async (newItem) => {
                     newItem = await this.populateMembers(newItem);
+                    console.log("Update: " + newItem.id)
+                    console.log(newItem.get("members"))
                     this.notifyUserOfChanges(newItem);
                     //Deliver notifications if applicable
                     this.setState((prevState) => ({

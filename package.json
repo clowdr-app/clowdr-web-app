@@ -9,7 +9,11 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
+    "@types/jest": "^26.0.4",
+    "@types/node": "^14.0.23",
     "@types/parse": "^2.12.1",
+    "@types/react": "^16.9.43",
+    "@types/react-dom": "^16.9.8",
     "@types/react-router-dom": "^5.1.3",
     "antd": "^4.2.4",
     "clowdr-video-frontend": "0.0.9",
@@ -31,6 +35,7 @@
     "react-dom": "^16.13.1",
     "react-emoji-render": "^1.2.4",
     "react-highlight-words": "^0.16.0",
+    "react-image-zoom": "^1.3.1",
     "react-infinite-scroller": "^1.2.4",
     "react-markdown": "^4.3.1",
     "react-masonry-css": "^1.0.14",
@@ -40,7 +45,8 @@
     "react-scripts": "3.4.1",
     "twilio": "^3.39.3",
     "twilio-chat": "^3.3.7",
-    "twilio-video": "^2.4.0"
+    "twilio-video": "^2.4.0",
+    "typescript": "^3.9.6"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [

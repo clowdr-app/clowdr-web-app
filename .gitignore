@@ -30,3 +30,4 @@ db/.env-db
 .env-dbref
 .idea
 #.*#
+TAGS

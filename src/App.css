@@ -171,12 +171,38 @@
     z-index:100;
     cursor: ew-resize;
 }
+.lobby-participant-list .activeBreakoutRoom{
+    text-indent: -22px;
+    padding: 0 0 0 22px;
+}
+.collapsedChatDisplay{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+.collapsedChatDisplay .userTag{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.collapsedChatDisplay .inlineactions{
+}
 .activeBreakoutRoom{
-    padding:0;
     line-height: 1;
+    padding: 0;
+
+    font-size: 2.2ex;
     text-overflow: ellipsis;
     /*overflow-y: auto;*/
     overflow:hidden;
+}
+.smallButton{
+    padding: 0;
+    margin-left: 5px;
+    line-height: 1;
+    height: initial;
 }
 .activeRoomsList .ant-list-item {
     padding-top: 0;
@@ -205,7 +231,7 @@
 }
 .slido{
     height: 500px;
-    width: 250px;
+    width: 100%;
 }
 #sidepopoutcontainer .ant-menu-sub.ant-menu-inline > .ant-menu-item{
     line-height: 1.1;
@@ -389,6 +415,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     /*bottom:40px;*/
     /*max-height: 30px;*/
     flex-grow: 100;
+    flex-shrink: 100;
     /*position: fixed;*/
     /*bottom: 50px;*/
 }
@@ -414,56 +441,60 @@ div.availabilityOptionsOpen  span.availabilityOption{
 .embeddedChatMessageEntry{
     /*position: relative;*/
     /*bottom: 0;*/
-    min-height: 30px;
     width: 100%;
-    display: flex;
+    flex-grow: 1;
 }
 .chatMessageContainer{
     flex-direction: column-reverse;
     padding: 5px;
     background-color: #fafafa;
 }
-
+.bottomChatHeaderItems{
+    display: flex;
+}
 .bottomChatHeader{
     background-color: #1890FF;
 
     border-bottom: 1px solid #6666;
-    display: flex;
     /*flex: 1 1 5%;*/
-    min-height: initial;
     flex-grow: 1;
     /*max-height: 2em;*/
 }
-.highlightedTags > .ant-tag{
+
+.highlightedTags > .ant-tag {
     padding-left: 1px;
     padding-right: 1px;
     line-height: 1.1;
     font-size: 0.75em;
 }
+
 .userDisplay {
     width: 100%;
 }
-.userDisplay:hover{
+
+.userDisplay:hover {
     cursor: pointer;
     background-color: #8cc8ff;
 }
+
 .presenceDesc{
-
 }
+
 .bottomEmbeddedChatFrame{
+}
 
-}
 .userPopover{
-    max-width: 250px;
+    max-width: 700px;
 }
+
 .bottomChatIdentity{
     color: white;
     padding-left: 2px;
     flex-grow: 2;
     font-weight:bolder;
 }
-.bottomChatClose{
 
+.bottomChatClose{
 }
 
 .programContainer{
@@ -493,7 +524,8 @@ div.availabilityOptionsOpen  span.availabilityOption{
     flex-direction: row;
 }
 td.ant-table-cell.program-table-date{
-    white-space: nowrap
+    white-space: nowrap;
+    vertical-align: top;
 }
 td.ant-table-cell.program-table-timeBand{
     white-space: nowrap
@@ -505,25 +537,16 @@ td.ant-table-cell.program-table-timeBand{
      margin: 0;
 }
 
-.lobby-participant-list {
- /* display: flex;
-    flex-flow: column wrap; */
-    column-fill: balance;
-    column-count: 3;
-}
-
 /* For Mobile */
 @media screen and (max-width: 540px) {
     .lobby-participant-list {
-     /* display: flex;
-        flex-flow: column wrap; */
         column-fill: balance;
         column-count: 2;
     }
 }
 
 /* For Tablets */
-@media screen and (min-width: 540px) and (max-width: 780px) {
+@media screen and (min-width: 540px) and (max-width: 1200px) {
     .lobby-participant-list {
         column-fill: balance;
         column-count: 3;
@@ -531,10 +554,10 @@ td.ant-table-cell.program-table-timeBand{
 }
 
 /* For Bigger screens */
-@media screen and (min-width: 780px) {
+@media screen and (min-width: 1200px) {
     .lobby-participant-list {
         column-fill: balance;
-        column-count: 4;
+        column-count: 3;
     }
 }
 
@@ -543,4 +566,22 @@ td.ant-table-cell.program-table-timeBand{
     max-width: 400px;
     min-width: 250px;
     flex: 1;
+}
+
+.new-breakout-room-button {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.lobby-section-header {
+    font-size: 2.0em;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.dmButton {
+    margin-top: 10px;
+    align: center;
+    margin-bottom: 3px;
 }

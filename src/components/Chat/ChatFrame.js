@@ -49,7 +49,7 @@ class ChatFrame extends React.Component {
     }
 
     formatTime(timestamp) {
-        return <Tooltip title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
+        return <Tooltip mouseEnterDelay={0.5} title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
     }
 
     async componentDidMount() {
@@ -276,7 +276,7 @@ class ChatFrame extends React.Component {
             //get the sender
             this.props.auth.helpers.getUserProfilesFromUserProfileID(message.author).then((profile)=>{
                 const args = {
-                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
+                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
                     description:
                     <ReactMarkdown source={message.body} renderers={{
                         text: emojiSupport,
@@ -307,14 +307,14 @@ class ChatFrame extends React.Component {
     };
 
     onMessageChanged = event => {
-        if (event.target.value != '\n')
-            this.setState({newMessage: event.target.value});
+        // if (event.target.value != '\n')
+        //     this.setState({newMessage: event.target.value});
     };
 
     sendMessage = event => {
+        event.preventDefault();
         if (!event.getModifierState("Shift")) {
-            let message = this.state.newMessage;
-            this.setState({newMessage: ''});
+            let message = this.form.current.getFieldValue("message");
             if (message)
                 message = message.replace(/\n/g, "  \n");
             this.activeChannel.sendMessage(message);
@@ -322,13 +322,18 @@ class ChatFrame extends React.Component {
                 this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c=>c!=this.activeChannel.sid);
                 this.clearedTempFlag = true;
             }
-            if (this.form && this.form.current)
-                this.form.current.resetFields();
+            // if (this.form && this.form.current)
+            //     this.form.current.resetFields();
 
+            let values={message: ""}
+            this.form.current.setFieldsValue(values);
+            // this.form.current.resetFields();
+            // this.form.current.scrollToField("message");
             //TODO if no longer a DM (converted to group), don't do this...
             if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
                 this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
             }
+
         }
     };
 
@@ -468,7 +473,7 @@ class ChatFrame extends React.Component {
                                           //         onConfirm={this.deleteMessage.bind(this, item)}
                                           //         okText="Yes"
                                           //         cancelText="No"
-                                          //     ><Tooltip title={"Delete this message"}><a
+                                          //     ><Tooltip mouseEnterDelay={0.5} title={"Delete this message"}><a
                                           //         href="#"><CloseOutlined/></a></Tooltip></Popconfirm>
                                           let initials = "";
                                           let authorID = item.author;
@@ -528,17 +533,15 @@ class ChatFrame extends React.Component {
                     // paddingLeft: "10px"
                     //}}
                 >
-                    <Form ref={this.form} className="embeddedChatMessageEntry">
-                        <Form.Item style={{width:"100%", marginBottom: "0px"}}>
+                    <Form ref={this.form} className="embeddedChatMessageEntry" name={"chat"+this.props.sid}>
+                        <Form.Item style={{width:"100%", marginBottom: "0px"}} name="message">
                             <Input.TextArea
                                 disabled={this.state.readOnly}
-                                name={"message"}
                                 className="embeddedChatMessage"
                                 placeholder={this.state.readOnly? "This channel is read-only" : "Send a message"}
                                 autoSize={{minRows: 1, maxRows: 6}}
-                                onChange={this.onMessageChanged}
                                 onPressEnter={this.sendMessage}
-                                value={this.state.newMessage}/>
+                            />
                         </Form.Item>
                     </Form>
                 </div>
@@ -571,7 +574,7 @@ class ChatFrame extends React.Component {
                 cancelText="No"
             ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
         if (options.length > 0)
-            return <Popover key={m.sid} placement="topRight" content={<div style={{backgroundColor: "white"}}>
+            return <Popover key={m.sid} mouseEnterDelay={0.5} placement="topRight" content={<div style={{backgroundColor: "white"}}>
                 {options}
             </div>}>
                 <div ref={(el) => {
@@ -599,4 +602,3 @@ const AuthConsumer = (props) => (
 
 );
 export default AuthConsumer;
-

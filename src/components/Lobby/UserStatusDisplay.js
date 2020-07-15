@@ -1,5 +1,5 @@
 import React from "react";
-import {Avatar, Badge, Popover, Skeleton, Tag, Tooltip} from "antd";
+import {Avatar, Badge, Button, Popover, Skeleton, Tag, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
@@ -13,13 +13,15 @@ class UserStatusDisplay extends React.Component{
         }
     }
 
-    async componentDidMount() {
+    componentDidMount() {
         this.mounted = true;
-        let profile = await this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id);
-        if(!this.mounted)
-            return;
-        let userStatus = this.props.auth.presences[this.state.id];
-        this.setState({profile: profile, presence: userStatus})
+
+        this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id).then(profile=>{
+            if(!this.mounted)
+                return;
+            let userStatus = this.props.auth.helpers.presences[this.state.id];
+            this.setState({profile: profile, presence: userStatus})
+        });
     }
 
     componentWillUnmount() {
@@ -29,8 +31,8 @@ class UserStatusDisplay extends React.Component{
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(!this.mounted)
             return;
-        if(this.props.auth.presences[this.state.id] != this.state.presence){
-            this.setState({presence: this.props.auth.presences[this.state.id]});
+        if(this.props.auth.helpers.presences[this.state.id] != this.state.presence){
+            this.setState({presence: this.props.auth.helpers.presences[this.state.id]});
         }
     }
 
@@ -84,15 +86,7 @@ class UserStatusDisplay extends React.Component{
         let affiliation = "";
         // BCP: This way of writing the tests is certainly suboptimal!
         if ("" + this.state.profile.get("affiliation") != "undefined") {
-            affiliation = "" + this.state.profile.get("affiliation");
-        }
-        let popoverTitle = <div className="nameAndAvatar">{avatar} {this.state.profile.get("displayName")}</div>;
-        let webpage = "";
-        if ("" + this.state.profile.get("webpage") != "undefined") {
-            webpage = <div>
-                <a href={this.state.profile.get("webpage")} target="_blank">
-                    {this.state.profile.get("webpage")}</a>
-                </div>;
+            affiliation = " (" + this.state.profile.get("affiliation") + ")";
         }
         let bio = "";
         if ("" + this.state.profile.get("bio") != "undefined") {
@@ -112,7 +106,7 @@ class UserStatusDisplay extends React.Component{
                     else if (!tagToHighlight || t.get("priority") < tagToHighlight.get("priority"))
                         tagToHighlight = t;
                     if (t.get("tooltip"))
-                        return <Tooltip key={t.id} title={t.get("tooltip")}>{tag}</Tooltip>
+                        return <Tooltip mouseEnterDelay={0.5} key={t.id} title={t.get("tooltip")}>{tag}</Tooltip>
                     else return tag;
                 }
             )
@@ -122,24 +116,42 @@ class UserStatusDisplay extends React.Component{
                            style={{marginRight: 3}}>{tagToHighlight.get("label")}</Tag>);
         }
 
-        // BCP: Not quite right -- needs some spaces after non-empty elements, and some vertical space after the first line if the whole first line is nonempty:
-        let firstLine = <div><div className="presenceDesc">{presenceDesc}</div> {tags} {statusDesc} {dntWaiver} </div>;
+        let popoverTitle =
+            <div className="nameAndAvatar">
+              {avatar} {this.state.profile.get("displayName")} {affiliation}
+              <span className="presenceDesc">{presenceDesc == "" ? "" : " is " + presenceDesc}</span>
+              <div> {tags} {statusDesc} </div>
+            </div>;
+        let webpage = "";
+        if ("" + this.state.profile.get("webpage") != "undefined") {
+            webpage = <div>
+                <a href={this.state.profile.get("webpage")} target="_blank">
+                    {this.state.profile.get("webpage")}</a>
+                </div>;
+        }
+        let dmButton = <Button className="dmButton" type="primary" onClick={onClick}>Send a message to {this.state.profile.get("displayName")}</Button>
+        let firstLine =
+            <div>
+              {dntWaiver}
+            </div>;
         // BCP: And this needs a bit more vertical spacing between non-empty elements too:
-        let popoverContent = <div className="userPopover"> {firstLine} {affiliation} {bio} {webpage} </div>;
+        let popoverContent = <div className="userPopover"> {firstLine} {bio} {webpage} {dmButton} </div>;
 /*
         let popoverContent = <span></span>
         // BCP: Not clear to me why we were treating these so popovers differently
         // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
 */
-        // The mouseEnterDelay setting doesn't seem to work :-(
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
                     <Popover title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
-                    <Badge status={badgeStyle} color={badgeColor} />
-                     <span style={{color:nameColor}}>{this.state.profile.get("displayName")} <span className="highlightedTags">{tagsToHighlight}</span></span>
-                    {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
-                 </Popover>
+                      &nbsp;&nbsp;&nbsp; {/* BCP: Better way to do this? */}
+                      <Badge status={badgeStyle} color={badgeColor} />
+                      <span style={{color:nameColor}}>{this.state.profile.get("displayName")}</span>
+                      &nbsp;
+                      <span className="highlightedTags">{tagsToHighlight}</span>
+                      {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
+                    </Popover>
               </div>
 /*
     else return <div
@@ -150,6 +162,7 @@ class UserStatusDisplay extends React.Component{
         {dntWaiver}>
         <Popover
             title={presenceDesc}
+            mouseEnterDelay={0.5}
             content={popoverContent}>
         <Badge  status={badgeStyle} color={badgeColor} />
            {this.state.profile.get("displayName")} {statusDesc}</Popover>

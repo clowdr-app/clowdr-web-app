@@ -39,7 +39,7 @@ class ContextualActiveUsers extends Component {
     async componentDidMount() {
         let user = this.props.auth.user;
         if (user) {
-            this.setState({presences: this.props.auth.presences});
+            this.props.auth.helpers.getPresences(this);
             this.setState({loggedIn: true});
             this.props.auth.chatClient.initJoinedChatList(this);
         } else {
@@ -58,9 +58,6 @@ class ContextualActiveUsers extends Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         let stateUpdate = {};
-        if(this.props.auth.presences != this.state.presences){
-            stateUpdate.presences = this.props.auth.presences;
-        }
         if(this.props.auth.activeSpace != this.state.activeSpace){
             stateUpdate.activeSpace = this.props.auth.activeSpace;
         }
@@ -91,6 +88,8 @@ class ContextualActiveUsers extends Component {
     }
 
     componentWillUnmount() {
+        this.props.auth.helpers.cancelPresenceSubscription(this);
+
         this.mounted = false;
     }
 
@@ -128,8 +127,6 @@ class ContextualActiveUsers extends Component {
             })
         )
     }
-
-
     filterList(value) {
         let roomID = value;
         let userID = null;
@@ -161,7 +158,7 @@ class ContextualActiveUsers extends Component {
             topHeight = topElement.clientHeight;
 
         let tabs = "";
-        let liveMembers = 0
+        let liveMembers = 0   // BCP: Seems not to be used??
         let allActiveRooms = [];
         if(!this.state.activePrivateVideoRooms)
             allActiveRooms = this.state.activePublicVideoRooms;
@@ -190,9 +187,10 @@ class ContextualActiveUsers extends Component {
                     && p.get("socialSpace")
                     && p.get("socialSpace").id == this.state.activeSpace.id
                     && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
-                ).sort((i1, i2) => {
-                return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
-            }).map(p => p.get("user")).sort(compareNames);
+                ).map(p => p.get("user")).sort(compareNames);
+        let latestLobbyMembers = lobbyMembers.concat().sort((i1, i2) => {
+            return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
+        }).slice(0,10);
         for(let u of lobbyMembers){
             searchOptions.push({label: "@"+u.get("displayName"), value: u.id+"@-lobby"});
         }
@@ -231,7 +229,7 @@ class ContextualActiveUsers extends Component {
                 selectedKeys.push(this.state.filteredUser);
 
             let programInfo = <></>
-            if(programRooms.length > 0){
+            if (programRooms.length > 0){
                 programInfo = <div>
                     <Divider className="social-sidebar-divider">Paper/Posters in {this.state.activeSpace.get("name")}</Divider>
 
@@ -243,7 +241,7 @@ class ContextualActiveUsers extends Component {
                           inlineIndent={0}
 
                           forceSubMenuRender={true}
-                          openKeys={allActiveRooms.map(r=>r.id)}
+                          openKeys={allActiveRooms.concat(programRooms).map(r=>r.id)}
                           expandIcon={null}
                           selectedKeys={selectedKeys}
                     >
@@ -291,10 +289,10 @@ class ContextualActiveUsers extends Component {
                                 if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
                                 {
                                     if (item.get("members") && item.get("capacity") <= item.get("members").length)
-                                        joinLink = <div><Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
+                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
                                             disabled>{formattedRoom}</Typography.Text></Tooltip></div>
                                     else if(isModOverride){
-                                        joinLink = <div><Tooltip title={joinInfo}>
+                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}>
                                             <Popconfirm title={<span style={{width: "250px"}}>You do not have permission to join this room, but can override<br />
                                         this as a moderator. Please only join this room if you were asked<br /> by a participant
                                         to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
@@ -307,7 +305,7 @@ class ContextualActiveUsers extends Component {
                                         </div>;
                                     }
                                     else
-                                        joinLink = <div><Tooltip title={joinInfo}><a href="#"
+                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
                                                                                      onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                         </div>;
                                 }
@@ -321,6 +319,7 @@ class ContextualActiveUsers extends Component {
                                         let className = "personHoverable";
                                         if (this.state.filteredUser == user.id)
                                             className += " personFiltered"
+                                        console.log(user);
                                         return <Menu.Item key={user.id} className={className}>
                                             <UserStatusDisplay popover={true}profileID={user.id}/>
                                         </Menu.Item>
@@ -364,7 +363,7 @@ class ContextualActiveUsers extends Component {
                     <div style={{height:'6px', background:'white'}}/>
 
                     <Divider className="social-sidebar-divider">
-                        <Tooltip title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{this.props.auth.activeSpace.get("name")}</Tooltip>
+                        <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{this.props.auth.activeSpace.get("name")}</Tooltip>
                     </Divider>
 
                         <Menu mode="inline"
@@ -387,20 +386,20 @@ class ContextualActiveUsers extends Component {
                         >
                             <Menu.SubMenu key="firstUsers" expandIcon={<span></span>}>
 
-                            {lobbyMembers.slice(0,10).map((user) => {
+                            {latestLobbyMembers.map((user) => {
                                 let className = "personHoverable";
                                 if (this.state.filteredUser == user.id)
                                     className += " personFiltered"
-                                return <Menu.Item key={user.id} className={className}>
+                                return <Menu.Item key={"latest"+user.id} className={className}>
                                     <UserStatusDisplay popover={true} profileID={user.id}/>
                                 </Menu.Item>
                             })
                             }
                             </Menu.SubMenu>{
-                            lobbyMembers.length > 10 ?
-                            <Menu.SubMenu key="restUsers" title={<div className="overflowHelper">{lobbyMembers.length-10} more</div>}>
+                            <Menu.SubMenu key="restUsers"
+                                          title={<div className="overflowHelper">{lobbyMembers.length} total</div>}>
 
-                                {lobbyMembers.slice(10).map((user) => {
+                                {lobbyMembers.map((user) => {
                                     let className = "personHoverable";
                                     if (this.state.filteredUser == user.id)
                                         className += " personFiltered"
@@ -410,13 +409,13 @@ class ContextualActiveUsers extends Component {
                                 })
                                 }
                             </Menu.SubMenu>
-                                :<></>}
+                        }
                         </Menu>
 
                 </div>
 
                 {programRoomSpecificContent}
-                <Divider className="social-sidebar-divider"><Tooltip title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room">Chats</Tooltip></Divider>
+                <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room">Chats</Tooltip></Divider>
                 <Menu mode="inline"
                       className="activeRoomsList"
                     // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
@@ -442,10 +441,13 @@ class ContextualActiveUsers extends Component {
                             let className = "personHoverable";
                             // if (this.state.filteredUser == user.id)
                             //     className += " personFiltered"
+                            // BCP: Rats -- my attempt to add a Tooltip does not seem to work :-(
+                            // BCP: also BTW, className={className} does not look right
                             return <Menu.Item key={sid} className={className}>
+                                <Tooltip mouseEnterDelay={0.5} title="Click to open messages">
                                 <CollapsedChatDisplay sid={sid} unread={this.state.unread[sid]}/>
                                 {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
-                            </Menu.Item>
+                            </Tooltip></Menu.Item>
                         })
                         }
                     </Menu.SubMenu>{
@@ -469,8 +471,8 @@ class ContextualActiveUsers extends Component {
 
                 {programInfo}
 
-                <Divider className="social-sidebar-divider"><Tooltip title={"These breakout rooms feature video and chat, and are associated with the room that you are currently in - "
-                + this.props.auth.activeSpace.get("name")}>Breakout (Video) Rooms</Tooltip></Divider>
+                <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
+                + this.props.auth.activeSpace.get("name")}>Video chat rooms</Tooltip></Divider>
 
                 <Menu mode="inline"
                       className="activeRoomsList"
@@ -528,10 +530,10 @@ class ContextualActiveUsers extends Component {
                         if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
                         {
                             if (item.get("members") && item.get("capacity") <= item.get("members").length)
-                                joinLink = <div><Tooltip title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
+                                joinLink = <div><Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
                                     disabled>{formattedRoom}</Typography.Text></Tooltip></div>
                             else if(isModOverride){
-                                joinLink = <div><Tooltip title={joinInfo}>
+                                joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}>
                                     <Popconfirm title={<span style={{width: "250px"}}>You do not have permission to join this room, but can override<br />
                                         this as a moderator. Please only join this room if you were asked<br /> by a participant
                                         to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
@@ -544,7 +546,7 @@ class ContextualActiveUsers extends Component {
                                 </div>;
                             }
                             else
-                                joinLink = <div><Tooltip title={joinInfo}><a href="#"
+                                joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
                                                                                          onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                 </div>;
                         }
@@ -555,12 +557,14 @@ class ContextualActiveUsers extends Component {
                     let header = joinLink;
                         if (item.get("members") && item.get("members").length > 0)
                             list = item.get("members").map(user=>{
-                                let className = "personHoverable";
-                                if (this.state.filteredUser == user.id)
-                                    className += " personFiltered"
-                                return <Menu.Item key={user.id} className={className}>
-                                    <UserStatusDisplay popover={true}profileID={user.id}/>
-                                </Menu.Item>
+                                if(user) {
+                                    let className = "personHoverable";
+                                    if (this.state.filteredUser == user.id)
+                                        className += " personFiltered"
+                                    return <Menu.Item key={user.id} className={className}>
+                                        <UserStatusDisplay popover={true} profileID={user.id}/>
+                                    </Menu.Item>
+                                }
                             }) //}>
                         else
                             list = <></>
@@ -574,10 +578,11 @@ class ContextualActiveUsers extends Component {
                             // </Menu.Item>
                         )
                     }
-                ) : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
+                )
+                : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
                 </Menu>
                 <div style={{textAlign: 'center'}}>
-                    <NewRoomForm type="secondary" text="New Breakout Room" />
+                    <NewRoomForm type="secondary" text="New video chat room" />
                 </div>
             </div>
         }

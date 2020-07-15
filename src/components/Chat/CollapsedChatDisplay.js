@@ -1,7 +1,8 @@
 import React from "react";
-import {Badge, Skeleton} from "antd";
+import {Badge, Button, Skeleton, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
+import {CloseOutlined, } from "@ant-design/icons"
 
 class CollapsedChatDisplay extends React.Component{
     constructor(props){
@@ -78,6 +79,15 @@ class CollapsedChatDisplay extends React.Component{
             return;
     }
 
+    destroyChat(){
+        let attr = this.props.auth.chatClient.joinedChannels[this.state.sid].attributes;
+        if(attr.category == "announcements-global"){
+        }
+        else{
+            this.setState({removeInProgress: true});
+            this.props.auth.chatClient.joinedChannels[this.state.sid].channel.leave();
+        }
+    }
     openDM(){
         this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
@@ -85,13 +95,27 @@ class CollapsedChatDisplay extends React.Component{
     render() {
         if (!this.state.title)
             return <Skeleton.Input active style={{width: '100px', height: '1em'}}/>
-       return <span
+       return <div
+           className="collapsedChatDisplay"
             key={this.state.sid}
-            className="userTag"
-            onClick={()=>{this.props.auth.chatClient.openChat(this.state.sid)}}
             >
-           <Badge overflowCount={9} className="chat-unread-count" count={this.state.unread} /> {this.state.title}
-        </span>
+           <div
+               className="userTag"
+               onClick={()=>{this.props.auth.chatClient.openChat(this.state.sid)}}
+           ><Badge overflowCount={9} className="chat-unread-count" count={this.state.unread} /> {this.state.title}
+           </div>
+           <div className="inlineactions">
+                           <Tooltip mouseEnterDelay={0.5} title="Close this chat. You will stop receiving notifications and lose access to this chat if you close it.">
+                               <Button type="text"
+                                       className="smallButton"
+                                                                                          loading={this.state.removeInProgress}
+                                                                                          onClick={
+                                                                                              // this.props.toggleOpen
+                                                                                              this.destroyChat.bind(this)
+                                                                                          }
+                               >X</Button></Tooltip>
+</div>
+        </div>
 
     }
 }

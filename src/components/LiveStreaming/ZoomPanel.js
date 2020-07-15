@@ -55,8 +55,7 @@ class ZoomPanel extends Component {
             return <div></div>
         }
 
-        let roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name'): 
-                        <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
+        let roomName = this.props.video.get('name');
 
         let navigation = <a href={this.state.video_url} target={"_blank"} rel="noopener noreferrer"><Button type="primary" >Enter</Button></a>
 

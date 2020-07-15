@@ -15,6 +15,7 @@ class SocialTab extends Component {
         else if(siderWidth == -1)
             siderWidth = 0;
         this.state = {siderCollapsed: this.props.collapsed, siderWidth: siderWidth, visible: false}
+        this.props.setWidth(siderWidth);
     }
     componentWillUnmount() {
     }
@@ -31,8 +32,13 @@ class SocialTab extends Component {
     }
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")){
-            this.setState({visible: true});
-            this.props.setWidth(250);
+            if(this.state.siderWidth < 10){
+                this.setState({visible: true, siderWidth: 250});
+                this.props.setWidth(250);
+            }else{
+                this.setState({visible: true});
+                this.props.setWidth(this.state.siderWidth);
+            }
         }
     }
 
@@ -63,7 +69,7 @@ class SocialTab extends Component {
 
         const handleMouseMove = (e) => {
             const newWidth = e.clientX - document.body.offsetLeft;
-            if (newWidth >= 0 && newWidth <= 300)
+            if (newWidth >= 0 && newWidth <= 600)
                 this.setDrawerWidth(newWidth);
         };
         let containerStyle = {width: this.state.siderWidth, top: topHeight};
@@ -115,7 +121,7 @@ class SocialTab extends Component {
                          this.setState((prevState) => ({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
                      }}
             >
-                {this.state.siderWidth == 0 ? <Tooltip title="Collapse the lobby drawer"><ChevronRightIcon/></Tooltip>:<Tooltip title="Expand the lobby drawer"><ChevronLeftIcon/></Tooltip>}
+                {this.state.siderWidth == 0 ? <Tooltip mouseEnterDelay={0.5} title="Collapse the lobby drawer"><ChevronRightIcon/></Tooltip>:<Tooltip mouseEnterDelay={0.5} title="Expand the lobby drawer"><ChevronLeftIcon/></Tooltip>}
                 {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
             </div>
 

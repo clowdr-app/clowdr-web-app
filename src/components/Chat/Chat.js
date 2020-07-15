@@ -369,6 +369,7 @@ class ChatContainer extends Component {
                                 <Layout>
                                     <Sider style={{backgroundColor: "white"}}>
                                         <Divider style={{verticalAlign: 'middle'}}>Channels <Popover
+                             mouseEnterDelay={0.5}
                                             content={<span onClick={()=>{this.setState({newChannelVisible: true})}}><a href="#">New channel</a></span>}
                                         ><ToolOutlined /></Popover></Divider>
 
@@ -389,7 +390,7 @@ class ChatContainer extends Component {
                                                     return <Menu.Item key={item.uniqueName}
                                                                       onClick={_this.changeActiveChannel.bind(_this, item)}>
                                                         <Popover
-                                                            placement="topRight" content={<span>
+                                                            placement="topRight"                              mouseEnterDelay={0.5} content={<span>
                                                              <Popconfirm
                                                                  title="Are you sure that you want to delete this chat room?"
                                                                  onConfirm={_this.deleteChatRoom.bind(_this, item)}
@@ -421,7 +422,7 @@ class ChatContainer extends Component {
                                                 })
                                             }
                                         </Menu>
-                                         : <Spin tip="Loding..." />}
+                                         : <Spin tip="Loading..." />}
                                     </Sider>
                                     <Layout>
                                     <Content style={{backgroundColor:"#FFFFFF", overflow:"auto"}}>
@@ -439,7 +440,7 @@ class ChatContainer extends Component {
                                                          onConfirm={this.deleteMessage.bind(this, item)}
                                                          okText="Yes"
                                                          cancelText="No"
-                                                     ><Tooltip title={"Delete this message"}><a href="#"><CloseOutlined /></a></Tooltip></Popconfirm>
+                                                     ><Tooltip mouseEnterDelay={0.5} title={"Delete this message"}><a href="#"><CloseOutlined /></a></Tooltip></Popconfirm>
                                                   let authorName = item.author.substring(1+item.author.indexOf(":"));
                                                   let initials = "";
                                                   let authorID = item.author.substring(0,item.author.indexOf(":"));
@@ -533,7 +534,7 @@ class ChatContainer extends Component {
                 okText="Yes"
                 cancelText="No"
             ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
-        return <Popover  key={m.sid} placement="topRight" content={<div style={{backgroundColor:"white"}}>
+        return <Popover  key={m.sid} mouseEnterDelay={0.5} placement="topRight" content={<div style={{backgroundColor:"white"}}>
             {options}
         </div>}><div className="chatMessage"><ReactMarkdown source={m.body} renderers={{ text: emojiSupport }} /></div>
         </Popover>
@@ -694,4 +695,3 @@ const AuthConsumer = (props) => (
             </AuthUserContext.Consumer>
 
 );
-

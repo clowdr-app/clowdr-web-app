@@ -478,21 +478,21 @@ class VideoRoom extends Component {
 
         let visibilityDescription, privacyDescription, ACLdescription, fullLabel;
         if (this.state.room.get("isPrivate")) {
-            visibilityDescription = (<Tooltip title="This room can only be accessed by users listed below."><Tag key="visibility" color="#2db7f5">Private</Tag></Tooltip>)
+            visibilityDescription = (<Tooltip mouseEnterDelay={0.5} title="This room can only be accessed by users listed below."><Tag key="visibility" color="#2db7f5">Private</Tag></Tooltip>)
         } else {
-            visibilityDescription = (<Tooltip title={"This room can be accessed by any member of " + this.props.authContext.currentConference.get("conferenceName")}><Tag key="visibility" color="#87d068">Open</Tag></Tooltip>);
+            visibilityDescription = (<Tooltip mouseEnterDelay={0.5} title={"This room can be accessed by any member of " + this.props.authContext.currentConference.get("conferenceName")}><Tag key="visibility" color="#87d068">Open</Tag></Tooltip>);
         }
         if(this.state.room.get("members") && this.state.room.get("members").length == this.state.room.get("capacity"))
         {
-            fullLabel=<Tooltip title="This room is at capacity. Nobody else can join until someone leaves"><Tag color="#f50">Full Capacity</Tag></Tooltip>
+            fullLabel=<Tooltip mouseEnterDelay={0.5} title="This room is at capacity. Nobody else can join until someone leaves"><Tag color="#f50">Full Capacity</Tag></Tooltip>
         }
         if (this.state.room.get("persistence") == "ephemeral") {
             privacyDescription = (
-                <Tooltip title="This room wil be garbage collected after 5 minutes
+                <Tooltip mouseEnterDelay={0.5} title="This room wil be garbage collected after 5 minutes
                     of being empty"><Tag key="persistence" color="#2db7f5">Ephemeral</Tag></Tooltip>)
         } else {
             privacyDescription = (
-                <Tooltip title="This room will exist until deleted by a moderator"><Tag key="persistence" color="#87d068">Persistent</Tag></Tooltip>
+                <Tooltip mouseEnterDelay={0.5} title="This room will exist until deleted by a moderator"><Tag key="persistence" color="#87d068">Persistent</Tag></Tooltip>
             )
         }
         if (this.state.room.get("isPrivate")) {
@@ -571,11 +571,11 @@ class VideoRoom extends Component {
                     <AppStateProvider meeting={this.state.meetingName} token={this.state.token}
                                       isEmbedded={true}
                         onConnect={(room,videoContext)=>{
-                            if(this.state.room.get("mode") == "group") {
-                                let localTracks = videoContext.localTracks;
-                                const audioTrack = localTracks.find(track => track.kind === 'audio');
-                                audioTrack.disable();
-                            }
+                            // if(this.state.room.get("mode") == "group") {
+                            //     let localTracks = videoContext.localTracks;
+                            //     const audioTrack = localTracks.find(track => track.kind === 'audio');
+                            //     audioTrack.disable();
+                            // }
 
                         }
                     }
@@ -621,7 +621,7 @@ class VideoRoom extends Component {
                                             }
                                         }
                                     </VideoContext.Consumer>
-                                        <Tooltip title={"This room was created as a " +
+                                        <Tooltip mouseEnterDelay={0.5} title={"This room was created as a " +
                                         this.state.room.get("mode") + " room with a capacity of " +
                                         this.state.room.get("capacity") +", there's currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
                                         {fullLabel}{visibilityDescription}
@@ -637,7 +637,7 @@ class VideoRoom extends Component {
 
                                     {/*        </Collapse.Panel>*/}
                                     {/*    </Collapse>*/}
-                                    {/*    <Tooltip title="Follow this room to get notifications in-app when people come and go">*/}
+                                    {/*    <Tooltip mouseEnterDelay={0.5} title="Follow this room to get notifications in-app when people come and go">*/}
                                     {/*        <Switch checkedChildren="Following" unCheckedChildren="Not Following" onChange={this.toggleWatch.bind(this)}*/}
                                     {/*                loading={this.state.watchLoading}*/}
                                     {/*                style={{marginTop: "5px", marginLeft:"5px"}} checked={this.state.watchedByMe}/></Tooltip>*/}
@@ -654,7 +654,7 @@ class VideoRoom extends Component {
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             {!this.props.hideInfo ? <div>
-                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the 4 most active participants. Click a participant to pin them to always show their video. <b>You are muted by default in this room, please unmute yourself if you want to talk.</b></span> :
+                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the most active participants. Click a participant to pin them to always show their video. </span> :
                                     this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
                             </div> :<></>}
                         <div className={"videoEmbed"}>
@@ -712,7 +712,7 @@ function ToggleFullscreenButton() {
     const [isFullScreen, toggleFullScreen] = useFullScreenToggle();
 
     return fscreen.fullscreenEnabled ? (
-        <Tooltip title="Toggle Full Screen view">
+        <Tooltip mouseEnterDelay={0.5} title="Toggle Full Screen view">
         <IconButton aria-label={`full screen`} onClick={toggleFullScreen}>
             {isFullScreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
         </IconButton>
@@ -885,7 +885,7 @@ export function DeviceSelector() {
 
     return (
         <>
-            <Tooltip title="Adjust Inputs">
+            <Tooltip mouseEnterDelay={0.5} title="Adjust Inputs">
             <IconButton onClick={() => setIsOpen(true)} data-cy-device-select>
                 <SettingsInputComponentIcon />
             </IconButton>

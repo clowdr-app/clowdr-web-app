@@ -5,6 +5,7 @@ import ReactPlayer from "react-player";
 import {videoURLFromData} from './utils';
 import { CollectionsOutlined } from "@material-ui/icons";
 import { NavLink } from "react-router-dom";
+var timezone = require('moment-timezone');
 
 class LiveStreamingPanel extends Component {
     constructor(props) {
@@ -48,6 +49,7 @@ class LiveStreamingPanel extends Component {
         var src = this.props.video.get("src1");
         var id = this.props.video.get("id1");
         var pwd = this.props.video.get("pwd1");
+        this.props.auth.helpers.getPresences(this);
 
         var inChina = false;
         if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
@@ -65,6 +67,8 @@ class LiveStreamingPanel extends Component {
     componentWillUnmount() {
         if (this.state.expanded)
             this.props.auth.setSocialSpace("Lobby");
+        this.props.auth.helpers.cancelPresenceSubscription(this);
+
     }
 
     toggleExpanded() {
@@ -85,7 +89,7 @@ class LiveStreamingPanel extends Component {
 
     componentDidUpdate(prevProps) {
         if(this.state.expanded != this.props.expanded){
-            if(this.props.expanded){
+            if (this.props.expanded){
                 this.props.auth.setSocialSpace(null,this.props.video.get("socialSpace"));
                 this.props.auth.helpers.setGlobalState({forceChatOpen: true});
                 this.props.auth.helpers.setExpandedProgramRoom(this.props.video);
@@ -127,10 +131,10 @@ class LiveStreamingPanel extends Component {
         
             sessionData = <table><tbody>
                 <tr>{this.props.mysessions.map(s => {
-                            return <td key={s.id}><b>{s.get("title")}</b></td>
+                            return <td key={s.id}><b>{moment(s.get("startTime")).tz(timezone.tz.guess()).calendar() + ": " + s.get("title")}</b></td>
                         })}</tr>
                         {rows.map(row => {
-                            return <tr>{row.map(pair => {
+                            return <tr key={row[0][0]}>{row.map(pair => {
                                 return <td key={pair[0]}>{pair[1] ? <div className="chatLink" onClick={this.joinChatChannel.bind(this, pair[1])}>{pair[0]}</div> : pair[0]}</td>
                             })}</tr>
                         })}
@@ -143,13 +147,13 @@ class LiveStreamingPanel extends Component {
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0,10) + "..."}</span>;
 
             sessionData = this.props.mysessions.map(s => {
-                            return <div key={s.id}>{s.get("title")}</div>
+                            return <div key={s.id}><b>{moment(s.get("startTime")).tz(timezone.tz.guess()).calendar() + ": " + s.get("title")}</b></div>
                         })
 
         }
         let viewers = 0;
-        if (this.props.auth.presences) {
-            let presences = Object.values(this.props.auth.presences);
+        if (this.state.presences) {
+            let presences = Object.values(this.state.presences);
             let pplInThisRoom = presences.filter(p => {
                 return (p.get("socialSpace") && this.props.video.get("socialSpace") &&
                         p.get("socialSpace").id === this.props.video.get("socialSpace").id);
@@ -162,23 +166,17 @@ class LiveStreamingPanel extends Component {
 
         let player = "";
         if (!this.state.china) {
-            player = <ReactPlayer playing playsinline controls={true} muted={true} volume={1}
+            player = <ReactPlayer playing={this.props.playing} playsinline controls={true} muted={true} volume={1}
                         width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
         }
         else {
             player = <iframe width="100%" height="100%" style={{position:"absolute", top:0, left:0}} src={this.state.video_url}/>
         }
 
-        let sessionInfo = this.props.mysessions.map(s => {
-                return <div key={s.id}>{s.get("title")}</div>
-            });
-
         let description=<div>
             <div className="video-watchers-count">{viewers} here now</div>
             <div className="video-room-session-info">
-                {this.props.mysessions.map(s => {
-                    return <div key={s.id}>{moment(s.get("startTime")).format('LT') + ": " + s.get("title")}</div>
-                })}
+                {sessionData}
             </div>
         </div>
         return <Card
@@ -194,26 +192,7 @@ class LiveStreamingPanel extends Component {
             ]}
         >
             <Card.Meta title={this.props.video.get("name")} description={description}></Card.Meta>
-            {/*<table style={{width:"100%"}}>*/}
-            {/*    <tbody>*/}
-            {/*    <tr >*/}
-            {/*        <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>*/}
-                    {/*        <td style={{"textAlign":"left"}}>Viewers: {viewers}</td>*/}
-                    {/*        <td style={{"textAlign":"right"}}><strong>{navigation}</strong></td>*/}
-                    {/*    </tr>*/}
-                    {/*    </tbody>*/}
-                    {/*</table>*/}
-                    {/*<div className="player-wrapper" >*/}
-                    {/*    <ReactPlayer playing playsinline controls={true} muted={true} volume={1} */}
-                    {/*                width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.video_url}/>*/}
-                    {/*</div>*/}
-                    <div>
-                        {sessionData}
-                        {/* {this.props.mysessions.map(s => {
-                            return <div key={s.id}>{s.get("title")}</div>
-                        })} */}
-                    </div>
-                </Card>
+            </Card>
     }
 }
 
