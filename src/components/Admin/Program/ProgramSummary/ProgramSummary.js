@@ -186,7 +186,13 @@ class ProgramSummary extends React.Component {
                         <UploadOutlined /> Click to upload program data
                     </Button>
                 </Upload>
-                <Table columns={columns} dataSource={this.state.counts} rowKey={(r)=>(r.key)}/>
+                <Table 
+                    columns={columns} 
+                    dataSource={this.state.counts} 
+                    rowKey={(r)=>(r.key)}
+                    pagination={{ defaultPageSize: 500,
+                        pageSizeOptions: [10, 20, 50, 100, 500], 
+                        position: ['topRight', 'bottomRight']}}/>
             </div>
         )
     }
