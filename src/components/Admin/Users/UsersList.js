@@ -65,7 +65,12 @@ export default class UsersList extends React.Component {
             },
         ];
         return <div>
-            <Table columns={columns} dataSource={this.state.users}></Table>
+            <Table 
+                columns={columns} 
+                dataSource={this.state.users}
+                pagination={{ defaultPageSize: 500,
+                    pageSizeOptions: [10, 20, 50, 100, 500], 
+                    position: ['topRight', 'bottomRight']}}/>
         </div>
     }
 

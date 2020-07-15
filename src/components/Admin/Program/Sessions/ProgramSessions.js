@@ -550,9 +550,9 @@ class ProgramSessions extends React.Component {
                         dataSource={this.state.searched ? this.state.searchResult : this.state.sessions}
                         columns={mergedColumns}
                         rowClassName="editable-row"
-                        pagination={{
-                            onChange: cancel,
-                        }}
+                        pagination={{ defaultPageSize: 500,
+                            pageSizeOptions: [10, 20, 50, 100, 500], 
+                            position: ['topRight', 'bottomRight']}}
                     />
                 </Form>
             );
