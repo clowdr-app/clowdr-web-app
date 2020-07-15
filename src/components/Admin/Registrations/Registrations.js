@@ -28,7 +28,9 @@ class Registrations extends React.Component {
         this.state = {
             loading: true, 
             regs: [],
-            filteredRegs : []
+            filteredRegs : [],
+            searched: false,
+            searchResult: ""
         };
         this.currentConference = props.auth.currentConference;
         console.log("Current conference is " + this.currentConference.get("conferenceName"));
@@ -274,7 +276,28 @@ class Registrations extends React.Component {
                         </tr>
                     </tbody>
                 </table>
-            <Table columns={columns} dataSource={this.state.filteredRegs} rowKey={(r)=>(r.id)}  pagination={{defaultPageSize:600, position: ['topRight', 'bottomRight']}}/>
+            <Input.Search
+                allowClear
+                onSearch = {key => {
+                    if (key === "") {
+                        this.setState({searched: false});
+                    } else {
+                        this.setState({
+                            searched: true,
+                            searchResult: this.state.regs.filter(
+                                reg => reg.get('name') && reg.get('name').toLowerCase().includes(key.toLowerCase()))
+                        });
+                    }
+                }
+                }
+            />
+            <Table
+                columns={columns}
+                dataSource={this.state.searched ? this.state.searchResult : this.state.filteredRegs}
+                rowKey={(r) => (r.id)}
+                pagination={{defaultPageSize:600, position: ['topRight', 'bottomRight']}}>
+            </Table>
+            {/*<Table columns={columns} dataSource={this.state.filteredRegs} rowKey={(r)=>(r.id)}  pagination={{defaultPageSize:600, position: ['topRight', 'bottomRight']}}/>*/}
         </div>
     }
 
