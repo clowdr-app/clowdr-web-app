@@ -16,35 +16,34 @@ let LiveActivity = Parse.Object.extend("LiveActivity");
 let Channel = Parse.Object.extend("Channel");
 let UserProfile = Parse.Object.extend("UserProfile");
 
-Parse.Cloud.define("registrations-upload", (request) => {
+Parse.Cloud.define("registrations-upload", async (request) => {
     console.log('Request to upload registration data');
     const data = request.params.content;
     const conferenceID = request.params.conference;
-
     var Registration = Parse.Object.extend("Registration");
     var rquery = new Parse.Query(Registration);
     rquery.equalTo("conference", conferenceID);
     rquery.limit(10000);
-    rquery.find().then(existing => {
-        let toSave = [];
-        
-        rows = Papa.parse(data, {header: true});
-        rows.data.forEach(element => {
-            addRow(element, conferenceID, existing, toSave);
-        });
-
-        Parse.Object.saveAll(toSave)
-        .then (res => console.log("[Registrations]: Done saving all registrations"))
-        .catch(err => console.log(err))
-        
-    }).catch(err => console.log('[Registrations]: Problem fetching registrations ' + err));
-
+    var existing = await rquery.find({useMasterKey: true});
+    // Create registrations first
+    let toSave = [];
+    let rows = Papa.parse(data, {header: true});
+    rows.data.forEach(element => {
+        addRow(element, conferenceID, existing, toSave);
+    });
+    try {
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    } catch(err){
+        console.log(err);
+    }
+    console.log('Tracks saved: ' + toSave.length);
+    return toSave;
 });
 
 function addRow(row, conferenceID, existing, toSave) {
     if (row.email) {
         if (validateEmail(row.email)) {
-            if (!existing.find(r => r.get("email") == row.email)) {
+            if (!existing.find(r => r.get("email") === row.email)) {
                 var Registration = Parse.Object.extend("Registration");
                 var reg = new Registration();
                 // Two required fields: email and conference ID
