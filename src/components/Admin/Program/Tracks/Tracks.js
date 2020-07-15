@@ -245,7 +245,9 @@ class Tracks extends React.Component {
                     columns={columns} 
                     dataSource={this.state.searched ? this.state.searchResult : this.state.tracks} 
                     rowKey={(t)=>(t.id)}
-                    pagination={{showSizeChanger: true}}>
+                    pagination={{ defaultPageSize: 500,
+                        pageSizeOptions: [10, 20, 50, 100, 500], 
+                        position: ['topRight', 'bottomRight']}}>
                 </Table>
             </Fragment>
             )
@@ -288,7 +290,9 @@ class Tracks extends React.Component {
                 columns={columns} 
                 dataSource={this.state.searched ? this.state.searchResult : this.state.tracks} 
                 rowKey={(t)=>(t.id)}
-                pagination={{showSizeChanger: true}}>
+                pagination={{ defaultPageSize: 500,
+                    pageSizeOptions: [10, 20, 50, 100, 500], 
+                    position: ['topRight', 'bottomRight']}}>
             </Table>
         </div>
     }
