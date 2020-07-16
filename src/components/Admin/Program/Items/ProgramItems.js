@@ -1,230 +1,323 @@
-import React from "react";
-import {AuthUserContext} from "../Session";
-import {ProgramContext} from "../Program";
-import Parse from "parse"
-import {Alert, Spin} from "antd";
-import ProgramVideoChat from "../VideoChat/ProgramVideoChat";
-import {videoURLFromData} from "../LiveStreaming/utils";
+import React, {Fragment} from 'react';
+import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
+import Parse from "parse";
+import {AuthUserContext} from "../../../Session";
+import {ProgramContext} from "../../../Program";
+import {
+    DeleteOutlined,
+    EditOutlined
+} from '@ant-design/icons';
 
-var moment = require('moment');
-var timezone = require('moment-timezone');
+const { Option } = Select;
 
-class ProgramItem extends React.Component {
+const {TabPane} = Tabs;
+const IconText = ({icon, text}) => (
+    <Space>
+        {React.createElement(icon)}
+        {text}
+    </Space>
+);
+
+let Liveitemsources = [];
+
+class ProgramItems extends React.Component {
     constructor(props) {
         super(props);
+        console.log("[Admin/Items]: program downloaded?" + this.props.downloaded);
         this.state = {
-            loading: true,
-            gotItems: false,
-            itemKey: null,
+            loading: true, 
             items: [],
-            waitingForProgram: true
+            tracks: [],
+            gotItems: false,
+            gotTracks: false,
+            editing: false,
+            edt_item: undefined,
+            seached: false,
+            searchResult: ""
         };
 
-            // Call to download program
+        // Call to download program
         if (!this.props.downloaded) 
             this.props.onDown(this.props);
         else {
             this.state.items = this.props.items;
-            this.state.waitForProgram = false;
-        }        
-    
-    }
-
-    async componentDidMount() {
-        let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
-        this.setState({itemKey: itemKey});
-
-        //For social features, we need to wait for the login to complete before doing anything
-        let user = await this.props.auth.refreshUser();
-
-
-        let item = this.props.items ? this.props.items.find(item => item.get("confKey") == itemKey) : undefined;
-
-        if (!item) {
-            let pq = new Parse.Query("ProgramItem");
-            pq.equalTo("confKey", itemKey);
-            pq.include("track");
-            pq.include("programSession")
-            pq.include("programSession.room")
-            pq.include("programSession.room.socialSpace")
-            pq.include("breakoutRoom");
-            item = await pq.first();
-        }
-
-        if (!item) {
-            this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
-        } else {
-            let stateUpdate = {loading: false, error: null, programItem: item, inBreakoutRoom: false};
-            if (user) {
-                if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
-                    //set the social space...
-                    let ss = item.get("programSession").get("room").get("socialSpace");
-                    this.props.auth.setSocialSpace(ss.get("name"));
-                    this.props.auth.helpers.setGlobalState({forceChatOpen: true});
-                }
-                if (item.get("track").get("perProgramItemChat")) {
-                    //Join the chat room
-                    let chatSID = item.get("chatSID");
-                    if (!chatSID) {
-                        chatSID = await Parse.Cloud.run("chat-getSIDForProgramItem", {
-                            programItem: item.id
-                        });
-                    }
-                    if(chatSID)
-                        this.props.auth.chatClient.openChatAndJoinIfNeeded(chatSID);
-                    stateUpdate.chatSID = chatSID;
-                }
-            }
-            this.setState(stateUpdate);
+            this.state.tracks = this.props.tracks;
         }
     }
 
-    componentWillUnmount() {
-        this.maybeCloseChat();
-        this.props.auth.helpers.setGlobalState({chatChannel: null, forceChatOpen: false});
-        this.props.auth.setSocialSpace("Lobby");
+    onCreate(values) {
+        var _this = this;
+        // Create the item record
+        var item = Parse.Object.extend("ProgramItem");
+        var item = new item();
+        item.set("name", values.name);
+        item.set("src1", values.location);
+        item.set("id1", values.id1);
+        item.set("pwd1", values.pwd1);
+        item.set("src2", values.src2);
+        item.set("id2", values.id2);
+        item.set("pwd2", values.pwd2);
+        item.set("qa", values.qa);
+        item.set("conference", this.props.auth.currentConference);
+        item.save().then((val) => {
+            _this.setState({visible: false, items: [item, ...this.state.items]})
+//            _this.refreshList();
+        }).catch(err => {
+            console.log(err);
+        });
     }
 
-    maybeCloseChat(){
-        this.props.auth.chatClient.closeChatAndLeaveIfUnused(this.state.chatSID);
-
+    onDelete(value) {
+        console.log("Deleting " + value + " " + value.get("name"));
+        // Delete the watchers first
+        
+        value.destroy().then(()=>{
+            this.refreshList();
+        });
     }
-    async componentDidUpdate(prevProps) {
 
-        if (this.state.waitForProgram) {
-            if (this.state.gotItems) {
-                // console.log('[ProgramItem]: Program download complete');
-                this.setState({items: this.props.items, waitingForProgram: false});
+    onEdit(item) {
+        console.log("Editing " + item.get("name") + " " + item.id);
+        this.setState({
+            visible: true, 
+            editing: true, 
+            edt_item: {
+                objectId: item.id,
+                name: item.get("name"),
+                src1: item.get("src1"),
+                pwd1: item.get("pwd1"),
+                id1: item.get("id1"),
+                src2: item.get("src2"),
+                id2: item.get("id2"),
+                pwd2: item.get("pwd2"),
+                qa: item.get("qa"),
             }
-            else {
-                // console.log('[ProgramItem]: Program still downloading...');
-                if (prevProps.items.length != this.props.items.length) {
-                    this.setState({gotItems: true});
-                    console.log('[ProgramItem]: got items');
-                }
-            }
+        });
+    }
+
+    onUpdate(values) {
+        var _this = this;
+        console.log("Updating " + values.id1 + "; " + values.objectId);
+        let item = this.state.items.find(r => r.id == values.objectId);
+
+        if (item) {
+            item.set("name", values.name);
+            item.set("src1", values.src1);
+            item.set("id1", values.id1);
+            item.set("pwd1", values.pwd1);
+            item.set("src2", values.src2);
+            item.set("id2", values.id2);
+            item.set("pwd2", values.pwd2);
+            item.set("qa", values.qa);
+            item.set("conference", this.props.auth.currentConference);
+            item.save().then((val) => {
+                _this.setState({visible: false, editing: false});
+//                _this.refreshList();
+            }).catch(err => {
+                console.log(err + ": " + values.objectId);
+            })
         }
         else {
-            // console.log('[ProgramItem]: Program cached');
+            console.log("item not found: " + values.id1);
         }
-        let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
-        if(this.state.itemKey != itemKey){
-            this.maybeCloseChat();
-            this.setState({itemKey: itemKey, loading: true});
-            let item = this.props.items ? this.props.items.find(item => item.get("confKey") == itemKey) : undefined;
+    }
 
-            if (!item) {
-                let pq = new Parse.Query("ProgramItem");
-                pq.equalTo("confKey", itemKey);
-                pq.include("track");
-                pq.include("programSession")
-                pq.include("programSession.room")
-                pq.include("programSession.room.socialSpace")
-                pq.include("breakoutRoom");
-                item = await pq.first();
+    setVisible() {
+        this.setState({'visible': !this.state.visible});
+    }
+
+    componentDidMount() {
+    }
+
+
+    componentDidUpdate(prevProps) {
+        console.log("[Admin/Items]: Something changed");
+
+        if (this.state.loading) {
+            if (this.state.gotTracks && this.state.gotItems) {
+                // console.log('[Admin/Items]: Program download complete');
+                this.setState({
+                    items: this.props.items,
+                    tracks: this.props.tracks,
+                    loading: false,
+                });
             }
-
-            if (!item) {
-                this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
-            } else {
-                let chatSID = undefined;
-                if (this.props.auth.user) {
-                    if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
-                        //set the social space...
-                        let ss = item.get("programSession").get("room").get("socialSpace");
-                        this.props.auth.setSocialSpace(ss.get("name"));
-                        this.props.auth.helpers.setGlobalState({forceChatOpen: true});
-                    }
-                    if (item.get("track").get("perProgramItemChat")) {
-                        //Join the chat room
-                        chatSID = item.get("chatSID");
-                        if (!chatSID) {
-                            chatSID = await Parse.Cloud.run("chat-getSIDForProgramItem", {
-                                programItem: item.id
-                            });
-                        }
-                        this.props.auth.chatClient.openChatAndJoinIfNeeded(chatSID);
-                    }
+            else {
+                // console.log('[Admin/Items]: Program still downloading...');
+                if (prevProps.tracks.length != this.props.tracks.length) {
+                    this.setState({gotTracks: true});
+                    // console.log('[Admin/Items]: got tracks');
                 }
-                this.setState({loading: false, error: null, programItem: item, inBreakoutRoom: false, chatSID: chatSID});
+                if (prevProps.items.length != this.props.items.length) {
+                    this.setState({gotItems: true})
+                    // console.log('[Admin/Items]: got items');
+                }
             }
-
         }
+        else 
+            console.log('[Admin/Items]: Program cached');
     }
-    formatTime(timestamp) {
-        return moment(timestamp).tz(timezone.tz.guess()).format('LLL z')
+
+
+    refreshList(){
+        let query = new Parse.Query("ProgramItem");
+        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
+        query.equalTo("conference", this.props.auth.currentConference);
+        query.limit(5000);
+        query.find().then(res=>{
+            console.log('Found items ' + res.length);
+            this.setState({
+                items: res,
+                loading: false
+            });
+        })
     }
+    
+    componentWillUnmount() {
+        // this.sub.unsubscribe();
+    }
+
+    // getAuthorsNames(item) {
+    //     let people = record.get("authors");
+    //     let ProgramPerson = Parse.Object.extend('ProgramPerson');
+    //     let qlist = [];
+    //     people.map(p => {
+    //         let qq = new Parse.Query(ProgramPerson);
+    //         qq.equalTo('objectId', p.id);
+    //         qlist.push(qq);
+    //     });
+    //     let q = Parse.Query.or(qlist);
+    //     let authors = await q.find();
+    //     return authors;
+    // }
+
     render() {
-        if (this.state.loading)
-            return <Spin/>
-        if(this.state.error){
-            return  <Alert
-                message="Unable to load program item"
-                description={this.state.error}
-                type="error"
+        const columns = [
+            {
+                title: 'Title',
+                dataIndex: 'title',
+                key: 'title',
+                width: '70%',
+                sorter: (a, b) => {
+                    var titleA = a.get("title") ? a.get("title") : "";
+                    var titleB = b.get("title") ? b.get("title") : "";
+                    return titleA.localeCompare(titleB);
+                }, 
+                render: (text, record) => <span>{record.get("title")}</span>,
+            },
+            {
+                title: 'Track',
+                dataIndex: 'track',
+                width: '30%',
+                sorter: (a, b) => {
+                    var trackA = a.get("track") ? a.get("track").get("name") : "";
+                    var trackB = b.get("track") ? b.get("track").get("name") : "";
+                    return trackA.localeCompare(trackB);
+                },   
+                render: (text,record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>,
+                key: 'track',
+            },
+            {
+                title: 'Action',
+                key: 'action',
+                render: (text, record) => (
+                    <Space size="small">
+                        <a href="#" title="Edit" item={record} onClick={() => this.onEdit(record)}>{<EditOutlined />}</a>
+                        <Popconfirm
+                            title="Are you sure delete this item?"
+                            onConfirm={()=>this.onDelete(record)}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                        <a href="#" title="Delete">{<DeleteOutlined />}</a>
+                        </Popconfirm>
+                    </Space>
+                ),
+            },
+        ];
+
+        if (!this.props.downloaded)
+            return (
+                <Spin tip="Loading...">
+                </Spin>)
+
+        else if (this.state.editing)
+            return (
+                <Fragment>
+                    <CollectionEditForm
+                        title="Edit Item"
+                        visible={this.state.visible}
+                        data={this.state.edt_item}
+                        onAction={this.onUpdate.bind(this)}
+                        onCancel={() => {
+                            this.setVisible(false);
+                            this.setState({editing: false});
+                        }}
+                        onSelectPullDown1={(value) => {
+                            this.setState({src1: value});
+                        }}
+                    />
+                    <Input.Search/>
+                    <Table 
+                        columns={columns} 
+                        pagination={{ defaultPageSize: 500,
+                            pageSizeOptions: [10, 20, 50, 100, 500], 
+                            position: ['topRight', 'bottomRight']}}
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
+                        rowKey={(i)=>(i.id)}>
+                    </Table>
+            </Fragment>
+            )
+        return <div>
+            <Button
+                type="primary"
+                onClick={() => {
+                    this.setVisible(true);
+                }}
+            >
+                New item
+            </Button>
+            <CollectionEditForm
+                title="Add Item"
+                visible={this.state.visible}
+                onAction={this.onCreate.bind(this)}
+                onCancel={() => {
+                    this.setVisible(false);
+                }}
+                onSelectPullDown1={(value) => {
+                    this.setState({src1: value});
+                }}
             />
-        }
-        let img = ""
-        if (this.state.programItem.get("posterImage")) {
-            img = <img src={this.state.programItem.get("posterImage").url()} />
-        }
-        let authors = this.state.programItem.get("authors") ? this.state.programItem.get("authors") : [];
-        let authorstr = authors.map(a => a.get('name')).join(", ");
-        let sessionInfo;
-        let now = Date.now();
-
-        if(this.state.programItem.get("programSession")){
-            let session = this.state.programItem.get("programSession");
-            let roomInfo;
-            if (session.get("room") && session.get("room").get("src1") == "YouTube") {
-                let when = "now"
-                roomInfo = <p><b>Virtual room (stream): </b><a href="#" onClick={() => {
-                    this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                }}>{session.get("room").get("name")}</a></p>
-            } else if (session.get("room") && session.get("room").get("src1") == "ZoomUS") {
-                let video = session.get("room"); // names :(
-                var timeS = session.get("startTime") ? session.get("startTime") : new Date();
-                let ts_window = moment(timeS).subtract(8, 'h').toDate().getTime();
-                let ts_future = moment(timeS).add(8, 'h').toDate().getTime();
-                let show_link = (timeS > now && ts_window < now);
-                if(show_link && video.get("src1")) {
-                    let country = this.props.auth.userProfile.get("country");
-                    var src = video.get("src1");
-                    var id = video.get("id1");
-                    var pwd = video.get("pwd1");
-
-                    var inChina = false;
-                    if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
-                        // Commenting it for now until we get conformation of the Chinese URL
-                        // src = this.props.video.get("src2");
-                        // id = this.props.video.get("id2");
-                        inChina = true;
+            <Input.Search
+                allowClear
+                onSearch={key => {
+                        if (key == "") {
+                            this.setState({searched: false});
+                        }
+                        else {
+                            this.setState({searched: true});
+                            this.setState({
+                                searchResult: this.state.items.filter(
+                                    item => 
+                                        (item.get('title') && item.get('title').toLowerCase().includes(key.toLowerCase()))
+                                        || (item.get('track') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
+                                    )
+                            })
+                        }
                     }
-                    let video_url= videoURLFromData(src, id, pwd, country);
-
-                    roomInfo = <p><b>Virtual room (stream): </b> <a target="_blank" href={video_url}>Join via Zoom</a></p>
                 }
-                else
-                    roomInfo = <p><b>Virtual room (stream): </b> A zoom link will be available here to join, 8 hours before the event starts.</p>
-            }
-            sessionInfo = <div>
-                <b>Session:</b> {session.get("title")} ({this.formatTime(session.get("startTime"))} - {this.formatTime(session.get('endTime'))}){roomInfo}
-            </div>;
-        }
-
-        return <div className="programItemContainer">
-            <div className="programItemMetadata">
-                <h3>{this.state.programItem.get('title')}</h3>
-                <p><i>{authorstr}</i></p>
-                {sessionInfo}
-                <p><b>Abstract: </b> {this.state.programItem.get("abstract")}</p>
-                {this.props.auth.user  && this.state.programItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.programItem.get("breakoutRoom")}/></div> : <></>}
-            </div>
-            <div className="fill">
-                {img}
-            </div>
+            />
+            <Table 
+                columns={columns} 
+                pagination={{ defaultPageSize: 500,
+                    pageSizeOptions: [10, 20, 50, 100, 500], 
+                    position: ['topRight', 'bottomRight']}}
+                dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
+                rowKey={(i)=>(i.id)}>
+            </Table>
         </div>
     }
+
 }
 
 const
@@ -233,7 +326,7 @@ const
             {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
                 <AuthUserContext.Consumer>
                     {value => (
-                        <ProgramItem {...props} auth={value} items={items} onDown={onDownload} downloaded={downloaded}/>
+                        <ProgramItems {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
                     )}
                 </AuthUserContext.Consumer>
             )}
@@ -242,3 +335,99 @@ const
     );
 
 export default AuthConsumer;
+
+const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1}) => {
+    const [form] = Form.useForm();
+    return (
+        <Modal
+            visible={visible}
+            title={title}
+            // okText="Create"
+            footer={[
+                <Button form="myForm" key="submit" type="primary" htmlType="submit">
+                    Submit
+                </Button>
+            ]}
+            cancelText="Cancel"
+            onCancel={onCancel}
+        >
+            <Form
+                form={form}
+                layout="vertical"
+                name="form_in_modal"
+                id="myForm"
+                initialValues={{
+                    modifier: 'public',
+                    ...data
+                }}
+                onFinish={() => {
+                    form
+                        .validateFields()
+                        .then(values => {
+                            form.resetFields();
+                            onAction(values);
+                        })
+                        .catch(info => {
+                            console.log('Validate Failed:', info);
+                        });
+                }}
+            >
+                <Form.Item name="objectId" noStyle>
+                    <Input type="text" type="hidden" />
+                </Form.Item>
+                <Form.Item
+                    name="title"
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Please input the title of the item!',
+                        },
+                    ]}
+                >
+                    <Input placeholder="Name"/>
+                </Form.Item>
+                <Form.Item name="stream1">
+                    <Input.Group compact>
+                        <Form.Item name="src1">
+                            <Select placeholder="Main Source" style={{ width: 120 }} onChange={onSelectPullDown1}>
+                                {Liveitemsources.map(src => (
+                                    <Option key={src}>{src}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item name="id1">
+                            <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
+                        </Form.Item>
+                        <Form.Item name="pwd1">
+                            <Input style={{ width: '100%' }} type="textarea" placeholder="Encrypted Password (Optional)"/>
+                        </Form.Item>
+                    </Input.Group>
+                </Form.Item>
+                <Form.Item name="stream2">
+                    <Input.Group compact>
+                        <Form.Item name="src2" >
+                            <Select placeholder="Alt. Source" style={{ width: 120 }} onChange={onSelectPullDown1}>
+                                {Liveitemsources.map(src => (
+                                    <Option key={src}>{src}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item name="id2" rules={[
+                            {
+                                required: false
+                            },
+                        ]}>
+                            <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
+                        </Form.Item>
+                        <Form.Item name="pwd2">
+                            <Input style={{ width: '100%' }} type="textarea" placeholder="Encrypted Password (Optional)"/>
+                        </Form.Item>
+                    </Input.Group>
+                </Form.Item>
+                <Form.Item name="qa">
+                    <Input placeholder="Q&A tool link"/>
+                </Form.Item>
+            </Form>
+        </Modal>
+    );
+};
