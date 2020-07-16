@@ -1,294 +1,97 @@
 # Things to do
 
-## High-priority small things (for ICSE if possible)
+## General
 
-reintegrate this with the TODO list on github
+High priority:
 
-comments from the ICSE discussion
-https://docs.google.com/document/d/1m0OoLhmlJNYsCfpd0m993UbABu39UWyOUOa538Yt4iw/edit
+Reconsider the name of the tool.  Clowdr is good, but it seems basically impossible for people to spell: I've seen cloudr, clouder, clowder, crowdr, ...
 
-random comments from a student:
-   - the virtual clapping soundtrack is excellent!
-   - maybe have the SVs put links to the papers in the chat as they are
-     starting
-   - maybe the lobby chat sidebar should be closed by default
-   - the UI is overwhelming at the beginning -- need an easier onramp
+General UI simplification
 
-Little UI things for anybody:
-  - Try putting people in "just listening" mode when they first enter a room
-    (with a prominent
-  - To minimize confusion about closing the text chat windows, what about
-    removing the X from the chat window itself and making the -- (minimize)
-    do what the X does now?  I.e., the only way to really close a chat
-    window is from the sidebar?
-  - Feature request for the day: I really want to be able to (a) search for
-    anyone on the platform, not just people in the same top-level room as
-    me, (b) search for anybody registered for the conference, not just
-    people signed on to the platform right now, and (c) send a chat message
-    to anybody I can search for…
-    (JB: This is not hard. The ContextualActiveUsers already gets all of the
-    presences and filters them to the current social space. So, the search
-    bar could be set to search across all of the users.)
-  - The hover text for an empty breakout room should say "(currently empty)"
-  - Show the long version of people's presence descriptors (with status
-    text) in the breakout rooms, etc.
-  - See if any more of the user manual can be reflected in popovers -- in
-    general, our goal should be not to have a user manual!
-  - The video chat rooms list in the lobby does not show which rooms are
-    private!  And the privacy marker is confusing to people -- it needs at
-    least a tooltip.
-  - If you click on the camera-+ icon in a chat to spin off a new private
-    room for a conversation, the room should be created in Ephemeral mode,
-    not Persistent.  (However, the fact that only one person seems to have
-    created a room in this way -- and that person was following my
-    instructions! -- suggests that this feature is not obvious to people!
-    We should make it easier to find -- at a minimum, choose a more
-    intuitive icon for it.)
-  - The semantics of private rooms is not clear.  We could add a tooltip
-    that says, e.g., "Private room: you have been granted access by Jane
-    Smith" or "Private room: you are seeing it because you have moderator
-    privileges"
+  - or... what about displaying the last message posted *in* the rectangle
+    that you can click on to expand the chat.  I.e., make minimized chat
+    bottons a bit larger, put their name plus the first few words of the
+    last posting as the button title, and clicking on them maximizes the
+    chat window and shows all the messages?
 
-Design issues
-  - What if there were some kind of "meetup matching" service -- each of us
-    tells the system which of the other participants they are interested in
-    talking to.  Then, when one of those people happens to be in a public
-    place / available for conversation, the UI lets me know, and I can go
-    join them.
-  - We really need to get Researhr integrated
-  - Rethink the "single presence" concept -- I (BCP) don't think it really
-    works.
-  - consider how to make it clear which poster sessions are active at the
-    moment (add a list to the Posters page, maybe? and/or to the Lobby
-    page?)
-  - I (BCP) don't like the way going to look at the program, look at My
-    Account, etc. takes me out of whatever conversation I'm in.  Relatedly,
-    I'm sad that I can't view a talk *and* see what's happening in the Lobby
-    chat rooms at the same time...  (Or wait, maybe I can!  Apparently I can
-    open multiple tabs on Clowdr.  I thought that was not allowed, but
-    actually it's quite convenient...  We should document it!)
-  - Slido is problematic: besides the "questions disappearing during the
-    talk" issue, there is simply the fact that questions don't persist
-    *after* the talk.  I wonder if it might not really be better just to
-    use the chat for this.  (Later: We seem to be converging on dumping
-    slido.)
-  - Announcements are really useful for people -- think about how to expand
-    them a bit?
+The UI is overwhelming at the beginning -- need an easier onramp
+  - maybe more things should be closed by default
+  - making more use of announcements would help (so that e.g., the lobby chat could start closed)
 
-Pending questions from users:
-  - 1) In the instructions it says presenters should start video chat
-    right after their session, but it wasn’t clear how to do that. Should
-    we go to video chat lobby?
-  - 1.5) In the training for session chairs, we were told that post talk
-    communication will happen via the Exhibit hall /research/paper page?
-    Is there another video chat communication too?
-  - 2) In the sessions tab, there is the practice session/zoom room….but,
-    its not clear how am I supposed to practice there. If there are
-    multiple people practicing won’t it be overlapping? I don’t understand
-    that room and its purpose at all. (I visited the zoom room, found
-    another participant lurking there, so I left the room, since I didn’t
-    want to disturb them)
+## Documentation
 
-Comments from #sv-indian
-  - People complained about positioning of slido widget, maybe we can
-    share the external links to slido in each room; this depends on
-    whether @Jonathan Bell @Crista Lopes (Virtualization Chair, UC Irvine)
-    are happy with people leaving clowdr
-  - Moving *unanswered* questions from the slido archive to the
-    corresponding should happen after each presentation ends
-  - There is a glitch where the central video panel overlaps with the left
-    side panel
-      - This point should be also made to Crista "I'm a bit concerned
-        about using Clowdr/Slido for questions.  I was in two sessions
-         this morning.  I did not have slido at all for the first session,
-         so could not ask questions. Then, I was chairing second session -
-         slido appeared on lhs (no idea how!).  And, before 3rd talk, it
-         disappeared.  I asked my own questions for last 3 papers."
-      - "to add more to the list for @Jonathan Bell and @Crista Lopes
-        (Virtualization Chair, UC Irvine), José and I just attended a demo,
-        and saw two problems: (1) it's hard to know which of the demos are
-        "active" (where the presenter is, or how many attendees are there),
-        and (2) when you enter one demo, it's hard to make the screen
-        really big (for the video to take the entire screen)"
+* See if any more of the user manual can be reflected in popovers -- in
+  general, our goal should be not to have a user manual!
 
-## Lower-priority small things (after ICSE)
+* Describe how to use multiple browser windows effectively (or make it obvious)
 
-Code cleanup
-  - refactor all the code that got duplicated in the heat of the moment :-)
-  - switch to Typescript!!
-  - global rename Breakout to Chat (but be careful of how "chat" is used
-    right now...)
+* The relation between top-level rooms and breakout rooms within top-level
+  rooms needs to be clarified.  (I [BCP] am still confused about it!)  Also
+  the relation between ordinary rooms and posters/exhibits.
 
-Social engineering:
-    - The Lobby chat got used at ICSE for two things: for general
-      announcements by the organizers, and for chat between participants.
-      IMO it would be good to separate them (e.g., use only the announcement
-      mechanism for announcements -- we'll have to make it a bit less
-      intrusive, though!)
-    - We really need a "take me someplace random" button
-    - If we are interested in continuing to use Slack, we should check Zulip
-      as an alternative
-    - The schedule needs very explicit "go to the Hallway" times!
-    - Maybe we should ask student volunteers to hang out in the Hallway
-      rooms when they are not doing something else... seems like it would be
-      good for them, good for the conference, and good for us... :-)
-    - Should Hallway rooms be large or small??  How many should we create by
-      default?  How should we display them so that (a) people can find a
-      particular one if they want to but (b) people are encouraged to join
-      them randomly?
+## General UI / Navigation
 
-Documentation:
-   - The relation between top-level rooms and breakout rooms within
-     top-level rooms needs to be clarified.  Also the relation between
-     ordinary rooms and posters/exhibits.
+Medium priority
 
-It should be possible to join a video chat without a camera (just audio)
-
-UI nits:
-  - Clicking on the name of a chat in the sidebar currently just OPENS the
-    chat.  It should also MINIMIZE the chat if it happens to be open at the
-    moment.
-  - Change the number of columns in lobby display depending on screen size
-    (this is partly implemented, but needs to be checked with several
-    different sizes)
-  - the Xs to close chats should be popovers (i.e., they appear if you hover
-    over the name of the chat, but they are not there all the time)
-  - Room popovers should include a descriptive message telling people what
-    the room is for and inviting them to join
-  - "Push to talk" for video rooms
-  - clicking on the blue button for a chat at the bottom of the screen opens
-    it; clicking again should close it
-  - It should be possible to scroll the videos to the very top of the screen.
-  - make sure all controls have (good) hover text
-  - Label everybody's video with their timezone!
-  - People's names in the headers of video windows should behave the same as
-    everywhere else in the UI (e.g., you should be able to click on them to
-    get a chat window)
-
-A breakout room should have some descriptive text saying what it is for;
-this should be entered when you create the room, and it should display in
-a popup when you hover over the room name.
-
-make chat windows resizeable -- seems to be not easy :-(
-
-Make avatars display a little larger in the popup?
-
-I thought Crista said that it was now easy to embed Zoom rooms in
-Clowdr.  Is that true?  If so, can we convert some of the big Hallway
-rooms to Zoom rooms?
-
-Do something about all the video rearranging that happens as people come
-and go from rooms (maybe this is better now??)
-
-We're not consistent about how we use the words Chat and Breakout
-
-I wonder if we should reconsider the name of the tool.  I like Clowdr, but
-it seems basically impossible for people to spell: I've seen cloudr,
-clouder, clowder, crowdr, ...
-
-Chat:
-  - allow editing posts on chats
-  - allow (a) marking a post as a question and (b) filtering the chat to
-    show only questions
-
-Decide where to keep the list of issues...
-  - @Jon: I looked for your list of todos on github to integrate them with
-    this file, but did not find them... (I had originally thought I'd move
-    things from here to there, but on reflection I think this file is a
-    better, more flexible way of keeping track of todo items and
-    priorities.)
-      * OK. They are in the "project" - it is a pretty good way to
-        organize things. https://github.com/orgs/clowdr-app/projects/1
-      * BCP: Thanks -- not sure why I could not find it yesterday.  We
-        should make a decision about where these things should really live
-        -- while I prefer this file (in part because it gets more text on
-        the screen at the same time, and in part because it seems useful
-        for both larger design notes and smaller todos), I can also work
-        with Github.  Either way, I can synchronize them at some point.
-
-deleting a room should make its text chat window go away
-
-Implement the "mute someone else's mic and put a message in the chat"
-feature?
-
-Clicking the little mic symbol in the upper right of the video display
-should mute and unmute you.
-
-If possible, gray out the names of people that have not been active for a
-while (> 15 min?)
-
-Allow anyone in a room to mute someone else's mic (and put a message in the
-chat saying who did it).  Important!
-
-Screen layout nit: When displaying on a laptop, it would be good to put
-other people's videos on the very top of the screen, near the camera!
-
-Consider (optionally) sorting participant list by
-  - whether I've designated them as a friend
-  - their topics / research interests
-  - do they want to be visible at all
-room lists could be sorted the same way, BTW -- or, e.g., color all the
-type theory people green, and show green dots on the rooms where they are
-hanging out
-
-What about a button to make a public room temporarily private (and then it goes
-back to public when everybody leaves)
+* If possible, gray out the names of people that have not been active for a
+  while (> 15 min?)
 
 dntWaiver = "Only you can see this status. Others will still see your
 presence in public rooms, but won't see a status" -- ... But this is the
 only status that will be displayed as blank, so won't people be able to
 infer it?
 
-Try to rename the "End call" button to "Back to lobby"
+Some kind of scheduling service for participants would be really nice.
+(Though I wonder whether there is some third-party tool that could be
+embedded, rather than writing our own.  Perhaps something as dumb as a
+google sheet.  Or perhaps not quite so dumb.)
 
-need to think about screen real estate on small (laptop, ipad) screens --
-e.g.
-     - the title bar across the top uses a lot of space
-     - the "live questions to the speakers" goes entirely off the bottom
+## Video Chat
 
-presenceDesc = "In a conversation; come join if you like"; -- have we made
-it possible / obvious how to go to where someone else is??
+* Clicking the little mic symbol in the upper right of the video display
+  should mute and unmute you.
 
-should there be a visual indication of which rooms are small/large/P2P?
+* rename the "End call" button to "Back to lobby" (BCP: not obvious how to
+  do it -- the button seems to come from from a component library)
 
-## Larger design questions to think about post-ICSE
+* What about live captioning (as an eventual feature)?
 
-We really need some way to replicate / reuse the "starred talks" / "my
-program" features of Researchr.
+* Screen layout nit: When displaying a video chat room on a laptop, it would
+  be good to put other people's videos on the very top of the screen, near
+  the camera!
 
-If we added a couple of small features to a slack-like chat channel,
-maybe we could get away without slido.
-   - Thumbs-up button (like slack)
-   - This-is-a-question-for-the-speaker button
-   - Display only questions from this channel, sorted by
-     most-thumbs-first.
+Are we going to keep the small/large/P2P disctinction?  If so, should there
+be a visual indication of which rooms are which size?
 
-integration with Researchr for #LIVE "go to what's happening now".
+## Social engineering:
 
-Integration with Researchr's "my program" feature -- super important for
-some people
+- The Lobby chat got used at ICSE for two things: for general
+  announcements by the organizers, and for chat between participants.
+  IMO it would be good to separate them (e.g., use only the announcement
+  mechanism for announcements -- we'll have to make it a bit less
+  intrusive, though!)
+- The schedule needs very explicit "go to the Hallway" times!
+- Maybe we should ask student volunteers to hang out in the Hallway
+  rooms when they are not doing something else... seems like it would be
+  good for them, good for the conference, and good for us... :-)
+- Should Hallway rooms be large or small??  How many should we create by
+  default?  How should we display them so that (a) people can find a
+  particular one if they want to but (b) people are encouraged to join
+  them randomly?
 
-What about watching multiple channels at the same time?
+# --------------------------------------------------------------------
+# Unfiled
 
-Mobile friendliness
-Logging in from multiple devices??
+If we are interested in continuing to use Slack, we should check Zulip as an alternative
 
-Implement Jon's "Post a 'come to me' button in a chat" feature (maybe this
-is done?)
+comments from the ICSE discussion
+https://docs.google.com/document/d/1m0OoLhmlJNYsCfpd0m993UbABu39UWyOUOa538Yt4iw/edit
 
-What about live captioning (as an eventual feature).
+random comments from a student:
+   - the virtual clapping soundtrack is excellent!
 
-should chat logs be logged somewhere so that, for example, allegations of
-misconduct can be investigated?  (Or should there be, for example, an
-option to include the chat log in what gets sent to a moderator? or?)
-More generally, what information do moderators need to do their job?
-
-## Random fun features
-
-Snarky reviewer #3 bots
-
-
-# --------------------------------------------------
+# --------------------------------------------------------------------
+# --------------------------------------------------------------------
 # Design notes
 
 ## Design alternatives for "take me someplace random"
@@ -456,7 +259,7 @@ Just talking with Richard and he mentioned two ideas for Clowdr:
   and not audible.
 
 
-# --------------------------------------------------
+# --------------------------------------------------------------------
 # Miscellaneous notes
 ## Notes and observations from PLDI 2020
 
