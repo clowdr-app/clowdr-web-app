@@ -92,7 +92,9 @@ class Registrations extends React.Component {
         const reader = new FileReader();
         reader.onload = () => {
             const data = {content: reader.result, conference: this.currentConference.id};
-            Parse.Cloud.run("registrations-upload", data).then(() => this.refreshList());
+            Parse.Cloud.run("registrations-upload", data).then(response => {
+                this.refreshList(response);
+            });
         }
         reader.readAsText(file);
         return false;
@@ -114,13 +116,12 @@ class Registrations extends React.Component {
 
     refreshList(value) {
         let regs = this.state.regs;
-        if (value)
-        {
-            regs = regs.filter(r => r.get("createdAt") >= value.startTime)
-            console.log('Filtering ' + regs.length);
+        if (value) {
+            regs = value;
         }
         this.setState({
             filteredRegs: regs,
+            regs: [regs, ...this.state.regs],
             loading: false
         });
     }
