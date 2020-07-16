@@ -1,4 +1,4 @@
-import React, {Fragment} from 'react';
+import React, {Fragment, useState} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
@@ -7,6 +7,7 @@ import {
     DeleteOutlined,
     EditOutlined
 } from '@ant-design/icons';
+import { BrandingWatermark } from '@material-ui/icons';
 
 const { Option } = Select;
 
@@ -192,49 +193,241 @@ class ProgramItems extends React.Component {
     // }
 
     render() {
-        const columns = [
-            {
-                title: 'Title',
-                dataIndex: 'title',
-                key: 'title',
-                width: '70%',
-                sorter: (a, b) => {
-                    var titleA = a.get("title") ? a.get("title") : "";
-                    var titleB = b.get("title") ? b.get("title") : "";
-                    return titleA.localeCompare(titleB);
-                }, 
-                render: (text, record) => <span>{record.get("title")}</span>,
-            },
-            {
-                title: 'Track',
-                dataIndex: 'track',
-                width: '30%',
-                sorter: (a, b) => {
-                    var trackA = a.get("track") ? a.get("track").get("name") : "";
-                    var trackB = b.get("track") ? b.get("track").get("name") : "";
-                    return trackA.localeCompare(trackB);
-                },   
-                render: (text,record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>,
-                key: 'track',
-            },
-            {
-                title: 'Action',
-                key: 'action',
-                render: (text, record) => (
-                    <Space size="small">
-                        <a href="#" title="Edit" item={record} onClick={() => this.onEdit(record)}>{<EditOutlined />}</a>
-                        <Popconfirm
-                            title="Are you sure delete this item?"
-                            onConfirm={()=>this.onDelete(record)}
-                            okText="Yes"
-                            cancelText="No"
+
+        //Set up edtiable table cell
+        const EditableCell = ({
+            editing,
+            dataIndex,
+            title,
+            inputType,
+            record,
+            index,
+            children,
+            ...restProps
+        }) => {
+            let inputNode = null;
+            switch (dataIndex) {
+                case('title'):
+                    inputNode = <Input/>;
+                    break;
+                case('track'):
+                    inputNode = (
+                        <Select placeholder="Choose the track" style={{ width: 400 }} >
+                            {this.state.tracks.map(t => (
+                                <Option key={t.id} value={t.id}>{t.get('name')}</Option>
+                            ))}
+                        </Select>
+                    );
+                    break;
+                default:
+                    inputNode = null;
+                    break;
+            }
+
+            return (
+                <td {...restProps}>
+                    {editing ? (
+                        <Form.Item
+                            name={dataIndex}
+                            style={{margin:0}}
+                            rules={[
+                                {
+                                    required:true,
+                                    message:`Please Input ${title}!`
+                                }
+                            ]}
                         >
-                        <a href="#" title="Delete">{<DeleteOutlined />}</a>
-                        </Popconfirm>
-                    </Space>
-                ),
-            },
-        ];
+                            {inputNode}   
+                        </Form.Item>
+                    ) : (
+                        children
+                    )}
+                </td>
+            );
+        };
+
+        //set up editable table
+        const EditableTable = () => {
+            //React hook
+            console.log("Loading Editable table");
+            const [form] = Form.useForm();
+            const [data, setData] = useState(this.state.items);
+            const [editingKey, setEditingKey] = useState('');
+
+            const isEditing = record => record.id === editingKey;
+
+            const edit = record => {
+                console.log("record being edited is " + record.get("title"));
+                console.log(JSON.stringify(record));
+                form.setFieldsValue({
+                    title: record.get("title") ? record.get("title") : "",
+                    track: record.get("track") ? record.get("track").get("name") : "",
+                });
+                console.log("setting editing key state");
+                setEditingKey(record.id);
+                console.log("editing key state done");
+            };
+
+            const cancel = () => {
+                setEditingKey('');
+            };
+
+            const onDelete = record => {
+                console.log("deleting item: " + record.get("title"));
+                const newItemList = [...this.state.items];
+                this.setState({
+                    items: newItemList.filter(item => item.id !== record.id)
+                });
+                // delete from database
+                record.destroy().then(() => {
+                    console.log("item deleted from db")
+                });
+            };
+
+            const save = async id => {
+                console.log("Entering save func");
+                try {
+                    const row = await form.validateFields();
+                    const newData = [...data];
+                    let item = newData.find(item => item.id === id);
+
+                    if (item) {
+                        item.set("title", row.title);
+                        let newTrack = this.state.tracks.find(t => t.id === row.track);
+                        if (newTrack) {
+                            console.log("Track found. Updating");
+                            item.set("track", newTrack)
+                        } else {
+                            console.log("Track not found");
+                        }
+
+                    setData(newData);
+
+                    item.save()
+                            .then((response) => {
+                                console.log('Updated ProgramItem', response);})
+                            .catch(err => {
+                                console.log(err);
+                                console.log("@" + item.id);
+                            });
+                        setEditingKey('');
+                    }
+                    else {
+                        newData.push(row);
+                        setData(newData);
+                        setEditingKey('');
+                    }
+                } catch (errInfo) {
+                    console.log('Validate Failed:', errInfo);
+                }
+            }
+
+            const columns = [
+                {
+                    title: 'Title',
+                    dataIndex: 'title',
+                    key: 'title',
+                    width: '70%',
+                    editable: true,
+                    sorter: (a, b) => {
+                        var titleA = a.get("title") ? a.get("title") : "";
+                        var titleB = b.get("title") ? b.get("title") : "";
+                        return titleA.localeCompare(titleB);
+                    }, 
+                    render: (text, record) => <span>{record.get("title")}</span>,
+                },
+                {
+                    title: 'Track',
+                    dataIndex: 'track',
+                    width: '30%',
+                    editable: true,
+                    sorter: (a, b) => {
+                        var trackA = a.get("track") ? a.get("track").get("name") : "";
+                        var trackB = b.get("track") ? b.get("track").get("name") : "";
+                        return trackA.localeCompare(trackB);
+                    },   
+                    render: (text,record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>,
+                    key: 'track',
+                },
+                {
+                    title: 'Action',
+                    //key: 'action',
+                    dataIndex: 'action',
+                    render: (_, record) => {
+                        const editable = isEditing(record);
+                        if (this.state.items.length > 0) {
+                            return editable ? (
+                                <span>
+                                    <a
+                                        onClick={() => save(record.id)}
+                                        style={{
+                                            marginRight: 8
+                                        }}
+                                    >
+                                        Save
+                                    </a>
+                                    <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+                                        <a>Cancel</a>
+                                    </Popconfirm>
+                                </span>
+                            ) : (
+                                <Space size="small">
+                                    <a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>
+                                        {<EditOutlined />}
+                                    </a>
+                                    <Popconfirm
+                                        title="Are you sure delete this item?"
+                                        onConfirm={()=>onDelete(record)}
+                                        okText="Yes"
+                                        cancelText="No"
+                                    >
+                                    <a title="Delete">{<DeleteOutlined />}</a>
+                                    </Popconfirm>
+                                </Space>
+                            );
+                        } else {
+                            return null;
+                        }
+                    }
+                },
+            ];
+
+            const mergedColumns = columns.map(col => {
+                if (!col.editable) {
+                    return col;
+                }
+
+                return {
+                    ...col,
+                    onCell: record => ({
+                        record,
+                        inputType: 'text',
+                        dataIndex: col.dataIndex,
+                        title: col.title,
+                        editing: isEditing(record),
+                    }),
+                };
+            });
+
+            return (
+                <Form form={form} component={false}>
+                    <Table
+                        components={{
+                            body: {
+                                cell: EditableCell,
+                            },
+                        }}
+                        bordered
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.items}
+                        columns={mergedColumns}
+                        rowClassName="editable-row"
+                        pagination={{ defaultPageSize: 500,
+                            pageSizeOptions: [10, 20, 50, 100, 500], 
+                            position: ['topRight', 'bottomRight']}}
+                    />
+                </Form>
+            );
+        };
 
         if (!this.props.downloaded)
             return (
@@ -258,14 +451,6 @@ class ProgramItems extends React.Component {
                         }}
                     />
                     <Input.Search/>
-                    <Table 
-                        columns={columns} 
-                        pagination={{ defaultPageSize: 500,
-                            pageSizeOptions: [10, 20, 50, 100, 500], 
-                            position: ['topRight', 'bottomRight']}}
-                        dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
-                        rowKey={(i)=>(i.id)}>
-                    </Table>
             </Fragment>
             )
         return <div>
@@ -307,14 +492,7 @@ class ProgramItems extends React.Component {
                     }
                 }
             />
-            <Table 
-                columns={columns} 
-                pagination={{ defaultPageSize: 500,
-                    pageSizeOptions: [10, 20, 50, 100, 500], 
-                    position: ['topRight', 'bottomRight']}}
-                dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
-                rowKey={(i)=>(i.id)}>
-            </Table>
+            <EditableTable/>
         </div>
     }
 
