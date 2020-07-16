@@ -363,6 +363,9 @@ class ProgramItems extends React.Component {
                         rowClassName="editable-row"
                         pagination={{
                             onChange: onCancel,
+                            defaultPageSize: 500,
+                            pageSizeOptions: [10, 20, 50, 100, 500],
+                            position: ['topRight', 'bottomRight']
                         }}
                     />
                 </Form>
