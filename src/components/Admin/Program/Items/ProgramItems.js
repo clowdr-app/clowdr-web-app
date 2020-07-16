@@ -1,145 +1,50 @@
-import React, {Fragment} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs} from "antd";
+import React, {useState} from 'react';
+import {Button, Form, Input, Popconfirm, Select, Space, Spin, Table, Alert} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
-import {
-    DeleteOutlined,
-    EditOutlined
-} from '@ant-design/icons';
+import {DeleteOutlined, EditOutlined} from '@ant-design/icons';
 
 const { Option } = Select;
-
-const {TabPane} = Tabs;
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
-
-let Liveitemsources = [];
 
 class ProgramItems extends React.Component {
     constructor(props) {
         super(props);
         console.log("[Admin/Items]: program downloaded?" + this.props.downloaded);
         this.state = {
-            loading: true, 
+            loading: true,
+            alert: undefined,
             items: [],
             tracks: [],
+            people: [],
             gotItems: false,
             gotTracks: false,
-            editing: false,
-            edt_item: undefined,
-            seached: false,
+            gotPeople: false,
+            searched: false,
             searchResult: ""
         };
 
         // Call to download program
-        if (!this.props.downloaded) 
+        if (!this.props.downloaded)
             this.props.onDown(this.props);
         else {
             this.state.items = this.props.items;
             this.state.tracks = this.props.tracks;
+            this.state.people = this.props.people;
         }
     }
-
-    onCreate(values) {
-        var _this = this;
-        // Create the item record
-        var item = Parse.Object.extend("ProgramItem");
-        var item = new item();
-        item.set("name", values.name);
-        item.set("src1", values.location);
-        item.set("id1", values.id1);
-        item.set("pwd1", values.pwd1);
-        item.set("src2", values.src2);
-        item.set("id2", values.id2);
-        item.set("pwd2", values.pwd2);
-        item.set("qa", values.qa);
-        item.set("conference", this.props.auth.currentConference);
-        item.save().then((val) => {
-            _this.setState({visible: false, items: [item, ...this.state.items]})
-//            _this.refreshList();
-        }).catch(err => {
-            console.log(err);
-        });
-    }
-
-    onDelete(value) {
-        console.log("Deleting " + value + " " + value.get("name"));
-        // Delete the watchers first
-        
-        value.destroy().then(()=>{
-            this.refreshList();
-        });
-    }
-
-    onEdit(item) {
-        console.log("Editing " + item.get("name") + " " + item.id);
-        this.setState({
-            visible: true, 
-            editing: true, 
-            edt_item: {
-                objectId: item.id,
-                name: item.get("name"),
-                src1: item.get("src1"),
-                pwd1: item.get("pwd1"),
-                id1: item.get("id1"),
-                src2: item.get("src2"),
-                id2: item.get("id2"),
-                pwd2: item.get("pwd2"),
-                qa: item.get("qa"),
-            }
-        });
-    }
-
-    onUpdate(values) {
-        var _this = this;
-        console.log("Updating " + values.id1 + "; " + values.objectId);
-        let item = this.state.items.find(r => r.id == values.objectId);
-
-        if (item) {
-            item.set("name", values.name);
-            item.set("src1", values.src1);
-            item.set("id1", values.id1);
-            item.set("pwd1", values.pwd1);
-            item.set("src2", values.src2);
-            item.set("id2", values.id2);
-            item.set("pwd2", values.pwd2);
-            item.set("qa", values.qa);
-            item.set("conference", this.props.auth.currentConference);
-            item.save().then((val) => {
-                _this.setState({visible: false, editing: false});
-//                _this.refreshList();
-            }).catch(err => {
-                console.log(err + ": " + values.objectId);
-            })
-        }
-        else {
-            console.log("item not found: " + values.id1);
-        }
-    }
-
-    setVisible() {
-        this.setState({'visible': !this.state.visible});
-    }
-
-    componentDidMount() {
-    }
-
 
     componentDidUpdate(prevProps) {
         console.log("[Admin/Items]: Something changed");
 
         if (this.state.loading) {
-            if (this.state.gotTracks && this.state.gotItems) {
+            if (this.state.gotTracks && this.state.gotItems && this.state.gotPeople) {
                 // console.log('[Admin/Items]: Program download complete');
                 this.setState({
                     items: this.props.items,
                     tracks: this.props.tracks,
-                    loading: false,
+                    people: this.props.people,
+                    loading: false
                 });
             }
             else {
@@ -152,9 +57,13 @@ class ProgramItems extends React.Component {
                     this.setState({gotItems: true})
                     // console.log('[Admin/Items]: got items');
                 }
+                if (prevProps.people.length != this.props.people.length) {
+                    this.setState({gotPeople: true})
+                    // console.log('[Admin/Items]: got people');
+                }
             }
         }
-        else 
+        else
             console.log('[Admin/Items]: Program cached');
     }
 
@@ -172,152 +81,375 @@ class ProgramItems extends React.Component {
             });
         })
     }
-    
+
     componentWillUnmount() {
         // this.sub.unsubscribe();
     }
 
-    // getAuthorsNames(item) {
-    //     let people = record.get("authors");
-    //     let ProgramPerson = Parse.Object.extend('ProgramPerson');
-    //     let qlist = [];
-    //     people.map(p => {
-    //         let qq = new Parse.Query(ProgramPerson);
-    //         qq.equalTo('objectId', p.id);
-    //         qlist.push(qq);
-    //     });
-    //     let q = Parse.Query.or(qlist);
-    //     let authors = await q.find();
-    //     return authors;
-    // }
-
     render() {
-        const columns = [
-            {
-                title: 'Title',
-                dataIndex: 'title',
-                key: 'title',
-                width: '70%',
-                sorter: (a, b) => {
-                    var titleA = a.get("title") ? a.get("title") : "";
-                    var titleB = b.get("title") ? b.get("title") : "";
-                    return titleA.localeCompare(titleB);
-                }, 
-                render: (text, record) => <span>{record.get("title")}</span>,
-            },
-            {
-                title: 'Track',
-                dataIndex: 'track',
-                width: '30%',
-                sorter: (a, b) => {
-                    var trackA = a.get("track") ? a.get("track").get("name") : "";
-                    var trackB = b.get("track") ? b.get("track").get("name") : "";
-                    return trackA.localeCompare(trackB);
-                },   
-                render: (text,record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>,
-                key: 'track',
-            },
-            {
-                title: 'Action',
-                key: 'action',
-                render: (text, record) => (
-                    <Space size="small">
-                        <a href="#" title="Edit" item={record} onClick={() => this.onEdit(record)}>{<EditOutlined />}</a>
-                        <Popconfirm
-                            title="Are you sure delete this item?"
-                            onConfirm={()=>this.onDelete(record)}
-                            okText="Yes"
-                            cancelText="No"
+        const EditableCell = ({
+                                  editing,
+                                  dataIndex,
+                                  title,
+                                  inputType,
+                                  record,
+                                  index,
+                                  children,
+                                  ...restProps
+                              }) => {
+            const inputNode = (dataIndex) => {
+                if (dataIndex === "title" || dataIndex === "abstract") {
+                    return <Input.TextArea autoSize={{ minRows: 2, maxRows: 10 }}/>;
+                }
+                else if (dataIndex === "authors") {
+                    return <Select
+                        placeholder="Choose authors"
+                        style={{ width: 400 }}
+                        mode="multiple"
+                    >
+                        {this.state.people.map(p => (
+                            <Option key={p.id} value={p.id}>{p.get('name')}</Option>
+                        ))}
+                    </Select>
+                }
+                else {
+                    return <Select
+                        placeholder="Choose a track"
+                    >
+                        {this.state.tracks.map(track => (
+                            <Option
+                                key={track.id}
+                                value={track.id}
+                            >
+                                {track.get('name')}
+                            </Option>
+                        ))}
+                    </Select>
+                }
+            };
+            return (
+                <td {...restProps}>
+                    {editing ? (
+                        <Form.Item
+                            name={dataIndex}
+                            style={{
+                                margin: 0,
+                            }}
+                            rules={dataIndex === "authors" || dataIndex ==="abstract" ? []: [
+                                {
+                                    required: true,
+                                    message: `Please Input ${title}!`,
+                                },
+                            ]}
                         >
-                        <a href="#" title="Delete">{<DeleteOutlined />}</a>
-                        </Popconfirm>
-                    </Space>
-                ),
-            },
-        ];
+                            {inputNode(dataIndex)}
+                        </Form.Item>
+                    ) : (
+                        children
+                    )}
+                </td>
+            );
+        };
 
-        if (!this.props.downloaded)
+        const EditableTable = () => {
+            const [form] = Form.useForm();
+            const [data, setData] = useState(this.state.items);
+            const [editingKey, setEditingKey] = useState('');
+
+            const isEditing = record => record.id === editingKey;
+
+            const onEdit = record => {
+                let currentAuthors = [];
+                if (record.get("authors")) {
+                    record.get("authors").map(a => {
+                        currentAuthors.push(a.id);
+                    })
+                }
+                form.setFieldsValue({
+                    title: record.get("title") ? record.get("title") : "",
+                    authors: currentAuthors,
+                    abstract: record.get("abstract"),
+                    track: record.get("track") ? record.get("track").get("name") : ""
+                });
+                setEditingKey(record.id);
+            };
+
+            const onDelete = record => {
+                const newItemList = [...this.state.items];
+
+                // delete from database
+                record.destroy()
+                    .then(() => {
+                        this.setState({
+                            alert: "delete success",
+                            items: newItemList.filter(item => item.id !== record.id),
+                            searchResult: this.state.searched ?  this.state.searchResult.filter(r => r.id !== record.id): ""
+                        });
+                        console.log("item deleted from db");})
+                    .catch(error => {
+                        this.setState({alert: "delete error"});
+                        console.log("item cannot be deleted from db");
+                    });
+            }
+
+            // cancel all edited fields
+            const onCancel = () => {
+                setEditingKey('');
+            };
+
+            // save current editing session
+            const onSave = async id => {
+                try {
+                    const row = await form.validateFields();
+                    const newData = [...data];
+                    let item = newData.find(item => item.id === id);
+
+                    if (item) {
+                        let newTrack = this.state.tracks.find(t => t.id === row.track);
+                        if (newTrack) {
+                            item.set("track", newTrack)
+                        } else {
+                            console.log("track not found");
+                        }
+                        let newAuthors = [];
+                        row.authors.map(a => {
+                            const newAuthor = this.state.people.find(p => p.id === a);
+                            newAuthors.push(newAuthor);
+                        })
+                        item.set("title", row.title);
+                        item.set("authors", newAuthors);
+                        item.set("abstract", row.abstract);
+                        setData(newData);
+                        item.save()
+                            .then((response) => {
+                                console.log('Updated ProgramItem', response);
+                                this.setState({alert: "save success"});})
+                            .catch(err => {
+                                console.log(err);
+                                console.log("@" + item.id);
+                                this.setState({alert: "save error"});
+                            });
+                        setEditingKey('');
+                    }
+                    else {
+                        newData.push(row);
+                        setData(newData);
+                        setEditingKey('');
+                    }
+                } catch (errInfo) {
+                    console.log('Validate Failed:', errInfo);
+                }
+            };
+
+            const columns = [
+                {
+                    title: 'Title',
+                    dataIndex: 'title',
+                    width: '30%',
+                    editable: true,
+                    sorter: (a, b) => {
+                        const titleA = a.get("title") ? a.get("title") : "";
+                        const titleB = b.get("title") ? b.get("title") : "";
+                        return titleA.localeCompare(titleB);
+                    },
+                    render: (text, record) => <span>{record.get("title")}</span>
+                },
+                {
+                    title: 'Abstract',
+                    dataIndex: 'abstract',
+                    width: '30%',
+                    editable: true,
+                    sorter: (a, b) => {
+                        const abstractA = a.get("abstract") ? a.get("abstract") : "";
+                        const abstractB = b.get("abstract") ? b.get("abstract") : "";
+                        return abstractA.localeCompare(abstractB);
+                    },
+                    render: (text, record) =>
+                        <span>
+                            {record.get("abstract").length > 150 ? record.get("abstract").substring(0, 150) + "..." : record.get("abstract")}
+                        </span>
+                },
+                {
+                    title: 'Authors',
+                    dataIndex: 'authors',
+                    width: '20%',
+                    editable: true,
+                    render: (text, record) => record.get("authors") ? <ul>{record.get("authors").map(author => (
+                        <li key={author.id} value={author.get("name")}>{author.get("name")}</li>
+                    ))}</ul> : <span> </span>
+                },
+                {
+                    title: 'Track',
+                    dataIndex: 'track',
+                    width: '10%',
+                    editable: true,
+                    sorter: (a, b) => {
+                        const trackA = a.get("track") ? a.get("track").get("name") : "";
+                        const trackB = b.get("track") ? b.get("track").get("name") : "";
+                        return trackA.localeCompare(trackB);
+                    },
+                    render: (text,record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>
+                },
+                {
+                    title: 'Action',
+                    dataIndex: 'action',
+                    render: (_, record) => {
+                        const editable = isEditing(record);
+                        if (this.state.items.length > 0) {
+                            return editable ? (
+                                <span>
+                                <a
+                                    onClick={() => onSave(record.id)}
+                                    style={{
+                                        marginRight: 8,
+                                    }}
+                                >
+                                    Save
+                                </a>
+                                <Popconfirm title="Sure to cancel?" onConfirm={onCancel}>
+                                    <a>Cancel</a>
+                                </Popconfirm>
+                            </span>
+                            ) : (
+                                <Space size='small'>
+                                    <a title="Edit" disabled={editingKey !== ''} onClick={() => onEdit(record)}>
+                                        {<EditOutlined />}
+                                    </a>
+                                    <Popconfirm
+                                        title="Are you sure delete this session?"
+                                        onConfirm={() => onDelete(record)}
+                                        okText="Yes"
+                                        cancelText="No"
+                                    >
+                                        <a title="Delete">{<DeleteOutlined />}</a>
+                                    </Popconfirm>
+                                </Space>
+                            );
+                        } else {
+                            return null;
+                        }
+                    },
+                },
+            ];
+
+            const mergedColumns = columns.map(col => {
+                if (!col.editable) {
+                    return col;
+                }
+
+                return {
+                    ...col,
+                    onCell: record => ({
+                        record,
+                        inputType: 'text',
+                        dataIndex: col.dataIndex,
+                        title: col.title,
+                        editing: isEditing(record),
+                    }),
+                };
+            });
+
+            return (
+                <Form form={form} component={false}>
+                    <Table
+                        components={{
+                            body: {
+                                cell: EditableCell,
+                            },
+                        }}
+                        bordered
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.items}
+                        columns={mergedColumns}
+                        rowClassName="editable-row"
+                        pagination={{
+                            onChange: onCancel,
+                        }}
+                    />
+                </Form>
+            );
+        };
+
+        // handle when a new item is added
+        const handleAdd = () => {
+            const ProgramItem = Parse.Object.extend('ProgramItem');
+            const myNewObject = new ProgramItem();
+
+            myNewObject.set('title', 'please input the title');
+            myNewObject.set('abstract', 'please input the abstract');
+            myNewObject.set('conference', this.props.auth.currentConference);
+
+            myNewObject.save().then(
+                (result) => {
+                    console.log('ProgramItem created', result);
+                    this.setState({
+                        alert: "add success",
+                        items: [myNewObject, ...this.state.items]
+                    })
+                },
+                (error) => {
+                    this.setState({alert: "add error"});
+                    console.error('Error while creating ProgramItem: ', error);
+                }
+            );
+        };
+
+        if (!this.props.downloaded) {
             return (
                 <Spin tip="Loading...">
                 </Spin>)
+        }
+        return (
+            <div>
+                <div>
+                    <Button
+                        onClick={handleAdd}
+                        type="primary"
+                        style={{
+                            margin: 16,
+                            display: "inline-block"
+                        }}
+                    >
+                        Add an item
+                    </Button>
+                    {this.state.alert ? <Alert
+                        onClose={() => this.setState({alert: undefined})}
+                        style={{
+                            margin: 16,
+                            display: "inline-block",
+                        }}
+                        message={this.state.alert}
+                        type={this.state.alert.includes("success") ? "success": "error"}
+                        showIcon
+                        closable
+                    /> : <span> </span>}
+                </div>
 
-        else if (this.state.editing)
-            return (
-                <Fragment>
-                    <CollectionEditForm
-                        title="Edit Item"
-                        visible={this.state.visible}
-                        data={this.state.edt_item}
-                        onAction={this.onUpdate.bind(this)}
-                        onCancel={() => {
-                            this.setVisible(false);
-                            this.setState({editing: false});
-                        }}
-                        onSelectPullDown1={(value) => {
-                            this.setState({src1: value});
-                        }}
-                    />
-                    <Input.Search/>
-                    <Table 
-                        columns={columns} 
-                        pagination={{ defaultPageSize: 500,
-                            pageSizeOptions: [10, 20, 50, 100, 500], 
-                            position: ['topRight', 'bottomRight']}}
-                        dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
-                        rowKey={(i)=>(i.id)}>
-                    </Table>
-            </Fragment>
-            )
-        return <div>
-            <Button
-                type="primary"
-                onClick={() => {
-                    this.setVisible(true);
-                }}
-            >
-                New item
-            </Button>
-            <CollectionEditForm
-                title="Add Item"
-                visible={this.state.visible}
-                onAction={this.onCreate.bind(this)}
-                onCancel={() => {
-                    this.setVisible(false);
-                }}
-                onSelectPullDown1={(value) => {
-                    this.setState({src1: value});
-                }}
-            />
-            <Input.Search
-                allowClear
-                onSearch={key => {
-                        if (key == "") {
+                <Input.Search
+                    allowClear
+                    placeholder="search anything"
+                    onSearch={key => {
+                        if (key === "") {
                             this.setState({searched: false});
                         }
                         else {
                             this.setState({searched: true});
                             this.setState({
                                 searchResult: this.state.items.filter(
-                                    item => 
+                                    item =>
                                         (item.get('title') && item.get('title').toLowerCase().includes(key.toLowerCase()))
                                         || (item.get('track') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
-                                    )
+                                        || (item.get('abstract') && item.get('abstract').toLowerCase().includes(key.toLowerCase()))
+                                        || (item.get('authors') && item.get('authors').some(a => a.get("name").toLowerCase().includes(key.toLowerCase())))
+                                )
                             })
                         }
                     }
-                }
-            />
-            <Table 
-                columns={columns} 
-                pagination={{ defaultPageSize: 500,
-                    pageSizeOptions: [10, 20, 50, 100, 500], 
-                    position: ['topRight', 'bottomRight']}}
-                dataSource={this.state.searched ? this.state.searchResult : this.state.items} 
-                rowKey={(i)=>(i.id)}>
-            </Table>
-        </div>
+                    }
+                />
+                <EditableTable />
+            </div>
+        )
     }
-
 }
 
 const
@@ -326,7 +458,7 @@ const
             {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
                 <AuthUserContext.Consumer>
                     {value => (
-                        <ProgramItems {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                        <ProgramItems {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
                     )}
                 </AuthUserContext.Consumer>
             )}
@@ -335,99 +467,3 @@ const
     );
 
 export default AuthConsumer;
-
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1}) => {
-    const [form] = Form.useForm();
-    return (
-        <Modal
-            visible={visible}
-            title={title}
-            // okText="Create"
-            footer={[
-                <Button form="myForm" key="submit" type="primary" htmlType="submit">
-                    Submit
-                </Button>
-            ]}
-            cancelText="Cancel"
-            onCancel={onCancel}
-        >
-            <Form
-                form={form}
-                layout="vertical"
-                name="form_in_modal"
-                id="myForm"
-                initialValues={{
-                    modifier: 'public',
-                    ...data
-                }}
-                onFinish={() => {
-                    form
-                        .validateFields()
-                        .then(values => {
-                            form.resetFields();
-                            onAction(values);
-                        })
-                        .catch(info => {
-                            console.log('Validate Failed:', info);
-                        });
-                }}
-            >
-                <Form.Item name="objectId" noStyle>
-                    <Input type="text" type="hidden" />
-                </Form.Item>
-                <Form.Item
-                    name="title"
-                    rules={[
-                        {
-                            required: true,
-                            message: 'Please input the title of the item!',
-                        },
-                    ]}
-                >
-                    <Input placeholder="Name"/>
-                </Form.Item>
-                <Form.Item name="stream1">
-                    <Input.Group compact>
-                        <Form.Item name="src1">
-                            <Select placeholder="Main Source" style={{ width: 120 }} onChange={onSelectPullDown1}>
-                                {Liveitemsources.map(src => (
-                                    <Option key={src}>{src}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item name="id1">
-                            <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
-                        </Form.Item>
-                        <Form.Item name="pwd1">
-                            <Input style={{ width: '100%' }} type="textarea" placeholder="Encrypted Password (Optional)"/>
-                        </Form.Item>
-                    </Input.Group>
-                </Form.Item>
-                <Form.Item name="stream2">
-                    <Input.Group compact>
-                        <Form.Item name="src2" >
-                            <Select placeholder="Alt. Source" style={{ width: 120 }} onChange={onSelectPullDown1}>
-                                {Liveitemsources.map(src => (
-                                    <Option key={src}>{src}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item name="id2" rules={[
-                            {
-                                required: false
-                            },
-                        ]}>
-                            <Input style={{ width: '100%' }} type="textarea" placeholder="ID"/>
-                        </Form.Item>
-                        <Form.Item name="pwd2">
-                            <Input style={{ width: '100%' }} type="textarea" placeholder="Encrypted Password (Optional)"/>
-                        </Form.Item>
-                    </Input.Group>
-                </Form.Item>
-                <Form.Item name="qa">
-                    <Input placeholder="Q&A tool link"/>
-                </Form.Item>
-            </Form>
-        </Modal>
-    );
-};
