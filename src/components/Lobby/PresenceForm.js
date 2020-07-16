@@ -25,29 +25,34 @@ class PresenceForm extends React.Component {
         let myStatus = this.props.auth.userProfile.get("presence");
         let isShowNewStatus = false;
         if (!myStatus) {
-            isShowNewStatus = true;
-            //Create a new one...
-            let presence = new UserPresence();
-            console.log("Creating presence with user "+ this.props.auth.userProfile.id)
-            presence.set("user", this.props.auth.userProfile);
-            presence.set("isAvailable", true);
-            presence.set("isDND", false);
-            presence.set("isDNT", false);
-            presence.set("isLookingForConversation", false);
-            presence.set("isOpenToConversation", false);
-            presence.set("isOnline", true);
-            presence.set("socialSpace", this.props.auth.activeSpace);
+            try {
+                isShowNewStatus = true;
+                //Create a new one...
+                let presence = new UserPresence();
+                presence.set("user", this.props.auth.userProfile);
+                presence.set("isAvailable", true);
+                presence.set("isDND", false);
+                presence.set("isDNT", false);
+                presence.set("isLookingForConversation", false);
+                presence.set("isOpenToConversation", false);
+                presence.set("isOnline", true);
+                presence.set("conference", this.props.auth.currentConference);
+                presence.set("socialSpace", this.props.auth.activeSpace);
 
-            let presenceACL = new Parse.ACL();
-            presenceACL.setPublicReadAccess(false);
-            presenceACL.setRoleReadAccess(this.props.auth.currentConference.id+"-conference", true);
-            presenceACL.setWriteAccess(this.props.auth.user, true);
-            presenceACL.setReadAccess(this.props.auth.user, true);
+                let presenceACL = new Parse.ACL();
+                presenceACL.setPublicReadAccess(false);
+                presenceACL.setRoleReadAccess(this.props.auth.currentConference.id + "-conference", true);
+                presenceACL.setWriteAccess(this.props.auth.user, true);
+                presenceACL.setReadAccess(this.props.auth.user, true);
 
-            presence.setACL(presenceACL);
-            myStatus = presence;
-            this.props.auth.userProfile.set("presence", presence);
-            await Parse.Object.saveAll([this.props.auth.userProfile, presence]);
+                presence.setACL(presenceACL);
+                await presence.save();
+                myStatus = presence;
+                this.props.auth.userProfile.set("presence", presence);
+                await this.props.auth.userProfile.save();
+            }catch(err){
+                console.log(err);
+            }
         }
         this.setState({presence: myStatus, isShowWelcome: isShowNewStatus});
     }

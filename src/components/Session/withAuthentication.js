@@ -268,6 +268,7 @@ const withAuthentication = Component => {
 
             let query  =new Parse.Query("UserPresence");
             query.limit(1000);
+            query.equalTo("conference", this.currentConference);
             query.equalTo("isOnline", true);
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
@@ -587,7 +588,6 @@ const withAuthentication = Component => {
                             loading: false,
                             roles: roles
                         })}, ()=>{
-                            console.log("Done updating state");
                             finishedStateFn()});
 
                         await stateSetPromise;
