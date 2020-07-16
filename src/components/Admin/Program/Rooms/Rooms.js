@@ -318,6 +318,9 @@ class Rooms extends React.Component {
                     <Input.Search/>
                     <Table 
                         columns={columns} 
+                        pagination={{ defaultPageSize: 500,
+                            pageSizeOptions: [10, 20, 50, 100, 500], 
+                            position: ['topRight', 'bottomRight']}}
                         dataSource={this.state.searched ? this.state.searchResult : this.state.rooms} 
                         rowKey={(t)=>(t.id)}>
                     </Table>
@@ -388,6 +391,9 @@ class Rooms extends React.Component {
                 </table>
             <Table 
                 columns={columns} 
+                pagination={{ defaultPageSize: 500,
+                    pageSizeOptions: [10, 20, 50, 100, 500], 
+                    position: ['topRight', 'bottomRight']}}
                 dataSource={this.state.searched ? this.state.searchResult : this.state.rooms} 
                 rowKey={(t)=>(t.id)}>
             </Table>

@@ -340,10 +340,10 @@ async function loadProgram() {
         for (const ses of data.Sessions) {
             if (ses.Items) {
                 ses.Items.forEach((k) => {
-                    if(allItems[k]){
-                        console.log(allItems[k].get("proram"))
-                        if(!allItems[k].get("programSession")){
-                            allItems[k].set("programSession", allSessions[ses.Key])
+                    if (allItems[k]){
+                        // console.log(allItems[k].get("programSession"))
+                        if (!allItems[k].get("programSession")) {
+                            allItems[k].set("programSession", session)
                             toSave.push(allItems[k]);
                         }
                     }
@@ -352,6 +352,7 @@ async function loadProgram() {
                 });
             }
         }
+        console.log('Resaving items: ' +toSave.length);
         await Parse.Object.saveAll(toSave);
     } catch (err) {
         console.log(err);

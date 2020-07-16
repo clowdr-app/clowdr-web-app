@@ -4,6 +4,7 @@ import {MailOutlined, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
 import moment from "moment";
+import * as timezone from 'moment-timezone';
 
 const { Option } = Select;
 
@@ -23,13 +24,16 @@ function validateEmail(email) {
 class Registrations extends React.Component {
     constructor(props) {
         super(props); // has props.auth
-        console.log("Registrations starting " + this.props);
+        console.log("Registrations starting " );
         this.state = {
             loading: true, 
-            regs: []
+            regs: [],
+            filteredRegs : [],
+            searched: false,
+            searchResult: ""
         };
         this.currentConference = props.auth.currentConference;
-        console.log("Current conference is " + this.currentConference);
+        console.log("Current conference is " + this.currentConference.get("conferenceName"));
     }
 
     onChange(info) {
@@ -48,6 +52,9 @@ class Registrations extends React.Component {
         var _this = this;
 
         let exists = this.state.regs.find(r => r.get("email") == values.email)
+        if (exists)
+            console.log("[Admin/Registrations]: Email already exists");
+            console.log("[Admin/Registrations]: Valid email? " + validateEmail(values.email));
 
         if (!exists && validateEmail(values.email)) {
             console.log("OnCreate! " + values.name)
@@ -60,10 +67,15 @@ class Registrations extends React.Component {
             reg.set("affiliation", values.affiliation);
             reg.set("country", values.country);
             reg.save().then((val) => {
-                _this.setState({visible: false})
-                _this.refreshList();
+                // Make local changes
+                let newRegs = [reg, ...this.state.regs];
+                _this.setState({
+                    visible: false,
+                    regs: newRegs,
+                    filteredRegs: newRegs
+                });
             }).catch(err => {
-                console.log(err + " " + reg.id);
+                console.log("[Admin/Registrations]: " + err );
             });
         }
     }
@@ -73,39 +85,45 @@ class Registrations extends React.Component {
     }
 
     componentDidMount() {
-        this.refreshList();
+        this.download();
     }
 
     beforeUpload(file, fileList) {
         const reader = new FileReader();
         reader.onload = () => {
             const data = {content: reader.result, conference: this.currentConference.id};
-            Parse.Cloud.run("registrations-upload", data).then(() => this.refreshList());
+            Parse.Cloud.run("registrations-upload", data).then(response => {
+                this.refreshList(response);
+            });
         }
         reader.readAsText(file);
         return false;
     } 
 
-    refreshList(value) {
+    download() {
         let query = new Parse.Query("Registration");
         query.equalTo("conference", this.props.auth.currentConference.id);
-        // if (value) { // THIS DOESN"T WANT TO WORK
-        //     query.greaterThan('createdAt', Date.parse(value.startTime));
-        // }
         query.addDescending("updatedAt")
         query.limit(10000);
         query.find().then(res => {
-            let regs = res;
-            if (value)
-            {
-                regs = res.filter(r => r.get("createdAt") >= value.startTime)
-                console.log('Filtering ' + regs.length);
-            }
             this.setState({
-                regs: regs,
+                regs: res,
+                filteredRegs: res,
                 loading: false
             });
         }).catch(err => console.log('[Registration]: error: ' + err));
+    }
+
+    refreshList(value) {
+        let regs = this.state.regs;
+        if (value) {
+            regs = value;
+        }
+        this.setState({
+            filteredRegs: regs,
+            regs: [regs, ...this.state.regs],
+            loading: false
+        });
     }
 
     componentWillUnmount() {
@@ -114,11 +132,13 @@ class Registrations extends React.Component {
 
     async sendInvitation(record){
         try {
+            this.setState({sending: true})
             await Parse.Cloud.run("registrations-inviteUser", {
                 conference: this.currentConference.id,
                 registrations: [record.id]
             });
             this.refreshList();
+            this.setState({sending: false})
         }catch(err){
             console.log(err);
         }
@@ -126,11 +146,13 @@ class Registrations extends React.Component {
 
     async sendInvitations(){
         try {
+            this.setState({sending: true})
             await Parse.Cloud.run("registrations-inviteUser", {
                 conference: this.currentConference.id,
-                registrations: this.state.regs.map(r => r.id)
+                registrations: this.state.filteredRegs.map(r => r.id)
             });
-            this.refreshList();
+            console.log('REAL SEND TO ' + this.state.filteredRegs.length)
+            this.setState({sending: false})
         }catch(err){
             console.log(err);
         }
@@ -187,12 +209,9 @@ class Registrations extends React.Component {
                 title: 'Created',
                 dataIndex: 'created',
                 sorter: (a, b) => {
-                    var timeA = a.get("createdAt");
-                    var timeB = b.get("createdAt");
-                    return timeA > timeB;
+                    return moment(a.get("createdAt"))- moment(b.get("createdAt"));
                 },
-                // render: (text,record) => <span>{timezone(record.get("createdAt")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
-                render: (text,record) => <span>{moment(record.get("createdAt")).format("YY-MM-DD HH:MM")}</span>,
+                render: (text,record) => <span>{timezone(record.get("createdAt")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'created',
             },
             {
@@ -248,17 +267,37 @@ class Registrations extends React.Component {
                                 </Form>
                             </td>
 
-                            <td style={{"textAlign":"right"}}> <Tooltip title="Send Invitation to ALL selected"> 
-                                    <Button danger icon={<MailOutlined />} onClick={this.sendInvitations.bind(this)}>Send All</Button>
+                            <td style={{"textAlign":"right"}}> <Tooltip mouseEnterDelay={0.5} title="Send Invitation to ALL selected">
+                                    <Button danger icon={<MailOutlined />} loading={this.state.sending} onClick={this.sendInvitations.bind(this)}>Send All</Button>
                                 </Tooltip></td>
                         </tr>
                         <tr>
                             <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-                            <td style={{"textAlign":"right"}}>Current filter: {this.state.regs.length}</td>
+                                    <td style={{"textAlign":"right"}}>Current filter: {this.state.filteredRegs.length} / {this.state.regs.length}</td>
                         </tr>
                     </tbody>
                 </table>
-            <Table columns={columns} dataSource={this.state.regs} rowKey={(r)=>(r.id)}/>
+            <Input.Search
+                allowClear
+                onSearch = {key => {
+                    if (key === "") {
+                        this.setState({searched: false});
+                    } else {
+                        this.setState({
+                            searched: true,
+                            searchResult: this.state.regs.filter(
+                                reg => reg.get('name') && reg.get('name').toLowerCase().includes(key.toLowerCase()))
+                        });
+                    }
+                }
+                }
+            />
+            <Table
+                columns={columns}
+                dataSource={this.state.searched ? this.state.searchResult : this.state.filteredRegs}
+                rowKey={(r) => (r.id)}
+                pagination={{defaultPageSize:600, position: ['topRight', 'bottomRight']}}>
+            </Table>
         </div>
     }
 

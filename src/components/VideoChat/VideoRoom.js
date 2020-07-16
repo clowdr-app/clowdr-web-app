@@ -68,14 +68,13 @@ class VideoRoom extends Component {
 
     componentWillUnmount() {
         console.log("Unmounting video room")
-        this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null });
+        this.props.authContext.helpers.setGlobalState({currentRoom: null});
     }
     async joinCallFromProps(){
         if (!this.props.match) {
             return;
         }
-
-        if(!this.props.authContext.user || this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName")){
+        if(!this.props.authContext.user || (this.props.match.params.conf && this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName"))){
             this.props.authContext.refreshUser(this.props.match.params.conf).then((u)=>{
                 this.joinCallFromPropsWithCurrentUser()
             })
@@ -161,18 +160,18 @@ class VideoRoom extends Component {
         })
     }
     async joinCallFromPropsWithCurrentUser() {
+        console.log("Joining")
 
         if (!this.props.match) {
             return;
         }
         let confName = this.props.match.params.conf;
         let roomID = this.props.match.params.roomName;
-        console.log("Current room: " + this.roomID)
-        if(confName == this.confName && roomID == this.roomID)
+        let parseRoomID = this.props.match.params.parseRoomID;
+        if(confName && (confName == this.confName && roomID == this.roomID))
             return;
         if(this.loadingVideo)
             return;
-        console.log(this.loadingVideo)
         this.loadingVideo = true;
         this.confName = confName;
         this.roomID = roomID;
@@ -181,15 +180,21 @@ class VideoRoom extends Component {
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
         let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 
-        let slackQuery = new Parse.Query(ClowdrInstance);
-        slackQuery.equalTo("conferenceName", confName)
-        let roomQuery = new Parse.Query(BreakoutRoom);
-        roomQuery.matchesQuery("conference", slackQuery)
-        roomQuery.equalTo("title", roomID);
-        roomQuery.include("members");
-        roomQuery.include("conference");
+        let room;
+        if(parseRoomID){
+            let roomQuery = new Parse.Query(BreakoutRoom);
+            room = await roomQuery.get(parseRoomID);
+        }else{
+            let slackQuery = new Parse.Query(ClowdrInstance);
+            slackQuery.equalTo("conferenceName", confName)
+            let roomQuery= new Parse.Query(BreakoutRoom);
+            roomQuery.matchesQuery("conference", slackQuery)
+            roomQuery.equalTo("title", roomID);
+            roomQuery.include("members");
+            roomQuery.include("conference");
+            room = await roomQuery.first();
+        }
 
-        let room = await roomQuery.first();
         if (!room) {
             this.setState({error: "invalidRoom"})
             this.loadingVideo = false;
@@ -237,7 +242,7 @@ class VideoRoom extends Component {
 
         room = await this.props.authContext.helpers.populateMembers(room);
         console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
-        this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
+        // this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         let watchedByMe = false;
         if(this.props.authContext.userProfile.get("watchedRooms")){
             watchedByMe = this.props.authContext.userProfile.get("watchedRooms").find(v =>v.id ==room.id);
@@ -247,6 +252,11 @@ class VideoRoom extends Component {
         let user = this.props.authContext.user;
 
         if (user) {
+            if(room.get("twilioChatID"))
+            this.props.authContext.chatClient.initChatClient(user, this.props.authContext.currentConference, this.props.authContext.userProfile).then(()=>{
+                this.props.authContext.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
+                })
+            });
             let idToken = user.getSessionToken();
             const data = fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
@@ -299,13 +309,11 @@ class VideoRoom extends Component {
     }
 
     handleLogout() {
-        if(this.props.onHangup){
+        if (this.props.onHangup) {
             this.props.onHangup();
-        }
-        else{
-            // console.log("Video room log out")
-            this.props.authContext.helpers.setGlobalState({currentRoom: null, chatChannel: null});
+        } else {
             this.props.history.push(ROUTES.LOBBY_SESSION);
+            this.props.authContext.helpers.setGlobalState({currentRoom: null});
         }
     }
 
@@ -319,7 +327,6 @@ class VideoRoom extends Component {
                 let roomID = this.props.match.params.roomName;
                 if((confName != this.confName || roomID != this.roomID) &&(!this.state.error || this.roomID != roomID))
                 {
-                    console.log("Clearing state...")
                     this.confName = null;
                     this.roomID = null;
                     this.setState({conf: conf, meetingName: roomID, token: null, error: null});
@@ -471,21 +478,21 @@ class VideoRoom extends Component {
 
         let visibilityDescription, privacyDescription, ACLdescription, fullLabel;
         if (this.state.room.get("isPrivate")) {
-            visibilityDescription = (<Tooltip title="This room can only be accessed by users listed below."><Tag key="visibility" color="#2db7f5">Private</Tag></Tooltip>)
+            visibilityDescription = (<Tooltip mouseEnterDelay={0.5} title="This room can only be accessed by users listed below."><Tag key="visibility" color="#2db7f5">Private</Tag></Tooltip>)
         } else {
-            visibilityDescription = (<Tooltip title={"This room can be accessed by any member of " + this.props.authContext.currentConference.get("conferenceName")}><Tag key="visibility" color="#87d068">Open</Tag></Tooltip>);
+            visibilityDescription = (<Tooltip mouseEnterDelay={0.5} title={"This room can be accessed by any member of " + this.props.authContext.currentConference.get("conferenceName")}><Tag key="visibility" color="#87d068">Open</Tag></Tooltip>);
         }
         if(this.state.room.get("members") && this.state.room.get("members").length == this.state.room.get("capacity"))
         {
-            fullLabel=<Tooltip title="This room is at capacity. Nobody else can join until someone leaves"><Tag color="#f50">Full Capacity</Tag></Tooltip>
+            fullLabel=<Tooltip mouseEnterDelay={0.5} title="This room is at capacity. Nobody else can join until someone leaves"><Tag color="#f50">Full Capacity</Tag></Tooltip>
         }
         if (this.state.room.get("persistence") == "ephemeral") {
             privacyDescription = (
-                <Tooltip title="This room wil be garbage collected after 5 minutes
+                <Tooltip mouseEnterDelay={0.5} title="This room wil be garbage collected after 5 minutes
                     of being empty"><Tag key="persistence" color="#2db7f5">Ephemeral</Tag></Tooltip>)
         } else {
             privacyDescription = (
-                <Tooltip title="This room will exist until deleted by a moderator"><Tag key="persistence" color="#87d068">Persistent</Tag></Tooltip>
+                <Tooltip mouseEnterDelay={0.5} title="This room will exist until deleted by a moderator"><Tag key="persistence" color="#87d068">Persistent</Tag></Tooltip>
             )
         }
         if (this.state.room.get("isPrivate")) {
@@ -564,11 +571,11 @@ class VideoRoom extends Component {
                     <AppStateProvider meeting={this.state.meetingName} token={this.state.token}
                                       isEmbedded={true}
                         onConnect={(room,videoContext)=>{
-                            if(this.state.room.get("mode") == "group") {
-                                let localTracks = videoContext.localTracks;
-                                const audioTrack = localTracks.find(track => track.kind === 'audio');
-                                audioTrack.disable();
-                            }
+                            // if(this.state.room.get("mode") == "group") {
+                            //     let localTracks = videoContext.localTracks;
+                            //     const audioTrack = localTracks.find(track => track.kind === 'audio');
+                            //     audioTrack.disable();
+                            // }
 
                         }
                     }
@@ -614,7 +621,7 @@ class VideoRoom extends Component {
                                             }
                                         }
                                     </VideoContext.Consumer>
-                                        <Tooltip title={"This room was created as a " +
+                                        <Tooltip mouseEnterDelay={0.5} title={"This room was created as a " +
                                         this.state.room.get("mode") + " room with a capacity of " +
                                         this.state.room.get("capacity") +", there's currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
                                         {fullLabel}{visibilityDescription}
@@ -630,7 +637,7 @@ class VideoRoom extends Component {
 
                                     {/*        </Collapse.Panel>*/}
                                     {/*    </Collapse>*/}
-                                    {/*    <Tooltip title="Follow this room to get notifications in-app when people come and go">*/}
+                                    {/*    <Tooltip mouseEnterDelay={0.5} title="Follow this room to get notifications in-app when people come and go">*/}
                                     {/*        <Switch checkedChildren="Following" unCheckedChildren="Not Following" onChange={this.toggleWatch.bind(this)}*/}
                                     {/*                loading={this.state.watchLoading}*/}
                                     {/*                style={{marginTop: "5px", marginLeft:"5px"}} checked={this.state.watchedByMe}/></Tooltip>*/}
@@ -647,7 +654,7 @@ class VideoRoom extends Component {
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             {!this.props.hideInfo ? <div>
-                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the 4 most active participants. Click a participant to pin them to always show their video. <b>You are muted by default in this room, please unmute yourself if you want to talk.</b></span> :
+                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the most active participants. Click a participant to pin them to always show their video. </span> :
                                     this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
                             </div> :<></>}
                         <div className={"videoEmbed"}>
@@ -705,7 +712,7 @@ function ToggleFullscreenButton() {
     const [isFullScreen, toggleFullScreen] = useFullScreenToggle();
 
     return fscreen.fullscreenEnabled ? (
-        <Tooltip title="Toggle Full Screen view">
+        <Tooltip mouseEnterDelay={0.5} title="Toggle Full Screen view">
         <IconButton aria-label={`full screen`} onClick={toggleFullScreen}>
             {isFullScreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
         </IconButton>
@@ -878,7 +885,7 @@ export function DeviceSelector() {
 
     return (
         <>
-            <Tooltip title="Adjust Inputs">
+            <Tooltip mouseEnterDelay={0.5} title="Adjust Inputs">
             <IconButton onClick={() => setIsOpen(true)} data-cy-device-select>
                 <SettingsInputComponentIcon />
             </IconButton>

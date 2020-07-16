@@ -4,7 +4,7 @@ Clowdr is a project bootstrapped with [Create React App](https://github.com/face
 
 ## Installation
 
-#### Install all dependencies
+### Install all dependencies
 
 Use npm to install (or upgrade) all dependencies after cloning.
 
@@ -12,7 +12,7 @@ Use npm to install (or upgrade) all dependencies after cloning.
 npm install
 ```
 
-#### Set Up a Backend
+### Set Up a Backend
 
 Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/) as the backend. The fastest way of getting this set up is to sign up for free app hosting in [Back4App](https://www.back4app.com/). The instructions here assume you do so.
 
@@ -24,11 +24,14 @@ The configuration parameters can be found from your created app in Back4App: Ser
 
 Additionally, download and install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/) and start the server.
 Note that installing MongoDB is used for calling the `mongodbrestore` command. You do not have to run MongoDB when using Back4App.
+
+For windows users, you MUST add environment variable to the PATH and make sure that you could run `mongo` command in your CMD. 
+
 You can find the MongoDB Database URI there. xxx is the password, yyy is the database ID in the following example.
 
 `mongodb://admin:xxx@mongodb.back4app.com:27017/yyy?ssl=true`
 
-#### Populate the Database
+### Populate the Database
 
 Run the following script to add initialized a minimal database:
 
@@ -56,7 +59,12 @@ admin@localhost / admin
 
 When you want to exit, enter `ctrl + c`.
 
+### Backend setup
+
+If you want to use chat section, you need to run the [backend](https://github.com/clowdr-app/clowdr-backend) server to generate `TWILIO_AUTH_TOKEN`. You need to follow instructions there to configure parameters in both `.env` files.
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Join us on the Slack [CLOWDR](clowdr.slack.com) workspace!
+

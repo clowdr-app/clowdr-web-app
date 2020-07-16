@@ -16,50 +16,57 @@ let LiveActivity = Parse.Object.extend("LiveActivity");
 let Channel = Parse.Object.extend("Channel");
 let UserProfile = Parse.Object.extend("UserProfile");
 
-Parse.Cloud.define("registrations-upload", (request) => {
+Parse.Cloud.define("registrations-upload", async (request) => {
     console.log('Request to upload registration data');
     const data = request.params.content;
     const conferenceID = request.params.conference;
-
     var Registration = Parse.Object.extend("Registration");
     var rquery = new Parse.Query(Registration);
     rquery.equalTo("conference", conferenceID);
     rquery.limit(10000);
-    rquery.find().then(existing => {
-        let toSave = [];
-        
-        rows = Papa.parse(data, {header: true});
-        rows.data.forEach(element => {
-            addRow(element, conferenceID, existing, toSave);
-        });
-
-        Parse.Object.saveAll(toSave)
-        .then (res => console.log("[Registrations]: Done saving all registrations"))
-        .catch(err => console.log(err))
-        
-    }).catch(err => console.log('[Registrations]: Problem fetching registrations ' + err));
-
+    var existing = await rquery.find({useMasterKey: true});
+    // Create registrations first
+    let toSave = [];
+    let rows = Papa.parse(data, {header: true});
+    rows.data.forEach(element => {
+        addRow(element, conferenceID, existing, toSave);
+    });
+    try {
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    } catch(err){
+        console.log(err);
+    }
+    console.log('Tracks saved: ' + toSave.length);
+    return toSave;
 });
 
 function addRow(row, conferenceID, existing, toSave) {
-    if (row.R_Email) {
-        if (validateEmail(row.R_Email)) {
-            if (!existing.find(r => r.get("email") == row.R_Email)) {
+    if (row.email) {
+        if (validateEmail(row.email)) {
+            if (!existing.find(r => r.get("email") === row.email)) {
                 var Registration = Parse.Object.extend("Registration");
                 var reg = new Registration();
-                reg.set("email", row.R_Email);
-                reg.set("name", row["R_First Name"] + " " + row["R_Last Name"]);
-                reg.set("passcode", row.Code);
-                reg.set("affiliation", row.R_Company);
-                reg.set("country", row.R_Country);
+                // Two required fields: email and conference ID
+                reg.set("email", row.email);
                 reg.set("conference", conferenceID);
+                // Everything else is optional
+                if (row.first && row.last)
+                    reg.set("name", row.first + " " + row.last);
+                else if (row.name)
+                    reg.set("name", row.name);
+                if (row.code)
+                    reg.set("passcode", row.code);
+                if (row.affiliation) 
+                    reg.set("affiliation", row.affiliation);
+                if (row.country)
+                    reg.set("country", row.country);
                 toSave.push(reg);
             }
             else
-                console.log('[Registrations]: Skipping existing registration for ' + row.R_Email);
+                console.log('[Registrations]: Skipping existing registration for ' + row.email);
         }
         else
-            console.log("[Registrations]: Invalid email " + row.R_Email);
+            console.log("[Registrations]: Invalid email " + row.email);
     }
 }
 
@@ -72,7 +79,6 @@ var conferenceInfoCache = {};
 
 async function getConferenceInfoForMailer(conf) {
     if (!conferenceInfoCache[conf.id]) {
-        console.log(conf)
         let keyQuery = new Parse.Query(InstanceConfig);
         keyQuery.equalTo("instance", conf);
         keyQuery.equalTo("key", "SENDGRID_API_KEY");
@@ -85,9 +91,7 @@ async function getConferenceInfoForMailer(conf) {
         compoundQ.include("instance");
         let config = await compoundQ.find({useMasterKey: true});
         let sgKey = null, confObj = null, frontendURL = null;
-        console.log(config)
         for (let res of config) {
-            console.log(res.get("key"))
             if (res.get("key") == "SENDGRID_API_KEY") {
                 sgKey = res.get("value");
                 confObj = res.get("instance");
@@ -146,6 +150,95 @@ Parse.Cloud.define("login-fromToken", async (request) => {
 
 });
 
+Parse.Cloud.define("login-resendInvite", async (request) => {
+    let userID = request.params.userID;
+    let userQ = new Parse.Query(Parse.User);
+    let confID = request.params.confID;
+    let confQ = new Parse.Query(ClowdrInstance);
+    confQ.equalTo("conferenceName", confID);
+    let conf = await confQ.first();
+
+    let user = await userQ.get(userID, {useMasterKey: true});
+    if (!user.get("passwordSet")) {
+        if(!user.get("loginKey")){
+            let authKey = await generateRandomString(48);
+            user.set("loginKey", authKey);
+            user.set("loginExpires", moment().add("60", "days").toDate());
+            await user.save({},{useMasterKey: true})
+        }
+        var fromEmail = new sgMail.Email('welcome@clowdr.org');
+        let config = await getConferenceInfoForMailer(conf);
+
+        let instructionsText = "The link below will let you set a password and finish creating your account " +
+            "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + conf.id + "/" + user.get("loginKey"));
+
+        var toEmail = new sgMail.Email(user.get("email"));
+        var subject = 'Account signup link for ' + config.conference.get("conferenceName");
+        var content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayname") + ",\n" +
+            config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
+            "The Clowdr app will organize the conference program, live sessions, networking, and more. "
+            + instructionsText + "\n\n" +
+            "Please note that Chrome, Safari and Edge provide the best compatability with CLOWDR. We are working to improve " +
+            "compatability with other browsers and to continue to add new features to the platform\n\n" +
+            "If you have any problems accessing the conference site, please reply to this email.\n\n" +
+            "Best regards,\n" +
+            "Your Virtual " + config.conference.get("conferenceName") + " team");
+        var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
+
+        sendMessage(config, mail, toEmail);
+
+
+        return {
+            status: "OK"
+        };
+    } else {
+        throw "Your account has already been set up. Please sign in with your email and password.";
+    }
+
+});
+function isNotWorkingOnSendgrid(email){
+    let domain = email.substring(email.indexOf("@") + 1);
+    if(domain == "jonbell.net" || domain == "outlook.com" || domain == "live.com" || domain == "hotmail.com" || domain == "antfin.com" || domain.endsWith("edu.cn") || domain == "outlook.fr")
+        return true;
+    return false;
+}
+function sendMessage(config, mail, toEmail){
+    // if(process.env.SMTP_PASSWORD && isNotWorkingOnSendgrid(toEmail.email)){
+    //     console.log("Sending message by SMTP to " + toEmail.email+"\nSubject: " + mail.getSubject() +"\n\n"+mail.getContents()[0].value);
+    //     const nodemailer = require("nodemailer");
+    //     let transporter = nodemailer.createTransport({
+    //         host: "smtp.dreamhost.com",
+    //         port: 465,
+    //         secure: true, // true for 465, false for other ports
+    //         auth: {
+    //             user: "welcome@clowdr.org", // generated ethereal user
+    //             pass: process.env.SMTP_PASSWORD
+    //         },
+    //     });
+    //     return transporter.sendMail({
+    //         from: mail.getFrom().email,
+    //         to: toEmail.email,
+    //         subject: mail.getSubject(),
+    //         text: mail.getContents()[0].value,
+    //     });
+    //
+    // }
+    // else{
+        console.log("Sending message by sendgrid to " + toEmail.email+"\nSubject: " + mail.getSubject() +"\n\n"+mail.getContents()[0].value);
+        var sg = require('sendgrid')(config.sendgrid);
+        var request = sg.emptyRequest({
+            method: 'POST',
+            path: '/v3/mail/send',
+            body: mail.toJSON()
+        });
+        return sg.API(request).catch((err)=>{
+            console.log("Unable to send email to " + toEmail.email)
+            console.log(mail.getContents()[0].value);
+            console.log(err);
+        });
+    // }
+
+}
 Parse.Cloud.define("reset-password", async (request) => {
     let email = request.params.email;
     let confID = request.params.confID;
@@ -164,6 +257,36 @@ Parse.Cloud.define("reset-password", async (request) => {
     let profile = await profileQ.first({useMasterKey: true});
     let config = await getConferenceInfoForMailer(conf);
     if(profile){
+        if(!profile.get("user").get("passwordSet")){
+            let user = profile.get("user");
+            if(!user.get("loginKey")){
+                let authKey = await generateRandomString(48);
+                user.set("loginKey", authKey);
+                user.set("loginExpires", moment().add("60", "days").toDate());
+                await user.save({},{useMasterKey: true})
+            }
+            var fromEmail = new sgMail.Email('welcome@clowdr.org');
+
+            let instructionsText = "The link below will let you set a password and finish creating your account " +
+                "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + conf.id + "/" + user.get("loginKey"));
+
+            var toEmail = new sgMail.Email(user.get("email"));
+            var subject = 'Account signup link for ' + config.conference.get("conferenceName");
+
+            var content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayname") + ",\n" +
+                config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
+                "The Clowdr app will organize the conference program, live sessions, networking, and more. "
+                + instructionsText + "\n\n" +
+                "Please note that Chrome, Safari and Edge provide the best compatability with CLOWDR. We are working to improve " +
+                "compatability with other browsers and to continue to add new features to the platform\n\n" +
+                "If you have any problems accessing the conference site, please reply to this email.\n\n" +
+                "Best regards,\n" +
+                "Your Virtual " + config.conference.get("conferenceName") + " team");
+            var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
+
+            sendMessage(config, mail, toEmail);
+            return {status:"OK", message: "Please check your email for instructions to finish resetting your password."}
+        }
         var fromEmail = new sgMail.Email('welcome@clowdr.org');
 
         let authKey = await generateRandomString(48);
@@ -183,21 +306,8 @@ Parse.Cloud.define("reset-password", async (request) => {
             "Your Virtual " + config.conference.get("conferenceName") + " team");
         var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
 
-        var sg = require('sendgrid')(config.sendgrid);
-        var request = sg.emptyRequest({
-            method: 'POST',
-            path: '/v3/mail/send',
-            body: mail.toJSON()
-        });
 
-        sg.API(request, function (error, response) {
-            if (error) {
-                console.log('Error response received');
-            }
-            console.log(response.statusCode);
-            console.log(response.body);
-            console.log(response.headers);
-        });
+        sendMessage(config, mail, toEmail);
 
     return {status:"OK", message: "Please check your email for instructions to finish resetting your password."}
     }
@@ -211,27 +321,22 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     let regIDs = request.params.registrations;
     let confID = request.params.conference;
 
-    console.log('--> ' + JSON.stringify(regIDs));
-    let regQ = new Parse.Query("Registration");
-    regQ.containedIn("objectId", regIDs);
-    regQ.withCount();
-    regQ.limit(1000);
-    let {count, results} = await regQ.find();
-    let registrants = results;
-    let nRetrieved = results.length;
-    while (nRetrieved < count) {
-        // totalCount = count;
-        let regQ = new Parse.Query("Registration");
-        regQ.containedIn("objectId", regIDs);
-        regQ.limit(1000);
-        regQ.skip(nRetrieved);
-        let results = await regQ.find({useMasterKey: true});
-        // results = dat.results;
-        nRetrieved += results.length;
-        if (results)
-            registrants = registrants.concat(results);
-    }
+    let nRemaining  =regIDs.length;
+    let sliceStart = 0;
 
+    let registrants = [];
+    console.log('--> ' + JSON.stringify(regIDs));
+    while (nRemaining > 0) {
+        let slice = regIDs.slice(sliceStart, sliceStart + 900);
+        let regQ = new Parse.Query("Registration");
+        regQ.containedIn("objectId", slice);
+        regQ.withCount();
+        regQ.limit(1000);
+        let results = await regQ.find({useMasterKey: true});
+        registrants = registrants.concat(results.results);
+        sliceStart += 900;
+        nRemaining -= 900;
+    }
 
     let promises = [];
 
@@ -244,6 +349,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
     roleQuery.equalTo("name", confID + "-conference");
     let role = await roleQuery.first({useMasterKey: true});
 
+    console.log("Request was for " + regIDs.length +", got: " + registrants.length);
     for (let registrant of registrants) {
 
         try {
@@ -275,12 +381,14 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                     "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + confID + "/" + authKey);
             }
             else if(!user.get("passwordSet")){
-                let authKey = await generateRandomString(48);
-                user.set("loginKey", authKey);
-                user.set("loginExpires", moment().add("60", "days").toDate());
-                await user.save({},{useMasterKey: true})
+                if(!user.get("loginKey")){
+                    let authKey = await generateRandomString(48);
+                    user.set("loginKey", authKey);
+                    user.set("loginExpires", moment().add("60", "days").toDate());
+                    await user.save({},{useMasterKey: true})
+                }
                 instructionsText = "The link below will let you set a password and finish creating your account " +
-                    "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + confID + "/" + authKey);
+                    "at Clowdr.org for " + config.conference.get("conferenceName") + "\n" + joinURL(config.frontendURL, "/finishAccount/" + user.id + "/" + confID + "/" + user.get("loginKey"));
             }
             let userProfileQ = new Parse.Query(UserProfile);
             userProfileQ.equalTo("user", user);
@@ -323,19 +431,28 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
                 "The Clowdr app will organize the conference program, live sessions, networking, and more. "
                 + instructionsText + "\n\n" +
+                "Please note that Chrome, Safari and Edge provide the best compatability with CLOWDR. We are working to improve " +
+                "compatability with other browsers and to continue to add new features to the platform\n\n" +
                 "If you have any problems accessing the conference site, please reply to this email.\n\n" +
                 "Best regards,\n" +
                 "Your Virtual " + config.conference.get("conferenceName") + " team");
+            // var subject = 'ACTION REQUIRED TO ATTEND ICSE 2020: Account signup link';
+            //
+            // var content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayname") + ",\n" +
+            //     "ICSE 2020 is about to get underway, and you have registered for ICSE but haven't yet activated your CLOWDR account! " +
+            //     config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
+            //     "The Clowdr app will organize the conference program, live sessions, networking, and more. "
+            //     + instructionsText + "\n\n" +
+            //     "Please note that Chrome, Safari and Edge provide the best compatability with CLOWDR. We are working to improve " +
+            //     "compatability with other browsers and to continue to add new features to the platform\n\n" +
+            //     "If you have any problems accessing the conference site, please reply to this email.\n\n" +
+            //     "Best regards,\n" +
+            //     "Your Virtual " + config.conference.get("conferenceName") + " team");
+
             var mail = new sgMail.Mail(fromEmail, subject, toEmail, content);
 
-            var sg = require('sendgrid')(config.sendgrid);
-            var request = sg.emptyRequest({
-                method: 'POST',
-                path: '/v3/mail/send',
-                body: mail.toJSON()
-            });
+            promises.push(sendMessage(config, mail, toEmail));
 
-            promises.push(sg.API(request));
         }catch(err){
             console.log(err);
         }

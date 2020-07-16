@@ -10,6 +10,7 @@ import {ProgramContext} from "../Program";
 class LiveStreaming extends Component {
     constructor(props) {
         // props.parseLive
+        console.log("Created a livestreaming")
         super(props);
         this.state = {
             expanded: false,
@@ -21,7 +22,9 @@ class LiveStreaming extends Component {
             gotSessions: false,
             gotRooms: false,
             liveRooms: [],
+            upcomingRooms: [],
             currentSessions: [],
+            upcomingSessions: [],
             loggedIn: (this.props.auth.user ? true : false)
         };
 
@@ -51,18 +54,18 @@ class LiveStreaming extends Component {
     getLiveRooms(when) {
         let now = Date.now();
 
+        // Live now
         let currentSessions = this.props.sessions.filter(s => {
             var timeS = s.get("startTime") ? s.get("startTime") : new Date();
             var timeE = s.get("endTime") ? s.get("endTime") : new Date();
             if (when == "past") {
-                return (now >= moment(timeE).add(10, 'm').toDate().getTime());
+                return (s.get("room") && now >= moment(timeE).add(10, 'm').toDate().getTime());
             }
             else { // live sessions
                 return (now >= moment(timeS).subtract(30, 'm').toDate().getTime() && 
-                        now <= moment(timeE).add(10, 'm').toDate().getTime());
+                        now <= moment(timeE).add(10, 'm').toDate().getTime() && s.get("room"));
             }
         }).sort(this.dateSorter);
-
         let liveRooms = [];
         if (currentSessions) {
             currentSessions.map(s => liveRooms.push(s.get("room")));
@@ -70,12 +73,42 @@ class LiveStreaming extends Component {
         else
             console.log('No current sessions');
 
-        liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
+        liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r && room && r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
+        liveRooms.sort((a, b) => (a.get("name") == "Practice Room" ? 1
+            : b.get("name") == "Practice Room" ? -1 : a.get('name').localeCompare(b.get('name'))));
 
-        liveRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
+        // Upcoming
+        let upcomingSessions = []
+        let upcomingRooms = [];
+        if (when == "now") {
+            upcomingSessions = this.props.sessions.filter(s => {
+                var timeS = s.get("startTime") ? s.get("startTime") : new Date();
+                let ts_window = moment(timeS).subtract(30, 'd').toDate().getTime();
+                return (timeS > now && ts_window < now && s.get("room"));
+            }).sort(this.dateSorter);
 
-//         liveRooms.map(r => console.log('Sessions @ ' + r.get('name')));
-        return [liveRooms, currentSessions];
+            if (upcomingSessions.length == 0) {
+                // Widen the time window
+                upcomingSessions = this.props.sessions.filter(s => {
+                    var timeS = s.get("startTime") ? s.get("startTime") : new Date();
+                    let ts_window = moment(timeS).subtract(24, 'h').toDate().getTime();
+                    return (timeS > now && ts_window < now && s.get("room"));
+                }).sort(this.dateSorter);
+    
+            }
+
+            if (upcomingSessions.length > 0) {
+                upcomingSessions.map(s => upcomingRooms.push(s.get("room")));
+            }
+            else
+                console.log('No upcoming sessions');
+
+            upcomingRooms = upcomingRooms.reduce((acc, room) => acc.find(r => r && room && r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
+            // upcomingRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
+            // console.log('--> Upcoming rooms: ' + upcomingRooms.length);
+        }
+
+        return [liveRooms, currentSessions, upcomingRooms, upcomingSessions];
     }
     
     async componentDidMount() {
@@ -99,6 +132,8 @@ class LiveStreaming extends Component {
                 this.setState({
                     liveRooms: current[0],
                     currentSessions: current[1],
+                    upcomingRooms: current[2],
+                    upcomingSessions: current[3],
                     loading: false
                 });
             }
@@ -108,46 +143,63 @@ class LiveStreaming extends Component {
     //            console.log('TICK!');
                 let current = this.getLiveRooms(this.props.match.params.when);
                 if (!this.arraysEqual(current[0], this.state.liveRooms)) {
-                    this.setState({liveRooms: current[0], currentSessions: current[1]});
+                    this.setState({
+                        liveRooms: current[0], 
+                        currentSessions: current[1],
+                        upcomingRooms: current[2],
+                        upcomingSessions: current[3],
+                    });
                 }
             }, 60000*15);
     
         }
+        if (this.props.match && this.props.match.params.roomName && this.props.downloaded){
+            this.expandVideoByName(this.props.match.params.roomName);
+        }
     }
 
     componentWillUnmount() {
+        this.props.auth.helpers.setExpandedProgramRoom(null);
         clearInterval(this.timerId);
     }
 
     toggleExpanded(vid) {
-        this.setState({
-            expanded: !this.state.expanded,
-            expanded_video: (this.state.expanded ? undefined: vid)
-        });
+        // this.setState({
+        //     expanded: !this.state.expanded,
+        //     expanded_video: (this.state.expanded ? undefined: vid)
+        // });
+        if (this.props.match.params.roomName){
+            this.expandVideoByName(null);
+            this.props.history.push("/live/"+this.props.match.params.when)
+        }
+        else if (vid)
+            this.props.history.push("/live/"+this.props.match.params.when+"/"+vid.get("name"))
     }
 
     componentDidUpdate(prevProps) {
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
-                console.log('[Live]: Program download complete');
+                // console.log('[Live]: Program download complete');
                 let current = this.getLiveRooms(this.props.match.params.when);
                 this.setState({
                     rooms: this.props.rooms,
                     sessions: this.props.sessions,
                     liveRooms: current[0],
                     currentSessions: current[1],
+                    upcomingRooms: current[2],
+                    upcomingSessions: current[3],
                     loading: false
                 });
             }
             else {
-                console.log('[Live]: Program still downloading...');
+                // console.log('[Live]: Program still downloading...');
                 if (prevProps.rooms.length != this.props.rooms.length) {
                     this.setState({gotRooms: true});
-                    console.log('[Live]: got rooms');
+                    // console.log('[Live]: got rooms');
                 }
                 if (prevProps.sessions.length != this.props.sessions.length) {
                     this.setState({gotSessions: true});
-                    console.log('[Live]: got sessions');
+                    // console.log('[Live]: got sessions');
                 }
             }
         }
@@ -159,36 +211,118 @@ class LiveStreaming extends Component {
             this.setState({
                 liveRooms: current[0],
                 currentSessions: current[1],
+                upcomingRooms: current[2],
+                upcomingSessions: current[3]
             })
         }
 
+        if (this.props.downloaded) {
+            if(this.props.match && this.props.match.params.roomName){
+                this.expandVideoByName(this.props.match.params.roomName);
+            } else {
+                if (this.state.expanded) {
+                    this.setState({expanded: false, expanded_video: null, expandedRoomName: null})
+                }
+                this.props.auth.setSocialSpace("Lobby");
+
+            }
+        }
     }
-    
+    expandVideoByName(roomName){
+        if(!this.state.expandedRoomName || !this.state.expanded || roomName != this.state.expandedRoomName){
+           let room = this.state.rooms.find(r=>(r.get("name") == roomName));
+            if(!room)
+                room = this.state.liveRooms.find(r=>(r.get("name") == roomName)); //I don't understand why we have rooms vs liveRooms...
+            if(!room)
+                room = this.state.upcomingRooms.find(r=>(r.get("name") == roomName));//...?
+           if(room){
+               // if(this.props.match.params.when == "now" && room.get("qa")){
+                   this.props.auth.helpers.setExpandedProgramRoom(room);
+               // }
+               this.setState({expanded: true, expanded_video: room, expandedRoomName: roomName})
+               window.scrollTo(0, 0);
+
+           }
+        }
+    }
     render() {
         if (!this.state.loggedIn) {
             return <div>You don't have access to this page.</div>
         }
 
-        if (this.props.downloaded) {
-
-            return <div className={"space-align-container"}>
-                    {this.state.liveRooms.map((room) => {
-                        let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
-                        let qa = "";
-                        let width = 0;
-                        if (!this.state.expanded) width = 320;
-                        if (this.state.expanded && room.id == this.state.expanded_video.id && this.props.match.params.when =="now") {
-                            width = 1000;
-                            const q_url = this.state.expanded_video.get("qa");
-                            qa = q_url ? <table><tbody><tr><td style={{"textAlign":"center"}}><strong>Live questions to the speakers</strong></td></tr>
-                                <tr><td><iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> </td></tr>  
-                                </tbody></table> : "";
+        let header = "";
+        let upcoming = ""
+        if (!this.state.expanded && this.props.match.params.when == "now") {
+            header = <h3>Happening now:</h3>
+            upcoming = <div><h3>Upcoming:</h3>
+                <div className={"space-align-container"}>
+                    {this.state.upcomingRooms.map((room) => {
+                        
+                        let mySessions = this.state.upcomingSessions.filter(s => s.get("room").id === room.id);
+                        let width = 320;
+                        if (!room.get("src1")) {
+                            // // return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                            //     <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
+                        // </div>
+                            return "";
                         }
+
+                        if (room.get("src1").includes("Zoom")) {
+                            return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                                <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
+                            </div>
+                        }
+
+                        return <React.Fragment key={room.id}>
+                            <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                                <LiveStreamingPanel auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when}
+                                                    playing={false}
+                                                    onExpand={this.toggleExpanded.bind(this,
+                                room)}/>
+                            </div>
+                            </React.Fragment> 
+                            
+                    })}
+                </div> 
+
+            </div>
+        }
+        if (!this.state.expanded && this.props.match.params.when == "past") {
+            header = <h3>Past live sessions:</h3>
+        }
+
+        if (this.props.downloaded) {
+            let rooms = this.state.liveRooms;
+            if(this.state.expanded){
+                rooms = rooms.concat(this.state.upcomingRooms).filter(r=>r.id == this.state.expanded_video.id);
+                if(rooms.length > 1)
+                    rooms = [rooms[0]];
+            }
+            return <div>{header}
+                <div className={"space-align-container"}>
+                    {rooms.map((room) => {
+                        
+                        let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
+                        if(mySessions.length == 0)
+                            mySessions = this.state.upcomingSessions.filter(s=>s.get("room").id === room.id); //TODO why are future/current separate datastructures?
+                        let qa = "";
+                        let width = "100%";
+                        if (!this.state.expanded) width = 320;
+                        // if (this.state.expanded && room.id == this.state.expanded_video.id) {
+                        //     if (this.props.match.params.when =="now") {
+                        //         const q_url = this.state.expanded_video.get("qa");
+                        //         qa = q_url ? <table><tbody><tr><td style={{"textAlign":"center"}}><strong>Live questions to the speakers</strong></td></tr>
+                        //             <tr><td><iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> </td></tr>
+                        //             </tbody></table> : "";
+                        //     }
+                        // }
                         
                         if (!room.get("src1")) {
-                            return <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
-                        </div>
+                            // return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                            //     <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
+                        // </div>
+                            return ""
+
                         }
 
                         if (room.get("src1").includes("Zoom")) {
@@ -198,17 +332,24 @@ class LiveStreaming extends Component {
                         }
 
                         if (this.state.expanded && room.id !== this.state.expanded_video.id)
+                        {
                             return ""
+                        }
                         else
                             return <React.Fragment key={room.id}>
                                 <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                    <LiveStreamingPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} onExpand={this.toggleExpanded.bind(this)}/>
+                                    <LiveStreamingPanel
+                                        playing={true}
+                                        auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when}  onExpand={this.toggleExpanded.bind(this,
+                                    room)}/>
                                 </div>
                                 <div className={"space-align-block"}>{qa}</div>   
                                 </React.Fragment> 
                             
                     })}
                 </div> 
+                {upcoming}
+            </div>
         }
         return (
             <Spin tip="Loading...">

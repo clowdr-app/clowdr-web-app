@@ -1,5 +1,8 @@
 import React, {Component} from 'react';
 import {BrowserRouter, NavLink, Route} from 'react-router-dom';
+import BrowserDetection from 'react-browser-detection';
+import { message } from 'antd';
+
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
@@ -101,8 +104,8 @@ class App extends Component {
                 </Select>
                 clowdrActionButtons = <span>
                 {(this.props.authContext.user && this.props.authContext.permissions.includes("moderator") ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
-                    <Tooltip title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
-                <Tooltip title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
+                    <Tooltip mouseEnterDelay={0.5} title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
+                <Tooltip mouseEnterDelay={0.5} title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
                 <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
                 </span>
             }
@@ -113,8 +116,8 @@ class App extends Component {
             else
                 confSwitcher= <span style={{float: "right"}}>{clowdrActionButtons}</span>;
             if (headerImage)
-                return <Header className="site-layout-background" style={{height: "140px", clear: "both"}}>
-                    <img src={headerImage.url()} className="App-logo" height="140"
+                return <Header className="site-layout-background" style={{height: "90px", clear: "both"}}>
+                    <img src={headerImage.url()} className="App-logo" height="90"
                          alt="logo"/><span style={{paddingLeft: "20px"}}><Typography.Title
                     style={{display: "inherit"}}>{headerText}</Typography.Title>{confSwitcher}</span>
                 </Header>
@@ -152,6 +155,7 @@ class App extends Component {
     componentDidMount() {
         if (this.props.authContext.currentConference)
             this.refreshConferenceInformation();
+        this.props.authContext.history = this.props.history;
 
     }
 
@@ -188,13 +192,16 @@ class App extends Component {
             {baseRoutes}
             <Route exact path="/" component={Home}/>
             <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem}/>
-            <Route exact path="/live/:when" component={LiveVideosArea}/>
+            <Route exact path="/live/:when/:roomName?" component={LiveVideosArea}/>
+
             <Route exact path="/program" component={Program}/>
 
             <Route exact path="/exhibits/:track/:style" component={Exhibits}/>
             {/* <Route exact path="/exhibits/srcposters" component={SRCPosters}/> */}
 
             <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
+            <Route exact path="/video/:parseRoomID" component={VideoRoom}/>
+
             <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
             <Route exact path="/moderation" component={Moderation} />
 
@@ -310,11 +317,27 @@ class App extends Component {
     }
 }
 
+
 let RouteredApp = withRouter(App);
 class ClowdrApp extends React.Component{
+    okBrowser = ()=><></>;
+    browserHandler = {
+        chrome: this.okBrowser,
+        edge: this.okBrowser,
+        safari: this.okBrowser,
+        default: (browser) => {
+            message.error(<span>The browser that you are using, {browser} is not known to be supported by Clowdr. <br />Clowdr is still in
+                beta mode, and we would suggest using Chrome, Safari, or Edge for the best experience.</span>,0)
+            return <></>
+        }
+    };
+
    render() {
        return <BrowserRouter basename={process.env.PUBLIC_URL}>
-           <RouteredApp authContext={this.props.authContext} />
+           <BrowserDetection>
+               {this.browserHandler}
+           </BrowserDetection>
+               <RouteredApp authContext={this.props.authContext} />
        </BrowserRouter>
    }
 }

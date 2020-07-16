@@ -20,27 +20,45 @@ class SlackToVideo extends React.Component {
         let token = this.props.match.params.token;
         try {
             if(this.props.authContext.user){
+                if(userID != this.props.authContext.user.id){
+                    await Parse.User.logOut();
+                    window.location.reload(false);
+
+                    let u = await this.props.authContext.refreshUser();
+                    return;
+                }
                 let currentStep =1;
                 if(this.props.authContext.user.get("passwordSet")){
                     currentStep =2;
                 }
                 this.setState({loading: false, step: currentStep});
-            }
-            else {
+            } else {
                 let res = await Parse.Cloud.run("login-fromToken", {
                     token: token,
                     userID: userID
                 });
                 try {
-                    let u = await Parse.User.become(res.token);
-                    let confQ = new Parse.Query("ClowdrInstance");
-                    let conf = await confQ.get(confID);
-                    await this.props.authContext.refreshUser(conf, true);
-                    let currentStep =1;
-                    if(this.props.authContext.user.get("passwordSet")){
-                        currentStep =2;
+                    if (res && res.token) {
+                        let u = await Parse.User.become(res.token);
+                        let confQ = new Parse.Query("ClowdrInstance");
+                        let conf = await confQ.get(confID);
+                        await this.props.authContext.refreshUser(conf, true);
+                        let currentStep = 1;
+                        if (this.props.authContext.user.get("passwordSet")) {
+                            currentStep = 2;
+                        }
+                        this.setState({loading: false, step: currentStep});
+                    } else {
+                        try {
+                            let resent = await this.resendInvitation();
+                            if(resent)
+                                this.setState({error: "Invalid signup link. "});
+                        } catch (err2) {
+                            console.log(err2);
+                            this.setState({error: err2});
+                            return;
+                        }
                     }
-                    this.setState({loading: false, step: currentStep});
                 } catch (err) {
                     console.log(err);
                     this.setState({error: "Invalid signup link. "});
@@ -69,16 +87,48 @@ class SlackToVideo extends React.Component {
         this.props.authContext.user.set("passwordSet",true);
         await this.props.authContext.user.save();
         this.setState({updating: false, step: 2});
+    }
+    async resendInvitation(){
+        this.setState({resendingInvitation: true})
+        try{
+            let userID = this.props.match.params.userID;
+            let res = await Parse.Cloud.run("login-resendInvite", {
+                userID: userID,
+                confID: process.env.REACT_APP_DEFAULT_CONFERENCE
 
+            });
+        }catch(err){
+            console.log(err);
+            this.setState({error: err.toString(), unableToSend: true});
+            this.setState({resendingInvitation: false, invitationSent: false})
+            return false;
+        }
+        this.setState({resendingInvitation: false, invitationSent: true})
+        return true;
     }
 
     render() {
         if (this.state.error) {
-            return <Alert message="Invalid magic link." description={this.state.error} type="error"/>
+            if(this.state.invitationSent){
+                return <div>
+                    <Alert type="info" message="One last step before you can register!" description="The link you clicked on has expired. However, we have automatically generated a *new* link and emailed it to you. Please use that link to complete your signup. Please contact us only
+                    if you don't receive a new signup link in a few minutes, or continue to receive this message, even when clicking on the new link." />
+                </div>
+            }
+            let button = <div>Sign up links expire after one click. <Button onClick={this.resendInvitation.bind(this)}
+                                                                            type="primary"
+                                                                            disabled={this.state.invitationSent}
+                                                                            loading={this.state.resendingInvitation}>{this.state.invitationSent ? "Sign-up link resent, please check your email" : "Request a new magic link"}</Button>
+            </div>
+            if (this.state.unableToSend)
+                button = <></>
+            return <div><Alert message="Invalid magic link." description={this.state.error} type="error"/>
+                {button}
+            </div>
         }
-        const antIcon = <LoadingOutlined color="white" style={{ fontSize: 96 }} spin />;
+        const antIcon = <LoadingOutlined color="white" style={{fontSize: 96}} spin/>;
 
-        if(this.props.authContext.user){
+        if (this.props.authContext.user) {
             let action = <></>
             if(this.state.step == 1){
                 let password1Rules = [

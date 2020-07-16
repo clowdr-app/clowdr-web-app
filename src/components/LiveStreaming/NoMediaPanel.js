@@ -3,6 +3,7 @@ import {Card} from 'antd';
 import {StopOutlined} from "@ant-design/icons";
 
 import AuthUserContext from "../Session/context";
+import nomediaImg from "./nomedia.png";
 
 class NoMediaPanel extends Component {
     constructor(props) {
@@ -33,25 +34,16 @@ class NoMediaPanel extends Component {
         let roomName = this.props.video.get('name').length < 35 ? this.props.video.get('name'): 
                         <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0, 35) + "..."}</span>;
 
-        return  <div>
-                    <table style={{width:"100%"}}>
-                        <tbody>
-                        <tr >
-                            <td style={{"textAlign":"left"}}><strong>{roomName}</strong></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <Card size="small" title={<StopOutlined />}>
-                                    <p>No media available. </p>
-                                    <p>Check the program for details.</p>
-                                    <p>&nbsp;</p>
-                                </Card>
-                    <div>
-                        {this.props.mysessions.map(s => {
-                            return <div key={s.id}>{s.get("title")}</div>
-                        })}
-                    </div>
-                </div>
+        return  <Card hoverable
+                      cover={<img alt="poster" style={{width:311, height:175 }} src={nomediaImg}  />}
+        >
+            <Card.Meta title={roomName}
+            description={<div>
+                {this.props.mysessions.map(s => {
+                    return <div key={s.id}>{s.get("title")}</div>
+                })}
+            </div>}></Card.Meta>
+                </Card>
     }
 }
 

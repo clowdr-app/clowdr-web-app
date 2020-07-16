@@ -3,22 +3,28 @@ const Twilio = require("twilio");
 const Papa = require('./papaparse.min');
 const { response } = require('express');
 
-Parse.Cloud.define("poster-upload", (request) => {
-    console.log('Request to upload a poster image');
+Parse.Cloud.define("poster-upload", async (request) => {
+    console.log('Request to upload a poster image for ' + request.params.posterId);
     const imgData = request.params.content;
     const conferenceId = request.params.conferenceId;
     const posterId = request.params.posterId;
 
-    var ProgramItem = Parse.Object.extend("ProgramItem");
-    var query = new Parse.Query(ProgramItem);
-    // query.equalTo("conference", conference);
-    query.get(posterId, {useMasterKey: true}).then(poster => {
-        poster.set("image", imgData);
-        poster.save({}, {useMasterKey: true})
-        .then (res => console.log("[Program]: Poster image saved"))
-        .catch(err => console.log(`[Program]: ${posterId}:` + err))
-        
-    }).catch(err => console.log(`[Program]: Problem fetching poster ${posterId}` + err));
+    try {
+
+        var ProgramItem = Parse.Object.extend("ProgramItem");
+        var query = new Parse.Query(ProgramItem);
+        // query.equalTo("conference", conference);
+        let poster = await query.get(posterId, {useMasterKey: true});
+        let file = new Parse.File('poster-image', {base64: imgData});
+        await file.save({useMasterKey: true});
+        poster.set("posterImage", file);
+        await poster.save({}, {useMasterKey: true});
+        return {status: "OK", "file": file.url()};
+    } catch (err) {
+        console.log("Unable to update poster " + posterId);
+        console.log(err);
+        throw err;
+    }
 });
 
 Parse.Cloud.define("rooms-upload", async (request) => {
@@ -88,8 +94,9 @@ function addRow(row, conference, existing, toSave, acl) {
                 room.set("src1", "YouTube")
                 room.set("id1", data[0]);
                 if (row.iQIYI) {
-                    room.set("src2", "iQYI")
-                    room.set("id2", data[0]);
+                    let data2 = getIDAndPwd(row.iQIYI)
+                    room.set("src2", "iQIYI")
+                    room.set("id2", data2[0]);
 
                 }
                 room.set("qa", (row.QA ? row.QA : ""));
@@ -317,8 +324,9 @@ Parse.Cloud.define("program-upload", async (request) => {
 
     let newSessions = [];
     for (const ses of data.Sessions) {
+        let session = undefined;
         if (allSessions[ses.Key])
-            continue;
+            session = allSessions[ses.Key];
 
         var start = Date.now(), end = Date.now();
         let times = ses.Time.split('-');
@@ -330,24 +338,28 @@ Parse.Cloud.define("program-upload", async (request) => {
 //            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
         }
 
-        let session = new ProgramSession();
-        ses.Title ? session.set("title", ses.Title.trim()) : session.set("title", ses.Title);
-        ses.Abstract ? session.set("abstract", ses.Abstract.trim()) : session.set("abstract", ses.Abstract);
-        // ses.Type ? session.set("type", ses.Type.trim()) : session.set("type", '');
-        session.set("type", ses.Type)
-        session.set("startTime", start.toDate());
-        session.set("endTime", end.toDate());
-        ses.Location ? session.set("location", ses.Location.trim()) : session.set("location", ses.Location);
-        ses.Key ? session.set("confKey", ses.Key.trim()) : session.set("confKey", ses.Key);
-        session.set("conference", conf);
-        session.setACL(acl);
+        if (!session) {
+            session = new ProgramSession();
+            allSessions[session.get("confKey")] = session;
 
-        // Find the pointer to the room
-        let room = existingRooms.find(r => r.get('name') == ses.Location);
-        if (room)
-            session.set("room", room);
-        else
-            console.log(`Warning: room ${ses.Location} not found for session ${ses.Title}`);
+            ses.Title ? session.set("title", ses.Title.trim()) : session.set("title", ses.Title);
+            ses.Abstract ? session.set("abstract", ses.Abstract.trim()) : session.set("abstract", ses.Abstract);
+            // ses.Type ? session.set("type", ses.Type.trim()) : session.set("type", '');
+            session.set("type", ses.Type)
+            session.set("startTime", start.toDate());
+            session.set("endTime", end.toDate());
+            ses.Location ? session.set("location", ses.Location.trim()) : session.set("location", ses.Location);
+            ses.Key ? session.set("confKey", ses.Key.trim()) : session.set("confKey", ses.Key);
+            session.set("conference", conf);
+            session.setACL(acl);
+
+            // Find the pointer to the room
+            let room = existingRooms.find(r => r.get('name') == ses.Location);
+            if (room)
+                session.set("room", room);
+            else
+                console.log(`Warning: room ${ses.Location} not found for session ${ses.Title}`);
+        }
 
         // Find the pointers to the items
         let items = [];
@@ -361,11 +373,28 @@ Parse.Cloud.define("program-upload", async (request) => {
         }
         session.set("items", items);
         newSessions.push(session);
-        allSessions[session.get("confKey")] = session;
         i++;
     }
     try{
         await Parse.Object.saveAll(newSessions, {useMasterKey: true});
+        toSave = [];
+        for (const ses of data.Sessions) {
+            if (ses.Items) {
+                ses.Items.forEach((k) => {
+                    if(allItems[k]){
+                        // console.log(allItems[k].get("program"))
+                        if(!allItems[k].get("programSession")){
+                            allItems[k].set("programSession", allSessions[ses.Key])
+                            toSave.push(allItems[k]);
+                        }
+                    }
+                    else
+                        console.log("Could not find item: " + k);
+                });
+            }
+        }
+        console.log('Resaving items: ' + toSave.length);
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
     } catch(err){
         console.log(err);
     }
@@ -399,8 +428,8 @@ async function getConfig(conference){
 async function createBreakoutRoomForProgramItem(programItem){
     let config = await getConfig(programItem.get("conference"));
 
-    let mode = "peer-to-peer";
-    let maxParticipants = 5;
+    let mode = "group";
+    let maxParticipants = 50;
 
     let parseRoom = new BreakoutRoom();
     parseRoom.set("title", programItem.get("title"));
@@ -441,23 +470,39 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
         if (track.get("perProgramItemVideo")) {
             let itemQ = new Parse.Query("ProgramItem");
             itemQ.equalTo("track", track);
+            itemQ.include("breakoutRoom");
             itemQ.include("programSession.room");
+            itemQ.include("programSession.room.socialSpace");
             itemQ.limit(1000);
             let items = await itemQ.find({useMasterKey: true});
             let promises = [];
             for(let item of items){
                 if(!item.get("programSession")){
+                    // let sessionQ = new Parse.Query("ProgramSession");
+                    // sessionQ.include("room");
+                    // let session = await sessionQ.get("S9BI5jmi4O");
+                    // if(!session.get("items"))
+                    //     session.set("items",[]);
+                    // session.get("items").push(item);
+                    // await session.save({},{useMasterKey: true});
+                    // item.set("programSession", session);
+                    // await item.save({},{useMasterKey: true});
                     console.log("No session for item in track: " + item.id)
                     continue;
                 }
-                console.log(item.get("programSession").get("room"))
                 if(!item.get("breakoutRoom")){
                     promises.push(createBreakoutRoomForProgramItem(item, track));
                 }
+                // if(item.get("breakoutRoom") && (!item.get("breakoutRoom").get("socialSpace") || item.get("breakoutRoom").get("socialSpace").id !=
+                // item.get("programSession").get("room").get("socialSpace").id)){
+                //     let breakout = item.get("breakoutRoom");
+                //     breakout.set("socialSpace", item.get("programSession").get("room").get("socialSpace"));
+                //     await breakout.save({},{useMasterKey: true});
+                // }
             }
             await Promise.all(promises);
         } else {
-            // TODO Make sure no tracks have breakout rooms still...
+        //     TODO Make sure no tracks have breakout rooms still...
         }
     }
 

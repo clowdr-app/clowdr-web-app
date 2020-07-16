@@ -4,7 +4,7 @@ import Parse from "parse";
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification} from 'antd';
+import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification, Button} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -13,7 +13,6 @@ import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
 const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
-const linkRenderer = props => <a href={props.href} target="_blank">{props.children}</a>;
 
 const {Header, Content, Footer, Sider} = Layout;
 
@@ -50,7 +49,7 @@ class ChatFrame extends React.Component {
     }
 
     formatTime(timestamp) {
-        return <Tooltip title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
+        return <Tooltip mouseEnterDelay={0.5} title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
     }
 
     async componentDidMount() {
@@ -115,12 +114,13 @@ class ChatFrame extends React.Component {
                 if (this.currentSID != sid)
                     return;
                 this.messagesLoaded(this.activeChannel, messages)
+                //Load the unread counts.
+                this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
+                this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
+                this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
             });
 
-            //Load the unread counts.
-            this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
-            this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
-            this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
+
             this.members = [];
             this.activeChannel.getMembers().then(members => this.members = members);
             this.activeChannel.on("memberLeft", (member)=> this.members = this.members.filter(m=>m.sid != member.sid));
@@ -192,6 +192,8 @@ class ChatFrame extends React.Component {
             if(lastTotal < 0)
                 lastTotal = this.lastSeenMessageIndex;
             let unread = lastTotal - lastConsumed;
+            if(unread < 0)
+                unread = 0;
             if (unread != this.unread) {
                 if (this.props.setUnreadCount)
                     this.props.setUnreadCount(unread);
@@ -216,7 +218,7 @@ class ChatFrame extends React.Component {
             if (lastSID && lastSID == message.sid)
                 continue;
             lastSID = message.sid;
-            lastIndex = message.index;
+            lastIndex = message.index
             if (!lastMessage || message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5) {
                 if (lastMessage)
                     ret.push(lastMessage);
@@ -260,6 +262,13 @@ class ChatFrame extends React.Component {
         this.groupMessages(this.messages[channel.sid]);
         this.setState({hasMoreMessages: messagePage.hasPrevPage, loadingMessages: false})
     };
+    linkRenderer = (props) => {
+        let currentDomain = window.location.origin;
+            if(props.href && props.href.startsWith(currentDomain))
+            return <a href="#" onClick={()=>{this.props.auth.history.push(props.href.replace(currentDomain,""))}}>{props.children}</a>;
+        return <a href={props.href} target="_blank">{props.children}</a>;
+    };
+
     messageAdded = (channel, message) => {
         this.messages[channel.sid].push(message);
         this.groupMessages(this.messages[channel.sid]);
@@ -267,11 +276,11 @@ class ChatFrame extends React.Component {
             //get the sender
             this.props.auth.helpers.getUserProfilesFromUserProfileID(message.author).then((profile)=>{
                 const args = {
-                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
+                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
                     description:
                     <ReactMarkdown source={message.body} renderers={{
                         text: emojiSupport,
-                        link: linkRenderer
+                        link: this.linkRenderer
                     }}/>,
                     placement: 'topLeft',
                     onClose: ()=>{
@@ -298,14 +307,14 @@ class ChatFrame extends React.Component {
     };
 
     onMessageChanged = event => {
-        if (event.target.value != '\n')
-            this.setState({newMessage: event.target.value});
+        // if (event.target.value != '\n')
+        //     this.setState({newMessage: event.target.value});
     };
 
     sendMessage = event => {
+        event.preventDefault();
         if (!event.getModifierState("Shift")) {
-            let message = this.state.newMessage;
-            this.setState({newMessage: ''});
+            let message = this.form.current.getFieldValue("message");
             if (message)
                 message = message.replace(/\n/g, "  \n");
             this.activeChannel.sendMessage(message);
@@ -313,12 +322,18 @@ class ChatFrame extends React.Component {
                 this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c=>c!=this.activeChannel.sid);
                 this.clearedTempFlag = true;
             }
-            if (this.form && this.form.current)
-                this.form.current.resetFields();
+            // if (this.form && this.form.current)
+            //     this.form.current.resetFields();
 
+            let values={message: ""}
+            this.form.current.setFieldsValue(values);
+            // this.form.current.resetFields();
+            // this.form.current.scrollToField("message");
+            //TODO if no longer a DM (converted to group), don't do this...
             if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
                 this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
             }
+
         }
     };
 
@@ -458,7 +473,7 @@ class ChatFrame extends React.Component {
                                           //         onConfirm={this.deleteMessage.bind(this, item)}
                                           //         okText="Yes"
                                           //         cancelText="No"
-                                          //     ><Tooltip title={"Delete this message"}><a
+                                          //     ><Tooltip mouseEnterDelay={0.5} title={"Delete this message"}><a
                                           //         href="#"><CloseOutlined/></a></Tooltip></Popconfirm>
                                           let initials = "";
                                           let authorID = item.author;
@@ -479,7 +494,7 @@ class ChatFrame extends React.Component {
                                                       >
 
                                                               <div>
-                                                                  <UserStatusDisplay style={{display: "inline"}}
+                                                                  <UserStatusDisplay
                                                                                      popover={true}
                                                                                      profileID={item.author}/>&nbsp;
                                                                   <span
@@ -518,17 +533,15 @@ class ChatFrame extends React.Component {
                     // paddingLeft: "10px"
                     //}}
                 >
-                    <Form ref={this.form} className="embeddedChatMessageEntry">
-                        <Form.Item style={{width:"100%", marginBottom: "0px"}}>
+                    <Form ref={this.form} className="embeddedChatMessageEntry" name={"chat"+this.props.sid}>
+                        <Form.Item style={{width:"100%", marginBottom: "0px"}} name="message">
                             <Input.TextArea
                                 disabled={this.state.readOnly}
-                                name={"message"}
                                 className="embeddedChatMessage"
                                 placeholder={this.state.readOnly? "This channel is read-only" : "Send a message"}
                                 autoSize={{minRows: 1, maxRows: 6}}
-                                onChange={this.onMessageChanged}
                                 onPressEnter={this.sendMessage}
-                                value={this.state.newMessage}/>
+                            />
                         </Form.Item>
                     </Form>
                 </div>
@@ -548,6 +561,10 @@ class ChatFrame extends React.Component {
         //     })
         // }}><SmileOutlined/> </a>);
         //
+        let actionButton;
+        if(m.attributes && m.attributes.linkTo){
+            actionButton = <Button onClick={()=>{this.props.auth.history.push(m.attributes.path)}}>Join Video</Button>
+        }
         if (isMyMessage || this.props.auth.permissions.includes("moderator"))
             options.push(<Popconfirm
                 key="delete"
@@ -557,19 +574,19 @@ class ChatFrame extends React.Component {
                 cancelText="No"
             ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
         if (options.length > 0)
-            return <Popover key={m.sid} placement="topRight" content={<div style={{backgroundColor: "white"}}>
+            return <Popover key={m.sid} mouseEnterDelay={0.5} placement="topRight" content={<div style={{backgroundColor: "white"}}>
                 {options}
             </div>}>
                 <div ref={(el) => {
                     this.messagesEnd = el;
                 }} className="chatMessage"><ReactMarkdown source={m.body}
-                                                          renderers={{text: emojiSupport, link: linkRenderer}}/></div>
+                                                          renderers={{text: emojiSupport, link: this.linkRenderer}}/>{actionButton}</div>
             </Popover>
         return <div key={m.sid} className="chatMessage"><ReactMarkdown source={m.body}
                                                                        renderers={{
                                                                            text: emojiSupport,
-                                                                           link: linkRenderer
-                                                                       }}/></div>
+                                                                           link: this.linkRenderer
+                                                                       }}/>{actionButton}</div>
 
 
     }
@@ -585,4 +602,3 @@ const AuthConsumer = (props) => (
 
 );
 export default AuthConsumer;
-

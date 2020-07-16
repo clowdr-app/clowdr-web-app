@@ -4,6 +4,8 @@ import {withRouter} from "react-router-dom";
 import Parse from "parse";
 import {Badge, Button, Divider, Form, Input, Select, Skeleton, Spin, Tooltip} from "antd";
 
+import {isDNDColor,isAvailableColor, isLookingForConversationColor} from "./LobbyColors.js";
+
 let UserProfile = Parse.Object.extend("UserProfile");
 
 let UserPresence = Parse.Object.extend("UserPresence");
@@ -136,7 +138,7 @@ class PresenceForm extends React.Component {
         if(!this.state.presence)
             return <Skeleton.Input />
         return <div>
-            <Divider>My Availability</Divider>
+            My status:
             <Form layout="inline"
                   ref={this.form}
                   id="statusForm"
@@ -145,7 +147,7 @@ class PresenceForm extends React.Component {
                       availability: this.availabilityByPresence(this.state.presence)
                   }
                   }>
-                <Tooltip defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
+                <Tooltip mouseEnterDelay={0.5} defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
                     it easier for other participants to know when it's OK to contact you.">
                     <Form.Item name="availability">
 
@@ -162,13 +164,17 @@ class PresenceForm extends React.Component {
                 )}
             >
             {/* BCP: Not sure I got this quite right -- I'm not certain what status="processing" does... */}
-                <Select.Option value="isLookingForConversation"><Badge status="processing" color="green" /><span className="availabilityOption">Looking for conversation</span></Select.Option>
-                <Select.Option value="isOpenToConversation"><Badge color="black" /><span className="availabilityOption">Open to conversation</span></Select.Option>
-                <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation; come
-                    join if you like</span></Select.Option>
-                <Select.Option value="isDND"><Badge color="orange"/><span className="availabilityOption">Busy / do not disturb</span></Select.Option>
+            <Select.Option value="isAvailable"><Badge color={isAvailableColor}/><span className="availabilityOption">(No special status)</span></Select.Option>
+            <Select.Option value="isLookingForConversation"><Badge status="processing" color={isLookingForConversationColor} /><span className="availabilityOption">Looking for conversation</span></Select.Option>
+            <Select.Option value="isDND"><Badge color={isDNDColor}/><span className="availabilityOption">Busy: do not disturb</span></Select.Option>
                 <Select.Option value="isDNT"><Badge status="default"/><span className="availabilityOption">Do not show others
                     my presence/status</span></Select.Option>
+            {/*
+               <Select.Option value="isOpenToConversation"><Badge color="black" /><span className="availabilityOption">Open to conversation</span></Select.Option> */}
+        {/*
+            <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation: come
+                    join if you like</span></Select.Option>
+*/}
 
             </Select>
                     </Form.Item>
