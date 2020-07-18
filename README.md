@@ -29,7 +29,7 @@ For windows users, you MUST add environment variable to the PATH and make sure t
 
 You can find the MongoDB Database URI there. xxx is the password, yyy is the database ID in the following example.
 
-`mongodb://admin:xxx@mongodb.back4app.com:27017/yyy?ssl=true`
+`mongodb://admin:XXX@mongodb.back4app.com:27017/YYY?ssl=true`
 
 ### Populate the Database
 
