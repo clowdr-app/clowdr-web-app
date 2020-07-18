@@ -2,6 +2,7 @@ const Parse = require('parse/node');
 const fs = require('fs');
 const path = require('path'); 
 const { exec } = require('child_process');
+const { SSL_OP_ALL } = require('constants');
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
@@ -60,8 +61,16 @@ async function addRequiredData() {
         let InstanceAccess = Parse.Object.extend('ClowdrInstanceAccess');
         let iaccess = new InstanceAccess();
         iaccess.set('instance', i);
-        iaccess.save().catch(err => console.log('InstanceAccess saved: ' + err));
+        iaccess.save().catch(err => console.log('InstanceAccess: ' + err));
     
+        let SocialSpace = Parse.Object.extend('SocialSpace');
+        let ss = new SocialSpace();
+        ss.set('conference', i);
+        ss.set('name', 'Lobby');
+        ss.set('isGlobal', true);
+        ss.save().catch(err => console.log('SocialSpace: ' + err));
+
+
         let user = new Parse.User();
         user.set('username', 'admin');
         user.set('password', 'admin');
