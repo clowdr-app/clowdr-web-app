@@ -53,6 +53,9 @@ class MeetingSummary extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!this.mounted)
+            return;
+
         if (this.props.item.get('members') !== prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
             this.setState({members: this.props.item.members});
         }
