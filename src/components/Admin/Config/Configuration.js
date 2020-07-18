@@ -11,6 +11,7 @@ class Configuration extends React.Component {
         super(props);
         this.state = {
             loading: true, 
+            initialized: false,
             config: []
         };
 
@@ -21,13 +22,21 @@ class Configuration extends React.Component {
     }
 
     componentDidMount() {
+        // Has this conference been initialized?
+        console.log('[Admin/Config]: active space ' + this.props.auth.activeSpace);
+        if (this.props.auth.activeSpace && this.props.auth.activeSpace.get('chatChannel')) {
+            this.setState({initialized: true});
+        }
+        else
+            console.log('[Admin/Config]: conference has not been yet initialized');
+
         this.refreshList();
     }
 
     componentDidUpdate(prevProps) {
     }
 
-    async refreshList(){
+    async refreshList() {
         let query = new Parse.Query("InstanceConfiguration");
         query.equalTo("instance", this.props.auth.currentConference);
         let res = await query.find();
@@ -40,6 +49,15 @@ class Configuration extends React.Component {
     }
 
     componentWillUnmount() {
+    }
+
+    initConference() {
+        const data = {conference: this.props.auth.currentConference.id};
+        Parse.Cloud.run("init-conference-2", data).then(response => {
+            console.log('[Admin/Config]: successfully initialized conference ' + this.props.auth.currentConference.id);
+            this.setState({initialized: true});
+        }).catch(err => console.log('[Admin/Config]: error in initializing conference: ' + err));
+
     }
 
     render() {
@@ -257,9 +275,7 @@ class Configuration extends React.Component {
                         dataSource={this.state.searched ? this.state.searchResult : this.state.config}
                         columns={mergedColumns}
                         rowClassName="editable-row"
-                        pagination={{ defaultPageSize: 500,
-                            pageSizeOptions: [10, 20, 50, 100, 500], 
-                            position: ['topRight', 'bottomRight']}}
+                        pagination={false}
                     />
                 </Form>
             );
@@ -293,8 +309,18 @@ class Configuration extends React.Component {
                 <Spin tip="Loading...">
                 </Spin>)
 
-        return <div>
-            <Button
+        let redButton = <td>&nbsp;</td>;
+        if (!this.state.initialized) 
+                redButton =  <td style={{textAlign: "right"}}><Button
+                    style={{background: "red", borderColor: "yellow"}}
+                    type="primary"
+                    onClick={this.initConference.bind(this)}
+                >
+                Initialize Conference
+            </Button></td>
+
+        return <div><table style={{width:"100%"}}><tbody><tr>
+            <td><Button
                 type="primary"
                 onClick={newConfig}
             >
@@ -319,7 +345,11 @@ class Configuration extends React.Component {
                     type={this.state.alert.includes("success") ? "success": "error"}
                     showIcon
                     closable
-            /> : <span> </span>}
+            /> : <span> </span>}</td>
+
+            {redButton}
+            </tr></tbody></table>
+
             <Input.Search
                 allowClear
                 onSearch={key => {
