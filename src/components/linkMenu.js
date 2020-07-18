@@ -17,6 +17,7 @@ import {
     ReadOutlined,
     SmileOutlined,
     ScheduleOutlined,
+    SlidersOutlined,
     SolutionOutlined,
     SyncOutlined,
     TeamOutlined,
@@ -67,6 +68,8 @@ class LinkMenu extends React.Component {
                     <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
                     Users</NavLink></Menu.Item>
 
+                    <Menu.Item key='/admin/configuration' icon={<SlidersOutlined/>}><NavLink to="/admin/configuration">
+                        Conference Configuration</NavLink></Menu.Item>
                 </SubMenu>
             }
             userTools =

@@ -34,6 +34,7 @@ import VideoChat from "./components/VideoChat";
 // import UsersList from "./components/Admin/Users";
 //
 import Registrations from "./components/Admin/Registrations";
+import Configuration from "./components/Admin/Config";
 import ProgramSummary from "./components/Admin/Program/ProgramSummary";
 import Rooms from "./components/Admin/Program/Rooms";
 import Tracks from "./components/Admin/Program/Tracks";
@@ -221,6 +222,7 @@ class App extends Component {
             {/*<Route exact path='/admin/schedule' component={withAuthentication(ScheduleList)} />*/}
             {/*<Route exact path='/admin/users' component={withAuthentication(UsersList)} />*/}
             {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
+            <Route exact path='/admin/configuration' component={Configuration}/>
             <Route exact path='/admin/registrations' component={Registrations}/>
             <Route exact path='/admin/program/rooms' component={Rooms}/>
             <Route exact path='/admin/program/tracks' component={Tracks}/>
