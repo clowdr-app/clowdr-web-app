@@ -1,1 +1,0 @@
-{"options":{},"indexes":[{"v":1,"key":{"_id":1},"name":"_id_","ns":"c05f56e7caec424f9a7f544c8a5c57d4.LiveVideo"},{"v":1,"key":{"_fts":"text","_ftsx":1},"name":"$**_text","weights":{"$**":1},"default_language":"english","language_override":"language","ns":"c05f56e7caec424f9a7f544c8a5c57d4.LiveVideo","background":true,"textIndexVersion":3}]}
