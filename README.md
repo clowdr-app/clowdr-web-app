@@ -70,12 +70,13 @@ When you want to exit, enter `ctrl + c`.
 
 Once you login with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
 
-TWILIO_ACCOUNT_SID=YOUR TWILIO SID
+```TWILIO_ACCOUNT_SID=YOUR TWILIO SID
 TWILIO_AUTH_TOKEN=YOUR TWILIO TOKEN
 TWILIO_API_KEY=YOUR TWILIO API KEY
 TWILIO_API_SECRET=YOUR TWILIO API SECRET
 TWILIO_CHAT_SERVICE_SID=YOUR TWILIO CHAT SERVICE ID
 FRONTEND_URL=http://localhost:3000
+```
 
 After entering these variables, press the big red button for initializing the conference. Assuming that succeeds, you should logout, and login again. This time, you should see two additional panels, one on the left side and one on the right side, both related to text and video chat.
 
