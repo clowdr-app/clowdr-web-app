@@ -51,35 +51,53 @@ q.first().then(version => {
 
 async function addRequiredData() {
     console.log('Adding required data');
+
     let Instance = Parse.Object.extend('ClowdrInstance');
     let instance = new Instance();
     instance.set('conferenceName', 'XYZ');
     instance.set('shortName', 'xyz');
-    instance.set('headerText', 'XYZ Conference');
+
+    let data = fs.readFileSync('art/clowdr-logo.png');     
+    let base64Image = new Buffer(data, 'binary').toString('base64');
+    let file = new Parse.File('clowdr-logo.png', {base64: base64Image});
+    await file.save();
+    instance.set('headerImage', file);
+
     instance.set('isIncludeAllFeatures', true);
-    instance.save().then(i => {
+    instance.save().then(async i => {
         let InstanceAccess = Parse.Object.extend('ClowdrInstanceAccess');
         let iaccess = new InstanceAccess();
         iaccess.set('instance', i);
-        iaccess.save().catch(err => console.log('InstanceAccess: ' + err));
-    
+        try {
+            await iaccess.save();
+            console.log('InstanceAccess created successfuly');
+        } catch (err){
+            console.log('InstanceAccess: ' + err)
+        }
+
         let SocialSpace = Parse.Object.extend('SocialSpace');
         let ss = new SocialSpace();
         ss.set('conference', i);
         ss.set('name', 'Lobby');
         ss.set('isGlobal', true);
-        ss.save().catch(err => console.log('SocialSpace: ' + err));
+        try {
+            await ss.save()
+            console.log('Lobby created successfully');
+        } catch(err) {
+             console.log('SocialSpace: ' + err)
+        };
 
 
         let user = new Parse.User();
-        user.set('username', 'admin');
+        user.set('username', 'clowdr');
         user.set('password', 'admin');
-        user.set('email', 'admin@localhost')
+        user.set('email', 'clowdr@localhost')
+        user.set('passwordSet', true);
         user.save().then(u => {
             let UserProfile = Parse.Object.extend('UserProfile');
             let userprofile = new UserProfile();
-            userprofile.set('realName', 'The Boss');
-            userprofile.set('displayName', 'admin');
+            userprofile.set('realName', 'Clowdr Super Admin');
+            userprofile.set('displayName', 'Clowdr Super Admin');
             userprofile.set('user', u);
             userprofile.set('conference', i);
             userprofile.save().then(up => {
@@ -98,9 +116,13 @@ async function addRequiredData() {
 
                     let roles = [role1, role2];
 
-                    Parse.Object.saveAll(roles)
-                        .then(res => console.log('Roles created successfully'))
-                        .catch(err => console.log('Roles saved: ' + err));
+                    try {
+                        await Parse.Object.saveAll(roles);
+                        console.log('Roles created successfully');
+                        
+                    } catch(err) {
+                        console.log('Roles saved: ' + err);
+                    }
 
                 }).catch(err => {console.log('User saved (again):' + err)}); 
             }).catch(err => console.log('UserProfile saved:' + err));    
