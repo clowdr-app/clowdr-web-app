@@ -18,7 +18,7 @@ Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/) as th
 
 Create an account on [Back4App](https://www.back4app.com/) and create an app space for Clowdr with any name you like.
 
-Set up your own configurations in ./.env file and ./db/.env-db file according to the ./.env-example and ./db/.env-db-example, respectively.
+Set up your own configuration in ./.env according to the ./.env-example.
 
 The configuration parameters can be found from your created app in Back4App: Server Settings -> Core Settings
 
@@ -43,25 +43,41 @@ You should be able to see all tables being added with some essential data stored
 
 #### Set Up Hosting and Live Query
 
-From the app created in back4app, turn on live queries for the following tables: LiveVideos /LiveVideoWatchers /BreakoutRoom, by going to Server Settings -> Web Hosting and Live Query
+From the app created in back4app, turn on live queries for the following tables by going to Server Settings -> Web Hosting and Live Query:
 
+![Live Query tables](art/LiveQuery.png?raw=true "Live Query Tables")
 
-## Usage
+#### Cloud Functions
 
-After all installation, start the application by executing
+Go to Cloud Functions in your Back4App workspace, upload all js code under backend/cloud, and click "deploy".
+
+#### Backend Setup
+
+Additionally, you must to run the [backend](https://github.com/clowdr-app/clowdr-backend) server. Follow the instructions there.
+
+## Usage and Further Configuration
+
+After the installation, start the application by executing
 
 ```bash
 npm start
 ```
 
-It will pop up a tab in your default browser and from there you can log into the website using the login credentials:
-admin@localhost / admin
+This will pop up a tab in your default browser and from there you can log into the website using the login credentials:
+clowdr@localhost / admin
 
 When you want to exit, enter `ctrl + c`.
 
-### Backend setup
+Once you login with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
 
-If you want to use chat section, you need to run the [backend](https://github.com/clowdr-app/clowdr-backend) server to generate `TWILIO_AUTH_TOKEN`. You need to follow instructions there to configure parameters in both `.env` files.
+TWILIO_ACCOUNT_SID=YOUR TWILIO SID
+TWILIO_AUTH_TOKEN=YOUR TWILIO TOKEN
+TWILIO_API_KEY=YOUR TWILIO API KEY
+TWILIO_API_SECRET=YOUR TWILIO API SECRET
+TWILIO_CHAT_SERVICE_SID=YOUR TWILIO CHAT SERVICE ID
+FRONTEND_URL=http://localhost:3000
+
+After entering these variables, press the big red button for initializing the conference. Assuming that succeeds, you should logout, and login again. This time, you should see two additional panels, one on the left side and one on the right side, both related to text and video chat.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
