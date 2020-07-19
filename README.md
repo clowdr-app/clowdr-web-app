@@ -55,7 +55,7 @@ From the app created in back4app, turn on live queries for the following tables 
 
 ![Live Query tables](art/LiveQuery.png?raw=true "Live Query Tables")
 
-Also check the custom domain name, and make sure it matches the environment variable `REACT_APP_PARSE_DOMAIN=wss://YOUR_APP_NAME.back4app.io` in your .env file.
+Also check the Activate Back4App hosting, and make sure the subdomain name you give it, `YOUR_APP_NAME`  matches the environment variable `REACT_APP_PARSE_DOMAIN=wss://YOUR_APP_NAME.back4app.io` in your .env file.
 
 
 #### Cloud Functions
