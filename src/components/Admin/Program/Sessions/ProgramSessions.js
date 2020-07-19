@@ -216,24 +216,32 @@ class ProgramSessions extends React.Component {
             console.log(item)
         });
 
+        const {Option} = Select;
+        function onChange(value) {
+            console.log(`selected ${value}`);
+        }
+
+        function onBlur() {
+            console.log('blur');
+        }
+
+        function onFocus() {
+            console.log('focus');
+        }
+
+        function onSearch(val) {
+            console.log('search:', val);
+        }
+
         // Set up editable table cell
-        const EditableCell = ({
-                                  editing,
-                                  dataIndex,
-                                  title,
-                                  inputType,
-                                  record,
-                                  index,
-                                  children,
-                                  ...restProps
-                              }) => {
+        const EditableCell = ({editing, dataIndex, title, inputType, record, index, children, ...restProps}) => {
             let inputNode = null;
             switch (dataIndex) {
                 case ('title'):
                     inputNode = <Input/>;
                     break;
                 case ('start'):
-                    inputNode = <DatePicker showTime/>;
+                    inputNode = <DatePicker showTime />;
                     break;
                 case ('end'):
                     inputNode = <DatePicker showTime/>;
@@ -250,25 +258,22 @@ class ProgramSessions extends React.Component {
                 case ('items'):
                     console.log('ITEMS CELL!!!');
                     console.log(myItemTitles);
-                    //
-                    // inputNode = (
-                    //     <Select
-                    //         placeholder="Choose new items"
-                    //         defaultValue={[]}
-                    //     >
-                    //         {myItemTitles.map((item, index) => {
-                    //             return <Option
-                    //                 key={index}
-                    //                 value={item}>
-                    //                     {item}
-                    //             </Option>
-                    //
-                    //         })}
-                    //     </Select>
-                    // );
-                    // break;
+
                     inputNode = (
-                        <Select placeholder="Choose the items" style={{ width: 400 }}  mode="multiple">
+                        <Select
+                            showSearch
+                            mode="multiple"
+                            style={{ width: 200 }}
+                            placeholder="Select a person"
+                            optionFilterProp="children"
+                            onChange={onChange}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                            onSearch={onSearch}
+                            filterOption={(input, option) =>
+                                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                            }
+                        >
                             {this.state.items.map(it => (
                                 <Option key={it.id} value={it.id}>{it.get('title')}</Option>
                             ))}
@@ -312,7 +317,6 @@ class ProgramSessions extends React.Component {
 
         // set up editable table
         const EditableTable = () => {
-            // React hook
             console.log("Loading Editable table");
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.sessions);
@@ -550,9 +554,9 @@ class ProgramSessions extends React.Component {
                         dataSource={this.state.searched ? this.state.searchResult : this.state.sessions}
                         columns={mergedColumns}
                         rowClassName="editable-row"
-                        pagination={{ defaultPageSize: 500,
-                            pageSizeOptions: [10, 20, 50, 100, 500], 
-                            position: ['topRight', 'bottomRight']}}
+                        pagination={{
+                            onChange: cancel,
+                        }}
                     />
                 </Form>
             );
