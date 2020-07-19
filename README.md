@@ -79,7 +79,9 @@ This will pop up a tab in your default browser and from there you can log into t
 
 ### Set up Twilio for your test conference
 
-Once you login with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
+Clowdr uses Twilio as the text and video chat service. Please go to Twilio,  create an account there, and create an API key/secret.
+
+Once you login into Clowdr with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
 
 | Config Value | Description |
 | ------------ | ----------- |
@@ -89,7 +91,15 @@ Once you login with the admin account, go to Administration->Conference Configur
 |`TWILIO_CHAT_SERVICE_SID` | [Chat](https://www.twilio.com/console/chat/services)|
 |`FRONTEND_URL` | http://localhost:3000, for development|
 
-After entering these variables, press the big red button for initializing the conference, and logout.
+### Set up email (Sendgrid) for your test conference
+
+Clowdr uses Sendgrid to deliver emails to conference participants. Please go to Sendgrid, create an account there, and create a Web app API, anf a key for it.
+
+Then add this additional configuration variable in Clowdr:
+
+`SENDGRID_API_KEY` Your sendgrid API key
+
+After entering all these variables, press the big red button for initializing the conference, and logout.
 
 ### Backend Setup
 
