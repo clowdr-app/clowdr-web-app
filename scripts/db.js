@@ -103,7 +103,7 @@ async function addRequiredData() {
             userprofile.save().then(up => {
                 let profiles = u.relation('profiles');
                 profiles.add(up);
-                u.save().then(u2 => {
+                u.save().then(async u2 => {
                     const roleACL = new Parse.ACL();
                     roleACL.setPublicReadAccess(true);
                     let role1 = new Parse.Role('ClowdrSysAdmin', roleACL);
@@ -119,7 +119,7 @@ async function addRequiredData() {
                     try {
                         await Parse.Object.saveAll(roles);
                         console.log('Roles created successfully');
-                        
+
                     } catch(err) {
                         console.log('Roles saved: ' + err);
                     }
