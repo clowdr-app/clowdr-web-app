@@ -51,7 +51,8 @@ After this command runs, you should be able to see all tables with some essentia
 
 #### Set Up Hosting and Live Query
 
-From the app created in back4app, turn on live queries for the following tables by going to Server Settings -> Web Hosting and Live Query:
+From the app created in back4app, turn on live queries for the tables in the
+image below by going to Server Settings -> Web Hosting and Live Query:
 
 ![Live Query tables](art/LiveQuery.png?raw=true "Live Query Tables")
 
@@ -61,7 +62,8 @@ name you give it, `YOUR_APP_NAME` matches the environment variable
 
 #### Cloud Functions
 
-Go to Cloud Functions in your Back4App workspace, upload all js code under backend/cloud, and click "deploy".
+Go to Cloud Code (also called "Cloud Code Functions") in your Back4App
+workspace, upload all files with .js extension under backend/cloud, and click "deploy".
 
 ## Usage and Further Configuration
 
@@ -75,9 +77,15 @@ This will pop up a tab in your default browser and from there you can log into t
 
 `clowdr@localhost / admin`
 
+BCP: Should we mention that it will come up looking like ICSE?
+
 ### Set up Twilio for your test conference
 
-Once you login with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
+BCP: Test conference, or just conference??
+
+Once you login with the admin account, go to Administration > Conference
+Configuration to enter the Twilio credentials for chat. You must enter at
+least the following configuration variables:
 
 | Config Value | Description |
 | ------------ | ----------- |
