@@ -99,7 +99,8 @@ class VideoRoom extends Component {
                     body: JSON.stringify({
                         room: room.id,
                         identity: idToken,
-                        conf: conf.get("slackWorkspace")
+                        conf: conf.get("slackWorkspace"),
+                        conference: conf.id
                     }),
                     headers: {
                         'Content-Type': 'application/json'
@@ -265,7 +266,8 @@ class VideoRoom extends Component {
                     body: JSON.stringify({
                         room: room.id,
                         identity: idToken,
-                        conf: room.get("conference").get("slackWorkspace")
+                        conf: room.get("conference").get("slackWorkspace"),
+                        conference: room.get("conference").id
                     }),
                     headers: {
                         'Content-Type': 'application/json'
