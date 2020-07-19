@@ -14,18 +14,22 @@ npm install
 
 ### Set Up a Backend
 
-Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/) as the backend. The fastest way of getting this set up is to sign up for free app hosting in [Back4App](https://www.back4app.com/). The instructions here assume you do so.
+Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/)
+as the backend. The fastest way of getting this set up is to sign up for
+free app hosting in [Back4App](https://www.back4app.com/). The instructions
+here assume you have done so.
 
-Create an account on [Back4App](https://www.back4app.com/) and create an app space for Clowdr with any name you like.
+Next, create an account on [Back4App](https://www.back4app.com/) and create an app
+space for Clowdr with any name you like.
 
-Set up your own configuration in ./.env according to the ./.env-example.
-
-The configuration parameters can be found from your created app in Back4App: Server Settings -> Core Settings
+Set up your own configuration in ./.env according to ./.env-example (both
+files are in this directory).  The configuration parameters can be found
+from your created app in Back4App (in Server Settings -> Core Settings).
 
 Additionally, download and install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/) and start the server.
 Note that installing MongoDB is used for calling the `mongodbrestore` command. You do not have to run MongoDB when using Back4App.
 
-For windows users, you MUST add environment variable to the PATH and make sure that you could run `mongo` command in your CMD. 
+For windows users, you MUST add environment variable to the PATH and make sure that you could run `mongo` command in your CMD.
 
 You can find the MongoDB Database URI there. xxx is the password, yyy is the database ID in the following example.
 
@@ -84,4 +88,3 @@ After entering these variables, press the big red button for initializing the co
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Join us on the Slack [CLOWDR](clowdr.slack.com) workspace!
-
