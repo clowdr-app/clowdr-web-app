@@ -1,6 +1,8 @@
 # Clowdr
 
-Clowdr is a project bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Clowdr is a virtual conference platform project bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and Node.js.
+
+If you want to run it, and help develop, we highly recommend you do it from a Linux environment. The instructions below assume so. If you are on Windows, install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run everything from there.
 
 ## Installation
 
@@ -20,10 +22,9 @@ free app hosting in [Back4App](https://www.back4app.com/) and
 create an app space for Clowdr with any name you like. The instructions
 here assume you have done so.
 
-Next, download and install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/). Note that installing MongoDB is used for calling the
-`mongodbrestore` command. You do not have to run MongoDB when using Back4App.
+Although you do not have to run MongoDB when using Back4App, you will need to install mongodb in your local computer in order to initialize Clowdr. Installing MongoDB locally is used only for calling the `mongodbrestore` command that sets up the database schema with the right permissions. Install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/).
 
-For windows users, you MUST add the Mongodb executable to the PATH environment variable (e.g. add this `"C:\Program Files\MongoDB\Server\4.2\bin"`, or the equivalent directory where mongodb was installed, to the PATH) and make sure that you can run `mongo` command in your Windows CMD shell. 
+### Environment variables
 
 Next, set up your own configuration in ./.env according to ./.env-example.  The configuration parameters can be found
 from your created app in Back4App (in Server Settings -> Core Settings). When it comes to the mongodb configuration variables,
@@ -33,17 +34,15 @@ from your created app in Back4App (in Server Settings -> Core Settings). When it
 
 Use XXX as the MONGODB_PASSWORD, YYY as MONGODB_DB.
 
-
-
 ### Populate the Database
 
 Run the following script to add initialized a minimal database:
 
 ```bash
-npm run init-app
+$ npm run init-app
 ```
 
-You should be able to see all tables being added with some essential data stored in the database.
+After this command runs, you should be able to see all tables with some essential data stored in the database in Back4App.
 
 #### Set Up Hosting and Live Query
 
@@ -55,22 +54,19 @@ From the app created in back4app, turn on live queries for the following tables 
 
 Go to Cloud Functions in your Back4App workspace, upload all js code under backend/cloud, and click "deploy".
 
-#### Backend Setup
-
-Additionally, you must to run the [backend](https://github.com/clowdr-app/clowdr-backend) server. Follow the instructions there.
-
 ## Usage and Further Configuration
 
 After the installation, start the application by executing
 
 ```bash
-npm start
+$ npm start
 ```
 
 This will pop up a tab in your default browser and from there you can log into the website using the login credentials:
-clowdr@localhost / admin
 
-When you want to exit, enter `ctrl + c`.
+`clowdr@localhost / admin`
+
+### Set up Twilio for your test conference
 
 Once you login with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
 
@@ -82,7 +78,13 @@ Once you login with the admin account, go to Administration->Conference Configur
 |`TWILIO_CHAT_SERVICE_SID` | [Chat](https://www.twilio.com/console/chat/services)|
 |`FRONTEND_URL` | http://localhost:3000, for development|
 
-After entering these variables, press the big red button for initializing the conference. Assuming that succeeds, you should logout, and login again. This time, you should see two additional panels, one on the left side and one on the right side, both related to text and video chat.
+After entering these variables, press the big red button for initializing the conference, and logout.
+
+### Backend Setup
+
+From here on, you must also run the [backend](https://github.com/clowdr-app/clowdr-backend) server. Follow the instructions there.
+
+After running the token server, login to your Clowdr app again. This time, you should see two additional panels, one on the left side and one on the right side, both related to text and video chat.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
