@@ -26,13 +26,18 @@ Although you do not have to run MongoDB when using Back4App, you will need to in
 
 ### Environment variables
 
-Next, set up your own configuration in ./.env according to ./.env-example.  The configuration parameters can be found
-from your created app in Back4App (in Server Settings -> Core Settings). When it comes to the mongodb configuration variables,
-`MONGODB_PASSWORD` and `MONGODB_DB`, find the mongodb URL in Back4App core server settings, which looks like this:
+Next, set up your own configuration in ./.env according to ./.env-example.
+The configuration parameters can be found from your created app in Back4App
+(in Server Settings -> Core Settings). When you come to the mongodb
+configuration variables, `MONGODB_PASSWORD` and `MONGODB_DB`, find the
+"MongoDB Database URI" in Back4App core server settings, which looks like
+this:
 
 `mongodb://admin:XXX@mongodb.back4app.com:27017/YYY?ssl=true`
 
 Use XXX as the MONGODB_PASSWORD, YYY as MONGODB_DB.
+
+BCP: Some Instructions about the MONGODB_HOST var would be useful
 
 ### Populate the Database
 
