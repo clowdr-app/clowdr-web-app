@@ -19,21 +19,28 @@ as the backend. The fastest way of getting this set up is to sign up for
 free app hosting in [Back4App](https://www.back4app.com/). The instructions
 here assume you have done so.
 
-Next, create an account on [Back4App](https://www.back4app.com/) and create an app
-space for Clowdr with any name you like.
+BCP: Reordered this first, since the .env step needs information from this step.
+Next, download and install
+[MongoDB](https://docs.mongodb.com/manual/administration/install-community/)
+and start the server.  Note that installing MongoDB is used for calling the
+`mongodbrestore` command. You do not have to run MongoDB when using
+Back4App.
+
+For windows users, you MUST add environment variable to the PATH and make
+sure that you could run `mongo` command in your CMD.  (BCP: Does that mean
+"Run it in a shell?"  Which environment var?)
+
+BCP: Don't understand this bit:
+You can find the MongoDB Database URI there. xxx is the password, yyy is the database ID in the following example.
+
+`mongodb://admin:XXX@mongodb.back4app.com:27017/YYY?ssl=true`
+
+Finally, create an account on [Back4App](https://www.back4app.com/) and
+create an app space for Clowdr with any name you like.
 
 Set up your own configuration in ./.env according to ./.env-example (both
 files are in this directory).  The configuration parameters can be found
 from your created app in Back4App (in Server Settings -> Core Settings).
-
-Additionally, download and install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/) and start the server.
-Note that installing MongoDB is used for calling the `mongodbrestore` command. You do not have to run MongoDB when using Back4App.
-
-For windows users, you MUST add environment variable to the PATH and make sure that you could run `mongo` command in your CMD.
-
-You can find the MongoDB Database URI there. xxx is the password, yyy is the database ID in the following example.
-
-`mongodb://admin:XXX@mongodb.back4app.com:27017/YYY?ssl=true`
 
 ### Populate the Database
 
