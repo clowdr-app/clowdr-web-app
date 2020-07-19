@@ -49,6 +49,7 @@ $ npm run init-app
 
 After this command runs, you should be able to see all tables with some essential data stored in the database in Back4App.
 
+<<<<<<< HEAD
 Select the `InstanceConfiguration` table, and click on the security icon on
 the top-right (a shield-like icon). Double check that Public read and write
 and unchecked, then add the role name `ClowdrSysAdmin` (press the tab key
@@ -57,6 +58,9 @@ role. Click save.
 
 BCP: Pressing tab in my browser (safari) selected the URL bar at the top!
 right arrow might have worked.
+=======
+Select the `InstanceConfiguration` table, and click on the security icon on the top-right (a shield-like icon). Double check that Public read and write are unchecked, then add the role name `ClowdrSysAdmin` (press the tab key after typing this word), and check both Read and Write permissions for this role. Click save.
+>>>>>>> cc81b190ce40df5941241971a2b166d1c45ce325
 
 #### Set Up Hosting and Live Query
 
@@ -90,18 +94,11 @@ BCP: Should we mention that it will come up looking like ICSE?
 
 ### Set up Twilio for your test conference
 
-BCP: Test conference, or just conference??
+Clowdr uses Twilio as the text and video chat service. Please go to
+[Twilio](https://www.twilio.com/),  create an account there, and create an
+API key/secret. (Select API Keys on the left under settings.)
 
-Once you login with the admin account, go to Administration > Conference
-Configuration to enter the Twilio credentials for chat. (Click New Config
-Variable and then click the small pencil icon to edit.) You must enter at
-least the following configuration variables.
-
-BCP: Select API Keys on the left in twilio?
-
-BCP: Do api keys need to be created?
-
-BCP: Live credentials or TEST credentials?  or wrong screen?
+Once you login into Clowdr with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
 
 | Config Value | Description |
 | ------------ | ----------- |
@@ -111,7 +108,15 @@ BCP: Live credentials or TEST credentials?  or wrong screen?
 |`TWILIO_CHAT_SERVICE_SID` | [Chat](https://www.twilio.com/console/chat/services)|
 |`FRONTEND_URL` | http://localhost:3000, for development|
 
-After entering these variables, press the big red button for initializing the conference, and logout.
+### Set up email (Sendgrid) for your test conference
+
+Clowdr uses Sendgrid to deliver emails to conference participants. Please go to [Sendgrid](https://sendgrid.com/), create an account there, and create a Web API, and a key for it.
+
+Then add this additional configuration variable in Clowdr:
+
+`SENDGRID_API_KEY` Your sendgrid API key
+
+After entering all these variables, press the big red button for initializing the conference, and logout.
 
 ### Backend Setup
 
