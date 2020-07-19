@@ -98,6 +98,8 @@ Clowdr uses Twilio as the text and video chat service. Please go to
 [Twilio](https://www.twilio.com/),  create an account there, and create an
 API key/secret. (Select API Keys on the left under settings.)
 
+BCP: What friendly name?
+
 Once you login into Clowdr with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
 
 | Config Value | Description |
@@ -108,9 +110,15 @@ Once you login into Clowdr with the admin account, go to Administration->Confere
 |`TWILIO_CHAT_SERVICE_SID` | [Chat](https://www.twilio.com/console/chat/services)|
 |`FRONTEND_URL` | http://localhost:3000, for development|
 
+(Don't press Initialize Conference yet!)
+
 ### Set up email (Sendgrid) for your test conference
 
-Clowdr uses Sendgrid to deliver emails to conference participants. Please go to [Sendgrid](https://sendgrid.com/), create an account there, and create a Web API, and a key for it.
+Clowdr uses Sendgrid to deliver emails to conference participants. Please go
+to [Sendgrid](https://sendgrid.com/), create an account there (Start for
+Free), and create a Web API, and a key for it.
+
+BCP: What is a web api?
 
 Then add this additional configuration variable in Clowdr:
 
@@ -122,7 +130,11 @@ After entering all these variables, press the big red button for initializing th
 
 From here on, you must also run the [backend](https://github.com/clowdr-app/clowdr-backend) server. Follow the instructions there.
 
-After running the token server, login to your Clowdr app again. This time, you should see two additional panels, one on the left side and one on the right side, both related to text and video chat.
+After running the token server, login to your Clowdr app again. This time,
+you should see two additional panels, one on the left side and one on the
+right side, both related to text and video chat.
+
+Setup complete!!
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
