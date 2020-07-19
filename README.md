@@ -36,7 +36,7 @@ Use XXX as the MONGODB_PASSWORD, YYY as MONGODB_DB.
 
 ### Populate the Database
 
-Run the following script to add initialized a minimal database:
+Run the following script to add and initialize a minimal database:
 
 ```bash
 $ npm run init-app
