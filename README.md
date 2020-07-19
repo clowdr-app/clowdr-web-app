@@ -9,38 +9,31 @@ Clowdr is a project bootstrapped with [Create React App](https://github.com/face
 Use npm to install (or upgrade) all dependencies after cloning.
 
 ```bash
-npm install
+$ npm install
 ```
 
 ### Set Up a Backend
 
 Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/)
 as the backend. The fastest way of getting this set up is to sign up for
-free app hosting in [Back4App](https://www.back4app.com/). The instructions
+free app hosting in [Back4App](https://www.back4app.com/) and
+create an app space for Clowdr with any name you like. The instructions
 here assume you have done so.
 
-BCP: Reordered this first, since the .env step needs information from this step.
-Next, download and install
-[MongoDB](https://docs.mongodb.com/manual/administration/install-community/)
-and start the server.  Note that installing MongoDB is used for calling the
-`mongodbrestore` command. You do not have to run MongoDB when using
-Back4App.
+Next, download and install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/). Note that installing MongoDB is used for calling the
+`mongodbrestore` command. You do not have to run MongoDB when using Back4App.
 
-For windows users, you MUST add environment variable to the PATH and make
-sure that you could run `mongo` command in your CMD.  (BCP: Does that mean
-"Run it in a shell?"  Which environment var?)
+For windows users, you MUST add the Mongodb executable to the PATH environment variable (e.g. add this `"C:\Program Files\MongoDB\Server\4.2\bin"`, or the equivalent directory where mongodb was installed, to the PATH) and make sure that you can run `mongo` command in your Windows CMD shell. 
 
-BCP: Don't understand this bit:
-You can find the MongoDB Database URI there. xxx is the password, yyy is the database ID in the following example.
+Next, set up your own configuration in ./.env according to ./.env-example.  The configuration parameters can be found
+from your created app in Back4App (in Server Settings -> Core Settings). When it comes to the mongodb configuration variables,
+`MONGODB_PASSWORD` and `MONGODB_DB`, find the mongodb URL in Back4App core server settings, which looks like this:
 
 `mongodb://admin:XXX@mongodb.back4app.com:27017/YYY?ssl=true`
 
-Finally, create an account on [Back4App](https://www.back4app.com/) and
-create an app space for Clowdr with any name you like.
+Use XXX as the MONGODB_PASSWORD, YYY as MONGODB_DB.
 
-Set up your own configuration in ./.env according to ./.env-example (both
-files are in this directory).  The configuration parameters can be found
-from your created app in Back4App (in Server Settings -> Core Settings).
+
 
 ### Populate the Database
 
