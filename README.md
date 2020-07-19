@@ -49,18 +49,10 @@ $ npm run init-app
 
 After this command runs, you should be able to see all tables with some essential data stored in the database in Back4App.
 
-<<<<<<< HEAD
-Select the `InstanceConfiguration` table, and click on the security icon on
-the top-right (a shield-like icon). Double check that Public read and write
-and unchecked, then add the role name `ClowdrSysAdmin` (press the tab key
-after typing this word), and check both Read and Write permissions this
-role. Click save.
-
 BCP: Pressing tab in my browser (safari) selected the URL bar at the top!
 right arrow might have worked.
-=======
+
 Select the `InstanceConfiguration` table, and click on the security icon on the top-right (a shield-like icon). Double check that Public read and write are unchecked, then add the role name `ClowdrSysAdmin` (press the tab key after typing this word), and check both Read and Write permissions for this role. Click save.
->>>>>>> cc81b190ce40df5941241971a2b166d1c45ce325
 
 #### Set Up Hosting and Live Query
 
@@ -114,15 +106,14 @@ Once you login into Clowdr with the admin account, go to Administration->Confere
 
 ### Set up email (Sendgrid) for your test conference
 
-Clowdr uses Sendgrid to deliver emails to conference participants. Please go
-to [Sendgrid](https://sendgrid.com/), create an account there (Start for
-Free), and create a Web API, and a key for it.
+Clowdr uses Sendgrid to deliver emails to conference participants. Please go to [Sendgrid](https://sendgrid.com/), create an account there, and create a Web API, and a key for it. Make sure to set up a verified sender address (or domain), for example <you>+clowdr@gmail.com or any other email address that is yours and that will be used as the sender of your Clowdr installation's emails. Sendgrid will ask you to verify it before you can send emails via their API.
 
-BCP: What is a web api?
+Then add the following additional configuration variables in Clowdr:
 
-Then add this additional configuration variable in Clowdr:
-
-`SENDGRID_API_KEY` Your sendgrid API key
+| Config Value | Description |
+| ------------ | ----------- |
+|`SENDGRID_API_KEY`| Your sendgrid API key|
+|`SENDGRID_SENDER`| Your verified sender address|
 
 After entering all these variables, press the big red button for initializing the conference, and logout.
 
