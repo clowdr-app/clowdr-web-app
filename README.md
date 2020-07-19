@@ -93,11 +93,14 @@ Once you login into Clowdr with the admin account, go to Administration->Confere
 
 ### Set up email (Sendgrid) for your test conference
 
-Clowdr uses Sendgrid to deliver emails to conference participants. Please go to [Sendgrid](https://sendgrid.com/), create an account there, and create a Web API, and a key for it.
+Clowdr uses Sendgrid to deliver emails to conference participants. Please go to [Sendgrid](https://sendgrid.com/), create an account there, and create a Web API, and a key for it. Make sure to set up a verified sender address (or domain), for example <you>+clowdr@gmail.com or any other email address that is yours and that will be used as the sender of your Clowdr installation's emails. Sendgrid will ask you to verify it before you can send emails via their API.
 
-Then add this additional configuration variable in Clowdr:
+Then add the following additional configuration variables in Clowdr:
 
-`SENDGRID_API_KEY` Your sendgrid API key
+| Config Value | Description |
+| ------------ | ----------- |
+|`SENDGRID_API_KEY`| Your sendgrid API key|
+|`SENDGRID_SENDER`| Your verified sender address|
 
 After entering all these variables, press the big red button for initializing the conference, and logout.
 
