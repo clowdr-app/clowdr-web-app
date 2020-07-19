@@ -1,4 +1,4 @@
-R_Email,R_First Name,R_Last Name,Code,R_Company,R_Country
+email,first,last,code,affiliation,country
 foo@bar.com,Foo,Bar,123,Yes,US
 winner@gmail.com,Winner,Takes All,234,University of All,US
 tres@amigos.org,Peter,Anteater,345,UCI,NL

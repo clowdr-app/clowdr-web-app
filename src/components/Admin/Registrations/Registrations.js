@@ -28,7 +28,9 @@ class Registrations extends React.Component {
         this.state = {
             loading: true, 
             regs: [],
-            filteredRegs : []
+            filteredRegs : [],
+            searched: false,
+            searchResult: ""
         };
         this.currentConference = props.auth.currentConference;
         console.log("Current conference is " + this.currentConference.get("conferenceName"));
@@ -90,7 +92,9 @@ class Registrations extends React.Component {
         const reader = new FileReader();
         reader.onload = () => {
             const data = {content: reader.result, conference: this.currentConference.id};
-            Parse.Cloud.run("registrations-upload", data).then(() => this.refreshList());
+            Parse.Cloud.run("registrations-upload", data).then(response => {
+                this.refreshList(response);
+            });
         }
         reader.readAsText(file);
         return false;
@@ -112,13 +116,12 @@ class Registrations extends React.Component {
 
     refreshList(value) {
         let regs = this.state.regs;
-        if (value)
-        {
-            regs = regs.filter(r => r.get("createdAt") >= value.startTime)
-            console.log('Filtering ' + regs.length);
+        if (value) {
+            regs = value;
         }
         this.setState({
             filteredRegs: regs,
+            regs: [regs, ...this.state.regs],
             loading: false
         });
     }
@@ -274,7 +277,29 @@ class Registrations extends React.Component {
                         </tr>
                     </tbody>
                 </table>
-            <Table columns={columns} dataSource={this.state.filteredRegs} rowKey={(r)=>(r.id)}  pagination={{defaultPageSize:600, position: ['topRight', 'bottomRight']}}/>
+            <Input.Search
+                allowClear
+                onSearch = {key => {
+                    if (key === "") {
+                        this.setState({searched: false});
+                    } else {
+                        this.setState({
+                            searched: true,
+                            searchResult: this.state.regs.filter(
+                                reg => reg.get('name') && reg.get('name').toLowerCase().includes(key.toLowerCase()))
+                        });
+                    }
+                }
+                }
+            />
+            <Table
+                columns={columns}
+                dataSource={this.state.searched ? this.state.searchResult : this.state.filteredRegs}
+                rowKey={(r) => (r.id)}
+                pagination={{ defaultPageSize: 500,
+                    pageSizeOptions: [10, 20, 50, 100, 500], 
+                    position: ['topRight', 'bottomRight']}}>
+            </Table>
         </div>
     }
 

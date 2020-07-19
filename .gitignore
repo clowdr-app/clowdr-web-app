@@ -24,10 +24,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# BCP -- I think this should be ignored??
+# BCP -- I think this one should be ignored??\
 react-app-env.d.ts
 db/.env-db
 .env-dbref
 .idea
 #.*#
 TAGS
+*.tmp

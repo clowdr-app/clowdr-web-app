@@ -268,6 +268,7 @@ const withAuthentication = Component => {
 
             let query  =new Parse.Query("UserPresence");
             query.limit(1000);
+            query.equalTo("conference", this.currentConference);
             query.equalTo("isOnline", true);
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
@@ -565,11 +566,14 @@ const withAuthentication = Component => {
                         _this.currentConference = conf;
                         _this.user = userWithRelations;
                         _this.userProfile = activeProfile;
-                        _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile)
-                        await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
-                        await _this.createSocialSpaceSubscription(user, activeProfile);
-                        let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
+                        _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile);
 
+                        try {
+                            await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
+                            await _this.createSocialSpaceSubscription(user, activeProfile);
+                        } catch (err) {
+                            console.log("[withAuth]: warn: " + err);
+                        }
 
                         let finishedStateFn = null;
                         let stateSetPromise = new Promise((resolve)=>{
@@ -587,7 +591,6 @@ const withAuthentication = Component => {
                             loading: false,
                             roles: roles
                         })}, ()=>{
-                            console.log("Done updating state");
                             finishedStateFn()});
 
                         await stateSetPromise;
@@ -597,7 +600,7 @@ const withAuthentication = Component => {
                         _this.forceUpdate();
                         return userWithRelations;
                     } catch (err) {
-                        console.log(err);
+                        console.log("[withAuth]: err: " + err);
                         //TODO uncomment
                         try {
                             _this.setState({loading: false, user: null});
@@ -651,6 +654,7 @@ const withAuthentication = Component => {
             query.include("members");
             query.include("programItem");
             query.equalTo("isPrivate", false);
+            query.limit(1000);
             // query.greaterThanOrEqualTo("updatedAt",date);
             query.find().then(res => {
                 if(!this.state.user){
