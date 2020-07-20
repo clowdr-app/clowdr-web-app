@@ -99,6 +99,7 @@ Once you login into Clowdr with the admin account, go to Administration->Confere
 | `TWILIO_ACCOUNT_SID` | [Your primary Twilio account identifier](https://www.twilio.com/console).|
 |`TWILIO_API_KEY` | [Used to authenticate](https://www.twilio.com/console/dev-tools/api-keys).|
 |`TWILIO_API_SECRET` | [Used to authenticate](https://www.twilio.com/console/dev-tools/api-keys).|
+|`TWILIO_AUTH_TOKEN`|[Used to authenticate](https://www.twilio.com/console/dev-tools/api-keys).|
 |`TWILIO_CHAT_SERVICE_SID` | [Chat](https://www.twilio.com/console/chat/services)|
 |`FRONTEND_URL` | http://localhost:3000, for development|
 
