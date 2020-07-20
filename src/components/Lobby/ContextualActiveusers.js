@@ -228,6 +228,7 @@ class ContextualActiveUsers extends Component {
             if(this.state.filteredUser)
                 selectedKeys.push(this.state.filteredUser);
 
+            let activeSpace = this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : "Nowhere";
             let programInfo = <></>
             if (programRooms.length > 0){
                 programInfo = <div>
@@ -363,7 +364,7 @@ class ContextualActiveUsers extends Component {
                     <div style={{height:'6px', background:'white'}}/>
 
                     <Divider className="social-sidebar-divider">
-                        <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{this.props.auth.activeSpace.get("name")}</Tooltip>
+                        <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{activeSpace}</Tooltip>
                     </Divider>
 
                         <Menu mode="inline"
@@ -472,7 +473,7 @@ class ContextualActiveUsers extends Component {
                 {programInfo}
 
                 <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
-                + this.props.auth.activeSpace.get("name")}>Video chat rooms</Tooltip></Divider>
+                + activeSpace}>Video chat rooms</Tooltip></Divider>
 
                 <Menu mode="inline"
                       className="activeRoomsList"

@@ -38,8 +38,8 @@ async function getConfig(conference){
 Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
     let room = request.object;
     let socialSpace = room.get("socialSpace");
-    let roomName = request.object.get("name").replace("Virtual | ","");
-    if(!socialSpace) {
+    let roomName = room.get("name").replace("Virtual | ","");
+    if (!socialSpace) {
         //create a social spac
         let socialSpace = new SocialSpace();
         socialSpace.set("conference", room.get("conference"));

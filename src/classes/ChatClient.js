@@ -265,12 +265,15 @@ export default class ChatClient{
         });
         //Do we already have the announcements channel?
         let announcements = Object.values(this.joinedChannels).find(chan => chan.attributes.category == 'announcements-global');
-        if(!announcements){
+        if (!announcements) {
             console.log("Trying to join announcements")
-            let res = await Parse.Cloud.run("join-announcements-channel", {
+           Parse.Cloud.run("join-announcements-channel", {
                 conference: this.conference.id
-            });
-            console.log(res);
+            }).then(res => {
+                console.log(res);
+            }).catch(err => {
+                console.log('[ChatClient]: Unable to join announcements: ' + err);
+            })
         }
         this.twilio = twilio;
         return this.twilio;
@@ -298,7 +301,7 @@ export default class ChatClient{
         let _this = this;
         let idToken = user.getSessionToken();
         if (idToken) {
-            console.log("Fetching chat token for " + idToken + ", " + conference.get("slackWorkspace"))
+            console.log("Fetching chat token for " + idToken + ", " + conference.id);
             const res = await fetch(
                 process.env.REACT_APP_TWILIO_CALLBACK_URL + '/chat/token'
                 // 'http://localhost:3001/video/token'
@@ -306,7 +309,7 @@ export default class ChatClient{
                     method: 'POST',
                     body: JSON.stringify({
                         identity: idToken,
-                        conference: conference.get("slackWorkspace")
+                        conference: conference.id
                     }),
                     headers: {
                         'Content-Type': 'application/json'

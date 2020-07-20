@@ -105,6 +105,7 @@ class NewRoomForm extends React.Component {
                                         identity: idToken,
                                         socialSpace: values.socialSpace,
                                         slackTeam: this.props.auth.currentConference.get("slackWorkspace"),
+                                        conference: this.props.auth.currentConference.id
                                     }),
                                     headers: {
                                         'Content-Type': 'application/json'

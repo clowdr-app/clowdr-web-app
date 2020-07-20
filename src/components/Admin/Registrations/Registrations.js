@@ -137,7 +137,6 @@ class Registrations extends React.Component {
                 conference: this.currentConference.id,
                 registrations: [record.id]
             });
-            this.refreshList();
             this.setState({sending: false})
         }catch(err){
             console.log(err);
@@ -222,7 +221,7 @@ class Registrations extends React.Component {
                     {
                         return <span>{moment(record.get("invitationSentDate")).calendar()} <Button onClick={this.sendInvitation.bind(this, record)}>Re-send</Button></span>
                     }
-                    return <span><Button onClick={this.sendInvitation.bind(this, record)}>Send</Button></span>},
+                    return <span><Button loading={this.state.sending} onClick={this.sendInvitation.bind(this, record)}>Send</Button></span>},
                 key: 'invitationSent',
             }
         ];
@@ -296,7 +295,9 @@ class Registrations extends React.Component {
                 columns={columns}
                 dataSource={this.state.searched ? this.state.searchResult : this.state.filteredRegs}
                 rowKey={(r) => (r.id)}
-                pagination={{defaultPageSize:600, position: ['topRight', 'bottomRight']}}>
+                pagination={{ defaultPageSize: 500,
+                    pageSizeOptions: [10, 20, 50, 100, 500], 
+                    position: ['topRight', 'bottomRight']}}>
             </Table>
         </div>
     }

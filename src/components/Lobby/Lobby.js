@@ -53,6 +53,9 @@ class MeetingSummary extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!this.mounted)
+            return;
+
         if (this.props.item.get('members') !== prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
             this.setState({members: this.props.item.members});
         }
@@ -222,6 +225,7 @@ class Lobby extends React.Component {
                     room: values.title,
                     identity: idToken,
                     slackTeam: this.props.auth.currentConference.get("slackWorkspace"),
+                    conference: this.props.auth.currentConference.id
                 }),
                 headers: {
                     'Content-Type': 'application/json'

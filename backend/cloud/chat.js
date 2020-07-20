@@ -22,7 +22,7 @@ async function getConfig(conference){
     config.twilioChat = config.twilio.chat.services(config.TWILIO_CHAT_SERVICE_SID);
 
     if (!config.TWILIO_CALLBACK_URL) {
-        config.TWILIO_CALLBACK_URL = "https://clowdr.herokuapp.com/twilio/event"
+        config.TWILIO_CALLBACK_URL = "http://localhost:3000/twilio/event"
     }
     if(!config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE){
         let role = await config.twilioChat.roles.create({
@@ -512,7 +512,7 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
     userQ.equalTo("conference", conf);
 
     let profile = await userQ.first({useMasterKey: true});
-    if(profile){
+    if (profile){
         let config = await getConfig(conf);
 
         //Now find out if we are a moderator or not...
@@ -522,6 +522,8 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
         actionQ.equalTo("action","announcement-global");
         accesToConf.matchesQuery("action", actionQ);
         const hasAccess = await accesToConf.first({sessionToken: request.user.getSessionToken()});
+        console.log('--> hasAccess: ' + hasAccess);
+
         let role = config.TWILIO_CHAT_CHANNEL_OBSERVER_ROLE;
         if (hasAccess) {
             role = config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE;

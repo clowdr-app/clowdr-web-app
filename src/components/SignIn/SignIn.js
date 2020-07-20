@@ -46,7 +46,7 @@ class SignIn extends Component {
         // event.preventDefault();
         try{
             let user = await Parse.User.logIn(email, password);
-            console.log(user)
+            console.log("[SignIn]: User=" + JSON.stringify(user));
             await this.props.refreshUser();
             this.props.history.push("/");
             window.location.reload(false);
