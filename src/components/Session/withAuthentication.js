@@ -48,7 +48,8 @@ const withAuthentication = Component => {
                 ifPermission: this.ifPermission.bind(this),
                 getUserRecord: this.getUserRecord.bind(this),
                 getPresences: this.getPresences.bind(this),
-                cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this)
+                cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
+                updateMyPresence: this.updateMyPresence.bind(this)
             }
             this.state = {
                 user: null,
@@ -78,6 +79,13 @@ const withAuthentication = Component => {
 
             };
             this.fetchingUsers = false;
+        }
+
+        async updateMyPresence(presence){
+            this.presences[this.state.userProfile.id] = presence;
+            for(let presenceWatcher of this.presenceWatchers){
+                presenceWatcher.setState({presences: this.presences});
+            }
         }
 
         async createOrOpenDM(profileOfUserToDM){
