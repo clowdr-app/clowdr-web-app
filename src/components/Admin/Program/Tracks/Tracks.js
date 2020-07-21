@@ -1,5 +1,5 @@
 import React, {Fragment, useState} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, Checkbox, Alert} from "antd";
+import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, Checkbox, Alert, Switch} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
@@ -8,7 +8,7 @@ import {
     EditOutlined
 } from '@ant-design/icons';
 
-// const { Option } = Select;
+const { Option } = Select;
 
 // const {TabPane} = Tabs;
 // const IconText = ({icon, text}) => (
@@ -32,7 +32,8 @@ class Tracks extends React.Component {
             editing: false,
             edt_track: undefined,
             searched: false,
-            searchResult: ""
+            searchResult: "",
+            test:false
         };
 
         console.log('[Admin/Tracks]: downloaded? ' + this.props.downloaded);
@@ -179,6 +180,14 @@ class Tracks extends React.Component {
     componentWillUnmount() {
     }
 
+    onChangeChat(record) {
+        record.set("perProgramItemChat", !record.get("perProgramItemChat"));
+    }
+
+    onChangeVideo(record) {
+        record.set("perProgramItemVideo", !record.get("perProgramItemVideo"));
+    }
+
     render() {
         // Set up editable table cell
         const EditableCell = ({
@@ -198,6 +207,25 @@ class Tracks extends React.Component {
                     break;
                 case ('displayName'):
                     inputNode = <Input/>;
+                    break;
+                case ('perProgramItemChat'):
+                    //console.log(record.get("perProgramItemChat"));
+                    inputNode = (
+                        <Checkbox 
+                            defaultChecked={record.get("perProgramItemChat")}
+                            onChange={this.onChangeChat.bind(this, record)}
+                        >
+                        </Checkbox>
+                    );
+                    break;
+                case ('perProgramItemVideo'):
+                    inputNode = (
+                        <Checkbox
+                            defaultChecked={record.get("perProgramItemVideo")}
+                            onChange= {this.onChangeVideo.bind(this, record)}
+                        >
+                        </Checkbox>
+                    );
                     break;
                 default:
                     inputNode = null;
@@ -239,8 +267,9 @@ class Tracks extends React.Component {
                 form.setFieldsValue({
                     name: record.get("name") ? record.get("name") : "",
                     displayName: record.get("displayName") ? record.get("displayName") : "",
-                    perProgramItemChat: record.get("perProgramItemChat"),
-                    perProgramItemVideo: record.get("perProgramItemVideo"),
+                    // perProgramItemChat: record.get("perProgramItemChat") ? record.get("perProgramItemChat") : false,
+                    // perProgramItemVideo: record.get("perProgramItemVideo") ? record.get("perProgramItemVideo") : false,
+                    
                 });
                 setEditingKey(record.id)
             }
@@ -323,7 +352,35 @@ class Tracks extends React.Component {
                         return displayNameA.localeCompare(displayNameB);
                     },
                     render: (text,record) => <span>{record.get("displayName")}</span>,
-                    key: 'dname',
+                    key: 'displayName',
+                },
+                {
+                    title: 'perProgramItemChat',
+                    dataIndex: 'perProgramItemChat',
+                    editable: true,
+                    width: '5%',
+                    sorter: (a, b) => {
+                        var A = a.get("perProgramItemChat") ? a.get("perProgramItemChat") : "";
+                        var B = b.get("perProgramItemChat") ? b.get("perProgramItemChat") : "";
+                        return A.localeCompare(B);
+                    },
+                    render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
+                    //render: (text,record) =><Checkbox checked={record.get("perProgramItemChat") ? true : false}></Checkbox>,
+                    key: 'perProgramItemChat',
+                },
+                {
+                    title: 'perProgramItemVideo',
+                    dataIndex: 'perProgramItemVideo',
+                    editable: true,
+                    width: '5%',
+                    sorter: (a, b) => {
+                        var A = a.get("perProgramItemChat") ? a.get("perProgramItemChat") : "";
+                        var B = b.get("perProgramItemChat") ? b.get("perProgramItemChat") : "";
+                        return A.localeCompare(B);
+                    },
+                    render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
+                    //render: (text,record) =><Checkbox checked={record.get("perProgramItemVideo") ? true : false}></Checkbox>,
+                    key: 'perProgramItemVideo',
                 },
                 {
                     title: 'Action',
@@ -409,6 +466,8 @@ class Tracks extends React.Component {
             const track = new Track();
             track.set("name", "Please Input Name");
             track.set("displayName", "Please Input DisplayName");
+            track.set("perProgramItemChat", false);
+            track.set("perProgramItemVideo", false);
 
             let acl = new Parse.ACL();
             acl.setPublicWriteAccess(false);
