@@ -96,11 +96,9 @@ class GuardedLanding extends Component {
       let controlButton = "";
       let alert = "";
       if (this.state.alert) {
-        console.log("ALERT")
         alert = <Alert
                   onClose={() => this.setState({alert: undefined})}
                   style={{
-                      margin: 0,
                       display: "inline-block",
                   }}
                   message={this.state.alert}
