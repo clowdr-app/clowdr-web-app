@@ -71,6 +71,8 @@ class PresenceForm extends React.Component {
             this.state.presence.set("status", theValue);
             await this.state.presence.save();
 
+            this.props.auth.helpers.updateMyPresence(this.state.presence);
+
             this.setState({saving: false, visible: false})
         }
     }
@@ -99,6 +101,7 @@ class PresenceForm extends React.Component {
             this.state.presence.set("isDND", false);
             this.state.presence.set("isDNT", false);
             this.state.presence.set(value, true);
+            this.props.auth.helpers.updateMyPresence(this.state.presence);
             await this.state.presence.save();
             this.setState({saving: false})
 
@@ -152,10 +155,8 @@ class PresenceForm extends React.Component {
                       availability: this.availabilityByPresence(this.state.presence)
                   }
                   }>
-                <Tooltip mouseEnterDelay={0.5} defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
-                    it easier for other participants to know when it's OK to contact you.">
-                    <Form.Item name="availability">
 
+                    <Form.Item name="availability">
             <Select
                 // style={{ width: 240 }}
                 // placeholder="Availability"
@@ -183,11 +184,15 @@ class PresenceForm extends React.Component {
 
             </Select>
                     </Form.Item>
-                </Tooltip>
                 <Form.Item name="status">
+                    <Tooltip mouseEnterDelay={0.5} defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
+                    it easier for other participants to know when it's OK to contact you."
+                             placement={"top"}
+                    >
                     <Input placeholder="Status message" onBlur={this.updatePresence.bind(this)} onPressEnter={this.updatePresence.bind(this)}
                            autoComplete="off"
                            disabled={this.state.saving} />
+                    </Tooltip>
                 </Form.Item>
                 {/*<Button type="primary" htmlType="submit" disabled={!this.state.dirty} loading={this.state.saving}>*/}
                 {/*    Update Status*/}
