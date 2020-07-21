@@ -143,14 +143,22 @@ async function createPrivileges() {
     ));
 }
 
-
-Parse.Cloud.define("init-conference-2", (request, response) => {
+// Is the given user in any of the given roles?
+async function userInRoles(user, allowedRoles) {
+    const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
+    return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
+}
+ 
+Parse.Cloud.define("init-conference-2", async (request) => {
 
     let confID = request.params.conference;
     console.log('[init]: conference ' + confID);
 
     let confQ = new Parse.Query(ClowdrInstance);
-    confQ.get(confID, {useMasterKey: true}).then( conf => {
+    let conf = await confQ.get(confID, {useMasterKey: true});
+
+    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+
         createSocialSpaces(conf);
 
         createPrivileges().then(async (res) => {
@@ -174,14 +182,10 @@ Parse.Cloud.define("init-conference-2", (request, response) => {
                 }
             }
             Parse.Object.saveAll(toSave, {useMasterKey: true})
-        }).catch(err => {
-            console.log('[init]: Unable to find ' + confID);
-            throw "Bad conference ID";
 
-        });
-
-        console.log("[init]: Done creating privileges")        
-    });
+            console.log("[init]: Done creating privileges") ;
+        })      
+    }
 })
 
 Parse.Cloud.define("save-instance", async (request) => {
@@ -195,12 +199,11 @@ Parse.Cloud.define("save-instance", async (request) => {
     }
     // Act on behalf of user
     let user = request.user;
-    let token = user.getSessionToken();
     let data = request.params.instanceData;
 
     const roles = await new Parse.Query(Parse.Role).equalTo('users', request.user).find();
-    if (roles.find(r => (r.get("name") == conf.id + "-admin") || r.get("name") == "ClowdrSysAdmin")) {
-        console.log('[save instance]: user has permission to save')
+    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+        console.log('[save instance]: user has permission to save');
         let res = await conf.save(data, {useMasterKey: true});
         if (!res) {
             throw ("Unable to save conference: " + err);
