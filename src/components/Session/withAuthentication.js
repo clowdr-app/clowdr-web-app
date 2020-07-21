@@ -240,7 +240,7 @@ const withAuthentication = Component => {
             component.setState({presences: this.presences});
         }
         cancelPresenceSubscription(component){
-            this.prsenceWatchers = this.presenceWatchers.filter(v => v!= component);
+            this.presenceWatchers = this.presenceWatchers.filter(v => v!= component);
         }
         updatePresences(){
             if(this.presenceUpdateScheduled){
