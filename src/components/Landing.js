@@ -91,7 +91,6 @@ class GuardedLanding extends Component {
     }
 
     render () {
-      console.log('isAdmin? ' + this.props.auth.isAdmin);
 
       let controlButton = "";
       let alert = "";
