@@ -70,6 +70,18 @@ name you give it, `YOUR_APP_NAME` matches the environment variable
 Go to Cloud Code (also called "Cloud Code Functions") in your Back4App
 workspace, upload all files with .js extension under backend/cloud, and click "deploy".
 
+#### Developing and Debugging Cloud Functions
+It's *much* easier to debug and develop cloud functions by running a local parse server, so that changes to cloud code just require restarting your local server. I don't know how to make it work with live query or with uploaded files - this should be doable, but I haven't found the magic strings yet. However, this is sufficient for testing cloud functions that don't involve files.
+
+To run a local parse server:
+
+1. Install the correct version of parse-server (we are currently on 3.9.0): `npm install -g parse-server@3.9.0
+`
+2. Run `npm install` in the `backend/cloud` directory
+3. Start the server, using the same keys that you would otherwise use on Back4App. Get the correct keys by logging into your Back4App console, then got to "Server Settings" -> "Core Settings." Copy and paste the app id, client key, master key, database URI and javascript key: `parse-server --appId <appID> --clientKey <clientKey> --masterKey <masterKey> --databaseURI <mongoDB URI>  --javascriptKey <javascriptKey> --cloud /path/to/backend/cloud/main.js`
+4. In your `.env.development` set `REACT_APP_PARSE_DATABASE_URL=http://localhost:1337/parse`, then do `npm start` to start the frontend.
+5. As you change your cloud functions, stop (control-C) and restart the parse server.
+
 ## Usage and Further Configuration
 
 After the installation, start the application by executing
