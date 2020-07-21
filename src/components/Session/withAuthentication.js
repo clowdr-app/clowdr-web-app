@@ -502,6 +502,7 @@ const withAuthentication = Component => {
                         const roles = await roleQuery.find();
 
                         let isAdmin = _this.state ? _this.state.isAdmin : false;
+                        let isClowdrAdmin = _this.state ? _this.state.isClowdrAdmin : false;
                         let validConferences = [];
 
                         let validConfQ= new Parse.Query("ClowdrInstanceAccess");
@@ -525,8 +526,14 @@ const withAuthentication = Component => {
                             }
                         }
                         for (let role of roles) {
-                            if (role.get("name") == "ClowdrSysAdmin")
+                            if (role.get("name") == "ClowdrSysAdmin") {
                                 isAdmin = true;
+                                isClowdrAdmin = true;
+                            }
+                            if (activeProfile && role.get("name") == (activeProfile.get("conference").id + "-admin")) {
+                                isAdmin = true;
+                                isClowdrAdmin = true;
+                            }
                         }
                         if(!activeProfile){
                             if(!preferredConference && process.env.REACT_APP_DEFAULT_CONFERENCE){
@@ -585,6 +592,7 @@ const withAuthentication = Component => {
                             userProfile: activeProfile,
                             teamID: session.get("activeTeam"),
                             isAdmin: isAdmin,
+                            isClowdrAdmin: isClowdrAdmin,
                             permissions: permissions.map(p=>p.get("action").get("action")),
                             validConferences: validConferences,
                             currentConference: conf,

@@ -1,5 +1,8 @@
 import React, {Component} from "react";
 import { Editor } from '@tinymce/tinymce-react';
+import {AuthUserContext} from "./Session";
+import {Button, Tooltip} from "antd";
+import {EditOutlined} from '@ant-design/icons';
 
 import tinymce from 'tinymce/tinymce';
 
@@ -32,7 +35,7 @@ import 'tinymce/plugins/help';
 import 'tinymce/plugins/wordcount';
 import 'tinymce/plugins/imagetools';
 
-const text = `
+const defaultText = `
 <div>
             <h2>XYZ LIVE @ CLOWDR</h2>
             <div><p><strong>What to do during virtual XYZ:</strong> Besides attending the live sessions, you can interact with other participants in many ways!</p>
@@ -71,25 +74,41 @@ const text = `
 </div>`;
 
 
-class Landing extends Component {
+class GuardedLanding extends Component {
 
-      componentDidMount() { 
-        // tinymce.init({ 
-        //   selector: `#${this.props.id}`, 
-        //   skin_url: `${process.env.PUBLIC_URL}/skins/lightgray`, 
-        //   plugins: 'wordcount advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste code help', 
-        //   setup: editor => { 
-        //     this.setState({ editor }); 
-        //     editor.on('keyup change', () => { 
-        //         const content = editor.getContent(); 
-        //         this.props.onEditorChange(content); 
-        //     }); 
-        //   } 
-        // }); 
+    constructor(props) {
+      super(props);
+
+      this.state = {
+        isLoggedIn: false,
+        text: defaultText,
+        isEditing: false
+      };
+    }
+
+    async componentDidMount() { 
+        //For social features, we need to wait for the login to complete before doing anything
+        let user = this.props.auth.user;
+        if (user) {
+            this.setState({
+                loggedIn: true
+            }); 
+        }
     }
 
     componentWillUnmount() { 
-      // tinymce.remove(this.state.editor); 
+    }
+
+    componentDidUpdate(prevProps) {
+      console.log('Something changed ' + prevProps.auth.user + " " + this.props.auth.user);
+      if (!prevProps.auth.user && this.props.auth.user) {
+        this.setState({isLoggedIn: true})
+      }
+
+    }
+
+    onEdit() {
+      this.setState({isEditing: true})
     }
 
     handleEditorChange = (content, editor) => {
@@ -97,28 +116,48 @@ class Landing extends Component {
     }
 
     render () {
-      return <Editor 
-        // apiKey="e1ncn4dnnsjx0othoqoe2spps7zhmoxh2gpq4y1vie7nq98v"
-        initialValue={text}
-        init={{
-          height: 600,
-          menubar: false,
-          skin_url: 'skins/ui/oxide',
-          content_css: '//www.tiny.cloud/css/codepen.min.css',
-          plugins: [
-            'advlist autolink lists link image charmap print preview anchor',
-            'searchreplace visualblocks code fullscreen imagetools',
-            'insertdatetime media table paste code help wordcount'
-          ],
-          toolbar:
-            'formatselect | link | image table | bold italic forecolor backcolor | \
-            alignleft aligncenter alignright alignjustify | \
-            bullist numlist outdent indent | removeformat code| help'
-        }}
-        onEditorChange={this.handleEditorChange.bind(this)}
+      console.log('isAdmin? ' + this.props.auth.isAdmin);
 
-        />
+      let editButton = "";
+      if (this.props.auth.isAdmin) {
+        if (!this.state.isEditing)
+          editButton = <Tooltip title="Edit this page"><Button type="primary" shape="round" icon={<EditOutlined />} onClick={this.onEdit.bind(this)}/></Tooltip>
+        else
+          return <Editor 
+            initialValue={this.state.text}
+            init={{
+              height: 600,
+              menubar: false,
+              skin_url: 'skins/ui/oxide',
+              content_css: 'https://www.tiny.cloud/css/codepen.min.css',
+              plugins: [
+                'advlist autolink lists link image charmap print preview anchor',
+                'searchreplace visualblocks code fullscreen imagetools',
+                'insertdatetime media table paste code help wordcount'
+              ],
+              toolbar:
+                'formatselect | link | image table | bold italic forecolor backcolor | \
+                alignleft aligncenter alignright alignjustify | \
+                bullist numlist outdent indent | removeformat code| help'
+            }}
+            onEditorChange={this.handleEditorChange.bind(this)}
+
+            />
+      }
+
+      return <div><div style={{textAlign: "right"}}>{editButton}</div>
+        <div dangerouslySetInnerHTML={{__html: this.state.text}} />
+        </div>
+
     }
 }
+
+const Landing = (props) => (
+  <AuthUserContext.Consumer>
+      {value => (
+          <GuardedLanding {...props} auth={value}/>
+      )}
+  </AuthUserContext.Consumer>
+);
 
 export default Landing;
