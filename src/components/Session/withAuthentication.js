@@ -567,7 +567,7 @@ const withAuthentication = Component => {
                         _this.user = userWithRelations;
                         _this.userProfile = activeProfile;
                         _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile)
-                        await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
+                        //await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
                         await _this.createSocialSpaceSubscription(user, activeProfile);
                         let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
 
