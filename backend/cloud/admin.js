@@ -144,7 +144,7 @@ async function createPrivileges() {
 }
 
 
-Parse.Cloud.define("init-conference-2", (request) => {
+Parse.Cloud.define("init-conference-2", (request, response) => {
 
     let confID = request.params.conference;
     console.log('[init]: conference ' + confID);
@@ -176,10 +176,39 @@ Parse.Cloud.define("init-conference-2", (request) => {
             Parse.Object.saveAll(toSave, {useMasterKey: true})
         }).catch(err => {
             console.log('[init]: Unable to find ' + confID);
-            response.error("Bad conference ID");
+            throw "Bad conference ID";
 
         });
 
         console.log("[init]: Done creating privileges")        
     });
 })
+
+Parse.Cloud.define("save-instance", async (request) => {
+    let confID = request.params.confID;
+    console.log('[save instance]: request to save ' + confID);
+
+    let confQ = new Parse.Query(ClowdrInstance);
+    let conf = await confQ.get(confID);
+    if (!conf) {
+        throw "Conference " + confID + ": " + err
+    }
+    // Act on behalf of user
+    let user = request.user;
+    let token = user.getSessionToken();
+    let data = request.params.instanceData;
+
+    const roles = await new Parse.Query(Parse.Role).equalTo('users', request.user).find();
+    if (roles.find(r => (r.get("name") == conf.id + "-admin") || r.get("name") == "ClowdrSysAdmin")) {
+        console.log('[save instance]: user has permission to save')
+        let res = await conf.save(data, {useMasterKey: true});
+        if (!res) {
+            throw ("Unable to save conference: " + err);
+        }
+
+        console.log('[save instance]: successfully saved ' + conf.id);
+    }
+    else
+        throw "Unable to save conference: user not allowed to change instance";
+});
+
