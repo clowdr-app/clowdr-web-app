@@ -2,6 +2,8 @@ import React from 'react';
 import Parse from "parse";
 
 import ProgramContext from './context';
+import {AuthUserContext} from "../Session";
+
 
 // Used to make sure the download is done only once
 var program = undefined;
@@ -36,7 +38,7 @@ const withProgram = Component => {
                         console.log('[withProgram]: Unable to dowload tracks: ' + err);
                         this.setState({tracks: []});
                     });
-                    this.subscribeToLiveQuery(trackQ, 'tracks');
+                    this.subscribeToLiveQuery(props.auth.parseLive, trackQ, 'tracks');
 
                     let roomQ = new Parse.Query("ProgramRoom");
                     roomQ.equalTo("conference", props.auth.currentConference);
@@ -47,7 +49,7 @@ const withProgram = Component => {
                         console.log('[withProgram]: Unable to dowload rooms: ' + err);
                         this.setState({rooms: []});
                     });
-                    this.subscribeToLiveQuery(roomQ, 'rooms');
+                    this.subscribeToLiveQuery(props.auth.parseLive, roomQ, 'rooms');
 
                     let itemQ = new Parse.Query("ProgramItem");
                     itemQ.equalTo("conference", props.auth.currentConference);
@@ -59,7 +61,7 @@ const withProgram = Component => {
                         console.log('[withProgram]: Unable to dowload items: ' + err);
                         this.setState({items: []});
                     });
-                    this.subscribeToLiveQuery(itemQ, 'items');
+                    this.subscribeToLiveQuery(props.auth.parseLive, itemQ, 'items');
 
                     let sessionQ = new Parse.Query("ProgramSession");
                     sessionQ.equalTo("conference", props.auth.currentConference);
@@ -72,7 +74,7 @@ const withProgram = Component => {
                         console.log('[withProgram]: Unable to dowload sessions: ' + err);
                         this.setState({sessions: []});
                     });
-                    this.subscribeToLiveQuery(sessionQ, 'sessions');
+                    this.subscribeToLiveQuery(props.auth.parseLive, sessionQ, 'sessions');
 
                     let peopleQ = new Parse.Query("ProgramPerson");
                     peopleQ.limit(10000);
@@ -97,21 +99,20 @@ const withProgram = Component => {
                 console.log('[withProgram]: No auth no good!');
         }    
 
-        subscribeToLiveQuery(query, ppart) {
+        subscribeToLiveQuery(parseLive, query, ppart) {
             // console.log('[withProgram]: subscribing to live query for ' + ppart);
-            query.subscribe().then(sub => {
-                this.sub = sub;
-                this.sub.on('create', obj => {
-                    // console.log("[withProgram]: object created " + (obj.get('name') ? obj.get('name') : obj.get('title')));
-                    this.setState((prevState) => prevState[ppart] = [...prevState[ppart], obj]);
-                })
-                this.sub.on('delete', obj => {
-                    // console.log("[withProgram]: object deleted " + (obj.get('name') ? obj.get('name') : obj.get('title')));
-                    this.setState((prevState) => (prevState[ppart] = prevState[ppart].filter(v => v.id != obj.id)));
-                });
-                this.sub.on('update', obj => {
-                    // console.log("[withProgram]: object updated " + (obj.get('name') ? obj.get('name') : obj.get('title')));
-                });
+            var sub = parseLive.subscribe(query);
+            this.sub = sub;
+            this.sub.on('create', obj => {
+                // console.log("[withProgram]: object created " + (obj.get('name') ? obj.get('name') : obj.get('title')));
+                this.setState((prevState) => prevState[ppart] = [...prevState[ppart], obj]);
+            })
+            this.sub.on('delete', obj => {
+                // console.log("[withProgram]: object deleted " + (obj.get('name') ? obj.get('name') : obj.get('title')));
+                this.setState((prevState) => (prevState[ppart] = prevState[ppart].filter(v => v.id != obj.id)));
+            });
+            this.sub.on('update', obj => {
+                // console.log("[withProgram]: object updated " + (obj.get('name') ? obj.get('name') : obj.get('title')));
             });
         }
 
@@ -126,6 +127,6 @@ const withProgram = Component => {
     }
 
     return Program;
-};
+};  
 
 export default withProgram;
