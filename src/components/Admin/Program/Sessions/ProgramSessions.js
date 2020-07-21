@@ -70,7 +70,7 @@ class ProgramSessions extends React.Component {
         session.set("confKey", Math.floor(Math.random() * 10000000).toString());
 
         let acl = new Parse.ACL();
-        acl.setPublicWriteAccess(true);
+        acl.setPublicWriteAccess(false);
         acl.setPublicReadAccess(true);
         acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
         acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
