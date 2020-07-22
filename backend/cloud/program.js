@@ -3,6 +3,96 @@ const Twilio = require("twilio");
 const Papa = require('./papaparse.min');
 const { response } = require('express');
 
+// Is the given user in any of the given roles?
+async function userInRoles(user, allowedRoles) {
+    const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
+    return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
+}
+
+Parse.Cloud.define("create-obj", async (request) => {
+    let data = request.params;
+    let clazz = request.params.clazz;
+    let confID = request.params.conference;
+    delete data.clazz;
+    console.log(`[create obj]: request to create ${clazz} in ${confID}`);
+
+    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+        console.log('[create obj]: user has permission to create obj');
+
+        let Clazz = Parse.Object.extend(clazz);
+        let obj = new Clazz();
+        let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
+        let conf = await new Parse.Query(ClowdrInstance).get(confID);
+        if (!conf) {
+            throw "Unable to create obj: conference not found";
+        }
+
+        data.conference = conf;
+        let res = await obj.save(data, {useMasterKey: true});
+
+        if (!res) {
+            throw ("Unable to create obj");
+        }
+
+        console.log('[create obj]: successfully created ' + obj.id);
+        return {status: "OK", "id": obj.id};
+    }
+    else
+        throw "Unable to create obj: user not allowed to create new objects";
+});
+
+Parse.Cloud.define("update-obj", async (request) => {
+    let data = request.params;
+    let clazz = request.params.clazz;
+    let confID = request.params.conference;
+    let id = request.params.id;
+
+    delete data.clazz;
+    delete data.conference;
+    console.log(`[update obj]: request to update ${data.id} of class ${clazz} in ${confID}`);
+
+    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+        console.log('[update obj]: user has permission to update obj');
+        let Clazz = Parse.Object.extend(clazz);
+        let obj = await new Parse.Query(Clazz).get(id);
+        if (!obj) {
+            throw (`Unable to update obj: ${id} not found`);
+        }
+        let res = await obj.save(data, {useMasterKey: true});
+
+        if (!res) {
+            throw ("Unable to update obj");
+        }
+
+        console.log('[update obj]: successfully updated ' + obj.id);
+    }
+    else
+        throw "Unable to update obj: user not allowed to update objects";
+});
+
+Parse.Cloud.define("delete-obj", async (request) => {
+    let confID = request.params.conference;
+    let id = request.params.id;
+    let clazz = request.params.clazz;
+    console.log(`[delete obj]: request to delete ${id} of class ${clazz} in ${confID}`);
+
+    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+        console.log('[delete obj]: user has permission to delete obj');
+        let Clazz = Parse.Object.extend(clazz);
+        let obj = await new Parse.Query(Clazz).get(id);
+        if (obj) {
+            await obj.destroy({useMasterKey: true});
+        }
+        else {
+            throw (`Unable to delete obj: ${id} not found`);
+        }
+
+        console.log('[delete obj]: successfully deleted ' + id);
+    }
+    else
+        throw "Unable to delete obj: user not allowed to delete objects";
+});
+
 Parse.Cloud.define("poster-upload", async (request) => {
     console.log('Request to upload a poster image for ' + request.params.posterId);
     const imgData = request.params.content;

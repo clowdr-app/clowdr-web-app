@@ -47,87 +47,6 @@ class Tracks extends React.Component {
 
     }
 
-    // onCreate(values) {
-    //     var _this = this;
-    //     // Create the track record
-    //     var Track = Parse.Object.extend("ProgramTrack");
-    //     var track = new Track();
-    //     track.set("name", values.name);
-    //     track.set("displayName", values.displayName);
-    //     let acl = new Parse.ACL();
-    //     acl.setPublicWriteAccess(false);
-    //     acl.setPublicReadAccess(true);
-    //     acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
-    //     acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
-    //     track.setACL(acl);
-    //     track.set("conference", this.props.auth.currentConference);
-
-    //     track.save().then((val) => {
-    //         _this.setState({visible: false, tracks: [track, ...this.state.tracks]})
-    //     }).catch(err => {
-    //         console.log(err);
-    //     });
-    // }
-
-    // onDelete(value) {
-    //     console.log("Deleting " + value + " " + value.get("name"));
-    //     // Delete the watchers first
-        
-    //     value.destroy().then(()=>{
-    //         this.refreshList();
-    //     });
-    // }
-
-    // onEdit(track) {
-    //     console.log("Editing " + track.get("name") + " " + track.id);
-    //     this.setState({
-    //         visible: true, 
-    //         editing: true, 
-    //         edt_track: {
-    //             objectId: track.id,
-    //             name: track.get("name"),
-    //             displayName: track.get("displayName"),
-    //             perProgramItemChat: track.get("perProgramItemChat"),
-    //             perProgramItemVideo: track.get("perProgramItemVideo"),
-    //         }
-    //     });
-    // }
-
-    // onUpdate(values) {
-    //     var _this = this;
-    //     console.log("Updating " + values.name + "; " + values.objectId);
-    //     console.log(values);
-    //     let track = this.state.tracks.find(t => t.id == values.objectId);
-
-    //     if (track) {
-    //         track.set("name", values.name);
-    //         track.set("displayName", values.displayName);
-    //         track.set("perProgramItemChat", values.perProgramItemChat);
-    //         track.set("perProgramItemVideo", values.perProgramItemVideo);
-    //         if(values.socialSpace != "new"){
-    //             if (values.socialSpace == "none" || !values.socialSpace) {
-    //                 track.set("socialSpace", null);
-    //             } else
-    //                 track.set("socialSpace", values.socialSpace);
-    //         }
-    //         track.save().then(async (val) => {
-    //             if (values.socialSpace == "new") {
-    //                 let newSocialSpace = await Parse.Cloud.run("social-socialSpaceForTrack", {
-    //                     programTrack: track.id
-    //                 });
-    //                 track.set("socialSpace", newSocialSpace);
-    //                 await track.save();
-    //             }
-    //             _this.setState({visible: false, editing: false});
-    //         }).catch(err => {
-    //             console.log(err + ": " + values.objectId);
-    //         })
-    //     }
-    //     else {
-    //         console.log("track not found: " + values.id1);
-    //     }
-    // }
-
     setVisible() {
         this.setState({'visible': !this.state.visible});
     }
@@ -158,15 +77,18 @@ class Tracks extends React.Component {
                 }
             }
         }
-        else 
-            console.log('[Admin/Tracks]: Program cached');
+        else {
+            if (prevProps.tracks.length != this.props.tracks.length) {
+                this.setState({tracks: this.props.tracks});
+                console.log('[Admin/Tracks]: changes in tracks');
+            }
+        }
 
     }
 
 
     refreshList(){
         let query = new Parse.Query("ProgramTrack");
-        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
         query.equalTo("conference", this.props.auth.currentConference);
         query.find().then(res=>{
             console.log('Found tracks ' + res.length);
@@ -237,6 +159,7 @@ class Tracks extends React.Component {
                     {editing ? (
                         <Form.Item
                             name={dataIndex}
+                            valuePropName={dataIndex == 'perProgramItemChat' || dataIndex == 'perProgramItemVideo' ? "checked" : "value"}
                             style={{
                                 margin: 0,
                             }}
@@ -267,9 +190,8 @@ class Tracks extends React.Component {
                 form.setFieldsValue({
                     name: record.get("name") ? record.get("name") : "",
                     displayName: record.get("displayName") ? record.get("displayName") : "",
-                    // perProgramItemChat: record.get("perProgramItemChat") ? record.get("perProgramItemChat") : false,
-                    // perProgramItemVideo: record.get("perProgramItemVideo") ? record.get("perProgramItemVideo") : false,
-                    
+                    perProgramItemChat: record.get("perProgramItemChat"),
+                    perProgramItemVideo: record.get("perProgramItemVideo")
                 });
                 setEditingKey(record.id)
             }
@@ -281,17 +203,30 @@ class Tracks extends React.Component {
             const onDelete = record => {
                 const newTrackList = [...this.state.tracks];
                 // delete from database
-                record.destroy().then(() => {
-                    this.setState({
-                        alert: "delete success",
-                        tracks: newTrackList.filter(track => track.id !== record.id)
-                    });
-                    console.log("Track deleted from db")
-                }).catch(error => {
-                    this.setState({alert: "delete error"});
-                    console.log("item cannot be deleted from db");
+                let data = {
+                    clazz: "ProgramTrack",
+                    conference: record.get("conference").id,
+                    id: record.id
+                }
+                Parse.Cloud.run("delete-obj", data)
+                .then(c => this.setState({alert: "delete success"}))
+                .catch(err => {
+                    this.setState({alert: "delete error"})
+                    this.refreshList();
+                    console.log("[Admin/Tracks]: Unable to delete track: " + err)
                 })
-                ;
+
+                // record.destroy().then(() => {
+                //     this.setState({
+                //         alert: "delete success",
+                //         tracks: newTrackList.filter(track => track.id !== record.id)
+                //     });
+                //     console.log("Track deleted from db")
+                // }).catch(error => {
+                //     this.setState({alert: "delete error"});
+                //     console.log("item cannot be deleted from db");
+                // })
+                // ;
             };
 
             const save = async id => {
@@ -305,16 +240,23 @@ class Tracks extends React.Component {
                         track.set("name", row.name);
                         track.set("displayName", row.displayName);
                         setData(newData);
-                        track.save()
-                            .then((response) => {
-                                console.log('Updated ProgramItem', response);
-                                this.setState({alert: "save success"});
-                            })
-                            .catch(err => {
-                                console.log(err);
-                                console.log("@" + track.id);
-                                this.setState({alert: "save error"});
-                            });
+
+                        let data = {
+                            clazz: "ProgramTrack",
+                            conference: track.get("conference").id,
+                            id: track.id,
+                            name: track.get("name"),
+                            displayName: track.get("displayName"),
+                            perProgramItemChat: track.get("perProgramItemChat"),
+                            perProgramItemVideo: track.get("perProgramItemVideo")
+                        }
+                        Parse.Cloud.run("update-obj", data)
+                        .then(c => this.setState({alert: "save success"}))
+                        .catch(err => {
+                            this.setState({alert: "save error"})
+                            console.log("[Admin/Tracks]: Unable to save track: " + err)
+                        })
+                    
                         setEditingKey('');
                     }
                     else {
@@ -355,7 +297,7 @@ class Tracks extends React.Component {
                     key: 'displayName',
                 },
                 {
-                    title: 'perProgramItemChat',
+                    title: 'Text Chats',
                     dataIndex: 'perProgramItemChat',
                     editable: true,
                     width: '5%',
@@ -364,12 +306,12 @@ class Tracks extends React.Component {
                         var B = b.get("perProgramItemChat") ? b.get("perProgramItemChat") : "";
                         return A.localeCompare(B);
                     },
-                    render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
-                    //render: (text,record) =><Checkbox checked={record.get("perProgramItemChat") ? true : false}></Checkbox>,
+                    //render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
+                    render: (text,record) =><Checkbox checked={record.get("perProgramItemChat") ? true : false} disabled></Checkbox>,
                     key: 'perProgramItemChat',
                 },
                 {
-                    title: 'perProgramItemVideo',
+                    title: 'Video Chats',
                     dataIndex: 'perProgramItemVideo',
                     editable: true,
                     width: '5%',
@@ -378,8 +320,8 @@ class Tracks extends React.Component {
                         var B = b.get("perProgramItemChat") ? b.get("perProgramItemChat") : "";
                         return A.localeCompare(B);
                     },
-                    render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
-                    //render: (text,record) =><Checkbox checked={record.get("perProgramItemVideo") ? true : false}></Checkbox>,
+                    //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
+                    render: (text,record) =><Checkbox checked={record.get("perProgramItemVideo") ? true : false} disabled></Checkbox>,
                     key: 'perProgramItemVideo',
                 },
                 {
@@ -408,7 +350,7 @@ class Tracks extends React.Component {
                                         {<EditOutlined />}
                                     </a>
                                     <Popconfirm
-                                        title="Are you sure delete this session?"
+                                        title="Are you sure delete this track?"
                                         onConfirm={() => onDelete(record)}
                                         okText="Yes"
                                         cancelText="No"
@@ -442,7 +384,7 @@ class Tracks extends React.Component {
             });
 
             return (
-                <Form form={form} component={false}>
+                <Form form={form} component={false} >
                     <Table
                         components={{
                             body: {
@@ -451,6 +393,7 @@ class Tracks extends React.Component {
                         }}
                         bordered
                         dataSource={this.state.searched ? this.state.searchResult : this.state.tracks}
+                        rowKey='id'
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         pagination={{ defaultPageSize: 500,
@@ -462,27 +405,22 @@ class Tracks extends React.Component {
         };
 
         const newTrack = () => {
-            const Track = Parse.Object.extend("ProgramTrack");
-            const track = new Track();
-            track.set("name", "Please Input Name");
-            track.set("displayName", "Please Input DisplayName");
-            track.set("perProgramItemChat", false);
-            track.set("perProgramItemVideo", false);
 
-            let acl = new Parse.ACL();
-            acl.setPublicWriteAccess(false);
-            acl.setPublicReadAccess(true);
-            acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
-            acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
-            track.setACL(acl);
-            track.set("conference", this.props.auth.currentConference);
-
-            track.save().then((val) => {
-                this.setState({alert: "add success", tracks: [track, ...this.state.tracks]})
-            }).catch(err => {
-                this.setState({alert: "add error"});
-                console.log(err);
-            }); 
+            let data = {
+                clazz: "ProgramTrack",
+                conference: this.props.auth.currentConference.id,
+                name: "One-word-name",
+                displayName: "Publicly visible name",
+                perProgramItemChat: false,
+                perProgramItemVideo: false
+            }
+            Parse.Cloud.run("create-obj", data)
+            .then(t => console.log("[Admin/Tracks]: sent new track to cloud"))
+            .catch(err => {
+                this.setState({alert: "add error"})
+                console.log("[Landing]: Unable to create track: " + err)
+            })
+        
         }
 
         if (!this.props.downloaded)
@@ -490,22 +428,7 @@ class Tracks extends React.Component {
                 <Spin tip="Loading...">
                 </Spin>)
 
-        // else if (this.state.editing)
-        //     return (
-        //         <Fragment>
-        //             {/* <CollectionEditForm
-        //                 title="Edit Track"
-        //                 visible={this.state.visible}
-        //                 data={this.state.edt_track}
-        //                 onAction={this.onUpdate.bind(this)}
-        //                 onCancel={() => {
-        //                     this.setVisible(false);
-        //                     this.setState({editing: false});
-        //                 }}
-        //             /> */}
-        //         <Input.Search/>
-        //     </Fragment>
-        //     )
+        console.log("--> # Tracks: " + this.state.tracks.length);
         return <div>
             <Button
                 type="primary"
@@ -513,14 +436,6 @@ class Tracks extends React.Component {
             >
                 New track
             </Button>
-            {/* <CollectionEditForm
-                title="Add Track"
-                visible={this.state.visible}
-                onAction={this.onCreate.bind(this)}
-                onCancel={() => {
-                    this.setVisible(false);
-                }}
-            /> */}
 
             {this.state.alert ? <Alert
                     onClose={() => this.setState({alert: undefined})}

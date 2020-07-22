@@ -105,7 +105,7 @@ const withProgram = Component => {
             this.sub = sub;
             this.sub.on('create', obj => {
                 // console.log("[withProgram]: object created " + (obj.get('name') ? obj.get('name') : obj.get('title')));
-                this.setState((prevState) => prevState[ppart] = [...prevState[ppart], obj]);
+                this.setState((prevState) => prevState[ppart] = [obj, ...prevState[ppart]]);
             })
             this.sub.on('delete', obj => {
                 // console.log("[withProgram]: object deleted " + (obj.get('name') ? obj.get('name') : obj.get('title')));
