@@ -305,10 +305,14 @@ class ContextualActiveUsers extends Component {
                                         </Tooltip>
                                         </div>;
                                     }
-                                    else
+                                    else {
+                                        if (!item.get("members") || item.get("members").length === 0) {
+                                            joinInfo = joinInfo + " (Currently Empty!)"
+                                        }
                                         joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
-                                                                                     onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
+                                                                                                           onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                         </div>;
+                                    }
                                 }
                                 else {
                                     joinLink = formattedRoom;
@@ -546,10 +550,14 @@ class ContextualActiveUsers extends Component {
                                     </Tooltip>
                                 </div>;
                             }
-                            else
+                            else {
+                                if (!item.get("members") || item.get("members").length === 0) {
+                                    joinInfo = joinInfo + " (Currently Empty!)"
+                                }
                                 joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
-                                                                                         onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
+                                                                                                   onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                 </div>;
+                            }
                         }
                         else {
                             joinLink = formattedRoom;
