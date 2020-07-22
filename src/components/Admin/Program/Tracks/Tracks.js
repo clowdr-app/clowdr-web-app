@@ -1,5 +1,5 @@
 import React, {Fragment, useState} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, Checkbox, Alert, Switch} from "antd";
+import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Radio, Space, Spin, Table, Tabs, Checkbox, Alert, Switch} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
@@ -102,6 +102,11 @@ class Tracks extends React.Component {
     componentWillUnmount() {
     }
 
+    onChangeExhibit(record, e) {
+        console.log("--> radio changed " + e.target.value);
+        record.set("exhibit", e.target.value);
+    }
+
     onChangeChat(record) {
         record.set("perProgramItemChat", !record.get("perProgramItemChat"));
     }
@@ -149,7 +154,17 @@ class Tracks extends React.Component {
                         </Checkbox>
                     );
                     break;
-                default:
+                    case ('exhibit'):
+                        inputNode = (
+                            <Radio.Group onChange={this.onChangeExhibit.bind(this, record)} 
+                                         value={record.get("exhibit")}>
+                                <Radio value="None">None</Radio>
+                                <Radio value="List">List</Radio>
+                                <Radio value="Grid">Grid</Radio>
+                          </Radio.Group>
+                        );
+                        break;
+                    default:
                     inputNode = null;
                     break;
             }
@@ -190,6 +205,7 @@ class Tracks extends React.Component {
                 form.setFieldsValue({
                     name: record.get("name") ? record.get("name") : "",
                     displayName: record.get("displayName") ? record.get("displayName") : "",
+                    exhibit: record.get("exhibit") ? record.get("exhibit") : "",
                     perProgramItemChat: record.get("perProgramItemChat"),
                     perProgramItemVideo: record.get("perProgramItemVideo")
                 });
@@ -247,6 +263,7 @@ class Tracks extends React.Component {
                             id: track.id,
                             name: track.get("name"),
                             displayName: track.get("displayName"),
+                            exhibit: track.get("exhibit"),
                             perProgramItemChat: track.get("perProgramItemChat"),
                             perProgramItemVideo: track.get("perProgramItemVideo")
                         }
@@ -295,6 +312,15 @@ class Tracks extends React.Component {
                     },
                     render: (text,record) => <span>{record.get("displayName")}</span>,
                     key: 'displayName',
+                },
+                {
+                    title: 'Exhibit',
+                    dataIndex: 'exhibit',
+                    editable: true,
+                    width: '5%',
+                    //render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
+                    render: (text,record) =><span>{record.get("exhibit")}</span>,
+                    key: 'exhibit',
                 },
                 {
                     title: 'Text Chats',
@@ -411,6 +437,7 @@ class Tracks extends React.Component {
                 conference: this.props.auth.currentConference.id,
                 name: "One-word-name",
                 displayName: "Publicly visible name",
+                exhibit: "None",
                 perProgramItemChat: false,
                 perProgramItemVideo: false
             }
