@@ -96,6 +96,12 @@ This will pop up a tab in your default browser and from there you can log into t
 
 BCP: Should we mention that it will come up looking like ICSE?
 
+### Set up Zoom for your test conference
+To use zoom embedding, you need to create a JWT app on Zoom, and set the instance
+configuration variables `ZOOM_API_KEY` and `ZOOM_API_SECRET` with the values from
+Zoom.
+
+
 ### Set up Twilio for your test conference
 
 Clowdr uses Twilio as the text and video chat service. Please go to
