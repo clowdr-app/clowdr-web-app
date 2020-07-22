@@ -375,15 +375,15 @@ class Lobby extends React.Component {
                     let tag, joinInfo;
                     if(item.get("mode") == "group"){
                     //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                        joinInfo = "Join this big group room, '"+item.get("title")+"'. Big group rooms support up to 50 callers, but you can only see the video of up to 4 other callers at once."
+                        joinInfo = "Click to join this big group room (up to 50 callers). Up to 5 speakers are allowed at once."
                     }
                     else if(item.get("mode") == "peer-to-peer"){
                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
-                        joinInfo ="Join this peer-to-peer room, '"+item.get("title")+"'. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
+                        joinInfo ="Click to join this peer-to-peer room (up to 10 callers)."
                     }
                     else if(item.get("mode") == "group-small"){
                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
-                        joinInfo = "Join this small group room, '"+item.get("title")+"'. Small group rooms support only up to 4 callers, but provide the best quality experience."
+                        joinInfo = "Click to join this small group room (up to 4 callers)."
                     }
 
                     let isModOverride = false;
@@ -420,10 +420,15 @@ class Lobby extends React.Component {
                                     </Tooltip>
                                 </div>;
                             }
-                            else
+                            else {
+                                if (!item.get("members") || item.get("members").length === 0) {
+                                    joinInfo = joinInfo + " (Currently Empty!)"
+                                }
                                 joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
-                                                                                         onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
+                                                                                                   onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                 </div>;
+                            }
+
                         }
                         else {
                             joinLink = formattedRoom;
