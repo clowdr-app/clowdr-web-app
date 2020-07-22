@@ -17,6 +17,7 @@ import {
     ReadOutlined,
     SmileOutlined,
     ScheduleOutlined,
+    SlidersOutlined,
     SolutionOutlined,
     SyncOutlined,
     TeamOutlined,
@@ -30,6 +31,8 @@ import {
 } from '@ant-design/icons';
 import SubMenu from "antd/es/menu/SubMenu";
 import {withRouter} from "react-router";
+import {ProgramContext} from "./Program";
+
 
 class LinkMenu extends React.Component {
 
@@ -67,6 +70,8 @@ class LinkMenu extends React.Component {
                     <Menu.Item key='/admin/users' icon={<UserOutlined/>}><NavLink to="/admin/users">
                     Users</NavLink></Menu.Item>
 
+                    <Menu.Item key='/admin/configuration' icon={<SlidersOutlined/>}><NavLink to="/admin/configuration">
+                        Conference Configuration</NavLink></Menu.Item>
                 </SubMenu>
             }
             userTools =
@@ -79,15 +84,15 @@ class LinkMenu extends React.Component {
                     </SubMenu>,
 
                     <SubMenu key="/exhibits" title={<span><TeamOutlined/><span>Exhibit Hall</span></span>}>
-                        <Menu.Item key='/exhibits/research-papers' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-papers/list">Research Papers</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/nier' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-New-Ideas-and-Emerging-Results/list">NIER</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/jf' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-Journal-First/list">Journal First</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/seet' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-Software-Engineering-Education-and-Training/list">SEET</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/seip' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-Software-Engineering-in-Practice/list">SEIP</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/seis' icon={<ReadOutlined/>}><NavLink to="/exhibits/icse-2020-Software-Engineering-in-Society/list">SEIS</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/demos' icon={<DesktopOutlined/>}><NavLink to="/exhibits/Demonstrations/grid">Demos</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/icse-2020-poster' icon={<BorderOutlined/>}><NavLink to="/exhibits/icse-2020-poster/grid">Posters</NavLink></Menu.Item>
-                        <Menu.Item key='/exhibits/src-posters' icon={<BorderOutlined/>}><NavLink to="/exhibits/icse-2020-ACM-Student-Research-Competition/grid">SRC Posters</NavLink></Menu.Item>
+                        {this.props.tracks
+                        .filter(track => track.get("exhibit") == "Grid" || track.get("exhibit") == "List")
+                        .map(track => {
+                            let mode = track.get("exhibit");
+                            let path = track.get("name");
+                            let displayName = track.get("displayName");
+                        return <Menu.Item key={`/exhibits/${path}`} icon={<ReadOutlined/>}> <NavLink to={`/exhibits/${path}/${mode}`}>{displayName}</NavLink></Menu.Item>
+
+                        })}
                     </SubMenu>,
 
                     <Menu.Item key='/lobby' icon={<WechatOutlined/>}><NavLink to="/lobby">Video Chat Lobby</NavLink></Menu.Item>,
@@ -121,12 +126,17 @@ class LinkMenu extends React.Component {
     }
 }
 let RouteredMenu = withRouter(LinkMenu);
-const MenuWithAuth = () => (
-    <AuthUserContext.Consumer>
-        {value => (
-            <RouteredMenu authContext={value} />
+const MenuWithAuth = (props) => (
+    <ProgramContext.Consumer>
+        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
+            <AuthUserContext.Consumer>
+                {value => (
+                    <RouteredMenu {...props} authContext={value} tracks={tracks} onDown={onDownload} downloaded={downloaded}/>
+                )}
+            </AuthUserContext.Consumer>
         )}
-    </AuthUserContext.Consumer>
+    </ProgramContext.Consumer>
+
 );
 
 export default withRouter(MenuWithAuth);

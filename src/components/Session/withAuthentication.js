@@ -48,7 +48,8 @@ const withAuthentication = Component => {
                 ifPermission: this.ifPermission.bind(this),
                 getUserRecord: this.getUserRecord.bind(this),
                 getPresences: this.getPresences.bind(this),
-                cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this)
+                cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
+                updateMyPresence: this.updateMyPresence.bind(this)
             }
             this.state = {
                 user: null,
@@ -78,6 +79,13 @@ const withAuthentication = Component => {
 
             };
             this.fetchingUsers = false;
+        }
+
+        async updateMyPresence(presence){
+            this.presences[this.state.userProfile.id] = presence;
+            for(let presenceWatcher of this.presenceWatchers){
+                presenceWatcher.setState({presences: this.presences});
+            }
         }
 
         async createOrOpenDM(profileOfUserToDM){
@@ -232,7 +240,7 @@ const withAuthentication = Component => {
             component.setState({presences: this.presences});
         }
         cancelPresenceSubscription(component){
-            this.prsenceWatchers = this.presenceWatchers.filter(v => v!= component);
+            this.presenceWatchers = this.presenceWatchers.filter(v => v!= component);
         }
         updatePresences(){
             if(this.presenceUpdateScheduled){
@@ -502,6 +510,7 @@ const withAuthentication = Component => {
                         const roles = await roleQuery.find();
 
                         let isAdmin = _this.state ? _this.state.isAdmin : false;
+                        let isClowdrAdmin = _this.state ? _this.state.isClowdrAdmin : false;
                         let validConferences = [];
 
                         let validConfQ= new Parse.Query("ClowdrInstanceAccess");
@@ -525,8 +534,14 @@ const withAuthentication = Component => {
                             }
                         }
                         for (let role of roles) {
-                            if (role.get("name") == "ClowdrSysAdmin")
+                            if (role.get("name") == "ClowdrSysAdmin") {
                                 isAdmin = true;
+                                isClowdrAdmin = true;
+                            }
+                            if (activeProfile && role.get("name") == (activeProfile.get("conference").id + "-admin")) {
+                                isAdmin = true;
+                                isClowdrAdmin = true;
+                            }
                         }
                         if(!activeProfile){
                             if(!preferredConference && process.env.REACT_APP_DEFAULT_CONFERENCE){
@@ -566,11 +581,14 @@ const withAuthentication = Component => {
                         _this.currentConference = conf;
                         _this.user = userWithRelations;
                         _this.userProfile = activeProfile;
-                        _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile)
-                        await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
-                        await _this.createSocialSpaceSubscription(user, activeProfile);
-                        let cchann = spacesByName['Lobby'] ? spacesByName['Lobby'].get("chatChannel") : undefined;
+                        _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile);
 
+                        try {
+                            await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
+                            await _this.createSocialSpaceSubscription(user, activeProfile);
+                        } catch (err) {
+                            console.log("[withAuth]: warn: " + err);
+                        }
 
                         let finishedStateFn = null;
                         let stateSetPromise = new Promise((resolve)=>{
@@ -582,6 +600,7 @@ const withAuthentication = Component => {
                             userProfile: activeProfile,
                             teamID: session.get("activeTeam"),
                             isAdmin: isAdmin,
+                            isClowdrAdmin: isClowdrAdmin,
                             permissions: permissions.map(p=>p.get("action").get("action")),
                             validConferences: validConferences,
                             currentConference: conf,
@@ -597,7 +616,7 @@ const withAuthentication = Component => {
                         _this.forceUpdate();
                         return userWithRelations;
                     } catch (err) {
-                        console.log(err);
+                        console.log("[withAuth]: err: " + err);
                         //TODO uncomment
                         try {
                             _this.setState({loading: false, user: null});

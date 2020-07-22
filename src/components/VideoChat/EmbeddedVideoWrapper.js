@@ -195,7 +195,9 @@ function ParticipantStrip() {
         enableScreenShare={true}
         priority={"high"}
         onClick={() => setSelectedParticipant(selectedParticipant)}
+        showWhenJustListening={true}
     /> : ""}
+        Active participants:
         <Masonry         breakpointCols={breakpointColumnsObj} className="video-masonry-grid" columnClassName="video-masonry-column">
             {/*{selectedParticipant == localParticipant ? "" : <Participant*/}
             {/*        participant={localParticipant}*/}
@@ -211,9 +213,23 @@ function ParticipantStrip() {
                         enableScreenShare={true}
                         priority={defaultPriority}
                         onClick={() => setSelectedParticipant(participant)}
+                        showWhenJustListening={false}
                     />
                 ))}
         </Masonry>
+    Just listening:
+            {tmp.filter((participant)=>(participant != selectedParticipant)).map((participant,idx)=>(
+                    <Participant
+                        key={""+idx+participant.sid}
+                        participant={participant}
+                        isSelected={selectedParticipant === participant}
+                        enableScreenShare={true}
+                        priority={defaultPriority}
+                        onClick={() => setSelectedParticipant(participant)}
+                        showWhenJustListening={true}
+                    />
+                ))}
+
     <div className={clsx(classes.controlsContainer, { showControls })}>
         <ToggleAudioButton disabled={isReconnecting} />
         <ToggleVideoButton disabled={isReconnecting} />
@@ -229,19 +245,29 @@ function ParticipantStrip() {
     );
 }
 
-function Participant({
-                         participant,
+function Participant({   participant,
                          disableAudio,
                          enableScreenShare,
                          onClick,
                          isSelected,
-    priority
+                         priority,
+                         showWhenJustListening,
                      }) {
-    return (
-        <ParticipantInfo participant={participant} onClick={onClick} isSelected={isSelected}>
-            <ParticipantTracks participant={participant} disableAudio={disableAudio} enableScreenShare={enableScreenShare} videoPriority={priority}/>
-        </ParticipantInfo>
-    );
+    const publications = usePublications(participant);
+    const audioPublication = publications.find(p => p.kind === 'audio');
+    const videoPublication = publications.find(p => p.trackName.includes('camera'));
+    const justListening = (audioPublication == null && videoPublication == null);
+    const showIt = showWhenJustListening ? justListening : !justListening;
+
+    if (showIt) {
+      return (
+          <ParticipantInfo participant={participant} onClick={onClick} isSelected={isSelected}>
+              <ParticipantTracks participant={participant} disableAudio={disableAudio} enableScreenShare={enableScreenShare} videoPriority={priority}/>
+          </ParticipantInfo>
+      );
+    } else {
+      return <></>
+    }
 }
 
 const useStyles = makeStyles((theme) =>

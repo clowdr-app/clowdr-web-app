@@ -189,7 +189,7 @@ class ContextualActiveUsers extends Component {
                     && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
                 ).map(p => p.get("user")).sort(compareNames);
         let latestLobbyMembers = lobbyMembers.concat().sort((i1, i2) => {
-            return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
+            return (i1 && i2 && i1.get("updatedAt") > i2.get("updatedAt") ? 1 : -1)
         }).slice(0,10);
         for(let u of lobbyMembers){
             searchOptions.push({label: "@"+u.get("displayName"), value: u.id+"@-lobby"});
@@ -228,6 +228,7 @@ class ContextualActiveUsers extends Component {
             if(this.state.filteredUser)
                 selectedKeys.push(this.state.filteredUser);
 
+            let activeSpace = this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : "Nowhere";
             let programInfo = <></>
             if (programRooms.length > 0){
                 programInfo = <div>
@@ -259,15 +260,15 @@ class ContextualActiveUsers extends Component {
                                 let tag, joinInfo;
                                 if(item.get("mode") == "group"){
                                     //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                                    joinInfo = "Join this big group room, '"+item.get("title")+"'. Big group rooms support up to 50 callers, but you can only see the video of up to 4 other callers at once."
+                                    joinInfo = "Click to join this big group room (up to 50 callers). Up to 5 speakers are allowed at once."
                                 }
                                 else if(item.get("mode") == "peer-to-peer"){
                                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
-                                    joinInfo ="Join this peer-to-peer room, '"+item.get("title")+"'. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
+                                    joinInfo ="Click to join this peer-to-peer room (up to 10 callers)."
                                 }
                                 else if(item.get("mode") == "group-small"){
                                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
-                                    joinInfo = "Join this small group room, '"+item.get("title")+"'. Small group rooms support only up to 4 callers, but provide the best quality experience."
+                                    joinInfo = "Click to join this small group room (up to 4 callers)."
                                 }
 
                                 let isModOverride = false;
@@ -304,10 +305,14 @@ class ContextualActiveUsers extends Component {
                                         </Tooltip>
                                         </div>;
                                     }
-                                    else
+                                    else {
+                                        if (!item.get("members") || item.get("members").length === 0) {
+                                            joinInfo = joinInfo + " (Currently Empty!)"
+                                        }
                                         joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
-                                                                                     onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
+                                                                                                           onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                         </div>;
+                                    }
                                 }
                                 else {
                                     joinLink = formattedRoom;
@@ -363,7 +368,7 @@ class ContextualActiveUsers extends Component {
                     <div style={{height:'6px', background:'white'}}/>
 
                     <Divider className="social-sidebar-divider">
-                        <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{this.props.auth.activeSpace.get("name")}</Tooltip>
+                        <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{activeSpace}</Tooltip>
                     </Divider>
 
                         <Menu mode="inline"
@@ -472,7 +477,7 @@ class ContextualActiveUsers extends Component {
                 {programInfo}
 
                 <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
-                + this.props.auth.activeSpace.get("name")}>Video chat rooms</Tooltip></Divider>
+                + activeSpace}>Video chat rooms</Tooltip></Divider>
 
                 <Menu mode="inline"
                       className="activeRoomsList"
@@ -500,15 +505,15 @@ class ContextualActiveUsers extends Component {
                     let tag, joinInfo;
                     if(item.get("mode") == "group"){
                     //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                        joinInfo = "Join this big group room, '"+item.get("title")+"'. Big group rooms support up to 50 callers, but you can only see the video of up to 4 other callers at once."
+                        joinInfo = "Click to join this big group room (up to 50 callers). Up to 5 speakers are allowed at once."
                     }
                     else if(item.get("mode") == "peer-to-peer"){
                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
-                        joinInfo ="Join this peer-to-peer room, '"+item.get("title")+"'. Peer-to-peer rooms support up to 10 callers at once, but quality may not be as good as small or big group rooms"
+                        joinInfo ="Click to join this peer-to-peer room (up to 10 callers)."
                     }
                     else if(item.get("mode") == "group-small"){
                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
-                        joinInfo = "Join this small group room, '"+item.get("title")+"'. Small group rooms support only up to 4 callers, but provide the best quality experience."
+                        joinInfo = "Click to join this small group room (up to 4 callers)."
                     }
 
                     let isModOverride = false;
@@ -545,10 +550,14 @@ class ContextualActiveUsers extends Component {
                                     </Tooltip>
                                 </div>;
                             }
-                            else
+                            else {
+                                if (!item.get("members") || item.get("members").length === 0) {
+                                    joinInfo = joinInfo + " (Currently Empty!)"
+                                }
                                 joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
-                                                                                         onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
+                                                                                                   onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
                                 </div>;
+                            }
                         }
                         else {
                             joinLink = formattedRoom;

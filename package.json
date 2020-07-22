@@ -9,6 +9,7 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
+    "@tinymce/tinymce-react": "^3.6.0",
     "@types/jest": "^26.0.4",
     "@types/node": "^14.0.23",
     "@types/parse": "^2.12.1",
@@ -43,6 +44,7 @@
     "react-player": "^2.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
+    "tinymce": "^5.4.1",
     "twilio": "^3.39.3",
     "twilio-chat": "^3.3.7",
     "twilio-video": "^2.4.0",
@@ -62,7 +64,7 @@
     "eject": "react-scripts eject",
     "deploy": "deployator",
     "export-schema": "node-env-run -E .env-main scripts/export-schema.js",
-    "init-app": "node-env-run -E ./db/.env-db scripts/db.js"
+    "init-app": "node-env-run -E .env scripts/db.js"
   },
   "eslintConfig": {
     "extends": "react-app"
