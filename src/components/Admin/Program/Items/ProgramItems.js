@@ -10,83 +10,35 @@ const { Option } = Select;
 class ProgramItems extends React.Component {
     constructor(props) {
         super(props);
-        console.log("[Admin/Items]: program downloaded?" + this.props.downloaded);
         this.state = {
             loading: true,
             alert: undefined,
-            items: undefined,
-            tracks: undefined,
-            people: undefined,
-            gotItems: false,
-            gotTracks: false,
-            gotPeople: false,
+            ProgramItems: [],
+            ProgramTracks: [],
+            ProgramPersons: [],
             searched: false,
             searchResult: ""
         };
-
-        // Call to download program
-        if (!this.props.downloaded)
-            this.props.onDown(this.props);
-        else {
-            this.state.items = this.props.items;
-            this.state.tracks = this.props.tracks;
-            this.state.people = this.props.people;
-        }
     }
 
-    componentDidUpdate(prevProps) {
-        console.log("[Admin/Items]: Something changed");
-
-        if (this.state.loading) {
-            if (this.state.gotTracks && this.state.gotItems && this.state.gotPeople) {
-                console.log('[Admin/Items]: Program download complete');
-                this.setState({
-                    items: this.props.items,
-                    tracks: this.props.tracks,
-                    people: this.props.people,
-                    loading: false
-                });
-            }
-            else {
-                // console.log('[Admin/Items]: Program still downloading...');
-                if (prevProps.tracks.length != this.props.tracks.length) {
-                    this.setState({gotTracks: true});
-                    // console.log('[Admin/Items]: got tracks');
-                }
-                if (prevProps.items.length != this.props.items.length) {
-                    this.setState({gotItems: true})
-                    // console.log('[Admin/Items]: got items');
-                }
-                if (prevProps.people.length != this.props.people.length) {
-                    this.setState({gotPeople: true})
-                    // console.log('[Admin/Items]: got people');
-                }
-            }
-        }
-        else {
-            if (prevProps.items.length != this.props.items.length) {
-                this.setState({items: this.props.items});
-                console.log('[Admin/Items]: changes in items');
-            }
-        }
-    }
-
-
-    refreshList(){
-        let query = new Parse.Query("ProgramItem");
-        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.limit(5000);
-        query.find().then(res=>{
-            console.log('Found items ' + res.length);
-            this.setState({
-                items: res,
-                loading: false
-            });
-        })
+    async componentDidMount() {
+       let [items, tracks, people] = await Promise.all([
+           this.props.auth.programCache.getProgramItems(this),
+           this.props.auth.programCache.getProgramTracks(this),
+           this.props.auth.programCache.getProgramPersons(this),
+       ]);
+       this.setState({
+           ProgramItems: items,
+           ProgramPersons: people,
+           ProgramTracks: tracks,
+           downloaded: true
+       })
     }
 
     componentWillUnmount() {
+        this.props.auth.programCache.cancelSubscription("ProgramItem", this);
+        this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
+        this.props.auth.programCache.cancelSubscription("ProgramPerson", this);
         // this.sub.unsubscribe();
     }
 
@@ -111,7 +63,7 @@ class ProgramItems extends React.Component {
                         style={{ width: 400 }}
                         mode="multiple"
                     >
-                        {this.state.people.map(p => (
+                        {this.state.ProgramPersons.map(p => (
                             <Option key={p.id} value={p.id}>{p.get('name')}</Option>
                         ))}
                     </Select>
@@ -120,7 +72,7 @@ class ProgramItems extends React.Component {
                     return <Select
                         placeholder="Choose a track"
                     >
-                        {this.state.tracks.map(track => (
+                        {this.state.ProgramTracks.map(track => (
                             <Option
                                 key={track.id}
                                 value={track.id}
@@ -157,7 +109,7 @@ class ProgramItems extends React.Component {
 
         const EditableTable = () => {
             const [form] = Form.useForm();
-            const [data, setData] = useState(this.state.items);
+            const [data, setData] = useState(this.state.ProgramItems);
             const [editingKey, setEditingKey] = useState('');
 
             const isEditing = record => record.id === editingKey;
@@ -179,7 +131,7 @@ class ProgramItems extends React.Component {
             };
 
             const onDelete = record => {
-                const newItemList = [...this.state.items];
+                const newItemList = [...this.state.ProgramItems];
 
                 // delete from database
                 let data = {
@@ -214,7 +166,8 @@ class ProgramItems extends React.Component {
                     let item = newData.find(item => item.id === id);
 
                     if (item) {
-                        let newTrack = this.state.tracks.find(t => t.id === row.track);
+                        console.log(row.track + " -- " + this.state.ProgramTracks)
+                        let newTrack = this.state.ProgramTracks.find(t => t.id === row.track);
                         if (newTrack) {
                             item.set("track", newTrack)
                         } else {
@@ -222,7 +175,7 @@ class ProgramItems extends React.Component {
                         }
                         let newAuthors = [];
                         row.authors.map(a => {
-                            const newAuthor = this.state.people.find(p => p.id === a);
+                            const newAuthor = this.state.ProgramPersons.find(p => p.id === a);
                             newAuthors.push(newAuthor);
                         })
 
@@ -313,7 +266,7 @@ class ProgramItems extends React.Component {
                     dataIndex: 'action',
                     render: (_, record) => {
                         const editable = isEditing(record);
-                        if (this.state.items.length > 0) {
+                        if (this.state.ProgramItems.length > 0) {
                             return editable ? (
                                 <span>
                                 <a
@@ -370,13 +323,14 @@ class ProgramItems extends React.Component {
             return (
                 <Form form={form} component={false}>
                     <Table
+                        rowKey="id"
                         components={{
                             body: {
                                 cell: EditableCell,
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult : this.state.items}
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramItems}
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
@@ -410,7 +364,7 @@ class ProgramItems extends React.Component {
 
         };
 
-        if (!this.props.downloaded) {
+        if (!this.state.downloaded) {
             return (
                 <Spin tip="Loading...">
                 </Spin>)
@@ -451,7 +405,7 @@ class ProgramItems extends React.Component {
                         else {
                             this.setState({searched: true});
                             this.setState({
-                                searchResult: this.state.items.filter(
+                                searchResult: this.state.ProgramItems.filter(
                                     item =>
                                         (item.get('title') && item.get('title').toLowerCase().includes(key.toLowerCase()))
                                         || (item.get('track') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
@@ -471,15 +425,11 @@ class ProgramItems extends React.Component {
 
 const
     AuthConsumer = (props) => (
-        <ProgramContext.Consumer>
-            {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
                 <AuthUserContext.Consumer>
                     {value => (
-                        <ProgramItems {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
+                        <ProgramItems {...props} auth={value}  />
                     )}
                 </AuthUserContext.Consumer>
-            )}
-        </ProgramContext.Consumer>
 
     );
 

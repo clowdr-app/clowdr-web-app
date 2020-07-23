@@ -4,6 +4,7 @@ import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
 import {isAvailableColor, isDNDColor, isDNDNameColor, isLookingForConversationColor} from "./LobbyColors.js";
+import ReactMarkdown from "react-markdown";
 
 class UserStatusDisplay extends React.Component{
     constructor(props){
@@ -16,7 +17,7 @@ class UserStatusDisplay extends React.Component{
     componentDidMount() {
         this.mounted = true;
 
-        this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id).then(profile=>{
+        this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id, this).then(profile=>{
             if(!this.mounted)
                 return;
             let userStatus = this.props.auth.helpers.presences[this.state.id];
@@ -26,6 +27,7 @@ class UserStatusDisplay extends React.Component{
 
     componentWillUnmount() {
         this.mounted = false;
+        this.props.auth.helpers.unmountProfileDisplay(this.state.id, this);
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -39,6 +41,12 @@ class UserStatusDisplay extends React.Component{
     openDM(){
         this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
+    linkRenderer = (props) => {
+        let currentDomain = window.location.origin;
+        if(props.href && props.href.startsWith(currentDomain))
+            return <a href="#" onClick={()=>{this.props.auth.history.push(props.href.replace(currentDomain,""))}}>{props.children}</a>;
+        return <a href={props.href} target="_blank">{props.children}</a>;
+    };
 
     render() {
         if (!this.state.profile)
@@ -90,9 +98,7 @@ class UserStatusDisplay extends React.Component{
         }
         let bio = "";
         if ("" + this.state.profile.get("bio") != "undefined") {
-            bio = <div>
-                {"" + this.state.profile.get("bio")}
-            </div>;
+            bio = this.state.profile.get("bio")
         }
         let tags = "";
         let tagToHighlight;
@@ -135,7 +141,9 @@ class UserStatusDisplay extends React.Component{
               {dntWaiver}
             </div>;
         // BCP: And this needs a bit more vertical spacing between non-empty elements too:
-        let popoverContent = <div className="userPopover"> {firstLine} {bio} {webpage} {dmButton} </div>;
+        let popoverContent = <div className="userPopover"> {firstLine} <ReactMarkdown source={bio}
+                                                                                     renderers={{link: this.linkRenderer}}
+        /> {webpage} {dmButton} </div>;
 /*
         let popoverContent = <span></span>
         // BCP: Not clear to me why we were treating these so popovers differently

@@ -5,7 +5,6 @@ import LiveStreamingPanel from "./LiveStreamingPanel";
 import ZoomPanel from "./ZoomPanel";
 import NoMediaPanel from "./NoMediaPanel";
 import AuthUserContext from "../Session/context";
-import {ProgramContext} from "../Program";
 
 class LiveStreaming extends Component {
     constructor(props) {
@@ -177,6 +176,7 @@ class LiveStreaming extends Component {
     }
 
     componentDidUpdate(prevProps) {
+        //TODO
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
                 // console.log('[Live]: Program download complete');
@@ -358,15 +358,11 @@ class LiveStreaming extends Component {
 }
 
 const LiveVideosArea = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <LiveStreaming {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                    <LiveStreaming {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
 );
 
 export default LiveVideosArea;

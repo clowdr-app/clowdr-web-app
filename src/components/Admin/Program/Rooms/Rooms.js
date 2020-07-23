@@ -3,7 +3,6 @@ import {Alert, Button, Form, Input, message, Modal, Popconfirm, Select, Space, S
 import {DeleteOutlined, EditOutlined, UploadOutlined} from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
-import {ProgramContext} from "../../../Program";
 
 const {Option} = Select;
 
@@ -22,23 +21,12 @@ class Rooms extends React.Component {
         super(props);
         this.state = {
             loading: true,
-            rooms: [],
-            gotRooms: false,
             editing: false,
             edt_room: undefined,
             searched: false,
             searchResult: "",
             alert: ""
         };
-
-        console.log('[Admin/Rooms]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded)
-            this.props.onDown(this.props);
-        else
-            this.state.rooms = this.props.rooms;
-
     }
 
     onCreate(values) {
@@ -56,7 +44,7 @@ class Rooms extends React.Component {
         room.set("qa", values.qa);
         room.set("conference", this.props.auth.currentConference);
         room.save().then((val) => {
-            _this.setState({visible: false, rooms: [room, ...this.state.rooms]})
+            _this.setState({visible: false, ProgramRooms: [room, ...this.state.ProgramRooms]})
         }).catch(err => {
             console.log(err);
         });
@@ -66,9 +54,7 @@ class Rooms extends React.Component {
         console.log("Deleting " + value + " " + value.get("name"));
         // Delete the watchers first
 
-        value.destroy().then(() => {
-            this.refreshList();
-        });
+        value.destroy();
     }
 
     onEdit(room) {
@@ -93,7 +79,7 @@ class Rooms extends React.Component {
     onUpdate(values) {
         var _this = this;
         console.log("Updating " + values.id1 + "; " + values.objectId);
-        let room = this.state.rooms.find(r => r.id == values.objectId);
+        let room = this.state.ProgramRooms.find(r => r.id == values.objectId);
 
         if (room) {
             room.set("name", values.name);
@@ -118,30 +104,9 @@ class Rooms extends React.Component {
         this.setState({'visible': !this.state.visible});
     }
 
-    componentDidMount() {
-        console.log("ROOMS ARE ======>", this.state.rooms);
-    }
-
-    componentDidUpdate(prevProps) {
-        console.log("[Admin/Rooms]: Something changed");
-
-        if (this.state.loading) {
-            if (this.state.gotRooms) {
-                console.log('[Admin/Rooms]: Program download complete');
-                this.setState({
-                    rooms: this.props.rooms,
-                    loading: false
-                });
-            } else {
-                console.log('[Admin/Rooms]: Program still downloading...');
-                if (prevProps.rooms.length != this.props.rooms.length) {
-                    this.setState({gotRooms: true});
-                    console.log('[Admin/Rooms]: got rooms');
-                }
-            }
-        } else
-            console.log('[Admin/Rooms]: Program cached');
-
+    async componentDidMount() {
+        let rooms = await this.props.auth.programCache.getProgramRooms(this);
+        this.setState({ProgramRooms: rooms, loading: false})
     }
 
     onChange(info) {
@@ -167,24 +132,8 @@ class Rooms extends React.Component {
         return false;
     }
 
-    refreshList() {
-        let query = new Parse.Query("ProgramRoom");
-//        console.log(this.props.auth);
-//        let token = this.props.auth.user.getSessionToken();
-//        console.log(token);
-        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.find().then(res => {
-            console.log('Found rooms ' + res.length);
-            this.setState({
-                rooms: res,
-                loading: false
-            });
-        })
-    }
-
     componentWillUnmount() {
-        // this.sub.unsubscribe();
+        this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
     }
 
     render() {
@@ -308,7 +257,7 @@ class Rooms extends React.Component {
         const EditableTable = () => {
             console.log("Loading Editable table");
             const [form] = Form.useForm();
-            const [data, setData] = useState(this.state.rooms);
+            const [data, setData] = useState(this.state.ProgramRooms);
             const [editingKey, setEditingKey] = useState('');
 
             const isEditing = record => record.id === editingKey;
@@ -336,9 +285,9 @@ class Rooms extends React.Component {
 
             const onDelete = record => {
                 console.log("deleting item: " + record.get("title"));
-                const newRooms = [...this.state.rooms];
+                const newRooms = [...this.state.ProgramRooms];
                 this.setState({
-                    rooms: newRooms.filter(item => item.id !== record.id)
+                    ProgramRooms: newRooms.filter(item => item.id !== record.id)
                 });
                 // delete from database
                 record.destroy().then(() => {
@@ -468,7 +417,7 @@ class Rooms extends React.Component {
                     dataIndex: 'action',
                     render: (_, record) => {
                         const editable = isEditing(record);
-                        if (this.state.rooms.length > 0) {
+                        if (this.state.ProgramRooms.length > 0) {
                             return editable ?
                                 (
                                     <span>
@@ -530,7 +479,7 @@ class Rooms extends React.Component {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult : this.state.rooms}
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramRooms}
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         pagination={{
@@ -554,7 +503,7 @@ class Rooms extends React.Component {
                     console.log('ProgramItem created', result);
                     this.setState({
                         alert: "Add success",
-                        rooms: [myNewObject, ...this.state.rooms]
+                        ProgramRooms: [myNewObject, ...this.state.ProgramRooms]
                     })
                 })
                 .catch(error => {
@@ -564,7 +513,7 @@ class Rooms extends React.Component {
                 );
         };
 
-        if (!this.props.downloaded)
+        if (this.state.loading)
             return (
                 <Spin tip="Loading...">
                 </Spin>
@@ -603,7 +552,7 @@ class Rooms extends React.Component {
                                     } else {
                                         this.setState({searched: true});
                                         this.setState({
-                                            searchResult: this.state.rooms.filter(
+                                            searchResult: this.state.ProgramRooms.filter(
                                                 room => (room.get('name') && room.get('name').toLowerCase().includes(key.toLowerCase()))
                                             )
                                         });
@@ -634,16 +583,11 @@ class Rooms extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <Rooms {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions}
-                           onDown={onDownload} downloaded={downloaded}/>
+                    <Rooms {...props} auth={value}  />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
 
 );
 

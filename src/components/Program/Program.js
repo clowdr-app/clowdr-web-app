@@ -1,14 +1,10 @@
 import React from 'react';
-import {Skeleton, Spin, Table, Button, Radio, Tooltip, Descriptions, Tag, Input} from 'antd';
+import {Descriptions, Radio, Skeleton, Spin, Table, Tag, Tooltip} from 'antd';
 import Parse from "parse";
 import {AuthUserContext} from "../Session";
-import Form from "antd/lib/form/Form";
-import withProgram from './withProgram';
-import ProgramContext from './context';
-import { ContactlessOutlined } from '@material-ui/icons';
 import {NavLink} from "react-router-dom";
-import {StarOutlined, StarFilled} from "@ant-design/icons";
-import ReactImageZoom from 'react-image-zoom';
+import {StarFilled, StarOutlined} from "@ant-design/icons";
+import ProgramItemDisplay from "./ProgramItemDisplay";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -30,28 +26,14 @@ class Program extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            sessions: [], 
+            ProgramSessions: [],
             loading: true,
-            gotTracks: false,
-            gotRooms: false,
             selectedDays: [],
-            gotItems: false,
-            gotSessions: false,
             starredItems: [],
             timeZone: timezone.tz.guess(),
         }
-
-        console.log('[Program]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded) 
-            this.props.onDown(this.props);
-        else{
-            this.state.sessions = this.props.sessions;
-            this.state.loading = false;
-        }
     }
-    componentDidMount() {
+    async componentDidMount() {
         //find our saved program
         if(this.props.auth.userProfile) {
             let StarredProgram = Parse.Object.extend("StarredProgram");
@@ -70,6 +52,8 @@ class Program extends React.Component {
                this.setState({starredProgram: res, starredItems: starredItems});
             });
         }
+        let sessions = await this.props.auth.programCache.getProgramSessions(this);
+        this.setState({ProgramSessions: sessions, loading: false});
         if(this.state.sessions && this.state.sessions.length){
             this.programLoaded();
         }
@@ -100,7 +84,7 @@ class Program extends React.Component {
                             if(this.state.filterByStar && !this.state.starredItems.find(item=>item.id == programItem.id))
                                 continue;
                             row.key = programItem.id;
-                            row.programItem = programItem.get("title");
+                            row.programItem = programItem.id;
                             row.confKey = programItem.get("confKey");
                             row.item = programItem;
                             table.push(row);
@@ -119,50 +103,8 @@ class Program extends React.Component {
         return table;
     }
 
-    componentDidUpdate(prevProps) {
-        if (this.state.loading) {
-            if (this.state.gotTracks && this.state.gotRooms && this.state.gotItems && this.state.gotSessions) {
-                this.programLoaded();
-                this.setState({
-                    // sessions: groupedByDate,
-                    sessions: this.props.sessions,
-                    loading: false
-                    // tracks: trackOptions
-                });
-            }
-            else {
-                if (prevProps.tracks.length != this.props.tracks.length) {
-                    this.setState({gotTracks: true});
-                }
-                if (prevProps.rooms.length != this.props.rooms.length) {
-                    this.setState({gotRooms: true})
-                }
-                if (prevProps.items.length != this.props.items.length) {
-                    this.setState({gotItems: true})
-                }
-                if (prevProps.sessions.length != this.props.sessions.length) {
-                    this.setState({gotSessions: true})
-                }
-            }
-        }
-        else {
-            if (prevProps.tracks.length != this.props.tracks.length) {
-                this.setState({tracks: this.props.tracks});
-            }
-            if (prevProps.rooms.length != this.props.rooms.length) {
-                this.setState({rooms: this.props.rooms});
-            }
-            if (prevProps.items.length != this.props.items.length) {
-                this.setState({items: this.props.items});
-            }
-            if (prevProps.sessions.length != this.props.sessions.length) {
-                this.setState({sessions: this.props.sessions});
-            }
-        }
-    }
-
     render() {
-        if(!this.state.sessions){
+        if(this.state.loading){
             return <Spin></Spin>
         }
         let days = [];
@@ -239,7 +181,7 @@ class Program extends React.Component {
                 className:"program-table-programItem",
                 dataIndex: "programItem",
                 render: (value, row, index)=>{
-                    return <NavLink to={"/program/"+row.confKey}>{value}</NavLink>
+                    return <ProgramItemDisplay auth={this.props.auth} id={value} />
                 }
             }
         ];
@@ -281,23 +223,23 @@ class Program extends React.Component {
                    {/*    </Form.Item>*/}
                    {/*</Form>*/}
                 </div>
-                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.sessions)} loading={this.state.loading}></Table>
+                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.ProgramSessions)} loading={this.state.loading}></Table>
             </div>
         </div>
     }
 
     programLoaded() {
-        if(this.state.loading){
-            let days = [... new Set(this.props.sessions.map((item)=>timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D")))];
-            this.setState({sessionDays: days})
-        }
+        // if(this.state.loading){
+        //     let days = [... new Set(this.state.sessions.map((item)=>timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D")))];
+        //     this.setState({sessionDays: days})
+        // }
     }
 }
 class ProgramDay extends React.Component{
     constructor(props) {
         super(props);
         //organize into time bands
-        let timeBands = groupBy(this.props.program,(session)=>(this.props.formatTime(session.get("startTime"))+ " - ") + this.props.formatTime(session.get('endTime')))
+        let timeBands = groupBy(this.state.program,(session)=>(this.props.formatTime(session.get("startTime"))+ " - ") + this.props.formatTime(session.get('endTime')))
         this.state = {
             timeBands : timeBands
         }
@@ -336,17 +278,14 @@ class ProgramItem extends React.Component {
         );
     }
 }
+
 const
     AuthConsumer = (props) => (
-        <ProgramContext.Consumer>
-            {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
-                <AuthUserContext.Consumer>
-                    {value => (
-                        <Program {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
-                    )}
-                </AuthUserContext.Consumer>
+        <AuthUserContext.Consumer>
+            {value => (
+                <Program {...props} auth={value}  />
             )}
-        </ProgramContext.Consumer>
+        </AuthUserContext.Consumer>
 
     );
 export default AuthConsumer;

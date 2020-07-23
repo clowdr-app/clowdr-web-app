@@ -4,6 +4,7 @@ import AuthUserContext from './context';
 import Parse from "parse";
 import {notification, Spin} from "antd";
 import ChatClient from "../../classes/ChatClient"
+import ProgramCache from "./ProgramCache";
 
 let UserProfile = Parse.Object.extend("UserProfile");
 
@@ -24,13 +25,14 @@ const withAuthentication = Component => {
             this.presenceWatchers = [];
             this.presences = {};
             this.newPresences = [];
+            this.userProfileSubscribers = {};
 
-            var parseLive = new Parse.LiveQueryClient({
+            this.parseLive = new Parse.LiveQueryClient({
                 applicationId: process.env.REACT_APP_PARSE_APP_ID,
                 serverURL: process.env.REACT_APP_PARSE_DOMAIN,
                 javascriptKey: process.env.REACT_APP_PARSE_JS_KEY,
             });
-            parseLive.open();
+            this.parseLive.open();
 
             let exports ={
                 unwrappedProfiles: this.unwrappedProfiles,
@@ -49,6 +51,7 @@ const withAuthentication = Component => {
                 getUserRecord: this.getUserRecord.bind(this),
                 getPresences: this.getPresences.bind(this),
                 cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
+                unmountProfileDisplay: this.unmountProfileDisplay.bind(this),
                 updateMyPresence: this.updateMyPresence.bind(this)
             }
             this.state = {
@@ -68,7 +71,7 @@ const withAuthentication = Component => {
                 activeRoom: null,
                 helpers: exports,
                 chatClient: new ChatClient(this.setState.bind(this)),
-                parseLive: parseLive,
+                parseLive: this.parseLive,
                 presences: {},
                 // video: {
                 videoRoomsLoaded: false,
@@ -239,8 +242,20 @@ const withAuthentication = Component => {
             this.presenceWatchers.push(component);
             component.setState({presences: this.presences});
         }
+        unmountProfileDisplay(profileID, component){
+            if(this.userProfileSubscribers[profileID])
+                this.userProfileSubscribers[profileID] = this.userProfileSubscribers[profileID].filter(c=>c!=component);
+        }
         cancelPresenceSubscription(component){
             this.presenceWatchers = this.presenceWatchers.filter(v => v!= component);
+        }
+        updateProfile(profile){
+            if(this.userProfileSubscribers[profile.id]){
+                for(let subscriber of this.userProfileSubscribers[profile.id]){
+                    subscriber.setState({profile: profile});
+                }
+            }
+
         }
         updatePresences(){
             if(this.presenceUpdateScheduled){
@@ -279,6 +294,7 @@ const withAuthentication = Component => {
             query.equalTo("conference", this.currentConference);
             query.equalTo("isOnline", true);
 
+
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
             this.socialSpaceSubscription.on('create', (presence) => {
                 this.newPresences.push(presence);
@@ -300,6 +316,7 @@ const withAuthentication = Component => {
                 this.presences[presence.get("user").id] = presence;
                 this.updatePresences();
             })
+
             let presences = await query.find();
             let presenceByProfile = {};
             for(let presence of presences){
@@ -307,6 +324,14 @@ const withAuthentication = Component => {
             }
             //trigger a big fetch of all of the profiles at once
             await this.getUserProfilesFromUserProfileIDs(Object.keys(presenceByProfile));
+            let profilesQuery = new Parse.Query("UserProfile");
+            profilesQuery.equalTo("conference", this.currentConference);
+            profilesQuery.limit(2000);
+            this.profilesSubscription = this.state.parseLive.subscribe(profilesQuery, user.getSessionToken());
+            this.profilesSubscription.on("update", (profile)=>{
+                this.userProfiles[profile.id] = new Promise((resolve)=>(resolve(profile)));
+                this.updateProfile(profile);
+            })
             for(let presence of presences){
                 this.presences[presence.get("user").id] = presence;
             }
@@ -357,10 +382,16 @@ const withAuthentication = Component => {
 
 
 
-        async getUserProfilesFromUserProfileID(id) {
+        async getUserProfilesFromUserProfileID(id, subscriber) {
             let q = new Parse.Query(UserProfile);
             let users = [];
             let toFetch = [];
+            if(subscriber){
+                if(!this.userProfileSubscribers[id]){
+                    this.userProfileSubscribers[id] = [];
+                }
+                this.userProfileSubscribers[id].push(subscriber);
+            }
             if (this.userProfiles[id]) {
                 let p = await this.userProfiles[id];
                 return p;
@@ -605,7 +636,8 @@ const withAuthentication = Component => {
                             validConferences: validConferences,
                             currentConference: conf,
                             loading: false,
-                            roles: roles
+                            roles: roles,
+                            programCache: new ProgramCache(conf, _this.parseLive),
                         })}, ()=>{
                             finishedStateFn()});
 
@@ -652,6 +684,7 @@ const withAuthentication = Component => {
                         user: null,
                         videoRoomsLoaded: false,
                         currentConference: conference,
+                        programCache: new ProgramCache(conference, _this.parseLive),
                         loading: false,
                         users: {}
                     })
@@ -855,6 +888,12 @@ const withAuthentication = Component => {
 
         componentWillUnmount() {
             this.mounted = false;
+            if(this.socialSpaceSubscription){
+                this.socialSpaceSubscription.unsubscribe();
+            }
+            if(this.profilesSubscription){
+                this.profilesSubscription.unsubscribe();
+            }
             if (this.parseLivePublicVideosSub) {
                 this.parseLivePublicVideosSub.unsubscribe();
             }
