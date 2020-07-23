@@ -38,9 +38,18 @@ class LinkMenu extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            ProgramTracks: []
+        }
     }
 
     componentDidMount() {
+        this.props.authContext.programCache.getProgramTracks(this).then(tracks => {
+            this.setState({ProgramTracks: tracks});
+        })
+    }
+    componentWillUnmount() {
+        this.props.authContext.programCache.cancelSubscription("ProgramTrack", this);
     }
 
     render() {
@@ -84,7 +93,7 @@ class LinkMenu extends React.Component {
                     </SubMenu>,
 
                     <SubMenu key="/exhibits" title={<span><TeamOutlined/><span>Exhibit Hall</span></span>}>
-                        {this.props.tracks
+                        {this.state.ProgramTracks
                         .filter(track => track.get("exhibit") == "Grid" || track.get("exhibit") == "List")
                         .map(track => {
                             let mode = track.get("exhibit");
@@ -127,15 +136,11 @@ class LinkMenu extends React.Component {
 }
 let RouteredMenu = withRouter(LinkMenu);
 const MenuWithAuth = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <RouteredMenu {...props} authContext={value} tracks={tracks} onDown={onDownload} downloaded={downloaded}/>
+                    <RouteredMenu {...props} authContext={value}  />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
 
 );
 

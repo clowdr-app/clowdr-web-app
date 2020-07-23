@@ -329,6 +329,7 @@ Parse.Cloud.define("program-upload", async (request) => {
     // Create People next
     let ProgramPerson = Parse.Object.extend("ProgramPerson");
     let qp = new Parse.Query(ProgramPerson);
+    qp.equalTo("conference", conf);
     qp.limit(10000);
     let people = await qp.find({useMasterKey: true});
     people.forEach((person) => {
@@ -347,6 +348,7 @@ Parse.Cloud.define("program-upload", async (request) => {
         person.Key ? newPerson.set("confKey", person.Key.trim()) : newPerson.set("confKey", person.Key);
         person.URL ? newPerson.set("URL", person.URL.trim()) : newPerson.set("URL", person.URL);
         person.URLPhoto ? newPerson.set("URLPhoto", person.URLPhoto.trim()) : newPerson.set("URLPhoto", person.URLPhoto);
+        newPerson.set("conference", conf);
         newPerson.setACL(acl);
         newPeople.push(newPerson);
         allPeople[newPerson.get("confKey")] = newPerson;

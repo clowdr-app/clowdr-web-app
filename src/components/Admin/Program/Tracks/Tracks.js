@@ -2,7 +2,6 @@ import React, {Fragment, useState} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Radio, Space, Spin, Table, Tabs, Checkbox, Alert, Switch} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
-import {ProgramContext} from "../../../Program";
 import {
     DeleteOutlined,
     EditOutlined
@@ -25,7 +24,7 @@ class Tracks extends React.Component {
         this.state = {
             loading: true, 
             alert: undefined,
-            tracks: [],
+            ProgramTracks: [],
             socialSpaces: [],
             socialSpacesLoading: true,
             gotTracks: false,
@@ -35,16 +34,6 @@ class Tracks extends React.Component {
             searchResult: "",
             test:false
         };
-
-        console.log('[Admin/Tracks]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded) 
-            this.props.onDown(this.props);
-        else {
-            this.state.tracks = this.props.tracks;
-        }
-
     }
 
     setVisible() {
@@ -54,52 +43,13 @@ class Tracks extends React.Component {
     async componentDidMount() {
         let socialSpaceQ = new Parse.Query("SocialSpace");
         socialSpaceQ.equalTo("conference", this.props.auth.currentConference);
-        let spaces = await socialSpaceQ.find();
-        this.setState({socialSpaces: spaces, spacesLoading: false});
-    }
-
-    componentDidUpdate(prevProps) {
-        console.log("[Admin/Tracks]: Something changed");
-
-        if (this.state.loading) {
-            if (this.state.gotTracks) {
-                console.log('[Admin/Tracks]: Program download complete');
-                this.setState({
-                    tracks: this.props.tracks,
-                    loading: false
-                });
-            }
-            else {
-                console.log('[Admin/Tracks]: Program still downloading...');
-                if (prevProps.tracks.length != this.props.tracks.length) {
-                    this.setState({gotTracks: true});
-                    console.log('[Admin/Tracks]: got tracks');
-                }
-            }
-        }
-        else {
-            if (prevProps.tracks.length != this.props.tracks.length) {
-                this.setState({tracks: this.props.tracks});
-                console.log('[Admin/Tracks]: changes in tracks');
-            }
-        }
-
-    }
-
-
-    refreshList(){
-        let query = new Parse.Query("ProgramTrack");
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.find().then(res=>{
-            console.log('Found tracks ' + res.length);
-            this.setState({
-                tracks: res,
-                loading: false
-            });
-        })
+        let [spaces, tracks] = await Promise.all([socialSpaceQ.find(),
+        this.props.auth.programCache.getProgramTracks(this)]);
+        this.setState({socialSpaces: spaces, loading: false, ProgramTracks: tracks});
     }
 
     componentWillUnmount() {
+        this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
     }
 
     onChangeExhibit(record, e) {
@@ -197,7 +147,7 @@ class Tracks extends React.Component {
         //Set up editable table
         const EditableTable = () => {
             const [form] = Form.useForm();
-            const [data, setData] = useState(this.state.tracks);
+            const [data, setData] = useState(this.state.ProgramTracks);
             const [editingKey, setEditingKey] = useState('');
             const isEditing = record => record.id === editingKey;
 
@@ -217,7 +167,7 @@ class Tracks extends React.Component {
             };
 
             const onDelete = record => {
-                const newTrackList = [...this.state.tracks];
+                const newTrackList = [...this.state.ProgramTracks];
                 // delete from database
                 let data = {
                     clazz: "ProgramTrack",
@@ -267,6 +217,7 @@ class Tracks extends React.Component {
                             perProgramItemChat: track.get("perProgramItemChat"),
                             perProgramItemVideo: track.get("perProgramItemVideo")
                         }
+                        console.log(data)
                         Parse.Cloud.run("update-obj", data)
                         .then(c => this.setState({alert: "save success"}))
                         .catch(err => {
@@ -355,7 +306,7 @@ class Tracks extends React.Component {
                     dataIndex: 'action',
                     render: (_, record) => {
                         const editable = isEditing(record);
-                        if (this.state.tracks.length > 0) {
+                        if (this.state.ProgramTracks.length > 0) {
                             return editable ? (
                                 <span>
                                 <a
@@ -418,7 +369,7 @@ class Tracks extends React.Component {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult : this.state.tracks}
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramTracks}
                         rowKey='id'
                         columns={mergedColumns}
                         rowClassName="editable-row"
@@ -450,12 +401,12 @@ class Tracks extends React.Component {
         
         }
 
-        if (!this.props.downloaded)
+        if (this.state.loading)
             return (
                 <Spin tip="Loading...">
                 </Spin>)
 
-        console.log("--> # Tracks: " + this.state.tracks.length);
+        console.log("--> # Tracks: " + this.state.ProgramTracks.length);
         return <div>
             <Button
                 type="primary"
@@ -484,7 +435,7 @@ class Tracks extends React.Component {
                         else {
                             this.setState({searched: true});
                             this.setState({
-                                searchResult: this.state.tracks.filter(
+                                searchResult: this.state.ProgramTracks.filter(
                                     track => 
                                         (track.get('name') && track.get('name').toLowerCase().includes(key.toLowerCase())) 
                                         || (track.get('displayName') && track.get('displayName').toLowerCase().includes(key.toLowerCase())))
@@ -499,16 +450,11 @@ class Tracks extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <Tracks {...props} auth={value} tracks={tracks} onDown={onDownload} downloaded={downloaded}/>
+                    <Tracks {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
-
 );
 export default AuthConsumer;
 
