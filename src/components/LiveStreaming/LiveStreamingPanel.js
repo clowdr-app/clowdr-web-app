@@ -5,6 +5,7 @@ import ReactPlayer from "react-player";
 import {videoURLFromData} from './utils';
 import { CollectionsOutlined } from "@material-ui/icons";
 import { NavLink } from "react-router-dom";
+import Parse from "parse";
 var timezone = require('moment-timezone');
 
 class LiveStreamingPanel extends Component {
@@ -17,8 +18,10 @@ class LiveStreamingPanel extends Component {
             video_url: undefined, 
             china: false
         };
+        this.props.video.set("id1","94569633467");
+        this.props.video.set("pwd1","824601")
     }
-    
+
 
     joinChatChannels() {
         var items = [];
@@ -51,6 +54,9 @@ class LiveStreamingPanel extends Component {
         var pwd = this.props.video.get("pwd1");
         this.props.auth.helpers.getPresences(this);
 
+        if(this.props.expanded)
+            this.fetchTokens();
+
         var inChina = false;
         if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
             src = this.props.video.get("src2");
@@ -63,6 +69,21 @@ class LiveStreamingPanel extends Component {
         // Where is this user?
         this.setState({video_url: src ? videoURLFromData(src, id, pwd, country): "", china:inChina});
     }
+
+    async fetchTokens(){
+        if (this.props.video && this.props.video.get("src1") &&
+            this.props.video.get("src1").includes("Zoom")) {
+            let res = await Parse.Cloud.run("zoom-getSignatureForMeeting", {
+                conference: this.props.auth.currentConference.id,
+                meeting: this.props.video.get("id1")
+            });
+            this.setState({
+                zoomSignature: res.signature,
+                zoomAPIKey: res.apiKey
+            })
+        }
+
+        }
 
     componentWillUnmount() {
         if (this.state.expanded)
@@ -90,6 +111,7 @@ class LiveStreamingPanel extends Component {
     componentDidUpdate(prevProps) {
         if(this.state.expanded != this.props.expanded){
             if (this.props.expanded){
+                this.fetchTokens();
                 this.props.auth.setSocialSpace(null,this.props.video.get("socialSpace"));
                 this.props.auth.helpers.setGlobalState({forceChatOpen: true});
                 this.props.auth.helpers.setExpandedProgramRoom(this.props.video);
@@ -165,7 +187,26 @@ class LiveStreamingPanel extends Component {
             return <Spin />
 
         let player = "";
-        if (!this.state.china) {
+        if (this.props.video.get("src1").includes("Zoom")) {
+            if(this.state.zoomSignature){
+                console.log(this.props.auth.user.get("displayname"));
+                console.log(encodeURI(this.props.auth.user.get("displayname")));
+                let video_url="/zoom/meeting.html?name="+encodeURI(this.props.auth.user.get("displayname"))+
+                    "&mn="+this.props.video.get("id1")+"&email=&pwd="+this.props.video.get("pwd1")
+                    +"&role=0&lang=en-US&signature="+this.state.zoomSignature+
+                    "&china=0&apiKey="+this.state.zoomAPIKey
+                if(this.props.expanded)
+                    player = <iframe width="100%" height="100%"
+                                     sandbox="allow-forms allow-scripts allow-same-origin" allow="microphone; camera; fullscreen; "
+                                     style={{position:"absolute", top:0, left:0}}
+                                     src={video_url}/>
+            }
+            else{
+                player = <Spin />
+            }
+
+        }
+        else if (!this.state.china) {
             player = <ReactPlayer playing={this.props.playing} playsinline controls={true} muted={true} volume={1}
                         width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
         }
