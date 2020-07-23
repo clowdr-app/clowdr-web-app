@@ -9,6 +9,18 @@ async function userInRoles(user, allowedRoles) {
     return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
 }
 
+function pointify(data) {
+    for (const k of Object.keys(data)) {
+        if (!Array.isArray(data[k]) && typeof data[k] === 'object' && data[k] !== null) {
+            // console.log('[pointify]: found pointer of type ' + data[k].clazz + " in " + JSON.stringify(data[k]));
+            let C = Parse.Object.extend(data[k].clazz);
+            data[k] = C.createWithoutData(data[k].id)
+        } else if (Array.isArray(data[k])) {
+            data[k].forEach(element => pointify(element));
+        }
+    }
+}
+
 Parse.Cloud.define("create-obj", async (request) => {
     let data = request.params;
     let clazz = request.params.clazz;
@@ -22,12 +34,14 @@ Parse.Cloud.define("create-obj", async (request) => {
         let Clazz = Parse.Object.extend(clazz);
         let obj = new Clazz();
         let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
-        let conf = await new Parse.Query(ClowdrInstance).get(confID);
+        let conf = ClowdrInstance.createWithoutData(confID);
         if (!conf) {
             throw "Unable to create obj: conference not found";
         }
 
         data.conference = conf;
+        pointify(data);
+
         let res = await obj.save(data, {useMasterKey: true});
 
         if (!res) {
@@ -58,6 +72,8 @@ Parse.Cloud.define("update-obj", async (request) => {
         if (!obj) {
             throw (`Unable to update obj: ${id} not found`);
         }
+
+        pointify(data);
         let res = await obj.save(data, {useMasterKey: true});
 
         if (!res) {

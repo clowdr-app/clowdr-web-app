@@ -14,9 +14,9 @@ class ProgramItems extends React.Component {
         this.state = {
             loading: true,
             alert: undefined,
-            items: [],
-            tracks: [],
-            people: [],
+            items: undefined,
+            tracks: undefined,
+            people: undefined,
             gotItems: false,
             gotTracks: false,
             gotPeople: false,
@@ -39,7 +39,7 @@ class ProgramItems extends React.Component {
 
         if (this.state.loading) {
             if (this.state.gotTracks && this.state.gotItems && this.state.gotPeople) {
-                // console.log('[Admin/Items]: Program download complete');
+                console.log('[Admin/Items]: Program download complete');
                 this.setState({
                     items: this.props.items,
                     tracks: this.props.tracks,
@@ -63,8 +63,12 @@ class ProgramItems extends React.Component {
                 }
             }
         }
-        else
-            console.log('[Admin/Items]: Program cached');
+        else {
+            if (prevProps.items.length != this.props.items.length) {
+                this.setState({items: this.props.items});
+                console.log('[Admin/Items]: changes in items');
+            }
+        }
     }
 
 
@@ -178,18 +182,23 @@ class ProgramItems extends React.Component {
                 const newItemList = [...this.state.items];
 
                 // delete from database
-                record.destroy()
-                    .then(() => {
-                        this.setState({
-                            alert: "delete success",
-                            items: newItemList.filter(item => item.id !== record.id),
-                            searchResult: this.state.searched ?  this.state.searchResult.filter(r => r.id !== record.id): ""
-                        });
-                        console.log("item deleted from db");})
-                    .catch(error => {
-                        this.setState({alert: "delete error"});
-                        console.log("item cannot be deleted from db");
-                    });
+                let data = {
+                    clazz: "ProgramItem",
+                    conference: record.get("conference").id,
+                    id: record.id
+                }
+                Parse.Cloud.run("delete-obj", data)
+                .then(c => this.setState({
+                    alert: "delete success",
+                    items: newItemList.filter(item => item.id !== record.id),
+                    searchResult: this.state.searched ?  this.state.searchResult.filter(r => r.id !== record.id): ""
+                }))
+                .catch(err => {
+                    this.setState({alert: "delete error"})
+                    this.refreshList();
+                    console.log("[Admin/Items]: Unable to delete: " + err)
+                })
+
             }
 
             // cancel all edited fields
@@ -216,19 +225,28 @@ class ProgramItems extends React.Component {
                             const newAuthor = this.state.people.find(p => p.id === a);
                             newAuthors.push(newAuthor);
                         })
+
                         item.set("title", row.title);
                         item.set("authors", newAuthors);
                         item.set("abstract", row.abstract);
                         setData(newData);
-                        item.save()
-                            .then((response) => {
-                                console.log('Updated ProgramItem', response);
-                                this.setState({alert: "save success"});})
-                            .catch(err => {
-                                console.log(err);
-                                console.log("@" + item.id);
-                                this.setState({alert: "save error"});
-                            });
+
+                        let data = {
+                            clazz: "ProgramItem",
+                            id: item.id,
+                            conference: item.get("conference").id,
+                            title: item.get("title"),
+                            authors: item.get("authors").map(a => {return {clazz: "ProgramPerson", id: a.id}}),
+                            abstract: item.get("abstract"),
+                            track: {clazz: "ProgramTrack", id: item.get("track").id}
+                        }
+                        Parse.Cloud.run("update-obj", data)
+                        .then(c => this.setState({alert: "save success"}))
+                        .catch(err => {
+                            this.setState({alert: "save error"})
+                            console.log("[Admin/Items]: Unable to save track: " + err)
+                        })
+
                         setEditingKey('');
                     }
                     else {
@@ -281,7 +299,7 @@ class ProgramItems extends React.Component {
                 {
                     title: 'Track',
                     dataIndex: 'track',
-                    width: '10%',
+                    width: '20%',
                     editable: true,
                     sorter: (a, b) => {
                         const trackA = a.get("track") ? a.get("track").get("name") : "";
@@ -361,6 +379,7 @@ class ProgramItems extends React.Component {
                         dataSource={this.state.searched ? this.state.searchResult : this.state.items}
                         columns={mergedColumns}
                         rowClassName="editable-row"
+                        rowKey='id'
                         pagination={{
                             onChange: onCancel,
                             defaultPageSize: 500,
@@ -374,26 +393,21 @@ class ProgramItems extends React.Component {
 
         // handle when a new item is added
         const handleAdd = () => {
-            const ProgramItem = Parse.Object.extend('ProgramItem');
-            const myNewObject = new ProgramItem();
+            let data = {
+                clazz: "ProgramItem",
+                conference: this.props.auth.currentConference.id,
+                title: "Please input the title",
+                abstract: "Please input the abstract",
+                authors: [],
+                track: ""
+            }
+            Parse.Cloud.run("create-obj", data)
+            .then(t => console.log("[Admin/Items]: sent new object to cloud"))
+            .catch(err => {
+                this.setState({alert: "add error"})
+                console.log("[Admin/Items]: Unable to create: " + err)
+            })
 
-            myNewObject.set('title', 'please input the title');
-            myNewObject.set('abstract', 'please input the abstract');
-            myNewObject.set('conference', this.props.auth.currentConference);
-
-            myNewObject.save().then(
-                (result) => {
-                    console.log('ProgramItem created', result);
-                    this.setState({
-                        alert: "add success",
-                        items: [myNewObject, ...this.state.items]
-                    })
-                },
-                (error) => {
-                    this.setState({alert: "add error"});
-                    console.error('Error while creating ProgramItem: ', error);
-                }
-            );
         };
 
         if (!this.props.downloaded) {

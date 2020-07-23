@@ -432,10 +432,10 @@ class Tracks extends React.Component {
                 perProgramItemVideo: false
             }
             Parse.Cloud.run("create-obj", data)
-            .then(t => console.log("[Admin/Tracks]: sent new track to cloud"))
+            .then(t => console.log("[Admin/Tracks]: sent new object to cloud"))
             .catch(err => {
                 this.setState({alert: "add error"})
-                console.log("[Landing]: Unable to create track: " + err)
+                console.log("[Admin/TRackd]: Unable to create: " + err)
             })
         
         }
