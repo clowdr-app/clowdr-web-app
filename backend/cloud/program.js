@@ -553,6 +553,18 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
     //     }
     // }
 });
+Parse.Cloud.beforeSave("StarredProgram", async (request) => {
+    let savedProgram = request.object;
+    if(savedProgram.isNew()){
+        let acl  =new Parse.ACL();
+        acl.setPublicReadAccess(false);
+        acl.setPublicWriteAccess(false);
+        acl.setWriteAccess(request.user, true);
+        acl.setReadAccess(request.user, true);
+        savedProgram.setACL(acl);
+    }
+});
+
 
 Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
     let track = request.object;
