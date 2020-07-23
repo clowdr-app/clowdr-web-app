@@ -170,8 +170,6 @@ class ProgramItems extends React.Component {
                         let newTrack = this.state.ProgramTracks.find(t => t.id === row.track);
                         if (newTrack) {
                             item.set("track", newTrack)
-                        } else {
-                            console.log("track not found");
                         }
                         let newAuthors = [];
                         row.authors.map(a => {
