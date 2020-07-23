@@ -130,37 +130,37 @@ class Tracks extends React.Component {
             let inputNode = null;
             switch (dataIndex) {
                 case ('name'):
-                    inputNode = <Input/>;
+                    inputNode = <Input title="Short name used internally, e.g. papers"/>;
                     break;
                 case ('displayName'):
-                    inputNode = <Input/>;
+                    inputNode = <Input title="Name that participants see, e.g. Research Papers"/>;
                     break;
                 case ('perProgramItemChat'):
                     //console.log(record.get("perProgramItemChat"));
                     inputNode = (
-                        <Checkbox 
+                        <span title="Do the track's items get their own text chat channels?"><Checkbox 
                             defaultChecked={record.get("perProgramItemChat")}
                             onChange={this.onChangeChat.bind(this, record)}
                         >
-                        </Checkbox>
+                        </Checkbox></span>
                     );
                     break;
                 case ('perProgramItemVideo'):
                     inputNode = (
-                        <Checkbox
+                        <span title="Do the track's items get their own video channels?"><Checkbox
                             defaultChecked={record.get("perProgramItemVideo")}
                             onChange= {this.onChangeVideo.bind(this, record)}
                         >
-                        </Checkbox>
+                        </Checkbox></span>
                     );
                     break;
                     case ('exhibit'):
                         inputNode = (
                             <Radio.Group onChange={this.onChangeExhibit.bind(this, record)} 
                                          value={record.get("exhibit")}>
-                                <Radio value="None">None</Radio>
-                                <Radio value="List">List</Radio>
-                                <Radio value="Grid">Grid</Radio>
+                                <Radio value="None"><span title="Don't show in Exhibit Hall">None</span></Radio>
+                                <Radio value="List"><span title="Show in Exhibit Hall as a simple list of all items">List</span></Radio>
+                                <Radio value="Grid"><span title="Show in Exhibit Hall as a grid of images, one per item">Grid</span></Radio>
                           </Radio.Group>
                         );
                         break;
@@ -327,11 +327,6 @@ class Tracks extends React.Component {
                     dataIndex: 'perProgramItemChat',
                     editable: true,
                     width: '5%',
-                    sorter: (a, b) => {
-                        var A = a.get("perProgramItemChat") ? a.get("perProgramItemChat") : "";
-                        var B = b.get("perProgramItemChat") ? b.get("perProgramItemChat") : "";
-                        return A.localeCompare(B);
-                    },
                     //render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
                     render: (text,record) =><Checkbox checked={record.get("perProgramItemChat") ? true : false} disabled></Checkbox>,
                     key: 'perProgramItemChat',
@@ -341,11 +336,6 @@ class Tracks extends React.Component {
                     dataIndex: 'perProgramItemVideo',
                     editable: true,
                     width: '5%',
-                    sorter: (a, b) => {
-                        var A = a.get("perProgramItemChat") ? a.get("perProgramItemChat") : "";
-                        var B = b.get("perProgramItemChat") ? b.get("perProgramItemChat") : "";
-                        return A.localeCompare(B);
-                    },
                     //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
                     render: (text,record) =><Checkbox checked={record.get("perProgramItemVideo") ? true : false} disabled></Checkbox>,
                     key: 'perProgramItemVideo',
@@ -455,7 +445,6 @@ class Tracks extends React.Component {
                 <Spin tip="Loading...">
                 </Spin>)
 
-        console.log("--> # Tracks: " + this.state.tracks.length);
         return <div>
             <Button
                 type="primary"
