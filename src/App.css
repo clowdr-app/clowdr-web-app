@@ -585,3 +585,19 @@ td.ant-table-cell.program-table-timeBand{
     align: center;
     margin-bottom: 3px;
 }
+
+.filterOptions .ant-tag-checkable:not(.ant-tag-checkable-checked){
+    border: 1px solid #d9d9d9;
+}
+.programStarNotStarred{
+    color: #ffc53d;
+}
+.programStarNotStarred:hover{
+    color: #ffc53d;
+    -webkit-filter: drop-shadow( 1px 2px 1px rgba(0, 0, 0, .4));
+    filter: drop-shadow( 1px 2px 1px rgba(0, 0, 0, .4));
+
+}
+.programStarStarred{
+    color: #d48806;
+}

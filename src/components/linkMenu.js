@@ -5,6 +5,7 @@ import {
     AuthUserContext,
 } from './Session';
 import {
+    AppstoreOutlined,
     BankOutlined,
     BarsOutlined,
     BorderOutlined,
@@ -22,6 +23,7 @@ import {
     SyncOutlined,
     TeamOutlined,
     ToolOutlined,
+    UnorderedListOutlined,
     UserOutlined,
     VideoCameraAddOutlined,
     VideoCameraOutlined,
@@ -38,9 +40,18 @@ class LinkMenu extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            ProgramTracks: []
+        }
     }
 
     componentDidMount() {
+        this.props.authContext.programCache.getProgramTracks(this).then(tracks => {
+            this.setState({ProgramTracks: tracks});
+        })
+    }
+    componentWillUnmount() {
+        this.props.authContext.programCache.cancelSubscription("ProgramTrack", this);
     }
 
     render() {
@@ -84,13 +95,14 @@ class LinkMenu extends React.Component {
                     </SubMenu>,
 
                     <SubMenu key="/exhibits" title={<span><TeamOutlined/><span>Exhibit Hall</span></span>}>
-                        {this.props.tracks
+                        {this.state.ProgramTracks
                         .filter(track => track.get("exhibit") == "Grid" || track.get("exhibit") == "List")
                         .map(track => {
-                            let mode = track.get("exhibit");
+                            let mode = track.get("exhibit").toLowerCase();
                             let path = track.get("name");
                             let displayName = track.get("displayName");
-                        return <Menu.Item key={`/exhibits/${path}`} icon={<ReadOutlined/>}> <NavLink to={`/exhibits/${path}/${mode}`}>{displayName}</NavLink></Menu.Item>
+                            let icon = mode == "list" ? <UnorderedListOutlined/> : <AppstoreOutlined/>;
+                        return <Menu.Item key={`/exhibits/${path}`} icon={icon}> <NavLink to={`/exhibits/${path}/${mode}`}>{displayName}</NavLink></Menu.Item>
 
                         })}
                     </SubMenu>,
@@ -127,15 +139,11 @@ class LinkMenu extends React.Component {
 }
 let RouteredMenu = withRouter(LinkMenu);
 const MenuWithAuth = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <RouteredMenu {...props} authContext={value} tracks={tracks} onDown={onDownload} downloaded={downloaded}/>
+                    <RouteredMenu {...props} authContext={value}  />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
 
 );
 

@@ -1,9 +1,10 @@
 import React from 'react';
-import {Button, Form, Input, Select, Skeleton, Tag, Tooltip} from "antd";
+import {AutoComplete, Button, Form, Input, Select, Skeleton, Tag, Tooltip} from "antd";
 import Avatar from "./Avatar";
 import {AuthUserContext} from "../Session";
 import Parse from "parse";
 import withLoginRequired from "../Session/withLoginRequired";
+import ProgramContext from "../Program/context";
 
 class Account extends React.Component {
     constructor(props) {
@@ -73,6 +74,7 @@ class Account extends React.Component {
         else{
             this.setStateFromUser();
         }
+        this.collectProgramItems();
         // this.userRef.once("value").then((val) => {
         //     let data = val.val();
         //     this.setState({
@@ -82,7 +84,12 @@ class Account extends React.Component {
         //         affiliation: data.affiliation
         //     });
         // });
-
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        console.log(this.props.programItems)
+        if(!this.state.programItemsLoaded && this.props.programItems && this.props.programItems.length > 0){
+            this.collectProgramItems();
+        }
     }
 
     async updateUser(values) {
@@ -98,6 +105,9 @@ class Account extends React.Component {
         this.props.auth.userProfile.set("country", values.country);
         this.props.auth.userProfile.set("webpage", values.website);
         this.props.auth.userProfile.set("bio", values.bio);
+        this.props.auth.userProfile.set("pronouns", values.pronouns);
+        this.props.auth.userProfile.set("position", values.position);
+
         this.props.auth.userProfile.save().then(() => {
                 this.setState({updating: false});
                 this.setStateFromUser();
@@ -105,6 +115,9 @@ class Account extends React.Component {
                     this.props.onFinish();
 
         });
+    }
+    collectProgramItems(){
+        console.log(this.props.programItems)
     }
 
     tagRender(props) {
@@ -194,6 +207,8 @@ class Account extends React.Component {
                       affiliation: this.props.auth.userProfile.get("affiliation"),
                       country: this.props.auth.userProfile.get("country"),
                       bio: this.props.auth.userProfile.get("bio"),
+                      pronouns: this.props.auth.userProfile.get("pronouns"),
+                      position: this.props.auth.userProfile.get("position"),
                       flair: this.state.selectedFlair
 
                   }}
@@ -209,6 +224,29 @@ class Account extends React.Component {
                         },
                     ]}
                 ><Input  /></Form.Item>
+                <Form.Item label="Preferred Pronouns"
+                name="pronouns" >
+                    <AutoComplete
+                        style={{ width: 200 }}
+                        options={[{ value: "She/her"},
+                            {value: "He/him"},
+                            {value: "They/them"}]}
+                        placeholder="Select or enter your preferred pronouns"
+                        filterOption={(inputValue, option) =>
+                            option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                        }
+                    />
+                </Form.Item>
+                <Form.Item label="Author of:"
+                           name="programItems" >
+                    {(this.state.programItemsLoaded ?
+                        <Select mode="multiple"
+                                placeholder="If you are an author of any published items, please select them here"
+                                style={{width:'100%'}}
+                                options={this.state.programItems}
+                        />
+                    : <Skeleton.Input />)}
+                </Form.Item>
                 {this.props.embedded ? <></> :<>
                 <Form.Item
                     label="Email Address"
@@ -253,6 +291,20 @@ class Account extends React.Component {
                         disabled={this.state.updating}
                         type="text"
                         />
+                </Form.Item>
+                <Form.Item label="Position"
+                name="position">
+                    <AutoComplete
+                        style={{ width: 200 }}
+                        options={[{ value: "Student"},
+                            {value: "Faculty"},
+                            {value: "Industry"}
+                            ]}
+                        placeholder="Select or enter your current position"
+                        filterOption={(inputValue, option) =>
+                            option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                        }
+                    />
                 </Form.Item>
                 <Form.Item
                     name="country"
@@ -301,7 +353,6 @@ class Account extends React.Component {
                         loading={this.state.updating}>
                     Save
                 </Button>
-                <p>Changes to your profile may not be immediately visible to other users.</p>
 
                 {error && <p>{error.message}</p>}
             </Form>);
@@ -309,10 +360,14 @@ class Account extends React.Component {
 }
 
 const AuthConsumerAccount = (props) => (
-    <AuthUserContext.Consumer>
-        {value => (
-            <Account auth={value} {...props} />
-        )}
-    </AuthUserContext.Consumer>
+    <ProgramContext.Consumer>
+        {({items}) => (
+
+            <AuthUserContext.Consumer>
+                {value => (
+                    <Account auth={value} {...props} programItems={items} />
+                )}
+            </AuthUserContext.Consumer>
+        )}</ProgramContext.Consumer>
 );
 export default withLoginRequired(AuthConsumerAccount);

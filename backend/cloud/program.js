@@ -9,6 +9,26 @@ async function userInRoles(user, allowedRoles) {
     return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
 }
 
+function pointify(data) {
+    if (data.clazz && data.id) {
+        // console.log('[pointify]: found pointer of type ' + data.clazz);
+        let C = Parse.Object.extend(data.clazz);
+        return C.createWithoutData(data.id)
+    }
+    for (const k of Object.keys(data)) {
+        // console.log("[pointify]: looking at " + k + ": " + JSON.stringify(data[k]));
+        if (!Array.isArray(data[k]) && typeof data[k] === 'object' && data[k] !== null) {
+            // console.log("[pointify]: found object " + JSON.stringify(data[k]));
+            if (data[k].clazz) {
+                data[k] = pointify(data[k]);
+            }
+        } else if (Array.isArray(data[k])) {
+            // console.log("[pointify]: found array " + JSON.stringify(data[k]));
+            data[k] = data[k].map(element => pointify(element));
+        }
+    }
+}
+
 Parse.Cloud.define("create-obj", async (request) => {
     let data = request.params;
     let clazz = request.params.clazz;
@@ -16,18 +36,13 @@ Parse.Cloud.define("create-obj", async (request) => {
     delete data.clazz;
     console.log(`[create obj]: request to create ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[create obj]: user has permission to create obj');
 
         let Clazz = Parse.Object.extend(clazz);
         let obj = new Clazz();
-        let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
-        let conf = await new Parse.Query(ClowdrInstance).get(confID);
-        if (!conf) {
-            throw "Unable to create obj: conference not found";
-        }
+        pointify(data);
 
-        data.conference = conf;
         let res = await obj.save(data, {useMasterKey: true});
 
         if (!res) {
@@ -51,13 +66,15 @@ Parse.Cloud.define("update-obj", async (request) => {
     delete data.conference;
     console.log(`[update obj]: request to update ${data.id} of class ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[update obj]: user has permission to update obj');
         let Clazz = Parse.Object.extend(clazz);
         let obj = await new Parse.Query(Clazz).get(id);
         if (!obj) {
             throw (`Unable to update obj: ${id} not found`);
         }
+
+        pointify(data);
         let res = await obj.save(data, {useMasterKey: true});
 
         if (!res) {
@@ -76,7 +93,7 @@ Parse.Cloud.define("delete-obj", async (request) => {
     let clazz = request.params.clazz;
     console.log(`[delete obj]: request to delete ${id} of class ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[delete obj]: user has permission to delete obj');
         let Clazz = Parse.Object.extend(clazz);
         let obj = await new Parse.Query(Clazz).get(id);
@@ -329,6 +346,7 @@ Parse.Cloud.define("program-upload", async (request) => {
     // Create People next
     let ProgramPerson = Parse.Object.extend("ProgramPerson");
     let qp = new Parse.Query(ProgramPerson);
+    qp.equalTo("conference", conf);
     qp.limit(10000);
     let people = await qp.find({useMasterKey: true});
     people.forEach((person) => {
@@ -347,6 +365,7 @@ Parse.Cloud.define("program-upload", async (request) => {
         person.Key ? newPerson.set("confKey", person.Key.trim()) : newPerson.set("confKey", person.Key);
         person.URL ? newPerson.set("URL", person.URL.trim()) : newPerson.set("URL", person.URL);
         person.URLPhoto ? newPerson.set("URLPhoto", person.URLPhoto.trim()) : newPerson.set("URLPhoto", person.URLPhoto);
+        newPerson.set("conference", conf);
         newPerson.setACL(acl);
         newPeople.push(newPerson);
         allPeople[newPerson.get("confKey")] = newPerson;
@@ -553,6 +572,18 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
     //     }
     // }
 });
+Parse.Cloud.beforeSave("StarredProgram", async (request) => {
+    let savedProgram = request.object;
+    if(savedProgram.isNew()){
+        let acl  =new Parse.ACL();
+        acl.setPublicReadAccess(false);
+        acl.setPublicWriteAccess(false);
+        acl.setWriteAccess(request.user, true);
+        acl.setReadAccess(request.user, true);
+        savedProgram.setACL(acl);
+    }
+});
+
 
 Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
     let track = request.object;

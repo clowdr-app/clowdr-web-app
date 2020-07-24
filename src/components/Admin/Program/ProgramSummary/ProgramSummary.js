@@ -1,12 +1,9 @@
-import React, {Fragment} from 'react';
-import { Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, message, Upload } from "antd";
+import React from 'react';
+import {Button, message, Select, Space, Spin, Table, Tabs, Upload} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
-import {ProgramContext} from "../../../Program";
 
-import {
-    UploadOutlined
-} from '@ant-design/icons';
+import {UploadOutlined} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -24,30 +21,9 @@ class ProgramSummary extends React.Component {
         super(props); // has props.auth
         this.state = {
             loading: true,
-            gotTracks: false,
-            gotRooms: false,
-            gotItems: false,
-            gotSessions: false,
-            gotPeople: false,
-            counts: [
-                {key: 1, 
-                sessions_c: this.props.sessions.length, 
-                items_c: this.props.items.length, 
-                tracks_c: this.props.tracks.length, 
-                rooms_c: this.props.rooms.length, 
-                people_c: this.props.people.length}
-            ]
         };
         // this.currentConference = "XYZ";
         this.currentConference = this.props.auth.currentConference;
-
-        console.log('[Admin/Program]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded) 
-            this.props.onDown(this.props);
-        else
-            this.state.loading = false;
     }
 
     onChange(info) {
@@ -66,53 +42,20 @@ class ProgramSummary extends React.Component {
         this.setState({'visible': !this.state.visible});
     }
 
-    componentDidMount() {
+    async componentDidMount() {
+
+        let program = await this.props.auth.programCache.getEntireProgram(this);
+        program.loading = false;
+        this.setState(program);
     }
+    componentWillUnmount() {
+        this.props.auth.programCache.cancelSubscription("ProgramItem", this);
+        this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
+        this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
+        this.props.auth.programCache.cancelSubscription("ProgramPerson", this);
+        this.props.auth.programCache.cancelSubscription("ProgramSession", this);
 
-    componentDidUpdate(prevProps) {
-        console.log("[Admin/Program]: Something changed");
-
-        if (this.state.loading) {
-            if (this.state.gotRooms && this.state.gotSessions && this.state.gotTracks && this.state.gotItems && this.state.gotPeople) {
-                console.log('[Admin/Program]: Program download complete');
-                this.refreshList();
-            }
-            else {
-                console.log('[Admin/Program]: Program still downloading...');
-                if (prevProps.tracks.length != this.props.tracks.length) {
-                    this.setState({gotTracks: true});
-                    console.log('[Admin/Program]: got tracks');
-                }
-                if (prevProps.rooms.length != this.props.rooms.length) {
-                    this.setState({gotRooms: true});
-                    console.log('[Admin/Program]: got rooms');
-                }
-                if (prevProps.sessions.length != this.props.sessions.length) {
-                    this.setState({gotSessions: true});
-                    console.log('[Admin/Program]: got sessions');
-                }
-                if (prevProps.items.length != this.props.items.length) {
-                    this.setState({gotItems: true});
-                    console.log('[Admin/Program]: got items');
-                }
-                if (prevProps.people.length != this.props.people.length) {
-                    this.setState({gotPeople: true});
-                    console.log('[Admin/Program]: got people');
-                }
-            }
-        }
-        else {
-            console.log('[Admin/Program]: Program cached ' + this.state.loading);
-            if ((prevProps.rooms.length != this.props.rooms.length) || (prevProps.sessions.length != this.props.sessions.length) ||
-                (prevProps.tracks.length != this.props.tracks.length) || (prevProps.items.length != this.props.items.length) ||
-                (prevProps.people.length != this.props.people.length))
-            {
-                console.log('[Admin/Program]: changes in something');
-                this.refreshList();
-            }
-        }
     }
-
 
     beforeUpload(file, fileList) {
         const reader = new FileReader();
@@ -121,28 +64,11 @@ class ProgramSummary extends React.Component {
             Parse.Cloud.run("program-upload", data)
                 .then((res) => {
                     console.log("Upload successfully!!!" + JSON.stringify(res));
-                    this.setState({
-                        counts: [res.sessions.length, res.items.length, res.tracks.length, res.rooms.length, res.people.length]
-                    });            
                 })
                 .catch(err => console.log('Upload failed: ' + err));
         }
         reader.readAsText(file);
         return false;
-    }
-
-    refreshList(counts){
-        this.setState({
-            loading: false,
-            counts: [
-                {key: 1, 
-                sessions_c: this.props.sessions.length, 
-                items_c: this.props.items.length, 
-                tracks_c: this.props.tracks.length, 
-                rooms_c: this.props.rooms.length, 
-                people_c: this.props.people.length}
-            ]
-        });
     }
 
     render() {
@@ -179,7 +105,18 @@ class ProgramSummary extends React.Component {
                 <Spin tip="Loading...">
                 </Spin>)
 
-        return   (
+
+        let counts = [
+            {
+                key: 1,
+                sessions_c: this.state.ProgramSessions.length,
+                items_c: this.state.ProgramItems.length,
+                tracks_c: this.state.ProgramTracks.length,
+                rooms_c: this.state.ProgramRooms.length,
+                people_c: this.state.ProgramPersons.length
+            }
+        ]
+        return (
             <div>
                 <Upload accept=".json, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
                     <Button>
@@ -188,7 +125,7 @@ class ProgramSummary extends React.Component {
                 </Upload>
                 <Table 
                     columns={columns} 
-                    dataSource={this.state.counts} 
+                    dataSource={counts}
                     rowKey={(r)=>(r.key)}
                     pagination={{ defaultPageSize: 500,
                         pageSizeOptions: [10, 20, 50, 100, 500], 
@@ -199,15 +136,11 @@ class ProgramSummary extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <ProgramSummary {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
+                    <ProgramSummary {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
 
 );
 

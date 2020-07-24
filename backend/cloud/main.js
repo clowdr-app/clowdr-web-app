@@ -4,3 +4,5 @@ require("./program")
 require("./chat")
 require("./social")
 require("./admin")
+require("./zoom")
+

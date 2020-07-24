@@ -3,7 +3,6 @@ import {Alert, Button, Form, Input, message, Modal, Popconfirm, Select, Space, S
 import {DeleteOutlined, EditOutlined, UploadOutlined} from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
-import {ProgramContext} from "../../../Program";
 
 const {Option} = Select;
 
@@ -22,23 +21,12 @@ class Rooms extends React.Component {
         super(props);
         this.state = {
             loading: true,
-            rooms: [],
-            gotRooms: false,
             editing: false,
             edt_room: undefined,
             searched: false,
             searchResult: "",
             alert: ""
         };
-
-        console.log('[Admin/Rooms]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded)
-            this.props.onDown(this.props);
-        else
-            this.state.rooms = this.props.rooms;
-
     }
 
     onCreate(values) {
@@ -56,7 +44,7 @@ class Rooms extends React.Component {
         room.set("qa", values.qa);
         room.set("conference", this.props.auth.currentConference);
         room.save().then((val) => {
-            _this.setState({visible: false, rooms: [room, ...this.state.rooms]})
+            _this.setState({visible: false, ProgramRooms: [room, ...this.state.ProgramRooms]})
         }).catch(err => {
             console.log(err);
         });
@@ -66,9 +54,7 @@ class Rooms extends React.Component {
         console.log("Deleting " + value + " " + value.get("name"));
         // Delete the watchers first
 
-        value.destroy().then(() => {
-            this.refreshList();
-        });
+        value.destroy();
     }
 
     onEdit(room) {
@@ -93,7 +79,7 @@ class Rooms extends React.Component {
     onUpdate(values) {
         var _this = this;
         console.log("Updating " + values.id1 + "; " + values.objectId);
-        let room = this.state.rooms.find(r => r.id == values.objectId);
+        let room = this.state.ProgramRooms.find(r => r.id == values.objectId);
 
         if (room) {
             room.set("name", values.name);
@@ -118,30 +104,9 @@ class Rooms extends React.Component {
         this.setState({'visible': !this.state.visible});
     }
 
-    componentDidMount() {
-        console.log("ROOMS ARE ======>", this.state.rooms);
-    }
-
-    componentDidUpdate(prevProps) {
-        console.log("[Admin/Rooms]: Something changed");
-
-        if (this.state.loading) {
-            if (this.state.gotRooms) {
-                console.log('[Admin/Rooms]: Program download complete');
-                this.setState({
-                    rooms: this.props.rooms,
-                    loading: false
-                });
-            } else {
-                console.log('[Admin/Rooms]: Program still downloading...');
-                if (prevProps.rooms.length != this.props.rooms.length) {
-                    this.setState({gotRooms: true});
-                    console.log('[Admin/Rooms]: got rooms');
-                }
-            }
-        } else
-            console.log('[Admin/Rooms]: Program cached');
-
+    async componentDidMount() {
+        let rooms = await this.props.auth.programCache.getProgramRooms(this);
+        this.setState({ProgramRooms: rooms, loading: false})
     }
 
     onChange(info) {
@@ -167,24 +132,8 @@ class Rooms extends React.Component {
         return false;
     }
 
-    refreshList() {
-        let query = new Parse.Query("ProgramRoom");
-//        console.log(this.props.auth);
-//        let token = this.props.auth.user.getSessionToken();
-//        console.log(token);
-        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.find().then(res => {
-            console.log('Found rooms ' + res.length);
-            this.setState({
-                rooms: res,
-                loading: false
-            });
-        })
-    }
-
     componentWillUnmount() {
-        // this.sub.unsubscribe();
+        this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
     }
 
     render() {
@@ -308,7 +257,7 @@ class Rooms extends React.Component {
         const EditableTable = () => {
             console.log("Loading Editable table");
             const [form] = Form.useForm();
-            const [data, setData] = useState(this.state.rooms);
+            const [data, setData] = useState(this.state.ProgramRooms);
             const [editingKey, setEditingKey] = useState('');
 
             const isEditing = record => record.id === editingKey;
@@ -336,14 +285,24 @@ class Rooms extends React.Component {
 
             const onDelete = record => {
                 console.log("deleting item: " + record.get("title"));
-                const newRooms = [...this.state.rooms];
+                const newRooms = [...this.state.ProgramRooms];
                 this.setState({
-                    rooms: newRooms.filter(item => item.id !== record.id)
+                    ProgramRooms: newRooms.filter(item => item.id !== record.id)
                 });
                 // delete from database
-                record.destroy().then(() => {
-                    console.log("item deleted from db")
-                });
+                let data = {
+                    clazz: "ProgramRoom",
+                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
+                    id: record.id
+                }
+                Parse.Cloud.run("delete-obj", data)
+                .then(c => this.setState({alert: "delete success"}))
+                .catch(err => {
+                    this.setState({alert: "delete error"})
+                    this.refreshList();
+                    console.log("[Admin/Rooms]: Unable to delete: " + err)
+                })
+
             };
 
             const save = async id => {
@@ -351,26 +310,30 @@ class Rooms extends React.Component {
                 try {
                     const row = await form.validateFields();
                     const newData = [...data];
-                    let item = newData.find(item => item.id === id);
+                    let room = newData.find(item => item.id === id);
 
-                    if (item) {
+                    if (room) {
                         console.log("row is : " + row.title);
-                        item.set("name", row.name);
-                        item.set("src1", row.src1);
-                        item.set("id1", row.id1);
-                        item.set("pwd1", row.pwd1);
-                        item.set("src2", row.src2);
-                        item.set("id2", row.id2);
-                        item.set("pwd2", row.pwd2);
-                        item.set("qa", row.qa);
-                        item.save()
-                            .then((response) => {
-                                console.log('Updated ProgramItem', response);
-                            })
-                            .catch(err => {
-                                console.log(err);
-                                console.log("@" + item.id);
-                            });
+
+                        let data = {
+                            clazz: "ProgramRoom",
+                            conference: {clazz: "ClowdrInstance", id: room.get("conference").id},
+                            id: room.id,
+                            name: row.name,
+                            src1: row.src1,
+                            id1: row.id1,
+                            src2: row.src2,
+                            id2: row.id1,
+                            qa: row.qa
+                        }
+                        console.log(data)
+                        Parse.Cloud.run("update-obj", data)
+                        .then(c => this.setState({alert: "save success"}))
+                        .catch(err => {
+                            this.setState({alert: "save error"})
+                            console.log("[Admin/Rooms]: Unable to save: " + err)
+                        })
+
                         setEditingKey('');
                     } else {
                         newData.push(row);
@@ -468,7 +431,7 @@ class Rooms extends React.Component {
                     dataIndex: 'action',
                     render: (_, record) => {
                         const editable = isEditing(record);
-                        if (this.state.rooms.length > 0) {
+                        if (this.state.ProgramRooms.length > 0) {
                             return editable ?
                                 (
                                     <span>
@@ -530,9 +493,10 @@ class Rooms extends React.Component {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult : this.state.rooms}
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramRooms}
                         columns={mergedColumns}
                         rowClassName="editable-row"
+                        rowKey='id'
                         pagination={{
                             onChange: cancel,
                         }}
@@ -543,28 +507,21 @@ class Rooms extends React.Component {
 
         // handle when a new item is added
         const handleAdd = () => {
-            const ProgramRoom = Parse.Object.extend('ProgramRoom');
-            const myNewObject = new ProgramRoom();
+            let data = {
+                clazz: "ProgramRoom",
+                conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+                name: "Please enter the name of the room",
+            }
 
-            myNewObject.set('name', '***NEWLY ADDED ROOM***');
-            myNewObject.set("conference", this.props.auth.currentConference);
-
-            myNewObject.save()
-                .then(result => {
-                    console.log('ProgramItem created', result);
-                    this.setState({
-                        alert: "Add success",
-                        rooms: [myNewObject, ...this.state.rooms]
-                    })
-                })
-                .catch(error => {
-                        this.setState({alert: "Add error"});
-                        console.error('Error while creating ProgramRoom: ', error);
-                    }
-                );
+            Parse.Cloud.run("create-obj", data)
+            .then(t => console.log("[Admin/Rooms]: sent new object to cloud"))
+            .catch(err => {
+                this.setState({alert: "add error"})
+                console.log("[Admin/Rooms]: Unable to create: " + err)
+            })
         };
 
-        if (!this.props.downloaded)
+        if (this.state.loading)
             return (
                 <Spin tip="Loading...">
                 </Spin>
@@ -603,7 +560,7 @@ class Rooms extends React.Component {
                                     } else {
                                         this.setState({searched: true});
                                         this.setState({
-                                            searchResult: this.state.rooms.filter(
+                                            searchResult: this.state.ProgramRooms.filter(
                                                 room => (room.get('name') && room.get('name').toLowerCase().includes(key.toLowerCase()))
                                             )
                                         });
@@ -634,16 +591,11 @@ class Rooms extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <Rooms {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions}
-                           onDown={onDownload} downloaded={downloaded}/>
+                    <Rooms {...props} auth={value}  />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
 
 );
 

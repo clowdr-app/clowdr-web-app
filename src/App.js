@@ -20,7 +20,6 @@ import VideoRoom from "./components/VideoChat/VideoRoom"
 import SlackToVideo from "./components/Slack/slackToVideo"
 
 import {withAuthentication} from "./components/Session";
-import {withProgram} from "./components/Program"
 
 import LiveVideosArea from "./components/LiveStreaming";
 import Exhibits from "./components/Exhibits";
@@ -344,4 +343,4 @@ class ClowdrApp extends React.Component{
    }
 }
 
-export default withProgram(withAuthentication(ClowdrApp));
+export default withAuthentication(ClowdrApp);

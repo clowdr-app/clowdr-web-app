@@ -5,7 +5,6 @@ import LiveStreamingPanel from "./LiveStreamingPanel";
 import ZoomPanel from "./ZoomPanel";
 import NoMediaPanel from "./NoMediaPanel";
 import AuthUserContext from "../Session/context";
-import {ProgramContext} from "../Program";
 
 class LiveStreaming extends Component {
     constructor(props) {
@@ -177,6 +176,7 @@ class LiveStreaming extends Component {
     }
 
     componentDidUpdate(prevProps) {
+        //TODO
         if (this.state.loading) {
             if (this.state.gotRooms && this.state.gotSessions) {
                 // console.log('[Live]: Program download complete');
@@ -325,11 +325,11 @@ class LiveStreaming extends Component {
 
                         }
 
-                        if (room.get("src1").includes("Zoom")) {
-                            return <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
-                            </div>
-                        }
+                        // if (room.get("src1").includes("Zoom")) {
+                        //     return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                        //         <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
+                        //     </div>
+                        // }
 
                         if (this.state.expanded && room.id !== this.state.expanded_video.id)
                         {
@@ -339,7 +339,7 @@ class LiveStreaming extends Component {
                             return <React.Fragment key={room.id}>
                                 <div className={"space-align-block"} key={room.id} style={{width:width}}>
                                     <LiveStreamingPanel
-                                        playing={true}
+                                        playing={this.state.expanded}
                                         auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when}  onExpand={this.toggleExpanded.bind(this,
                                     room)}/>
                                 </div>
@@ -358,15 +358,11 @@ class LiveStreaming extends Component {
 }
 
 const LiveVideosArea = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <LiveStreaming {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
+                    <LiveStreaming {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
 );
 
 export default LiveVideosArea;

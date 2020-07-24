@@ -1,13 +1,10 @@
 import React from 'react';
-import {Select, Spin, Table, Button, Radio, Tooltip} from 'antd';
+import {Descriptions, Radio, Skeleton, Spin, Table, Tag, Tooltip} from 'antd';
 import Parse from "parse";
 import {AuthUserContext} from "../Session";
-import Form from "antd/lib/form/Form";
-import withProgram from './withProgram';
-import ProgramContext from './context';
-import { ContactlessOutlined } from '@material-ui/icons';
 import {NavLink} from "react-router-dom";
-import ReactImageZoom from 'react-image-zoom';
+import {StarFilled, StarOutlined} from "@ant-design/icons";
+import ProgramItemDisplay from "./ProgramItemDisplay";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -29,23 +26,36 @@ class Program extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            sessions: [], 
+            ProgramSessions: [],
             loading: true,
-            gotTracks: false,
-            gotRooms: false,
-            gotItems: false,
-            gotSessions: false,
+            selectedDays: [],
+            starredItems: [],
             timeZone: timezone.tz.guess(),
         }
+    }
+    async componentDidMount() {
+        //find our saved program
+        if(this.props.auth.userProfile) {
+            let StarredProgram = Parse.Object.extend("StarredProgram");
+            let progQ = new Parse.Query(StarredProgram);
+            progQ.equalTo("user", this.props.auth.userProfile)
+            progQ.first().then(async res=>{
+               if(!res){
+                   res = new StarredProgram();
+                   res.set("user", this.props.auth.userProfile);
+                   res.save();
+               }
 
-        console.log('[Program]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded) 
-            this.props.onDown(this.props);
-        else{
-            this.state.sessions = this.props.sessions;
-            this.state.loading = false;
+               let itemsQ = res.relation("items").query();
+               itemsQ.limit(1000);
+               let starredItems = await itemsQ.find();
+               this.setState({starredProgram: res, starredItems: starredItems});
+            });
+        }
+        let sessions = await this.props.auth.programCache.getProgramSessions(this);
+        this.setState({ProgramSessions: sessions, loading: false});
+        if(this.state.sessions && this.state.sessions.length){
+            this.programLoaded();
         }
     }
 
@@ -54,6 +64,8 @@ class Program extends React.Component {
             (item)=>timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D"));
         let table = [];
         for(const [date, rawSessions] of groupedByDate){
+            if(this.state.selectedDays.length > 0 && !this.state.selectedDays.includes(date))
+                continue;
             let row = {};
             let dateHeader = {label: date, rowSpan: 0};
             row.date = dateHeader;
@@ -69,9 +81,12 @@ class Program extends React.Component {
                     row.session = sessionHeader;
                     if (session.get("items")) {
                         for (let programItem of session.get("items")) {
+                            if(this.state.filterByStar && !this.state.starredItems.find(item=>item.id == programItem.id))
+                                continue;
                             row.key = programItem.id;
-                            row.programItem = programItem.get("title");
+                            row.programItem = programItem.id;
                             row.confKey = programItem.get("confKey");
+                            row.item = programItem;
                             table.push(row);
                             row = {};
                             row.session = {};
@@ -88,65 +103,8 @@ class Program extends React.Component {
         return table;
     }
 
-    componentDidUpdate(prevProps) {
-        console.log("[Program]: Something changed");
-
-        if (this.state.loading) {
-            if (this.state.gotTracks && this.state.gotRooms && this.state.gotItems && this.state.gotSessions) {
-                console.log('[Program]: Program download complete');
-                this.setState({
-                    // sessions: groupedByDate,
-                    sessions: this.props.sessions,
-                    loading: false
-                    // tracks: trackOptions
-                });
-            }
-            else {
-                console.log('[Program]: Program still downloading...');
-                if (prevProps.tracks.length != this.props.tracks.length) {
-                    this.setState({gotTracks: true});
-                    console.log('[Program]: got tracks');
-                }
-                if (prevProps.rooms.length != this.props.rooms.length) {
-                    this.setState({gotRooms: true})
-                    console.log('[Program]: got rooms');
-                }
-                if (prevProps.items.length != this.props.items.length) {
-                    this.setState({gotItems: true})
-                    console.log('[Program]: got items');
-                }
-                if (prevProps.sessions.length != this.props.sessions.length) {
-                    this.setState({gotSessions: true})
-                    console.log('[Program]: got sessions');
-                }
-            }
-        }
-        else {
-            console.log('[Program]: Program cached');
-            if (prevProps.tracks.length != this.props.tracks.length) {
-                this.setState({tracks: this.props.tracks});
-                console.log('[Program]: changes in tracks');
-            }
-            if (prevProps.rooms.length != this.props.rooms.length) {
-                this.setState({rooms: this.props.rooms});
-                console.log('[Program]: changes in rooms');
-            }
-            if (prevProps.items.length != this.props.items.length) {
-                this.setState({items: this.props.items});
-                console.log('[Program]: changes in items');
-            }
-            if (prevProps.sessions.length != this.props.sessions.length) {
-                // let sortedSessions = [...this.props.sessions];
-                // sortedSessions.sort((s1, s2) => s1.get("startTime") - s2.get("startTime"));
-
-                this.setState({sessions: this.props.sessions});
-                console.log('[Program]: changes in sessions');
-            }
-        }
-    }
-
     render() {
-        if(!this.state.sessions){
+        if(this.state.loading){
             return <Spin></Spin>
         }
         let days = [];
@@ -156,6 +114,25 @@ class Program extends React.Component {
 
 
         let cols = [{
+            title: 'Saved',
+            className: "program-table-starred",
+            render: (value, row, index) => {
+                let starred = this.state.starredItems.find(item => item.id == row.item.id);
+                return (starred ? <Tooltip title="Remove this from your saved program" placement="top"><StarFilled className="programStarStarred" onClick={()=> {
+                        this.state.starredProgram.relation("items").remove(row.item);
+                        this.state.starredProgram.save().catch((err) => console.log(err));
+                        this.setState((prevState) => ({
+                            starredItems: prevState.starredItems.filter(item => item.id != row.item.id)
+                        }));
+                }} /></Tooltip> :  <Tooltip title="Add this iem to your saved program" placement="top"><StarOutlined className="programStarNotStarred" onClick={()=> {
+                        this.state.starredProgram.relation("items").add(row.item);
+                        this.state.starredProgram.save().catch((err) => console.log(err));
+                        this.setState((prevState) => ({
+                            starredItems: [row.item, ...prevState.starredItems]
+                        }));
+                }} /></Tooltip>);
+            }
+        },{
             title: 'Date',
             className:"program-table-date",
             dataIndex: 'date',
@@ -204,7 +181,7 @@ class Program extends React.Component {
                 className:"program-table-programItem",
                 dataIndex: "programItem",
                 render: (value, row, index)=>{
-                    return <NavLink to={"/program/"+row.confKey}>{value}</NavLink>
+                    return <ProgramItemDisplay auth={this.props.auth} id={value} />
                 }
             }
         ];
@@ -215,6 +192,21 @@ class Program extends React.Component {
             <img style={{width: "100%", height: "100%"}} src={'https://2020.icse-conferences.org/getImage/orig/ICSE-Schedule.PNG'} /> 
 
             <h4>Details:</h4>
+            <Descriptions title="Filter">
+                <Descriptions.Item label="Filter by day"><span className="filterOptions">{this.state.sessionDays? this.state.sessionDays.map(day=><Tag.CheckableTag
+                    color="red"
+                    checked={this.state.selectedDays.indexOf(day) > -1}
+                    onChange={checked => {
+                        this.setState(prevState => ({ selectedDays: checked ? [...prevState.selectedDays, day] : prevState.selectedDays.filter(t => t !== day)}));
+                    }}
+                    key={day}>{day}</Tag.CheckableTag>) : <Skeleton.Input />}</span></Descriptions.Item>
+                <Descriptions.Item label="Filter by Starred">
+                    <Radio.Group defaultValue={false} onChange={e => {this.setState({filterByStar: e.target.value})}}>
+                        <Radio.Button value={false}>All</Radio.Button>
+                        <Radio.Button value={true}><StarFilled className="programStarStarred" /> Only</Radio.Button>
+                    </Radio.Group>
+                </Descriptions.Item>
+            </Descriptions>
             <Radio.Group defaultValue="timezone.tz.guess()" onChange={e => {this.setState({timeZone: e.target.value})}}>
                 <Radio.Button value="timezone.tz.guess()">Local Time</Radio.Button>
                 <Radio.Button value="UTC">UTC Time</Radio.Button>
@@ -231,16 +223,23 @@ class Program extends React.Component {
                    {/*    </Form.Item>*/}
                    {/*</Form>*/}
                 </div>
-                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.sessions)} loading={this.state.loading}></Table>
+                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.ProgramSessions)} loading={this.state.loading}></Table>
             </div>
         </div>
+    }
+
+    programLoaded() {
+        // if(this.state.loading){
+        //     let days = [... new Set(this.state.sessions.map((item)=>timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D")))];
+        //     this.setState({sessionDays: days})
+        // }
     }
 }
 class ProgramDay extends React.Component{
     constructor(props) {
         super(props);
         //organize into time bands
-        let timeBands = groupBy(this.props.program,(session)=>(this.props.formatTime(session.get("startTime"))+ " - ") + this.props.formatTime(session.get('endTime')))
+        let timeBands = groupBy(this.state.program,(session)=>(this.props.formatTime(session.get("startTime"))+ " - ") + this.props.formatTime(session.get('endTime')))
         this.state = {
             timeBands : timeBands
         }
@@ -279,17 +278,14 @@ class ProgramItem extends React.Component {
         );
     }
 }
+
 const
     AuthConsumer = (props) => (
-        <ProgramContext.Consumer>
-            {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
-                <AuthUserContext.Consumer>
-                    {value => (
-                        <Program {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} people={people} onDown={onDownload} downloaded={downloaded}/>
-                    )}
-                </AuthUserContext.Consumer>
+        <AuthUserContext.Consumer>
+            {value => (
+                <Program {...props} auth={value}  />
             )}
-        </ProgramContext.Consumer>
+        </AuthUserContext.Consumer>
 
     );
 export default AuthConsumer;

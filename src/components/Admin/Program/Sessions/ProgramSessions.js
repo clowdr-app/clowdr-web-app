@@ -2,10 +2,9 @@ import React, {Fragment, useState} from 'react';
 import {Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Space, Spin, Table, Tabs} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
-import {ProgramContext} from "../../../Program";
-import moment from 'moment';
 import * as timezone from 'moment-timezone';
 import {DeleteOutlined, EditOutlined} from '@ant-design/icons';
+import moment from "moment";
 
 const { Option } = Select;
 
@@ -26,195 +25,70 @@ class ProgramSessions extends React.Component {
         this.state = {
             loading: true,
             toggle: false,
-            sessions: [],
-            rooms: [],
-            items: [],
-            gotSessions: false,
-            gotRooms: false,
-            gotItems: false,
-            editing: false,
-            edt_session: undefined,
             searched: false,
             searchResult: ""
         };
-
-        console.log('[Admin/Sessions]: downloaded? ' + this.props.downloaded);
-
-        // Call to download program
-        if (!this.props.downloaded)
-            this.props.onDown(this.props);
-        else {
-            this.state.rooms = this.props.rooms;
-            this.state.sessions = this.props.sessions;
-            this.state.items = this.props.items;
-        }
     }
 
 
     async onCreate(values) {
         console.log("OnCreate! " + values.title);
         var _this = this;
-        let room = this.state.rooms.find(r => r.get('name') == values.room);
+        let room = this.state.ProgramRooms.find(r => r.id == values.room);
         if (!room)
             console.log('Invalid room ' + values.room);
 
-        // Create the session record
-        var Session = Parse.Object.extend("ProgramSession");
-        var session = new Session();
-        session.set('conference', this.props.auth.currentConference);
-        session.set("title", values.title);
-        session.set("startTime", values.startTime.toDate());
-        session.set("endTime", values.endTime.toDate());
-        session.set("room", room);
-        session.set("items", values.items);
-        session.set("confKey", Math.floor(Math.random() * 10000000).toString());
-
-        let acl = new Parse.ACL();
-        acl.setPublicWriteAccess(false);
-        acl.setPublicReadAccess(true);
-        acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-manager", true);
-        acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
-        session.setACL(acl);
-        session.save()
-            .then(session => this.setState({visible: false /*, sessions: sortedSessions*/}))
-            .catch(err => {
-                console.log(err);
-                console.log("@" + session.id);
-            });
-
-        // let data = {
-        //     conference: this.props.auth.currentConference.id,
-        //     title: values.title,
-        //     startTime: values.startTime.toDate(),
-        //     endTime: values.endTime.toDate(),
-        //     room: room.id
-        // }
-        // Parse.Cloud.run("newProgramSession", data).then(() => {
-        //     console.log('[ProgramSession]: sent request to create new session ' + data.title);
-        // });
-
-    }
-
-    onDelete(value) {
-        console.log("Deleting " + value + " " + value.get("title"));
-        // Delete the watchers first
-
-        value.destroy().then(() => {
-            this.setState({
-                sessions: [...this.state.sessions]
-            });
-        });
-    }
-
-
-
-    onUpdate(values) {
-        var _this = this;
-        console.log("Updating session " + values.title);
-        let session = this.state.sessions.find(s => s.id == values.objectId);
-
-        if (session) {
-            console.log(session);
-
-            session.set("title", values.title);
-            session.set("startTime", values.startTime.toDate());
-            session.set("endTime", values.endTime.toDate());
-            session.set("items", values.items);
-            let room = this.state.rooms.find(r => r.id == values.room);
-            if (!room)
-                console.log('Invalid room ' + values.room);
-            session.set("room", room);
-            session.save().then((val) => {
-                _this.setState({visible: false, editing: false});
-            }).catch(err => {
-                console.log(err + ": " + values.objectId);
-            })
+        let data = {
+            clazz: "ProgramSession",
+            conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+            title: values.title,
+            startTime: values.startTime.toDate(),
+            endTime: values.endTime.toDate(),
+            items: values.items ? values.items.map(i => {return {clazz: "ProgramItem", id: i.id}}) : [],
+            confKey: Math.floor(Math.random() * 10000000).toString()
         }
-        else {
-            console.log("Program session not found: " + values.title);
-        }
+        if (room)
+            data.room = {clazz: "ProgramRoom", id: room.id};
+
+        Parse.Cloud.run("create-obj", data)
+        .then(t => {
+            console.log("[Admin/Sessions]: sent new object to cloud");
+            this.setVisible();
+        })
+        .catch(err => {
+            this.setState({alert: "add error"})
+            console.log("[Admin/Sessions]: Unable to create: " + err)
+        })
+
     }
 
     setVisible() {
         this.setState({'visible': !this.state.visible});
     }
 
-    componentDidMount() {
-
-    }
-
-    componentDidUpdate(prevProps) {
-        console.log("[Admin/Sessions]: Something changed");
-
-        if (this.state.loading) {
-            if (this.state.gotRooms && this.state.gotSessions && this.state.gotItems) {
-                console.log('[Admin/Sessions]: Program download complete');
-                this.setState({
-                    rooms: this.props.rooms,
-                    sessions: this.props.sessions,
-                    items: this.props.items,
-                    loading: false
-                });
-            }
-            else {
-                console.log('[Admin/Sessions]: Program still downloading...');
-                if (prevProps.rooms.length != this.props.rooms.length) {
-                    this.setState({gotRooms: true});
-                    console.log('[Admin/Sessions]: got rooms');
-                }
-                if (prevProps.sessions.length != this.props.sessions.length) {
-                    this.setState({gotSessions: true});
-                    console.log('[Admin/Sessions]: got sessions');
-                }
-                if (prevProps.items.length != this.props.items.length) {
-                    this.setState({gotItems: true});
-                }
-            }
-        }
-        else {
-            console.log('[Admin/Sessions]: Program cached');
-            if (prevProps.rooms.length != this.props.rooms.length) {
-                this.setState({rooms: this.props.rooms});
-                console.log('[Admin/Sessions]: changes in rooms');
-            }
-            if (prevProps.sessions.length != this.props.sessions.length) {
-                let sortedSessions = [...this.props.sessions];
-                sortedSessions.sort((s1, s2) => s1.get("startTime") - s2.get("startTime"));
-
-                this.setState({sessions: sortedSessions});
-                console.log('[Admin/Sessions]: changes in sessions');
-            }
-            if (prevProps.items.length != this.props.items.length) {
-                this.setState({items: this.props.items});
-                console.log('[Admin/Sessions]: changes in items')
-            }
-        }
-    }
-
-    refreshList(){
-        let query = new Parse.Query("ProgramSession");
-        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.limit(1000);
-        query.find().then(res=>{
-            console.log('Found sessions ' + res.length);
-            this.setState({
-                sessions: res,
-                loading: false
-            });
-        })
+    async componentDidMount() {
+        let [sessions, rooms, items]= await Promise.all([
+            this.props.auth.programCache.getProgramSessions(this),
+            this.props.auth.programCache.getProgramRooms(this),
+            this.props.auth.programCache.getProgramItems(this),
+        ]);
+        this.setState({ProgramSessions: sessions,
+            ProgramRooms: rooms,
+            ProgramItems: items,
+            loading: false});
     }
 
     componentWillUnmount() {
-        // this.sub.unsubscribe();
+        this.props.auth.programCache.cancelSubscription("ProgramSession", this);
+        this.props.auth.programCache.cancelSubscription("ProgramItem", this);
+        this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
     }
 
     render() {
+        if(this.state.loading)
+            return <Spin />
         console.log("Loading Editable Cell");
         const myItemTitles = [];
-        this.state.items.map(item => {
-            console.log(item)
-        });
 
         const {Option} = Select;
         function onChange(value) {
@@ -249,22 +123,19 @@ class ProgramSessions extends React.Component {
                 case ('room'):
                     inputNode = (
                         <Select placeholder="Choose the room" style={{ width: 400 }} >
-                            {this.state.rooms.map(r => (
+                            {this.state.ProgramRooms.map(r => (
                                 <Option key={r.id} value={r.id}>{r.get('name')}</Option>
                             ))}
                         </Select>
                     );
                     break;
                 case ('items'):
-                    console.log('ITEMS CELL!!!');
-                    console.log(myItemTitles);
-
                     inputNode = (
                         <Select
                             showSearch
                             mode="multiple"
                             style={{ width: 200 }}
-                            placeholder="Select a person"
+                            placeholder="Select an item"
                             optionFilterProp="children"
                             onChange={onChange}
                             onFocus={onFocus}
@@ -274,7 +145,7 @@ class ProgramSessions extends React.Component {
                                 option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                             }
                         >
-                            {this.state.items.map(it => (
+                            {this.state.ProgramItems.map(it => (
                                 <Option key={it.id} value={it.id}>{it.get('title')}</Option>
                             ))}
                         </Select>
@@ -319,27 +190,20 @@ class ProgramSessions extends React.Component {
         const EditableTable = () => {
             console.log("Loading Editable table");
             const [form] = Form.useForm();
-            const [data, setData] = useState(this.state.sessions);
+            const [data, setData] = useState(this.state.ProgramSessions);
             const [editingKey, setEditingKey] = useState('');
 
             const isEditing = record => record.id === editingKey;
 
             const edit = record => {
-                console.log("record being edited is " + record.get("title"));
-                console.log(JSON.stringify(record));
-                console.log("Start time is =============> " + record.get("startTime"));
                 form.setFieldsValue({
                     title: record.get("title") ? record.get("title") : "",
-                    // start: record.get("startTime") ? record.get("startTime") : "",
-                    start:  "",
-                    end: "",
-                    // end: record.get("endTime") ? record.get("endTime") : "",
+                    start: record.get("startTime") ? moment(record.get("startTime")) : "",
+                    end: record.get("endTime") ? moment(record.get("endTime")) : "",
                     room: record.get("room") ? record.get("room").get("name") : "",
-                    items:  record.get("items") && record.get("items").length > 0 ? record.get("items")[0].get("title") : ""
+                    items:  record.get("items") && record.get("items").length > 0 ? record.get("items").map(i => i.get("title")) : []
                 });
-                console.log("setting editing key state");
                 setEditingKey(record.id);
-                console.log("editing key state done");
             };
 
             const cancel = () => {
@@ -347,15 +211,23 @@ class ProgramSessions extends React.Component {
             };
 
             const onDelete = record => {
-                console.log("deleting item: " + record.get("title"));
-                const newItemList = [...this.state.items];
-                this.setState({
-                    items: newItemList.filter(item => item.id !== record.id)
-                });
+                console.log("deleting session: " + record.get("title"));
                 // delete from database
-                record.destroy().then(() => {
-                    console.log("item deleted from db")
-                });
+                let data = {
+                    clazz: "ProgramSession",
+                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
+                    id: record.id
+                }
+                Parse.Cloud.run("delete-obj", data)
+                .then(c => this.setState({
+                    alert: "delete success",
+                    searchResult: this.state.searched ?  this.state.searchResult.filter(r => r.id !== record.id): ""
+                }))
+                .catch(err => {
+                    this.setState({alert: "delete error"})
+                    this.refreshList();
+                    console.log("[Admin/Sessions]: Unable to delete: " + err)
+                })
             };
 
             const save = async id => {
@@ -363,41 +235,46 @@ class ProgramSessions extends React.Component {
                 try {
                     const row = await form.validateFields();
                     const newData = [...data];
-                    let item = newData.find(item => item.id === id);
+                    let session = newData.find(s => s.id === id);
 
-                    if (item) {
+                    if (session) {
                         console.log("row is : " + row.title);
-                        let newRoom = this.state.rooms.find(t => t.id === row.room);
-                        if (newRoom) {
-                            console.log("Room found. Updating");
-                            item.set("room", newRoom)
-                        } else {
-                            console.log("Room not found");
-                        }
+
+                        let newRoom = this.state.ProgramRooms.find(t => t.id === row.room);
                         let newItems = [];
                         for (let item of row.items) {
-                            let newItem = this.state.items.find(t => t.id === item);
+                            let newItem = this.state.ProgramItems.find(t => t.id === item);
                             if (newItem) {
                                 newItems.push(newItem);
                             } else {
                                 console.log("Item "  + item + " not found");
                             }
-
                         }
                         console.log("newITEMS are ####++++++++ " + newItems);
 
-                        item.set("title", row.title);
-                        item.set("startTime", row.start.toDate());
-                        item.set("endTime", row.end.toDate());
-                        item.set("items", newItems);
+                        let data = {
+                            clazz: "ProgramSession",
+                            conference: {clazz: "ClowdrInstance", id: session.get("conference").id},
+                            id: session.id,
+                            title: row.title,
+                            startTime: row.start.toDate(),
+                            endTime: row.end.toDate()
+                        }
+                        if (newRoom) {
+                            console.log("Room found. Updating");
+                            data.room = {clazz: "ProgramRoom", id: newRoom.id}
+                        } 
+                        if (newItems.length > 0)
+                            data.items = newItems.map(i => {return {clazz: "ProgramItem", id: i.id}})
+
+                        Parse.Cloud.run("update-obj", data)
+                        .then(c => this.setState({alert: "save success"}))
+                        .catch(err => {
+                            this.setState({alert: "save error"})
+                            console.log("[Admin/Sessions]: Unable to save: " + err)
+                        })
+
                         setData(newData);
-                        item.save()
-                            .then((response) => {
-                                console.log('Updated ProgramItem', response);})
-                            .catch(err => {
-                                console.log(err);
-                                console.log("@" + item.id);
-                            });
                         setEditingKey('');
                     }
                     else {
@@ -487,7 +364,7 @@ class ProgramSessions extends React.Component {
                     dataIndex: 'action',
                     render: (_, record) => {
                         const editable = isEditing(record);
-                        if (this.state.sessions.length > 0) {
+                        if (this.state.ProgramSessions.length > 0) {
                             return editable ? (
                                 <span>
                                 <a
@@ -551,9 +428,10 @@ class ProgramSessions extends React.Component {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult : this.state.sessions}
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramSessions}
                         columns={mergedColumns}
                         rowClassName="editable-row"
+                        rowKey='id'
                         pagination={{
                             onChange: cancel,
                         }}
@@ -562,31 +440,6 @@ class ProgramSessions extends React.Component {
             );
         };
 
-        if (!this.props.downloaded)
-            return (
-                <Spin tip="Loading...">
-                </Spin>);
-
-        else if (this.state.editing)
-            return (
-                <Fragment>
-                    <CollectionEditForm
-                        title="Edit Session"
-                        visible={this.state.visible}
-                        data={this.state.edt_session}
-                        onAction={this.onUpdate.bind(this)}
-                        onCancel={() => {
-                            this.setVisible(false);
-                            this.setState({editing: false});
-                        }}
-                        rooms={this.state.rooms}
-                        items={this.state.items}
-                        myItems={this.state.edt_session.items ? this.state.edt_session.items : []}
-                    />
-                    <Input.Search/>
-
-                </Fragment>
-            );
         return <div>
             <Button
                 type="primary"
@@ -603,8 +456,8 @@ class ProgramSessions extends React.Component {
                 onCancel={() => {
                     this.setVisible(false);
                 }}
-                rooms={this.state.rooms}
-                items={this.state.items}
+                rooms={this.state.ProgramRooms}
+                items={this.state.ProgramItems}
                 myItems={[]}
             />
             <Input.Search
@@ -616,7 +469,7 @@ class ProgramSessions extends React.Component {
                     else {
                         this.setState({searched: true});
                         this.setState({
-                            searchResult: this.state.sessions.filter(
+                            searchResult: this.state.ProgramSessions.filter(
                                 session => (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase()))
                                     || (session.get('startTime') && timezone(session.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase()))
                                     || (session.get('endTime') && timezone(session.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase()))
@@ -634,16 +487,12 @@ class ProgramSessions extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-    <ProgramContext.Consumer>
-        {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <ProgramSessions {...props} auth={value} rooms={rooms} tracks={tracks} items={items} sessions={sessions} onDown={onDownload} downloaded={downloaded}/>
-                )}
-            </AuthUserContext.Consumer>
-        )}
-    </ProgramContext.Consumer>
+    <AuthUserContext.Consumer>
+        {value => (
+            <ProgramSessions {...props} auth={value}  />
 
+        )}
+    </AuthUserContext.Consumer>
 );
 export default AuthConsumer;
 

@@ -1,10 +1,10 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
-import {ProgramContext} from "../Program";
 import Parse from "parse"
 import {Alert, Spin} from "antd";
 import ProgramVideoChat from "../VideoChat/ProgramVideoChat";
 import {videoURLFromData} from "../LiveStreaming/utils";
+import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -19,15 +19,6 @@ class ProgramItem extends React.Component {
             items: [],
             waitingForProgram: true
         };
-
-            // Call to download program
-        if (!this.props.downloaded) 
-            this.props.onDown(this.props);
-        else {
-            this.state.items = this.props.items;
-            this.state.waitForProgram = false;
-        }        
-    
     }
 
     async componentDidMount() {
@@ -35,26 +26,12 @@ class ProgramItem extends React.Component {
         this.setState({itemKey: itemKey});
 
         //For social features, we need to wait for the login to complete before doing anything
-        let user = await this.props.auth.refreshUser();
-
-
-        let item = this.props.items ? this.props.items.find(item => item.get("confKey") == itemKey) : undefined;
-
-        if (!item) {
-            let pq = new Parse.Query("ProgramItem");
-            pq.equalTo("confKey", itemKey);
-            pq.include("track");
-            pq.include("programSession")
-            pq.include("programSession.room")
-            pq.include("programSession.room.socialSpace")
-            pq.include("breakoutRoom");
-            item = await pq.first();
-        }
+        let [user, item] = await Promise.all([this.props.auth.refreshUser(), this.props.auth.programCache.getProgramItemByConfKey(itemKey, this)]);
 
         if (!item) {
             this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
         } else {
-            let stateUpdate = {loading: false, error: null, programItem: item, inBreakoutRoom: false};
+            let stateUpdate = {loading: false, error: null, ProgramItem: item, inBreakoutRoom: false};
             if (user) {
                 if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
                     //set the social space...
@@ -81,6 +58,8 @@ class ProgramItem extends React.Component {
 
     componentWillUnmount() {
         this.maybeCloseChat();
+        if(this.state.ProgramItem)
+            this.props.auth.programCache.cancelSubscription("ProgramItem", this, this.state.ProgramItem.id);
         this.props.auth.helpers.setGlobalState({chatChannel: null, forceChatOpen: false});
         this.props.auth.setSocialSpace("Lobby");
     }
@@ -90,65 +69,11 @@ class ProgramItem extends React.Component {
 
     }
     async componentDidUpdate(prevProps) {
-
-        if (this.state.waitForProgram) {
-            if (this.state.gotItems) {
-                // console.log('[ProgramItem]: Program download complete');
-                this.setState({items: this.props.items, waitingForProgram: false});
-            }
-            else {
-                // console.log('[ProgramItem]: Program still downloading...');
-                if (prevProps.items.length != this.props.items.length) {
-                    this.setState({gotItems: true});
-                    console.log('[ProgramItem]: got items');
-                }
-            }
-        }
-        else {
-            // console.log('[ProgramItem]: Program cached');
-        }
         let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
         if(this.state.itemKey != itemKey){
+            this.props.auth.programCache.cancelSubscription("ProgramItem", this, this.state.ProgramItem.id);
             this.maybeCloseChat();
-            this.setState({itemKey: itemKey, loading: true});
-            let item = this.props.items ? this.props.items.find(item => item.get("confKey") == itemKey) : undefined;
-
-            if (!item) {
-                let pq = new Parse.Query("ProgramItem");
-                pq.equalTo("confKey", itemKey);
-                pq.include("track");
-                pq.include("programSession")
-                pq.include("programSession.room")
-                pq.include("programSession.room.socialSpace")
-                pq.include("breakoutRoom");
-                item = await pq.first();
-            }
-
-            if (!item) {
-                this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
-            } else {
-                let chatSID = undefined;
-                if (this.props.auth.user) {
-                    if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
-                        //set the social space...
-                        let ss = item.get("programSession").get("room").get("socialSpace");
-                        this.props.auth.setSocialSpace(ss.get("name"));
-                        this.props.auth.helpers.setGlobalState({forceChatOpen: true});
-                    }
-                    if (item.get("track").get("perProgramItemChat")) {
-                        //Join the chat room
-                        chatSID = item.get("chatSID");
-                        if (!chatSID) {
-                            chatSID = await Parse.Cloud.run("chat-getSIDForProgramItem", {
-                                programItem: item.id
-                            });
-                        }
-                        this.props.auth.chatClient.openChatAndJoinIfNeeded(chatSID);
-                    }
-                }
-                this.setState({loading: false, error: null, programItem: item, inBreakoutRoom: false, chatSID: chatSID});
-            }
-
+            this.componentDidMount();
         }
     }
     formatTime(timestamp) {
@@ -165,16 +90,17 @@ class ProgramItem extends React.Component {
             />
         }
         let img = ""
-        if (this.state.programItem.get("posterImage")) {
-            img = <img src={this.state.programItem.get("posterImage").url()} />
+        if (this.state.ProgramItem.get("posterImage")) {
+            img = <img src={this.state.ProgramItem.get("posterImage").url()} />
         }
-        let authors = this.state.programItem.get("authors") ? this.state.programItem.get("authors") : [];
-        let authorstr = authors.map(a => a.get('name')).join(", ");
+        let authors = this.state.ProgramItem.get("authors") ? this.state.ProgramItem.get("authors") : [];
+        let authorstr= authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />).reduce((prev,curr) => [prev,", ",curr]);
+
         let sessionInfo;
         let now = Date.now();
 
-        if(this.state.programItem.get("programSession")){
-            let session = this.state.programItem.get("programSession");
+        if(this.state.ProgramItem.get("programSession")){
+            let session = this.state.ProgramItem.get("programSession");
             let roomInfo;
             if (session.get("room") && session.get("room").get("src1") == "YouTube") {
                 let when = "now"
@@ -214,11 +140,11 @@ class ProgramItem extends React.Component {
 
         return <div className="programItemContainer">
             <div className="programItemMetadata">
-                <h3>{this.state.programItem.get('title')}</h3>
+                <h3>{this.state.ProgramItem.get('title')}</h3>
                 <p><i>{authorstr}</i></p>
                 {sessionInfo}
-                <p><b>Abstract: </b> {this.state.programItem.get("abstract")}</p>
-                {this.props.auth.user  && this.state.programItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.programItem.get("breakoutRoom")}/></div> : <></>}
+                <p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>
+                {this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.ProgramItem.get("breakoutRoom")}/></div> : <></>}
             </div>
             <div className="fill">
                 {img}
@@ -229,15 +155,11 @@ class ProgramItem extends React.Component {
 
 const
     AuthConsumer = (props) => (
-        <ProgramContext.Consumer>
-            {({rooms, tracks, items, sessions, people, onDownload, downloaded}) => (
                 <AuthUserContext.Consumer>
                     {value => (
-                        <ProgramItem {...props} auth={value} items={items} onDown={onDownload} downloaded={downloaded}/>
+                        <ProgramItem {...props} auth={value} />
                     )}
                 </AuthUserContext.Consumer>
-            )}
-        </ProgramContext.Consumer>
 
     );
 
