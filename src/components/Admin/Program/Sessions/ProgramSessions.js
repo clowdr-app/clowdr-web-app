@@ -72,7 +72,8 @@ class ProgramSessions extends React.Component {
             this.props.auth.programCache.getProgramRooms(this),
             this.props.auth.programCache.getProgramItems(this),
         ]);
-        this.setState({ProgramSessions: sessions,
+        this.setState({
+            ProgramSessions: sessions,
             ProgramRooms: rooms,
             ProgramItems: items,
             loading: false});
@@ -84,11 +85,25 @@ class ProgramSessions extends React.Component {
         this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
     }
 
+    refreshList() {
+        let query = new Parse.Query("ProgramSession");
+        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
+        query.equalTo("conference", this.props.auth.currentConference);
+        query.limit(1000);
+        query.find().then(res => {
+            console.log('Found sessions ' + res.length);
+            this.setState({
+                ProgramSessions: res,
+                loading: false
+            });
+        })
+    }
+
     render() {
         if(this.state.loading)
             return <Spin />
         console.log("Loading Editable Cell");
-        const myItemTitles = [];
+
 
         const {Option} = Select;
         function onChange(value) {
@@ -118,11 +133,11 @@ class ProgramSessions extends React.Component {
                     inputNode = <DatePicker showTime />;
                     break;
                 case ('end'):
-                    inputNode = <DatePicker showTime/>;
+                    inputNode = <DatePicker showTime />;
                     break;
                 case ('room'):
                     inputNode = (
-                        <Select placeholder="Choose the room" style={{ width: 400 }} >
+                        <Select placeholder="Choose the room" >
                             {this.state.ProgramRooms.map(r => (
                                 <Option key={r.id} value={r.id}>{r.get('name')}</Option>
                             ))}
@@ -134,7 +149,6 @@ class ProgramSessions extends React.Component {
                         <Select
                             showSearch
                             mode="multiple"
-                            style={{ width: 200 }}
                             placeholder="Select an item"
                             optionFilterProp="children"
                             onChange={onChange}
@@ -149,11 +163,6 @@ class ProgramSessions extends React.Component {
                                 <Option key={it.id} value={it.id}>{it.get('title')}</Option>
                             ))}
                         </Select>
-                    // <Select placeholder="Choose the item" style={{ width: 400 }} >
-                    //     {this.state.items.map(r => (
-                    //         <Option key={r.id} value={r.get('title')}>{r.get('title')}</Option>
-                    //     ))}
-                    // </Select>
                     );
                     break;
 
@@ -170,12 +179,8 @@ class ProgramSessions extends React.Component {
                             style={{
                                 margin: 0,
                             }}
-                            rules={[
-                                {
-                                    required: true,
-                                    message: `Please Input ${title}!`,
-                                },
-                            ]}
+                            rules={dataIndex === 'start' || dataIndex === 'end' ?
+                                [{required: true, message: `Please Input ${title}!`}] : []}
                         >
                             {inputNode}
                         </Form.Item>
@@ -188,7 +193,6 @@ class ProgramSessions extends React.Component {
 
         // set up editable table
         const EditableTable = () => {
-            console.log("Loading Editable table");
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.ProgramSessions);
             const [editingKey, setEditingKey] = useState('');
@@ -196,12 +200,18 @@ class ProgramSessions extends React.Component {
             const isEditing = record => record.id === editingKey;
 
             const edit = record => {
+                let currentItems = [];
+                if (record.get("items")) {
+                    record.get("items").map(a => {
+                        currentItems.push(a.id);
+                    })
+                }
                 form.setFieldsValue({
                     title: record.get("title") ? record.get("title") : "",
                     start: record.get("startTime") ? moment(record.get("startTime")) : "",
                     end: record.get("endTime") ? moment(record.get("endTime")) : "",
                     room: record.get("room") ? record.get("room").get("name") : "",
-                    items:  record.get("items") && record.get("items").length > 0 ? record.get("items").map(i => i.get("title")) : []
+                    items:  currentItems
                 });
                 setEditingKey(record.id);
             };
@@ -250,8 +260,12 @@ class ProgramSessions extends React.Component {
                                 console.log("Item "  + item + " not found");
                             }
                         }
-                        console.log("newITEMS are ####++++++++ " + newItems);
 
+                        session.set("title", row.title);
+                        session.set("startTime", row.start.toDate());
+                        session.set("endTime", row.end.toDate());
+                        session.set("items", newItems);
+                        session.set("room", newRoom);
                         let data = {
                             clazz: "ProgramSession",
                             conference: {clazz: "ClowdrInstance", id: session.get("conference").id},
@@ -267,11 +281,15 @@ class ProgramSessions extends React.Component {
                         if (newItems.length > 0)
                             data.items = newItems.map(i => {return {clazz: "ProgramItem", id: i.id}})
 
+                        console.log("SAVING HERE =====>", data);
                         Parse.Cloud.run("update-obj", data)
-                        .then(c => this.setState({alert: "save success"}))
+                        .then(c => {
+                            this.setState({alert: "save success"});
+                            setData(newData);
+                        })
                         .catch(err => {
-                            this.setState({alert: "save error"})
-                            console.log("[Admin/Sessions]: Unable to save: " + err)
+                            this.setState({alert: "save error"});
+                            console.log("[Admin/Sessions]: Unable to save: " + err);
                         })
 
                         setData(newData);
@@ -294,6 +312,7 @@ class ProgramSessions extends React.Component {
                     key: 'title',
                     width: '20%',
                     editable: true,
+                    defaultSortOrder: 'ascend',
                     sorter: (a, b) => {
                         var titleA = a.get("title") ? a.get("title") : "";
                         var titleB = b.get("title") ? b.get("title") : "";
@@ -333,8 +352,8 @@ class ProgramSessions extends React.Component {
                     width: '12%',
                     editable: true,
                     sorter: (a, b) => {
-                        var roomA = a.get("room") ? a.get("room").get("name") : "";
-                        var roomB = b.get("room") ? b.get("room").get("name") : "";
+                        const roomA = a.get("room") && a.get("room").get("name") ? a.get("room").get("name") : " ";
+                        const roomB = b.get("room") && b.get("room").get("name") ? b.get("room").get("name") : " ";
                         return roomA.localeCompare(roomB);
                     },
                     render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : "NO SUCH DATA"}</span>,
@@ -440,50 +459,71 @@ class ProgramSessions extends React.Component {
             );
         };
 
-        return <div>
-            <Button
-                type="primary"
-                onClick={() => {
-                    this.setVisible(true);
-                }}
-            >
-                New session
-            </Button>
-            <CollectionEditForm
-                title="Add Session"
-                visible={this.state.visible}
-                onAction={this.onCreate.bind(this)}
-                onCancel={() => {
-                    this.setVisible(false);
-                }}
-                rooms={this.state.ProgramRooms}
-                items={this.state.ProgramItems}
-                myItems={[]}
-            />
-            <Input.Search
-                allowClear
-                onSearch={key => {
-                    if (key == "") {
-                        this.setState({searched: false});
-                    }
-                    else {
-                        this.setState({searched: true});
-                        this.setState({
-                            searchResult: this.state.ProgramSessions.filter(
-                                session => (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase()))
-                                    || (session.get('startTime') && timezone(session.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase()))
-                                    || (session.get('endTime') && timezone(session.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z").toLowerCase().includes(key.toLowerCase()))
-                                    || (session.get('items') && session.get('items').some((element) => element.get('title').toLowerCase().includes(key)))
-                                    || (session.get('room') && session.get('room').get('name').toLowerCase().includes(key.toLowerCase())))
-                        })
-                    }
-                }
-                }
-            />
-            <EditableTable/>
-        </div>
-    }
+        const handleAdd = () => {
+            const ProgramSession = Parse.Object.extend('ProgramSession');
+            const myNewObject = new ProgramSession();
+            myNewObject.set("title", '***NEWLY ADDED SESSION***');
+            myNewObject.set("conference", this.props.auth.currentConference);
+            myNewObject.set("startTime", new Date());
+            myNewObject.set("endTime", new Date());
+            myNewObject.set("room", null);
+            myNewObject.set("items", []);
 
+            myNewObject.save()
+                .then(result => {
+                    console.log('ProgramSession created', result);
+                    this.setState({
+                        alert: "Add success",
+                        ProgramSessions: [myNewObject, ...this.state.ProgramSessions]
+                    })
+                })
+                .catch(error => {
+                        this.setState({alert: "Add error"});
+                        console.error('Error while creating ProgramSession: ', error);
+                    }
+                );
+        };
+
+        return (
+            <div>
+                <table style={{width: "100%"}}>
+                    <tbody>
+                    <tr>
+                        <td width='100%'>
+                            <Input.Search
+                                allowClear
+                                onSearch={key => {
+                                    if (key == "") {
+                                        this.setState({searched: false});
+                                    } else {
+                                        this.setState({searched: true});
+                                        this.setState({
+                                            searchResult: this.state.ProgramSessions.filter(
+                                                session => (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase()))
+                                                    || (session.get('startTime') && session.get('startTime').toString().toLowerCase().includes(key.toLowerCase()))
+                                                    || (session.get('endTime') && session.get('endTime').toString().toLowerCase().includes(key.toLowerCase()))
+                                                    || (session.get('items') && session.get('items').some((element) => element.get('title') && element.get('title').toLowerCase().includes(key)))
+                                                    || (session.get('room') && session.get('room').get('name') && session.get('room').get('name').toLowerCase().includes(key.toLowerCase())))
+                                        })
+                                    }
+                                }}
+                            />
+                        </td>
+                        <td>
+                            <Button
+                                type="primary"
+                                onClick={handleAdd}
+                            >
+                                New session
+                            </Button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <EditableTable/>
+            </div>
+        );
+    }
 }
 
 const AuthConsumer = (props) => (
@@ -495,164 +535,3 @@ const AuthConsumer = (props) => (
     </AuthUserContext.Consumer>
 );
 export default AuthConsumer;
-
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, rooms, items, myItems}) => {
-    const [form] = Form.useForm();
-    const myItemTitles = [];
-    myItems.map(item => {
-        myItemTitles.push(item.get('title'));
-    })
-    console.log("total number of items is: " + items.length);
-    return (
-        <Modal
-            visible={visible}
-            title={title}
-            // okText="Create"
-            footer={[
-                <Button form="myForm" key="submit" type="primary" htmlType="submit">
-                    Submit
-                </Button>
-            ]}
-            cancelText="Cancel"
-            onCancel={onCancel}
-        >
-            <Form
-                form={form}
-                layout="vertical"
-                name="form_in_modal"
-                id="myForm"
-                initialValues={{
-                    modifier: 'public',
-                    ...data
-                }}
-                onFinish={() => {
-                    form
-                        .validateFields()
-                        .then(values => {
-                            form.resetFields();
-                            onAction(values);
-                        })
-                        .catch(info => {
-                            console.log('Validate Failed:', info);
-                        });
-                }}
-            >
-                <Form.Item name="objectId" noStyle>
-                    <Input type="text" type="hidden" />
-                </Form.Item>
-
-                <Form.Item name="roomId" noStyle>
-                    <Input type="text" type="hidden" />
-                </Form.Item>
-
-                <Form.Item
-                    name="title"
-                    label="Title"
-                    rules={[
-                        {
-                            required: true,
-                            message: 'Please input the title of the session!',
-                        },
-                    ]}
-                >
-                    <Input placeholder="Name"/>
-                </Form.Item>
-
-                <Form.Item name="dates">
-                    <Input.Group compact>
-                        <Form.Item name="startTime" label="Start time"
-                                   rules={[
-                                       {
-                                           required: true,
-                                           message: 'Required!',
-                                       },
-                                   ]}
-                        >
-                            <DatePicker showTime/>
-                        </Form.Item>
-                        <Form.Item name="endTime" label="End time"
-                                   rules={[
-                                       {
-                                           required: true,
-                                           message: 'Required!',
-                                       },
-                                   ]}
-                        >
-                            <DatePicker showTime/>
-                        </Form.Item>
-                    </Input.Group>
-                </Form.Item>
-
-                <Form.Item
-                    label="Current items"
-                >
-                    <Space>
-                        <Select
-                            placeholder="Choose a current item"
-                            style={{ width: 400 }}
-                            defaultValue={myItemTitles.length > 0 ? myItemTitles[0]: []}
-                        >
-                            {myItems.map(item => (
-                                <Option
-                                    key={item.id}
-                                    value={item.get('title')}
-                                >
-                                    {item.get('title')}
-                                </Option>
-                            ))}
-                        </Select>
-                        <a href="#" title="Edit" >{<EditOutlined />}</a>
-
-                        <Popconfirm
-                            title="Are you sure to delete this item?"
-                            okText="Yes"
-                            cancelText="No"
-                        >
-                            <a href="#" title="Delete">{<DeleteOutlined />}</a>
-                        </Popconfirm>
-                    </Space>
-
-                </Form.Item>
-
-                <Form.Item
-                    label="Add new items"
-                >
-                    <Select
-                        placeholder="Choose new items"
-                        style={{ width: 400 }}
-                        defaultValue={[]}
-                        mode="multiple"
-                        optionLabelProp="label"
-                    >
-                        {items.map(item => {
-                            if (!myItemTitles.includes(item.get('title'))) {
-                                return <Option
-                                    key={item.id}
-                                    value={item.get('title')}
-                                    label = {item.get('title').length > 5 ? item.get('title').substring(0, 5)+"..." : item.get('title')}>
-                                    {item.get('title')}
-                                </Option>
-                            }
-                        })}
-                    </Select>
-                </Form.Item>
-
-                <Form.Item name="room" label="Room"
-                           rules={[
-                               {
-                                   required: true,
-                                   message: 'Please input the room the session!',
-                               },
-                           ]}
-                >
-                    <Select placeholder="Choose the room" style={{ width: 400 }} >
-                        {rooms.map(r => (
-                            <Option key={r.id}>{r.get('name')}</Option>
-                        ))}
-                    </Select>
-                </Form.Item>
-
-            </Form>
-        </Modal>
-    );
-};
