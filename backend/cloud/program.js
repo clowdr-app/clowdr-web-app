@@ -533,6 +533,8 @@ async function getConfig(conference){
         config[obj.get("key")] = obj.get("value");
     }
     config.twilio = Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
+    config.twilioChat = config.twilio.chat.services(config.TWILIO_CHAT_SERVICE_SID);
+
     return config;
 }
 
@@ -579,9 +581,6 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
         for(let author of oldItem.get("authors")){
             if(!newAuthors.find(v=>v.id==author.id)){
                 //no longer an author
-                console.log("No longer an author:")
-                console.log(author.get("name"));
-                console.log(author.get("programItems"));
                 let oldItems= author.get("programItems");
                 if(oldItems){
                     oldItems = oldItems.filter(item=>item.id!=programItem.id);
@@ -593,15 +592,25 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
         }
         newAuthors = newAuthors.filter(v=>(!oldItem.get('authors').find(y=>y.id==v.id)));
         newAuthors = await Parse.Object.fetchAll(newAuthors, {useMasterKey: true});
+        let config = null;
+        let promises = [];
         for(let author of newAuthors){
-            console.log("New author: " + author.get('name'))
-            console.log(author.get("programItems"))
             let oldItems= author.get("programItems");
             if(!oldItems)
                 oldItems = [];
             oldItems.push(programItem);
             author.set("programItems", oldItems);
             toSave.push(author);
+            if(programItem.get("chatSID") && author.get("userProfile")){
+                //add the author to the chat channel
+                if (!config)
+                    config = await getConfig(programItem.get("conference"));
+                let member = config.twilioChat.channels(programItem.get("chatSID")).members.create({
+                    identity: author.get("userProfile").id
+                }).catch(err=>{
+                    console.log(err);
+                });
+            }
         }
         await Parse.Object.saveAll(toSave, {useMasterKey: true});
     }
@@ -677,16 +686,6 @@ function eqInclNull(a,b){
         return false;
     return a==b.id;
 }
-async function calculatePersonsItems(person){
-    let personsQ = new Parse.Query("ProgramPerson");
-    personsQ.equalTo("userProfile", person.get("userProfile"));
-    let itemsQ = new Parse.Query("ProgramItem");
-    itemsQ.matchesQuery("authors", personsQ);
-    let items = await itemsQ.find({useMasterKey: true});
-    let profile = person.get("userProfile");
-    profile.set("programItems", items);
-    return profile;
-}
 
 Parse.Cloud.afterSave("ProgramPerson", async (request) => {
     let person = request.object;
@@ -700,9 +699,26 @@ Parse.Cloud.afterSave("ProgramPerson", async (request) => {
         let oldPersons = profile.get("programPersons");
         oldPersons.push(person);
         profile.set("programPersons", oldPersons);
+        if(person.get("programItems")){
+            Parse.Object.fetchAll(person.get("programItems")).then(( async (items) =>{
+                let config = null;
+                for(let item of items){
+                    if(item.get("chatSID")){
+                        //add the author to the chat channel
+                        if (!config)
+                            config = await getConfig(item.get("conference"));
+                        let member = config.twilioChat.channels(item.get("chatSID")).members.create({
+                            identity: profile.id
+                        }).catch(err=>{
+                            console.log(err);
+                        });
+                    }
+                }
+            }));
+        }
         try {
             await profile.save({}, {useMasterKey: true});
-        }catch(err){
+        } catch (err) {
             console.log("On " + person.id)
             console.log(err);
         }
