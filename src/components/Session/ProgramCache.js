@@ -7,6 +7,7 @@ export default class ProgramCache {
         this._dataPromises = {};
         this._dataResolves = {};
         this._data = {};
+        this._dataById = {};
         this._subscriptions = {};
         this._listSubscribers = {};
         this._updateSubscribers = {};
@@ -33,6 +34,7 @@ export default class ProgramCache {
             let sub = this.parseLive.subscribe(query);
             this._subscriptions[tableName] = sub;
             sub.on("create", obj => {
+                this._dataById[tableName][obj.id] = obj;
                 this._data[tableName] = [obj, ...this._data[tableName]];
                 if (this._listSubscribers[tableName]) {
                     for (let subscriber of this._listSubscribers[tableName]) {
@@ -44,6 +46,8 @@ export default class ProgramCache {
             });
             sub.on("delete", obj => {
                 this._data[tableName] = this._data[tableName].filter(v=> v.id != obj.id);
+                delete this._dataById[tableName][obj.id];
+
                 if (this._listSubscribers[tableName]) {
                     for (let subscriber of this._listSubscribers[tableName]) {
                         let stateUpdate = {};
@@ -54,6 +58,8 @@ export default class ProgramCache {
             });
             sub.on("update", obj => {
                 this._data[tableName] = this._data[tableName].map(v=> v.id == obj.id ? obj : v);
+
+                this._dataById[tableName][obj.id] = obj;
                 if (this._listSubscribers[tableName]) {
                     for (let subscriber of this._listSubscribers[tableName]) {
                         let stateUpdate = {};
@@ -71,6 +77,10 @@ export default class ProgramCache {
             });
             let data = await query.find();
             this._data[tableName] = data;
+            this._dataById[tableName] = {};
+            for(let obj of data)
+                this._dataById[tableName][obj.id] = obj;
+
             console.log("Loaded: " + tableName + ", " + data.length)
             if(this._dataResolves[tableName]){
                 this._dataResolves[tableName](data);
@@ -87,7 +97,7 @@ export default class ProgramCache {
         if(!this._updateSubscribers['ProgramItem'][id])
             this._updateSubscribers['ProgramItem'][id] = [];
         this._updateSubscribers['ProgramItem'][id].push(component);
-        return items.find(v => v.id==id);
+        return this._dataById['ProgramItem'][id];
     }
 
     async getProgramItemByConfKey(confKey, component){

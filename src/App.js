@@ -52,6 +52,7 @@ import SidebarChat from "./components/SocialTab/SidebarChat";
 import {withRouter} from "react-router";
 import BottomChat from "./components/SocialTab/BottomChat";
 import ProgramItem from "./components/ProgramItem";
+import UserStatusDisplay from "./components/Lobby/UserStatusDisplay";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -156,6 +157,7 @@ class App extends Component {
     componentDidMount() {
         if (this.props.authContext.currentConference)
             this.refreshConferenceInformation();
+        this.props.authContext.programCache.getEntireProgram();
         this.props.authContext.history = this.props.history;
 
     }

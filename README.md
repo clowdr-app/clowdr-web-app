@@ -1,10 +1,14 @@
 # Clowdr
+Clowdr is an open source tool suite to make it easier to run interactive and engaging virtual conferences. Imagine that your conference attendees could video and text chat with each other and easily drift between different conversations in different rooms. Now imagine that this app also integrated your conference program (directly imported from conf.researchr.org), and let attendees see who else is watching the same content. We were unable to find a technology platform that allowed for these interactions, so we built Clowdr.
 
-Clowdr is a virtual conference platform project bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and Node.js.
+This repository contains the source code for the Clowdr web app.
 
-If you want to run it, and help develop, we highly recommend you do it from a Linux environment. The instructions below assume so. If you are on Windows, install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run everything from there.
+## Information for Conference Organizers
+This repository contains the source code for Clowdr. If you are interested in using Clowdr for your event, there is no need for you to download any code or run your own server (unless you want to!). We can host your backend server for free, the only costs to your conference are for streaming video (you'll need accounts with Zoom and Twilio). Clowdr has been battle-tested by thousands of users already this year at [PLDI](https://pldi20.sigplan.org/), [ICSE](https://2020.icse-conferences.org/) and [ISSTA](https://conf.researchr.org/home/issta-2020). In August, [VL/HCC](https://conf.researchr.org/home/vlhcc2020) and [ICFP](https://icfp20.sigplan.org/) plan to use Clowdr. As we gain deployment experience, we hope to offer conference organizers a one-click installation of Clowdr. However, in the meantime, if you are considering Clowdr for your virtual conference, please email us at [hello@clowdr.org](mailto:hello@clowdr.org) and we can provide a demo and deployment for your conference.
 
 ## Installation
+
+If you want to run Clowdr lcoally, and help develop it, we highly recommend you do it from a Mac or Linux environment. The instructions below assume so. If you are on Windows, install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run everything from there.
 
 ### Install all dependencies
 
