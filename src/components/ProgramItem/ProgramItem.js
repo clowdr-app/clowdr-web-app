@@ -141,7 +141,7 @@ class ProgramItem extends React.Component {
         return <div className="programItemContainer">
             <div className="programItemMetadata">
                 <h3>{this.state.ProgramItem.get('title')}</h3>
-                <p><i>{authorstr}</i></p>
+                <div><i>{authorstr}</i></div>
                 {sessionInfo}
                 <p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>
                 {this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.ProgramItem.get("breakoutRoom")}/></div> : <></>}

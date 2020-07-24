@@ -60,13 +60,13 @@ class ProgramItems extends React.Component {
                 else if (dataIndex === "authors") {
                     return <Select
                         placeholder="Choose authors"
+                        optionFilterProp="label"
                         style={{ width: 400 }}
+                        options={this.state.ProgramPersons.sort((a,b)=>(
+                            a.get('name').localeCompare(b.get('name'))
+                        )).map(p=>({value: p.id, label:p.get('name')}))}
                         mode="multiple"
-                    >
-                        {this.state.ProgramPersons.map(p => (
-                            <Option key={p.id} value={p.id}>{p.get('name')}</Option>
-                        ))}
-                    </Select>
+                        />
                 }
                 else {
                     return <Select
