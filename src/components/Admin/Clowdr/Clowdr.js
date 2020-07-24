@@ -51,6 +51,11 @@ class Clowdr extends React.Component {
 
     }
 
+    onChangeFeatures(record) {
+        record.set("isIncludeAllFeatures", !record.get("isIncludeAllFeatures"));
+    }
+
+
     render() {
         // Set up editable table cell
         const EditableCell = ({
@@ -65,11 +70,23 @@ class Clowdr extends React.Component {
         }) => {
             let inputNode = null;
             switch (dataIndex) {
-                case ('shortName'):
-                    inputNode = <Input/>;
-                    break;
                 case ('conferenceName'):
                     inputNode = <Input/>;
+                    break;
+                case ('adminName'):
+                    inputNode = <Input/>;
+                    break;
+                case ('adminEmail'):
+                    inputNode = <Input/>;
+                    break;
+                case ('isIncludeAllFeatures'):
+                    inputNode = (
+                        <span title="All goodies?"><Checkbox
+                            defaultChecked={record.get("isIncludeAllFeatures")}
+                            onChange= {this.onChangeFeatures.bind(this, record)}
+                        >
+                        </Checkbox></span>
+                    );
                     break;
                 default:
                     inputNode = null;
@@ -81,10 +98,11 @@ class Clowdr extends React.Component {
                     {editing ? (
                         <Form.Item
                             name={dataIndex}
+                            valuePropName={dataIndex == 'isIncludeAllFeatures' ? "checked" : "value"}
                             style={{
                                 margin: 0,
                             }}
-                            rules={[
+                            rules={dataIndex === "isIncludeAllFeatures" ? []: [
                                 {
                                     required: true,
                                     message: `Please Input ${title}!`,
@@ -109,8 +127,9 @@ class Clowdr extends React.Component {
 
             const edit = record => {
                 form.setFieldsValue({
-                    key: record.get("shortName") ? record.get("shortName") : "",
-                    value: record.get("conferenceName") ? record.get("conferenceName") : ""
+                    conferenceName: record.get("conferenceName") ? record.get("conferenceName") : "",
+                    adminName: record.get("adminName") ? record.get("adminName") : "",
+                    adminEmail: record.get("adminEmail") ? record.get("adminEmail") : ""
                 });
                 setEditingKey(record.id)
             }
@@ -122,17 +141,20 @@ class Clowdr extends React.Component {
             const onDelete = record => {
                 const newInstanceList = [...this.state.instances];
                 // delete from database
-                record.destroy().then(() => {
+                let data = {
+                    id: record.id
+                }
+                Parse.Cloud.run("delete-clowdr-instance", data)
+                .then(t => {
                     this.setState({
-                        alert: "delete success",
-                        instances: newInstanceList.filter(instance => instance.id !== record.id)
-                    });
-                    console.log("Instance deleted from db")
-                }).catch(error => {
-                    this.setState({alert: "delete error"});
-                    console.log("[Admin/Clowdr]: item cannot be deleted from db");
+                        alert: "delete success", 
+                        instances: newInstanceList.filter(instance => instance.id !== record.id)});
+                    console.log("[Admin/Clowdr]: sent delete request to cloud");
                 })
-                ;
+                .catch(err => {
+                    this.setState({alert: "delete error"})
+                    console.log("[Admin/Clowdr]: Unable to delete: " + err)
+                });
             };
 
             const save = async id => {
@@ -142,20 +164,31 @@ class Clowdr extends React.Component {
                     const newData = [...data];
                     let instance = newData.find(i => i.id === id);
 
+                    instance.set("conferenceName", row.conferenceName);
+                    instance.set("isIncludeAllFeatures", row.isIncludeAllFeatures);
+                    instance.set("adminName", row.adminName);
+                    instance.set("adminEmail", row.adminEmail);
+
                     if (instance) {
-                        instance.set("shortName", row.shortName);
-                        instance.set("conferenceName", row.conferenceName);
-                        setData(newData);
-                        instance.save()
-                            .then((response) => {
-                                console.log('[Admin/Clowdr]: Updated config', response);
-                                this.setState({alert: "save success"});
-                            })
-                            .catch(err => {
-                                console.log('[Admin/Clowdr]: error when saving config: ' + err);
-                                console.log("@" + instance.id);
-                                this.setState({alert: "save error"});
-                            });
+
+                        let data = {
+                            id: instance.id,
+                            conferenceName: instance.get('conferenceName'),
+                            shortName: instance.get('conferenceName').replace(" ", ""),
+                            isIncludeAllFeatures: instance.get('isIncludeAllFeatures'),
+                            adminName: instance.get('adminName'),
+                            adminEmail: instance.get('adminEmail')
+                        }
+                        Parse.Cloud.run("update-clowdr-instance", data)
+                        .then(t => {
+                            this.setState({alert: "save success"});
+                            console.log("[Admin/Clowdr]: sent updated object to cloud");
+                        })
+                        .catch(err => {
+                            this.setState({alert: "add error"})
+                            console.log("[Admin/Clowdr]: Unable to update: " + err)
+                        })
+
                         setEditingKey('');
                     }
                     else {
@@ -170,20 +203,7 @@ class Clowdr extends React.Component {
 
             const columns = [
                 {
-                    title: 'Short Name',
-                    dataIndex: 'key',
-                    key: 'shortName',
-                    editable: true,
-                    width: '10%',
-                    sorter: (a, b) => {
-                        var nameA = a.get("shortName") ? a.get("shortName"): "";
-                        var nameB = b.get("shortName") ? b.get("shortName") : "";
-                        return nameA.localeCompare(nameB);
-                    },
-                    render: (text, record) => <span>{record.get("shortName")}</span>,
-                },
-                {
-                    title: 'Public Name',
+                    title: 'Name',
                     dataIndex: 'conferenceName',
                     editable: true,
                     width: '40%',
@@ -196,8 +216,17 @@ class Clowdr extends React.Component {
                     key: 'conferenceName',
                 },
                 {
+                    title: 'All features',
+                    dataIndex: 'isIncludeAllFeatures',
+                    editable: true,
+                    width: '5%',
+                    //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
+                    render: (text,record) =><Checkbox checked={record.get("isIncludeAllFeatures") ? true : false} disabled></Checkbox>,
+                    key: 'isIncludeAllFeatures',
+                },
+                {
                     title: 'Admin Name',
-                    dataIndex: 'key',
+                    dataIndex: 'adminName',
                     key: 'adminName',
                     editable: true,
                     width: '30%',
@@ -210,7 +239,7 @@ class Clowdr extends React.Component {
                 },
                 {
                     title: 'Admin Email',
-                    dataIndex: 'key',
+                    dataIndex: 'adminEmail',
                     key: 'adminEmail',
                     editable: true,
                     width: '20%',
@@ -247,7 +276,7 @@ class Clowdr extends React.Component {
                                         {<EditOutlined />}
                                     </a>
                                     <Popconfirm
-                                        title="Are you sure delete this variable?"
+                                        title="Are you sure delete this CLOWDR instance?"
                                         onConfirm={() => onDelete(record)}
                                         okText="Yes"
                                         cancelText="No"
@@ -299,27 +328,33 @@ class Clowdr extends React.Component {
             );
         };
 
-        const newConfig = () => {
-            const Config = Parse.Object.extend("InstanceConfiguration");
-            const config = new Config();
-            config.set("key", "Please enter a name");
-            config.set("value", "Please enter a value");
+        const newInstance = () => {
+            const ClowdrInstance = Parse.Object.extend('ClowdrInstance');
+            const myNewObject = new ClowdrInstance();
+            myNewObject.set("conferenceName", "NEW CONFERENCE " + Math.floor(Math.random() * 10000).toString());
+            myNewObject.set("shortName", myNewObject.get("conferenceName").replace(" ", ""));
+            myNewObject.set("isIncludeAllFeatures", true);
+            myNewObject.set("adminName", "ADMIN PERSON");
+            myNewObject.set("adminEmail", "someone@somewhere");
 
-            let acl = new Parse.ACL();
-            acl.setPublicWriteAccess(false);
-            acl.setPublicReadAccess(false);
-            acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
-            acl.setRoleReadAccess(this.props.auth.currentConference.id+"-admin", true);
-            config.setACL(acl);
-            config.set("instance", this.props.auth.currentConference);
-
-            config.save().then(val => {
-                config.key = val.id;
-                this.setState({alert: "add success", config: [config, ...this.state.config]})
-            }).catch(err => {
-                this.setState({alert: "add error"});
-                console.log('[Admin/Clowdr]: error: ' + err);
-            }); 
+            console.log("[Admin/Clowdr]: Creating new instance " + myNewObject.id);
+            let data = {
+                conferenceName: myNewObject.get("conferenceName"),
+                shortName: myNewObject.get("shortName"),
+                isIncludeAllFeatures: true,
+                adminName: "ADMIN PERSON",
+                adminEmail: "someone@somewhere",
+                isInitialized: false
+            }
+            Parse.Cloud.run("create-clowdr-instance", data)
+            .then(t => {
+                this.setState({instances: [myNewObject, ...this.state.instances]})
+                console.log("[Admin/Clowdr]: sent new object to cloud");
+            })
+            .catch(err => {
+                this.setState({alert: "add error"})
+                console.log("[Admin/Clowdr]: Unable to create: " + err)
+            })
         }
 
         if (this.props.loading)
@@ -330,18 +365,10 @@ class Clowdr extends React.Component {
         return <div><table style={{width:"100%"}}><tbody><tr>
             <td><Button
                 type="primary"
-                onClick={newConfig}
+                onClick={newInstance}
             >
-                New config variable
+                New Instance
             </Button>
-            {/* <CollectionEditForm
-                title="Add Track"
-                visible={this.state.visible}
-                onAction={this.onCreate.bind(this)}
-                onCancel={() => {
-                    this.setVisible(false);
-                }}
-            /> */}
 
             {this.state.alert ? <Alert
                     onClose={() => this.setState({alert: undefined})}

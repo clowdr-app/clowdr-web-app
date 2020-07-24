@@ -188,28 +188,70 @@ Parse.Cloud.define("init-conference-2", async (request) => {
     }
 })
 
-Parse.Cloud.define("save-instance", async (request) => {
-    let confID = request.params.confID;
-    console.log('[save instance]: request to save ' + confID);
+Parse.Cloud.define("create-clowdr-instance", async (request) => {
+    let data = request.params;
+    console.log(`[create clowdr]: request to create instance`);
 
-    let confQ = new Parse.Query(ClowdrInstance);
-    let conf = await confQ.get(confID);
-    if (!conf) {
-        throw "Conference " + confID + ": " + err
-    }
-    // Act on behalf of user
-    let user = request.user;
-    let data = request.params.instanceData;
+    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+        console.log('[create clowdr]: user has permission to create instance');
 
-    const roles = await new Parse.Query(Parse.Role).equalTo('users', request.user).find();
-    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
-        console.log('[save instance]: user has permission to save');
-        let res = await conf.save(data, {useMasterKey: true});
+        let Clazz = Parse.Object.extend("ClowdrInstance");
+        let obj = new Clazz();
+        obj.isInitialized = false;
+        let res = await obj.save(data, {useMasterKey: true});
+
         if (!res) {
-            throw ("Unable to save conference: " + err);
+            throw ("Unable to create instance");
         }
 
-        console.log('[save instance]: successfully saved ' + conf.id);
+        console.log('[create instance]: successfully created ' + obj.id);
+        return {status: "OK", "id": obj.id};
+    }
+    else
+        throw "Unable to create instance: user not allowed to create new instances";
+});
+
+
+Parse.Cloud.define("delete-clowdr-instance", async (request) => {
+    let id = request.params.id;
+    console.log(`[delete instance]: request to delete insstance ${id}`);
+
+    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+        console.log('[delete instance]: user has permission to delete instance');
+        let obj = await new Parse.Query(ClowdrInstance).get(id);
+        if (obj) {
+            await obj.destroy({useMasterKey: true});
+        }
+        else {
+            throw (`Unable to delete instance: ${id} not found`);
+        }
+
+        console.log('[delete instance]: successfully deleted ' + id);
+    }
+    else
+        throw "Unable to delete instance: user not allowed to delete instances";
+});
+
+Parse.Cloud.define("update-clowdr-instance", async (request) => {
+    let id = request.params.id;
+    let data = request.params;
+    
+    console.log('[update instance]: request to update ' + id + " " + JSON.stringify(data));
+
+    let confQ = new Parse.Query(ClowdrInstance);
+    let conf = await confQ.get(id);
+    if (!conf) {
+        throw "Conference " + id + ": " + err
+    }
+
+    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+        console.log('[update instance]: user has permission to save');
+        let res = await conf.save(data, {useMasterKey: true});
+        if (!res) {
+            throw ("Unable to update conference: " + err);
+        }
+
+        console.log('[update instance]: successfully saved ' + conf.id);
     }
     else
         throw "Unable to save conference: user not allowed to change instance";
