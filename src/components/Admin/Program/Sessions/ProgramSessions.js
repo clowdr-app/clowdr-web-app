@@ -31,36 +31,7 @@ class ProgramSessions extends React.Component {
     }
 
 
-    async onCreate(values) {
-        console.log("OnCreate! " + values.title);
-        var _this = this;
-        let room = this.state.ProgramRooms.find(r => r.id == values.room);
-        if (!room)
-            console.log('Invalid room ' + values.room);
 
-        let data = {
-            clazz: "ProgramSession",
-            conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
-            title: values.title,
-            startTime: values.startTime.toDate(),
-            endTime: values.endTime.toDate(),
-            items: values.items ? values.items.map(i => {return {clazz: "ProgramItem", id: i.id}}) : [],
-            confKey: Math.floor(Math.random() * 10000000).toString()
-        }
-        if (room)
-            data.room = {clazz: "ProgramRoom", id: room.id};
-
-        Parse.Cloud.run("create-obj", data)
-        .then(t => {
-            console.log("[Admin/Sessions]: sent new object to cloud");
-            this.setVisible();
-        })
-        .catch(err => {
-            this.setState({alert: "add error"})
-            console.log("[Admin/Sessions]: Unable to create: " + err)
-        })
-
-    }
 
     setVisible() {
         this.setState({'visible': !this.state.visible});
@@ -85,25 +56,46 @@ class ProgramSessions extends React.Component {
         this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
     }
 
-    refreshList() {
-        let query = new Parse.Query("ProgramSession");
-        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.limit(1000);
-        query.find().then(res => {
-            console.log('Found sessions ' + res.length);
-            this.setState({
-                ProgramSessions: res,
-                loading: false
-            });
-        })
+    onCreate = async (values) => {
+        console.log("OnCreate! " + values.title);
+        let room = this.state.ProgramRooms.find(r => r.id == values.room);
+        if (!room)
+            console.log('Invalid room ' + values.room);
+
+        let data = {
+            clazz: "ProgramSession",
+            conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+            title: values.title,
+            startTime: values.startTime.toDate(),
+            endTime: values.endTime.toDate(),
+            items: values.items ? values.items.map(i => {return {clazz: "ProgramItem", id: i.id}}) : [],
+            confKey: Math.floor(Math.random() * 10000000).toString()
+        }
+        if (room)
+            data.room = {clazz: "ProgramRoom", id: room.id};
+
+        Parse.Cloud.run("create-obj", data)
+            .then(t => {
+                console.log("[Admin/Sessions]: sent new object to cloud");
+                this.setVisible();
+            })
+            .catch(err => {
+                this.setState({alert: "add error"})
+                console.log("[Admin/Sessions]: Unable to create: " + err)
+            })
     }
 
     render() {
         if(this.state.loading)
             return <Spin />
-        console.log("Loading Editable Cell");
 
+        const defaultData = {
+            title: "***NEWLY ADDED DATA***",
+            startTime: moment(new Date().toString()),
+            endTime: moment(new Date().toString()),
+            items: [],
+            room: null
+        }
 
         const {Option} = Select;
         function onChange(value) {
@@ -139,7 +131,7 @@ class ProgramSessions extends React.Component {
                     inputNode = (
                         <Select placeholder="Choose the room" >
                             {this.state.ProgramRooms.map(r => (
-                                <Option key={r.id} value={r.id}>{r.get('name')}</Option>
+                                <Option key={r.id} value={r.get('name')}>{r.get('name')}</Option>
                             ))}
                         </Select>
                     );
@@ -235,7 +227,6 @@ class ProgramSessions extends React.Component {
                 }))
                 .catch(err => {
                     this.setState({alert: "delete error"})
-                    this.refreshList();
                     console.log("[Admin/Sessions]: Unable to delete: " + err)
                 })
             };
@@ -248,9 +239,7 @@ class ProgramSessions extends React.Component {
                     let session = newData.find(s => s.id === id);
 
                     if (session) {
-                        console.log("row is : " + row.title);
-
-                        let newRoom = this.state.ProgramRooms.find(t => t.id === row.room);
+                        let newRoom = this.state.ProgramRooms.find(t => t.get('name') === row.room);
                         let newItems = [];
                         for (let item of row.items) {
                             let newItem = this.state.ProgramItems.find(t => t.id === item);
@@ -261,11 +250,6 @@ class ProgramSessions extends React.Component {
                             }
                         }
 
-                        session.set("title", row.title);
-                        session.set("startTime", row.start.toDate());
-                        session.set("endTime", row.end.toDate());
-                        session.set("items", newItems);
-                        session.set("room", newRoom);
                         let data = {
                             clazz: "ProgramSession",
                             conference: {clazz: "ClowdrInstance", id: session.get("conference").id},
@@ -281,11 +265,9 @@ class ProgramSessions extends React.Component {
                         if (newItems.length > 0)
                             data.items = newItems.map(i => {return {clazz: "ProgramItem", id: i.id}})
 
-                        console.log("SAVING HERE =====>", data);
                         Parse.Cloud.run("update-obj", data)
                         .then(c => {
                             this.setState({alert: "save success"});
-                            setData(newData);
                         })
                         .catch(err => {
                             this.setState({alert: "save error"});
@@ -459,30 +441,7 @@ class ProgramSessions extends React.Component {
             );
         };
 
-        const handleAdd = () => {
-            const ProgramSession = Parse.Object.extend('ProgramSession');
-            const myNewObject = new ProgramSession();
-            myNewObject.set("title", '***NEWLY ADDED SESSION***');
-            myNewObject.set("conference", this.props.auth.currentConference);
-            myNewObject.set("startTime", new Date());
-            myNewObject.set("endTime", new Date());
-            myNewObject.set("room", null);
-            myNewObject.set("items", []);
 
-            myNewObject.save()
-                .then(result => {
-                    console.log('ProgramSession created', result);
-                    this.setState({
-                        alert: "Add success",
-                        ProgramSessions: [myNewObject, ...this.state.ProgramSessions]
-                    })
-                })
-                .catch(error => {
-                        this.setState({alert: "Add error"});
-                        console.error('Error while creating ProgramSession: ', error);
-                    }
-                );
-        };
 
         return (
             <div>
@@ -512,7 +471,7 @@ class ProgramSessions extends React.Component {
                         <td>
                             <Button
                                 type="primary"
-                                onClick={handleAdd}
+                                onClick={() => this.onCreate(defaultData)}
                             >
                                 New session
                             </Button>
@@ -530,7 +489,6 @@ const AuthConsumer = (props) => (
     <AuthUserContext.Consumer>
         {value => (
             <ProgramSessions {...props} auth={value}  />
-
         )}
     </AuthUserContext.Consumer>
 );
