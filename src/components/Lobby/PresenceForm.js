@@ -143,98 +143,99 @@ class PresenceForm extends React.Component {
             wrapperCol: {offset: 8, span: 16},
         };
 
-        if(!this.state.presence)
-            return <Skeleton.Input />
-        return <div>
-            My status:
-            <Form layout="inline"
-                  ref={this.form}
-                  id="statusForm"
-                  initialValues={{
-                      status: this.state.presence.get("status"),
-                      availability: this.availabilityByPresence(this.state.presence)
-                  }
-                  }>
-
-                    <Form.Item name="availability">
-            <Select
-                // style={{ width: 240 }}
-                // placeholder="Availability"
-                onChange={this.valuesChange.bind(this)}
-                loading={this.state.saving}
-                dropdownMatchSelectWidth={false}
-                dropdownRender={menu => (
-                    <div className="availabilityOptionsOpen">
-                        {menu}
-                    </div>
-                )}
-            >
-            {/* BCP: Not sure I got this quite right -- I'm not certain what status="processing" does... */}
-            <Select.Option value="isAvailable"><Badge color={isAvailableColor}/><span className="availabilityOption">(No special status)</span></Select.Option>
-            <Select.Option value="isLookingForConversation"><Badge status="processing" color={isLookingForConversationColor} /><span className="availabilityOption">Looking for conversation</span></Select.Option>
-            <Select.Option value="isDND"><Badge color={isDNDColor}/><span className="availabilityOption">Busy: do not disturb</span></Select.Option>
-                <Select.Option value="isDNT"><Badge status="default"/><span className="availabilityOption">Do not show others
-                    my presence/status</span></Select.Option>
-            {/*
-               <Select.Option value="isOpenToConversation"><Badge color="black" /><span className="availabilityOption">Open to conversation</span></Select.Option> */}
-        {/*
-            <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation: come
-                    join if you like</span></Select.Option>
-*/}
-
-            </Select>
-                    </Form.Item>
-                <Form.Item name="status">
-                    <Tooltip mouseEnterDelay={0.5} defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
-                    it easier for other participants to know when it's OK to contact you."
-                             placement={"top"}
-                    >
-                    <Input placeholder="Status message" onBlur={this.updatePresence.bind(this)} onPressEnter={this.updatePresence.bind(this)}
-                           autoComplete="off"
-                           disabled={this.state.saving} />
-                    </Tooltip>
-                </Form.Item>
-                {/*<Button type="primary" htmlType="submit" disabled={!this.state.dirty} loading={this.state.saving}>*/}
-                {/*    Update Status*/}
-                {/*</Button>*/}
-            </Form>
-            {/*<Modal*/}
-            {/*    zIndex="200"*/}
-            {/*    title="Update your status"*/}
-            {/*    visible={this.state.visible}*/}
-            {/*    confirmLoading={this.state.saving}*/}
-            {/*    footer={[*/}
-            {/*        <Button form="statusForm" key="submit" type="primary" htmlType="submit" disabled={!this.state.dirty} loading={this.state.saving}>*/}
-            {/*            Update*/}
-            {/*        </Button>*/}
-            {/*    ]}*/}
-            {/*    onCancel={this.handleCancel}*/}
-            {/*>*/}
-            {/*<Form {...layout} onFinish={this.updatePresence.bind(this)} onValuesChange={this.valuesChange.bind(this)}*/}
-            {/*      ref={this.form}*/}
-            {/*      id="statusForm"*/}
-            {/*      initialValues={{*/}
-            {/*    status: this.state.presence.get("status"),*/}
-            {/*    availability: this.availabilityByPresence(this.state.presence)*/}
-            {/*}*/}
-            {/*}>*/}
-            {/*    <Form.Item label="Availability" name="availability">*/}
-            {/*        <Select style={{width: "100%"}}>*/}
-            {/*            <Select.Option value="isLookingForConversation"><Badge status="success"/>Looking for conversation</Select.Option>*/}
-            {/*            <Select.Option value="isAvailable"><Badge status="processing"/>In a conversation; but come*/}
-            {/*                join if you like</Select.Option>*/}
-            {/*            <Select.Option value="isDND"><Badge status="warning"/>Busy / Do Not Disturb</Select.Option>*/}
-            {/*            <Select.Option value="isDNT"><Badge status="default"/>Do not show others*/}
-            {/*                my presence/status</Select.Option>*/}
-            {/*        </Select>*/}
-            {/*    </Form.Item>*/}
-            {/*    <Form.Item label="Status" name="status">*/}
-            {/*        <Input placeholder="Share a status message for other attendees to see at a glance" />*/}
-            {/*    </Form.Item>*/}
-
-            {/*</Form>*/}
-            {/*</Modal>*/}
-        </div>
+        return <></>
+//         if(!this.state.presence)
+//             return <Skeleton.Input />
+//         return <div>
+//             My status:
+//             <Form layout="inline"
+//                   ref={this.form}
+//                   id="statusForm"
+//                   initialValues={{
+//                       status: this.state.presence.get("status"),
+//                       availability: this.availabilityByPresence(this.state.presence)
+//                   }
+//                   }>
+//
+//                     <Form.Item name="availability">
+//             <Select
+//                 // style={{ width: 240 }}
+//                 // placeholder="Availability"
+//                 onChange={this.valuesChange.bind(this)}
+//                 loading={this.state.saving}
+//                 dropdownMatchSelectWidth={false}
+//                 dropdownRender={menu => (
+//                     <div className="availabilityOptionsOpen">
+//                         {menu}
+//                     </div>
+//                 )}
+//             >
+//             {/* BCP: Not sure I got this quite right -- I'm not certain what status="processing" does... */}
+//             <Select.Option value="isAvailable"><Badge color={isAvailableColor}/><span className="availabilityOption">(No special status)</span></Select.Option>
+//             <Select.Option value="isLookingForConversation"><Badge status="processing" color={isLookingForConversationColor} /><span className="availabilityOption">Looking for conversation</span></Select.Option>
+//             <Select.Option value="isDND"><Badge color={isDNDColor}/><span className="availabilityOption">Busy: do not disturb</span></Select.Option>
+//                 <Select.Option value="isDNT"><Badge status="default"/><span className="availabilityOption">Do not show others
+//                     my presence/status</span></Select.Option>
+//             {/*
+//                <Select.Option value="isOpenToConversation"><Badge color="black" /><span className="availabilityOption">Open to conversation</span></Select.Option> */}
+//         {/*
+//             <Select.Option value="isAvailable"><Badge color="geekblue"/><span className="availabilityOption">In a conversation: come
+//                     join if you like</span></Select.Option>
+// */}
+//
+//             </Select>
+//                     </Form.Item>
+//                 <Form.Item name="status">
+//                     <Tooltip mouseEnterDelay={0.5} defaultVisible={this.state.isShoWWelcome} title="CLOWDR shows other participants your availability based on this indicator. Use this dropdown to set your availability, then set a status message to make
+//                     it easier for other participants to know when it's OK to contact you."
+//                              placement={"top"}
+//                     >
+//                     <Input placeholder="Status message" onBlur={this.updatePresence.bind(this)} onPressEnter={this.updatePresence.bind(this)}
+//                            autoComplete="off"
+//                            disabled={this.state.saving} />
+//                     </Tooltip>
+//                 </Form.Item>
+//                 {/*<Button type="primary" htmlType="submit" disabled={!this.state.dirty} loading={this.state.saving}>*/}
+//                 {/*    Update Status*/}
+//                 {/*</Button>*/}
+//             </Form>
+//             {/*<Modal*/}
+//             {/*    zIndex="200"*/}
+//             {/*    title="Update your status"*/}
+//             {/*    visible={this.state.visible}*/}
+//             {/*    confirmLoading={this.state.saving}*/}
+//             {/*    footer={[*/}
+//             {/*        <Button form="statusForm" key="submit" type="primary" htmlType="submit" disabled={!this.state.dirty} loading={this.state.saving}>*/}
+//             {/*            Update*/}
+//             {/*        </Button>*/}
+//             {/*    ]}*/}
+//             {/*    onCancel={this.handleCancel}*/}
+//             {/*>*/}
+//             {/*<Form {...layout} onFinish={this.updatePresence.bind(this)} onValuesChange={this.valuesChange.bind(this)}*/}
+//             {/*      ref={this.form}*/}
+//             {/*      id="statusForm"*/}
+//             {/*      initialValues={{*/}
+//             {/*    status: this.state.presence.get("status"),*/}
+//             {/*    availability: this.availabilityByPresence(this.state.presence)*/}
+//             {/*}*/}
+//             {/*}>*/}
+//             {/*    <Form.Item label="Availability" name="availability">*/}
+//             {/*        <Select style={{width: "100%"}}>*/}
+//             {/*            <Select.Option value="isLookingForConversation"><Badge status="success"/>Looking for conversation</Select.Option>*/}
+//             {/*            <Select.Option value="isAvailable"><Badge status="processing"/>In a conversation; but come*/}
+//             {/*                join if you like</Select.Option>*/}
+//             {/*            <Select.Option value="isDND"><Badge status="warning"/>Busy / Do Not Disturb</Select.Option>*/}
+//             {/*            <Select.Option value="isDNT"><Badge status="default"/>Do not show others*/}
+//             {/*                my presence/status</Select.Option>*/}
+//             {/*        </Select>*/}
+//             {/*    </Form.Item>*/}
+//             {/*    <Form.Item label="Status" name="status">*/}
+//             {/*        <Input placeholder="Share a status message for other attendees to see at a glance" />*/}
+//             {/*    </Form.Item>*/}
+//
+//             {/*</Form>*/}
+//             {/*</Modal>*/}
+//         </div>
     }
 }
 
