@@ -131,18 +131,15 @@ class ProgramItems extends React.Component {
             };
 
             const onDelete = record => {
-                const newItemList = [...this.state.ProgramItems];
-
                 // delete from database
                 let data = {
                     clazz: "ProgramItem",
-                    conference: record.get("conference").id,
+                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
                 .then(c => this.setState({
                     alert: "delete success",
-                    items: newItemList.filter(item => item.id !== record.id),
                     searchResult: this.state.searched ?  this.state.searchResult.filter(r => r.id !== record.id): ""
                 }))
                 .catch(err => {
@@ -158,7 +155,7 @@ class ProgramItems extends React.Component {
                 setEditingKey('');
             };
 
-            // save current editing session
+            // save current editing item
             const onSave = async id => {
                 try {
                     const row = await form.validateFields();
@@ -185,7 +182,7 @@ class ProgramItems extends React.Component {
                         let data = {
                             clazz: "ProgramItem",
                             id: item.id,
-                            conference: item.get("conference").id,
+                            conference: {clazz: "ClowdrInstance", id: item.get("conference").id},
                             title: item.get("title"),
                             authors: item.get("authors").map(a => {return {clazz: "ProgramPerson", id: a.id}}),
                             abstract: item.get("abstract"),
@@ -285,7 +282,7 @@ class ProgramItems extends React.Component {
                                         {<EditOutlined />}
                                     </a>
                                     <Popconfirm
-                                        title="Are you sure delete this session?"
+                                        title="Are you sure delete this item?"
                                         onConfirm={() => onDelete(record)}
                                         okText="Yes"
                                         cancelText="No"
@@ -347,11 +344,10 @@ class ProgramItems extends React.Component {
         const handleAdd = () => {
             let data = {
                 clazz: "ProgramItem",
-                conference: this.props.auth.currentConference.id,
+                conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
                 title: "Please input the title",
                 abstract: "Please input the abstract",
-                authors: [],
-                track: ""
+                authors: []
             }
             Parse.Cloud.run("create-obj", data)
             .then(t => console.log("[Admin/Items]: sent new object to cloud"))

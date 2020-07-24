@@ -171,7 +171,7 @@ class Tracks extends React.Component {
                 // delete from database
                 let data = {
                     clazz: "ProgramTrack",
-                    conference: record.get("conference").id,
+                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -179,20 +179,9 @@ class Tracks extends React.Component {
                 .catch(err => {
                     this.setState({alert: "delete error"})
                     this.refreshList();
-                    console.log("[Admin/Tracks]: Unable to delete track: " + err)
+                    console.log("[Admin/Tracks]: Unable to delete: " + err)
                 })
 
-                // record.destroy().then(() => {
-                //     this.setState({
-                //         alert: "delete success",
-                //         tracks: newTrackList.filter(track => track.id !== record.id)
-                //     });
-                //     console.log("Track deleted from db")
-                // }).catch(error => {
-                //     this.setState({alert: "delete error"});
-                //     console.log("item cannot be deleted from db");
-                // })
-                // ;
             };
 
             const save = async id => {
@@ -209,7 +198,7 @@ class Tracks extends React.Component {
 
                         let data = {
                             clazz: "ProgramTrack",
-                            conference: track.get("conference").id,
+                            conference: {clazz: "ClowdrInstance", id: track.get("conference").id},
                             id: track.id,
                             name: track.get("name"),
                             displayName: track.get("displayName"),
@@ -222,7 +211,7 @@ class Tracks extends React.Component {
                         .then(c => this.setState({alert: "save success"}))
                         .catch(err => {
                             this.setState({alert: "save error"})
-                            console.log("[Admin/Tracks]: Unable to save track: " + err)
+                            console.log("[Admin/Tracks]: Unable to save: " + err)
                         })
                     
                         setEditingKey('');
@@ -375,7 +364,7 @@ class Tracks extends React.Component {
 
             let data = {
                 clazz: "ProgramTrack",
-                conference: this.props.auth.currentConference.id,
+                conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
                 name: "One-word-name",
                 displayName: "Publicly visible name",
                 exhibit: "None",
@@ -386,7 +375,7 @@ class Tracks extends React.Component {
             .then(t => console.log("[Admin/Tracks]: sent new object to cloud"))
             .catch(err => {
                 this.setState({alert: "add error"})
-                console.log("[Admin/TRackd]: Unable to create: " + err)
+                console.log("[Admin/Track]: Unable to create: " + err)
             })
         
         }

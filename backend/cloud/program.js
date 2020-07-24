@@ -10,13 +10,21 @@ async function userInRoles(user, allowedRoles) {
 }
 
 function pointify(data) {
+    if (data.clazz && data.id) {
+        // console.log('[pointify]: found pointer of type ' + data.clazz);
+        let C = Parse.Object.extend(data.clazz);
+        return C.createWithoutData(data.id)
+    }
     for (const k of Object.keys(data)) {
+        // console.log("[pointify]: looking at " + k + ": " + JSON.stringify(data[k]));
         if (!Array.isArray(data[k]) && typeof data[k] === 'object' && data[k] !== null) {
-            // console.log('[pointify]: found pointer of type ' + data[k].clazz + " in " + JSON.stringify(data[k]));
-            let C = Parse.Object.extend(data[k].clazz);
-            data[k] = C.createWithoutData(data[k].id)
+            // console.log("[pointify]: found object " + JSON.stringify(data[k]));
+            if (data[k].clazz) {
+                data[k] = pointify(data[k]);
+            }
         } else if (Array.isArray(data[k])) {
-            data[k].forEach(element => pointify(element));
+            // console.log("[pointify]: found array " + JSON.stringify(data[k]));
+            data[k] = data[k].map(element => pointify(element));
         }
     }
 }
@@ -28,18 +36,11 @@ Parse.Cloud.define("create-obj", async (request) => {
     delete data.clazz;
     console.log(`[create obj]: request to create ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[create obj]: user has permission to create obj');
 
         let Clazz = Parse.Object.extend(clazz);
         let obj = new Clazz();
-        let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
-        let conf = ClowdrInstance.createWithoutData(confID);
-        if (!conf) {
-            throw "Unable to create obj: conference not found";
-        }
-
-        data.conference = conf;
         pointify(data);
 
         let res = await obj.save(data, {useMasterKey: true});
@@ -65,7 +66,7 @@ Parse.Cloud.define("update-obj", async (request) => {
     delete data.conference;
     console.log(`[update obj]: request to update ${data.id} of class ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[update obj]: user has permission to update obj');
         let Clazz = Parse.Object.extend(clazz);
         let obj = await new Parse.Query(Clazz).get(id);
@@ -92,7 +93,7 @@ Parse.Cloud.define("delete-obj", async (request) => {
     let clazz = request.params.clazz;
     console.log(`[delete obj]: request to delete ${id} of class ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID + "-admin", confID + "-manager"])) {
+    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[delete obj]: user has permission to delete obj');
         let Clazz = Parse.Object.extend(clazz);
         let obj = await new Parse.Query(Clazz).get(id);
