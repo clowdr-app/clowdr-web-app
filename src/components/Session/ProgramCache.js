@@ -34,8 +34,8 @@ export default class ProgramCache {
             let sub = this.parseLive.subscribe(query);
             this._subscriptions[tableName] = sub;
             sub.on("create", obj => {
-                this._data[tableName] = [...this._data[tableName], obj];
                 this._dataById[tableName][obj.id] = obj;
+                this._data[tableName] = [obj, ...this._data[tableName]];
                 if (this._listSubscribers[tableName]) {
                     for (let subscriber of this._listSubscribers[tableName]) {
                         let stateUpdate = {};

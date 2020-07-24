@@ -290,9 +290,19 @@ class Rooms extends React.Component {
                     ProgramRooms: newRooms.filter(item => item.id !== record.id)
                 });
                 // delete from database
-                record.destroy().then(() => {
-                    console.log("item deleted from db")
-                });
+                let data = {
+                    clazz: "ProgramRoom",
+                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
+                    id: record.id
+                }
+                Parse.Cloud.run("delete-obj", data)
+                .then(c => this.setState({alert: "delete success"}))
+                .catch(err => {
+                    this.setState({alert: "delete error"})
+                    this.refreshList();
+                    console.log("[Admin/Rooms]: Unable to delete: " + err)
+                })
+
             };
 
             const save = async id => {
@@ -300,26 +310,30 @@ class Rooms extends React.Component {
                 try {
                     const row = await form.validateFields();
                     const newData = [...data];
-                    let item = newData.find(item => item.id === id);
+                    let room = newData.find(item => item.id === id);
 
-                    if (item) {
+                    if (room) {
                         console.log("row is : " + row.title);
-                        item.set("name", row.name);
-                        item.set("src1", row.src1);
-                        item.set("id1", row.id1);
-                        item.set("pwd1", row.pwd1);
-                        item.set("src2", row.src2);
-                        item.set("id2", row.id2);
-                        item.set("pwd2", row.pwd2);
-                        item.set("qa", row.qa);
-                        item.save()
-                            .then((response) => {
-                                console.log('Updated ProgramItem', response);
-                            })
-                            .catch(err => {
-                                console.log(err);
-                                console.log("@" + item.id);
-                            });
+
+                        let data = {
+                            clazz: "ProgramRoom",
+                            conference: {clazz: "ClowdrInstance", id: room.get("conference").id},
+                            id: room.id,
+                            name: row.name,
+                            src1: row.src1,
+                            id1: row.id1,
+                            src2: row.src2,
+                            id2: row.id1,
+                            qa: row.qa
+                        }
+                        console.log(data)
+                        Parse.Cloud.run("update-obj", data)
+                        .then(c => this.setState({alert: "save success"}))
+                        .catch(err => {
+                            this.setState({alert: "save error"})
+                            console.log("[Admin/Rooms]: Unable to save: " + err)
+                        })
+
                         setEditingKey('');
                     } else {
                         newData.push(row);
@@ -482,6 +496,7 @@ class Rooms extends React.Component {
                         dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramRooms}
                         columns={mergedColumns}
                         rowClassName="editable-row"
+                        rowKey='id'
                         pagination={{
                             onChange: cancel,
                         }}
@@ -492,25 +507,18 @@ class Rooms extends React.Component {
 
         // handle when a new item is added
         const handleAdd = () => {
-            const ProgramRoom = Parse.Object.extend('ProgramRoom');
-            const myNewObject = new ProgramRoom();
+            let data = {
+                clazz: "ProgramRoom",
+                conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+                name: "Please enter the name of the room",
+            }
 
-            myNewObject.set('name', '***NEWLY ADDED ROOM***');
-            myNewObject.set("conference", this.props.auth.currentConference);
-
-            myNewObject.save()
-                .then(result => {
-                    console.log('ProgramItem created', result);
-                    this.setState({
-                        alert: "Add success",
-                        ProgramRooms: [myNewObject, ...this.state.ProgramRooms]
-                    })
-                })
-                .catch(error => {
-                        this.setState({alert: "Add error"});
-                        console.error('Error while creating ProgramRoom: ', error);
-                    }
-                );
+            Parse.Cloud.run("create-obj", data)
+            .then(t => console.log("[Admin/Rooms]: sent new object to cloud"))
+            .catch(err => {
+                this.setState({alert: "add error"})
+                console.log("[Admin/Rooms]: Unable to create: " + err)
+            })
         };
 
         if (this.state.loading)

@@ -80,37 +80,37 @@ class Tracks extends React.Component {
             let inputNode = null;
             switch (dataIndex) {
                 case ('name'):
-                    inputNode = <Input/>;
+                    inputNode = <Input title="Short name used internally, e.g. papers"/>;
                     break;
                 case ('displayName'):
-                    inputNode = <Input/>;
+                    inputNode = <Input title="Name that participants see, e.g. Research Papers"/>;
                     break;
                 case ('perProgramItemChat'):
                     //console.log(record.get("perProgramItemChat"));
                     inputNode = (
-                        <Checkbox 
+                        <span title="Do the track's items get their own text chat channels?"><Checkbox 
                             defaultChecked={record.get("perProgramItemChat")}
                             onChange={this.onChangeChat.bind(this, record)}
                         >
-                        </Checkbox>
+                        </Checkbox></span>
                     );
                     break;
                 case ('perProgramItemVideo'):
                     inputNode = (
-                        <Checkbox
+                        <span title="Do the track's items get their own video channels?"><Checkbox
                             defaultChecked={record.get("perProgramItemVideo")}
                             onChange= {this.onChangeVideo.bind(this, record)}
                         >
-                        </Checkbox>
+                        </Checkbox></span>
                     );
                     break;
                     case ('exhibit'):
                         inputNode = (
                             <Radio.Group onChange={this.onChangeExhibit.bind(this, record)} 
                                          value={record.get("exhibit")}>
-                                <Radio value="None">None</Radio>
-                                <Radio value="List">List</Radio>
-                                <Radio value="Grid">Grid</Radio>
+                                <Radio value="None"><span title="Don't show in Exhibit Hall">None</span></Radio>
+                                <Radio value="List"><span title="Show in Exhibit Hall as a simple list of all items">List</span></Radio>
+                                <Radio value="Grid"><span title="Show in Exhibit Hall as a grid of images, one per item">Grid</span></Radio>
                           </Radio.Group>
                         );
                         break;
@@ -171,7 +171,7 @@ class Tracks extends React.Component {
                 // delete from database
                 let data = {
                     clazz: "ProgramTrack",
-                    conference: record.get("conference").id,
+                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -179,20 +179,9 @@ class Tracks extends React.Component {
                 .catch(err => {
                     this.setState({alert: "delete error"})
                     this.refreshList();
-                    console.log("[Admin/Tracks]: Unable to delete track: " + err)
+                    console.log("[Admin/Tracks]: Unable to delete: " + err)
                 })
 
-                // record.destroy().then(() => {
-                //     this.setState({
-                //         alert: "delete success",
-                //         tracks: newTrackList.filter(track => track.id !== record.id)
-                //     });
-                //     console.log("Track deleted from db")
-                // }).catch(error => {
-                //     this.setState({alert: "delete error"});
-                //     console.log("item cannot be deleted from db");
-                // })
-                // ;
             };
 
             const save = async id => {
@@ -209,7 +198,7 @@ class Tracks extends React.Component {
 
                         let data = {
                             clazz: "ProgramTrack",
-                            conference: track.get("conference").id,
+                            conference: {clazz: "ClowdrInstance", id: track.get("conference").id},
                             id: track.id,
                             name: track.get("name"),
                             displayName: track.get("displayName"),
@@ -222,7 +211,7 @@ class Tracks extends React.Component {
                         .then(c => this.setState({alert: "save success"}))
                         .catch(err => {
                             this.setState({alert: "save error"})
-                            console.log("[Admin/Tracks]: Unable to save track: " + err)
+                            console.log("[Admin/Tracks]: Unable to save: " + err)
                         })
                     
                         setEditingKey('');
@@ -278,11 +267,6 @@ class Tracks extends React.Component {
                     dataIndex: 'perProgramItemChat',
                     editable: true,
                     width: '5%',
-                    sorter: (a, b) => {
-                        var A = a.get("perProgramItemChat") ? a.get("perProgramItemChat") : "";
-                        var B = b.get("perProgramItemChat") ? b.get("perProgramItemChat") : "";
-                        return A.localeCompare(B);
-                    },
                     //render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
                     render: (text,record) =><Checkbox checked={record.get("perProgramItemChat") ? true : false} disabled></Checkbox>,
                     key: 'perProgramItemChat',
@@ -292,11 +276,6 @@ class Tracks extends React.Component {
                     dataIndex: 'perProgramItemVideo',
                     editable: true,
                     width: '5%',
-                    sorter: (a, b) => {
-                        var A = a.get("perProgramItemChat") ? a.get("perProgramItemChat") : "";
-                        var B = b.get("perProgramItemChat") ? b.get("perProgramItemChat") : "";
-                        return A.localeCompare(B);
-                    },
                     //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
                     render: (text,record) =><Checkbox checked={record.get("perProgramItemVideo") ? true : false} disabled></Checkbox>,
                     key: 'perProgramItemVideo',
@@ -385,7 +364,7 @@ class Tracks extends React.Component {
 
             let data = {
                 clazz: "ProgramTrack",
-                conference: this.props.auth.currentConference.id,
+                conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
                 name: "One-word-name",
                 displayName: "Publicly visible name",
                 exhibit: "None",
@@ -393,10 +372,10 @@ class Tracks extends React.Component {
                 perProgramItemVideo: false
             }
             Parse.Cloud.run("create-obj", data)
-            .then(t => console.log("[Admin/Tracks]: sent new track to cloud"))
+            .then(t => console.log("[Admin/Tracks]: sent new object to cloud"))
             .catch(err => {
                 this.setState({alert: "add error"})
-                console.log("[Landing]: Unable to create track: " + err)
+                console.log("[Admin/Track]: Unable to create: " + err)
             })
         
         }
@@ -406,7 +385,6 @@ class Tracks extends React.Component {
                 <Spin tip="Loading...">
                 </Spin>)
 
-        console.log("--> # Tracks: " + this.state.ProgramTracks.length);
         return <div>
             <Button
                 type="primary"
@@ -458,70 +436,3 @@ const AuthConsumer = (props) => (
 );
 export default AuthConsumer;
 
-// const CollectionEditForm = ({title, visible, data, onAction, onCancel }) => {
-//     const [form] = Form.useForm();
-//     return (
-//         <Modal
-//             visible={visible}
-//             title={title}
-//             // okText="Create"
-//             footer={[
-//                 <Button form="myForm" key="submit" type="primary" htmlType="submit">
-//                     Submit
-//                 </Button>
-//             ]}
-//             cancelText="Cancel"
-//             onCancel={onCancel}
-//         >
-//             <Form
-//                 form={form}
-//                 layout="vertical"
-//                 name="form_in_modal"
-//                 id="myForm"
-//                 initialValues={{
-//                     modifier: 'public',
-//                     ...data
-//                 }}
-//                 onFinish={() => {
-//                     form
-//                         .validateFields()
-//                         .then(values => {
-//                             form.resetFields();
-//                             onAction(values);
-//                         })
-//                         .catch(info => {
-//                             console.log('Validate Failed:', info);
-//                         });
-//                 }}
-//             >
-//                 <Form.Item name="objectId" noStyle>
-//                     <Input type="text" type="hidden" />
-//                 </Form.Item>
-//                 <Form.Item
-//                     name="name"
-//                     rules={[
-//                         {
-//                             required: true,
-//                             message: 'Please input the name of the track!',
-//                         },
-//                     ]}
-//                 >
-//                     <Input placeholder="Name"/>
-//                 </Form.Item>
-//                 <Form.Item name="displayName">
-//                     <Input style={{ width: '100%' }} type="textarea" placeholder="Display Name"/>
-//                 </Form.Item>
-//                 <Form.Item name="perProgramItemChat" valuePropName="checked">
-//                     <Checkbox>
-//                         Create a chat channel for each program item
-//                     </Checkbox>
-//                 </Form.Item>
-//                 <Form.Item name="perProgramItemVideo" valuePropName="checked">
-//                     <Checkbox>
-//                         Create a video room for each program item
-//                     </Checkbox>
-//                 </Form.Item>
-//             </Form>
-//         </Modal>
-//     );
-// };
