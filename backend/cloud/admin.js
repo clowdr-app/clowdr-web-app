@@ -245,7 +245,7 @@ async function activate(instance) {
                 userACL.setRoleReadAccess("ClowdrSysAdmin", true);
                 u2.setACL(userACL);
                 await u2.save({}, {useMasterKey: true});
-                console.log('User ACM saved successfully');
+                console.log('User ACL saved successfully');
 
             }); 
         });    
@@ -272,13 +272,11 @@ Parse.Cloud.define("activate-clowdr-instance", async (request) => {
 
         // Finally, set an ACL on ClowdrInstance
         roleACL = new Parse.ACL();
-        roleACL.setPublicReadAccess(false);
+        roleACL.setPublicReadAccess(true);
         roleACL.setPublicWriteAccess(false);
         roleACL.setRoleReadAccess(conf.id + "-conference", true);
         roleACL.setRoleWriteAccess(conf.id + "-admin", true);
-        roleACL.setRoleReadAccess(conf.id + "-admin", true);
         roleACL.setRoleWriteAccess("ClowdrSysAdmin", true);
-        roleACL.setRoleReadAccess("ClowdrSysAdmin", true);
         conf.setACL(roleACL);
 
         await conf.save({}, {useMasterKey: true});
@@ -380,7 +378,7 @@ Parse.Cloud.define("update-clowdr-instance", async (request) => {
     console.log('[update instance]: request to update ' + id + " " + JSON.stringify(data));
 
     let confQ = new Parse.Query(ClowdrInstance);
-    let conf = await confQ.get(id);
+    let conf = await confQ.get(id, {useMasterKey: true});
     if (!conf) {
         throw "Conference " + id + ": " + err
     }
