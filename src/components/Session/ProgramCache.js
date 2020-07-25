@@ -11,6 +11,7 @@ export default class ProgramCache {
         this._subscriptions = {};
         this._listSubscribers = {};
         this._updateSubscribers = {};
+        this.getEntireProgram()
     }
 
     async _fetchTableAndSubscribe(tableName, objToSetStateOnUpdate) {
@@ -60,6 +61,11 @@ export default class ProgramCache {
                 this._data[tableName] = this._data[tableName].map(v=> v.id == obj.id ? obj : v);
 
                 this._dataById[tableName][obj.id] = obj;
+                /* I didn't mean to have this code in here: this is a big performance anti-pattern
+                 since any update to anything basically causes the entire thing to re-render, rather
+                 than just the component that changed. It would be good to refactor things to not
+                 rely on this. -JB
+                */
                 if (this._listSubscribers[tableName]) {
                     for (let subscriber of this._listSubscribers[tableName]) {
                         let stateUpdate = {};
@@ -148,8 +154,12 @@ export default class ProgramCache {
         let tracks = await this.getProgramTracks();
         return tracks.find(v=>v.get("name") == trackName);
     }
-    async getProgramItemsByTrackName(trackName, component){
-        let [items, track] = await Promise.all([this.getProgramItems(component),
+    /*
+    This command can't support live query right now, since it would update all
+    programItems, not just the ones in the requested track
+     */
+    async getProgramItemsByTrackName(trackName){
+        let [items, track] = await Promise.all([this.getProgramItems(),
         this.getProgramTrackByName(trackName)])
         return items.filter(item => item.get("track") && item.get("track").id == track.id);
     }

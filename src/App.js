@@ -157,7 +157,6 @@ class App extends Component {
     componentDidMount() {
         if (this.props.authContext.currentConference)
             this.refreshConferenceInformation();
-        this.props.authContext.programCache.getEntireProgram();
         this.props.authContext.history = this.props.history;
 
     }

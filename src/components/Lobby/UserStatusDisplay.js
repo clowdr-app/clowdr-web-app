@@ -155,6 +155,15 @@ class UserStatusDisplay extends React.Component{
         // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
 */
+        if(this.props.inline){
+            return <span className="userDisplay" style={this.props.style}
+                        onClick={onClick}>
+                <Popover
+                    title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
+                    {this.state.profile.get("displayName")}
+                </Popover>
+            </span>
+        }
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
                     <Popover

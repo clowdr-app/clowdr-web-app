@@ -695,13 +695,10 @@ Parse.Cloud.afterSave("ProgramPerson", async (request) => {
     if (person.get("userProfile") &&
         !eqInclNull(request.context.oldUserID, person.get("userProfile"))) {
         let profile = person.get("userProfile");
-        let profileQ = new Parse.Query("UserProfile");
-        profile = await profileQ.get(profile.id, {useMasterKey: true});
-        if (!profile.get("programPersons"))
-            profile.set("programPersons", []);
-        let oldPersons = profile.get("programPersons");
-        oldPersons.push(person);
-        profile.set("programPersons", oldPersons);
+        let personsQ = new Parse.Query("ProgramPerson");
+        personsQ.equalTo("userProfile", profile);
+        let persons = await personsQ.find({useMasterKey: true});
+        profile.set("programPersons", persons);
         if(person.get("programItems")){
             Parse.Object.fetchAll(person.get("programItems")).then(( async (items) =>{
                 let config = null;
