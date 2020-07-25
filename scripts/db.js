@@ -3,6 +3,12 @@ const fs = require('fs');
 const path = require('path'); 
 const { exec } = require('child_process');
 const { SSL_OP_ALL } = require('constants');
+const {activate} = require('../cloud/admin');
+var readline = require('readline');
+var rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
@@ -93,8 +99,11 @@ async function addRequiredData() {
 
     let Instance = Parse.Object.extend('ClowdrInstance');
     let instance = new Instance();
-    instance.set('conferenceName', 'XYZ');
-    instance.set('shortName', 'xyz');
+    instance.set('conferenceName', 'Test');
+    instance.set('shortName', 'test');
+    instance.set('isInitialized', true);
+    instance.set('adminName', "Clowdr Admin");
+    instance.set('adminEmail', "clowdr@localhost");
 
     let data = fs.readFileSync('art/clowdr-logo.png');     
     let base64Image = new Buffer(data, 'binary').toString('base64');
@@ -109,71 +118,11 @@ async function addRequiredData() {
     acl.setPublicWriteAccess(false);
     acl.setPublicReadAccess(true);
     acl.setRoleWriteAccess(instance.id+"-admin", true);
+    acl.setRoleReadAccess(instance.id+"-admin", true);
     instance.setACL(acl);
 
     instance.save().then(async i => {
-        let InstanceAccess = Parse.Object.extend('ClowdrInstanceAccess');
-        let iaccess = new InstanceAccess();
-        iaccess.set('instance', i);
-        try {
-            await iaccess.save();
-            console.log('InstanceAccess created successfuly');
-        } catch (err){
-            console.log('InstanceAccess: ' + err)
-        }
-
-        let SocialSpace = Parse.Object.extend('SocialSpace');
-        let ss = new SocialSpace();
-        ss.set('conference', i);
-        ss.set('name', 'Lobby');
-        ss.set('isGlobal', true);
-        try {
-            await ss.save()
-            console.log('Lobby created successfully');
-        } catch(err) {
-             console.log('SocialSpace: ' + err)
-        };
-
-
-        let user = new Parse.User();
-        user.set('username', 'clowdr');
-        user.set('password', 'admin');
-        user.set('email', 'clowdr@localhost')
-        user.set('passwordSet', true);
-        user.save().then(u => {
-            let UserProfile = Parse.Object.extend('UserProfile');
-            let userprofile = new UserProfile();
-            userprofile.set('realName', 'Clowdr Super Admin');
-            userprofile.set('displayName', 'Clowdr Super Admin');
-            userprofile.set('user', u);
-            userprofile.set('conference', i);
-            userprofile.save().then(up => {
-                let profiles = u.relation('profiles');
-                profiles.add(up);
-                u.save().then(async u2 => {
-                    const roleACL = new Parse.ACL();
-                    roleACL.setPublicReadAccess(true);
-                    let role1 = new Parse.Role('ClowdrSysAdmin', roleACL);
-                    let role2 = new Parse.Role(i.id+'-admin', roleACL);
-                
-                    let users1 = role1.relation('users');
-                    users1.add(u2);
-                    let users2 = role2.relation('users');
-                    users2.add(u2);
-
-                    let roles = [role1, role2];
-
-                    try {
-                        await Parse.Object.saveAll(roles);
-                        console.log('Roles created successfully');
-
-                    } catch(err) {
-                        console.log('Roles saved: ' + err);
-                    }
-
-                }).catch(err => {console.log('User saved (again):' + err)}); 
-            }).catch(err => console.log('UserProfile saved:' + err));    
-        }).catch(err => console.log('User saved:' + err));
+        activate(i);
     }).catch(err => console.log('Instance saved:' + err));
 
 }

@@ -34,7 +34,7 @@ class Clowdr extends React.Component {
         let query = new Parse.Query("ClowdrInstance");
         let res = await query.find();
         console.log('[Admin/Clowdr]: Found ' + res.length + ' instances');
-        res.map(v => v.key = v.get('key')); // Add a 'key' for the rows of the table
+        // res.map(v => v.key = v.get('key')); // Add a 'key' for the rows of the table
         this.setState({
             instances: res,
             loading: false
@@ -42,15 +42,6 @@ class Clowdr extends React.Component {
     }
 
     componentWillUnmount() {
-    }
-
-    initConference() {
-        const data = {shortName: this.state.shortName, conferenceName: this.state.conferenceName};
-        Parse.Cloud.run("init-conference-1", data).then(response => {
-            console.log('[Admin/Clowdr]: successfully created conference ' + response.id);
-            this.setState({initialized: true});
-        }).catch(err => console.log('[Admin/Clowdr]: error in initializing conference: ' + err));
-
     }
 
     onChangeFeatures(record) {
@@ -145,9 +136,10 @@ class Clowdr extends React.Component {
                     id: record.id
                 }
                 Parse.Cloud.run("activate-clowdr-instance", data)
-                .then(t => {
+                .then(async t => {
+                    console.log("[Admin/Clowdr]: activated " + JSON.stringify(t));
                     this.setState({alert: "activate success"});
-                    console.log("[Admin/Clowdr]: sent activate request to cloud");
+                    this.refreshList()
                 })
                 .catch(err => {
                     this.setState({alert: "activate error"})
@@ -200,6 +192,7 @@ class Clowdr extends React.Component {
                         .then(t => {
                             this.setState({alert: "save success"});
                             console.log("[Admin/Clowdr]: sent updated object to cloud");
+                            this.refreshList();
                         })
                         .catch(err => {
                             this.setState({alert: "add error"})
@@ -309,11 +302,11 @@ class Clowdr extends React.Component {
                             </span>
                             ) : (
                                 <Space size='small'>
-                                    {active}
                                     <a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>
                                         {<EditOutlined />}
                                     </a>
                                     {del}
+                                    {active}
                                 </Space>
 
                             );
@@ -360,18 +353,10 @@ class Clowdr extends React.Component {
         };
 
         const newInstance = () => {
-            const ClowdrInstance = Parse.Object.extend('ClowdrInstance');
-            const myNewObject = new ClowdrInstance();
-            myNewObject.set("conferenceName", "NEW CONFERENCE " + Math.floor(Math.random() * 10000).toString());
-            myNewObject.set("shortName", myNewObject.get("conferenceName").replace(" ", ""));
-            myNewObject.set("isIncludeAllFeatures", true);
-            myNewObject.set("adminName", "ADMIN PERSON");
-            myNewObject.set("adminEmail", "someone@somewhere");
-
-            console.log("[Admin/Clowdr]: Creating new instance " + myNewObject.id);
+            console.log("[Admin/Clowdr]: Creating new instance " );
             let data = {
-                conferenceName: myNewObject.get("conferenceName"),
-                shortName: myNewObject.get("shortName"),
+                conferenceName: "NEW CONFERENCE " + Math.floor(Math.random() * 10000).toString(),
+                shortName: "NEWCONFERENCE",
                 isIncludeAllFeatures: true,
                 adminName: "ADMIN PERSON",
                 adminEmail: "someone@somewhere",
@@ -379,8 +364,8 @@ class Clowdr extends React.Component {
             }
             Parse.Cloud.run("create-clowdr-instance", data)
             .then(t => {
-                this.setState({instances: [myNewObject, ...this.state.instances]})
-                console.log("[Admin/Clowdr]: sent new object to cloud");
+                console.log("[Admin/Clowdr]: new instance " + JSON.stringify(t));
+                this.refreshList();
             })
             .catch(err => {
                 this.setState({alert: "add error"})

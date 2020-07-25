@@ -186,6 +186,7 @@ const withAuthentication = Component => {
             }
         }
         async setActiveConference(conf) {
+            console.log('[wA]: changing conference to ' + conf.conferenceName);
             this.refreshUser(conf, true);
         }
 
@@ -544,15 +545,13 @@ const withAuthentication = Component => {
                         let isClowdrAdmin = _this.state ? _this.state.isClowdrAdmin : false;
                         let validConferences = [];
 
-                        let validConfQ= new Parse.Query("ClowdrInstanceAccess");
-                        validConfQ.include('instance');
-                        let validInstances = await validConfQ.find();
-                        validConferences=validInstances.map(i=>i.get("instance"));
+                        let validConfQ= new Parse.Query("ClowdrInstance");
+                        validConferences = await validConfQ.find();
 
                         let conf = _this.currentConference;
                         let currentProfileID = sessionStorage.getItem("activeProfileID");
                         let activeProfile = null;
-                        if(currentProfileID){
+                        if (currentProfileID) {
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.include("conference");
                             profileQ.include("tags");
