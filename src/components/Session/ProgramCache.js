@@ -11,6 +11,7 @@ export default class ProgramCache {
         this._subscriptions = {};
         this._listSubscribers = {};
         this._updateSubscribers = {};
+        this.getEntireProgram()
     }
 
     async _fetchTableAndSubscribe(tableName, objToSetStateOnUpdate) {
