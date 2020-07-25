@@ -396,3 +396,17 @@ Parse.Cloud.define("update-clowdr-instance", async (request) => {
         throw "Unable to save conference: user not allowed to change instance";
 });
 
+Parse.Cloud.define("logo-upload", async (request) => {
+    console.log('Request to upload a logo image for ' + request.params.conferenceId);
+    const imgData = request.params.content;
+    const conferenceId = request.params.conferenceId;
+
+    var Instance = Parse.Object.extend("ClowdrInstance");
+    var query = new Parse.Query(Instance);
+    let conf = await query.get(conferenceId);
+    let file = new Parse.File(conf.id + '-logo', {base64: imgData});
+    await file.save({useMasterKey: true});
+    conf.set("headerImage", file);
+    await conf.save({}, {useMasterKey: true});
+    return {status: "OK", "file": file.url()};
+});
