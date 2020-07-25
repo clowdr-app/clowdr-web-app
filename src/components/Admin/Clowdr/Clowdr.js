@@ -2,8 +2,10 @@ import React, {Fragment, useState} from 'react';
 import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, Checkbox, Alert} from "antd";
 import Parse from "parse";
 import {
+    CheckCircleTwoTone,
     DeleteOutlined,
-    EditOutlined
+    EditOutlined,
+    WarningTwoTone
 } from '@ant-design/icons';
 
 class Clowdr extends React.Component {
@@ -138,6 +140,21 @@ class Clowdr extends React.Component {
                 setEditingKey('');
             };
 
+            const onActivate = record => {
+                let data = {
+                    id: record.id
+                }
+                Parse.Cloud.run("activate-clowdr-instance", data)
+                .then(t => {
+                    this.setState({alert: "activate success"});
+                    console.log("[Admin/Clowdr]: sent activate request to cloud");
+                })
+                .catch(err => {
+                    this.setState({alert: "activate error"})
+                    console.log("[Admin/Clowdr]: Unable to activate: " + err)
+                });
+            };
+
             const onDelete = record => {
                 const newInstanceList = [...this.state.instances];
                 // delete from database
@@ -254,6 +271,26 @@ class Clowdr extends React.Component {
                     title: 'Action',
                     dataIndex: 'action',
                     render: (_, record) => {
+                        let active = record.get("isInitialized") ? 
+                                        <CheckCircleTwoTone twoToneColor='#52c41a' title="This instance is activated"/> :
+                                        <Popconfirm
+                                            title="Activate this CLOWDR instance?"
+                                            onConfirm={() => onActivate(record)}
+                                            okText="Yes"
+                                            cancelText="No"
+                                        >
+                                            <a title="This instance is not yet activated. Click to activate.">{<WarningTwoTone twoToneColor="#ff3333"/>}</a>
+                                        </Popconfirm>
+                            let del = record.get("isInitialized") ? <></> :
+                                        <Popconfirm
+                                            title="Delete this CLOWDR instance?"
+                                            onConfirm={() => onDelete(record)}
+                                            okText="Yes"
+                                            cancelText="No"
+                                        >
+                                            <a title="Delete">{<DeleteOutlined />}</a>
+                                        </Popconfirm>
+
                         const editable = isEditing(record);
                         if (this.state.instances.length > 0) {
                             return editable ? (
@@ -272,17 +309,11 @@ class Clowdr extends React.Component {
                             </span>
                             ) : (
                                 <Space size='small'>
+                                    {active}
                                     <a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>
                                         {<EditOutlined />}
                                     </a>
-                                    <Popconfirm
-                                        title="Are you sure delete this CLOWDR instance?"
-                                        onConfirm={() => onDelete(record)}
-                                        okText="Yes"
-                                        cancelText="No"
-                                    >
-                                        <a title="Delete">{<DeleteOutlined />}</a>
-                                    </Popconfirm>
+                                    {del}
                                 </Space>
 
                             );
