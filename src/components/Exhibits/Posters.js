@@ -14,7 +14,7 @@ class Exhibits extends React.Component {
             dirty: false,
             loading: true,
             posters: [],
-            myposter: undefined,
+            myposters: [],
             gotTracks: false,
             gotItems: false,
             gotPeople: false,
@@ -71,21 +71,12 @@ class Exhibits extends React.Component {
         return posters;
     }
 
-    getUserPoster(posters) {
-        console.log(this.first_last)
-        let myposter = posters.find(poster => {
-            let authors = poster.get("authors");
-            let me = authors.find(a => {
-                let fl = a.get('name') ? a.get('name').split() : ["-", "-"];
-                if (fl.length > 2) 
-                    fl = [fl[0], fl[1]];
-                return fl[0] === this.first_last[0] && fl[1] == this.first_last[1];
-            });
-            if (me) return true
-            else return false
-        });
-        console.log(myposter)
-        return myposter;
+    getUserPosters(posters) {
+        let myposters = posters.filter(poster =>
+            poster.get("authors") && poster.get("authors").find(a =>
+            this.props.auth.userProfile.get("programPersons") &&
+            this.props.auth.userProfile.get("programPersons").find(p=>p.id==a.id))).map(p=>p.id);
+        return myposters;
     }
 
     async componentDidMount() {
@@ -116,7 +107,7 @@ class Exhibits extends React.Component {
         let [track, posters] = await Promise.all(
             [
                 this.props.auth.programCache.getProgramTrackByName(trackName),
-                this.props.auth.programCache.getProgramItemsByTrackName(trackName,this)
+                this.props.auth.programCache.getProgramItemsByTrackName(trackName)
             ]
         );
 
@@ -125,7 +116,7 @@ class Exhibits extends React.Component {
             ProgramItems: posters,
             track: track,
             loading: false,
-            myposter: this.getUserPoster(posters),
+            myposters: this.getUserPosters(posters),
             waitForProgram: false
         });
         this.changeChatPanel(posters);
@@ -221,10 +212,14 @@ class Exhibits extends React.Component {
             <div className={"space-align-container"}>
                 {this.state.ProgramItems.map((poster) => {
                     let authors = poster.get("authors");
-                    let authorstr= authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />).reduce((prev,curr) => [prev,", ",curr]);
+                    let authorsArr = authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />);
+
+                    let authorstr = "";
+                    if (authorsArr.length >= 1)
+                        authorstr = authorsArr.reduce((prev,curr) => [prev,", ",curr]);
 
                     let tool = "";
-                    if (this.state.myposter && (this.state.myposter.id == poster.id))
+                    if (this.state.myposters && (this.state.myposters.includes(poster.id)))
                         tool = <span title="Looks like you're an author. Replace the image? Use 3x2 ratio.">
                                     <Upload accept=".png, .jpg" name='poster' beforeUpload={this.onImageUpload.bind(this, poster)}>
                                     <Button type="primary">

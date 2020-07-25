@@ -20,7 +20,7 @@ export default class ProgramPersonDisplay extends React.Component{
             return <Skeleton.Input />
         }
         if(this.state.ProgramPerson.get("userProfile")){
-            return <UserStatusDisplay profileID={this.state.ProgramPerson.get("userProfile").id} style={{display: 'inline'}} />
+            return <UserStatusDisplay profileID={this.state.ProgramPerson.get("userProfile").id} inline={true} />
         }
         return <Tooltip title={this.state.ProgramPerson.get("name") + " has not yet linked their CLOWDR and author records. To link these records, please go to 'My Account'."}><span className="programPerson">{this.state.ProgramPerson.get("name")}</span></Tooltip>
     }
