@@ -189,7 +189,6 @@ class Program extends React.Component {
         return <div>
             <h4>Program Overview:</h4>
             {/* <ReactImageZoom {...props}/> */}
-            <img style={{width: "100%", height: "100%"}} src={'https://2020.icse-conferences.org/getImage/orig/ICSE-Schedule.PNG'} /> 
 
             <h4>Details:</h4>
             <Descriptions title="Filter">

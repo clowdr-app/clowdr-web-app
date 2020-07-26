@@ -31,36 +31,7 @@ class ProgramSessions extends React.Component {
     }
 
 
-    async onCreate(values) {
-        console.log("OnCreate! " + values.title);
-        var _this = this;
-        let room = this.state.ProgramRooms.find(r => r.id == values.room);
-        if (!room)
-            console.log('Invalid room ' + values.room);
 
-        let data = {
-            clazz: "ProgramSession",
-            conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
-            title: values.title,
-            startTime: values.startTime.toDate(),
-            endTime: values.endTime.toDate(),
-            items: values.items ? values.items.map(i => {return {clazz: "ProgramItem", id: i.id}}) : [],
-            confKey: Math.floor(Math.random() * 10000000).toString()
-        }
-        if (room)
-            data.room = {clazz: "ProgramRoom", id: room.id};
-
-        Parse.Cloud.run("create-obj", data)
-        .then(t => {
-            console.log("[Admin/Sessions]: sent new object to cloud");
-            this.setVisible();
-        })
-        .catch(err => {
-            this.setState({alert: "add error"})
-            console.log("[Admin/Sessions]: Unable to create: " + err)
-        })
-
-    }
 
     setVisible() {
         this.setState({'visible': !this.state.visible});
@@ -85,25 +56,30 @@ class ProgramSessions extends React.Component {
         this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
     }
 
-    refreshList() {
-        let query = new Parse.Query("ProgramSession");
-        console.log('Current conference: ' + this.props.auth.currentConference.get('name'));
-        query.equalTo("conference", this.props.auth.currentConference);
-        query.limit(1000);
-        query.find().then(res => {
-            console.log('Found sessions ' + res.length);
-            this.setState({
-                ProgramSessions: res,
-                loading: false
-            });
-        })
+    onCreate = () => {
+
+        let data = {
+            clazz: "ProgramSession",
+            conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+            title: "***NEWLY ADDED SESSION***",
+            items: [],
+            confKey: Math.floor(Math.random() * 10000000).toString()
+        }
+
+        Parse.Cloud.run("create-obj", data)
+            .then(t => {
+                console.log("[Admin/Sessions]: sent new object to cloud");
+                this.setVisible();
+            })
+            .catch(err => {
+                this.setState({alert: "add error"})
+                console.log("[Admin/Sessions]: Unable to create: " + err)
+            })
     }
 
     render() {
         if(this.state.loading)
             return <Spin />
-        console.log("Loading Editable Cell");
-
 
         const {Option} = Select;
         function onChange(value) {
@@ -139,7 +115,7 @@ class ProgramSessions extends React.Component {
                     inputNode = (
                         <Select placeholder="Choose the room" >
                             {this.state.ProgramRooms.map(r => (
-                                <Option key={r.id} value={r.id}>{r.get('name')}</Option>
+                                <Option key={r.id} value={r.get('name')}>{r.get('name')}</Option>
                             ))}
                         </Select>
                     );
@@ -179,7 +155,7 @@ class ProgramSessions extends React.Component {
                             style={{
                                 margin: 0,
                             }}
-                            rules={dataIndex === 'start' || dataIndex === 'end' ?
+                            rules={dataIndex === 'title' ?
                                 [{required: true, message: `Please Input ${title}!`}] : []}
                         >
                             {inputNode}
@@ -235,7 +211,6 @@ class ProgramSessions extends React.Component {
                 }))
                 .catch(err => {
                     this.setState({alert: "delete error"})
-                    this.refreshList();
                     console.log("[Admin/Sessions]: Unable to delete: " + err)
                 })
             };
@@ -248,9 +223,7 @@ class ProgramSessions extends React.Component {
                     let session = newData.find(s => s.id === id);
 
                     if (session) {
-                        console.log("row is : " + row.title);
-
-                        let newRoom = this.state.ProgramRooms.find(t => t.id === row.room);
+                        let newRoom = this.state.ProgramRooms.find(t => t.get('name') === row.room);
                         let newItems = [];
                         for (let item of row.items) {
                             let newItem = this.state.ProgramItems.find(t => t.id === item);
@@ -261,11 +234,6 @@ class ProgramSessions extends React.Component {
                             }
                         }
 
-                        session.set("title", row.title);
-                        session.set("startTime", row.start.toDate());
-                        session.set("endTime", row.end.toDate());
-                        session.set("items", newItems);
-                        session.set("room", newRoom);
                         let data = {
                             clazz: "ProgramSession",
                             conference: {clazz: "ClowdrInstance", id: session.get("conference").id},
@@ -281,11 +249,9 @@ class ProgramSessions extends React.Component {
                         if (newItems.length > 0)
                             data.items = newItems.map(i => {return {clazz: "ProgramItem", id: i.id}})
 
-                        console.log("SAVING HERE =====>", data);
                         Parse.Cloud.run("update-obj", data)
                         .then(c => {
                             this.setState({alert: "save success"});
-                            setData(newData);
                         })
                         .catch(err => {
                             this.setState({alert: "save error"});
@@ -310,7 +276,7 @@ class ProgramSessions extends React.Component {
                     title: 'Title',
                     dataIndex: 'title',
                     key: 'title',
-                    width: '20%',
+                    width: '30%',
                     editable: true,
                     defaultSortOrder: 'ascend',
                     sorter: (a, b) => {
@@ -323,45 +289,46 @@ class ProgramSessions extends React.Component {
                 {
                     title: 'Start Time',
                     dataIndex: 'start',
-                    width: '12%',
+                    width: '15%',
                     editable: true,
                     sorter: (a, b) => {
                         var timeA = a.get("startTime") ? a.get("startTime") : new Date();
                         var timeB = b.get("startTime") ? b.get("startTime") : new Date();
                         return timeA > timeB;
                     },
-                    render: (text,record) => <span>{timezone(record.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
+                    render: (text,record) => <span>{record.get("startTime") ? timezone(record.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
                     key: 'start',
                 },
                 {
                     title: 'End Time',
                     dataIndex: 'end',
-                    width: '12%',
+                    width: '15%',
                     editable: true,
                     sorter: (a, b) => {
                         var timeA = a.get("endTime") ? a.get("endTime") : new Date();
                         var timeB = b.get("endTime") ? b.get("endTime") : new Date();
                         return timeA > timeB;
                     },
-                    render: (text,record) => <span>{timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
+                    render: (text,record) => <span>{record.get("endTime") ? timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
                     key: 'end',
                 },
                 {
                     title: 'Room',
                     dataIndex: 'room',
-                    width: '12%',
+                    width: '20%',
                     editable: true,
                     sorter: (a, b) => {
                         const roomA = a.get("room") && a.get("room").get("name") ? a.get("room").get("name") : " ";
                         const roomB = b.get("room") && b.get("room").get("name") ? b.get("room").get("name") : " ";
                         return roomA.localeCompare(roomB);
                     },
-                    render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : "NO SUCH DATA"}</span>,
+                    render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : ""}</span>,
                     key: 'room',
                 },
                 {
                     title: 'Items',
                     dataIndex: 'items',
+                    width: '30%',
                     editable: true,
                     render: (text,record) => {
                         if (record.get("items")) {
@@ -381,6 +348,7 @@ class ProgramSessions extends React.Component {
                 {
                     title: 'Action',
                     dataIndex: 'action',
+                    width: '10%',
                     render: (_, record) => {
                         const editable = isEditing(record);
                         if (this.state.ProgramSessions.length > 0) {
@@ -459,30 +427,7 @@ class ProgramSessions extends React.Component {
             );
         };
 
-        const handleAdd = () => {
-            const ProgramSession = Parse.Object.extend('ProgramSession');
-            const myNewObject = new ProgramSession();
-            myNewObject.set("title", '***NEWLY ADDED SESSION***');
-            myNewObject.set("conference", this.props.auth.currentConference);
-            myNewObject.set("startTime", new Date());
-            myNewObject.set("endTime", new Date());
-            myNewObject.set("room", null);
-            myNewObject.set("items", []);
 
-            myNewObject.save()
-                .then(result => {
-                    console.log('ProgramSession created', result);
-                    this.setState({
-                        alert: "Add success",
-                        ProgramSessions: [myNewObject, ...this.state.ProgramSessions]
-                    })
-                })
-                .catch(error => {
-                        this.setState({alert: "Add error"});
-                        console.error('Error while creating ProgramSession: ', error);
-                    }
-                );
-        };
 
         return (
             <div>
@@ -512,7 +457,7 @@ class ProgramSessions extends React.Component {
                         <td>
                             <Button
                                 type="primary"
-                                onClick={handleAdd}
+                                onClick={() => this.onCreate()}
                             >
                                 New session
                             </Button>
@@ -530,7 +475,6 @@ const AuthConsumer = (props) => (
     <AuthUserContext.Consumer>
         {value => (
             <ProgramSessions {...props} auth={value}  />
-
         )}
     </AuthUserContext.Consumer>
 );

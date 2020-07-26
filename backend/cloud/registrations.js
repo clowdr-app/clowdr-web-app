@@ -380,7 +380,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 let userACL = new Parse.ACL();
                 userACL.setWriteAccess(user, true);
                 userACL.setReadAccess(user, true);
-                userACL.setRoleReadAccess("moderators", true);
+                userACL.setRoleReadAccess(confID + "-manager", true);
                 userACL.setPublicReadAccess(false);
                 user.setACL(userACL);
                 user = await user.save({}, {useMasterKey: true})
