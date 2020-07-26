@@ -687,62 +687,62 @@ function eqInclNull(a,b){
     return a==b.id;
 }
 
-Parse.Cloud.afterSave("ProgramPerson", async (request) => {
-    let person = request.object;
-    if (person.get("userProfile") &&
-        !eqInclNull(request.context.oldUserID, person.get("userProfile"))) {
-        let profile = person.get("userProfile");
-        let personsQ = new Parse.Query("ProgramPerson");
-        personsQ.equalTo("userProfile", profile);
-        let persons = await personsQ.find({useMasterKey: true});
-        profile.set("programPersons", persons);
-        if(person.get("programItems")){
-            Parse.Object.fetchAll(person.get("programItems")).then(( async (items) =>{
-                let config = null;
-                for(let item of items){
-                    if(item.get("chatSID")){
-                        //add the author to the chat channel
-                        if (!config)
-                            config = await getConfig(item.get("conference"));
-                        let member = config.twilioChat.channels(item.get("chatSID")).members.create({
-                            identity: profile.id
-                        }).catch(err=>{
-                            console.log(err);
-                        });
-                    }
-                }
-            }));
-        }
-        try {
-            await profile.save({}, {useMasterKey: true});
-        } catch (err) {
-            console.log("On " + person.id)
-            console.log(err);
-        }
-    }
-});
-Parse.Cloud.beforeSave("ProgramPerson", async (request) => {
-    let person = request.object;
-    if (person.dirty("userProfile")) {
-        //items -> authors (array) -> userProfile
-        let personQ = new Parse.Query("ProgramPerson");
-        personQ.include("userProfile");
-        let oldPerson = await personQ.get(person.id,{useMasterKey: true});
-        let oldID = null;
-        if(oldPerson && oldPerson.get("userProfile"))
-            oldID = oldPerson.get("userProfile").id;
-        request.context ={oldUserID: oldID};
-        if(oldPerson && oldPerson.get("userProfile")) {
-            let profile = oldPerson.get("userProfile");
-            let oldPersonMappings = oldPerson.get("programPersons");
-            if(oldPersonMappings)
-            {
-                profile.set("programPersons", oldPersonMappings.filter(v=>v.id != person.id));
-                await profile.save({}, {useMasterKey: true});
-            }
-        }
-    }
-});
+// Parse.Cloud.afterSave("ProgramPerson", async (request) => {
+//     let person = request.object;
+//     if (person.get("userProfile") &&
+//         !eqInclNull(request.context.oldUserID, person.get("userProfile"))) {
+//         let profile = person.get("userProfile");
+//         let personsQ = new Parse.Query("ProgramPerson");
+//         personsQ.equalTo("userProfile", profile);
+//         let persons = await personsQ.find({useMasterKey: true});
+//         profile.set("programPersons", persons);
+//         if(person.get("programItems")){
+//             Parse.Object.fetchAll(person.get("programItems")).then(( async (items) =>{
+//                 let config = null;
+//                 for(let item of items){
+//                     if(item.get("chatSID")){
+//                         //add the author to the chat channel
+//                         if (!config)
+//                             config = await getConfig(item.get("conference"));
+//                         let member = config.twilioChat.channels(item.get("chatSID")).members.create({
+//                             identity: profile.id
+//                         }).catch(err=>{
+//                             console.log(err);
+//                         });
+//                     }
+//                 }
+//             }));
+//         }
+//         try {
+//             await profile.save({}, {useMasterKey: true});
+//         } catch (err) {
+//             console.log("On " + person.id)
+//             console.log(err);
+//         }
+//     }
+// });
+// Parse.Cloud.beforeSave("ProgramPerson", async (request) => {
+//     let person = request.object;
+//     if (person.dirty("userProfile")) {
+//         //items -> authors (array) -> userProfile
+//         let personQ = new Parse.Query("ProgramPerson");
+//         personQ.include("userProfile");
+//         let oldPerson = await personQ.get(person.id,{useMasterKey: true});
+//         let oldID = null;
+//         if(oldPerson && oldPerson.get("userProfile"))
+//             oldID = oldPerson.get("userProfile").id;
+//         request.context ={oldUserID: oldID};
+//         if(oldPerson && oldPerson.get("userProfile")) {
+//             let profile = oldPerson.get("userProfile");
+//             let oldPersonMappings = oldPerson.get("programPersons");
+//             if(oldPersonMappings)
+//             {
+//                 profile.set("programPersons", oldPersonMappings.filter(v=>v.id != person.id));
+//                 await profile.save({}, {useMasterKey: true});
+//             }
+//         }
+//     }
+// });
 Parse.Cloud.define("program-updatePersons", async (request) => {
     let profileID = request.params.userProfileID;
     let personsIDs = request.params.programPersonIDs;
@@ -753,19 +753,21 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
     existingPersonsQ.equalTo("userProfile", fp);
 
     let requestedPersonIDs = [];
+    let newPersonsToFetch = [];
     for(let pid of personsIDs){
         let p = new ProgramPerson();
         p.id = pid;
+        newPersonsToFetch.push(p);
         requestedPersonIDs.push(p);
     }
 
     let profileQ = new Parse.Query("UserProfile");
     let [profile, alreadyClaimedPersons
-        // , personsNowListed
+        , newPersonsToClaim
         ] = await
         Promise.all([profileQ.get(profileID, {useMasterKey: true}),
             existingPersonsQ.find({useMasterKey: true}),
-        // Parse.Object.fetchAll(curPersons, {useMasterKey: true})
+        Parse.Object.fetchAll(newPersonsToFetch, {useMasterKey: true})
         ]);
 
     if(profile.get("user").id != user.id)
@@ -773,18 +775,40 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
     //Check to see what the changes if any are
     let dirty = false;
     let toSave = [];
-    for(let p of requestedPersonIDs){
+    for(let p of newPersonsToClaim){
         if(!alreadyClaimedPersons.find(v => v.id==p.id)){
-            p.set("userProfile",profile);
+            p.set("userProfile", profile);
             toSave.push(p);
+            let config = null;
+            if (p.get("programItems")) {
+                Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
+                    let config = null;
+                    console.log(items)
+                    for (let item of items) {
+                        console.log(item)
+                        if (item.get("chatSID")) {
+                            //add the author to the chat channel
+                            if (!config)
+                                config = await getConfig(item.get("conference"));
+                            let member = config.twilioChat.channels(item.get("chatSID")).members.create({
+                                identity: profile.id
+                            }).catch(err => {
+                                console.log(err);
+                            });
+                        }
+                    }
+                }));
+            }
         }
     }
-    for(let p of alreadyClaimedPersons){
+    for (let p of alreadyClaimedPersons) {
         if(!requestedPersonIDs.find(v => v.id==p.id)){
             p.set("userProfile", null);
             toSave.push(p);
         }
     }
+    profile.set("programPersons", newPersonsToClaim);
+    toSave.push(profile);
     await Parse.Object.saveAll(toSave,{useMasterKey: true});
 });
 
