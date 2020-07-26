@@ -56,23 +56,15 @@ class ProgramSessions extends React.Component {
         this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
     }
 
-    onCreate = async (values) => {
-        console.log("OnCreate! " + values.title);
-        let room = this.state.ProgramRooms.find(r => r.id == values.room);
-        if (!room)
-            console.log('Invalid room ' + values.room);
+    onCreate = () => {
 
         let data = {
             clazz: "ProgramSession",
             conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
-            title: values.title,
-            startTime: values.startTime.toDate(),
-            endTime: values.endTime.toDate(),
-            items: values.items ? values.items.map(i => {return {clazz: "ProgramItem", id: i.id}}) : [],
+            title: "***NEWLY ADDED SESSION***",
+            items: [],
             confKey: Math.floor(Math.random() * 10000000).toString()
         }
-        if (room)
-            data.room = {clazz: "ProgramRoom", id: room.id};
 
         Parse.Cloud.run("create-obj", data)
             .then(t => {
@@ -88,14 +80,6 @@ class ProgramSessions extends React.Component {
     render() {
         if(this.state.loading)
             return <Spin />
-
-        const defaultData = {
-            title: "***NEWLY ADDED DATA***",
-            startTime: moment(new Date().toString()),
-            endTime: moment(new Date().toString()),
-            items: [],
-            room: null
-        }
 
         const {Option} = Select;
         function onChange(value) {
@@ -171,7 +155,7 @@ class ProgramSessions extends React.Component {
                             style={{
                                 margin: 0,
                             }}
-                            rules={dataIndex === 'start' || dataIndex === 'end' ?
+                            rules={dataIndex === 'title' ?
                                 [{required: true, message: `Please Input ${title}!`}] : []}
                         >
                             {inputNode}
@@ -292,7 +276,7 @@ class ProgramSessions extends React.Component {
                     title: 'Title',
                     dataIndex: 'title',
                     key: 'title',
-                    width: '20%',
+                    width: '30%',
                     editable: true,
                     defaultSortOrder: 'ascend',
                     sorter: (a, b) => {
@@ -305,45 +289,46 @@ class ProgramSessions extends React.Component {
                 {
                     title: 'Start Time',
                     dataIndex: 'start',
-                    width: '12%',
+                    width: '15%',
                     editable: true,
                     sorter: (a, b) => {
                         var timeA = a.get("startTime") ? a.get("startTime") : new Date();
                         var timeB = b.get("startTime") ? b.get("startTime") : new Date();
                         return timeA > timeB;
                     },
-                    render: (text,record) => <span>{timezone(record.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
+                    render: (text,record) => <span>{record.get("startTime") ? timezone(record.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
                     key: 'start',
                 },
                 {
                     title: 'End Time',
                     dataIndex: 'end',
-                    width: '12%',
+                    width: '15%',
                     editable: true,
                     sorter: (a, b) => {
                         var timeA = a.get("endTime") ? a.get("endTime") : new Date();
                         var timeB = b.get("endTime") ? b.get("endTime") : new Date();
                         return timeA > timeB;
                     },
-                    render: (text,record) => <span>{timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
+                    render: (text,record) => <span>{record.get("endTime") ? timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
                     key: 'end',
                 },
                 {
                     title: 'Room',
                     dataIndex: 'room',
-                    width: '12%',
+                    width: '20%',
                     editable: true,
                     sorter: (a, b) => {
                         const roomA = a.get("room") && a.get("room").get("name") ? a.get("room").get("name") : " ";
                         const roomB = b.get("room") && b.get("room").get("name") ? b.get("room").get("name") : " ";
                         return roomA.localeCompare(roomB);
                     },
-                    render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : "NO SUCH DATA"}</span>,
+                    render: (text,record) => <span>{record.get("room") ? record.get("room").get('name') : ""}</span>,
                     key: 'room',
                 },
                 {
                     title: 'Items',
                     dataIndex: 'items',
+                    width: '30%',
                     editable: true,
                     render: (text,record) => {
                         if (record.get("items")) {
@@ -363,6 +348,7 @@ class ProgramSessions extends React.Component {
                 {
                     title: 'Action',
                     dataIndex: 'action',
+                    width: '10%',
                     render: (_, record) => {
                         const editable = isEditing(record);
                         if (this.state.ProgramSessions.length > 0) {
@@ -471,7 +457,7 @@ class ProgramSessions extends React.Component {
                         <td>
                             <Button
                                 type="primary"
-                                onClick={() => this.onCreate(defaultData)}
+                                onClick={() => this.onCreate()}
                             >
                                 New session
                             </Button>
