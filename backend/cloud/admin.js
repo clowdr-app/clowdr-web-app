@@ -49,31 +49,43 @@ async function createSocialSpaces(conf){
         if (!space.get("chatChannel")) {
             console.log(`[init]: chat for ${spaceName} doesn't yet exist. Creating it.`);
             let chat = conf.twilio.chat.services(conf.config.TWILIO_CHAT_SERVICE_SID);
-            let twilioChatRoom = await chat.channels.create({
-                friendlyName: spaceName,
-                uniqueName: "socialSpace-" + space.id,
-                type: "public",
-                attributes: JSON.stringify({
-                    category: "socialSpace",
-                    isGlobal: true,
-                    spaceID: space.id
-                })
-            });
-            space.set("chatChannel", twilioChatRoom.sid);
+            try {
+                let twilioChatRoom = await chat.channels.create({
+                    friendlyName: spaceName,
+                    uniqueName: "socialSpace-" + space.id,
+                    type: "public",
+                    attributes: JSON.stringify({
+                        category: "socialSpace",
+                        isGlobal: true,
+                        spaceID: space.id
+                    })
+                });
+                space.set("chatChannel", twilioChatRoom.sid);
+                await space.save({}, {useMasterKey: true});
+            }catch(err){
+                console.log("Unble to create chat channel for social space:")
+                console.log(err);
+                console.trace();
+            }
 
-            await space.save({}, {useMasterKey: true});
             console.log('[init]: chat channel is ' + space.get('chatChannel'));
         } else {
             console.log(`[init]: chat for ${spaceName} already exists. Updating it.`);
-            let chat = conf.twilio.chat.services(conf.config.TWILIO_CHAT_SERVICE_SID);
-            let twilioChatRoom = await chat.channels(space.get("chatChannel")).update({
-                friendlyName: spaceName,
-                attributes: JSON.stringify({
-                    category: "socialSpace",
-                    isGlobal: true,
-                    spaceID: space.id
-                })
-            });
+            try {
+
+                let chat = conf.twilio.chat.services(conf.config.TWILIO_CHAT_SERVICE_SID);
+                let twilioChatRoom = await chat.channels(space.get("chatChannel")).update({
+                    friendlyName: spaceName,
+                    attributes: JSON.stringify({
+                        category: "socialSpace",
+                        isGlobal: true,
+                        spaceID: space.id
+                    })
+                });
+            }catch(err){
+                console.log("In update of chat channel for social space")
+                console.log(err);
+            }
         }
     }
 
@@ -149,6 +161,8 @@ async function userInRoles(user, allowedRoles) {
     return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
 }
 
+//JB note: this function does not guarantee all effects have completed when returning,
+//and does not handle all nested errors.
 async function activate(instance) {
 
     let SocialSpace = Parse.Object.extend('SocialSpace');
@@ -179,7 +193,7 @@ async function activate(instance) {
         console.log(`[activate]: user ${instance.get("adminEmail")} already exists. Updating`);
     }
 
-    user.save({}, {useMasterKey: true}).then(u => {
+    user.save({}, {useMasterKey: true}).then(async (u) => {
         console.log(`[activate]: user ${u.get("email")} saved`);
         let UserProfile = Parse.Object.extend('UserProfile');
         let userprofile = new UserProfile();
@@ -187,30 +201,43 @@ async function activate(instance) {
         userprofile.set('displayName', instance.get("adminName"));
         userprofile.set('user', u);
         userprofile.set('conference', instance);
+
+        let profileACL = new Parse.ACL();
+        profileACL.setRoleReadAccess(instance.id + "-conference", true);
+        profileACL.setWriteAccess(user, true);
+        userprofile.setACL(profileACL);
+        userprofile = await userprofile.save({}, {useMasterKey: true});
+
         userprofile.save({}, {useMasterKey: true}).then(async up => {
             console.log(`[activate]: user profile ${up.get("realName")} saved`);
 
             // Create a new profile for Clowdr Admins
             let clowdrAdminRole = await getClowdrAdminRole();
-            let adminUsers = await clowdrAdminRole.relation("users").query().find();
+            let adminUsers = await clowdrAdminRole.relation("users").query().find({useMasterKey: true});
             adminUsers.map(async clowdrU => {
                 console.log(`[activate]: creating new user profile for Clowdr Admin`);
-                let clowdrUp = new UserProfile();
-                clowdrUp.set('realName', clowdrU.get("username"));
-                clowdrUp.set('displayName', clowdrU.get("username"));
-                clowdrUp.set('user', clowdrU);
-                clowdrUp.set('conference', instance);
-                await clowdrUp.save({}, {useMasterKey: true});
-                console.log(`[activate]: new user profile for Clowdr Admin saved`);
-                let profiles = clowdrU.relation('profiles');
-                profiles.add(clowdrUp);
-                await clowdrU.save({}, {useMasterKey: true});
-                console.log(`[activate]: user Clowdr Admin saved`);
+                if (clowdrU.get("email") != user.get("email")) {
+                    let clowdrUp = new UserProfile();
+                    clowdrUp.set('realName', clowdrU.get("displayname"));
+                    clowdrUp.set('displayName', clowdrU.get("displayname"));
+                    clowdrUp.set('user', clowdrU);
+                    clowdrUp.set('conference', instance);
+                    let profileACL = new Parse.ACL();
+                    profileACL.setRoleReadAccess(instance.id + "-conference", true);
+                    profileACL.setWriteAccess(user, true);
+                    clowdrUp.setACL(profileACL);
+                    await clowdrUp.save({}, {useMasterKey: true});
+                    console.log(`[activate]: new user profile for Clowdr Admin saved`);
+                    let profiles = clowdrU.relation('profiles');
+                    profiles.add(clowdrUp);
+                    await clowdrU.save({}, {useMasterKey: true});
+                    console.log(`[activate]: user Clowdr Admin saved`);
+                }
             })
 
             let profiles = u.relation('profiles');
             profiles.add(up);
-            u.save({}, {useMasterKey: true}).then(async u2 => {
+            user.save({}, {useMasterKey: true}).then(async u2 => {
                 const roleACL = new Parse.ACL();
                 roleACL.setPublicReadAccess(true);
                 roleACL.setPublicWriteAccess(false);
@@ -236,7 +263,9 @@ async function activate(instance) {
                     console.log('Roles saved: ' + err);
                 }
 
-                let userACL = new Parse.ACL();
+                let userACL = u2.getACL();
+                if(!userACL)
+                    userACL = new Parse.ACL();
                 userACL.setPublicReadAccess(false);
                 userACL.setPublicWriteAccess(false);
                 userACL.setWriteAccess(user.id, true);
@@ -297,6 +326,18 @@ Parse.Cloud.define("init-conference-2", async (request) => {
     let conf = await confQ.get(confID, {useMasterKey: true});
 
     if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+
+
+        let config = await getConfig(conf);
+        if (!config.TWILIO_CHAT_SERVICE_SID) {
+            let newChatService = await r.twilio.chat.services.create({friendlyName: 'clowdr_chat'});
+            let tokenConfig = new InstanceConfig();
+            tokenConfig.set("value", newChatService.sid);
+            tokenConfig.set("key", "TWILIO_CHAT_SERVICE_SID");
+            tokenConfig.set("instance", conf);
+            await tokenConfig.save({},{useMasterKey: true});
+
+        }
 
         createSocialSpaces(conf);
 

@@ -3,7 +3,6 @@ import {Spin} from 'antd';
 import moment from 'moment';
 import LiveStreamingPanel from "./LiveStreamingPanel";
 import ZoomPanel from "./ZoomPanel";
-import NoMediaPanel from "./NoMediaPanel";
 import AuthUserContext from "../Session/context";
 
 class LiveStreaming extends Component {
@@ -50,11 +49,13 @@ class LiveStreaming extends Component {
         return timeA > timeB;
     }
 
-    getLiveRooms(when) {
+    getLiveRooms(when, sessions) {
+        if(!sessions)
+            sessions = this.state.ProgramSessions;
         let now = Date.now();
 
         // Live now
-        let currentSessions = this.props.sessions.filter(s => {
+        let currentSessions = sessions.filter(s => {
             var timeS = s.get("startTime") ? s.get("startTime") : new Date();
             var timeE = s.get("endTime") ? s.get("endTime") : new Date();
             if (when == "past") {
@@ -80,7 +81,7 @@ class LiveStreaming extends Component {
         let upcomingSessions = []
         let upcomingRooms = [];
         if (when == "now") {
-            upcomingSessions = this.props.sessions.filter(s => {
+            upcomingSessions = sessions.filter(s => {
                 var timeS = s.get("startTime") ? s.get("startTime") : new Date();
                 let ts_window = moment(timeS).subtract(30, 'd').toDate().getTime();
                 return (timeS > now && ts_window < now && s.get("room"));
@@ -88,7 +89,7 @@ class LiveStreaming extends Component {
 
             if (upcomingSessions.length == 0) {
                 // Widen the time window
-                upcomingSessions = this.props.sessions.filter(s => {
+                upcomingSessions = sessions.filter(s => {
                     var timeS = s.get("startTime") ? s.get("startTime") : new Date();
                     let ts_window = moment(timeS).subtract(24, 'h').toDate().getTime();
                     return (timeS > now && ts_window < now && s.get("room"));
@@ -112,6 +113,7 @@ class LiveStreaming extends Component {
     
     async componentDidMount() {
         let user = undefined;
+
         if (!this.state.loggedIn) {
             user = await this.props.auth.refreshUser();
             if (user) {
@@ -121,22 +123,17 @@ class LiveStreaming extends Component {
             }
         }
 
+        let sessions = await this.props.auth.programCache.getProgramSessions(this);
         if (this.props.auth.user) {
 
-            // Call to download program
-            if (!this.props.downloaded) 
-                this.props.onDown(this.props);
-            else {
-                let current = this.getLiveRooms(this.props.match.params.when);
-                this.setState({
-                    liveRooms: current[0],
-                    currentSessions: current[1],
-                    upcomingRooms: current[2],
-                    upcomingSessions: current[3],
-                    loading: false
-                });
-            }
-    
+            let current = this.getLiveRooms(this.props.match.params.when, sessions);
+            this.setState({
+                liveRooms: current[0],
+                currentSessions: current[1],
+                upcomingRooms: current[2],
+                upcomingSessions: current[3],
+            });
+
             // Run every 15 minutes that the user is on this page
             this.timerId = setInterval(() => {
     //            console.log('TICK!');
@@ -155,6 +152,7 @@ class LiveStreaming extends Component {
         if (this.props.match && this.props.match.params.roomName && this.props.downloaded){
             this.expandVideoByName(this.props.match.params.roomName);
         }
+        this.setState({loading: false});
     }
 
     componentWillUnmount() {
@@ -176,33 +174,6 @@ class LiveStreaming extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        //TODO
-        if (this.state.loading) {
-            if (this.state.gotRooms && this.state.gotSessions) {
-                // console.log('[Live]: Program download complete');
-                let current = this.getLiveRooms(this.props.match.params.when);
-                this.setState({
-                    rooms: this.props.rooms,
-                    sessions: this.props.sessions,
-                    liveRooms: current[0],
-                    currentSessions: current[1],
-                    upcomingRooms: current[2],
-                    upcomingSessions: current[3],
-                    loading: false
-                });
-            }
-            else {
-                // console.log('[Live]: Program still downloading...');
-                if (prevProps.rooms.length != this.props.rooms.length) {
-                    this.setState({gotRooms: true});
-                    // console.log('[Live]: got rooms');
-                }
-                if (prevProps.sessions.length != this.props.sessions.length) {
-                    this.setState({gotSessions: true});
-                    // console.log('[Live]: got sessions');
-                }
-            }
-        }
         if (prevProps.match.params.when != this.props.match.params.when) {
             if (this.state.expanded) {
                 this.toggleExpanded();
@@ -215,17 +186,14 @@ class LiveStreaming extends Component {
                 upcomingSessions: current[3]
             })
         }
-
-        if (this.props.downloaded) {
-            if(this.props.match && this.props.match.params.roomName){
-                this.expandVideoByName(this.props.match.params.roomName);
-            } else {
-                if (this.state.expanded) {
-                    this.setState({expanded: false, expanded_video: null, expandedRoomName: null})
-                }
-                this.props.auth.setSocialSpace("Lobby");
-
+        if (this.props.match && this.props.match.params.roomName) {
+            this.expandVideoByName(this.props.match.params.roomName);
+        } else {
+            if (this.state.expanded) {
+                this.setState({expanded: false, expanded_video: null, expandedRoomName: null})
             }
+            this.props.auth.setSocialSpace("Lobby");
+
         }
     }
     expandVideoByName(roomName){
@@ -246,8 +214,11 @@ class LiveStreaming extends Component {
         }
     }
     render() {
+        if(this.state.loading){
+            return <Spin />
+        }
         if (!this.state.loggedIn) {
-            return <div>You don't have access to this page.</div>
+            return <div>You don't have access to this page unless you are signed in. Please log in.</div>
         }
 
         let header = "";

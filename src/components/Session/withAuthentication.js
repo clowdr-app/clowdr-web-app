@@ -537,7 +537,8 @@ const withAuthentication = Component => {
                         // Valid conferences for this user
                         let profiles = await user.relation("profiles").query().include("conference").find();
                         let validConferences = profiles.map(p => p.get("conference"));
-                        console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
+                        console.log(validConferences)
+                        // console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
 
                         // Roles for this user
                         const roleQuery = new Parse.Query(Parse.Role);

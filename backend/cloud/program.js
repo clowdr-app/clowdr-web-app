@@ -510,17 +510,13 @@ Parse.Cloud.define("program-upload", async (request) => {
         }
         console.log('Resaving items: ' + toSave.length);
         await Parse.Object.saveAll(toSave, {useMasterKey: true});
+        console.log("Finished save-all");
     } catch(err){
         console.log(err);
     }
-    return {
-        'key': 1,
-        'sessions': Object.keys(allSessions).length,
-        'items': Object.keys(allItems).length,
-        'tracks': existingTracks.length,
-        'rooms': existingRooms.length,
-        'people': Object.keys(allPeople.length)
-    };
+    return {status: 'ok'};
+
+
 });
 
 //=======
