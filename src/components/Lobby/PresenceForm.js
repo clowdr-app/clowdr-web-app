@@ -4,7 +4,7 @@ import {withRouter} from "react-router-dom";
 import Parse from "parse";
 import {Badge, Button, Divider, Form, Input, Select, Skeleton, Spin, Tooltip} from "antd";
 
-import {isDNDColor,isAvailableColor, isLookingForConversationColor} from "./LobbyColors.js";
+import {isDNDColor,isAvailableColor, isLookingForConversationColor} from "./LobbyColors";
 
 let UserProfile = Parse.Object.extend("UserProfile");
 

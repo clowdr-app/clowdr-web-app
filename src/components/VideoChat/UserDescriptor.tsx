@@ -1,11 +1,22 @@
 import {AuthUserContext} from "../Session";
 import withLoginRequired from "../Session/withLoginRequired";
-import React from "react";
+import * as React from "react";
 import {Skeleton} from "antd";
+import { Profiler } from "inspector";
 
+interface UserDescriptorState {
+    userID: string;
+    loading: Boolean;
+    profile?: any;      /* BCP: What should this be?? */
+}
 
-class UserDescriptor extends React.Component{
-    constructor(props){
+interface UserDescriptorProps {
+    id: string;
+    authContext: any;   /* BCP: What should this be?? */
+}
+
+class UserDescriptor extends React.Component<UserDescriptorProps,UserDescriptorState>{
+    constructor(props: any) {
         super(props);
         this.state = {userID: props.id, loading: true};
     }
@@ -23,11 +34,10 @@ class UserDescriptor extends React.Component{
         </div>
     }
 }
-const AuthConsumer = (props) => (
+const AuthConsumer = (props: UserDescriptorProps) => (
     <AuthUserContext.Consumer>
         {value => (
-            <UserDescriptor {...props} authContext={value}
-            />
+            <UserDescriptor {...props} authContext={value} />
         )}
     </AuthUserContext.Consumer>
 );

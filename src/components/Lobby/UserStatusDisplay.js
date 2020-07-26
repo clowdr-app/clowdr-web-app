@@ -3,7 +3,7 @@ import {Avatar, Badge, Button, Popover, Skeleton, Tag, Tooltip} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
 
-import {isAvailableColor, isDNDColor, isDNDNameColor, isLookingForConversationColor} from "./LobbyColors.js";
+import {isAvailableColor, isDNDColor, isDNDNameColor, isLookingForConversationColor} from "./LobbyColors";
 import ReactMarkdown from "react-markdown";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
 import ProgramPersonAuthorship from "../Program/ProgramPersonAuthorship";

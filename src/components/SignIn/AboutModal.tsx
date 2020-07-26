@@ -1,11 +1,27 @@
 import {AuthUserContext} from "../Session";
-import {withRouter} from "react-router-dom";
-import React from "react";
-import {About, Alert, Button, Modal, Result, Typography} from "antd";
+import {withRouter, RouteComponentProps} from "react-router-dom";
+import * as React from "react";
+import {Alert, Button, Modal, Result, Typography} from "antd";
 import { SmileOutlined } from '@ant-design/icons';
 
-class WelcomePortal extends React.Component{
-    constructor(props) {
+/*
+interface WelcomePortalProps {
+    auth?: any;
+}
+*/
+
+/* A (not quite working) suggestion from VSCode
+   PropsWithChildren<RouteComponentProps<any, StaticContext, PoorMansUnknown>> */
+/* BCP: What should all the 'any's be? */
+type WelcomePortalProps = React.PropsWithChildren<any>
+
+interface WelcomePortalState {
+    visible: any;  
+    welcomeText?: any;
+}
+
+class WelcomePortal extends React.Component<WelcomePortalProps,WelcomePortalState>{
+    constructor(props: WelcomePortalProps) {
         super(props);
         this.state={visible: false};
     }
@@ -36,7 +52,7 @@ class WelcomePortal extends React.Component{
         let codeOfConductWarning = <span>This is a social platform to engage with your colleagues, and while we have a very light hand for moderating
             content, violators of the <a href="https://www.acm.org/special-interest-groups/volunteer-resources/officers-manual/policy-against-discrimination-and-harassment" target="_blank">
                 ACM Policy Against Discrimination and Harassment</a> risk being permanently banned from this platform.</span>
-        return <Modal zIndex="300"
+        return <Modal zIndex={300}
                       // title="Welcome to CLOWDR"
                       onCancel={()=>{this.setState({visible: false})}}
                       visible={this.state.visible}
@@ -63,7 +79,7 @@ class WelcomePortal extends React.Component{
         </Modal>
     }
 }
-const AuthConsumer = (props) => (
+const AuthConsumer = (props: WelcomePortalProps) => (
     <AuthUserContext.Consumer>
         {value => (
             <WelcomePortal {...props} auth={value} />

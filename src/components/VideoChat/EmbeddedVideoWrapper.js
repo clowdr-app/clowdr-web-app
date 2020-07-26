@@ -396,13 +396,15 @@ function ParticipantInfo({participant, onClick, isSelected, children}) {
 }
 
 function ParticipantTracks({
-                               participant : Participant,
+                               participant,
                                disableAudio,
                                enableScreenShare,
                                videoPriority,
                            }) {
     const {room} = useVideoContext();
+    // eslint-disable-next-line no-undef
     const publications = usePublications(participant);
+    // eslint-disable-next-line no-undef
     const isLocal = participant === room.localParticipant;
 
     let filteredPublications;
@@ -415,7 +417,7 @@ function ParticipantTracks({
 
     return (
         <>
-            {filteredPublications.map(publication : Boolean => (
+            {filteredPublications.map(publication => ( 
                 <Publication
                     key={publication.kind}
                     publication={publication}
