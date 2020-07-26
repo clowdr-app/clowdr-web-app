@@ -9,7 +9,8 @@ import Lobby from "./components/Lobby"
 import SignUp from "./components/SignUp"
 import SignIn from "./components/SignIn"
 import AccountFromToken from "./components/Account/AccountFromToken"
-import {Button, Layout, Select, Spin, Tooltip, Typography} from 'antd';
+import {Button, Layout, Select, Spin, Tooltip, Typography, Upload} from 'antd';
+import {UploadOutlined} from '@ant-design/icons';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
@@ -34,6 +35,7 @@ import VideoChat from "./components/VideoChat";
 //
 import Registrations from "./components/Admin/Registrations";
 import Configuration from "./components/Admin/Config";
+import Clowdr from "./components/Admin/Clowdr";
 import ProgramSummary from "./components/Admin/Program/ProgramSummary";
 import Rooms from "./components/Admin/Program/Rooms";
 import Tracks from "./components/Admin/Program/Tracks";
@@ -69,7 +71,8 @@ class App extends Component {
             conference: null,
             showingLanding: this.props.authContext.showingLanding,
             socialCollapsed: false,
-            chatCollapsed: false
+            chatCollapsed: false,
+            dirty: false
         }
 
         if(window.location.pathname.startsWith("/fromSlack") &&!this.props.authContext.user){
@@ -77,10 +80,49 @@ class App extends Component {
         }
     }
 
+    dirty() {
+        this.setState({dirty: !this.state.dirty})
+    }
+
     isSlackAuthOnly() {
         if(!this.state.conference)
             return true;
         return !this.state.conference.get("isIncludeAllFeatures");
+    }
+
+    onLogoUpload(file) {
+        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+        if (!isJpgOrPng) {
+            message.error('You can only upload JPG/PNG file!');
+            return false;
+        }
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isLt2M) {
+            message.error('Image must be smaller than 2MB!');
+            return false;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const data = {
+                content: reader.result,
+                conferenceId: this.props.authContext.currentConference.id
+            };
+
+            Parse.Cloud.run("logo-upload", data).then(async (res) => {
+                message.info("Success! Your logo has been uploaded.");
+                let updatedItemQ = new Parse.Query("ClowdrInstance");
+                let updatedItem = await updatedItemQ.get(this.props.authContext.currentConference.id);
+
+                this.props.authContext.currentConference.set("headerImage", updatedItem.get("headerImage")); //well that is gross
+                console.log(res);
+                console.log('[App]: Logo uploaded successfully');
+                this.dirty();
+            });
+        }
+        reader.readAsDataURL(file);
+        return false;
+
     }
 
     siteHeader() {
@@ -116,20 +158,40 @@ class App extends Component {
             }
             else
                 confSwitcher= <span style={{float: "right"}}>{clowdrActionButtons}</span>;
-            if (headerImage)
-                return <Header className="site-layout-background" style={{height: "90px", clear: "both"}}>
-                    <img src={headerImage.url()} className="App-logo" height="90"
-                         alt="logo"/><span style={{paddingLeft: "20px"}}><Typography.Title
-                    style={{display: "inherit"}}>{headerText}</Typography.Title>{confSwitcher}</span>
-                </Header>
+
+            if (headerImage) {
+                let logo = ""
+                if (this.props.authContext.user && this.props.authContext.isAdmin) {
+                    logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
+                               <img src={headerImage.url()} className="App-logo" height="75" alt="logo" title="Click to replace logo"/> 
+                           </Upload>
+                }
+                else
+                    logo = <img src={headerImage.url()} className="App-logo" height="75" alt="logo"/> 
+    
+                return <table className="site-layout-background" style={{height: "75px", clear: "both"}}>
+                        <tbody><tr>
+                        <td>{logo}</td>
+                        <td><Typography.Title style={{display: "inherit"}}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
+                        </tr></tbody></table>
+            }
             else if (headerText) {
-                return <Header className="site-layout-background" style={{height: "140px", clear: "both"}}>
-                    <Typography.Title>{headerText}</Typography.Title>{confSwitcher}
-                </Header>
+                let logo = "";
+                if (this.props.authContext.user && this.props.authContext.isAdmin) {
+                    logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
+                                    <Button type="primary" size="small" title="Upload conference logo">
+                                        <UploadOutlined />
+                                    </Button>
+                            </Upload>
+                }
+                return <table className="site-layout-background" style={{height: "75px", clear: "both"}}>
+                        <tbody><tr>
+                            <td>{logo}</td><td><Typography.Title style={{display: 'inherit'}}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
+                        </tr></tbody></table>
             } else
-                return <Header className="site-layout-background" style={{clear:'both' }}>
+                return <div className="site-layout-background" style={{clear:'both' }}>
                    <div style={{float:'left'}}><Typography.Title>
-                       {this.state.conference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</Header>
+                       {this.state.conference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</div>
         }
     }
 
@@ -222,6 +284,7 @@ class App extends Component {
             {/*<Route exact path='/admin/schedule' component={withAuthentication(ScheduleList)} />*/}
             {/*<Route exact path='/admin/users' component={withAuthentication(UsersList)} />*/}
             {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
+            <Route exact path='/admin/clowdr' component={Clowdr}/>
             <Route exact path='/admin/configuration' component={Configuration}/>
             <Route exact path='/admin/registrations' component={Registrations}/>
             <Route exact path='/admin/program/rooms' component={Rooms}/>

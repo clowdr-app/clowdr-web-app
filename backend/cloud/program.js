@@ -85,6 +85,8 @@ Parse.Cloud.define("update-obj", async (request) => {
         }
 
         console.log('[update obj]: successfully updated ' + obj.id);
+        return {status: "OK", "id": obj.id};
+
     }
     else
         throw "Unable to update obj: user not allowed to update objects";
@@ -108,6 +110,7 @@ Parse.Cloud.define("delete-obj", async (request) => {
         }
 
         console.log('[delete obj]: successfully deleted ' + id);
+        return {status: "OK", "id": obj.id};
     }
     else
         throw "Unable to delete obj: user not allowed to delete objects";
@@ -565,7 +568,7 @@ async function createBreakoutRoomForProgramItem(programItem){
     await programItem.save({},{useMasterKey: true})
 }
 
-Parse.Cloud.beforeSave("ProgramItem", async (request) => {
+Parse.Cloud.afterSave("ProgramItem", async (request) => {
     //Check to make sure that we don't need to make a video room for this
     let programItem = request.object;
     if(programItem.dirty("authors")){

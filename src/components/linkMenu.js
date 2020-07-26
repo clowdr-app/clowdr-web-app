@@ -15,14 +15,17 @@ import {
     DesktopOutlined,
     IdcardOutlined,
     HomeOutlined,
+    PlusSquareTwoTone,
     ReadOutlined,
     SmileOutlined,
     ScheduleOutlined,
     SlidersOutlined,
     SolutionOutlined,
+    SwitcherTwoTone,
     SyncOutlined,
     TeamOutlined,
     ToolOutlined,
+    ToolTwoTone,
     UnorderedListOutlined,
     UserOutlined,
     VideoCameraAddOutlined,
@@ -59,6 +62,10 @@ class LinkMenu extends React.Component {
         let adminTools = "";
         if (this.props.authContext.user) {
             if(this.props.authContext.isAdmin) {
+                let newConfOption = ""
+                if (this.props.authContext.isClowdrAdmin)
+                    newConfOption = <Menu.Item key="/admin/clowdr" icon={<ToolTwoTone twoToneColor="red" />}><NavLink to="/admin/clowdr">CLOWDR</NavLink></Menu.Item>
+    
                 adminTools = <SubMenu key="/admin" title={<span><ToolOutlined/><span>Administration</span></span>}>
                     <Menu.Item key='/admin/program/rooms' icon={<BankOutlined/>}><NavLink to="/admin/program/rooms">
                         Virtual Rooms</NavLink></Menu.Item>
@@ -83,8 +90,11 @@ class LinkMenu extends React.Component {
 
                     <Menu.Item key='/admin/configuration' icon={<SlidersOutlined/>}><NavLink to="/admin/configuration">
                         Conference Configuration</NavLink></Menu.Item>
+
+                    {newConfOption}
                 </SubMenu>
             }
+
             userTools =
                 [
                     <Menu.Item key='/program' icon={<ScheduleOutlined />}><NavLink to="/program">Program</NavLink></Menu.Item>,

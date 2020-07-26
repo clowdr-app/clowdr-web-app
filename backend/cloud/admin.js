@@ -148,7 +148,146 @@ async function userInRoles(user, allowedRoles) {
     const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
     return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
 }
- 
+
+async function activate(instance) {
+
+    let SocialSpace = Parse.Object.extend('SocialSpace');
+    let ss = new SocialSpace();
+    ss.set('conference', instance);
+    ss.set('name', 'Lobby');
+    ss.set('isGlobal', true);
+    try {
+        await ss.save({}, {useMasterKey: true})
+        console.log('Lobby created successfully');
+    } catch(err) {
+         console.log('SocialSpace: ' + err)
+    };
+
+    // Check if the user already exists
+    let userQ = new Parse.Query(Parse.User);
+    userQ.equalTo("email", instance.get("adminEmail"));
+    let user = await userQ.first({useMasterKey: true});
+    if (!user) {
+        console.log("[activate]: user not found. Creating it " + instance.get("adminEmail"));
+        user = new Parse.User();
+        user.set('username', instance.get("adminName"));
+        user.set('password', 'admin');
+        user.set('email', instance.get("adminEmail"))
+        user.set('passwordSet', true);
+        user = await user.signUp({}, {useMasterKey: true});
+    } else {
+        console.log(`[activate]: user ${instance.get("adminEmail")} already exists. Updating`);
+    }
+
+    user.save({}, {useMasterKey: true}).then(u => {
+        console.log(`[activate]: user ${u.get("email")} saved`);
+        let UserProfile = Parse.Object.extend('UserProfile');
+        let userprofile = new UserProfile();
+        userprofile.set('realName', instance.get("adminName"));
+        userprofile.set('displayName', instance.get("adminName"));
+        userprofile.set('user', u);
+        userprofile.set('conference', instance);
+        userprofile.save({}, {useMasterKey: true}).then(async up => {
+            console.log(`[activate]: user profile ${up.get("realName")} saved`);
+
+            // Create a new profile for Clowdr Admins
+            let clowdrAdminRole = await getClowdrAdminRole();
+            let adminUsers = await clowdrAdminRole.relation("users").query().find();
+            adminUsers.map(async clowdrU => {
+                console.log(`[activate]: creating new user profile for Clowdr Admin`);
+                let clowdrUp = new UserProfile();
+                clowdrUp.set('realName', clowdrU.get("username"));
+                clowdrUp.set('displayName', clowdrU.get("username"));
+                clowdrUp.set('user', clowdrU);
+                clowdrUp.set('conference', instance);
+                await clowdrUp.save({}, {useMasterKey: true});
+                console.log(`[activate]: new user profile for Clowdr Admin saved`);
+                let profiles = clowdrU.relation('profiles');
+                profiles.add(clowdrUp);
+                await clowdrU.save({}, {useMasterKey: true});
+                console.log(`[activate]: user Clowdr Admin saved`);
+            })
+
+            let profiles = u.relation('profiles');
+            profiles.add(up);
+            u.save({}, {useMasterKey: true}).then(async u2 => {
+                const roleACL = new Parse.ACL();
+                roleACL.setPublicReadAccess(true);
+                roleACL.setPublicWriteAccess(false);
+
+                let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference']
+                if (instance.get("adminName") == "Clowdr Admin") {
+                    roleNames.push("ClowdrSysAdmin");
+                }
+                let roles = [];
+
+                roleNames.map(r => {
+                    let role = new Parse.Role(r, roleACL);
+                    let users = role.relation('users');
+                    users.add(u2);
+                    roles.push(role)    
+                })
+                        
+                try {
+                    await Parse.Object.saveAll(roles, {useMasterKey: true});
+                    console.log('[activate]: Roles created successfully');
+
+                } catch(err) {
+                    console.log('Roles saved: ' + err);
+                }
+
+                let userACL = new Parse.ACL();
+                userACL.setPublicReadAccess(false);
+                userACL.setPublicWriteAccess(false);
+                userACL.setWriteAccess(user.id, true);
+                userACL.setReadAccess(user.id, true);
+                userACL.setRoleReadAccess(instance.id + "-manager", true);
+                userACL.setRoleReadAccess("ClowdrSysAdmin", true);
+                u2.setACL(userACL);
+                await u2.save({}, {useMasterKey: true});
+                console.log('User ACL saved successfully');
+
+            }); 
+        });    
+    });
+}
+
+Parse.Cloud.define("activate-clowdr-instance", async (request) => {
+
+    let confID = request.params.id;
+    console.log('[init]: conference ' + confID);
+
+    let confQ = new Parse.Query(ClowdrInstance);
+    let conf = await confQ.get(confID);
+
+    if (!conf)
+        throw "Invalid conference"
+
+    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+        await activate(conf);
+
+        conf.set("isInitialized", true);
+        conf.set('headerText', conf.get("conferenceName"));
+        conf.set("landingPage", `<h2>${conf.get("conferenceName")} is using CLOWDR!</h2>`);
+
+        // Finally, set an ACL on ClowdrInstance
+        roleACL = new Parse.ACL();
+        roleACL.setPublicReadAccess(true);
+        roleACL.setPublicWriteAccess(false);
+        roleACL.setRoleReadAccess(conf.id + "-conference", true);
+        roleACL.setRoleWriteAccess(conf.id + "-admin", true);
+        roleACL.setRoleWriteAccess("ClowdrSysAdmin", true);
+        conf.setACL(roleACL);
+
+        await conf.save({}, {useMasterKey: true});
+        
+        return {status: "OK", "id": conf.id};
+
+    } else {
+        throw "No permission to activate conference"
+    }
+})
+
 Parse.Cloud.define("init-conference-2", async (request) => {
 
     let confID = request.params.conference;
@@ -188,30 +327,86 @@ Parse.Cloud.define("init-conference-2", async (request) => {
     }
 })
 
-Parse.Cloud.define("save-instance", async (request) => {
-    let confID = request.params.confID;
-    console.log('[save instance]: request to save ' + confID);
+Parse.Cloud.define("create-clowdr-instance", async (request) => {
+    let data = request.params;
+    console.log(`[create clowdr]: request to create instance`);
 
-    let confQ = new Parse.Query(ClowdrInstance);
-    let conf = await confQ.get(confID);
-    if (!conf) {
-        throw "Conference " + confID + ": " + err
-    }
-    // Act on behalf of user
-    let user = request.user;
-    let data = request.params.instanceData;
+    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+        console.log('[create clowdr]: user has permission to create instance');
 
-    const roles = await new Parse.Query(Parse.Role).equalTo('users', request.user).find();
-    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
-        console.log('[save instance]: user has permission to save');
-        let res = await conf.save(data, {useMasterKey: true});
+        let Clazz = Parse.Object.extend("ClowdrInstance");
+        let obj = new Clazz();
+        obj.isInitialized = false;
+        let res = await obj.save(data, {useMasterKey: true});
+
         if (!res) {
-            throw ("Unable to save conference: " + err);
+            throw ("Unable to create instance");
         }
 
-        console.log('[save instance]: successfully saved ' + conf.id);
+        console.log('[create instance]: successfully created ' + res.id);
+        return {status: "OK", "id": obj.id};
+    }
+    else
+        throw "Unable to create instance: user not allowed to create new instances";
+});
+
+
+Parse.Cloud.define("delete-clowdr-instance", async (request) => {
+    let id = request.params.id;
+    console.log(`[delete instance]: request to delete insstance ${id}`);
+
+    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+        console.log('[delete instance]: user has permission to delete instance');
+        let obj = await new Parse.Query(ClowdrInstance).get(id);
+        if (obj) {
+            await obj.destroy({useMasterKey: true});
+        }
+        else {
+            throw (`Unable to delete instance: ${id} not found`);
+        }
+
+        console.log('[delete instance]: successfully deleted ' + id);
+    }
+    else
+        throw "Unable to delete instance: user not allowed to delete instances";
+});
+
+Parse.Cloud.define("update-clowdr-instance", async (request) => {
+    let id = request.params.id;
+    let data = request.params;
+    
+    console.log('[update instance]: request to update ' + id + " " + JSON.stringify(data));
+
+    let confQ = new Parse.Query(ClowdrInstance);
+    let conf = await confQ.get(id, {useMasterKey: true});
+    if (!conf) {
+        throw "Conference " + id + ": " + err
+    }
+
+    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+        console.log('[update instance]: user has permission to save');
+        let res = await conf.save(data, {useMasterKey: true});
+        if (!res) {
+            throw ("Unable to update conference: " + err);
+        }
+
+        console.log('[update instance]: successfully saved ' + conf.id);
     }
     else
         throw "Unable to save conference: user not allowed to change instance";
 });
 
+Parse.Cloud.define("logo-upload", async (request) => {
+    console.log('Request to upload a logo image for ' + request.params.conferenceId);
+    const imgData = request.params.content;
+    const conferenceId = request.params.conferenceId;
+
+    var Instance = Parse.Object.extend("ClowdrInstance");
+    var query = new Parse.Query(Instance);
+    let conf = await query.get(conferenceId);
+    let file = new Parse.File(conf.id + '-logo', {base64: imgData});
+    await file.save({useMasterKey: true});
+    conf.set("headerImage", file);
+    await conf.save({}, {useMasterKey: true});
+    return {status: "OK", "file": file.url()};
+});
