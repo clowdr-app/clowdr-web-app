@@ -1,5 +1,3 @@
-// @ts-check
-
 import {createStyles, makeStyles} from '@material-ui/core/styles';
 import clsx from 'clsx';
 
