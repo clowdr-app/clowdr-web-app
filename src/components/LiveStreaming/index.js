@@ -149,7 +149,7 @@ class LiveStreaming extends Component {
             }, 60000*15);
     
         }
-        if (this.props.match && this.props.match.params.roomName && this.props.downloaded){
+        if (this.props.match && this.props.match.params.roomName){
             this.expandVideoByName(this.props.match.params.roomName);
         }
         this.setState({loading: false});
@@ -262,69 +262,64 @@ class LiveStreaming extends Component {
             header = <h3>Past live sessions:</h3>
         }
 
-        if (this.props.downloaded) {
-            let rooms = this.state.liveRooms;
-            if(this.state.expanded){
-                rooms = rooms.concat(this.state.upcomingRooms).filter(r=>r.id == this.state.expanded_video.id);
-                if(rooms.length > 1)
-                    rooms = [rooms[0]];
-            }
-            return <div>{header}
-                <div className={"space-align-container"}>
-                    {rooms.map((room) => {
-                        
-                        let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
-                        if(mySessions.length == 0)
-                            mySessions = this.state.upcomingSessions.filter(s=>s.get("room").id === room.id); //TODO why are future/current separate datastructures?
-                        let qa = "";
-                        let width = "100%";
-                        if (!this.state.expanded) width = 320;
-                        // if (this.state.expanded && room.id == this.state.expanded_video.id) {
-                        //     if (this.props.match.params.when =="now") {
-                        //         const q_url = this.state.expanded_video.get("qa");
-                        //         qa = q_url ? <table><tbody><tr><td style={{"textAlign":"center"}}><strong>Live questions to the speakers</strong></td></tr>
-                        //             <tr><td><iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> </td></tr>
-                        //             </tbody></table> : "";
-                        //     }
-                        // }
-                        
-                        if (!room.get("src1")) {
-                            // return <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                            //     <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
-                        // </div>
-                            return ""
-
-                        }
-
-                        // if (room.get("src1").includes("Zoom")) {
-                        //     return <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                        //         <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
-                        //     </div>
-                        // }
-
-                        if (this.state.expanded && room.id !== this.state.expanded_video.id)
-                        {
-                            return ""
-                        }
-                        else
-                            return <React.Fragment key={room.id}>
-                                <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                    <LiveStreamingPanel
-                                        playing={this.state.expanded}
-                                        auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when}  onExpand={this.toggleExpanded.bind(this,
-                                    room)}/>
-                                </div>
-                                <div className={"space-align-block"}>{qa}</div>   
-                                </React.Fragment> 
-                            
-                    })}
-                </div> 
-                {upcoming}
-            </div>
+        let rooms = this.state.liveRooms;
+        if (this.state.expanded) {
+            rooms = rooms.concat(this.state.upcomingRooms).filter(r => r.id == this.state.expanded_video.id);
+            if (rooms.length > 1)
+                rooms = [rooms[0]];
         }
-        return (
-            <Spin tip="Loading...">
-            </Spin>)
+        return <div>{header}
+            <div className={"space-align-container"}>
+                {rooms.map((room) => {
+
+                    let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
+                    if (mySessions.length == 0)
+                        mySessions = this.state.upcomingSessions.filter(s => s.get("room").id === room.id); //TODO why are future/current separate datastructures?
+                    let qa = "";
+                    let width = "100%";
+                    if (!this.state.expanded) width = 320;
+                    // if (this.state.expanded && room.id == this.state.expanded_video.id) {
+                    //     if (this.props.match.params.when =="now") {
+                    //         const q_url = this.state.expanded_video.get("qa");
+                    //         qa = q_url ? <table><tbody><tr><td style={{"textAlign":"center"}}><strong>Live questions to the speakers</strong></td></tr>
+                    //             <tr><td><iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> </td></tr>
+                    //             </tbody></table> : "";
+                    //     }
+                    // }
+
+                    if (!room.get("src1")) {
+                        // return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                        //     <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
+                        // </div>
+                        return ""
+
+                    }
+
+                    // if (room.get("src1").includes("Zoom")) {
+                    //     return <div className={"space-align-block"} key={room.id} style={{width:width}}>
+                    //         <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
+                    //     </div>
+                    // }
+
+                    if (this.state.expanded && room.id !== this.state.expanded_video.id) {
+                        return ""
+                    } else
+                        return <React.Fragment key={room.id}>
+                            <div className={"space-align-block"} key={room.id} style={{width: width}}>
+                                <LiveStreamingPanel
+                                    playing={this.state.expanded}
+                                    auth={this.props.auth} expanded={this.state.expanded} video={room}
+                                    mysessions={mySessions} when={this.props.match.params.when}
+                                    onExpand={this.toggleExpanded.bind(this,
+                                        room)}/>
+                            </div>
+                            <div className={"space-align-block"}>{qa}</div>
+                        </React.Fragment>
+
+                })}
+            </div>
+            {upcoming}
+        </div>
     }
 }
 

@@ -346,6 +346,7 @@ class ProgramItems extends React.Component {
                 clazz: "ProgramItem",
                 conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
                 title: "Please input the title",
+                confKey: "items/item-"+new Date().getTime(),
                 abstract: "Please input the abstract",
                 authors: []
             }

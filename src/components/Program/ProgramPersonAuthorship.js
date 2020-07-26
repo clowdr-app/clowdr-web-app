@@ -21,9 +21,10 @@ export default class ProgramPersonAuthorship extends React.Component{
             return <Skeleton.Input />
         }
         let items = [];
-        for(let item of this.state.ProgramPerson.get("programItems")){
-            items.push(<li key={item.id}><ProgramItemDisplay id={item.id} auth={this.props.auth} /></li>)
-        }
+        if (this.state.ProgramPerson.get("programItems"))
+            for (let item of this.state.ProgramPerson.get("programItems")) {
+                items.push(<li key={item.id}><ProgramItemDisplay id={item.id} auth={this.props.auth}/></li>)
+            }
         if(items.length == 0)
             items = "(No items)";
         return <div>
