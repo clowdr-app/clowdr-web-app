@@ -568,7 +568,7 @@ async function createBreakoutRoomForProgramItem(programItem){
     await programItem.save({},{useMasterKey: true})
 }
 
-Parse.Cloud.beforeSave("ProgramItem", async (request) => {
+Parse.Cloud.afterSave("ProgramItem", async (request) => {
     //Check to make sure that we don't need to make a video room for this
     let programItem = request.object;
     if(programItem.dirty("authors")){
