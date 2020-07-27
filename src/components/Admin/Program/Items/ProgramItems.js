@@ -65,7 +65,7 @@ class ProgramItems extends React.Component {
                         options={this.state.ProgramPersons.sort((a,b)=>(
                             a.get('name').localeCompare(b.get('name'))
                         )).map(p=>({value: p.id, label:p.get('name')}))}
-                        mode="multiple"
+                        mode="tags"
                         />
                 }
                 else {
@@ -163,17 +163,35 @@ class ProgramItems extends React.Component {
                     let item = newData.find(item => item.id === id);
 
                     if (item) {
-                        console.log(row.track + " -- " + this.state.ProgramTracks)
                         let newTrack = this.state.ProgramTracks.find(t => t.id === row.track);
                         if (newTrack) {
                             item.set("track", newTrack)
                         }
                         let newAuthors = [];
-                        row.authors.map(a => {
-                            const newAuthor = this.state.ProgramPersons.find(p => p.id === a);
+                        for(let a of row.authors) {
+                            let newAuthor = this.state.ProgramPersons.find(p => p.id === a);
+                            if(!newAuthor){
+                                //Create a new program person
+                                let data = {
+                                    clazz: "ProgramPerson",
+                                    conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+                                    confKey: "authors/author-"+new Date().getTime(),
+                                    name: a
+                                }
+                                let res = await Parse.Cloud.run("create-obj", data)
+                                    .catch(err => {
+                                        this.setState({alert: "add error"})
+                                        console.log("[Admin/Persons]: Unable to create: " + err)
+                                    })
+                                let programperson = Parse.Object.extend("ProgramPerson");
+                                newAuthor = new programperson();
+                                newAuthor.id = res.id;
+                                newAuthor.set("name", a);
+                            }
                             newAuthors.push(newAuthor);
-                        })
+                        }
 
+                        console.log(newAuthors)
                         item.set("title", row.title);
                         item.set("authors", newAuthors);
                         item.set("abstract", row.abstract);

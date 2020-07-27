@@ -54,6 +54,7 @@ import {withRouter} from "react-router";
 import BottomChat from "./components/SocialTab/BottomChat";
 import ProgramItem from "./components/ProgramItem";
 import UserStatusDisplay from "./components/Lobby/UserStatusDisplay";
+import UsersList from "./components/Admin/Users";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -282,7 +283,7 @@ class App extends Component {
             <Route exact path="/admin" component={(props)=><SignIn {...props} dontBounce={true}/>} />
 
             {/*<Route exact path='/admin/schedule' component={withAuthentication(ScheduleList)} />*/}
-            {/*<Route exact path='/admin/users' component={withAuthentication(UsersList)} />*/}
+            <Route exact path='/admin/users' component={UsersList} />
             {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
             <Route exact path='/admin/clowdr' component={Clowdr}/>
             <Route exact path='/admin/configuration' component={Configuration}/>

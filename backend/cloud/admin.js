@@ -257,6 +257,15 @@ async function activate(instance) {
                         
                 try {
                     await Parse.Object.saveAll(roles, {useMasterKey: true});
+                    for(let role of roles){
+                        let acl = role.getACL();
+                        acl.setWriteAccess(instance.id+"-admin", true);
+                        if(!role.get("name").contains("admin")){
+                            role.relation("groups").add(instance.id+"-admin");
+                        }
+                        role.setACL(acl);
+                    }
+                    await Parse.Object.saveAll(roles, {useMasterKey: true});
                     console.log('[activate]: Roles created successfully');
 
                 } catch(err) {
@@ -450,4 +459,65 @@ Parse.Cloud.define("logo-upload", async (request) => {
     conf.set("headerImage", file);
     await conf.save({}, {useMasterKey: true});
     return {status: "OK", "file": file.url()};
+});
+Parse.Cloud.define("admin-userProfiles-by-role", async (request) => {
+    let id = request.params.id;
+    let roleName = request.params.roleName;
+
+    let confQ = new Parse.Query(ClowdrInstance);
+    let conf = await confQ.get(id, {useMasterKey: true});
+    if (!conf) {
+        throw "Conference " + id + ": Not valid";
+    }
+
+    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+        let roleQuery = new Parse.Query(Parse.Role);
+        roleQuery.equalTo("name",id+"-"+roleName);
+        console.log(id+"-"+roleName)
+        let role = await roleQuery.first({useMasterKey: true});
+        console.log(role)
+        let usersQ = role.getUsers().query();
+        let profileQ = new Parse.Query('UserProfile');
+        profileQ.equalTo("conference", conf);
+        profileQ.matchesQuery("user", usersQ);
+        profileQ.limit(10000);
+        let profiles = await profileQ.find({useMasterKey: true});
+        return profiles.map(p=>p.id);
+    }
+    else
+        throw "Unable to get roles for conference: user not allowed to change instance";
+
+});
+Parse.Cloud.define("admin-role", async (request) => {
+    let id = request.params.id;
+    let roleName = request.params.roleName;
+    let userProfileId = request.params.userProfileId;
+    let shouldHaveRole = request.params.shouldHaveRole;
+
+    let confQ = new Parse.Query(ClowdrInstance);
+    let conf = await confQ.get(id, {useMasterKey: true});
+    if (!conf) {
+        throw "Conference " + id + ": Not valid";
+    }
+
+    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+        let roleQuery = new Parse.Query(Parse.Role);
+        roleQuery.equalTo("name",id+"-"+roleName);
+        let profileQ = new Parse.Query('UserProfile');
+        let [role,profile] = await Promise.all([
+            roleQuery.first({useMasterKey: true}),
+            profileQ.get(userProfileId, {useMasterKey: true})
+        ]);
+        if(profile.get("conference").id == id){
+            if(shouldHaveRole){
+                role.getUsers().add(profile.get("user"));
+            }else{
+                role.getUsers().remove(profile.get("user"));
+            }
+            await role.save({},{useMasterKey: true});
+        }
+    }
+    else
+        throw "Unable to get roles for conference: user not allowed to change instance";
+
 });
