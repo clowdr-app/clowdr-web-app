@@ -3,7 +3,7 @@ import {Button, Form, Input, Popconfirm, Select, Space, Spin, Table, Alert} from
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
-import {DeleteOutlined, EditOutlined} from '@ant-design/icons';
+import {DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -61,7 +61,6 @@ class ProgramItems extends React.Component {
                     return <Select
                         placeholder="Choose authors"
                         optionFilterProp="label"
-                        style={{ width: 400 }}
                         options={this.state.ProgramPersons.sort((a,b)=>(
                             a.get('name').localeCompare(b.get('name'))
                         )).map(p=>({value: p.id, label:p.get('name')}))}
@@ -270,10 +269,10 @@ class ProgramItems extends React.Component {
                                         marginRight: 8,
                                     }}
                                 >
-                                    Save
+                                    {<SaveTwoTone />}
                                 </a>
                                 <Popconfirm title="Sure to cancel?" onConfirm={onCancel}>
-                                    <a>Cancel</a>
+                                    <a>{<CloseCircleTwoTone />}</a>
                                 </Popconfirm>
                             </span>
                             ) : (
