@@ -22,6 +22,9 @@ export interface AuthContext {
     roles: Array<Role>;
     programCache: ProgramCache;
     helpers: any;
+    getChatClient: any;  // should be a function (higher-order?)
+    getLiveChannel: any;
+    getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
 }
 
 /*

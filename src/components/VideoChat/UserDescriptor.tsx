@@ -13,7 +13,7 @@ interface UserDescriptorState {
 
 interface UserDescriptorProps {
     id: string;
-    authContext: AuthContext | null;   /* BCP: What should this be?? */
+    authContext: AuthContext | null;   
 }
 
 class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptorState>{
