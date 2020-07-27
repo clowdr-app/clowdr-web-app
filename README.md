@@ -20,6 +20,11 @@ Use npm to install (or upgrade) all dependencies after cloning.
 $ npm install
 ```
 
+BCP: And maybe we need this:
+```bash
+$ npm install --save typescript @types/node @types/react @types/react-dom @types/jest @types/parse
+```
+
 ### Set Up a Backend
 
 Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/)
