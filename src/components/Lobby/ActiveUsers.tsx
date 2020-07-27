@@ -85,7 +85,7 @@ class ActiveUsers extends React.Component<ActiveUsersProps, ActiveUsersState> {
                                 this.cleanupChannel(this.channel);
                             }
                             this.channel = channel;
-                            channel.getUserDescriptors().then((users: UserDesc[]) => {
+                            channel.getUserDescriptors().then((users: {items:UserDesc[]}) => {
                                 let formattedUsers: { id: any; name: any; initials: string; online: any; attributes: any; notifiable: any; }[] = [];
                                 users.items.forEach((user: UserDesc) => {
                                     let authorName = user.identity.substring(1 + user.identity.indexOf(":"));
