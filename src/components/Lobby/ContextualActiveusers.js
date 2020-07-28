@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import * as React from "react";
 import {AuthUserContext} from "../Session";
 import {Collapse, Divider, Menu, Popconfirm, Select, Skeleton, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
@@ -10,7 +10,7 @@ import PresenceForm from "./PresenceForm";
 import CollapsedChatDisplay from "../Chat/CollapsedChatDisplay";
 
 
-class ContextualActiveUsers extends Component {
+class ContextualActiveUsers extends React.Component {
 
     constructor(props) {
         super(props);

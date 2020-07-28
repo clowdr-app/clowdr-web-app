@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import {
     Avatar,
     Button,
@@ -17,19 +17,38 @@ import {
     Tag,
     Checkbox
 } from "antd";
+import Firebase from '../../Firebase/firebase';
+import { CheckboxChangeEvent } from 'antd/lib/checkbox';
 
-const {TabPane} = Tabs;
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
+interface EditUserProps {
+    firebase: Firebase;
+    user: any;  // TS: Refine it!
+    match: {params: {userID: string}};     // TS: Guessing.  And this type should be named somewhere!
+}
 
-export default class EditUser extends React.Component {
-    constructor(props) {
+interface EditUserState {
+    loading: boolean,
+    username?: string;
+    email?: string;
+    affiliation?: string;
+    updating?: boolean;
+    passwordOne?: string,
+    passwordTwo?: string,
+    isAdmin?: boolean,
+    error?: {message: string},
+}
+
+export default class EditUser extends React.Component<EditUserProps,EditUserState> {
+    // @ts-ignore    TS: Suppressing error about possible non-initialization
+    userRef: firebase.database.Reference;   // TS: Also call it usersRef?
+    // TS: Where do these get initialized??
+    onChange: any;
+    onChangeCheckbox: ((e: CheckboxChangeEvent) => void) | undefined;
+    onSubmit: ((event: MouseEvent) => void) | undefined;
+    constructor(props: EditUserProps) {
         super(props);
         this.state={loading:true};
+        // @Jon/Crista: I don't understand this bit of code -- looks to TS (and me) like userRef is not always initialized...?
         if(!this.props.match){
             return;
         }
@@ -98,7 +117,9 @@ export default class EditUser extends React.Component {
                   initialValues={{
                       size: 50,
                   }}
-                  size={100}>
+                  // @ts-ignore
+                  size={100}>    // @Jon/@Crista: TS: Possible type error: 100 should be a SizeType, which is defined as: 
+                                 // "small" | "middle" | "large" | undefined
                 <Form.Item
                     label="Full Name"
                     rules={[
@@ -134,6 +155,7 @@ export default class EditUser extends React.Component {
                         onChange={this.onChange}/>
                 </Form.Item>
                 <Form.Item label="Profile Photo">
+                    {/* @ts-ignore     TS: Not sure what the problem is here: */}
                     <Avatar user={this.props.user} firebase={this.props.firebase}
                             imageURL={this.props.firebase.auth.currentUser.photoURL}/>
                 </Form.Item>
@@ -142,11 +164,12 @@ export default class EditUser extends React.Component {
                 ><Checkbox
                     disabled={this.state.updating}
                     name="isAdmin"
-                    type="checkbox"
+                    // type="checkbox"     // @Jon: The typechecker complained about this
                     checked={isAdmin}
                     onChange={this.onChangeCheckbox}
                 />
                 </Form.Item>
+                {/* @ts-ignore    TS: This error is about different event types... */}
                 <Button type="primary" htmlType="submit" disabled={isInvalid} onClick={this.onSubmit}
                         loading={this.state.updating}>
                     Save

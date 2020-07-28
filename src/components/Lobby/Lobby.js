@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import {Avatar, Card, Collapse, Skeleton, Layout, List, message, Popconfirm, Space, Spin, Tooltip, Typography} from "antd";
 import {AuthUserContext} from "../Session";
 import withLoginRequired from "../Session/withLoginRequired";
@@ -8,15 +8,6 @@ import NewRoomForm from "./NewRoomForm";
 import {LockTwoTone} from "@ant-design/icons"
 
 const { Content, Footer, Sider} = Layout;
-
-// const {TabPane} = Tabs;
-// const IconText = ({icon, text}) => (
-//     <Space>
-//         {React.createElement(icon)}
-//         {text}
-//     </Space>
-// );
-
 
 class MeetingSummary extends React.Component {
     constructor(props) {
