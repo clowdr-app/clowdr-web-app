@@ -4,6 +4,7 @@ import { AuthContext } from "../../AuthContext";
 import { timeStamp } from 'console';
 import { UserDescriptor } from 'twilio-chat/lib/userdescriptor';
 
+/*
 const { TabPane } = Tabs;
 interface IconText { icon: any, text: string }  // ???
 const IconText = ({ icon, text }: IconText) => (
@@ -12,6 +13,7 @@ const IconText = ({ icon, text }: IconText) => (
         {text}
     </Space>
 );
+*/
 
 interface ActiveUsersProps {
     auth: AuthContext | null;
@@ -26,19 +28,19 @@ interface ActiveUsersState {
     profiles: any,
 }
 
-interface UserDesc {   // What should this be called?
+interface UserDesc {   // TS: What should this be called?
     identity: string,
     online: Boolean,
     notifiable: Boolean,
-    attributes: any,  // ???
+    attributes: any,  // TS: ???
 }
 
-interface Update { // Guessing!
+interface Update { // TS: Guessing!
     user: UserDescriptor,
 }
 
-type Channel = any   // Probly something from Twilio??
-type ChatClient = any   // Probly something from Twilio??
+type Channel = any   // TS: Probly something from Twilio??
+type ChatClient = any   // TS: Probly something from Twilio??
 
 class ActiveUsers extends React.Component<ActiveUsersProps, ActiveUsersState> {
     chatClient: any;
@@ -47,7 +49,7 @@ class ActiveUsers extends React.Component<ActiveUsersProps, ActiveUsersState> {
         super(props);
         this.state = {
             usersHere: [], hasMore: true, profiles: {}, loggedIn: false,
-            loading: false, activeUsers: [],  // Guessing!
+            loading: false, activeUsers: [],  // TS: Guessing!
         };
     }
 

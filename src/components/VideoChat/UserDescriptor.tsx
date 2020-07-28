@@ -8,7 +8,7 @@ import { AuthContext } from "../../AuthContext";
 interface UserDescriptorState {
     userID: string;
     loading: Boolean;
-    profile?: any;      /* BCP: What should this be?? */
+    profile?: any;      /* TS: What should this be?? */
 }
 
 interface UserDescriptorProps {
@@ -17,7 +17,7 @@ interface UserDescriptorProps {
 }
 
 class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptorState>{
-    constructor(props: any) {
+    constructor(props: UserDescriptorProps) {
         super(props);
         this.state = { userID: props.id, loading: true };
     }

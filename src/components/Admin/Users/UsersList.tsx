@@ -21,7 +21,7 @@ interface UsersListProps {
 
 interface UsersListState {
     loading: Boolean,
-    users?: any[];     // Can this be refined??
+    users?: any[];     // TS: Can this be refined??
 }
 
 interface UserSchema {
@@ -42,7 +42,7 @@ export default class UsersList extends React.Component<UsersListProps, UsersList
         this.usersRef.on('value', (val: firebase.database.DataSnapshot) => {
             const res = val.val();
             if (res) {
-                const users: any[] = [];
+                const users: any[] = [];    // TS: ??
                 val.forEach((vid) => {
                     let user = vid.val();
                     user.key = vid.key;
@@ -64,8 +64,8 @@ export default class UsersList extends React.Component<UsersListProps, UsersList
                 title: 'Name',
                 dataIndex: 'username',
                 key: 'name',
-                // BCP: The weird type annotation for record comes from the fact that here it must contain a 
-                // key and below it must contain a name!
+                // @Jon/@Crista: The weird type annotation for record comes from the fact that here it must contain a 
+                // key and below it must contain a name!  Is that right?
                 render: (text: string, record: { key?: string, name?: string }) => <a onClick={() => { this.props.history.push("/admin/users/edit/" + record.key) }}>{text}</a>,
             },
             // {
