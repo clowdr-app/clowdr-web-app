@@ -4,7 +4,9 @@ import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {
     DeleteOutlined,
-    EditOutlined
+    EditOutlined,
+    SaveTwoTone,
+    CloseCircleTwoTone
 } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -294,10 +296,10 @@ class Tracks extends React.Component {
                                         marginRight: 8,
                                     }}
                                 >
-                                    Save
+                                    {<SaveTwoTone />}
                                 </a>
                                 <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                    <a>Cancel</a>
+                                    <a>{<CloseCircleTwoTone />}</a>
                                 </Popconfirm>
                             </span>
                             ) : (

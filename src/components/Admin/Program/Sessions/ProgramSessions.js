@@ -3,7 +3,7 @@ import {Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Space, Spin,
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import * as timezone from 'moment-timezone';
-import {DeleteOutlined, EditOutlined} from '@ant-design/icons';
+import {DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone} from '@ant-design/icons';
 import moment from "moment";
 
 const { Option } = Select;
@@ -315,7 +315,7 @@ class ProgramSessions extends React.Component {
                 {
                     title: 'Room',
                     dataIndex: 'room',
-                    width: '20%',
+                    width: '15%',
                     editable: true,
                     sorter: (a, b) => {
                         const roomA = a.get("room") && a.get("room").get("name") ? a.get("room").get("name") : " ";
@@ -328,7 +328,7 @@ class ProgramSessions extends React.Component {
                 {
                     title: 'Items',
                     dataIndex: 'items',
-                    width: '30%',
+                    width: '25%',
                     editable: true,
                     render: (text,record) => {
                         if (record.get("items")) {
@@ -348,7 +348,7 @@ class ProgramSessions extends React.Component {
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    width: '10%',
+                    // width: '10%',
                     render: (_, record) => {
                         const editable = isEditing(record);
                         if (this.state.ProgramSessions.length > 0) {
@@ -360,10 +360,10 @@ class ProgramSessions extends React.Component {
                                         marginRight: 8,
                                     }}
                                 >
-                                    Save
+                                    {<SaveTwoTone />}
                                 </a>
                                 <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                    <a>Cancel</a>
+                                    <a>{<CloseCircleTwoTone />}</a>
                                 </Popconfirm>
                             </span>
                             ) : (
