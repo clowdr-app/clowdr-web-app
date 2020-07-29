@@ -1,104 +1,331 @@
-import React from 'react';
-import { Avatar, Button, Card, Form, Input, List, Modal, Radio, Space, Spin, Tabs, Row, Col, Table, Tag } from "antd";
-import { ColumnsType } from 'antd/lib/table';
-import Firebase from '../../Firebase/firebase';
-
-// BCP: This bit of code is repeated in several other places! -- should be moved to a library file (not needed here, tho!)
-/*
-const {TabPane} = Tabs;
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
-*/
+import * as React from "react";
+import {AuthUserContext} from "../../Session";
+import withLoginRequired from "../../Session/withLoginRequired";
+import Parse from "parse"
+import {Button, Input, message, Space, Switch, Table, Tooltip} from "antd";
+import {SearchOutlined} from "@material-ui/icons";
+import Highlighter from 'react-highlight-words';
+import { AuthContext, IDToken } from "../../../ClowdrTypes";
 
 interface UsersListProps {
-    firebase: Firebase;
-    history: string[];  
+    // history: string[],
+    auth: AuthContext,
 }
 
-interface UsersListState {
-    loading: Boolean,
-    users?: any[];     // TS: Can this be refined??
-}
-
-interface UserSchema {
-    title: string,
-    dataIndex?: string,
+interface ManagedUser {
     key: string,
-    render: (text: string, record: { key: string }) => React.ReactElement,
+    displayName: string,
+    slackUID: string,
+    user_id: string,
+    email: string | undefined,  // TS: Maybe not string??
+    isBanned: "Yes" | "No"
 }
 
-export default class UsersList extends React.Component<UsersListProps, UsersListState> {
-    usersRef: firebase.database.Reference;
+// Replace item by manu or something
+interface UsersListState {
+    loading: boolean,
+    banUpdating: boolean,
+    allUsers: ManagedUser[],
+    roles: any,    // TS: ???
+    roleUpdating: boolean,
+    searchedColumn: string,
+    searchText: string,
+}
+
+interface UserProfileSchema {
+}
+
+// TS: Not very sure about this!  
+interface QueryResult {id: string, get: (x:string)=>unknown}
+
+const roles = [
+    {
+        'name': 'moderator',
+    },
+    {
+        'name': 'manager',
+    },
+    {
+        'name': "admin",
+    }
+]
+class UsersList extends React.Component<UsersListProps, UsersListState> {
+    searchInput: Input | null = null;  // TS: ??
     constructor(props: UsersListProps) {
         super(props);
-        this.state = { loading: true };
-        this.usersRef = this.props.firebase.db.ref("users");
+        this.state = {
+            loading: true, 
+            banUpdating: false,  
+            allUsers: [], 
+            roles: {},      // TS: ???
+            searchedColumn: "",     // TS: ???
+            searchText: "",     // TS: ???
+            roleUpdating: false,     // TS: ???
+        }
     }
-    componentDidMount() {
-        this.usersRef.on('value', (val: firebase.database.DataSnapshot) => {
-            const res = val.val();
-            if (res) {
-                const users: any[] = [];    // TS: ??
-                val.forEach((vid) => {
-                    let user = vid.val();
-                    user.key = vid.key;
-                    users.push(user);
-                });
-                this.setState({ loading: false, users: users });
+
+    async updateBan(item: ManagedUser){
+        this.setState({banUpdating: true})
+        console.log(item);
+        let idToken: IDToken = "";
+        if (this.props.auth.user != null) {
+            idToken = this.props.auth.user.getSessionToken();
+        }
+
+        const data = await fetch(
+            `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/users/ban`
+            , {
+                method: 'POST',
+                body: JSON.stringify({
+                    identity: idToken,
+                    conference: this.props.auth.currentConference.id,
+                    profileID: item.key,
+                    isBan: (item.isBanned == "No")
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        let res = await data.json();
+        if (res.status == "OK") {
+            let updatedItem = item;
+            if (item.isBanned == "Yes")
+                updatedItem.isBanned = "No";
+            else
+                updatedItem.isBanned = "Yes";
+            this.setState((prevState:UsersListState) => ({
+                banUpdating: false,
+                allUsers: prevState.allUsers.map(u => (u.key == item.key ? updatedItem : u))
+            }));
+        }
+        else {
+            message.error(res.message);
+            this.setState({ banUpdating: false })
+        }
+    }
+    async componentDidMount() {
+        let parseUserQ = new Parse.Query("UserProfile")
+        parseUserQ.equalTo("conference", this.props.auth.currentConference);
+        parseUserQ.include("user");
+        parseUserQ.addAscending("displayName");
+        // Code quality: Is the constant in the next line going to bite us someday??
+        parseUserQ.limit(4000);
+        // @ts-ignore     TS: Apparently the Parse type definitions are not up to date (this was added recently)
+        parseUserQ.withCount();
+        let nRetrieved = 0;
+        let roleData = [];
+        for (let role of roles) {
+            roleData.push(Parse.Cloud.run('admin-userProfiles-by-role', {
+                id: this.props.auth.currentConference.id,
+                roleName: role.name
+            }).then((ids) => {
+                return {'role': role, 'users': ids}
+            }))
+        }
+        let roleUsers = await Promise.all(roleData);
+        // TS: BCP stopped here -- need to figure out what type find is returning!
+        let {count, results} = (await parseUserQ.find()) as unknown as {count: number, results: any[]};
+        nRetrieved = results.length;
+        // @ts-ignore     @Jon/@Crista: Don't we need a user_id field also??
+        let allUsers: ManagedUser[] = results.map((item: QueryResult) => ({
+            key: item.id,
+            displayName: item.get("displayName"),
+            slackUID: item.get("slackID"),
+            // TS: The unsafe "as" coercion is ugly -- is there a better way??
+            email: (item.get("user") ? (item.get("user") as QueryResult).get("email") : undefined),
+            isBanned: item.get('isBanned') ? "Yes":"No"
+        }))
+        while (nRetrieved < count) {
+            parseUserQ = new Parse.Query("UserProfile")
+            parseUserQ.equalTo("conference", this.props.auth.currentConference);
+            parseUserQ.include("user");
+            parseUserQ.skip(nRetrieved)
+            parseUserQ.addAscending("displayName");
+            parseUserQ.limit(4000);
+            results = await parseUserQ.find();
+            // // results = dat.results;
+            nRetrieved += results.length;
+            if (results) {
+                allUsers = allUsers.concat(results.map(item => ({
+                    key: item.id,
+                    displayName: item.get("displayName"),
+                    slackUID: item.get("slackID"),
+                    user_id: item.get("user").id,
+                    email: (item.get("user") ? item.get("user").get("email") : undefined),
+                    isBanned: item.get('isBanned') ? "Yes" : "No"
+                })));
             }
-        });
+        }
+        let roleObj = {};
+        for(let role of roleUsers) {
+            // @ts-ignore     TS: should roleObj be declared as an empty _array_ above?
+            roleObj[role.role.name] = role.users;
+        }
+        this.setState({allUsers: allUsers, loading: false, roles: roleObj});
     }
-    componentWillUnmount() {
-        this.usersRef.off("value");
+    async refreshRoles(){
+        let roleData = [];
+        for (let role of roles) {
+            roleData.push(Parse.Cloud.run('admin-userProfiles-by-role', {
+                id: this.props.auth.currentConference.id,
+                roleName: role.name
+            }).then((ids) => {
+                return {'role': role, 'users': ids}
+            }))
+        }
+        let roleUsers = await Promise.all(roleData);
+        let roleObj = {};
+        for(let role of roleUsers){
+            // @ts-ignore     TS: Need help with this!
+            roleObj[role.role.name] = role.users;
+        }
+
+        this.setState({roles: roleObj});
+    }
+    handleSearch = (selectedKeys: string[], confirm: () => void, dataIndex: string) => {
+        confirm();
+        this.setState({
+            searchText: selectedKeys[0],
+            searchedColumn: dataIndex,
+        });
+    };
+
+    handleReset = (clearFilters: () => void) => {
+        clearFilters();
+        this.setState({ searchText: '' });
+    };
+    getColumnSearchProps = (dataIndex:string) => ({
+        // @ts-ignore     TS: Need help with this!
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+            <div style={{ padding: 8 }}>
+                <Input
+                    ref={node => {
+                        this.searchInput = node;
+                    }}
+                    placeholder={`Search ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
+                    style={{ width: 188, marginBottom: 8, display: 'block' }}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        onClick={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
+                        icon={<SearchOutlined />}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Search
+                    </Button>
+                    <Button onClick={() => this.handleReset(clearFilters)} size="small" style={{ width: 90 }}>
+                        Reset
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+        onFilter: (value:string, record:ManagedUser) =>
+        // @ts-ignore     TS: What is the right type for record??
+            record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+        onFilterDropdownVisibleChange: (visible:boolean) => {
+            if (visible) {
+                setTimeout(() => {if (this.searchInput != null) this.searchInput.select();})
+            }
+        },
+        render: (text:string, item: ManagedUser) =>{
+            if (dataIndex == "isBanned")
+            {
+                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text =="Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
+            }
+            return this.state.searchedColumn === dataIndex ? (
+                <Highlighter
+                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+                    searchWords={[this.state.searchText]}
+                    autoEscape
+                    textToHighlight={text.toString()}  // TS: Why do we need toString here?  Is it not already a string?
+                />
+            ) : (
+                text
+            )
+        },
+    });
+
+    async updateRole(roleName:string, item: { key: any; }, shouldHaveRole:boolean){
+        this.setState({roleUpdating: true})
+        let res = await Parse.Cloud.run('admin-role', {
+            id: this.props.auth.currentConference.id,
+            roleName: roleName,
+            userProfileId: item.key,
+            shouldHaveRole: shouldHaveRole
+        })
+        this.refreshRoles();
+        this.setState({roleUpdating: false})
     }
 
     render() {
-        if (this.state.loading)
-            return <Spin>Loading...</Spin>
-        const columns: ColumnsType<UserSchema> = [
+        if(!this.props.auth.roles.find(v => v && v.get("name") == this.props.auth.currentConference.id+"-admin"))
+            return <div>Error: you do not have permission to view this page - it is only for administrators.</div>
+        if(this.state.loading)
+            return <div>Loading...</div>
+
+        const columns = [
             {
                 title: 'Name',
-                dataIndex: 'username',
-                key: 'name',
-                // @Jon/@Crista: The weird type annotation for record comes from the fact that here it must contain a 
-                // key and below it must contain a name!  Is that right?
-                render: (text: string, record: { key?: string, name?: string }) => <a onClick={() => { this.props.history.push("/admin/users/edit/" + record.key) }}>{text}</a>,
+                dataIndex: 'displayName',
+                key: 'displayName',
+                ...this.getColumnSearchProps('displayName'),
             },
-            // {
-            //     title: 'Age',
-            //     dataIndex: 'age',
-            //     key: 'age',
-            // },
-            // {
-            //     title: 'Address',
-            //     dataIndex: 'address',
-            //     key: 'address',
-            // },
             {
-                title: 'Action',
-                key: 'action',
-                render: (text: string, record: { key?: string, name?: string }) => (
-                    <Space size="middle">
-                        <a>Invite {record.name}</a>
-                        <a>Delete</a>
-                    </Space>
-                ),
+                title: 'Banned',
+                dataIndex: 'isBanned',
+                key: 'isBanned',
+                ...this.getColumnSearchProps('isBanned'),
+            }, {
+                 // @ts-ignore     @Jon/@!Crista: Does the type error here indicate a bug?
+                 title: <Tooltip title="Administrators have full access to all that managers do, plus the ability to manage internal clowdr settings">Admin</Tooltip>,
+                key: 'admin',
+                render: (text:string, item: { key: any; })=>{   // TS: Is this the best annotation?
+                    let hasRole = this.state.roles['admin'] && this.state.roles['admin'].includes(item.key);
+                    return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
+                                   onChange={this.updateRole.bind(this, 'admin', item, !hasRole)}></Switch>
+                }
+            },
+            {
+                // @ts-ignore     @Jon/@!Crista: Does the type error here indicate a bug?
+                title: <Tooltip title="Content managers can edit the program">Manager</Tooltip>,
+                key: 'manager',
+                render: (text:string, item: { key: any; })=>{
+                    let hasRole = this.state.roles['manager'] && this.state.roles['manager'].includes(item.key);
+                    return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
+                                   onChange={this.updateRole.bind(this, 'manager', item, !hasRole)}></Switch>
+                }
+            },
+            {
+                // @ts-ignore     @Jon/@!Crista: Does the type error here indicate a bug?
+                title: <Tooltip title="Moderators can enter all private channels and send global announcements">Moderator</Tooltip>,
+                key: 'moderator',
+                render: (text:string, item: { key: any; })=>{
+                    let hasRole = this.state.roles['moderator'] && this.state.roles['moderator'].includes(item.key);
+                    return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
+                                   onChange={this.updateRole.bind(this, 'moderator', item, !hasRole)}></Switch>
+                }
             },
         ];
         return <div>
-            <Table
-                columns={columns}
-                dataSource={this.state.users}
-                pagination={{
-                    defaultPageSize: 500,
-                    pageSizeOptions: ["10", "20", "50", "100", "500"],
-                    position: ['topRight', 'bottomRight']
-                }} />
+            <h2>User Management</h2>
+            {/* @ts-ignore    TS: Need to figure out what's wrong here -- number and string not compatible... */}
+            <Table dataSource={this.state.allUsers} columns={columns}>
+            </Table>
         </div>
     }
-
 }
+
+const AuthConsumer = (props:UsersListProps) => (
+    <AuthUserContext.Consumer>
+        {value => (value == null ? <></> :   // @ts-ignore  TS: Can value really be null here?
+            <UsersList {...props} auth={value} />
+        )}
+    </AuthUserContext.Consumer>
+);
+export default withLoginRequired(AuthConsumer);

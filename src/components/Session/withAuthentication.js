@@ -143,7 +143,7 @@ const withAuthentication = Component => {
                 this.usersPromise = new Promise(async (resolve, reject) => {
                     let parseUserQ = new Parse.Query(UserProfile)
                     parseUserQ.equalTo("conference", this.state.currentConference);
-                    parseUserQ.limit(1000);
+                    parseUserQ.limit(5000);
                     parseUserQ.withCount();
                     let nRetrieved = 0;
                     let {count, results} = await parseUserQ.find();
@@ -154,7 +154,7 @@ const withAuthentication = Component => {
                         let parseUserQ = new Parse.Query(UserProfile)
                         parseUserQ.skip(nRetrieved);
                         parseUserQ.equalTo("conference", this.state.currentConference);
-                        parseUserQ.limit(1000);
+                        parseUserQ.limit(5000);
                         let results = await parseUserQ.find();
                         // results = dat.results;
                         nRetrieved += results.length;
@@ -574,9 +574,11 @@ const withAuthentication = Component => {
                             }
                         }
                         if(!activeProfile){
-                            if(!preferredConference && process.env.REACT_APP_DEFAULT_CONFERENCE){
+                            let defaultConferenceName = _this.getDefaultConferenceName();
+
+                            if(!preferredConference && defaultConferenceName){
                                 let confQ = new Parse.Query("ClowdrInstance")
-                                confQ.equalTo("conferenceName", process.env.REACT_APP_DEFAULT_CONFERENCE);
+                                confQ.equalTo("conferenceName", defaultConferenceName);
                                 preferredConference = await confQ.first();
                             }
                             if (preferredConference) {
@@ -675,9 +677,10 @@ const withAuthentication = Component => {
                         _this.chatClient = null;
                     }
                     let conference = null;
-                    if(process.env.REACT_APP_DEFAULT_CONFERENCE){
+                    let defaultConferenceName = _this.getDefaultConferenceName();
+                    if(defaultConferenceName){
                         let confQ = new Parse.Query("ClowdrInstance")
-                        confQ.equalTo("conferenceName", process.env.REACT_APP_DEFAULT_CONFERENCE);
+                        confQ.equalTo("conferenceName", defaultConferenceName);
                         conference = await confQ.first();
                     }
                     _this.setState({
@@ -693,6 +696,18 @@ const withAuthentication = Component => {
                 }
                 // do stuff with your user
             });
+        }
+
+        getDefaultConferenceName() {
+            let defaultConferenceName = process.env.REACT_APP_DEFAULT_CONFERENCE;
+            let hostname = window.location.hostname;
+            if(hostname && (hostname.endsWith("clowdr.org") || hostname.endsWith("clowdr.internal"))){
+                let confHostname = hostname.substring(0, hostname.indexOf('.'));
+                defaultConferenceName = confHostname.substring(0, confHostname.indexOf('2'));
+                defaultConferenceName = defaultConferenceName + " " + confHostname.substring(confHostname.indexOf('2'));
+                defaultConferenceName = defaultConferenceName.toUpperCase();
+            }
+            return defaultConferenceName;
         }
         async subscribeToPublicRooms() {
             if(!this.currentConference){

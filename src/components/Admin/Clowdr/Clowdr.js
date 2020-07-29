@@ -5,7 +5,9 @@ import {
     CheckCircleTwoTone,
     DeleteOutlined,
     EditOutlined,
-    WarningTwoTone
+    WarningTwoTone,
+    SaveTwoTone,
+    CloseCircleTwoTone
 } from '@ant-design/icons';
 
 class Clowdr extends React.Component {
@@ -294,10 +296,10 @@ class Clowdr extends React.Component {
                                         marginRight: 8,
                                     }}
                                 >
-                                    Save
+                                {<SaveTwoTone />}
                                 </a>
                                 <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                    <a>Cancel</a>
+                                    <a>{<CloseCircleTwoTone />}</a>
                                 </Popconfirm>
                             </span>
                             ) : (

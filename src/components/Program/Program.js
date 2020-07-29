@@ -222,7 +222,11 @@ class Program extends React.Component {
                    {/*    </Form.Item>*/}
                    {/*</Form>*/}
                 </div>
-                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.ProgramSessions)} loading={this.state.loading}></Table>
+                <Table columns={cols} pagination={false} dataSource={
+                    this.formatSessionsIntoTable(this.state.ProgramSessions.sort((a,b)=> {
+                        return a.get("startTime") && b.get("startTime") ? moment(a.get("startTime")).diff(moment(b.get('startTime'))) : 0
+                    }
+                ))} loading={this.state.loading}></Table>
             </div>
         </div>
     }

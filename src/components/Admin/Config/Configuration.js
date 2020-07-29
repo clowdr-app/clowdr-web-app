@@ -3,7 +3,9 @@ import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin,
 import Parse from "parse";
 import {
     DeleteOutlined,
-    EditOutlined
+    EditOutlined,
+    SaveTwoTone,
+    CloseCircleTwoTone
 } from '@ant-design/icons';
 
 class Configuration extends React.Component {
@@ -218,10 +220,10 @@ class Configuration extends React.Component {
                                         marginRight: 8,
                                     }}
                                 >
-                                    Save
+                                    {<SaveTwoTone />}
                                 </a>
                                 <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                    <a>Cancel</a>
+                                    <a>{<CloseCircleTwoTone />}</a>
                                 </Popconfirm>
                             </span>
                             ) : (

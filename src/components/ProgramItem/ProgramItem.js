@@ -94,7 +94,10 @@ class ProgramItem extends React.Component {
             img = <img src={this.state.ProgramItem.get("posterImage").url()} />
         }
         let authors = this.state.ProgramItem.get("authors") ? this.state.ProgramItem.get("authors") : [];
-        let authorstr= authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />).reduce((prev,curr) => [prev,", ",curr]);
+        let authorstr = "";
+        let authorsArr = authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />);
+        if (authorsArr.length >= 1)
+            authorstr= authorsArr.reduce((prev,curr) => [prev,", ",curr]);
 
         let sessionInfo;
         let now = Date.now();

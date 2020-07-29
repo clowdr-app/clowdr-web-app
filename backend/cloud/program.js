@@ -45,6 +45,12 @@ Parse.Cloud.define("create-obj", async (request) => {
         let Clazz = Parse.Object.extend(clazz);
         let obj = new Clazz();
         pointify(data);
+        let acl = new Parse.ACL();
+        acl.setPublicReadAccess(true);
+        acl.setPublicWriteAccess(false);
+        acl.setRoleWriteAccess(confID.id +"-manager", true);
+        acl.setRoleWriteAccess(confID.id +"-admin", true);
+        obj.setACL(acl);
 
         let res = await obj.save(data, {useMasterKey: true});
 
@@ -394,6 +400,7 @@ Parse.Cloud.define("program-upload", async (request) => {
     })
 
     let newItems = [];
+    let authorsToSave = {};
     for (const item of data.Items) {
         if (allItems[item.Key.trim()]) {
             continue
@@ -418,11 +425,19 @@ Parse.Cloud.define("program-upload", async (request) => {
         // get authors pointers
         let authors = getAuthors(item.Authors);
         newItem.set("authors", authors);
+        for(let author of authors){
+            if(!author.get("programItems"))
+                author.set("programItems",[]);
+            let items = author.get("programItems");
+            items.push(newItem);
+            authorsToSave[author.get("confKey")] = author;
+        }
         newItems.push(newItem);
         allItems[newItem.get("confKey")] = newItem;
     }
     try {
         await Parse.Object.saveAll(newItems, {useMasterKey: true});
+        await Parse.Object.saveAll(Object.values(authorsToSave), {useMasterKey: true});
     } catch(err){
         console.log(err);
     }
@@ -558,69 +573,133 @@ async function createBreakoutRoomForProgramItem(programItem){
     acl.setRoleReadAccess(programItem.get("conference").id+"-conference", true);
     parseRoom.setACL(acl);
 
-    parseRoom.set("socialSpace", programItem.get("programSession").get("room").get("socialSpace"))
+    let space;
+    if (programItem.get("programSession")) {
+        space = programItem.get("programSession").get("room").get("socialSpace");
+    } else {
+        //default to the first non-lobby social space
+        let socialSpaceQ = new Parse.Query("SocialSpace");
+        socialSpaceQ.equalTo("conference", programItem.get('conference'));
+        let spaces = await socialSpaceQ.find({useMasterKey: true});
+        if(spaces.length == 1){
+            space = spaces[0];
+        }
+        else if(spaces.length == 2){
+            space = spaces[0];
+            if(space.get('name') == "Lobby")
+                space = spaces[1];
+        }
+        else{
+            throw "Error: Program item '" + programItem.get('title') + "' is not mapped to a session, so we can't tell where to put the breakout room. Please map this program item to a session.";
+        }
+    }
+    parseRoom.set("socialSpace", space);
     parseRoom = await parseRoom.save({}, {useMasterKey: true});
     programItem.set("breakoutRoom", parseRoom);
     await programItem.save({},{useMasterKey: true})
 }
+Parse.Cloud.afterSave("ProgramSession", async (request) => {
+    //Make sure that all of our items are pointing back to us
+    let programSession = request.object;
+    if(programSession.get("items") && programSession.get("items").length > 0) {
+        let items = await Parse.Object.fetchAll(programSession.get("items"), {useMasterKey: true});
+        let toSave = [];
+        for (let item of items) {
+            if (!item.get("programSession") || item.get("programSession").id != programSession.id) {
+                item.set("programSession", programSession);
+                toSave.push(item);
+            }
+        }
+        if(toSave.length > 0)
+            await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    }
+})
 
-Parse.Cloud.afterSave("ProgramItem", async (request) => {
-    //Check to make sure that we don't need to make a video room for this
+Parse.Cloud.beforeDelete("ProgramItem", async (request) => {
+    if(request.object.get("breakoutRoom")){
+        request.object.get("breakoutRoom").destroy({useMasterKey: true});
+    }
+});
+Parse.Cloud.beforeSave("ProgramItem", async (request) => {
     let programItem = request.object;
+    if (programItem.isNew()) {
+        //TODO - when creating lots of program items doing it this way kills mongo
+        //so for now, don't do this mapping for new objects...
+        return;
+    }
     if(programItem.dirty("authors")){
         //Recalculate the items for each author
         let itemQ = new Parse.Query("ProgramItem");
         itemQ.include("authors");
-        let oldItem = await itemQ.get(programItem.id, {useMasterKey: true});
+        let oldItem = null;
+        if(!programItem.isNew())
+            oldItem = await itemQ.get(programItem.id, {useMasterKey: true});
         let newAuthors = [];
         for(let author of programItem.get("authors")){
             newAuthors.push(author);
         }
         let toSave = [];
-        for(let author of oldItem.get("authors")){
-            if(!newAuthors.find(v=>v.id==author.id)){
-                //no longer an author
-                let oldItems= author.get("programItems");
-                if(oldItems){
-                    oldItems = oldItems.filter(item=>item.id!=programItem.id);
+        if (oldItem)
+            for (let author of oldItem.get("authors")) {
+                if (!newAuthors.find(v => v.id == author.id)) {
+                    //no longer an author
+                    let oldItems = author.get("programItems");
+                    if (oldItems) {
+                        oldItems = oldItems.filter(item => item.id != programItem.id);
+                        author.set("programItems", oldItems);
+                        toSave.push(author);
+                    }
+
+                }
+            }
+        if(oldItem)
+            newAuthors = newAuthors.filter(v=>(!oldItem.get('authors').find(y=>y.id==v.id)));
+        if(newAuthors.length > 0) {
+            try {
+                newAuthors = await Parse.Object.fetchAll(newAuthors, {useMasterKey: true});
+            } catch(err){
+                console.log(err);
+                return;
+            }
+            let config = null;
+            let promises = [];
+            for (let author of newAuthors) {
+                let oldItems = author.get("programItems");
+                if (!oldItems)
+                    oldItems = [];
+                if (!oldItems.find(v => v.id == programItem.id)) {
+                    oldItems.push(programItem);
                     author.set("programItems", oldItems);
                     toSave.push(author);
+                    if (programItem.get("chatSID") && author.get("userProfile")) {
+                        //add the author to the chat channel
+                        if (!config)
+                            config = await getConfig(programItem.get("conference"));
+                        let member = config.twilioChat.channels(programItem.get("chatSID")).members.create({
+                            identity: author.get("userProfile").id
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    }
                 }
-
             }
         }
-        newAuthors = newAuthors.filter(v=>(!oldItem.get('authors').find(y=>y.id==v.id)));
-        newAuthors = await Parse.Object.fetchAll(newAuthors, {useMasterKey: true});
-        let config = null;
-        let promises = [];
-        for(let author of newAuthors){
-            let oldItems= author.get("programItems");
-            if(!oldItems)
-                oldItems = [];
-            oldItems.push(programItem);
-            author.set("programItems", oldItems);
-            toSave.push(author);
-            if(programItem.get("chatSID") && author.get("userProfile")){
-                //add the author to the chat channel
-                if (!config)
-                    config = await getConfig(programItem.get("conference"));
-                let member = config.twilioChat.channels(programItem.get("chatSID")).members.create({
-                    identity: author.get("userProfile").id
-                }).catch(err=>{
-                    console.log(err);
-                });
-            }
-        }
-        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+        if(toSave.length > 0)
+            await Parse.Object.saveAll(toSave, {useMasterKey: true});
     }
-    // if (programItem.isNew() && !programItem.get("breakoutRoom")) {
-    //     let track = programItem.get("track");
-    //     track = await track.fetch({useMasterKey: true});
-    //     if (track && track.get("perProgramItemVideo")) {
-    //         //Create a breakoutroom for this program item
-    //         await createBreakoutRoomForProgramItem(programItem, track);
-    //     }
-    // }
+
+});
+Parse.Cloud.afterSave("ProgramItem", async (request) => {
+    let programItem = request.object;
+    //Check to make sure that we don't need to make a video room for this
+    if (programItem.isNew() && !programItem.get("breakoutRoom")) {
+        let track = programItem.get("track");
+        track = await track.fetch({useMasterKey: true});
+        if (track && track.get("perProgramItemVideo")) {
+            //Create a breakoutroom for this program item
+            await createBreakoutRoomForProgramItem(programItem, track);
+        }
+    }
 });
 Parse.Cloud.beforeSave("StarredProgram", async (request) => {
     let savedProgram = request.object;
@@ -659,10 +738,10 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
                     // item.set("programSession", session);
                     // await item.save({},{useMasterKey: true});
                     console.log("No session for item in track: " + item.id)
-                    continue;
+                    // continue;
                 }
                 if(!item.get("breakoutRoom")){
-                    promises.push(createBreakoutRoomForProgramItem(item, track));
+                    promises.push(createBreakoutRoomForProgramItem(item, track).catch(err=>console.log(err)));
                 }
                 // if(item.get("breakoutRoom") && (!item.get("breakoutRoom").get("socialSpace") || item.get("breakoutRoom").get("socialSpace").id !=
                 // item.get("programSession").get("room").get("socialSpace").id)){

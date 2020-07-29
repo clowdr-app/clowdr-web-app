@@ -3,7 +3,7 @@ import {Button, Form, Input, Popconfirm, Select, Space, Spin, Table, Alert} from
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {ProgramContext} from "../../../Program";
-import {DeleteOutlined, EditOutlined} from '@ant-design/icons';
+import {DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone} from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -61,11 +61,10 @@ class ProgramItems extends React.Component {
                     return <Select
                         placeholder="Choose authors"
                         optionFilterProp="label"
-                        style={{ width: 400 }}
                         options={this.state.ProgramPersons.sort((a,b)=>(
                             a.get('name').localeCompare(b.get('name'))
                         )).map(p=>({value: p.id, label:p.get('name')}))}
-                        mode="multiple"
+                        mode="tags"
                         />
                 }
                 else {
@@ -163,17 +162,35 @@ class ProgramItems extends React.Component {
                     let item = newData.find(item => item.id === id);
 
                     if (item) {
-                        console.log(row.track + " -- " + this.state.ProgramTracks)
                         let newTrack = this.state.ProgramTracks.find(t => t.id === row.track);
                         if (newTrack) {
                             item.set("track", newTrack)
                         }
                         let newAuthors = [];
-                        row.authors.map(a => {
-                            const newAuthor = this.state.ProgramPersons.find(p => p.id === a);
+                        for(let a of row.authors) {
+                            let newAuthor = this.state.ProgramPersons.find(p => p.id === a);
+                            if(!newAuthor){
+                                //Create a new program person
+                                let data = {
+                                    clazz: "ProgramPerson",
+                                    conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+                                    confKey: "authors/author-"+new Date().getTime(),
+                                    name: a
+                                }
+                                let res = await Parse.Cloud.run("create-obj", data)
+                                    .catch(err => {
+                                        this.setState({alert: "add error"})
+                                        console.log("[Admin/Persons]: Unable to create: " + err)
+                                    })
+                                let programperson = Parse.Object.extend("ProgramPerson");
+                                newAuthor = new programperson();
+                                newAuthor.id = res.id;
+                                newAuthor.set("name", a);
+                            }
                             newAuthors.push(newAuthor);
-                        })
+                        }
 
+                        console.log(newAuthors)
                         item.set("title", row.title);
                         item.set("authors", newAuthors);
                         item.set("abstract", row.abstract);
@@ -270,10 +287,10 @@ class ProgramItems extends React.Component {
                                         marginRight: 8,
                                     }}
                                 >
-                                    Save
+                                    {<SaveTwoTone />}
                                 </a>
                                 <Popconfirm title="Sure to cancel?" onConfirm={onCancel}>
-                                    <a>Cancel</a>
+                                    <a>{<CloseCircleTwoTone />}</a>
                                 </Popconfirm>
                             </span>
                             ) : (
@@ -346,6 +363,7 @@ class ProgramItems extends React.Component {
                 clazz: "ProgramItem",
                 conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
                 title: "Please input the title",
+                confKey: "items/item-"+new Date().getTime(),
                 abstract: "Please input the abstract",
                 authors: []
             }
