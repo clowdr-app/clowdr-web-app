@@ -1,3 +1,6 @@
+// TS: @Crista / @Jon: Is AuthContext the right name for this type?  Seems like it is carrying a lot more than authorization information!
+// (the basic structure is there, but there are a lot kore details to be filled in...)
+
 import React from 'react';
 import { Avatar, Button, Card, Form, Input, List, Modal, Radio, Space, Spin, Tabs, Row, Col, Table, Tag } from "antd";
 import { ColumnsType } from 'antd/lib/table';
