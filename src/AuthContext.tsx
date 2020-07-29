@@ -1,3 +1,6 @@
+// TS: @Crista / @Jon: Is AuthContext the right name for this type?  Seems like it is carrying a lot more than authorization information!
+// (the basic structure is there, but there are a lot more details to be filled in...)
+
 import * as Parse from 'parse';
 
 /* This all might belong somewhere else? Or rename the file Types.ts? */
