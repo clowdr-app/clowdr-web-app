@@ -1,5 +1,9 @@
 import React, {Component} from "react";
 import {Typography} from "antd";
+
+// @Jon / @Crista: Since in fact our plans are up in the air, I'd prefer not to say anything about plans to monetize CLOWDR.  
+// Also, the mention of Slack is a bit out of date.
+
 class About extends Component {
     render() {
         return <div>

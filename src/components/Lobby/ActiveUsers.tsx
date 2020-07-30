@@ -1,6 +1,6 @@
 import React from 'react';
 import { Avatar, Badge, Card, List, Space, Spin, Tabs } from "antd";
-import { AuthContext } from "../../AuthContext";
+import { AuthContext } from "../../ClowdrTypes";
 import { timeStamp } from 'console';
 import { UserDescriptor } from 'twilio-chat/lib/userdescriptor';
 

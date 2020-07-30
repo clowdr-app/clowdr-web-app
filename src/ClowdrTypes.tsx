@@ -3,12 +3,14 @@
 
 import * as Parse from 'parse';
 
-/* This all might belong somewhere else? Or rename the file Types.ts? */
 type UserProfile = any
 type ClowdrInstance = any
 type SocialSpace = any
 type ProgramCache = any
 type Role = any
+
+// @Jon: Are these the same thing??  Crista thinks no...
+export type IDToken = string
 export type ID = string
 
 export interface AuthContext {

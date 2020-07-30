@@ -3,7 +3,7 @@ import withLoginRequired from "../Session/withLoginRequired";
 import * as React from "react";
 import { Skeleton } from "antd";
 import { Profiler } from "inspector";
-import { AuthContext } from "../../AuthContext";
+import { AuthContext } from "../../ClowdrTypes";
 
 interface UserDescriptorState {
     userID: string;
