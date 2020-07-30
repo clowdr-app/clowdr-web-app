@@ -94,7 +94,10 @@ class ProgramItem extends React.Component {
             img = <img src={this.state.ProgramItem.get("posterImage").url()} />
         }
         let authors = this.state.ProgramItem.get("authors") ? this.state.ProgramItem.get("authors") : [];
-        let authorstr= authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />).reduce((prev,curr) => [prev,", ",curr]);
+        let authorstr = "";
+        let authorsArr = authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />);
+        if (authorsArr.length >= 1)
+            authorstr= authorsArr.reduce((prev,curr) => [prev,", ",curr]);
 
         let sessionInfo;
         let now = Date.now();
@@ -141,7 +144,7 @@ class ProgramItem extends React.Component {
         return <div className="programItemContainer">
             <div className="programItemMetadata">
                 <h3>{this.state.ProgramItem.get('title')}</h3>
-                <p><i>{authorstr}</i></p>
+                <div><i>{authorstr}</i></div>
                 {sessionInfo}
                 <p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>
                 {this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.ProgramItem.get("breakoutRoom")}/></div> : <></>}

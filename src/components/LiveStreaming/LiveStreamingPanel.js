@@ -6,6 +6,7 @@ import {videoURLFromData} from './utils';
 import { CollectionsOutlined } from "@material-ui/icons";
 import { NavLink } from "react-router-dom";
 import Parse from "parse";
+import zoomImg from "./zoom.png";
 var timezone = require('moment-timezone');
 
 class LiveStreamingPanel extends Component {
@@ -189,8 +190,6 @@ class LiveStreamingPanel extends Component {
         let player = "";
         if (this.props.video.get("src1").includes("Zoom")) {
             if(this.state.zoomSignature){
-                console.log(this.props.auth.user.get("displayname"));
-                console.log(encodeURI(this.props.auth.user.get("displayname")));
                 let video_url="/zoom/meeting.html?name="+encodeURI(this.props.auth.user.get("displayname"))+
                     "&mn="+this.props.video.get("id1")+"&email=&pwd="+this.props.video.get("pwd1")
                     +"&role=0&lang=en-US&signature="+this.state.zoomSignature+
@@ -202,7 +201,7 @@ class LiveStreamingPanel extends Component {
                                      src={video_url}/>
             }
             else{
-                player = <Spin />
+                player=<img alt="poster" style={{width:311, height:175 }} src={zoomImg}  />
             }
 
         }

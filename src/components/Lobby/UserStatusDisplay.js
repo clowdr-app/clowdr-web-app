@@ -5,6 +5,8 @@ import {withRouter} from "react-router-dom";
 
 import {isAvailableColor, isDNDColor, isDNDNameColor, isLookingForConversationColor} from "./LobbyColors.js";
 import ReactMarkdown from "react-markdown";
+import ProgramItemDisplay from "../Program/ProgramItemDisplay";
+import ProgramPersonAuthorship from "../Program/ProgramPersonAuthorship";
 
 class UserStatusDisplay extends React.Component{
     constructor(props){
@@ -22,6 +24,7 @@ class UserStatusDisplay extends React.Component{
                 return;
             let userStatus = this.props.auth.helpers.presences[this.state.id];
             this.setState({profile: profile, presence: userStatus})
+            //Fetch any related program item info
         });
     }
 
@@ -53,36 +56,17 @@ class UserStatusDisplay extends React.Component{
             return <Skeleton.Input active style={{width: '100px', height: '1em'}}/>
         let presenceDesc = "";
         let badgeColor = "";
-        let badgeStyle = "success";
+        let badgeStyle = "default";
         let nameColor = "black";
         let dntWaiver = "";
-        if (!this.state.presence){
-            if(this.props.onlyShowWithPresence)
-                return <div></div>
-            badgeStyle = "default";
-            presenceDesc = "Offline";
-        } else if (this.state.presence.get("isLookingForConversation")) {
-            presenceDesc = "looking for conversation";
-            badgeColor = isLookingForConversationColor;
-            badgeStyle = "processing";
-        } else if (this.state.presence.get("isAvailable")) {
-            // presenceDesc = "In a conversation: come join if you like";
-            presenceDesc = "";
-            badgeColor = isAvailableColor;
-        } else if (this.state.presence.get("isOpenToConversation")) {
-            presenceDesc = "open to conversation";
-            badgeColor = "geekBlue";
-        } else if (this.state.presence.get("isDND")) {
-            presenceDesc = "busy: do not disturb";
-            badgeColor = isDNDColor;
-            nameColor = isDNDNameColor;
-        } else if (this.state.presence.get("isDNT")){
-            presenceDesc = "Do not track"
-            badgeStyle = "default"
-            dntWaiver = "Only you can see this status. Others will still see your presence in public rooms, but won't see a status"
+        if(this.state.presence && this.state.presence.get("isOnline")) {
+            presenceDesc = "(Online)";
+            badgeColor = "green";
         }
-        // BCP: We should really do the italic styling and color in a style sheet!
-        let statusDesc = (this.state.presence ? <i><span style={{color:"gray"}}>{this.state.presence.get("status")}</span></i> : <></>);
+        else{
+            presenceDesc = "(Offline)";
+            badgeColor = "grey";
+        }
         let onClick = ()=>{};
         if (this.props.auth.userProfile.id != this.state.profile.id){
             onClick = this.openDM.bind(this);
@@ -92,13 +76,36 @@ class UserStatusDisplay extends React.Component{
             avatar = <Avatar src={this.state.profile.get("profilePhoto").url()}/>
 
         let affiliation = "";
-        // BCP: This way of writing the tests is certainly suboptimal!
-        if ("" + this.state.profile.get("affiliation") != "undefined") {
-            affiliation = " (" + this.state.profile.get("affiliation") + ")";
+        let parensData = [];
+        if(this.state.profile.get("pronouns"))
+            parensData.push(this.state.profile.get("pronouns"));
+        if(this.state.profile.get("position") && this.state.profile.get("affiliation"))
+            parensData.push(this.state.profile.get("position") + " @ "+
+            this.state.profile.get("affiliation"));
+        else if(this.state.profile.get("position"))
+            parensData.push(this.state.profile.get("position"));
+        else if(this.state.profile.get("affiliation"))
+            parensData.push(this.state.profile.get("affiliation"));
+        if(parensData.length > 0){
+            affiliation = "("+parensData.join(", ")+")";
         }
         let bio = "";
-        if ("" + this.state.profile.get("bio") != "undefined") {
-            bio = this.state.profile.get("bio")
+        if (this.state.profile.get("bio")){
+            bio = <div className="userBio"><b>Bio:</b><ReactMarkdown source={this.state.profile.get("bio")}
+            renderers={{link: this.linkRenderer}}
+            /> </div>
+        }
+        let authorship = "";
+        if(this.state.profile.get("programPersons")){
+            let persons = [];
+            for(let programPerson of this.state.profile.get("programPersons")){
+                persons.push(<ProgramPersonAuthorship id={programPerson.id} key={programPerson.id}
+                auth={this.props.auth}
+                />);
+            }
+            authorship = <div className="profileAuthorOf">
+                {persons}
+            </div>
         }
         let tags = "";
         let tagToHighlight;
@@ -125,8 +132,7 @@ class UserStatusDisplay extends React.Component{
         let popoverTitle =
             <div className="nameAndAvatar">
               {avatar} {this.state.profile.get("displayName")} {affiliation}
-              <span className="presenceDesc">{presenceDesc == "" ? "" : " is " + presenceDesc}</span>
-              <div> {tags} {statusDesc} </div>
+              <div> {tags} {presenceDesc}</div>
             </div>;
         let webpage = "";
         if ("" + this.state.profile.get("webpage") != "undefined") {
@@ -141,24 +147,33 @@ class UserStatusDisplay extends React.Component{
               {dntWaiver}
             </div>;
         // BCP: And this needs a bit more vertical spacing between non-empty elements too:
-        let popoverContent = <div className="userPopover"> {firstLine} <ReactMarkdown source={bio}
-                                                                                     renderers={{link: this.linkRenderer}}
-        /> {webpage} {dmButton} </div>;
+        let popoverContent = <div className="userPopover"> {firstLine}
+        {authorship} {bio} {webpage} {dmButton} </div>;
 /*
         let popoverContent = <span></span>
         // BCP: Not clear to me why we were treating these so popovers differently
         // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
 */
+        if(this.props.inline){
+            return <span className="userDisplay" style={this.props.style}
+                        onClick={onClick}>
+                <Popover
+                    title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
+                    {this.state.profile.get("displayName")}
+                </Popover>
+            </span>
+        }
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
-                    <Popover title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
+                    <Popover
+                        title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
                       &nbsp;&nbsp;&nbsp; {/* BCP: Better way to do this? */}
                       <Badge status={badgeStyle} color={badgeColor} />
                       <span style={{color:nameColor}}>{this.state.profile.get("displayName")}</span>
                       &nbsp;
                       <span className="highlightedTags">{tagsToHighlight}</span>
-                      {this.props.popover && statusDesc != "" ? <></> : <span> &nbsp; {statusDesc} </span>}
+
                     </Popover>
               </div>
 /*

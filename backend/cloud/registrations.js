@@ -90,6 +90,8 @@ async function getConferenceInfoForMailer(conf) {
         senderQuery.equalTo("key", "SENDGRID_SENDER");
 
         let compoundQ = Parse.Query.or(keyQuery, frontendURLQuery, senderQuery);
+        console.log("Looking for conference info for")
+        console.log(conf)
 
         compoundQ.include("instance");
         let config = await compoundQ.find({useMasterKey: true});
@@ -380,7 +382,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
                 let userACL = new Parse.ACL();
                 userACL.setWriteAccess(user, true);
                 userACL.setReadAccess(user, true);
-                userACL.setRoleReadAccess("moderators", true);
+                userACL.setRoleReadAccess(confID + "-manager", true);
                 userACL.setPublicReadAccess(false);
                 user.setACL(userACL);
                 user = await user.save({}, {useMasterKey: true})

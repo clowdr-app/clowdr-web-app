@@ -4,7 +4,9 @@ import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {
     DeleteOutlined,
-    EditOutlined
+    EditOutlined,
+    SaveTwoTone,
+    CloseCircleTwoTone
 } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -104,17 +106,17 @@ class Tracks extends React.Component {
                         </Checkbox></span>
                     );
                     break;
-                    case ('exhibit'):
-                        inputNode = (
-                            <Radio.Group onChange={this.onChangeExhibit.bind(this, record)} 
-                                         value={record.get("exhibit")}>
-                                <Radio value="None"><span title="Don't show in Exhibit Hall">None</span></Radio>
-                                <Radio value="List"><span title="Show in Exhibit Hall as a simple list of all items">List</span></Radio>
-                                <Radio value="Grid"><span title="Show in Exhibit Hall as a grid of images, one per item">Grid</span></Radio>
-                          </Radio.Group>
-                        );
-                        break;
-                    default:
+                case ('exhibit'):
+                    inputNode = (
+                        <Radio.Group onChange={this.onChangeExhibit.bind(this, record)} 
+                                        value={record.get("exhibit")}>
+                            <Radio value="None"><span title="Don't show in Exhibit Hall">None</span></Radio>
+                            <Radio value="List"><span title="Show in Exhibit Hall as a simple list of all items">List</span></Radio>
+                            <Radio value="Grid"><span title="Show in Exhibit Hall as a grid of images, one per item">Grid</span></Radio>
+                        </Radio.Group>
+                    );
+                    break;
+                default:
                     inputNode = null;
                     break;
             }
@@ -294,10 +296,10 @@ class Tracks extends React.Component {
                                         marginRight: 8,
                                     }}
                                 >
-                                    Save
+                                    {<SaveTwoTone />}
                                 </a>
                                 <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                    <a>Cancel</a>
+                                    <a>{<CloseCircleTwoTone />}</a>
                                 </Popconfirm>
                             </span>
                             ) : (

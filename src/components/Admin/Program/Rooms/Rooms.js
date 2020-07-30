@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {Alert, Button, Form, Input, message, Modal, Popconfirm, Select, Space, Spin, Table, Tabs, Upload} from "antd";
-import {DeleteOutlined, EditOutlined, UploadOutlined} from '@ant-design/icons';
+import {DeleteOutlined, EditOutlined, UploadOutlined, SaveTwoTone, CloseCircleTwoTone} from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 
@@ -166,7 +166,6 @@ class Rooms extends React.Component {
                     inputNode = (
                         <Select
                             showSearch
-                            style={{width: 200}}
                             placeholder="Select a Main Channel"
                             optionFilterProp="children"
                             onChange={onChange}
@@ -197,7 +196,6 @@ class Rooms extends React.Component {
                     inputNode = (
                         <Select
                             showSearch
-                            style={{width: 200}}
                             placeholder="Select an Alt Channel"
                             optionFilterProp="children"
                             onChange={onChange}
@@ -363,7 +361,7 @@ class Rooms extends React.Component {
                 {
                     title: 'Main Media Source',
                     dataIndex: 'src1',
-                    width: '20%',
+                    width: '15%',
                     editable: true,
                     sorter: (a, b) => {
                         var srcA = a.get("src1") ? a.get("src1") : "";
@@ -392,7 +390,7 @@ class Rooms extends React.Component {
                 {
                     title: 'Alt Media Source',
                     dataIndex: 'src2',
-                    width: '20%',
+                    width: '15%',
                     editable: true,
                     sorter: (a, b) => {
                         var srcA = a.get("src2") ? a.get("src2") : "";
@@ -437,10 +435,10 @@ class Rooms extends React.Component {
                                     <span>
                                         <a onClick={() => save(record.id)}
                                            style={{marginRight: 8}}>
-                                        Save
+                                            {<SaveTwoTone />}
                                         </a>
                                         <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                            <a>Cancel</a>
+                                            <a>{<CloseCircleTwoTone />}</a>
                                         </Popconfirm>
                                     </span>
                                 )

@@ -143,7 +143,7 @@ const withAuthentication = Component => {
                 this.usersPromise = new Promise(async (resolve, reject) => {
                     let parseUserQ = new Parse.Query(UserProfile)
                     parseUserQ.equalTo("conference", this.state.currentConference);
-                    parseUserQ.limit(1000);
+                    parseUserQ.limit(5000);
                     parseUserQ.withCount();
                     let nRetrieved = 0;
                     let {count, results} = await parseUserQ.find();
@@ -154,7 +154,7 @@ const withAuthentication = Component => {
                         let parseUserQ = new Parse.Query(UserProfile)
                         parseUserQ.skip(nRetrieved);
                         parseUserQ.equalTo("conference", this.state.currentConference);
-                        parseUserQ.limit(1000);
+                        parseUserQ.limit(5000);
                         let results = await parseUserQ.find();
                         // results = dat.results;
                         nRetrieved += results.length;
@@ -186,6 +186,7 @@ const withAuthentication = Component => {
             }
         }
         async setActiveConference(conf) {
+            console.log('[wA]: changing conference to ' + conf.conferenceName);
             this.refreshUser(conf, true);
         }
 
@@ -525,34 +526,32 @@ const withAuthentication = Component => {
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
                 if (user) {
-                    const query = new Parse.Query(Parse.User);
-                    query.include(["tags"]);
                     try {
-                        let userWithRelations = await query.get(user.id);
 
                         if (!_this.isLoggedIn) {
                             _this.isLoggedIn = true;
-                            _this.authCallbacks.forEach((cb) => (cb(userWithRelations)));
+                            _this.authCallbacks.forEach((cb) => (cb(user)));
                         }
                         let session = await Parse.Session.current();
-                        const roleQuery = new Parse.Query(Parse.Role);
-                        roleQuery.equalTo("users", userWithRelations);
 
+                        // Valid conferences for this user
+                        let profiles = await user.relation("profiles").query().include("conference").find();
+                        let validConferences = profiles.map(p => p.get("conference"));
+                        console.log(validConferences)
+                        // console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
+
+                        // Roles for this user
+                        const roleQuery = new Parse.Query(Parse.Role);
+                        roleQuery.equalTo("users", user);
                         const roles = await roleQuery.find();
 
                         let isAdmin = _this.state ? _this.state.isAdmin : false;
                         let isClowdrAdmin = _this.state ? _this.state.isClowdrAdmin : false;
-                        let validConferences = [];
-
-                        let validConfQ= new Parse.Query("ClowdrInstanceAccess");
-                        validConfQ.include('instance');
-                        let validInstances = await validConfQ.find();
-                        validConferences=validInstances.map(i=>i.get("instance"));
 
                         let conf = _this.currentConference;
                         let currentProfileID = sessionStorage.getItem("activeProfileID");
                         let activeProfile = null;
-                        if(currentProfileID){
+                        if (currentProfileID) {
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.include("conference");
                             profileQ.include("tags");
@@ -575,9 +574,11 @@ const withAuthentication = Component => {
                             }
                         }
                         if(!activeProfile){
-                            if(!preferredConference && process.env.REACT_APP_DEFAULT_CONFERENCE){
+                            let defaultConferenceName = _this.getDefaultConferenceName();
+
+                            if(!preferredConference && defaultConferenceName){
                                 let confQ = new Parse.Query("ClowdrInstance")
-                                confQ.equalTo("conferenceName", process.env.REACT_APP_DEFAULT_CONFERENCE);
+                                confQ.equalTo("conferenceName", defaultConferenceName);
                                 preferredConference = await confQ.first();
                             }
                             if (preferredConference) {
@@ -585,14 +586,16 @@ const withAuthentication = Component => {
                                 if (!conf) {
                                     conf = validConferences[0];
                                 }
-                            } else if(!conf)
+                            } else if(!conf) {
                                 conf = validConferences[0];
+                            }
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.equalTo("conference",conf);
-                            profileQ.equalTo("user",userWithRelations);
+                            profileQ.equalTo("user",user);
                             profileQ.include("tags");
                             activeProfile = await profileQ.first();
                             sessionStorage.setItem("activeProfileID",activeProfile.id);
+
                             window.location.reload(false);
                         }
                         const privsQuery = new Parse.Query("InstancePermission");
@@ -610,9 +613,9 @@ const withAuthentication = Component => {
                         }
                         let priorConference = _this.state.currentConference;
                         _this.currentConference = conf;
-                        _this.user = userWithRelations;
+                        _this.user = user;
                         _this.userProfile = activeProfile;
-                        _this.state.chatClient.initChatClient(userWithRelations, conf, activeProfile);
+                        _this.state.chatClient.initChatClient(user, conf, activeProfile);
 
                         try {
                             await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
@@ -627,7 +630,7 @@ const withAuthentication = Component => {
                         });
                         _this.setState((prevState) => { return ({
                             spaces: spacesByName,
-                            user: userWithRelations,
+                            user: user,
                             userProfile: activeProfile,
                             teamID: session.get("activeTeam"),
                             isAdmin: isAdmin,
@@ -640,13 +643,12 @@ const withAuthentication = Component => {
                             programCache: new ProgramCache(conf, _this.parseLive),
                         })}, ()=>{
                             finishedStateFn()});
-
-                        await stateSetPromise;
-                        if(priorConference && priorConference.id != conf.id){
-                            window.location.reload(false);
-                        }
+                            await stateSetPromise;
+                            if(priorConference && priorConference.id != conf.id){
+                                window.location.reload(false);
+                            }
                         _this.forceUpdate();
-                        return userWithRelations;
+                        return user;
                     } catch (err) {
                         console.log("[withAuth]: err: " + err);
                         //TODO uncomment
@@ -675,9 +677,10 @@ const withAuthentication = Component => {
                         _this.chatClient = null;
                     }
                     let conference = null;
-                    if(process.env.REACT_APP_DEFAULT_CONFERENCE){
+                    let defaultConferenceName = _this.getDefaultConferenceName();
+                    if(defaultConferenceName){
                         let confQ = new Parse.Query("ClowdrInstance")
-                        confQ.equalTo("conferenceName", process.env.REACT_APP_DEFAULT_CONFERENCE);
+                        confQ.equalTo("conferenceName", defaultConferenceName);
                         conference = await confQ.first();
                     }
                     _this.setState({
@@ -693,6 +696,18 @@ const withAuthentication = Component => {
                 }
                 // do stuff with your user
             });
+        }
+
+        getDefaultConferenceName() {
+            let defaultConferenceName = process.env.REACT_APP_DEFAULT_CONFERENCE;
+            let hostname = window.location.hostname;
+            if(hostname && (hostname.endsWith("clowdr.org") || hostname.endsWith("clowdr.internal"))){
+                let confHostname = hostname.substring(0, hostname.indexOf('.'));
+                defaultConferenceName = confHostname.substring(0, confHostname.indexOf('2'));
+                defaultConferenceName = defaultConferenceName + " " + confHostname.substring(confHostname.indexOf('2'));
+                defaultConferenceName = defaultConferenceName.toUpperCase();
+            }
+            return defaultConferenceName;
         }
         async subscribeToPublicRooms() {
             if(!this.currentConference){

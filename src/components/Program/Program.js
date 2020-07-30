@@ -189,7 +189,6 @@ class Program extends React.Component {
         return <div>
             <h4>Program Overview:</h4>
             {/* <ReactImageZoom {...props}/> */}
-            <img style={{width: "100%", height: "100%"}} src={'https://2020.icse-conferences.org/getImage/orig/ICSE-Schedule.PNG'} /> 
 
             <h4>Details:</h4>
             <Descriptions title="Filter">
@@ -223,7 +222,11 @@ class Program extends React.Component {
                    {/*    </Form.Item>*/}
                    {/*</Form>*/}
                 </div>
-                <Table columns={cols} pagination={false} dataSource={this.formatSessionsIntoTable(this.state.ProgramSessions)} loading={this.state.loading}></Table>
+                <Table columns={cols} pagination={false} dataSource={
+                    this.formatSessionsIntoTable(this.state.ProgramSessions.sort((a,b)=> {
+                        return a.get("startTime") && b.get("startTime") ? moment(a.get("startTime")).diff(moment(b.get('startTime'))) : 0
+                    }
+                ))} loading={this.state.loading}></Table>
             </div>
         </div>
     }

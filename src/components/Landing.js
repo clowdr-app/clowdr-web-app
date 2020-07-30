@@ -75,10 +75,10 @@ class GuardedLanding extends Component {
       console.log('Will save...');
       this.props.auth.currentConference.set("landingPage", this.state.text);
       let data = {
-        confID: this.props.auth.currentConference.id,
-        instanceData: {landingPage: this.state.text}
+        id: this.props.auth.currentConference.id,
+        landingPage: this.state.text
       }
-      Parse.Cloud.run("save-instance", data)
+      Parse.Cloud.run("update-clowdr-instance", data)
       .then(c => this.setState({alert: "save success"}))
       .catch(err => {
         this.setState({alert: "save error"})
