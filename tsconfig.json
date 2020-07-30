@@ -17,10 +17,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "noImplicitReturns", true,      
-    "jsx": "react"
+    "noImplicitReturns": true,      
+    "jsx": "react",
 
-/* Strict Type-Checking Options */
+/* Strict Type-Checking Options 
     "strict": true,                           
     "noImplicitAny": true,               
     "strictNullChecks": true,              
@@ -29,12 +29,13 @@
     "noImplicitThis": true,                
     "alwaysStrict": true,                 
     "suppressImplicitAnyIndexErrors": true,
-/* Additional Checks */
+
+ Additional Checks 
     "noUnusedLocals": true,                
     "noUnusedParameters": true,           
     "noImplicitReturns": true,             
     "noFallthroughCasesInSwitch": true,
-
+*/
   },
   "include": [
     "src"
