@@ -13,7 +13,7 @@ interface UserDescriptorState {
 
 interface UserDescriptorProps {
     id: string;
-    authContext: AuthContext | null;   
+    authContext: AuthContext | null;
 }
 
 class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptorState>{
@@ -30,15 +30,17 @@ class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptor
     render() {
         if (this.state.loading) {
             return <Skeleton.Input active style={{ width: '200px' }} />
-        }
-        if (this.props.authContext) { // Should always succeed -- only null during initialization
+        } else if (this.props.authContext) { // Should always succeed -- only null during initialization
             let popoverContent = <a href={"slack://user?team=" + this.props.authContext.currentConference.get("slackWorkspace") + "&id=" + this.state.profile.get("slackID")}>Direct message on Slack</a>;
             return <div>
                 {this.state.profile.get("displayName")}
             </div>
+        } else {
+            return <></>
         }
     }
 }
+
 const AuthConsumer = (props: UserDescriptorProps) => (
     <AuthUserContext.Consumer>
         {value => (
