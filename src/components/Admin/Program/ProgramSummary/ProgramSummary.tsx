@@ -4,29 +4,45 @@ import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 
 import {UploadOutlined} from '@ant-design/icons';
+import { ClowdrAppState } from "../../../../ClowdrTypes";
+import { UploadChangeParam, RcFile } from 'antd/lib/upload/interface';
+
+interface ProgramSummaryProps {
+    auth: ClowdrAppState,
+}
+
+interface ProgramSummaryState {
+    loading: boolean,
+    visible: boolean,
+    deleteLoading: boolean,
+    ProgramSessions: Parse.Object[],
+    ProgramItems: Parse.Object[],
+    ProgramTracks: Parse.Object[],
+    ProgramRooms: Parse.Object[],
+    ProgramPersons: Parse.Object[],
+}
 
 const { Option } = Select;
 
-const {TabPane} = Tabs;
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
-
-
-class ProgramSummary extends React.Component {
-    constructor(props) {
+class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummaryState> {
+    currentConference: any;
+    constructor(props: ProgramSummaryProps) {
         super(props); // has props.auth
         this.state = {
             loading: true,
+            visible: true,
+            deleteLoading: false,
+            ProgramSessions: [],
+            ProgramItems: [],
+            ProgramTracks: [],
+            ProgramRooms: [],
+            ProgramPersons: [],
         };
         // this.currentConference = "XYZ";
         this.currentConference = this.props.auth.currentConference;
     }
 
-    onChange(info) {
+    onChange(info: UploadChangeParam) { 
         console.log("onChange " + info.file.status);
         if (info.file.status !== 'uploading') {
             console.log(info.file, info.fileList);
@@ -43,21 +59,20 @@ class ProgramSummary extends React.Component {
     }
 
     async componentDidMount() {
-
         let program = await this.props.auth.programCache.getEntireProgram(this);
         program.loading = false;
         this.setState(program);
     }
+    
     componentWillUnmount() {
         this.props.auth.programCache.cancelSubscription("ProgramItem", this);
         this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
         this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
         this.props.auth.programCache.cancelSubscription("ProgramPerson", this);
         this.props.auth.programCache.cancelSubscription("ProgramSession", this);
-
     }
 
-    beforeUpload(file, fileList) {
+    beforeUpload(file: RcFile) {
         const reader = new FileReader();
         reader.onload = () => {
             const data = {content: reader.result, conference: this.currentConference.id};
@@ -69,12 +84,13 @@ class ProgramSummary extends React.Component {
                 .catch(err => {
                     console.log('Upload failed: ' + err)
                     console.log(err);
-                    message.err("Error uploading program, please see console for debugging")
+                    message.error("Error uploading program, please see console for debugging")
                 });
         }
         reader.readAsText(file);
         return false;
     }
+    
     async deleteProgram(){
         this.setState({deleteLoading: true});
         try {
@@ -97,8 +113,7 @@ class ProgramSummary extends React.Component {
                 personsQ.find(), trackQ.find(), roomQ.find(), sessionQ.find()]);
             await Parse.Object.destroyAll(items.concat(persons).concat(tracks).concat(rooms).concat(sessions));
             message.info("Deleted entire program");
-        }
-        catch(err){
+        } catch(err) {
             message.error("Unable to delete program");
             console.log(err);
             console.log(err.errors);
@@ -142,7 +157,6 @@ class ProgramSummary extends React.Component {
                 <Spin tip="Loading...">
                 </Spin>)
 
-
         let counts = [
             {
                 key: 1,
@@ -153,6 +167,7 @@ class ProgramSummary extends React.Component {
                 people_c: this.state.ProgramPersons.length
             }
         ]
+        
         return (
             <div>
                 <Upload accept=".json, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
@@ -160,26 +175,26 @@ class ProgramSummary extends React.Component {
                         <UploadOutlined /> Click to upload program data
                     </Button>
                 </Upload>
-                <Popconfirm title="Are you sure you want to delete the entire program? This can't be undone." onConfirm={this.deleteProgram.bind(this)}><Button type="danger" loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
+                <Popconfirm title="Are you sure you want to delete the entire program? This can't be undone." onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
                 <Table
                     columns={columns} 
                     dataSource={counts}
                     rowKey={(r)=>(r.key)}
                     pagination={{ defaultPageSize: 500,
-                        pageSizeOptions: [10, 20, 50, 100, 500], 
-                        position: ['topRight', 'bottomRight']}}/>
+                        pageSizeOptions: ['10', '20', '50', '100', '500'], 
+                        position: ['topRight', 'bottomRight']
+                    }}/>
             </div>
         )
     }
 }
 
-const AuthConsumer = (props) => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <ProgramSummary {...props} auth={value} />
-                )}
-            </AuthUserContext.Consumer>
-
+const AuthConsumer = (props: ProgramSummaryProps) => (
+    <AuthUserContext.Consumer>
+        {value => (value == null ? <></> :    // @ts-ignore    TS: Can it really be null??
+            <ProgramSummary {...props} auth={value} />
+        )}
+    </AuthUserContext.Consumer>
 );
 
 export default AuthConsumer;
