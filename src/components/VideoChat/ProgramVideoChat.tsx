@@ -24,13 +24,14 @@ interface ProgramVideoChatState {
 
 interface ProgramVideoChatProps {
     room: any;    // TS: ???
+    isInRoom: boolean;
     authContext: ClowdrAppState | null;
 }
 class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVideoChatState>{
 
     constructor(props: ProgramVideoChatProps) {
         super(props);
-        this.state = { room: props.room, isInRoom: false, loading: false };  // TS: is false the right initial value?
+        this.state = { room: props.room, isInRoom: this.props.isInRoom, loading: false };  // TS: is false the right initial value?
     }
 
     componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
@@ -48,7 +49,7 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
     render() {
         if (!this.state.isInRoom) {
             return <div>
-                <Button type="primary" loading={this.state.loading} onClick={this.joinRoom.bind(this)}>Join the video room</Button>
+                <Button type="primary" loading={this.state.loading} onClick={this.joinRoom.bind(this)}>Join the breakout room</Button>
             </div>
         }
         return <VideoRoom

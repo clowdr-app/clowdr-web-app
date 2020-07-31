@@ -8,6 +8,7 @@ import UserStatusDisplay from "./UserStatusDisplay";
 import Parse from "parse";
 import PresenceForm from "./PresenceForm";
 import CollapsedChatDisplay from "../Chat/CollapsedChatDisplay";
+import UpcomingProgram from "./UpcomingProgram";
 
 
 class ContextualActiveUsers extends React.Component {
@@ -229,121 +230,7 @@ class ContextualActiveUsers extends React.Component {
                 selectedKeys.push(this.state.filteredUser);
 
             let activeSpace = this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : "Nowhere";
-            let programInfo = <></>
-            if (programRooms.length > 0){
-                programInfo = <div>
-                    <Divider className="social-sidebar-divider">Paper/Posters in {this.state.activeSpace.get("name")}</Divider>
-
-                    <Menu mode="inline"
-                          className="activeRoomsList"
-                          style={{
-                              border: '1px solid #FAFAFA'
-                          }}
-                          inlineIndent={0}
-
-                          forceSubMenuRender={true}
-                          openKeys={allActiveRooms.concat(programRooms).map(r=>r.id)}
-                          expandIcon={null}
-                          selectedKeys={selectedKeys}
-                    >
-                        {programRooms ? programRooms.sort((i1, i2) => {
-                            return (i1 && i2 && i1.get("name") < i2.get("name") ? 1 : -1)
-                        }).map((item) => {
-                                if(!item){
-                                    return <Skeleton />
-                                }
-
-                                let membersCount = 0;
-                                if (item.get("members")) {
-                                    membersCount = item.get("members").length;
-                                }
-                                let tag, joinInfo;
-                                if(item.get("mode") == "group"){
-                                    //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                                    joinInfo = "Click to join this big group room (up to 50 callers). Up to 5 speakers are allowed at once."
-                                }
-                                else if(item.get("mode") == "peer-to-peer"){
-                                    //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
-                                    joinInfo ="Click to join this peer-to-peer room (up to 10 callers)."
-                                }
-                                else if(item.get("mode") == "group-small"){
-                                    //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
-                                    joinInfo = "Click to join this small group room (up to 4 callers)."
-                                }
-
-                                let isModOverride = false;
-                                if(item.get("isPrivate")){
-                                    //check for our uid in the acl
-                                    let acl = item.getACL();
-                                    if(!acl.getReadAccess(this.props.auth.user.id))
-                                        isModOverride = true;
-                                }
-                                let privateSymbol = <></>
-                                if (item.get("isPrivate")) {
-                                    if (isModOverride)
-                                        privateSymbol = <LockTwoTone style={{verticalAlign: 'middle'}} twoToneColor="#eb2f96"/>
-                                    else privateSymbol = <LockTwoTone style={{verticalAlign: 'middle'}}/>
-                                }
-                                let formattedRoom =
-                                    <div className="activeBreakoutRoom" style={{paddingLeft: "3px"}}>{tag}{privateSymbol}{item.get('title')}</div>
-                                let joinLink = "";
-                                if (!this.state.currentRoom || this.state.currentRoom.id != item.id)
-                                {
-                                    if (item.get("members") && item.get("capacity") <= item.get("members").length)
-                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is "+item.get('capacity')+")"}><Typography.Text
-                                            disabled>{formattedRoom}</Typography.Text></Tooltip></div>
-                                    else if(isModOverride){
-                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}>
-                                            <Popconfirm title={<span style={{width: "250px"}}>You do not have permission to join this room, but can override<br />
-                                        this as a moderator. Please only join this room if you were asked<br /> by a participant
-                                        to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
-                                                        onConfirm={this.joinCall.bind(this,item)}
-                                            >
-                                                <a href="#"
-                                                >{formattedRoom}</a>
-                                            </Popconfirm>
-                                        </Tooltip>
-                                        </div>;
-                                    }
-                                    else {
-                                        if (!item.get("members") || item.get("members").length === 0) {
-                                            joinInfo = joinInfo + " (Currently Empty!)"
-                                        }
-                                        joinLink = <div><Tooltip mouseEnterDelay={0.5} title={joinInfo}><a href="#"
-                                                                                                           onClick={this.joinCall.bind(this, item)}>{formattedRoom}</a></Tooltip>
-                                        </div>;
-                                    }
-                                }
-                                else {
-                                    joinLink = formattedRoom;
-                                }
-                                let list;
-                                let header = joinLink;
-                                if (item.get("members") && item.get("members").length > 0)
-                                    list = item.get("members").map(user=>{
-                                        let className = "personHoverable";
-                                        if (this.state.filteredUser == user.id)
-                                            className += " personFiltered"
-                                        console.log(user);
-                                        return <Menu.Item key={user.id} className={className}>
-                                            <UserStatusDisplay popover={true}profileID={user.id}/>
-                                        </Menu.Item>
-                                    }) //}>
-                                else
-                                    list = <></>
-                                return (
-                                    // <Menu.Item key={item.id}>
-                                    //     {header}
-                                    <Menu.SubMenu key={item.id} popupClassName="activeBreakoutRoom" title={header} expandIcon={<span></span>}>
-
-                                        {list}
-                                    </Menu.SubMenu>
-                                    // </Menu.Item>
-                                )
-                            }
-                        ) : <Collapse.Panel showArrow={false} header={<Skeleton/>}></Collapse.Panel>}
-                    </Menu></div>
-            }
+            let programInfo = <UpcomingProgram />
             tabs = <div>
                 <div>
                     <div style={{height:'6px', background:'white'}}/>

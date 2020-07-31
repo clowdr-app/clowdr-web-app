@@ -1,5 +1,6 @@
 import Parse from "parse";
 
+
 export default class ProgramCache {
     constructor(conference, parseLive) {
         this.conference = conference;
@@ -98,11 +99,13 @@ export default class ProgramCache {
 
     async getProgramItem(id, component){
         let items = await this.getProgramItems();
-        if(!this._updateSubscribers['ProgramItem'])
-            this._updateSubscribers['ProgramItem'] = {};
-        if(!this._updateSubscribers['ProgramItem'][id])
-            this._updateSubscribers['ProgramItem'][id] = [];
-        this._updateSubscribers['ProgramItem'][id].push(component);
+        if(component) {
+            if (!this._updateSubscribers['ProgramItem'])
+                this._updateSubscribers['ProgramItem'] = {};
+            if (!this._updateSubscribers['ProgramItem'][id])
+                this._updateSubscribers['ProgramItem'][id] = [];
+            this._updateSubscribers['ProgramItem'][id].push(component);
+        }
         return this._dataById['ProgramItem'][id];
     }
 
@@ -111,11 +114,13 @@ export default class ProgramCache {
         let item = items.find(v => v.get("confKey")==confKey);
         if(item){
             let id = item.id;
-            if(!this._updateSubscribers['ProgramItem'])
-                this._updateSubscribers['ProgramItem'] = {};
-            if(!this._updateSubscribers['ProgramItem'][id])
-                this._updateSubscribers['ProgramItem'][id] = [];
-            this._updateSubscribers['ProgramItem'][id].push(component);
+            if(component) {
+                if (!this._updateSubscribers['ProgramItem'])
+                    this._updateSubscribers['ProgramItem'] = {};
+                if (!this._updateSubscribers['ProgramItem'][id])
+                    this._updateSubscribers['ProgramItem'][id] = [];
+                this._updateSubscribers['ProgramItem'][id].push(component);
+            }
         }
         return item;
     }
@@ -124,11 +129,13 @@ export default class ProgramCache {
         let person = persons.find(v=>v.id==personID);
         if(person) {
             let id = person.id;
-            if (!this._updateSubscribers['ProgramPerson'])
-                this._updateSubscribers['ProgramPerson'] = {};
-            if (!this._updateSubscribers['ProgramPerson'][id])
-                this._updateSubscribers['ProgramPerson'][id] = [];
-            this._updateSubscribers['ProgramPerson'][id].push(component);
+            if(component) {
+                if (!this._updateSubscribers['ProgramPerson'])
+                    this._updateSubscribers['ProgramPerson'] = {};
+                if (!this._updateSubscribers['ProgramPerson'][id])
+                    this._updateSubscribers['ProgramPerson'][id] = [];
+                this._updateSubscribers['ProgramPerson'][id].push(component);
+            }
         }
         return person;
     }

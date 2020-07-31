@@ -255,6 +255,7 @@ class App extends Component {
         return (<div>
             {baseRoutes}
             <Route exact path="/" component={Home}/>
+            <Route exact path="/breakoutRoom/:programConfKey1/:programConfKey2" component={ProgramItem}/>
             <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem}/>
             <Route exact path="/live/:when/:roomName?" component={LiveVideosArea}/>
 

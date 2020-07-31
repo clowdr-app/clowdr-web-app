@@ -1,13 +1,13 @@
 import Parse from "parse";
 import ProgramItem from "./ProgramItem";
 
-class ProgramSession extends Parse.Object{
+export default class ProgramSession extends Parse.Object{
 
     constructor() {
         super("ProgramSession");
     }
     getItems(){
-        return <Parse.Pointer[]>this.get("items");
+        return <ProgramItem[]>this.get("items");
     }
 }
 Parse.Object.registerSubclass('ProgramSession', ProgramSession);

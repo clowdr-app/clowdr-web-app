@@ -1,11 +1,12 @@
 // BCP: (the basic structure is there, but there are a lot more details to be filled in...)
 
 import * as Parse from 'parse';
+import ProgramItem from "./classes/ProgramItem";
+import ProgramCache from "./components/Session/ProgramCache";
 
 type UserProfile = any
 type ClowdrInstance = any
 type SocialSpace = any
-type ProgramCache = any
 type Role = any
 
 export type UserSessionToken = string

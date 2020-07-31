@@ -1,7 +1,7 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
 import Parse from "parse"
-import {Alert, Spin} from "antd";
+import {Alert, Button, Spin} from "antd";
 import ProgramVideoChat from "../VideoChat/ProgramVideoChat";
 import {videoURLFromData} from "../LiveStreaming/utils";
 import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";
@@ -24,6 +24,9 @@ class ProgramItem extends React.Component {
     async componentDidMount() {
         let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
         this.setState({itemKey: itemKey});
+        if(this.props.match.path.startsWith("/breakoutRoom")){
+            this.setState({isInRoom: true});
+        }
 
         //For social features, we need to wait for the login to complete before doing anything
         let [user, item] = await Promise.all([this.props.auth.refreshUser(), this.props.auth.programCache.getProgramItemByConfKey(itemKey, this)]);
@@ -105,36 +108,18 @@ class ProgramItem extends React.Component {
         if(this.state.ProgramItem.get("programSession")){
             let session = this.state.ProgramItem.get("programSession");
             let roomInfo;
-            if (session.get("room") && session.get("room").get("src1") == "YouTube") {
+            let now = Date.now();
+            var timeS = session.get("startTime") ? session.get("startTime") : new Date();
+            var timeE = session.get("endTime") ? session.get("endTime") : new Date();
+
+            if (session.get("room")){ // && session.get("room").get("src1") == "YouTube") {
                 let when = "now"
-                roomInfo = <p><b>Virtual room (stream): </b><a href="#" onClick={() => {
+                if(timeE >= now)
+                    roomInfo = <div><b>Presentation room: </b><Button type="primary" onClick={() => {
                     this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                }}>{session.get("room").get("name")}</a></p>
-            } else if (session.get("room") && session.get("room").get("src1") == "ZoomUS") {
-                let video = session.get("room"); // names :(
-                var timeS = session.get("startTime") ? session.get("startTime") : new Date();
-                let ts_window = moment(timeS).subtract(8, 'h').toDate().getTime();
-                let ts_future = moment(timeS).add(8, 'h').toDate().getTime();
-                let show_link = (timeS > now && ts_window < now);
-                if(show_link && video.get("src1")) {
-                    let country = this.props.auth.userProfile.get("country");
-                    var src = video.get("src1");
-                    var id = video.get("id1");
-                    var pwd = video.get("pwd1");
-
-                    var inChina = false;
-                    if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
-                        // Commenting it for now until we get conformation of the Chinese URL
-                        // src = this.props.video.get("src2");
-                        // id = this.props.video.get("id2");
-                        inChina = true;
-                    }
-                    let video_url= videoURLFromData(src, id, pwd, country);
-
-                    roomInfo = <p><b>Virtual room (stream): </b> <a target="_blank" href={video_url}>Join via Zoom</a></p>
-                }
+                }}>{session.get("room").get("name")}</Button></div>
                 else
-                    roomInfo = <p><b>Virtual room (stream): </b> A zoom link will be available here to join, 8 hours before the event starts.</p>
+                    roomInfo = <div><b>Presentation room:</b> This session has ended.</div>
             }
             sessionInfo = <div>
                 <b>Session:</b> {session.get("title")} ({this.formatTime(session.get("startTime"))} - {this.formatTime(session.get('endTime'))}){roomInfo}
@@ -147,7 +132,7 @@ class ProgramItem extends React.Component {
                 <div><i>{authorstr}</i></div>
                 {sessionInfo}
                 <p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>
-                {this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.ProgramItem.get("breakoutRoom")}/></div> : <></>}
+                {this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat isInRoom={this.state.isInRoom} room={this.state.ProgramItem.get("breakoutRoom")}/></div> : <></>}
             </div>
             <div className="fill">
                 {img}

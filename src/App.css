@@ -601,3 +601,26 @@ td.ant-table-cell.program-table-timeBand{
 .programStarStarred{
     color: #d48806;
 }
+
+.text-indented {
+    margin-left: 22px;
+    text-indent: -22px;
+}
+.program-collapse{
+}
+.program-collapse > .ant-collapse-item > .ant-collapse-header{
+    padding-bottom: 0;
+    padding-top: 0;
+}
+.program-collapse > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.program-session-collapse > .ant-collapse-item > .ant-collapse-header{
+    padding-bottom: 0;
+    padding-top: 0;
+}
+.program-session-collapse > .ant-collapse-item > .ant-collapse-content > div.ant-collapse-content-box {
+    padding-top: 0;
+    padding-bottom: 0;
+}
