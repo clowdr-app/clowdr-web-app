@@ -21,17 +21,17 @@ interface ActiveUsersProps {
 
 interface ActiveUsersState {
     usersHere: any[],  // ??
-    hasMore: Boolean,
-    loggedIn: Boolean,
+    hasMore: boolean,
+    loggedIn: boolean,
     activeUsers: any[],
-    loading: Boolean,
+    loading: boolean,
     profiles: any,
 }
 
 interface UserDesc {   // TS: What should this be called?
     identity: string,
-    online: Boolean,
-    notifiable: Boolean,
+    online: boolean,
+    notifiable: boolean,
     attributes: any,  // TS: ???
 }
 

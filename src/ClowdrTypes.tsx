@@ -15,12 +15,12 @@ export interface ClowdrAppState {
     spaces: Map<string, SocialSpace>;   // Crista said Dictionary, but I think she meant Map
     user: Parse.User | null;
     userProfile: UserProfile | null;
-    isAdmin: Boolean;
-    isClowdrAdmin: Boolean;
+    isAdmin: boolean;
+    isClowdrAdmin: boolean;
     permissions: Array<string>;
     validConferences: Array<ClowdrInstance>;
     currentConference: ClowdrInstance | null;
-    loading: Boolean;
+    loading: boolean;
     roles: Array<Role>;
     programCache: ProgramCache;
     helpers: any;
