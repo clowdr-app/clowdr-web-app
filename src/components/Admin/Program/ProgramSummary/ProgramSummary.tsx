@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, message, Popconfirm, Select, Space, Spin, Table, Tabs, Upload, } from "antd";
+import {Button, message, Popconfirm, Select, Space, Spin, Table, Tabs, Upload} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 
@@ -23,15 +23,6 @@ interface ProgramSummaryState {
 }
 
 const { Option } = Select;
-
-// const {TabPane} = Tabs;
-// const IconText = ({icon, text}) => (
-//     <Space>
-//         {React.createElement(icon)}
-//         {text}
-//     </Space>
-// );
-//TS: Not used anywhere
 
 class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummaryState> {
     currentConference: any;
@@ -68,18 +59,17 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
     }
 
     async componentDidMount() {
-
         let program = await this.props.auth.programCache.getEntireProgram(this);
         program.loading = false;
         this.setState(program);
     }
+    
     componentWillUnmount() {
         this.props.auth.programCache.cancelSubscription("ProgramItem", this);
         this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
         this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
         this.props.auth.programCache.cancelSubscription("ProgramPerson", this);
         this.props.auth.programCache.cancelSubscription("ProgramSession", this);
-
     }
 
     beforeUpload(file: RcFile) {
@@ -100,6 +90,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
         reader.readAsText(file);
         return false;
     }
+    
     async deleteProgram(){
         this.setState({deleteLoading: true});
         try {
@@ -122,8 +113,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                 personsQ.find(), trackQ.find(), roomQ.find(), sessionQ.find()]);
             await Parse.Object.destroyAll(items.concat(persons).concat(tracks).concat(rooms).concat(sessions));
             message.info("Deleted entire program");
-        }
-        catch(err){
+        } catch(err) {
             message.error("Unable to delete program");
             console.log(err);
             console.log(err.errors);
@@ -167,7 +157,6 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                 <Spin tip="Loading...">
                 </Spin>)
 
-
         let counts = [
             {
                 key: 1,
@@ -178,6 +167,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                 people_c: this.state.ProgramPersons.length
             }
         ]
+        
         return (
             <div>
                 <Upload accept=".json, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
@@ -201,7 +191,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
 
 const AuthConsumer = (props: ProgramSummaryProps) => (
     <AuthUserContext.Consumer>
-        {value => (value == null ? <></> : //@ts-ignore
+        {value => (value == null ? <></> :    // @ts-ignore    TS: Can it really be null??
             <ProgramSummary {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
