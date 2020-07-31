@@ -1,32 +1,57 @@
 import React from 'react';
-import {Button, message, Popconfirm, Select, Space, Spin, Table, Tabs, Upload} from "antd";
+import {Button, message, Popconfirm, Select, Space, Spin, Table, Tabs, Upload, } from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 
 import {UploadOutlined} from '@ant-design/icons';
+import { ClowdrAppState } from "../../../../ClowdrTypes";
+import { UploadChangeParam, RcFile } from 'antd/lib/upload/interface';
+
+interface ProgramSummaryProps {
+    auth: ClowdrAppState,
+}
+
+interface ProgramSummaryState {
+    loading: boolean,
+    visible: boolean,
+    deleteLoading: boolean,
+    ProgramSessions: Parse.Object[],
+    ProgramItems: Parse.Object[],
+    ProgramTracks: Parse.Object[],
+    ProgramRooms: Parse.Object[],
+    ProgramPersons: Parse.Object[],
+}
 
 const { Option } = Select;
 
-const {TabPane} = Tabs;
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
+// const {TabPane} = Tabs;
+// const IconText = ({icon, text}) => (
+//     <Space>
+//         {React.createElement(icon)}
+//         {text}
+//     </Space>
+// );
+//TS: Not used anywhere
 
-
-class ProgramSummary extends React.Component {
-    constructor(props) {
+class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummaryState> {
+    currentConference: any;
+    constructor(props: ProgramSummaryProps) {
         super(props); // has props.auth
         this.state = {
             loading: true,
+            visible: true,
+            deleteLoading: false,
+            ProgramSessions: [],
+            ProgramItems: [],
+            ProgramTracks: [],
+            ProgramRooms: [],
+            ProgramPersons: [],
         };
         // this.currentConference = "XYZ";
         this.currentConference = this.props.auth.currentConference;
     }
 
-    onChange(info) {
+    onChange(info: UploadChangeParam) { 
         console.log("onChange " + info.file.status);
         if (info.file.status !== 'uploading') {
             console.log(info.file, info.fileList);
@@ -57,7 +82,7 @@ class ProgramSummary extends React.Component {
 
     }
 
-    beforeUpload(file, fileList) {
+    beforeUpload(file: RcFile) {
         const reader = new FileReader();
         reader.onload = () => {
             const data = {content: reader.result, conference: this.currentConference.id};
@@ -69,7 +94,7 @@ class ProgramSummary extends React.Component {
                 .catch(err => {
                     console.log('Upload failed: ' + err)
                     console.log(err);
-                    message.err("Error uploading program, please see console for debugging")
+                    message.error("Error uploading program, please see console for debugging")
                 });
         }
         reader.readAsText(file);
@@ -160,26 +185,26 @@ class ProgramSummary extends React.Component {
                         <UploadOutlined /> Click to upload program data
                     </Button>
                 </Upload>
-                <Popconfirm title="Are you sure you want to delete the entire program? This can't be undone." onConfirm={this.deleteProgram.bind(this)}><Button type="danger" loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
+                <Popconfirm title="Are you sure you want to delete the entire program? This can't be undone." onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
                 <Table
                     columns={columns} 
                     dataSource={counts}
                     rowKey={(r)=>(r.key)}
                     pagination={{ defaultPageSize: 500,
-                        pageSizeOptions: [10, 20, 50, 100, 500], 
-                        position: ['topRight', 'bottomRight']}}/>
+                        pageSizeOptions: ['10', '20', '50', '100', '500'], 
+                        position: ['topRight', 'bottomRight']
+                    }}/>
             </div>
         )
     }
 }
 
-const AuthConsumer = (props) => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <ProgramSummary {...props} auth={value} />
-                )}
-            </AuthUserContext.Consumer>
-
+const AuthConsumer = (props: ProgramSummaryProps) => (
+    <AuthUserContext.Consumer>
+        {value => (value == null ? <></> : //@ts-ignore
+            <ProgramSummary {...props} auth={value} />
+        )}
+    </AuthUserContext.Consumer>
 );
 
 export default AuthConsumer;
