@@ -7,7 +7,7 @@ import { ClowdrAppState } from "../../ClowdrTypes";
 
 interface UserDescriptorState {
     userID: string;
-    loading: Boolean;
+    loading: boolean;
     profile?: any;      /* TS: What should this be?? */
 }
 
@@ -29,7 +29,7 @@ class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptor
         if (this.state.loading) {
             return <Skeleton.Input active style={{ width: '200px' }} />
         }
-        // This will be a better way, once Typescript 3.7 is available:
+        // TS: This should be a better way, but I didn't get it to propagate the non-null information to the rest of the method
         // assert (this.props.authContext !== null);
         let popoverContent = <a href={"slack://user?team=" + this.props.authContext?.currentConference.get("slackWorkspace") + "&id=" + this.state.profile.get("slackID")}>Direct message on Slack</a>;
         return <div>
