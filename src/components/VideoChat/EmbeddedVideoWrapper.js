@@ -43,7 +43,7 @@ const Main = styled('main')({
     // overflow: 'hidden',
 });
 
-const ParticipantContainer = styled('Grid')(({ theme }) => ({
+const ParticipantContainer = styled('Grid')(({theme}) => ({
     // position: 'relative',
     height: '80vh',
     // display: 'grid',
@@ -72,23 +72,21 @@ export default function App() {
 
     return (
         <div>
-            <MenuBar />
+            <MenuBar/>
             <Main>
-                {roomState === 'disconnected' ? <ConnectTriggeringLocalVideoPreview /> : <div>
+                {roomState === 'disconnected' ? <ConnectTriggeringLocalVideoPreview/> : <div>
                     <ParticipantStrip/>
                 </div>}
             </Main>
-            <ReconnectingNotification />
+            <ReconnectingNotification/>
         </div>
     );
 }
 
 
-
-
 function ParticipantStrip() {
     const {
-        room: { localParticipant },
+        room: {localParticipant},
     } = useVideoContext();
     const participants = useParticipants();
     const classes = useStyles();
@@ -97,7 +95,7 @@ function ParticipantStrip() {
     let tmp = [];
     tmp = tmp.concat(participants)
     // for(let i = 0; i < 10; i++){
-        tmp.push(localParticipant);
+    tmp.push(localParticipant);
     // }
 
 
@@ -117,12 +115,11 @@ function ParticipantStrip() {
         700: 2,
         500: 1
     };
-    if(nImages ==1){
-        breakpointColumnsObj={
+    if (nImages == 1) {
+        breakpointColumnsObj = {
             default: 1
         }
-    }
-    else if (nImages == 2) {
+    } else if (nImages == 2) {
         breakpointColumnsObj = {
             default: 2,
             1200: 1
@@ -133,19 +130,17 @@ function ParticipantStrip() {
             1100: 3,
             500: 3
         };
-    }
-    else if(nImages <= 16){
-        breakpointColumnsObj ={
+    } else if (nImages <= 16) {
+        breakpointColumnsObj = {
             default: 4,
             1100: 4,
-            500 : 4
+            500: 4
         }
-    }
-    else{
-        breakpointColumnsObj ={
+    } else {
+        breakpointColumnsObj = {
             default: 10,
             1100: 6,
-            500 : 4
+            500: 4
         }
     }
     if (selectedParticipant) {
@@ -155,12 +150,11 @@ function ParticipantStrip() {
             700: 4,
             500: 2
         };
-        if(nImages == 1){
-            breakpointColumnsObj ={
+        if (nImages == 1) {
+            breakpointColumnsObj = {
                 default: 1
             }
-        }
-        else if (nImages == 2) {
+        } else if (nImages == 2) {
             breakpointColumnsObj = {
                 default: 4,
                 500: 2
@@ -171,13 +165,13 @@ function ParticipantStrip() {
                 1100: 3,
                 500: 3
             };
-        } else{
-            breakpointColumnsObj ={
+        } else {
+            breakpointColumnsObj = {
                 default: 8
             }
         }
     }
-    if(selectedParticipant && !tmp.find(p=>p.sid == selectedParticipant.sid)){
+    if (selectedParticipant && !tmp.find(p => p.sid == selectedParticipant.sid)) {
         //selected is gone
         setSelectedParticipant(null);
     }
@@ -187,65 +181,54 @@ function ParticipantStrip() {
         //     <ScrollContainer>
         // <Container style={{ height }}>
 
-                <div style={{paddingLeft: "5px"}}>
-    {selectedParticipant?  <Participant
-        key={selectedParticipant.sid}
-        participant={selectedParticipant}
-        isSelected={true}
-        enableScreenShare={true}
-        priority={"high"}
-        onClick={() => setSelectedParticipant(selectedParticipant)}
-        showWhenJustListening={true}
-    /> : ""}
-        Active participants:
-        <Masonry         breakpointCols={breakpointColumnsObj} className="video-masonry-grid" columnClassName="video-masonry-column">
-            {/*{selectedParticipant == localParticipant ? "" : <Participant*/}
-            {/*        participant={localParticipant}*/}
-            {/*        isSelected={selectedParticipant === localParticipant}*/}
-            {/*        onClick={() => setSelectedParticipant(localParticipant)}*/}
-            {/*    />}*/}
-            {tmp.filter((participant)=>(participant != selectedParticipant)).map((participant,idx)=>(
-                // {participants.filter((participant)=>(participant != selectedParticipant)).map((participant, idx)=> (
-                    <Participant
-                        key={""+idx+participant.sid}
-                        participant={participant}
-                        isSelected={selectedParticipant === participant}
-                        enableScreenShare={true}
-                        priority={defaultPriority}
-                        onClick={() => setSelectedParticipant(participant)}
-                        showWhenJustListening={false}
-                    />
-                ))}
-        </Masonry>
-    Just listening:
-            {tmp.filter((participant)=>(participant != selectedParticipant)).map((participant,idx)=>(
-                    <Participant
-                        key={""+idx+participant.sid}
-                        participant={participant}
-                        isSelected={selectedParticipant === participant}
-                        enableScreenShare={true}
-                        priority={defaultPriority}
-                        onClick={() => setSelectedParticipant(participant)}
-                        showWhenJustListening={true}
-                    />
-                ))}
+        <div style={{paddingLeft: "5px"}}>
+            {selectedParticipant ? <Participant
+                key={selectedParticipant.sid}
+                participant={selectedParticipant}
+                isSelected={true}
+                enableScreenShare={true}
+                priority={"high"}
+                onClick={() => setSelectedParticipant(selectedParticipant)}
+                showWhenJustListening={true}
+            /> : ""}
+            <Masonry breakpointCols={breakpointColumnsObj}
+                     className="video-masonry-grid" columnClassName="video-masonry-column">
+                {/*{selectedParticipant == localParticipant ? "" : <Participant*/}
+                {/*        participant={localParticipant}*/}
+                {/*        isSelected={selectedParticipant === localParticipant}*/}
+                {/*        onClick={() => setSelectedParticipant(localParticipant)}*/}
+                {/*    />}*/}
+                {tmp.filter((participant) => (participant != selectedParticipant))
+                    .map((participant, idx) =>
+                        (<Participant
+                                key={"" + idx + participant.sid}
+                                participant={participant}
+                                isSelected={selectedParticipant === participant}
+                                enableScreenShare={true}
+                                priority={defaultPriority}
+                                onClick={() => setSelectedParticipant(participant)}
+                                showWhenJustListening={false}
+                            />
+                        ))}
+            </Masonry>
 
-    <div className={clsx(classes.controlsContainer, { showControls })}>
-        <ToggleAudioButton disabled={isReconnecting} />
-        <ToggleVideoButton disabled={isReconnecting} />
-        {roomState !== 'disconnected' && (
-            <>
-                <ToggleScreenShareButton disabled={isReconnecting} />
-                <EndCallButton />
-            </>
-        )}
-    </div>
-</div>
+            <div className={clsx(classes.controlsContainer, {showControls})}>
+                <ToggleAudioButton disabled={isReconnecting}/>
+                <ToggleVideoButton disabled={isReconnecting}/>
+                {roomState !== 'disconnected' && (
+                    <>
+                        <ToggleScreenShareButton disabled={isReconnecting}/>
+                        <EndCallButton/>
+                    </>
+                )}
+            </div>
+        </div>
         // </ParticipantStripContainer>
     );
 }
 
-function Participant({   participant,
+function Participant({
+                         participant,
                          disableAudio,
                          enableScreenShare,
                          onClick,
@@ -256,18 +239,22 @@ function Participant({   participant,
     const publications = usePublications(participant);
     const audioPublication = publications.find(p => p.kind === 'audio');
     const videoPublication = publications.find(p => p.trackName.includes('camera'));
-    const justListening = (audioPublication == null && videoPublication == null);
-    const showIt = showWhenJustListening ? justListening : !justListening;
 
-    if (showIt) {
-      return (
-          <ParticipantInfo participant={participant} onClick={onClick} isSelected={isSelected}>
-              <ParticipantTracks participant={participant} disableAudio={disableAudio} enableScreenShare={enableScreenShare} videoPriority={priority}/>
-          </ParticipantInfo>
-      );
-    } else {
-      return <></>
-    }
+    /*
+       const justListening = (audioPublication == null && videoPublication == null);
+           <div>
+               showWhenJustListening = {showWhenJustListening.toString()} <br/>
+               audioPublication = { audioPublication != null ? audioPublication.toString() : "null"} <br/>
+               videoPublication = { videoPublication != null ? videoPublication.toString() : "null"} <br/>
+               {justListening ? "Just listening!" : ""}
+             */
+    return <ParticipantInfo participant={participant} onClick={onClick} isSelected={isSelected}>
+        <ParticipantTracks participant={participant} disableAudio={disableAudio}
+                           enableScreenShare={enableScreenShare} videoPriority={priority}/>
+    </ParticipantInfo>;
+    /*
+            </div>;
+            */
 }
 
 const useStyles = makeStyles((theme) =>
@@ -338,26 +325,28 @@ const useStyles = makeStyles((theme) =>
     })
 );
 
-class UserProfileDisplay extends React.Component{
-    constructor(props){
+class UserProfileDisplay extends React.Component {
+    constructor(props) {
         super(props);
         this.state = {name: this.props.id, loading: true};
     }
+
     async componentDidMount() {
         let profile = await this.props.authContext.helpers.getUserRecord(this.props.id);
-        if(profile)
+        if (profile)
             this.setState({name: profile.get("displayName"), loading: false});
 
     }
-    render(){
-        if(this.state.loading){
-            return <Skeleton.Input active style={{width: '200px'}} />
+
+    render() {
+        if (this.state.loading) {
+            return <Skeleton.Input active style={{width: '200px'}}/>
         }
         return <span>{this.state.name}</span>
     }
 }
 
-function ParticipantInfo({ participant, onClick, isSelected, children }) {
+function ParticipantInfo({participant, onClick, isSelected, children}) {
     const publications = usePublications(participant);
 
     const audioPublication = publications.find(p => p.kind === 'audio');
@@ -385,19 +374,19 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
             onClick={onClick}
             data-cy-participant={participant.identity}
         >
-            <div className={clsx(classes.infoContainer, { [classes.hideVideo]: !isVideoEnabled })}>
+            <div className={clsx(classes.infoContainer, {[classes.hideVideo]: !isVideoEnabled})}>
                 <div className={classes.infoRow}>
                     <h4 className={classes.identity}>
-                        <ParticipantConnectionIndicator participant={participant} />
+                        <ParticipantConnectionIndicator participant={participant}/>
                         <UserProfileDisplay authContext={authContext} id={participant.identity}/>
                     </h4>
-                    <NetworkQualityLevel qualityLevel={networkQualityLevel} />
+                    <NetworkQualityLevel qualityLevel={networkQualityLevel}/>
                 </div>
                 <div>
-                    <AudioLevelIndicator audioTrack={audioTrack} background="white" />
-                    {!isVideoEnabled && <VideocamOff />}
-                    {isScreenShareEnabled && <ScreenShare />}
-                    {isSelected ? <PushpinFilled /> : <PushpinOutlined/>}
+                    <AudioLevelIndicator audioTrack={audioTrack} background="white"/>
+                    {!isVideoEnabled && <VideocamOff/>}
+                    {isScreenShareEnabled && <ScreenShare/>}
+                    {isSelected ? <PushpinFilled/> : <PushpinOutlined/>}
                 </div>
             </div>
             {/*{isVideoSwitchedOff && <BandwidthWarning />}*/}
@@ -405,14 +394,17 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
         </div>
     );
 }
+
 function ParticipantTracks({
                                participant,
                                disableAudio,
                                enableScreenShare,
                                videoPriority,
                            }) {
-    const { room } = useVideoContext();
+    const {room} = useVideoContext();
+    // eslint-disable-next-line no-undef
     const publications = usePublications(participant);
+    // eslint-disable-next-line no-undef
     const isLocal = participant === room.localParticipant;
 
     let filteredPublications;
@@ -425,7 +417,7 @@ function ParticipantTracks({
 
     return (
         <>
-            {filteredPublications.map(publication => (
+            {filteredPublications.map(publication => ( 
                 <Publication
                     key={publication.kind}
                     publication={publication}

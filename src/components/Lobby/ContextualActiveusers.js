@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import * as React from "react";
 import {AuthUserContext} from "../Session";
 import {Collapse, Divider, Menu, Popconfirm, Select, Skeleton, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
@@ -10,7 +10,7 @@ import PresenceForm from "./PresenceForm";
 import CollapsedChatDisplay from "../Chat/CollapsedChatDisplay";
 
 
-class ContextualActiveUsers extends Component {
+class ContextualActiveUsers extends React.Component {
 
     constructor(props) {
         super(props);
@@ -24,40 +24,9 @@ class ContextualActiveUsers extends Component {
             activeSpace: this.props.auth.activeSpace,
             filterRoom: null,
             unread: {},
-            expandedProgramRoom: this.props.auth.expandedProgramRoom,
-            searchOptions: [],
-            allMembers: [],
-            allActiveRooms: [],
-            programRooms: []
+            expandedProgramRoom: this.props.auth.expandedProgramRoom
         };
         this.props.auth.leftSidebar = this;
-        this.currentConference = this.props.auth.currentConference;
-        const UserProfile = Parse.Object.extend("UserProfile");
-        const profileQ = new Parse.Query(UserProfile);
-        profileQ.limit(10000);
-        profileQ.equalTo("conference", this.currentConference);  // check if work
-        profileQ.find().then((results) => {
-            let searchOptions = [];
-            let allMembers = [];
-            for (let u of results) {
-                searchOptions.push({label: "@" + u.get("displayName"), value: u.id+"@-lobby"});
-                allMembers.push(u)
-            }
-            let allActiveRooms = [];
-            if(!this.state.activePrivateVideoRooms)
-                allActiveRooms = this.state.activePublicVideoRooms;
-            else if(!this.state.activePublicVideoRooms){
-                allActiveRooms = this.state.activePrivateVideoRooms;
-            } else {
-                allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
-            }
-            let programRooms = allActiveRooms.filter(r => r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id));
-            allActiveRooms = allActiveRooms.filter(r => !r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id));
-            for (let room of allActiveRooms) {
-                searchOptions.push({label: "#" + room.get("title"), value: room.id});
-            }
-            this.setState({searchOptions:searchOptions, allMembers:allMembers, allActiveRooms:allActiveRooms, programRooms:programRooms});
-        });
     }
 
 
@@ -190,39 +159,54 @@ class ContextualActiveUsers extends Component {
 
         let tabs = "";
         let liveMembers = 0   // BCP: Seems not to be used??
-        let allActiveRooms = this.state.allActiveRooms;
-        for (let room of allActiveRooms) {
-            if (room && room.get("members")) {
-                liveMembers += room.get("members").length;
-            }
+        let allActiveRooms = [];
+        if(!this.state.activePrivateVideoRooms)
+            allActiveRooms = this.state.activePublicVideoRooms;
+        else if(!this.state.activePublicVideoRooms){
+            allActiveRooms = this.state.activePrivateVideoRooms;
+        } else {
+            allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
         }
-        if(this.state.filteredRoom)
-            allActiveRooms = allActiveRooms.filter(r=>r.id == this.state.filteredRoom);
+
+        let programRooms = allActiveRooms.filter(r => r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id));
+        allActiveRooms = allActiveRooms.filter(r => !r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id))
         //Also make a fake rom for the lobby.
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 
 
+        if(this.state.filteredRoom)
+            allActiveRooms = allActiveRooms.filter(r=>r.id == this.state.filteredRoom);
+        let searchOptions = [];
+
+
         let lobbyMembers = [];
-        // if (this.state.presences && this.state.activeSpace)
-        //     lobbyMembers = Object.values(this.state.presences)
-        //         .filter(p =>
-        //             p
-        //             && p.get("socialSpace")
-        //             && p.get("socialSpace").id == this.state.activeSpace.id
-        //             && (!this.state.filteredUser || p.get("user").id == this.state.filteredUser)
-        //         ).map(p => p.get("user")).sort(compareNames);
-        lobbyMembers = this.state.filteredUser ? this.state.allMembers
-            .filter(p => p && p.id === this.state.filteredUser)
-            .sort(compareNames) : this.state.allMembers;
-
+        if (this.state.presences && this.state.activeSpace)
+            lobbyMembers = Object.values(this.state.presences)
+                .filter(p =>
+                    p
+                    && p.get("socialSpace")
+                    && p.get("socialSpace").id == this.state.activeSpace.id
+                    && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
+                ).map(p => p.get("user")).sort(compareNames);
         let latestLobbyMembers = lobbyMembers.concat().sort((i1, i2) => {
-            if (i1 && i2 && i1.get("presence") && i2.get("presence") && i1.get("presence").get("updatedAt") > i2.get("presence").get("updatedAt")) {
-                return -1;
-            } else {
-                return 1;
-            }
+            return (i1 && i2 && i1.get("updatedAt") > i2.get("updatedAt") ? 1 : -1)
         }).slice(0,10);
+        for(let u of lobbyMembers){
+            searchOptions.push({label: "@"+u.get("displayName"), value: u.id+"@-lobby"});
+        }
 
+        for (let room of allActiveRooms) {
+            searchOptions.push({label: "#" + room.get("title"), value: room.id});
+            if (room && room.get("members")) {
+                searchOptions = searchOptions.concat(room.get("members").map(u => {
+                    if(u)
+                        return {label: "@" + u.get("displayName"), value: u.id + "@" + room.id}
+                    else
+                        return {label: "@???", value: "??"}
+                }));
+                liveMembers += room.get("members").length;
+            }
+        }
 
         if (!this.state.collapsed) {
 
@@ -246,7 +230,7 @@ class ContextualActiveUsers extends Component {
 
             let activeSpace = this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : "Nowhere";
             let programInfo = <></>
-            if (this.state.programRooms.length > 0){
+            if (programRooms.length > 0){
                 programInfo = <div>
                     <Divider className="social-sidebar-divider">Paper/Posters in {this.state.activeSpace.get("name")}</Divider>
 
@@ -258,11 +242,11 @@ class ContextualActiveUsers extends Component {
                           inlineIndent={0}
 
                           forceSubMenuRender={true}
-                          openKeys={allActiveRooms.concat(this.state.programRooms).map(r=>r.id)}
+                          openKeys={allActiveRooms.concat(programRooms).map(r=>r.id)}
                           expandIcon={null}
                           selectedKeys={selectedKeys}
                     >
-                        {this.state.programRooms ? this.state.programRooms.sort((i1, i2) => {
+                        {programRooms ? programRooms.sort((i1, i2) => {
                             return (i1 && i2 && i1.get("name") < i2.get("name") ? 1 : -1)
                         }).map((item) => {
                                 if(!item){
@@ -375,7 +359,7 @@ class ContextualActiveUsers extends Component {
                                 return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
                             }}
 
-                            options={this.state.searchOptions} placeholder="Search for people and rooms"></Select>
+                            options={searchOptions} placeholder="Search for people and rooms"></Select>
 
                     <div style={{height:'6px', background:'white'}}/>
 

@@ -3,8 +3,10 @@ Clowdr is an open source tool suite to make it easier to run interactive and eng
 
 This repository contains the source code for the Clowdr web app.
 
-## Information for Conference Organizers
+# Information for Conference Organizers
 This repository contains the source code for Clowdr. If you are interested in using Clowdr for your event, there is no need for you to download any code or run your own server (unless you want to!). We can host your backend server for free, the only costs to your conference are for streaming video (you'll need accounts with Zoom and Twilio). Clowdr has been battle-tested by thousands of users already this year at [PLDI](https://pldi20.sigplan.org/), [ICSE](https://2020.icse-conferences.org/) and [ISSTA](https://conf.researchr.org/home/issta-2020). In August, [VL/HCC](https://conf.researchr.org/home/vlhcc2020) and [ICFP](https://icfp20.sigplan.org/) plan to use Clowdr. As we gain deployment experience, we hope to offer conference organizers a one-click installation of Clowdr. However, in the meantime, if you are considering Clowdr for your virtual conference, please email us at [hello@clowdr.org](mailto:hello@clowdr.org) and we can provide a demo and deployment for your conference.
+
+# Information for Developers
 
 ## Installation
 
@@ -16,6 +18,11 @@ Use npm to install (or upgrade) all dependencies after cloning.
 
 ```bash
 $ npm install
+```
+
+BCP: And maybe we need this:
+```bash
+$ npm install --save typescript @types/node @types/react @types/react-dom @types/jest @types/parse
 ```
 
 ### Set Up a Backend
@@ -105,7 +112,6 @@ To use zoom embedding, you need to create a JWT app on Zoom, and set the instanc
 configuration variables `ZOOM_API_KEY` and `ZOOM_API_SECRET` with the values from
 Zoom.
 
-
 ### Set up Twilio for your test conference
 
 Clowdr uses Twilio as the text and video chat service. Please go to
@@ -150,7 +156,7 @@ right side, both related to text and video chat.
 
 Setup complete!!
 
-## Contributing
+# Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Join us on the Slack [CLOWDR](clowdr.slack.com) workspace!

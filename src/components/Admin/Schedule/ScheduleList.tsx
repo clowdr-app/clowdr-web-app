@@ -1,17 +1,35 @@
-import React from 'react';
-import {Space, Table} from "antd";
+import * as React from 'react';
+import { Space, Table } from "antd";
+import { ColumnsType } from 'antd/lib/table';
+import Firebase from '../../Firebase/firebase';
 
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
+interface ScheduleListProps {
+    firebase: Firebase;
+}
 
-export default class ScheduleList extends React.Component {
-    constructor(props) {
+interface ScheduleListState {
+    sessions: any[],//TS: refine!
+    items: {}  //TS: refine!
+    loading: boolean,
+    categories: string[],
+}
+
+interface ScheduleListSchema {
+    title: string,
+    dataIndex?: string,
+    key: string,
+    name: string,
+    address: string,
+    render: (text: string, record: { key: string }) => React.ReactElement,
+}
+
+export default class ScheduleList extends React.Component<ScheduleListProps, ScheduleListState> {
+    sessionsRef: firebase.database.Reference;
+    itemsRef: firebase.database.Reference;
+    categoriesRef: firebase.database.Reference;
+    constructor(props: ScheduleListProps) {
         super(props);
-        this.state = {sessions: [], items: {}}
+        this.state = { sessions: [], items: {}, loading: false, categories: [] }
         this.sessionsRef = this.props.firebase.db.ref("program/sessions/");
         this.itemsRef = this.props.firebase.db.ref("program/items/");
         this.categoriesRef = this.props.firebase.db.ref("program/categories/");
@@ -20,7 +38,7 @@ export default class ScheduleList extends React.Component {
     componentDidMount() {
         this.sessionsRef.on('value', (val) => {
             const res = val.val();
-            const sessions = [];
+            const sessions: string[] = [];   // TS: ??
             if (res) {
                 val.forEach((session) => {
                     let d = session.val();
@@ -28,11 +46,11 @@ export default class ScheduleList extends React.Component {
                     sessions.push(d);
                 });
             }
-            this.setState({sessions: sessions, loading: false});
+            this.setState({ sessions: sessions, loading: false });
         });
         this.categoriesRef.on('value', (val) => {
             const res = val.val();
-            const categories = [];
+            const categories: string[] = [];   // TS: ??
             if (res) {
                 val.forEach((cat) => {
                     let d = cat.val();
@@ -40,18 +58,24 @@ export default class ScheduleList extends React.Component {
                     categories.push(d);
                 });
             }
-            this.setState({categories: categories, loading: false});
+            this.setState({ categories: categories, loading: false });
         });
         this.itemsRef.on('value', (val) => {
             const res = val.val();
             const items = {};
             if (res) {
                 val.forEach((item) => {
+                    // TS : TS is unhappy because item.key can be null according to its type...
+                    // @ts-ignore
+                    if (items.key != null) {
+                    // @ts-ignore
                     items[item.key] = item.val();
+                    // @ts-ignore
                     items[item.key].id = item.key;
+                    }
                 });
             }
-            this.setState({items: items});
+            this.setState({ items: items });
         });
     }
 
@@ -61,7 +85,7 @@ export default class ScheduleList extends React.Component {
     }
 
     render() {
-        const columns = [
+        const columns: ColumnsType<ScheduleListSchema> = [
             {
                 title: 'Title',
                 dataIndex: 'title',
@@ -91,8 +115,11 @@ export default class ScheduleList extends React.Component {
                 ],
                 // specify the condition of filtering result
                 // here is that finding the name started with `value`
-                onFilter: (value, record) => record.name.indexOf(value) === 0,
-                sorter: (a, b) => a.name.length - b.name.length,
+                // TS: Not sure what the correct annotations are here: onFilter seems to want a function that 
+                // can accept any of string,number,boolean, but indexOf only wants a string...
+                // @ts-ignore
+                onFilter: (value:string|number|boolean, record) => record.name.indexOf(value) === 0,
+                sorter: (a: ScheduleListSchema, b: ScheduleListSchema) => a.name.length - b.name.length,
                 sortDirections: ['descend'],
             },
             {
@@ -115,12 +142,15 @@ export default class ScheduleList extends React.Component {
                     },
                 ],
                 filterMultiple: false,
-                onFilter: (value, record) => record.address.indexOf(value) === 0,
-                sorter: (a, b) => a.address.length - b.address.length,
+                onFilter: (value, record:any) => record.address.indexOf(value) === 0,  // TS: refine!
+                sorter: (a: {address:string}, b: {address:string}) => a.address.length - b.address.length,
                 sortDirections: ['descend', 'ascend'],
             },
         ];
-        return (<Table columns={columns} dataSource={this.state.sessions} onChange={this.onChange}/>)
+        return (<Table 
+            columns= { columns } 
+            dataSource = { this.state.sessions } 
+            onChange = { this.onChange } />)
     }
 
     onChange() {

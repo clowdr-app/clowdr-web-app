@@ -1,7 +1,7 @@
-import React, {Component} from "react";
+import * as React from "react";
 import {Typography} from "antd";
 
-class Help extends Component {
+class Help extends React.Component<{},{}> {
     render() {
         return <div>
             <Typography.Title level={2}>CLOWDR Support</Typography.Title>
