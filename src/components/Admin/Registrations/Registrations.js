@@ -237,9 +237,9 @@ class Registrations extends React.Component {
                     <tbody>
                         <tr>
                             <td><Upload accept=".txt, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
-                                <Button>
+                                <Tooltip title="Upload a CSV file with a header and mandatory fields: email,name and optional fields affiliation,country. Name can be either a single field 'name' or 'first' and 'last'"><Button>
                                     <UploadOutlined /> Upload file
-                                </Button>
+                                </Button></Tooltip>
                             </Upload></td>
 
                             <td>
