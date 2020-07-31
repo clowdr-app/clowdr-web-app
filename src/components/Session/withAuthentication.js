@@ -66,7 +66,6 @@ const withAuthentication = Component => {
                 setSocialSpace: this.setSocialSpace.bind(this),
                 getConferenceBySlackName: this.getConferenceBySlackName.bind(this),
                 setActiveRoom: this.setActiveRoom.bind(this),
-                teamID: null,
                 currentConference: null,
                 activeRoom: null,
                 helpers: exports,
@@ -229,15 +228,6 @@ const withAuthentication = Component => {
             let res = await confQ.first();
             return res;
         }
-
-        // activeConference(teamID){
-        //     if(teamID){
-        //         this.setState({teamID: teamID})
-        //     }
-        //     else{
-        //         return this.state.teamID;
-        //     }
-        // }
 
         getPresences(component){
             this.presenceWatchers.push(component);
@@ -632,7 +622,6 @@ const withAuthentication = Component => {
                             spaces: spacesByName,
                             user: user,
                             userProfile: activeProfile,
-                            teamID: session.get("activeTeam"),
                             isAdmin: isAdmin,
                             isClowdrAdmin: isClowdrAdmin,
                             permissions: permissions.map(p=>p.get("action").get("action")),

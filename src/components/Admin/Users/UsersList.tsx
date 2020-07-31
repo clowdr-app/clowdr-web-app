@@ -5,11 +5,11 @@ import Parse from "parse"
 import {Button, Input, message, Space, Switch, Table, Tooltip} from "antd";
 import {SearchOutlined} from "@material-ui/icons";
 import Highlighter from 'react-highlight-words';
-import { AuthContext, IDToken } from "../../../ClowdrTypes";
+import { ClowdrAppState, UserSessionToken } from "../../../ClowdrTypes";
 
 interface UsersListProps {
     // history: string[],
-    auth: AuthContext,
+    auth: ClowdrAppState,
 }
 
 interface ManagedUser {
@@ -67,7 +67,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     async updateBan(item: ManagedUser){
         this.setState({banUpdating: true})
         console.log(item);
-        let idToken: IDToken = "";
+        let idToken: UserSessionToken = "";
         if (this.props.auth.user != null) {
             idToken = this.props.auth.user.getSessionToken();
         }
@@ -127,6 +127,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         let {count, results} = (await parseUserQ.find()) as unknown as {count: number, results: any[]};
         nRetrieved = results.length;
         // @ts-ignore     @Jon/@Crista: Don't we need a user_id field also??
+        //Jon: user_id is item.id is key in this situation.
         let allUsers: ManagedUser[] = results.map((item: QueryResult) => ({
             key: item.id,
             displayName: item.get("displayName"),
@@ -282,8 +283,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 key: 'isBanned',
                 ...this.getColumnSearchProps('isBanned'),
             }, {
-                 // @ts-ignore     @Jon/@!Crista: Does the type error here indicate a bug?
-                 title: <Tooltip title="Administrators have full access to all that managers do, plus the ability to manage internal clowdr settings">Admin</Tooltip>,
+                 title: <Tooltip title="Administrators have full access to all that managers do, plus the ability to manage internal clowdr settings"><>Admin</></Tooltip>,
                 key: 'admin',
                 render: (text:string, item: { key: any; })=>{   // TS: Is this the best annotation?
                     let hasRole = this.state.roles['admin'] && this.state.roles['admin'].includes(item.key);
@@ -292,8 +292,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 }
             },
             {
-                // @ts-ignore     @Jon/@!Crista: Does the type error here indicate a bug?
-                title: <Tooltip title="Content managers can edit the program">Manager</Tooltip>,
+                title: <Tooltip title="Content managers can edit the program"><>Manager</></Tooltip>,
                 key: 'manager',
                 render: (text:string, item: { key: any; })=>{
                     let hasRole = this.state.roles['manager'] && this.state.roles['manager'].includes(item.key);
@@ -302,8 +301,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 }
             },
             {
-                // @ts-ignore     @Jon/@!Crista: Does the type error here indicate a bug?
-                title: <Tooltip title="Moderators can enter all private channels and send global announcements">Moderator</Tooltip>,
+                title: <Tooltip title="Moderators can enter all private channels and send global announcements"><>Moderator</></Tooltip>,
                 key: 'moderator',
                 render: (text:string, item: { key: any; })=>{
                     let hasRole = this.state.roles['moderator'] && this.state.roles['moderator'].includes(item.key);

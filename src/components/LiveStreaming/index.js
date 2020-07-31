@@ -52,6 +52,8 @@ class LiveStreaming extends Component {
     getLiveRooms(when, sessions) {
         if(!sessions)
             sessions = this.state.ProgramSessions;
+        if(!sessions)
+            throw "No session data!"
         let now = Date.now();
 
         // Live now

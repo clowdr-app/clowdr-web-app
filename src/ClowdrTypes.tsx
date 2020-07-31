@@ -1,5 +1,4 @@
-// TS: @Crista / @Jon: Is AuthContext the right name for this type?  Seems like it is carrying a lot more than authorization information!
-// (the basic structure is there, but there are a lot more details to be filled in...)
+// BCP: (the basic structure is there, but there are a lot more details to be filled in...)
 
 import * as Parse from 'parse';
 
@@ -9,15 +8,12 @@ type SocialSpace = any
 type ProgramCache = any
 type Role = any
 
-// @Jon: Are these the same thing??  Crista thinks no...
-export type IDToken = string
-export type ID = string
+export type UserSessionToken = string
 
-export interface AuthContext {
+export interface ClowdrAppState {
     spaces: Map<string, SocialSpace>;   // Crista said Dictionary, but I think she meant Map
     user: Parse.User | null;
     userProfile: UserProfile | null;
-    teamID: ID | null;
     isAdmin: Boolean;
     isClowdrAdmin: Boolean;
     permissions: Array<string>;
