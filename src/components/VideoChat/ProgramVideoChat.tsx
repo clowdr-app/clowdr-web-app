@@ -24,7 +24,7 @@ interface ProgramVideoChatState {
 
 interface ProgramVideoChatProps {
     room: any;    // TS: ???
-    authContext: ClowdrAppState | null;
+    clowdrAppState: ClowdrAppState | null;
 }
 class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVideoChatState>{
 
@@ -40,8 +40,8 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
         // }
     }
     joinRoom() {
-        if (this.props.authContext != null) {
-            let user = this.props.authContext.user;
+        if (this.props.clowdrAppState != null) {
+            let user = this.props.clowdrAppState.user;
             this.setState({ isInRoom: true });
         }
     }
@@ -53,7 +53,7 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
         }
         return <VideoRoom
             hideInfo={true} room={this.state.room}
-            conference={this.props.authContext != null ? this.props.authContext.currentConference : null}
+            conference={this.props.clowdrAppState != null ? this.props.clowdrAppState.currentConference : null}
             onHangup={() => {
                 this.setState({ isInRoom: false })
             }
@@ -63,7 +63,7 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
 const AuthConsumer = (props: ProgramVideoChatProps) => (
     <AuthUserContext.Consumer>
         {value => (
-            <ProgramVideoChat {...props} authContext={value}
+            <ProgramVideoChat {...props} clowdrAppState={value}
             />
         )}
     </AuthUserContext.Consumer>

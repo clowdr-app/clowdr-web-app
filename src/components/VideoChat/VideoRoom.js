@@ -68,14 +68,14 @@ class VideoRoom extends Component {
 
     componentWillUnmount() {
         console.log("Unmounting video room")
-        this.props.authContext.helpers.setGlobalState({currentRoom: null});
+        this.props.clowdrAppState.helpers.setGlobalState({currentRoom: null});
     }
     async joinCallFromProps(){
         if (!this.props.match) {
             return;
         }
-        if(!this.props.authContext.user || (this.props.match.params.conf && this.props.match.params.conf != this.props.authContext.currentConference.get("conferenceName"))){
-            this.props.authContext.refreshUser(this.props.match.params.conf).then((u)=>{
+        if(!this.props.clowdrAppState.user || (this.props.match.params.conf && this.props.match.params.conf != this.props.clowdrAppState.currentConference.get("conferenceName"))){
+            this.props.clowdrAppState.refreshUser(this.props.match.params.conf).then((u)=>{
                 this.joinCallFromPropsWithCurrentUser()
             })
         }
@@ -85,7 +85,7 @@ class VideoRoom extends Component {
     }
 
     async joinCallEmbedded(room, conf) {
-        let user = this.props.authContext.user;
+        let user = this.props.clowdrAppState.user;
 
         this.setState({loadingMeeting: 'true', room: room})
 
@@ -141,7 +141,7 @@ class VideoRoom extends Component {
         }
     }
     async deleteRoom(){
-        let idToken = this.props.authContext.user.getSessionToken();
+        let idToken = this.props.clowdrAppState.user.getSessionToken();
         this.setState({roomDeleteInProgress: true})
 
         const data = fetch(
@@ -149,7 +149,7 @@ class VideoRoom extends Component {
             , {
                 method: 'POST',
                 body: JSON.stringify({
-                    conference: this.props.authContext.currentConference.get("slackWorkspace"),
+                    conference: this.props.clowdrAppState.currentConference.get("slackWorkspace"),
                     identity: idToken,
                     room: this.state.room.id,
                 }),
@@ -239,23 +239,23 @@ class VideoRoom extends Component {
             }
         }, timeout);
         if(room.get("socialSpace"))
-            this.props.authContext.setSocialSpace(null,room.get("socialSpace"));
+            this.props.clowdrAppState.setSocialSpace(null,room.get("socialSpace"));
 
-        room = await this.props.authContext.helpers.populateMembers(room);
+        room = await this.props.clowdrAppState.helpers.populateMembers(room);
         console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
-        // this.props.authContext.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
+        // this.props.clowdrAppState.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         let watchedByMe = false;
-        if(this.props.authContext.userProfile.get("watchedRooms")){
-            watchedByMe = this.props.authContext.userProfile.get("watchedRooms").find(v =>v.id ==room.id);
+        if(this.props.clowdrAppState.userProfile.get("watchedRooms")){
+            watchedByMe = this.props.clowdrAppState.userProfile.get("watchedRooms").find(v =>v.id ==room.id);
         }
         this.setState({loadingMeeting: 'true', room: room, watchedByMe: watchedByMe})
 
-        let user = this.props.authContext.user;
+        let user = this.props.clowdrAppState.user;
 
         if (user) {
             if(room.get("twilioChatID"))
-            this.props.authContext.chatClient.initChatClient(user, this.props.authContext.currentConference, this.props.authContext.userProfile).then(()=>{
-                this.props.authContext.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
+            this.props.clowdrAppState.chatClient.initChatClient(user, this.props.clowdrAppState.currentConference, this.props.clowdrAppState.userProfile).then(()=>{
+                this.props.clowdrAppState.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
                 })
             });
             let idToken = user.getSessionToken();
@@ -315,7 +315,7 @@ class VideoRoom extends Component {
             this.props.onHangup();
         } else {
             this.props.history.push(ROUTES.LOBBY_SESSION);
-            this.props.authContext.helpers.setGlobalState({currentRoom: null});
+            this.props.clowdrAppState.helpers.setGlobalState({currentRoom: null});
         }
     }
 
@@ -324,7 +324,7 @@ class VideoRoom extends Component {
         if(!this.props.room){
             let conf = this.props.match.params.conf;
             let roomID = this.props.match.params.roomName;
-            if (this.props.authContext.user != prevProps.authContext.user || conf != this.state.conf || roomID !=this.state.meetingName){
+            if (this.props.clowdrAppState.user != prevProps.clowdrAppState.user || conf != this.state.conf || roomID !=this.state.meetingName){
                 let confName = this.props.match.params.conf;
                 let roomID = this.props.match.params.roomName;
                 if((confName != this.confName || roomID != this.roomID) &&(!this.state.error || this.roomID != roomID))
@@ -342,7 +342,7 @@ class VideoRoom extends Component {
                 if(!this.state.members.find(v=>v.id == member.id)){
                     //new member appeared
                     hadChange = true;
-                    // if (this.state.members.length > 0 && this.props.authContext.userProfile.id != member.id)
+                    // if (this.state.members.length > 0 && this.props.clowdrAppState.userProfile.id != member.id)
                     //     notification.info({
                     //         message: member.get("displayName") + " has joined this room",
                     //         placement: 'topLeft',
@@ -350,7 +350,7 @@ class VideoRoom extends Component {
                 }
             }
             for(let member of this.state.members){
-                if(this.props.authContext.userProfile.id != member.id && !this.state.room.get("members").find(v=>v.id == member.id)){
+                if(this.props.clowdrAppState.userProfile.id != member.id && !this.state.room.get("members").find(v=>v.id == member.id)){
                     hadChange = true;
                     // notification.info({
                     //     message: member.get("displayName") + " has left this room",
@@ -363,7 +363,7 @@ class VideoRoom extends Component {
         }
         // if (this.state.room && this.state.room.get("isPrivate")) {
             //Was there an update to the ACL?
-            // let room = this.props.authContext.activePrivateVideoRooms.find(r => r.id == this.state.room.id);
+            // let room = this.props.clowdrAppState.activePrivateVideoRooms.find(r => r.id == this.state.room.id);
             // console.log(room)
             // console.log(this.state.room.getACL().permissionsById)
             // if(room)
@@ -381,7 +381,7 @@ class VideoRoom extends Component {
     }
     async toggleWatch(){
         this.setState({watchLoading: true})
-        let idToken = this.props.authContext.user.getSessionToken();
+        let idToken = this.props.clowdrAppState.user.getSessionToken();
 
         const data = await fetch(
             `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/follow`
@@ -391,7 +391,7 @@ class VideoRoom extends Component {
                     roomID: this.state.room.id,
                     identity: idToken,
                     add: !this.state.watchedByMe,
-                    slackTeam: this.props.authContext.currentConference.get("slackWorkspace"),
+                    slackTeam: this.props.clowdrAppState.currentConference.get("slackWorkspace"),
                 }),
                 headers: {
                     'Content-Type': 'application/json'
@@ -405,12 +405,12 @@ class VideoRoom extends Component {
         else{
             if(!this.state.watchedByMe){
                 //toggle to true
-                let watched = this.props.authContext.userProfile.get("watchedRooms");
+                let watched = this.props.clowdrAppState.userProfile.get("watchedRooms");
                 if(!watched)
                     watched = [];
                 watched.push(this.state.room);
-                this.props.authContext.userProfile.set("watchedRooms", watched);
-                await this.props.authContext.userProfile.save();
+                this.props.clowdrAppState.userProfile.set("watchedRooms", watched);
+                await this.props.clowdrAppState.userProfile.save();
                 notification.info({
                     message: "You're now watching this room. You'll get notifications like this one whenever someone comes or goes, regardless of which room you're in at the time",
                     placement: 'topLeft',
@@ -418,12 +418,12 @@ class VideoRoom extends Component {
                 this.setState({watchedByMe: true, watchLoading: false});
             }
             else{
-                let watched = this.props.authContext.userProfile.get("watchedRooms");
+                let watched = this.props.clowdrAppState.userProfile.get("watchedRooms");
                 if(!watched)
                     watched = [];
                 watched = watched.filter(r => r.id != this.state.room.id);
-                this.props.authContext.userProfile.set("watchedRooms", watched);
-                await this.props.authContext.userProfile.save();
+                this.props.clowdrAppState.userProfile.set("watchedRooms", watched);
+                await this.props.clowdrAppState.userProfile.save();
                 notification.info({
                     message: "OK, you won't receive notifications about this room unless you're in it. We'll still notify you while you're here as people come and go.",
                     placement: 'topLeft',
@@ -467,7 +467,7 @@ class VideoRoom extends Component {
         //
         //     greeting = <div>
         //         This room is private. Only the following users can see it:
-        //         <RoomVisibilityController authContext={this.props.authContext} roomID={this.state.room.id} sid={this.state.room.get("twilioID")} acl={this.state.room.getACL()}/>
+        //         <RoomVisibilityController clowdrAppState={this.props.clowdrAppState} roomID={this.state.room.id} sid={this.state.room.get("twilioID")} acl={this.state.room.getACL()}/>
         //         Any user who can see this room can edit the access list.
         //     </div>
         //
@@ -482,7 +482,7 @@ class VideoRoom extends Component {
         if (this.state.room.get("isPrivate")) {
             visibilityDescription = (<Tooltip mouseEnterDelay={0.5} title="This room can only be accessed by users listed below."><Tag key="visibility" color="#2db7f5">Private</Tag></Tooltip>)
         } else {
-            visibilityDescription = (<Tooltip mouseEnterDelay={0.5} title={"This room can be accessed by any member of " + this.props.authContext.currentConference.get("conferenceName")}><Tag key="visibility" color="#87d068">Open</Tag></Tooltip>);
+            visibilityDescription = (<Tooltip mouseEnterDelay={0.5} title={"This room can be accessed by any member of " + this.props.clowdrAppState.currentConference.get("conferenceName")}><Tag key="visibility" color="#87d068">Open</Tag></Tooltip>);
         }
         if(this.state.room.get("members") && this.state.room.get("members").length == this.state.room.get("capacity"))
         {
@@ -499,7 +499,7 @@ class VideoRoom extends Component {
         }
         if (this.state.room.get("isPrivate")) {
             ACLdescription = (<RoomVisibilityController
-                authContext={this.props.authContext} roomID={this.state.room.id} sid={this.state.room.get("twilioID")}
+                clowdrAppState={this.props.clowdrAppState} roomID={this.state.room.id} sid={this.state.room.get("twilioID")}
                 acl={this.state.room.getACL()}/>);
         }
         let nMembers = 0;
@@ -652,7 +652,7 @@ class VideoRoom extends Component {
 
                                 {ACLdescription}
 
-                            {(this.props.authContext.user && !this.props.hideInfo && this.props.authContext.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
+                            {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             {!this.props.hideInfo ? <div>
@@ -731,7 +731,7 @@ class RoomVisibilityController extends React.Component {
 
     handleChange(value) {
         let isError = false;
-        if (!value || !value.find(u => u == this.props.authContext.user.id))
+        if (!value || !value.find(u => u == this.props.clowdrAppState.user.id))
             isError = true;
         let hasChange = false;
         if (this.state.selected.length != value.length)
@@ -747,7 +747,7 @@ class RoomVisibilityController extends React.Component {
 
     async componentDidMount() {
         let selected = Object.keys(this.props.acl.permissionsById).filter(v=>!v.startsWith("role"));
-        let profiles = await this.props.authContext.helpers.getUserProfilesFromUserIDs(selected);
+        let profiles = await this.props.clowdrAppState.helpers.getUserProfilesFromUserIDs(selected);
         let selectedIDs = profiles.map(p=>p.get("user").id);
         this.setState({selected: selectedIDs, users: profiles});
     }
@@ -769,7 +769,7 @@ class RoomVisibilityController extends React.Component {
             return;
         this.setState({pendingSave: true});
         let users = values.users;
-        let idToken = this.props.authContext.user.getSessionToken();
+        let idToken = this.props.clowdrAppState.user.getSessionToken();
         const data = await fetch(
             `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/acl`
             , {
@@ -778,7 +778,7 @@ class RoomVisibilityController extends React.Component {
                     roomID: this.props.roomID,
                     users: users,
                     identity: idToken,
-                    slackTeam: this.props.authContext.currentConference.get("slackWorkspace"),
+                    slackTeam: this.props.clowdrAppState.currentConference.get("slackWorkspace"),
                 }),
                 headers: {
                     'Content-Type': 'application/json'
@@ -799,7 +799,7 @@ class RoomVisibilityController extends React.Component {
         if (!this.triggeredUserLoad) {
             this.setState({loading: true})
             this.triggeredUserLoad = true;
-            let users = await this.props.authContext.helpers.getUsers();
+            let users = await this.props.clowdrAppState.helpers.getUsers();
             this.setState({loading: false, users: users});
         }
     }
@@ -915,7 +915,7 @@ export function DeviceSelector() {
 const AuthConsumer = (props) => (
     <AuthUserContext.Consumer>
         {value => (
-            <VideoRoom {...props} authContext={value}
+            <VideoRoom {...props} clowdrAppState={value}
             />
         )}
     </AuthUserContext.Consumer>

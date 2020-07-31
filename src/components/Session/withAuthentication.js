@@ -915,7 +915,7 @@ const withAuthentication = Component => {
                 </div>
             return (
                 <AuthUserContext.Provider value={this.state}>
-                    <Component {...this.props}  authContext={this.state} parseLive={this.state.parseLive} />
+                    <Component {...this.props}  clowdrAppState={this.state} parseLive={this.state.parseLive} />
                 </AuthUserContext.Provider>
             );
         }

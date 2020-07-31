@@ -13,7 +13,7 @@ interface UserDescriptorState {
 
 interface UserDescriptorProps {
     id: string;
-    authContext: ClowdrAppState | null;
+    clowdrAppState: ClowdrAppState | null;
 }
 
 class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptorState>{
@@ -22,7 +22,7 @@ class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptor
         this.state = { userID: props.id, loading: true };
     }
     async componentDidMount() {
-        let profile = await this.props.authContext?.helpers.getUserRecord(this.props.id);
+        let profile = await this.props.clowdrAppState?.helpers.getUserRecord(this.props.id);
         this.setState({ profile: profile, loading: false });
     }
     render() {
@@ -30,8 +30,8 @@ class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptor
             return <Skeleton.Input active style={{ width: '200px' }} />
         }
         // TS: This should be a better way, but I didn't get it to propagate the non-null information to the rest of the method
-        // assert (this.props.authContext !== null);
-        let popoverContent = <a href={"slack://user?team=" + this.props.authContext?.currentConference.get("slackWorkspace") + "&id=" + this.state.profile.get("slackID")}>Direct message on Slack</a>;
+        // assert (this.props.clowdrAppState !== null);
+        let popoverContent = <a href={"slack://user?team=" + this.props.clowdrAppState?.currentConference.get("slackWorkspace") + "&id=" + this.state.profile.get("slackID")}>Direct message on Slack</a>;
         return <div>
             {this.state.profile.get("displayName")}
         </div>
@@ -41,7 +41,7 @@ class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptor
 const AuthConsumer = (props: UserDescriptorProps) => (
     <AuthUserContext.Consumer>
         {value => (
-            <UserDescriptor {...props} authContext={value} />
+            <UserDescriptor {...props} clowdrAppState={value} />
         )}
     </AuthUserContext.Consumer>
 );

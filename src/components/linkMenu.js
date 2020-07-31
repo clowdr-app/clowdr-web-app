@@ -49,21 +49,21 @@ class LinkMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.props.authContext.programCache.getProgramTracks(this).then(tracks => {
+        this.props.clowdrAppState.programCache.getProgramTracks(this).then(tracks => {
             this.setState({ProgramTracks: tracks});
         })
     }
     componentWillUnmount() {
-        this.props.authContext.programCache.cancelSubscription("ProgramTrack", this);
+        this.props.clowdrAppState.programCache.cancelSubscription("ProgramTrack", this);
     }
 
     render() {
         let userTools = [];
         let adminTools = "";
-        if (this.props.authContext.user) {
-            if(this.props.authContext.isAdmin) {
+        if (this.props.clowdrAppState.user) {
+            if(this.props.clowdrAppState.isAdmin) {
                 let newConfOption = ""
-                if (this.props.authContext.isClowdrAdmin)
+                if (this.props.clowdrAppState.isClowdrAdmin)
                     newConfOption = <Menu.Item key="/admin/clowdr" icon={<ToolTwoTone twoToneColor="red" />}><NavLink to="/admin/clowdr">CLOWDR</NavLink></Menu.Item>
     
                 adminTools = <SubMenu key="/admin" title={<span><ToolOutlined/><span>Administration</span></span>}>
@@ -123,7 +123,7 @@ class LinkMenu extends React.Component {
 
                     <SubMenu key="conf-select" title="Select Conference">
                         {
-                            this.props.authContext.validConferences.map((conf)=><Menu.Item key={conf.id} onClick={this.props.authContext.helpers.setActiveConference.bind(this,conf)}>{conf.get("conferenceName")}</Menu.Item>)
+                            this.props.clowdrAppState.validConferences.map((conf)=><Menu.Item key={conf.id} onClick={this.props.clowdrAppState.helpers.setActiveConference.bind(this,conf)}>{conf.get("conferenceName")}</Menu.Item>)
                         }
                     </SubMenu>
                     ];
@@ -151,7 +151,7 @@ let RouteredMenu = withRouter(LinkMenu);
 const MenuWithAuth = (props) => (
             <AuthUserContext.Consumer>
                 {value => (
-                    <RouteredMenu {...props} authContext={value}  />
+                    <RouteredMenu {...props} clowdrAppState={value}  />
                 )}
             </AuthUserContext.Consumer>
 
