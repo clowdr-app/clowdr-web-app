@@ -22,22 +22,19 @@ class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptor
         this.state = { userID: props.id, loading: true };
     }
     async componentDidMount() {
-        if (this.props.authContext) { // Should always succeed -- only null during initialization
-            let profile = await this.props.authContext.helpers.getUserRecord(this.props.id);
-            this.setState({ profile: profile, loading: false });
-        }
+        let profile = await this.props.authContext?.helpers.getUserRecord(this.props.id);
+        this.setState({ profile: profile, loading: false });
     }
     render() {
         if (this.state.loading) {
             return <Skeleton.Input active style={{ width: '200px' }} />
-        } else if (this.props.authContext) { // Should always succeed -- only null during initialization
-            let popoverContent = <a href={"slack://user?team=" + this.props.authContext.currentConference.get("slackWorkspace") + "&id=" + this.state.profile.get("slackID")}>Direct message on Slack</a>;
-            return <div>
-                {this.state.profile.get("displayName")}
-            </div>
-        } else {
-            return <></>
         }
+        // This will be a better way, once Typescript 3.7 is available:
+        // assert (this.props.authContext !== null);
+        let popoverContent = <a href={"slack://user?team=" + this.props.authContext?.currentConference.get("slackWorkspace") + "&id=" + this.state.profile.get("slackID")}>Direct message on Slack</a>;
+        return <div>
+            {this.state.profile.get("displayName")}
+        </div>
     }
 }
 

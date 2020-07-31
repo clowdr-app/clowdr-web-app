@@ -5,7 +5,9 @@ This repository contains the source code for the Clowdr web app.
 
 # Information for Conference Participants
 
-See the [Clowdr User Manual](https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOTpHw0BIo/edit#heading=h.dhd7xqg6t0qm) for instructions on how to use Clowdr.
+See the [User
+Manual](https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOTpHw0BIo/edit#heading=h.dhd7xqg6t0qm)
+for instructions on how to use Clowdr as a conference participant.
 
 # Information for Conference Organizers
 This repository contains the source code for Clowdr. If you are interested
