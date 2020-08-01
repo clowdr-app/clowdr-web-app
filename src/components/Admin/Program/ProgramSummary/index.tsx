@@ -1,10 +1,15 @@
 import React from "react";
 import ProgramSummary from "./ProgramSummary";
 import AuthUserContext from "../../../Session/context";
+import { ClowdrAppState } from "../../../../ClowdrTypes";
 
-const ProgramAdminArea = (props) => (
+interface ProgramSummaryProps {
+    auth: ClowdrAppState,
+}
+
+const ProgramAdminArea = (props: ProgramSummaryProps) => (
     <AuthUserContext.Consumer>
-        {value => (
+        {value => (value == null ? <></> : //@ts-ignore
             <ProgramSummary {...props} auth={value}/>
         )}
     </AuthUserContext.Consumer>
