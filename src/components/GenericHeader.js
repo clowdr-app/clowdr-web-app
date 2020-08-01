@@ -9,16 +9,16 @@ class GenericHeader extends Component {
     constructor(props) {
         super(props);
         let confName ='';
-        if(this.props.authContext.currentConference){
-            confName = this.props.authContext.currentConference.get("conferenceName");
+        if(this.props.clowdrAppState.currentConference){
+            confName = this.props.clowdrAppState.currentConference.get("conferenceName");
         }
         this.state = {conferenceName: confName};
     }
 
 
     componentDidUpdate() {
-        if (this.props.authContext.currentConference) {
-            let name = this.props.authContext.currentConference.get("conferenceName");
+        if (this.props.clowdrAppState.currentConference) {
+            let name = this.props.clowdrAppState.currentConference.get("conferenceName");
             if (this.state.conferenceName != name) {
                 this.setState({conferenceName: name});
             }
@@ -34,7 +34,7 @@ class GenericHeader extends Component {
 const AuthConsumer = (props) => (
     <AuthUserContext.Consumer>
         {value => (
-            <GenericHeader {...props} authContext={value}
+            <GenericHeader {...props} clowdrAppState={value}
             />
         )}
     </AuthUserContext.Consumer>

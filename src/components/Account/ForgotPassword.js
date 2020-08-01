@@ -17,7 +17,7 @@ class SlackToVideo extends React.Component {
         let userID = this.props.match.params.userID;
         let token = this.props.match.params.token;
         try {
-            if(!this.props.authContext.user) {
+            if(!this.props.clowdrAppState.user) {
                 this.setState({loading: true});
                 let res = await Parse.Cloud.run("login-fromToken", {
                     token: token,
@@ -26,7 +26,7 @@ class SlackToVideo extends React.Component {
                 try {
                     let u = await Parse.User.become(res.token);
                     let confQ = new Parse.Query("ClowdrInstance");
-                    await this.props.authContext.refreshUser(null, true);
+                    await this.props.clowdrAppState.refreshUser(null, true);
                     this.setState({loading: false});
                 } catch (err) {
                     console.log(err);
@@ -42,9 +42,9 @@ class SlackToVideo extends React.Component {
 
     async setPassword(values){
         this.setState({updating: true});
-        this.props.authContext.user.setPassword(values.password);
-        this.props.authContext.user.set("passwordSet",true);
-        await this.props.authContext.user.save();
+        this.props.clowdrAppState.user.setPassword(values.password);
+        this.props.clowdrAppState.user.set("passwordSet",true);
+        await this.props.clowdrAppState.user.save();
         message.success("Your password has been updated");
         this.props.history.push("/");
 
@@ -87,7 +87,7 @@ class SlackToVideo extends React.Component {
                 let action = <div>
 
                     <Card title="Reset Your Password for Clowdr.org" style={{maxWidth: "500px", marginLeft:"auto",marginRight:"auto"}}>
-                        <Typography.Paragraph>{this.props.authContext.currentConference.get("conferenceName")} is using Clowdr.org to power its
+                        <Typography.Paragraph>{this.props.clowdrAppState.currentConference.get("conferenceName")} is using Clowdr.org to power its
                         virtual conference. Each attendee has their own profile that lets them customize their virtual
                         conference experience. You are now logged in and can choose a new password.</Typography.Paragraph>
                         <Form       {...layout}
@@ -140,7 +140,7 @@ const
     AuthConsumer = (props) => (
         <AuthUserContext.Consumer>
             {value => (
-                <SlackToVideo {...props} user={value.user} authContext={value}/>
+                <SlackToVideo {...props} user={value.user} clowdrAppState={value}/>
             )}
         </AuthUserContext.Consumer>
     );

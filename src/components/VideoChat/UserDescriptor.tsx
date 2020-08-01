@@ -7,13 +7,13 @@ import { ClowdrAppState } from "../../ClowdrTypes";
 
 interface UserDescriptorState {
     userID: string;
-    loading: Boolean;
+    loading: boolean;
     profile?: any;      /* TS: What should this be?? */
 }
 
 interface UserDescriptorProps {
     id: string;
-    authContext: ClowdrAppState | null;
+    clowdrAppState: ClowdrAppState | null;
 }
 
 class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptorState>{
@@ -22,29 +22,26 @@ class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptor
         this.state = { userID: props.id, loading: true };
     }
     async componentDidMount() {
-        if (this.props.authContext) { // Should always succeed -- only null during initialization
-            let profile = await this.props.authContext.helpers.getUserRecord(this.props.id);
-            this.setState({ profile: profile, loading: false });
-        }
+        let profile = await this.props.clowdrAppState?.helpers.getUserRecord(this.props.id);
+        this.setState({ profile: profile, loading: false });
     }
     render() {
         if (this.state.loading) {
             return <Skeleton.Input active style={{ width: '200px' }} />
-        } else if (this.props.authContext) { // Should always succeed -- only null during initialization
-            let popoverContent = <a href={"slack://user?team=" + this.props.authContext.currentConference.get("slackWorkspace") + "&id=" + this.state.profile.get("slackID")}>Direct message on Slack</a>;
-            return <div>
-                {this.state.profile.get("displayName")}
-            </div>
-        } else {
-            return <></>
         }
+        // TS: This should be a better way, but I didn't get it to propagate the non-null information to the rest of the method
+        // assert (this.props.clowdrAppState !== null);
+        let popoverContent = <a href={"slack://user?team=" + this.props.clowdrAppState?.currentConference.get("slackWorkspace") + "&id=" + this.state.profile.get("slackID")}>Direct message on Slack</a>;
+        return <div>
+            {this.state.profile.get("displayName")}
+        </div>
     }
 }
 
 const AuthConsumer = (props: UserDescriptorProps) => (
     <AuthUserContext.Consumer>
         {value => (
-            <UserDescriptor {...props} authContext={value} />
+            <UserDescriptor {...props} clowdrAppState={value} />
         )}
     </AuthUserContext.Consumer>
 );

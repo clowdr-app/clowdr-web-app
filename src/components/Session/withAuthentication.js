@@ -35,6 +35,8 @@ const withAuthentication = Component => {
             this.parseLive.open();
 
             let exports ={
+                getBreakoutRoom: this.getBreakoutRoom.bind(this),
+                cancelBreakoutRoomSubscription: this.cancelBreakoutRoomSubscription.bind(this),
                 unwrappedProfiles: this.unwrappedProfiles,
                 setExpandedProgramRoom: this.setExpandedProgramRoom.bind(this),
                 presences: this.presences,
@@ -52,7 +54,9 @@ const withAuthentication = Component => {
                 getPresences: this.getPresences.bind(this),
                 cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
                 unmountProfileDisplay: this.unmountProfileDisplay.bind(this),
-                updateMyPresence: this.updateMyPresence.bind(this)
+                updateMyPresence: this.updateMyPresence.bind(this),
+                userHasWritePermission: this.userHasWritePermission.bind(this)
+
             }
             this.state = {
                 user: null,
@@ -698,6 +702,22 @@ const withAuthentication = Component => {
             }
             return defaultConferenceName;
         }
+
+       async getBreakoutRoom(id, component){
+            if(!this.activePublicVideoRooms)
+                await this.subscribeToPublicRooms();
+            let room = this.activePublicVideoRooms.find(v=>v.id == id);
+            if(room){
+                if(!this.activePublicVideoRoomSubscribers[id])
+                    this.activePublicVideoRoomSubscribers[id] = [];
+                this.activePublicVideoRoomSubscribers[id].push(component);
+            }
+            return room;
+        }
+        cancelBreakoutRoomSubscription(id, component){
+            if(this.activePublicVideoRoomSubscribers[id])
+                this.activePublicVideoRoomSubscribers[id] = this.activePublicVideoRoomSubscribers[id].filter(v=>v!=component);
+        }
         async subscribeToPublicRooms() {
             if(!this.currentConference){
                 throw "Not logged in"
@@ -718,6 +738,8 @@ const withAuthentication = Component => {
                     }
                 }
                 res.forEach(this.notifyUserOfChanges.bind(this));
+                this.activePublicVideoRooms = res;
+                this.activePublicVideoRoomSubscribers = {};
                 this.setState({activePublicVideoRooms: res})
                 if (this.parseLivePublicVideosSub) {
                     this.parseLivePublicVideosSub.unsubscribe();
@@ -725,11 +747,13 @@ const withAuthentication = Component => {
                 this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.user.getSessionToken());
                 this.parseLivePublicVideosSub.on('create', async (vid) => {
                     vid = await this.populateMembers(vid);
+                    this.activePublicVideoRooms.push(vid);
                     this.setState((prevState) => ({
                         activePublicVideoRooms: [vid, ...prevState.activePublicVideoRooms]
                     }))
                 })
                 this.parseLivePublicVideosSub.on("delete", vid => {
+                    this.activePublicVideoRooms = this.activePublicVideoRooms.filter(v=> v.id != vid.id);
                     this.setState((prevState) => ({
                         activePublicVideoRooms: prevState.activePublicVideoRooms.filter((v) => (
                             v.id != vid.id
@@ -738,9 +762,11 @@ const withAuthentication = Component => {
                 });
                 this.parseLivePublicVideosSub.on('update', async (newItem) => {
                     newItem = await this.populateMembers(newItem);
-                    console.log("Update: " + newItem.id)
-                    console.log(newItem.get("members"))
                     this.notifyUserOfChanges(newItem);
+                    this.activePublicVideoRooms = this.activePublicVideoRooms.map(room=>room.id == newItem.id ? newItem : room);
+                    if(this.activePublicVideoRoomSubscribers[newItem.id])
+                        for(let obj of this.activePublicVideoRoomSubscribers[newItem.id])
+                            obj.setState({BreakoutRoom : newItem});
                     //Deliver notifications if applicable
                     this.setState((prevState) => ({
                         activePublicVideoRooms: prevState.activePublicVideoRooms.map(room => room.id == newItem.id ? newItem : room)
@@ -865,6 +891,15 @@ const withAuthentication = Component => {
             this.setState({videoRoomsLoaded: true});
         }
 
+        userHasWritePermission(object){
+            let acl = object.getACL();
+            if(acl.getWriteAccess(this.user))
+                return true;
+            // if(this.state.roles.find(v => v.get('name') == this.state.currentConference.id+'-manager' || v.get('name') == this.state.currentConference.id+"-admin"))
+            //     return true;
+            return false;
+        }
+
         componentDidMount() {
             const Flair = Parse.Object.extend("Flair");
             const query = new Parse.Query(Flair);
@@ -915,7 +950,7 @@ const withAuthentication = Component => {
                 </div>
             return (
                 <AuthUserContext.Provider value={this.state}>
-                    <Component {...this.props}  authContext={this.state} parseLive={this.state.parseLive} />
+                    <Component {...this.props}  clowdrAppState={this.state} parseLive={this.state.parseLive} />
                 </AuthUserContext.Provider>
             );
         }

@@ -1,10 +1,13 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
 import Parse from "parse"
-import {Alert, Spin} from "antd";
-import ProgramVideoChat from "../VideoChat/ProgramVideoChat";
-import {videoURLFromData} from "../LiveStreaming/utils";
+import {Alert, Button, Descriptions, message, Popconfirm, Space, Spin} from "antd";
+import NewMediaLinkForm from "./NewMediaLinkForm";
 import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";
+import {Document, Page, pdfjs} from 'react-pdf';
+import VideoRoom from "../VideoChat/VideoRoom";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -24,14 +27,21 @@ class ProgramItem extends React.Component {
     async componentDidMount() {
         let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
         this.setState({itemKey: itemKey});
+        if(this.props.match.path.startsWith("/breakoutRoom")){
+            this.setState({isInRoom: true});
+        }
 
         //For social features, we need to wait for the login to complete before doing anything
-        let [user, item] = await Promise.all([this.props.auth.refreshUser(), this.props.auth.programCache.getProgramItemByConfKey(itemKey, this)]);
+        let [user, item, attachmentTypes] = await Promise.all([this.props.auth.refreshUser(), this.props.auth.programCache.getProgramItemByConfKey(itemKey, this),
+        this.props.auth.programCache.getAttachmentTypes(this)]);
 
         if (!item) {
             this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
         } else {
-            let stateUpdate = {loading: false, error: null, ProgramItem: item, inBreakoutRoom: false};
+            let stateUpdate = {loading: false, error: null, ProgramItem: item, inBreakoutRoom: false, AttachmentTypes: attachmentTypes};
+            if (item.get("attachments")) {
+                await Parse.Object.fetchAllIfNeeded(item.get("attachments"));
+            }
             if (user) {
                 if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
                     //set the social space...
@@ -82,16 +92,13 @@ class ProgramItem extends React.Component {
     render() {
         if (this.state.loading)
             return <Spin/>
+        let hasWritePerm = this.props.auth.helpers.userHasWritePermission(this.state.ProgramItem);
         if(this.state.error){
             return  <Alert
                 message="Unable to load program item"
                 description={this.state.error}
                 type="error"
             />
-        }
-        let img = ""
-        if (this.state.ProgramItem.get("posterImage")) {
-            img = <img src={this.state.ProgramItem.get("posterImage").url()} />
         }
         let authors = this.state.ProgramItem.get("authors") ? this.state.ProgramItem.get("authors") : [];
         let authorstr = "";
@@ -102,55 +109,120 @@ class ProgramItem extends React.Component {
         let sessionInfo;
         let now = Date.now();
 
+        let roomInfo = <></>;
         if(this.state.ProgramItem.get("programSession")){
             let session = this.state.ProgramItem.get("programSession");
-            let roomInfo;
-            if (session.get("room") && session.get("room").get("src1") == "YouTube") {
+            let now = Date.now();
+            var timeS = session.get("startTime") ? session.get("startTime") : new Date();
+            var timeE = session.get("endTime") ? session.get("endTime") : new Date();
+
+            if (session.get("room")){ // && session.get("room").get("src1") == "YouTube") {
                 let when = "now"
-                roomInfo = <p><b>Virtual room (stream): </b><a href="#" onClick={() => {
+                if(timeE >= now)
+                    roomInfo = <Button type="primary" onClick={() => {
                     this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                }}>{session.get("room").get("name")}</a></p>
-            } else if (session.get("room") && session.get("room").get("src1") == "ZoomUS") {
-                let video = session.get("room"); // names :(
-                var timeS = session.get("startTime") ? session.get("startTime") : new Date();
-                let ts_window = moment(timeS).subtract(8, 'h').toDate().getTime();
-                let ts_future = moment(timeS).add(8, 'h').toDate().getTime();
-                let show_link = (timeS > now && ts_window < now);
-                if(show_link && video.get("src1")) {
-                    let country = this.props.auth.userProfile.get("country");
-                    var src = video.get("src1");
-                    var id = video.get("id1");
-                    var pwd = video.get("pwd1");
-
-                    var inChina = false;
-                    if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
-                        // Commenting it for now until we get conformation of the Chinese URL
-                        // src = this.props.video.get("src2");
-                        // id = this.props.video.get("id2");
-                        inChina = true;
-                    }
-                    let video_url= videoURLFromData(src, id, pwd, country);
-
-                    roomInfo = <p><b>Virtual room (stream): </b> <a target="_blank" href={video_url}>Join via Zoom</a></p>
-                }
-                else
-                    roomInfo = <p><b>Virtual room (stream): </b> A zoom link will be available here to join, 8 hours before the event starts.</p>
+                }}>Join Live Session</Button>
             }
             sessionInfo = <div>
-                <b>Session:</b> {session.get("title")} ({this.formatTime(session.get("startTime"))} - {this.formatTime(session.get('endTime'))}){roomInfo}
+                {session.get("title")} ({this.formatTime(session.get("startTime"))} - {this.formatTime(session.get('endTime'))})
             </div>;
+        }
+
+        let additionalDescription =[];
+        let externalLinks = [];
+        if(this.state.ProgramItem.get("attachments")){
+            let attachments = this.state.ProgramItem.get("attachments").sort((a,b)=>{
+                if(!a.get("attachmentType"))
+                    return -1;
+                if(!b.get("attachmentType"))
+                    return 1;
+                let t1 = this.state.AttachmentTypes.find(v=>v.id == a.get("attachmentType").id);
+                let t2 = this.state.AttachmentTypes.find(v=>v.id == b.get("attachmentType").id);
+                if(t1.get("ordinal") < t2.get("ordinal"))
+                    return -1;
+                return 1;
+            })
+            for (let attachment of attachments) {
+                let type = this.state.AttachmentTypes.find(v => v && v.id == attachment.get("attachmentType").id);
+                let deleteButton = <></>
+
+                if (hasWritePerm)
+                    deleteButton =
+                        <Popconfirm title={"Are you sure you want to delete this " + type.get('name') + " attachment?"}
+                                    onConfirm={
+                                        () => {
+                                            attachment.destroy();
+                                            message.success("Attachment deleted.");
+                                        }
+                                    }><Button type="text" danger size="small">Delete</Button></Popconfirm>
+                if (type.get("displayAsLink")) {
+                    let url = attachment.get("url");
+                    if (!url)
+                        url = attachment.get("file").url();
+                    externalLinks.push(<span key={attachment.id}><a href={url}
+                                                                    target="_blank">{type.get("name")}</a>{deleteButton}</span>);
+                } else {
+                    let url = attachment.get("url");
+                    if (!url)
+                    {
+                        if(!attachment.get("file"))
+                            continue;
+                        url = attachment.get("file").url();
+                    }
+                    let viewer = url;
+                    if (url.endsWith(".pdf")) {
+                        viewer = <Space><Document
+                            file={url}
+                            // onLoadSuccess={onDocumentLoadSuccess}
+                        >
+                            <Page pageNumber={1}/>
+                        </Document>{deleteButton}</Space>
+                    } else {
+                        viewer = <Space>
+                            <a href={url} target="_blank"><img src={url} alt={type.get("name")}
+                                                               width={300}/></a> {deleteButton}</Space>
+                    }
+                    additionalDescription.push(<Descriptions.Item key={attachment.id} label={type.get('name')}>{viewer}</Descriptions.Item>)
+                }
+            }
+            if (externalLinks.length) {
+                additionalDescription.push(<Descriptions.Item key="externalLinks"
+                                                              label="External Links">{externalLinks.reduce((prev,curr) => [prev,", ",curr])}</Descriptions.Item>)
+            }
+        }
+        additionalDescription.push(<Descriptions.Item key="actions" label="Actions">
+            <Space align="center">
+                {roomInfo}
+                {this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")? <Button disabled={this.state.isInRoom} type="primary" onClick={()=>{
+                    this.setState({isInRoom: true});
+                }
+                }>Join Breakout Room</Button> : <></>}
+                {hasWritePerm ? <NewMediaLinkForm ProgramItem={this.state.ProgramItem} /> : <></>}
+            </Space>
+        </Descriptions.Item>)
+        let videoRoom = <></>
+        if(this.state.isInRoom){
+            videoRoom = <VideoRoom
+                hideInfo={true} room={this.state.ProgramItem.get("breakoutRoom")}
+                conference={this.props.auth != null ? this.props.auth.currentConference : null}
+                onHangup={() => {
+                    this.setState({ isInRoom: false })
+                }
+                } />
         }
 
         return <div className="programItemContainer">
             <div className="programItemMetadata">
                 <h3>{this.state.ProgramItem.get('title')}</h3>
-                <div><i>{authorstr}</i></div>
-                {sessionInfo}
-                <p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>
-                {this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")? <div className="embeddedVideoRoom"><ProgramVideoChat room={this.state.ProgramItem.get("breakoutRoom")}/></div> : <></>}
+                <Descriptions layout="horizontal" column={1} bordered>
+                    <Descriptions.Item label="Authors">{authorstr}</Descriptions.Item>
+                    <Descriptions.Item label="Session">{sessionInfo}</Descriptions.Item>
+                    <Descriptions.Item label="Abstract">{this.state.ProgramItem.get("abstract")}</Descriptions.Item>
+                    {additionalDescription}
+                </Descriptions>
             </div>
-            <div className="fill">
-                {img}
+            <div className="embeddedVideoRoom">
+                {videoRoom}
             </div>
         </div>
     }

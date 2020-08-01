@@ -59,7 +59,7 @@ class SignIn extends Component {
 
     componentDidMount() {
         if (process.env.REACT_APP_IS_MINIMAL_UI && !this.props.dontBounce) {
-            this.props.authContext.helpers.setGlobalState({showingLanding: true});
+            this.props.clowdrAppState.helpers.setGlobalState({showingLanding: true});
         }
     }
 
@@ -120,7 +120,7 @@ class SignIn extends Component {
 const AuthConsumer = (props)=>(
     <AuthUserContext.Consumer>
         {value => (
-            <SignIn {...props} user={value.user} authContext={value} refreshUser={value.refreshUser}/>
+            <SignIn {...props} user={value.user} clowdrAppState={value} refreshUser={value.refreshUser}/>
         )}
     </AuthUserContext.Consumer>
 );

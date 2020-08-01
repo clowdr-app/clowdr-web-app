@@ -60,16 +60,15 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
 
     async componentDidMount() {
         let program = await this.props.auth.programCache.getEntireProgram(this);
-        program.loading = false;
-        this.setState(program);
+        this.setState({...program, loading: false});
     }
     
     componentWillUnmount() {
-        this.props.auth.programCache.cancelSubscription("ProgramItem", this);
-        this.props.auth.programCache.cancelSubscription("ProgramRoom", this);
-        this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
-        this.props.auth.programCache.cancelSubscription("ProgramPerson", this);
-        this.props.auth.programCache.cancelSubscription("ProgramSession", this);
+        this.props.auth.programCache.cancelSubscription("ProgramItem", this, undefined);
+        this.props.auth.programCache.cancelSubscription("ProgramRoom", this, undefined);
+        this.props.auth.programCache.cancelSubscription("ProgramTrack", this, undefined);
+        this.props.auth.programCache.cancelSubscription("ProgramPerson", this, undefined);
+        this.props.auth.programCache.cancelSubscription("ProgramSession", this, undefined);
     }
 
     beforeUpload(file: RcFile) {

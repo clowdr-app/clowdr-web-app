@@ -70,13 +70,13 @@ class App extends Component {
         // if(this.props.match.)
         this.state = {
             conference: null,
-            showingLanding: this.props.authContext.showingLanding,
+            showingLanding: this.props.clowdrAppState.showingLanding,
             socialCollapsed: false,
             chatCollapsed: false,
             dirty: false
         }
 
-        if(window.location.pathname.startsWith("/fromSlack") &&!this.props.authContext.user){
+        if(window.location.pathname.startsWith("/fromSlack") &&!this.props.clowdrAppState.user){
             this.state.isMagicLogin = true;
         }
     }
@@ -107,15 +107,15 @@ class App extends Component {
         reader.onload = () => {
             const data = {
                 content: reader.result,
-                conferenceId: this.props.authContext.currentConference.id
+                conferenceId: this.props.clowdrAppState.currentConference.id
             };
 
             Parse.Cloud.run("logo-upload", data).then(async (res) => {
                 message.info("Success! Your logo has been uploaded.");
                 let updatedItemQ = new Parse.Query("ClowdrInstance");
-                let updatedItem = await updatedItemQ.get(this.props.authContext.currentConference.id);
+                let updatedItem = await updatedItemQ.get(this.props.clowdrAppState.currentConference.id);
 
-                this.props.authContext.currentConference.set("headerImage", updatedItem.get("headerImage")); //well that is gross
+                this.props.clowdrAppState.currentConference.set("headerImage", updatedItem.get("headerImage")); //well that is gross
                 console.log(res);
                 console.log('[App]: Logo uploaded successfully');
                 this.dirty();
@@ -134,20 +134,20 @@ class App extends Component {
             let headerText = this.state.conference.get("headerText");
             let confSwitcher;
             let clowdrActionButtons;
-            if(this.props.authContext.validConferences && this.props.authContext.validConferences.length > 1 && this.isSlackAuthOnly()){
+            if(this.props.clowdrAppState.validConferences && this.props.clowdrAppState.validConferences.length > 1 && this.isSlackAuthOnly()){
                 confSwitcher = <Select
                                        placeholder="Change conference"
                                        onChange={(conf)=>{
                                            console.log(conf);
-                    this.props.authContext.helpers.setActiveConference(this.props.authContext.validConferences[conf]);
+                    this.props.clowdrAppState.helpers.setActiveConference(this.props.clowdrAppState.validConferences[conf]);
                 }}>
                     {
-                        this.props.authContext.validConferences.map((conf,i)=>
+                        this.props.clowdrAppState.validConferences.map((conf,i)=>
                             <Select.Option key={i}>{conf.get("conferenceName")}</Select.Option>)
                     }
                 </Select>
                 clowdrActionButtons = <span>
-                {(this.props.authContext.user && this.props.authContext.permissions.includes("moderator") ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
+                {(this.props.clowdrAppState.user && this.props.clowdrAppState.permissions.includes("moderator") ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
                     <Tooltip mouseEnterDelay={0.5} title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
                 <Tooltip mouseEnterDelay={0.5} title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
                 <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
@@ -162,7 +162,7 @@ class App extends Component {
 
             if (headerImage) {
                 let logo = ""
-                if (this.props.authContext.user && this.props.authContext.isAdmin) {
+                if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
                     logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
                                <img src={headerImage.url()} className="App-logo" height="75" alt="logo" title="Click to replace logo"/> 
                            </Upload>
@@ -178,7 +178,7 @@ class App extends Component {
             }
             else if (headerText) {
                 let logo = "";
-                if (this.props.authContext.user && this.props.authContext.isAdmin) {
+                if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
                     logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
                                     <Button type="primary" size="small" title="Upload conference logo">
                                         <UploadOutlined />
@@ -205,26 +205,26 @@ class App extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (!prevProps.authContext || prevProps.authContext.currentConference != this.props.authContext.currentConference) {
+        if (!prevProps.clowdrAppState || prevProps.clowdrAppState.currentConference != this.props.clowdrAppState.currentConference) {
             this.refreshConferenceInformation();
         }
-        if (this.props.authContext.showingLanding != this.state.showingLanding) {
-            this.setState({showingLanding: this.props.authContext.showingLanding});
+        if (this.props.clowdrAppState.showingLanding != this.state.showingLanding) {
+            this.setState({showingLanding: this.props.clowdrAppState.showingLanding});
         }
-        if (this.state.isMagicLogin && (!window.location.pathname.startsWith("/fromSlack") || this.props.authContext.user)) {
+        if (this.state.isMagicLogin && (!window.location.pathname.startsWith("/fromSlack") || this.props.clowdrAppState.user)) {
             this.setState({isMagicLogin: false});
         }
     }
 
     componentDidMount() {
-        if (this.props.authContext.currentConference)
+        if (this.props.clowdrAppState.currentConference)
             this.refreshConferenceInformation();
-        this.props.authContext.history = this.props.history;
+        this.props.clowdrAppState.history = this.props.history;
 
     }
 
     refreshConferenceInformation() {
-        this.setState({conference: this.props.authContext.currentConference});
+        this.setState({conference: this.props.clowdrAppState.currentConference});
     }
 
     routes() {
@@ -255,6 +255,7 @@ class App extends Component {
         return (<div>
             {baseRoutes}
             <Route exact path="/" component={Home}/>
+            <Route exact path="/breakoutRoom/:programConfKey1/:programConfKey2" component={ProgramItem}/>
             <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem}/>
             <Route exact path="/live/:when/:roomName?" component={LiveVideosArea}/>
 
@@ -330,7 +331,7 @@ class App extends Component {
             }
         }
 
-        let isLoggedIn = this.props.authContext.user != null;
+        let isLoggedIn = this.props.clowdrAppState.user != null;
         return (
                 <div className="App">
                     <div>
@@ -340,8 +341,8 @@ class App extends Component {
                             {this.navBar()}
                         {/*<Header className="action-bar">*/}
                         {/*    /!*<Badge*!/*/}
-                        {/*    /!*    title={this.props.authContext.liveVideoRoomMembers + " user"+(this.props.authContext.liveVideoRoomMembers == 1 ? " is" : "s are")+" in video chats"}*!/*/}
-                        {/*    /!*    showZero={true} style={{backgroundColor: '#52c41a'}} count={this.props.authContext.liveVideoRoomMembers} offset={[0,-5]}>*!/*/}
+                        {/*    /!*    title={this.props.clowdrAppState.liveVideoRoomMembers + " user"+(this.props.clowdrAppState.liveVideoRoomMembers == 1 ? " is" : "s are")+" in video chats"}*!/*/}
+                        {/*    /!*    showZero={true} style={{backgroundColor: '#52c41a'}} count={this.props.clowdrAppState.liveVideoRoomMembers} offset={[0,-5]}>*!/*/}
                         {/*    <Button style={lobbySiderButtonStyle} onClick={this.toggleLobbySider.bind(this)} size="small" >Breakout Rooms <RightOutlined /></Button>*/}
                         {/*    <Button style={chatSiderButtonStyle} onClick={this.toggleChatSider.bind(this)} size="small" >Chat</Button>*/}
 
@@ -403,7 +404,7 @@ class ClowdrApp extends React.Component{
            <BrowserDetection>
                {this.browserHandler}
            </BrowserDetection>
-               <RouteredApp authContext={this.props.authContext} />
+               <RouteredApp clowdrAppState={this.props.clowdrAppState} />
        </BrowserRouter>
    }
 }

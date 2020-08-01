@@ -19,16 +19,16 @@ class SlackToVideo extends React.Component {
         let userID = this.props.match.params.userID;
         let token = this.props.match.params.token;
         try {
-            if(this.props.authContext.user){
-                if(userID != this.props.authContext.user.id){
+            if(this.props.clowdrAppState.user){
+                if(userID != this.props.clowdrAppState.user.id){
                     await Parse.User.logOut();
                     window.location.reload(false);
 
-                    let u = await this.props.authContext.refreshUser();
+                    let u = await this.props.clowdrAppState.refreshUser();
                     return;
                 }
                 let currentStep =1;
-                if(this.props.authContext.user.get("passwordSet")){
+                if(this.props.clowdrAppState.user.get("passwordSet")){
                     currentStep =2;
                 }
                 this.setState({loading: false, step: currentStep});
@@ -42,9 +42,9 @@ class SlackToVideo extends React.Component {
                         let u = await Parse.User.become(res.token);
                         let confQ = new Parse.Query("ClowdrInstance");
                         let conf = await confQ.get(confID);
-                        await this.props.authContext.refreshUser(conf, true);
+                        await this.props.clowdrAppState.refreshUser(conf, true);
                         let currentStep = 1;
-                        if (this.props.authContext.user.get("passwordSet")) {
+                        if (this.props.clowdrAppState.user.get("passwordSet")) {
                             currentStep = 2;
                         }
                         this.setState({loading: false, step: currentStep});
@@ -83,9 +83,9 @@ class SlackToVideo extends React.Component {
 
     async setPassword(values){
         this.setState({updating: true});
-        this.props.authContext.user.setPassword(values.password);
-        this.props.authContext.user.set("passwordSet",true);
-        await this.props.authContext.user.save();
+        this.props.clowdrAppState.user.setPassword(values.password);
+        this.props.clowdrAppState.user.set("passwordSet",true);
+        await this.props.clowdrAppState.user.save();
         this.setState({updating: false, step: 2});
     }
     async resendInvitation(){
@@ -128,7 +128,7 @@ class SlackToVideo extends React.Component {
         }
         const antIcon = <LoadingOutlined color="white" style={{fontSize: 96}} spin/>;
 
-        if (this.props.authContext.user) {
+        if (this.props.clowdrAppState.user) {
             let action = <></>
             if(this.state.step == 1){
                 let password1Rules = [
@@ -162,16 +162,16 @@ class SlackToVideo extends React.Component {
                 action = <div>
 
                     <Card title="Create a Password for Clowdr.org" style={{maxWidth: "500px", marginLeft:"auto",marginRight:"auto"}}>
-                        <Typography.Paragraph>{this.props.authContext.currentConference.get("conferenceName")} is using Clowdr.org to power its
+                        <Typography.Paragraph>{this.props.clowdrAppState.currentConference.get("conferenceName")} is using Clowdr.org to power its
                         virtual conference. In addition to organizing all of the links to the events, CLOWDR adds social features to the conference, so that you can see and chat
                             with other attendees. Each attendee has their own profile that lets them customize their virtual
                         conference experience. Please choose a password to use to login.</Typography.Paragraph>
                         <Form       {...layout}
                                     onFinish={this.setPassword.bind(this)}>
                             <Form.Item label="Email Address"
-                                       extra={"This is the email that you used to register for "+this.props.authContext.currentConference.get("conferenceName")+" and can't be changed"}
+                                       extra={"This is the email that you used to register for "+this.props.clowdrAppState.currentConference.get("conferenceName")+" and can't be changed"}
                             >
-                                <Input value={this.props.authContext.user.getEmail()}
+                                <Input value={this.props.clowdrAppState.user.getEmail()}
                                        name="email"
                                        type="text"
                                        disabled={true}
@@ -206,9 +206,9 @@ class SlackToVideo extends React.Component {
                     <Account embedded={true} onFinish={()=>{this.setState({step: 3})}}/></Card>
             }
             // else if(this.state.step == 3){
-            //     action = <Card title={"Join "+this.props.authContext.currentConference.get("conferenceName")+" on Slack"} style={{marginLeft:"auto",marginRight:"auto",maxWidth:"700px"}}>
+            //     action = <Card title={"Join "+this.props.clowdrAppState.currentConference.get("conferenceName")+" on Slack"} style={{marginLeft:"auto",marginRight:"auto",maxWidth:"700px"}}>
             //         <Typography.Paragraph>While CLOWDR provides chat integrated with the conference program, there is also a Slack
-            //             workspace. Please be sure to use your real name as your Slack handle, and the same email address that you used to register for this conference ({this.props.authContext.user.get("email")}).</Typography.Paragraph>
+            //             workspace. Please be sure to use your real name as your Slack handle, and the same email address that you used to register for this conference ({this.props.clowdrAppState.user.get("email")}).</Typography.Paragraph>
             //         <Typography.Paragraph>After you create your slack account, come back to this window to browse the program, see what events are going on, and who is online.</Typography.Paragraph>
             //         <Button href={this.state.slackLink} type="primary" target="_blank" onClick={()=>{this.setState({step: 4})}}>Join Slack</Button>
             //     </Card>
@@ -216,8 +216,8 @@ class SlackToVideo extends React.Component {
             else if(this.state.step == 3){
                 action = <Result
                     status="success"
-                    title={"You're ready to explore Virtual " + this.props.authContext.currentConference.get("conferenceName")+"!"}
-                    subTitle={"You can now log back in to " + this.props.authContext.currentConference.get("conferenceName") + " at any time by returning to this site. Feel free to use the navigation above to explore the conference, or start with some of the most popular pages:"}
+                    title={"You're ready to explore Virtual " + this.props.clowdrAppState.currentConference.get("conferenceName")+"!"}
+                    subTitle={"You can now log back in to " + this.props.clowdrAppState.currentConference.get("conferenceName") + " at any time by returning to this site. Feel free to use the navigation above to explore the conference, or start with some of the most popular pages:"}
                     extra={[
                         <Button type="primary" key="console" onClick={()=>this.props.history.push("/live")}>
                             Live Sessions
@@ -231,7 +231,7 @@ class SlackToVideo extends React.Component {
             }
             return <div>
                 <Steps current={this.state.step}>
-                    <Steps.Step title="Register" description={"You have registered for "+this.props.authContext.currentConference.get("conferenceName") +", and are almost ready to visit the virtual conference!"} />
+                    <Steps.Step title="Register" description={"You have registered for "+this.props.clowdrAppState.currentConference.get("conferenceName") +", and are almost ready to visit the virtual conference!"} />
                     <Steps.Step title="Create Password" description="You'll use this password to sign in directly to this app."/>
                     <Steps.Step title="Create your Badge" description="Tell other attendees who you are."/>
                     {/*<Steps.Step title="Join Slack" description="Slack provides additional chat functionality to CLOWDR."/>*/}
@@ -263,7 +263,7 @@ const
     AuthConsumer = (props) => (
         <AuthUserContext.Consumer>
             {value => (
-                <SlackToVideo {...props} user={value.user} authContext={value}/>
+                <SlackToVideo {...props} user={value.user} clowdrAppState={value}/>
             )}
         </AuthUserContext.Consumer>
     );

@@ -24,13 +24,14 @@ interface ProgramVideoChatState {
 
 interface ProgramVideoChatProps {
     room: any;    // TS: ???
-    authContext: ClowdrAppState | null;
+    isInRoom: boolean;
+    clowdrAppState: ClowdrAppState | null;
 }
 class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVideoChatState>{
 
     constructor(props: ProgramVideoChatProps) {
         super(props);
-        this.state = { room: props.room, isInRoom: false, loading: false };  // TS: is false the right initial value?
+        this.state = { room: props.room, isInRoom: this.props.isInRoom, loading: false };  // TS: is false the right initial value?
     }
 
     componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
@@ -40,20 +41,20 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
         // }
     }
     joinRoom() {
-        if (this.props.authContext != null) {
-            let user = this.props.authContext.user;
+        if (this.props.clowdrAppState != null) {
+            let user = this.props.clowdrAppState.user;
             this.setState({ isInRoom: true });
         }
     }
     render() {
         if (!this.state.isInRoom) {
             return <div>
-                <Button type="primary" loading={this.state.loading} onClick={this.joinRoom.bind(this)}>Join the video room</Button>
+                <Button type="primary" loading={this.state.loading} onClick={this.joinRoom.bind(this)}>Join the breakout room</Button>
             </div>
         }
         return <VideoRoom
             hideInfo={true} room={this.state.room}
-            conference={this.props.authContext != null ? this.props.authContext.currentConference : null}
+            conference={this.props.clowdrAppState != null ? this.props.clowdrAppState.currentConference : null}
             onHangup={() => {
                 this.setState({ isInRoom: false })
             }
@@ -63,7 +64,7 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
 const AuthConsumer = (props: ProgramVideoChatProps) => (
     <AuthUserContext.Consumer>
         {value => (
-            <ProgramVideoChat {...props} authContext={value}
+            <ProgramVideoChat {...props} clowdrAppState={value}
             />
         )}
     </AuthUserContext.Consumer>

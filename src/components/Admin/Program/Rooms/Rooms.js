@@ -190,7 +190,7 @@ class Rooms extends React.Component {
                     break;
                 case ('pwd1'):
                     inputNode =
-                        <Input style={{width: '100%'}} type="password" placeholder="Encrypted Password (Optional)"/>
+                        <Input style={{width: '100%'}} type="text" placeholder="Password (Optional)"/>
                     break;
                 case ('src2'):
                     inputNode = (
@@ -220,7 +220,7 @@ class Rooms extends React.Component {
                     break;
                 case ('pwd2'):
                     inputNode =
-                        <Input style={{width: '100%'}} type="password" placeholder="Encrypted Password (Optional)"/>
+                        <Input style={{width: '100%'}} type="text" placeholder="Password (Optional)"/>
                     break;
                 case ('qa'):
                     inputNode = <Input placeholder="Q&A tool link"/>
@@ -304,14 +304,12 @@ class Rooms extends React.Component {
             };
 
             const save = async id => {
-                console.log("Entering save func");
                 try {
                     const row = await form.validateFields();
                     const newData = [...data];
                     let room = newData.find(item => item.id === id);
 
                     if (room) {
-                        console.log("row is : " + row.title);
 
                         let data = {
                             clazz: "ProgramRoom",
@@ -322,9 +320,10 @@ class Rooms extends React.Component {
                             id1: row.id1,
                             src2: row.src2,
                             id2: row.id1,
+                            pwd1: row.pwd1,
+                            pwd2: row.pwd2,
                             qa: row.qa
                         }
-                        console.log(data)
                         Parse.Cloud.run("update-obj", data)
                         .then(c => this.setState({alert: "save success"}))
                         .catch(err => {
@@ -662,7 +661,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                             <Input style={{width: '100%'}} type="textarea" placeholder="ID"/>
                         </Form.Item>
                         <Form.Item name="pwd1">
-                            <Input style={{width: '100%'}} type="textarea" placeholder="Encrypted Password (Optional)"/>
+                            <Input style={{width: '100%'}} type="textarea" placeholder="Password (Optional)"/>
                         </Form.Item>
                     </Input.Group>
                 </Form.Item>
@@ -683,7 +682,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                             <Input style={{width: '100%'}} type="textarea" placeholder="ID"/>
                         </Form.Item>
                         <Form.Item name="pwd2">
-                            <Input style={{width: '100%'}} type="textarea" placeholder="Encrypted Password (Optional)"/>
+                            <Input style={{width: '100%'}} type="textarea" placeholder="Password (Optional)"/>
                         </Form.Item>
                     </Input.Group>
                 </Form.Item>

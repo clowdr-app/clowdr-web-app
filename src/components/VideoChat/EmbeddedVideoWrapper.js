@@ -332,7 +332,7 @@ class UserProfileDisplay extends React.Component {
     }
 
     async componentDidMount() {
-        let profile = await this.props.authContext.helpers.getUserRecord(this.props.id);
+        let profile = await this.props.clowdrAppState.helpers.getUserRecord(this.props.id);
         if (profile)
             this.setState({name: profile.get("displayName"), loading: false});
 
@@ -363,7 +363,7 @@ function ParticipantInfo({participant, onClick, isSelected, children}) {
 
     const classes = useStyles();
 
-    const authContext = useContext(AuthUserContext);
+    const clowdrAppState = useContext(AuthUserContext);
     let name = participant.identity;
 
     return (
@@ -378,7 +378,7 @@ function ParticipantInfo({participant, onClick, isSelected, children}) {
                 <div className={classes.infoRow}>
                     <h4 className={classes.identity}>
                         <ParticipantConnectionIndicator participant={participant}/>
-                        <UserProfileDisplay authContext={authContext} id={participant.identity}/>
+                        <UserProfileDisplay clowdrAppState={clowdrAppState} id={participant.identity}/>
                     </h4>
                     <NetworkQualityLevel qualityLevel={networkQualityLevel}/>
                 </div>
