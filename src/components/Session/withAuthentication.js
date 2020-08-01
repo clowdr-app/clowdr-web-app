@@ -54,7 +54,9 @@ const withAuthentication = Component => {
                 getPresences: this.getPresences.bind(this),
                 cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
                 unmountProfileDisplay: this.unmountProfileDisplay.bind(this),
-                updateMyPresence: this.updateMyPresence.bind(this)
+                updateMyPresence: this.updateMyPresence.bind(this),
+                userHasWritePermission: this.userHasWritePermission.bind(this)
+
             }
             this.state = {
                 user: null,
@@ -887,6 +889,15 @@ const withAuthentication = Component => {
                 }));
             })
             this.setState({videoRoomsLoaded: true});
+        }
+
+        userHasWritePermission(object){
+            let acl = object.getACL();
+            if(acl.getWriteAccess(this.user))
+                return true;
+            // if(this.state.roles.find(v => v.get('name') == this.state.currentConference.id+'-manager' || v.get('name') == this.state.currentConference.id+"-admin"))
+            //     return true;
+            return false;
         }
 
         componentDidMount() {

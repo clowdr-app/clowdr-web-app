@@ -11,7 +11,7 @@ interface UpcomingProgramProps {
 }
 
 interface UpcomingProgramState {
-    loading: Boolean,
+    loading: boolean,
     ProgramSessions: ProgramSession[],
     curSessions: ProgramSession[],
     pastSessions: ProgramSession[],

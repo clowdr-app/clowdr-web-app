@@ -58,8 +58,12 @@ export default class ProgramCache {
                     }
                 }
             });
-            sub.on("update", obj => {
+            sub.on("update", async (obj) => {
+                if(obj.get("attachments") && obj.get("attachments").length > 0){
+                    await Parse.Object.fetchAllIfNeeded(obj.get("attachments"));
+                }
                 this._data[tableName] = this._data[tableName].map(v=> v.id == obj.id ? obj : v);
+
 
                 this._dataById[tableName][obj.id] = obj;
                 /* I didn't mean to have this code in here: this is a big performance anti-pattern
@@ -104,6 +108,8 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramItem'] = {};
             if (!this._updateSubscribers['ProgramItem'][id])
                 this._updateSubscribers['ProgramItem'][id] = [];
+            console.log("Sub for " + id)
+            console.log(component)
             this._updateSubscribers['ProgramItem'][id].push(component);
         }
         return this._dataById['ProgramItem'][id];
@@ -139,7 +145,9 @@ export default class ProgramCache {
         }
         return person;
     }
-
+    async getAttachmentTypes(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("AttachmentType",  objToSetStateOnUpdate);
+    }
     async getProgramRooms(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("ProgramRoom",  objToSetStateOnUpdate);
     }
@@ -188,10 +196,11 @@ export default class ProgramCache {
 
     cancelSubscription(tableName, obj, idx) {
         if (idx) {
-            if(this._updateSubscribers[tableName][idx])
+            if(this._updateSubscribers[tableName] && this._updateSubscribers[tableName][idx])
                 this._updateSubscribers[tableName][idx] = this._updateSubscribers[tableName][idx].filter(v => v != obj);
         } else {
-            this._listSubscribers[tableName] = this._listSubscribers[tableName].filter(v => v != obj);
+            if(this._updateSubscribers[tableName])
+                this._listSubscribers[tableName] = this._listSubscribers[tableName].filter(v => v != obj);
         }
     }
 }

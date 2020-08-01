@@ -420,9 +420,9 @@ class ProgramItems extends React.Component {
                                 searchResult: this.state.ProgramItems.filter(
                                     item =>
                                         (item.get('title') && item.get('title').toLowerCase().includes(key.toLowerCase()))
-                                        || (item.get('track') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
+                                        || (item.get('track') && item.get('track').get('name') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
                                         || (item.get('abstract') && item.get('abstract').toLowerCase().includes(key.toLowerCase()))
-                                        || (item.get('authors') && item.get('authors').some(a => a.get("name").toLowerCase().includes(key.toLowerCase())))
+                                        || (item.get('authors') && item.get('authors').some(a => a.get("name") && a.get("name").toLowerCase().includes(key.toLowerCase())))
                                 )
                             })
                         }

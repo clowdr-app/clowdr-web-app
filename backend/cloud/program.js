@@ -630,7 +630,7 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
     if(programItem.dirty("authors")){
         //Recalculate the items for each author
         let itemQ = new Parse.Query("ProgramItem");
-        itemQ.include("authors");
+        itemQ.include(["authors", "authors.userProfile"]);
         let oldItem = null;
         if(!programItem.isNew())
             oldItem = await itemQ.get(programItem.id, {useMasterKey: true});
@@ -639,7 +639,7 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
             newAuthors.push(author);
         }
         let toSave = [];
-        if (oldItem)
+        if (oldItem) {
             for (let author of oldItem.get("authors")) {
                 if (!newAuthors.find(v => v.id == author.id)) {
                     //no longer an author
@@ -649,14 +649,18 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
                         author.set("programItems", oldItems);
                         toSave.push(author);
                     }
+                    if (author.get("userProfile")) {
+                        programItem.getACL().setWriteAccess(author.get("userProfile").get('user'), false);
+                    }
 
                 }
             }
+        }
         if(oldItem)
             newAuthors = newAuthors.filter(v=>(!oldItem.get('authors').find(y=>y.id==v.id)));
         if(newAuthors.length > 0) {
             try {
-                newAuthors = await Parse.Object.fetchAll(newAuthors, {useMasterKey: true});
+                newAuthors = await Parse.Object.fetchAllWithInclude(newAuthors,["userProfile"], {useMasterKey: true});
             } catch(err){
                 console.log(err);
                 return;
@@ -671,6 +675,7 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
                     oldItems.push(programItem);
                     author.set("programItems", oldItems);
                     toSave.push(author);
+                    programItem.getACL().setWriteAccess(author.get("userProfile").get("user"), true);
                     if (programItem.get("chatSID") && author.get("userProfile")) {
                         //add the author to the chat channel
                         if (!config)
@@ -682,6 +687,12 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
                         });
                     }
                 }
+            }
+        }
+        if(programItem.get("attachments")) {
+            for (let attachment of programItem.get("attachments")) {
+                attachment.setACL(programItem.getACL());
+                toSave.add(attachment);
             }
         }
         if(toSave.length > 0)
@@ -712,7 +723,53 @@ Parse.Cloud.beforeSave("StarredProgram", async (request) => {
         savedProgram.setACL(acl);
     }
 });
+Parse.Cloud.beforeSave("ProgramItemAttachment", async (request) => {
+    let attachment = request.object;
+    if(attachment.isNew()){
+        let programItem = attachment.get("programItem");
+        await programItem.fetch();
+        request.context={isNew: true};
+        if(!programItem.getACL().getWriteAccess(request.user)){
+            try {
+                await programItem.save({}, {sessionToken: request.user.getSessionToken()});
+            } catch (err) {
+                throw "You do not have write permissions for this Program Item.";
+            }
+        }
+        attachment.setACL(programItem.getACL());
+    }
+    if(attachment.dirty("file")){
+        console.log("DIrty file, setting context")
+        request.context={forceSaveItem: true};
+    }
+});
 
+Parse.Cloud.beforeDelete("ProgramItemAttachment", async (request) => {
+    let attachment = request.object;
+    let programItem = attachment.get("programItem");
+    await programItem.fetch();
+    if(attachment.get("file")) {
+        let file = attachment.get("file");
+        // const split_url = file.url().split('/');
+        // const filename = split_url[split_url.length - 1];
+        const filename = file.name();
+        await Parse.Cloud.httpRequest({
+            url: `${process.env.REACT_APP_PARSE_DATABASE_URL}/files/${filename}`,
+            method: 'DELETE',
+            headers: {
+                'X-Parse-Master-Key': process.env.PARSE_MASTER_KEY,
+                'X-Parse-Application-Id': process.env.REACT_APP_PARSE_APP_ID
+            }
+        });
+    }
+    if (programItem.get("attachments"))
+    {
+        let attachments = programItem.get("attachments");
+        attachments = attachments.filter(v=>v.id != attachment.id);
+        programItem.set("attachments", attachments);
+        await programItem.save({},{useMasterKey: true});
+    }
+});
 
 Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
     let track = request.object;
@@ -861,9 +918,14 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
             if (p.get("programItems")) {
                 Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
                     let config = null;
-                    console.log(items)
                     for (let item of items) {
-                        console.log(item)
+                        item.getACL().setWriteAccess(user.id,true);
+                        if(item.get("attachments")){
+                            for(let attachment of item.get("attachments")){
+                                attachment.setACL(item.getACL());
+                            }
+                            Parse.Object.saveAll(item.get("attachments"));
+                        }
                         if (item.get("chatSID")) {
                             //add the author to the chat channel
                             if (!config)
@@ -875,6 +937,7 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
                             });
                         }
                     }
+                    Parse.Object.saveAll(items, {useMasterKey: true});
                 }));
             }
         }
@@ -882,6 +945,19 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
     for (let p of alreadyClaimedPersons) {
         if(!requestedPersonIDs.find(v => v.id==p.id)){
             p.set("userProfile", null);
+            if (p.get("programItems")) {
+                Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
+                    for (let item of items) {
+                        item.getACL().setWriteAccess(user.id,false);
+                        for(let attachment of item.get("attachments")){
+                            attachment.setACL(item.getACL());
+                        }
+                        Parse.Object.saveAll(item.get("attachments"));
+                    }
+                    Parse.Object.saveAll(items, {useMasterKey: true});
+
+                }));
+            }
             toSave.push(p);
         }
     }
