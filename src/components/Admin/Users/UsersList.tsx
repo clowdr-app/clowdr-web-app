@@ -8,7 +8,6 @@ import Highlighter from 'react-highlight-words';
 import { ClowdrAppState, UserSessionToken } from "../../../ClowdrTypes";
 
 interface UsersListProps {
-    // history: string[],
     auth: ClowdrAppState,
 }
 

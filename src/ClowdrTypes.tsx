@@ -1,8 +1,9 @@
 // BCP: (the basic structure is there, but there are a lot more details to be filled in...)
 
 import * as Parse from 'parse';
-import ProgramItem from "./classes/ProgramItem";
 import ProgramCache from "./components/Session/ProgramCache";
+// Is this one needed?
+// import ProgramItem from "./classes/ProgramItem";
 
 type UserProfile = any
 type ClowdrInstance = any
