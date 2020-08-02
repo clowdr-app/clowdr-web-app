@@ -32,7 +32,7 @@ $ npm install
 BCP: And maybe we need something like this (and maybe a few more dependencies):
 ```bash
 $ npm install --save typescript @types/node @types/react @types/react-dom
-@types/jest @types/parse material-ui @types/material-ui
+@types/jest @types/parse 
 ```
 
 ### Set Up a Backend
