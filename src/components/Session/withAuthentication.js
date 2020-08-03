@@ -540,6 +540,8 @@ const withAuthentication = Component => {
                         const roles = await roleQuery.find();
 
                         let isAdmin = _this.state ? _this.state.isAdmin : false;
+                        let isModerator = _this.state ? _this.state.isModerator : false;
+                        let isManager = _this.state ? _this.state.isManager : false;
                         let isClowdrAdmin = _this.state ? _this.state.isClowdrAdmin : false;
 
                         let conf = _this.currentConference;
@@ -565,6 +567,15 @@ const withAuthentication = Component => {
                             if (activeProfile && role.get("name") == (activeProfile.get("conference").id + "-admin")) {
                                 isAdmin = true;
                                 isClowdrAdmin = true;
+                                isManager = true;
+                                isModerator = true;
+                            }
+                            if (activeProfile && role.get("name") == (activeProfile.get("conference").id + "-moderator")) {
+                                isModerator = true;
+                            }
+                            if (activeProfile && role.get("name") == (activeProfile.get("conference").id + "-manager")) {
+                                isModerator = true;
+                                isManager = true;
                             }
                         }
                         if(!activeProfile){
@@ -627,6 +638,8 @@ const withAuthentication = Component => {
                             user: user,
                             userProfile: activeProfile,
                             isAdmin: isAdmin,
+                            isModerator: isModerator,
+                            isManager: isManager,
                             isClowdrAdmin: isClowdrAdmin,
                             permissions: permissions.map(p=>p.get("action").get("action")),
                             validConferences: validConferences,

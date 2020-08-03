@@ -12,6 +12,7 @@ export default class ProgramCache {
         this._subscriptions = {};
         this._listSubscribers = {};
         this._updateSubscribers = {};
+        this._zoomLinks = {};
         this.getEntireProgram()
     }
 
@@ -165,9 +166,22 @@ export default class ProgramCache {
     async getProgramSessions(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("ProgramSession", objToSetStateOnUpdate);
     }
+    async getZoomHostAccounts(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("ZoomHostAccount", objToSetStateOnUpdate);
+    }
+    async getZoomRooms(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("ZoomRoom", objToSetStateOnUpdate);
+    }
     async getProgramTrackByName(trackName){
         let tracks = await this.getProgramTracks();
         return tracks.find(v=>v.get("name") == trackName);
+    }
+
+    async getZoomJoinLink(programRoom){
+        if(this._zoomLinks[programRoom.id]){
+            return this._zoomLinks[programRoom.id];
+        }
+
     }
     /*
     This command can't support live query right now, since it would update all

@@ -624,3 +624,7 @@ td.ant-table-cell.program-table-timeBand{
     padding-top: 0;
     padding-bottom: 0;
 }
+.leave-zoom-button{
+    position: absolute;
+    right: 0;
+}

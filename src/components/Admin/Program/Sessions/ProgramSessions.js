@@ -106,10 +106,10 @@ class ProgramSessions extends React.Component {
                     inputNode = <Input/>;
                     break;
                 case ('start'):
-                    inputNode = <DatePicker showTime />;
+                    inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
                     break;
                 case ('end'):
-                    inputNode = <DatePicker showTime />;
+                    inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
                     break;
                 case ('room'):
                     inputNode = (

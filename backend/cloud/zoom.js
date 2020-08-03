@@ -6,6 +6,9 @@ let BondedChannel = Parse.Object.extend("BondedChannel");
 let TwilioChannelMirror = Parse.Object.extend("TwilioChannelMirror");
 let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 let SocialSpace = Parse.Object.extend("SocialSpace");
+const axios = require('axios');
+var moment = require('moment');
+var jwt = require('jsonwebtoken');
 
 const Twilio = require("twilio");
 const crypto = require('crypto');
@@ -92,6 +95,38 @@ Parse.Cloud.define("zoom-getSignatureForMeeting", async (request) => {
         let config = await getConfig(conf);
         let sig = generateSignature(config.ZOOM_API_KEY, config.ZOOM_API_SECRET, request.params.meeting, 0);
         return {signature: sig, apiKey: config.ZOOM_API_KEY};
+
+    }
+    return null;
+});
+Parse.Cloud.define("zoom-refresh-start-url", async (request) => {
+    let roomID = request.params.room;
+    let roomQ = new Parse.Query("ZoomRoom");
+    console.log(roomID)
+    console.log(request.user.getSessionToken())
+    let room = await roomQ.get(roomID,{sessionToken: request.user.getSessionToken()});
+    if(room) {
+        let config = await getConfig(room.get("conference"));
+
+        const payload = {
+            iss: config.ZOOM_API_KEY,
+            exp: ((new Date()).getTime() + 5000)
+        };
+        const token = jwt.sign(payload, config.ZOOM_API_SECRET);
+        let res = await axios({
+            method: 'get',
+            url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID"),
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'User-Agent': 'Zoom-api-Jwt-Request',
+                'content-type': 'application/json'
+            }
+        });
+        room.set("start_url", res.data.start_url);
+        room.set("start_url_expiration", moment().add(2, "hours").toDate());
+        await room.save({},{useMasterKey: true});
+
+        return {start_url: room.get("start_url")};
 
     }
     return null;
