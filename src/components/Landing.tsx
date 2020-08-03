@@ -50,7 +50,7 @@ interface GuardedLandingProps {
 }
 
 interface GuardedLandingState {
-  text: React.ReactElement;
+  text: string;
   isLoggedIn: boolean,
   isEditing: boolean,
   alert: React.ReactElement | undefined | string
@@ -97,7 +97,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
       })
   }
 
-  handleEditorChange = (content: React.ReactElement, editor: any) => {
+  handleEditorChange = (content: string, editor: any) => {
     this.setState({ text: content });
   }
 
@@ -112,7 +112,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
         }}
         message={this.state.alert}
         // @ts-ignore    TS: @Jon/@Crista This might like a real type error -- 
-        // is alert guaranteed to be a string here, even though it is assigned a ReactElement sometimes?
+        // Is alert guaranteed to be a string here, even though it is assigned a ReactElement sometimes?
         type={this.state.alert.includes("success") ? "success" : "error"}
         showIcon
         closable
@@ -126,8 +126,6 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
         controlButton = <Tooltip title="Save this page"><Button type="primary" shape="round" icon={<SaveOutlined />} onClick={this.onSave.bind(this)} /></Tooltip>
         return <div><div style={{ textAlign: "right" }}>{controlButton}</div>
           <Editor
-            // @ts-ignore    TS: @Jon/@Crista This might like a real type error -- 
-            // The text field is sometimes a ReactElement, no?
             initialValue={this.state.text}
             init={{
               height: 600,
@@ -151,7 +149,6 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
     }
 
     return <div><div style={{ textAlign: "right" }}>{alert}  {controlButton}</div>
-      // @ts-ignore    TS: @Jon/@Crista same question
       <div dangerouslySetInnerHTML={{ __html: this.state.text }} />
     </div>
   }
