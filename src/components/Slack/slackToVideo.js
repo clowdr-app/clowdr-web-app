@@ -5,6 +5,8 @@ import Parse from "parse";
 import {LoadingOutlined} from '@ant-design/icons';
 import LandingContainer from "../LandingContainer";
 
+// @Jon/@Crista    are we ready to jettison slack yet?
+
 class SlackToVideo extends React.Component {
 
     constructor(props) {

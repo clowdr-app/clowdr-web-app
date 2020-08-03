@@ -29,9 +29,10 @@ Use npm to install (or upgrade) all dependencies after cloning.
 $ npm install
 ```
 
-BCP: And maybe we need this:
+BCP: And maybe we need something like this (and maybe a few more dependencies):
 ```bash
-$ npm install --save typescript @types/node @types/react @types/react-dom @types/jest @types/parse
+$ npm install --save typescript @types/node @types/react @types/react-dom
+@types/jest @types/parse 
 ```
 
 ### Set Up a Backend

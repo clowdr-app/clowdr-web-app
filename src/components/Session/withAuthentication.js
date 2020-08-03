@@ -78,11 +78,10 @@ const withAuthentication = Component => {
                 presences: {},
                 // video: {
                 videoRoomsLoaded: false,
-                    liveVideoRoomMembers: 0,
-                    activePublicVideoRooms: [],
-                    activePrivateVideoRooms: [],
+                liveVideoRoomMembers: 0,
+                activePublicVideoRooms: [],
+                activePrivateVideoRooms: [],
                 // },
-
             };
             this.fetchingUsers = false;
         }
