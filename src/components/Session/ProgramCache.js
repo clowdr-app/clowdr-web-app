@@ -131,18 +131,29 @@ export default class ProgramCache {
         }
         return item;
     }
+    subscribeComponentToIDOnTable(table,id,component){
+        if(component){
+            if(!this._updateSubscribers[table])
+                this._updateSubscribers[table] = {};
+            if(!this._updateSubscribers[table][id])
+                this._updateSubscribers[table][id] = [];
+            this._updateSubscribers[table][id].push(component);
+        }
+    }
+    async getProgramRoom(roomID, component){
+        let rooms = await this.getProgramRooms();
+        let room = rooms.find(v=>v.id == roomID);
+        if(room){
+            this.subscribeComponentToIDOnTable("ProgramRoom", roomID, component);
+        }
+        return room;
+    }
     async getProgramPersonByID(personID, component){
         let persons = await this.getProgramPersons();
         let person = persons.find(v=>v.id==personID);
         if(person) {
             let id = person.id;
-            if(component) {
-                if (!this._updateSubscribers['ProgramPerson'])
-                    this._updateSubscribers['ProgramPerson'] = {};
-                if (!this._updateSubscribers['ProgramPerson'][id])
-                    this._updateSubscribers['ProgramPerson'][id] = [];
-                this._updateSubscribers['ProgramPerson'][id].push(component);
-            }
+            this.subscribeComponentToIDOnTable("ProgramPerson", personID, component);
         }
         return person;
     }
