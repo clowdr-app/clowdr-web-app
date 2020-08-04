@@ -63,7 +63,7 @@ export default class ProgramItemDisplay extends React.Component{
             <b>{this.state.ProgramItem.get("title")}</b>
             <div><i>{authorstr}</i></div>
             {sessionInfo}
-            <p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>
+            {/*<p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>*/}
             <p><b>Breakout Room: </b>
             {(this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")) ? <Button onClick={()=>{
                 this.props.auth.history.push("/breakoutRoom/" + this.state.ProgramItem.get("confKey"))

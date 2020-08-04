@@ -11,6 +11,7 @@ export default class ChatClient{
         this.chatUser = null;
         this.twilio = null;
         this.chats = [];
+        this.ephemerallyOpenedChats = [];
         this.channelListeners = {};
         this.channelPromises ={};
         this.channelWaiters = {};
@@ -21,26 +22,43 @@ export default class ChatClient{
         let found = channels[sid];
         if (!found) {
             found = await this.joinAndGetChannel(sid);
+            console.log("Joining ephemerally: " + found.sid)
+            this.ephemerallyOpenedChats.push(found.sid);
         }
         else{
             found = found.channel;
+            if(!this.chatBar.state[found.sid]){
+                this.channelsThatWeHaventMessagedIn.push(found.sid);
+            }
         }
         if(!found){
             console.log("Unable to find chat: " + sid)
         }
         else{
             this.openChat(found.sid);
+            return found.sid;
         }
 
     }
     closeChatAndLeaveIfUnused(sid){
-       if(this.channelsThatWeHaventMessagedIn.includes(sid))
-           this.closeChatAndLeave(sid);
+       if(this.channelsThatWeHaventMessagedIn.includes(sid)){
+           if(this.ephemerallyOpenedChats.includes(sid))
+           {
+               this.closeChatAndLeave(sid); //we were not previously in the chat
+               this.ephemerallyOpenedChats = this.ephemerallyOpenedChats.filter(v=>v!=sid);
+           }else{
+               //just minimize the window
+               this.chatBar.setState((prevState)=>({
+                   chats: prevState.chats.filter(v=>v!=sid)
+               }))
+           }
+       }
     }
 
     async closeChatAndLeave(sid) {
-        if (this.joinedChannels[sid])
+        if (this.joinedChannels[sid]){
             this.joinedChannels[sid].channel.leave();
+        }
     }
     async getJoinedChannel(sid){
         let chan = this.joinedChannels[sid];
@@ -181,6 +199,10 @@ export default class ChatClient{
         }
         const updateMembers = async ()=>{
             let container = this.joinedChannels[sid];
+            if(!container){
+                //we have left this channel
+                return;
+            }
             let members = await container.channel.getMembers();
             members = members.map(m=>m.identity);
             this.joinedChannels[sid].members = members;
