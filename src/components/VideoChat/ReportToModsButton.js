@@ -15,6 +15,7 @@ class ReportToModsButton extends React.Component {
         loading: true,
         users: {}
     };
+
     constructor(props) {
         super(props);
         this.form = React.createRef();
@@ -94,11 +95,10 @@ class ReportToModsButton extends React.Component {
                 >
                     <Typography.Paragraph>
                         All participants are expected to follow the {this.props.auth.currentConference.get("conferenceName")} code of conduct.
-                        We take inappropriate behavior quite seriously, and have a team of moderators standing by to help intervene.
-                        Please use this form to make a report to the moderators, who will respond to you on Slack.
+                        We take inappropriate behavior seriously, and we have a team of moderators ready to help.
+                        Please use this form to make a report to the moderators, who will respond to you privately.
                         Please note that since moderators are volunteers, we are unable to provide 24/7 moderation service,
-                        but will do our best to address every complaint as quickly as possible, and will be sure to follow up
-                        to every report.
+                        but we will do our best to address every complaint as quickly as possible.
                     </Typography.Paragraph>
                     <Typography.Paragraph>
                         This report will automatically capture the current list of participants in this chat:
@@ -148,8 +148,7 @@ class ReportToModsButton extends React.Component {
                                 this.setState({confirmLoading: false})
 
                             }
-                        }}
-                    >
+                        }} >
                         <Form.Item
                             name="message"
                             label="Message"
@@ -158,8 +157,7 @@ class ReportToModsButton extends React.Component {
                                     required: true,
                                     message: 'Please describe what went wrong.',
                                 },
-                            ]}
-                        >
+                            ]} >
                             <Input.TextArea rows={6} />
                         </Form.Item>
                     </Form>
@@ -168,6 +166,7 @@ class ReportToModsButton extends React.Component {
         );
     }
 }
+
 const AuthConsumer = (props) => (
             <AuthUserContext.Consumer>
                 {value => (
@@ -176,4 +175,5 @@ const AuthConsumer = (props) => (
             </AuthUserContext.Consumer>
 
 );
+
 export default withRouter(AuthConsumer);

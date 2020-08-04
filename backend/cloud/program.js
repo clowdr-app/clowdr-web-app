@@ -1,3 +1,9 @@
+var jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+const axios = require('axios');
+
+
 var moment = require('moment');
 const Twilio = require("twilio");
 const Papa = require('./papaparse.min');
@@ -739,8 +745,14 @@ Parse.Cloud.beforeSave("ProgramItemAttachment", async (request) => {
         attachment.setACL(programItem.getACL());
     }
     if(attachment.dirty("file")){
-        console.log("DIrty file, setting context")
-        request.context={forceSaveItem: true};
+        let attachmentType = attachment.get("attachmentType");
+        await attachmentType.fetch();
+        if(attachmentType.get("isCoverImage")){
+            let programItem = attachment.get("programItem");
+            programItem.set("posterImage", attachment.get("file"));
+            await programItem.save({}, {sessionToken: request.user.getSessionToken()});
+
+        }
     }
 });
 
@@ -750,7 +762,13 @@ Parse.Cloud.beforeDelete("ProgramItemAttachment", async (request) => {
     await programItem.fetch();
     if(attachment.get("file")) {
         let file = attachment.get("file");
-        // const split_url = file.url().split('/');
+        let attachmentType = attachment.get("attachmentType");
+        await attachmentType.fetch();
+        if(attachmentType.get("isCoverImage")) {
+            programItem.set("posterImage", null);
+            await programItem.save({}, {sessionToken: request.user.getSessionToken()});
+        }
+            // const split_url = file.url().split('/');
         // const filename = split_url[split_url.length - 1];
         const filename = file.name();
         await Parse.Cloud.httpRequest({
@@ -965,5 +983,194 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
     toSave.push(profile);
     await Parse.Object.saveAll(toSave,{useMasterKey: true});
 });
+function generateRandomString(length) {
+    return new Promise((resolve, reject) => {
+        crypto.randomBytes(length,
+            function (err, buffer) {
+                if (err) {
+                    return reject(err);
+                }
+                var token = buffer.toString('hex');
+                return resolve(token);
+            });
+    })
+}
+Parse.Cloud.beforeDelete("ProgramRoom", async (request) => {
+    let room = request.object;
+    if(room.get("zoomRoom")){
+        await room.get("zoomRoom").destroy({useMasterKey: true});
+    }
 
+});
+Parse.Cloud.beforeDelete("ZoomRoom", async (request) => {
+    let room = request.object;
+    if(room.get("meetingID")){
+        let config = await getConfig(room.get("conference"));
+        const payload = {
+            iss: config.ZOOM_API_KEY,
+            exp: ((new Date()).getTime() + 5000)
+        };
+        const token = jwt.sign(payload, config.ZOOM_API_SECRET);
+        try {
+            //If we are changing the account, delete the meeting from zoom.
+            let res = await axios({
+                method: 'delete',
+                url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID"),
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'User-Agent': 'Zoom-api-Jwt-Request',
+                    'content-type': 'application/json'
+                }
+            });
+        }catch(err){
+            console.log(err);
+        }
+
+    }
+});
+Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
+    let room = request.object;
+    if(room.isNew()) {
+        let confID = room.get("conference");
+        if (!confID || !userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
+            throw "You do not have permission to create a ZoomRoom for this conference";
+        }
+        let acl = new Parse.ACL();
+        acl.setPublicReadAccess(false);
+        acl.setPublicWriteAccess(false);
+        acl.setRoleWriteAccess(confID.id +"-manager", true);
+        acl.setRoleWriteAccess(confID.id +"-admin", true);
+
+        acl.setRoleReadAccess(confID.id + "-moderator", true);
+        acl.setRoleReadAccess(confID.id +"-manager", true);
+        acl.setRoleReadAccess(confID.id +"-admin", true);
+
+        room.setACL(acl);
+    }
+
+    if (room.dirty("hostAccount") || room.dirty("startTime") || room.dirty("endTime") || room.dirty("requireRegistration")) {
+        if (room.get("startTime") && room.get("endTime")) {
+            console.log("\n\n\nRegenerate meeting\n\n")
+            let config = await getConfig(room.get("conference"));
+            const payload = {
+                iss: config.ZOOM_API_KEY,
+                exp: ((new Date()).getTime() + 5000)
+            };
+            const token = jwt.sign(payload, config.ZOOM_API_SECRET);
+
+
+
+
+            if (room.get("meetingID") && room.dirty("hostAccount")) {
+                //If we are changing the account, delete the meeting from zoom.
+                let res = await axios({
+                    method: 'delete',
+                    url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID"),
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'User-Agent': 'Zoom-api-Jwt-Request',
+                        'content-type': 'application/json'
+                    }
+                });
+                room.set("meetingID", undefined);
+            }
+
+
+            let host = room.get("hostAccount");
+            if (!host.isDataAvailable())
+                await host.fetch({useMasterKey: true});
+            let programRoom = room.get("programRoom");
+            if (!programRoom.isDataAvailable())
+                await programRoom.fetch({useMasterKey: true});
+
+            let diffInHours = moment(room.get("endTime")).diff(moment(room.get("startTime")), 'hours');
+            let recurrence = undefined;
+            let duration = undefined;
+            if (diffInHours < 24) {
+                duration = (diffInHours + 1) * 60;
+            } else {
+                //Start on the first day at the startTime for the rest of the day, recur every day
+                duration = 24 * 60;
+                recurrence = {
+                    type: 1,
+                    repeat_interval: 1,
+                    end_date_time: moment(room.get("endTime").toUTCString()).format("YYYY-MM-DD[T]HH:mm:ss[Z]")
+                }
+            }
+            let registration_type = undefined;
+            let approval_type = 2;
+            if (room.get("requireRegistration")) {
+                approval_type = 0;
+                if (recurrence)
+                    registration_type = 3;
+            }
+            let data = {
+                topic: 'CLOWDR Room: ' + programRoom.get("name"),
+                type: (recurrence ? 8 : 2),
+                start_time: moment(room.get("startTime").toUTCString()).format("YYYY-MM-DD[T]HH:mm:ss[Z]"),
+                duration: duration,
+                timezone: "UTC",
+                recurrence: recurrence,
+                settings: {
+                    host_video: true,
+                    participant_video: false,
+                    join_before_host: true,
+                    mute_upon_entry: true,
+                    registration_type: registration_type,
+                    approval_type: approval_type,
+                    audio: 'both',
+                    waiting_room: false,
+                    registrants_email_notification: false,
+                    registrants_confirmation_email: false,
+                    meeting_authentication: false,
+
+                }
+            }
+            if (room.get("meetingID")) {
+                data.password = room.get("meetingPassword");
+                let res = await axios({
+                    method: 'patch',
+                    url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID"),
+                    data: data,
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'User-Agent': 'Zoom-api-Jwt-Request',
+                        'content-type': 'application/json'
+                    }
+                });
+            } else {
+                let pwd = await generateRandomString(3);
+                data.password = pwd;
+                try {
+                    let res = await axios({
+                        method: 'post',
+                        url: 'https://api.zoom.us/v2/users/' + host.get("email") + '/meetings',
+                        data: data,
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'User-Agent': 'Zoom-api-Jwt-Request',
+                            'content-type': 'application/json'
+                        }
+                    });
+                    room.set("meetingID", "" + res.data.id);
+                    room.set("meetingPassword", pwd);
+                    room.set("start_url", res.data.start_url);
+                    room.set("start_url_expiration", moment().add(2, "hours").toDate());
+                    room.set("join_url", res.data.join_url);
+                    room.set("registration_url", res.data.registration_url);
+                    programRoom.set("src1","ZoomUS");
+                    programRoom.set("id1", ""+res.data.id);
+                    programRoom.set("pwd1", pwd);
+                    await programRoom.save({},{useMasterKey: true});
+                } catch (err) {
+                    console.log(err);
+                    if (err.response.data.errors)
+                        console.log(err.response.data.errors)
+                    throw "Error creating zoom room";
+                }
+            }
+        }
+
+    }
+});
 

@@ -42,7 +42,7 @@ class BreakoutRoomDisplay extends React.Component<BreakoutRoomDisplayProps, Brea
             list = this.state.BreakoutRoom.get("members").map((user: any)=>{
                 if(user) {
                     let className = "personHoverable";
-                    return <UserStatusDisplay popover={true} profileID={user.id}/>
+                    return <UserStatusDisplay popover={true} profileID={user.id} key={user.id} />
                 }
                 return <></>
             }) //}>

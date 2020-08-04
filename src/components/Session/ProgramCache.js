@@ -12,6 +12,7 @@ export default class ProgramCache {
         this._subscriptions = {};
         this._listSubscribers = {};
         this._updateSubscribers = {};
+        this._zoomLinks = {};
         this.getEntireProgram()
     }
 
@@ -108,8 +109,6 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramItem'] = {};
             if (!this._updateSubscribers['ProgramItem'][id])
                 this._updateSubscribers['ProgramItem'][id] = [];
-            console.log("Sub for " + id)
-            console.log(component)
             this._updateSubscribers['ProgramItem'][id].push(component);
         }
         return this._dataById['ProgramItem'][id];
@@ -130,18 +129,29 @@ export default class ProgramCache {
         }
         return item;
     }
+    subscribeComponentToIDOnTable(table,id,component){
+        if(component){
+            if(!this._updateSubscribers[table])
+                this._updateSubscribers[table] = {};
+            if(!this._updateSubscribers[table][id])
+                this._updateSubscribers[table][id] = [];
+            this._updateSubscribers[table][id].push(component);
+        }
+    }
+    async getProgramRoom(roomID, component){
+        let rooms = await this.getProgramRooms();
+        let room = rooms.find(v=>v.id == roomID);
+        if(room){
+            this.subscribeComponentToIDOnTable("ProgramRoom", roomID, component);
+        }
+        return room;
+    }
     async getProgramPersonByID(personID, component){
         let persons = await this.getProgramPersons();
         let person = persons.find(v=>v.id==personID);
         if(person) {
             let id = person.id;
-            if(component) {
-                if (!this._updateSubscribers['ProgramPerson'])
-                    this._updateSubscribers['ProgramPerson'] = {};
-                if (!this._updateSubscribers['ProgramPerson'][id])
-                    this._updateSubscribers['ProgramPerson'][id] = [];
-                this._updateSubscribers['ProgramPerson'][id].push(component);
-            }
+            this.subscribeComponentToIDOnTable("ProgramPerson", personID, component);
         }
         return person;
     }
@@ -165,9 +175,25 @@ export default class ProgramCache {
     async getProgramSessions(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("ProgramSession", objToSetStateOnUpdate);
     }
+    async getZoomHostAccounts(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("ZoomHostAccount", objToSetStateOnUpdate);
+    }
+    async getZoomRooms(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("ZoomRoom", objToSetStateOnUpdate);
+    }
+    async getMeetingRegistrations(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("MeetingRegistration", objToSetStateOnUpdate);
+    }
     async getProgramTrackByName(trackName){
         let tracks = await this.getProgramTracks();
         return tracks.find(v=>v.get("name") == trackName);
+    }
+
+    async getZoomJoinLink(programRoom){
+        if(this._zoomLinks[programRoom.id]){
+            return this._zoomLinks[programRoom.id];
+        }
+
     }
     /*
     This command can't support live query right now, since it would update all
