@@ -1,3 +1,5 @@
+// @Jon/@Crista    Is this file correctly named, or should it be called withClowdrAppState
+
 import React from 'react';
 
 import AuthUserContext from './context';
@@ -9,6 +11,8 @@ import ProgramCache from "./ProgramCache";
 let UserProfile = Parse.Object.extend("UserProfile");
 
 const withAuthentication = Component => {
+    // @Jon/@Crista    Is this file correctly named, or should it be called WithClowdrAppState
+    // (and maybe ClowdrAppState can be globally renamed just ClowdrState...?)
     class WithAuthentication extends React.Component {
 
         constructor(props) {
