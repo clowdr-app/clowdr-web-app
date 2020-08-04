@@ -13,7 +13,30 @@ class ZoomPanel extends Component {
         };
     }
 
+    componentWillUnmount() {
+        this.props.auth.programCache.cancelSubscription("MeetingRegistration", this);
+    }
+
     async componentDidMount() {
+        if(this.props.auth.user){
+            this.props.auth.programCache.getMeetingRegistrations(this).then(async (registrations)=>{
+                let start_url = undefined;
+                if(this.props.room && this.props.room.get("zoomRoom")){
+                    let reg = registrations.find(v=>v.get("meetingID") == this.props.room.get("id1"))
+                    let link;
+                    if(!reg){
+                        let res = await Parse.Cloud.run("zoom-meeting-register", {
+                            room: this.props.room.get("zoomRoom").id
+                        });
+                        link = res.join_url;
+                    }
+                    else{
+                        link = reg.get("link");
+                    }
+                    this.setState({MeetingRegistrations: registrations, personalJoinLink: link});
+                }
+            })
+        }
         if(this.props.auth.isModerator && this.props.room){
             //Get the start url
             let zoomRoom = this.props.room.get("zoomRoom");
@@ -25,6 +48,7 @@ class ZoomPanel extends Component {
                     let res = await Parse.Cloud.run("zoom-refresh-start-url", {
                         room: zoomRoom.id
                     });
+                    start_url = res.start_url;
                 }
                 this.setState({
                     start_url: start_url
@@ -77,7 +101,7 @@ class ZoomPanel extends Component {
                         install the Zoom application if you haven't already and join in the app. We suggest joining
                         through the Zoom app if possible.
                     </p>
-                    <Space><Button type="primary" disabled={this.state.zoomLoading} loading={!this.state.personalJoinLink}>Join By Zoom App</Button><Button
+                    <Space><Button type="primary" disabled={this.state.zoomLoading} href={this.state.personalJoinLink} target="_blank" loading={!this.state.personalJoinLink}>Join By Zoom App</Button><Button
                         type="primary" onClick={() => {
                         this.joinZoomByBrowser();
                     }

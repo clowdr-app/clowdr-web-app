@@ -6,6 +6,7 @@ let BondedChannel = Parse.Object.extend("BondedChannel");
 let TwilioChannelMirror = Parse.Object.extend("TwilioChannelMirror");
 let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 let SocialSpace = Parse.Object.extend("SocialSpace");
+let MeetingRegistration = Parse.Object.extend("MeetingRegistration");
 const axios = require('axios');
 var moment = require('moment');
 var jwt = require('jsonwebtoken');
@@ -127,6 +128,71 @@ Parse.Cloud.define("zoom-refresh-start-url", async (request) => {
         await room.save({},{useMasterKey: true});
 
         return {start_url: room.get("start_url")};
+
+    }
+    return null;
+});
+async function userInRoles(user, allowedRoles) {
+    const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
+    return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
+}
+Parse.Cloud.define("zoom-meeting-register", async (request) => {
+    let roomID = request.params.room;
+    let roomQ = new Parse.Query("ZoomRoom");
+    let room = await roomQ.get(roomID, {useMasterKey: true});
+    if (room) {
+        if (!userInRoles(request.user, [room.get("conference").id + "-conference"])) {
+            throw "You are not registered to attend this conference";
+        }
+        let joinURL = undefined;
+        let registrantID = undefined;
+        if (room.get("requireRegistration")) {
+            let config = await getConfig(room.get("conference"));
+
+            const payload = {
+                iss: config.ZOOM_API_KEY,
+                exp: ((new Date()).getTime() + 5000)
+            };
+            const token = jwt.sign(payload, config.ZOOM_API_SECRET);
+            try {
+                let res = await axios({
+                    method: 'post',
+                    url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID") + "/registrants",
+                    data: {
+                        email: request.user.getEmail(),
+                        first_name: request.user.get("displayname")
+                    },
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'User-Agent': 'Zoom-api-Jwt-Request',
+                        'content-type': 'application/json'
+                    }
+                });
+                console.log(res.data);
+                joinURL = res.data.join_url;
+                registrantID = res.data.registrant_id;
+            } catch (err) {
+                console.log(err);
+                throw err;
+            }
+        }
+        else{
+            joinURL = room.get("join_url")
+        }
+        let reg = new MeetingRegistration();
+        reg.set("link", joinURL);
+        reg.set("registrantID", registrantID);
+        reg.set("meetingID", room.get("meetingID"));
+        reg.set("conference", room.get("conference"));
+        let acl = new Parse.ACL();
+        acl.setPublicReadAccess(false);
+        acl.setPublicWriteAccess(false);
+        acl.setReadAccess(request.user, true);
+        reg.setACL(acl);
+        await reg.save({}, {useMasterKey: true});
+
+
+        return {join_url: joinURL};
 
     }
     return null;
