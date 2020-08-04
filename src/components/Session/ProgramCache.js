@@ -172,6 +172,9 @@ export default class ProgramCache {
     async getZoomRooms(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("ZoomRoom", objToSetStateOnUpdate);
     }
+    async getMeetingRegistrations(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("MeetingRegistration", objToSetStateOnUpdate);
+    }
     async getProgramTrackByName(trackName){
         let tracks = await this.getProgramTracks();
         return tracks.find(v=>v.get("name") == trackName);
