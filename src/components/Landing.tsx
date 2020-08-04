@@ -4,38 +4,30 @@ import { AuthUserContext } from "./Session";
 import { Alert, Button, Tooltip } from "antd";
 import { EditOutlined, SaveOutlined } from '@ant-design/icons';
 import Parse from "parse";
+import { ClowdrAppState } from "../ClowdrTypes";
 
 // import tinymce from 'tinymce/tinymce';
-
-// Default icons are required for TinyMCE 5.3 or above
-import 'tinymce/icons/default';
-
-// A theme is also required
-import 'tinymce/themes/silver';
-
-// Any plugins you want to use has to be imported
-import 'tinymce/plugins/advlist';
-import 'tinymce/plugins/autolink';
-import 'tinymce/plugins/lists';
-import 'tinymce/plugins/link';
-import 'tinymce/plugins/image';
-import 'tinymce/plugins/charmap';
-import 'tinymce/plugins/print';
-import 'tinymce/plugins/preview';
-import 'tinymce/plugins/anchor';
-import 'tinymce/plugins/searchreplace';
-import 'tinymce/plugins/visualblocks';
-import 'tinymce/plugins/code';
-import 'tinymce/plugins/fullscreen';
-import 'tinymce/plugins/insertdatetime';
-import 'tinymce/plugins/media';
-import 'tinymce/plugins/table';
-import 'tinymce/plugins/paste';
-import 'tinymce/plugins/code';
-import 'tinymce/plugins/help';
-import 'tinymce/plugins/wordcount';
-import 'tinymce/plugins/imagetools';
-import { ClowdrAppState } from "../ClowdrTypes";
+var tinymce = require('tinymce/tinymce');
+require('tinymce/icons/default');
+require('tinymce/themes/silver');
+require('tinymce/plugins/advlist');
+require('tinymce/plugins/image');
+require('tinymce/plugins/charmap');
+require('tinymce/plugins/print');
+require('tinymce/plugins/preview');
+require('tinymce/plugins/anchor');
+require('tinymce/plugins/searchreplace');
+require('tinymce/plugins/visualblocks');
+require('tinymce/plugins/code');
+require('tinymce/plugins/fullscreen');
+require('tinymce/plugins/insertdatetime');
+require('tinymce/plugins/media');
+require('tinymce/plugins/table');
+require('tinymce/plugins/paste');
+require('tinymce/plugins/code');
+require('tinymce/plugins/help');
+require('tinymce/plugins/wordcount');
+require('tinymce/plugins/imagetools');
 
 const defaultText = `
 <div>
