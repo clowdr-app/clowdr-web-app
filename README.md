@@ -29,9 +29,10 @@ Use npm to install (or upgrade) all dependencies after cloning.
 $ npm install
 ```
 
-BCP: And maybe we need this:
+@Jon/@Crista: And maybe we need something like this (and maybe a few more dependencies):
 ```bash
-$ npm install --save typescript @types/node @types/react @types/react-dom @types/jest @types/parse
+$ npm install --save typescript @types/node @types/react @types/react-dom
+@types/jest @types/parse 
 ```
 
 ### Set Up a Backend
@@ -57,7 +58,7 @@ this:
 
 Use XXX as the MONGODB_PASSWORD, YYY as MONGODB_DB.
 
-BCP: Some Instructions about the MONGODB_HOST var would be useful
+@Jon/@Crista: Some Instructions about the MONGODB_HOST var would be useful
 
 ### Populate the Database
 
@@ -69,7 +70,7 @@ $ npm run init-app
 
 After this command runs, you should be able to see all tables with some essential data stored in the database in Back4App.
 
-BCP: Pressing tab in my browser (safari) selected the URL bar at the top!
+@Jon/@Crista: Pressing tab in my browser (safari) selected the URL bar at the top!
 right arrow might have worked.
 
 Select the `InstanceConfiguration` table, and click on the security icon on the top-right (a shield-like icon). Double check that Public read and write are unchecked, then add the role name `ClowdrSysAdmin` (press the tab key after typing this word), and check both Read and Write permissions for this role. Click save.
@@ -114,7 +115,7 @@ This will pop up a tab in your default browser and from there you can log into t
 
 `clowdr@localhost / admin`
 
-BCP: Should we mention that it will come up looking like ICSE?
+@Jon/@Crista: Should we mention that it will come up looking like ICSE?
 
 ### Set up Zoom for your test conference
 To use zoom embedding, you need to create a JWT app on Zoom, and set the instance
@@ -127,7 +128,7 @@ Clowdr uses Twilio as the text and video chat service. Please go to
 [Twilio](https://www.twilio.com/),  create an account there, and create an
 API key/secret. (Select API Keys on the left under settings.)
 
-BCP: What friendly name?
+@Jon/@Crista: What friendly name?
 
 Once you login into Clowdr with the admin account, go to Administration->Conference Configuration to enter the Twilio credentials for chat. You must enter, at least the following configuration variables:
 

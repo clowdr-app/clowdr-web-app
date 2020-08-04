@@ -8,6 +8,8 @@ export default createMuiTheme({
             main: '#F22F46',
         },
     },
-    sidebarWidth: 260,
-    sidebarMobileHeight: 90,
+    // @ts-ignore    
+    // @Jon: sidebarWidth doesn't seem to exist in the appropriate interface type
+    sidebarWidth: '260',
+    sidebarMobileHeight: '90',
 });

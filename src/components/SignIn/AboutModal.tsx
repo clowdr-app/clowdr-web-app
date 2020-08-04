@@ -12,7 +12,7 @@ interface WelcomePortalProps {
 
 /* A (not quite working) suggestion from VSCode
    PropsWithChildren<RouteComponentProps<any, StaticContext, PoorMansUnknown>> */
-/* BCP: What should all the 'any's be? */
+/* TS: BCP: What should all the 'any's be? */
 type WelcomePortalProps = React.PropsWithChildren<any>
 
 interface WelcomePortalState {

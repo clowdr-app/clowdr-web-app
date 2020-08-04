@@ -1,8 +1,11 @@
 // BCP: (the basic structure is there, but there are a lot more details to be filled in...)
 
 import * as Parse from 'parse';
-import ProgramItem from "./classes/ProgramItem";
 import ProgramCache from "./components/Session/ProgramCache";
+import ChatClient from "./classes/ChatClient";
+import {History} from "history";
+// Is this one needed?
+// import ProgramItem from "./classes/ProgramItem";
 
 type UserProfile = any
 type ClowdrInstance = any
@@ -12,7 +15,7 @@ type Role = any
 export type UserSessionToken = string
 
 export interface ClowdrAppState {
-    spaces: Map<string, SocialSpace>;   // Crista said Dictionary, but I think she meant Map
+    spaces: Map<string, SocialSpace>;   // @Crista said Dictionary, but I think she meant Map
     user: Parse.User | null;
     userProfile: UserProfile | null;
     isAdmin: boolean;
@@ -26,10 +29,12 @@ export interface ClowdrAppState {
     helpers: any;
     getChatClient: any;  // should be a function (higher-order?)
     getLiveChannel: any;
+    chatClient: ChatClient;
+    history: History;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
 }
 
-/*
+/* @Crista: advice about these?
 Some more fields that might belong (copied from withAuthentication.js -- are they relevant?)
 {
                 currentRoom: null,
