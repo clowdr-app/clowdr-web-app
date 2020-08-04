@@ -745,8 +745,14 @@ Parse.Cloud.beforeSave("ProgramItemAttachment", async (request) => {
         attachment.setACL(programItem.getACL());
     }
     if(attachment.dirty("file")){
-        console.log("DIrty file, setting context")
-        request.context={forceSaveItem: true};
+        let attachmentType = attachment.get("attachmentType");
+        await attachmentType.fetch();
+        if(attachmentType.get("isCoverImage")){
+            let programItem = attachment.get("programItem");
+            programItem.set("posterImage", attachment.get("file"));
+            await programItem.save({}, {sessionToken: request.user.getSessionToken()});
+
+        }
     }
 });
 
@@ -756,7 +762,13 @@ Parse.Cloud.beforeDelete("ProgramItemAttachment", async (request) => {
     await programItem.fetch();
     if(attachment.get("file")) {
         let file = attachment.get("file");
-        // const split_url = file.url().split('/');
+        let attachmentType = attachment.get("attachmentType");
+        await attachmentType.fetch();
+        if(attachmentType.get("isCoverImage")) {
+            programItem.set("posterImage", null);
+            await programItem.save({}, {sessionToken: request.user.getSessionToken()});
+        }
+            // const split_url = file.url().split('/');
         // const filename = split_url[split_url.length - 1];
         const filename = file.name();
         await Parse.Cloud.httpRequest({

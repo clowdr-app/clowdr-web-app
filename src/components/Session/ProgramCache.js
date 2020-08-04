@@ -109,8 +109,6 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramItem'] = {};
             if (!this._updateSubscribers['ProgramItem'][id])
                 this._updateSubscribers['ProgramItem'][id] = [];
-            console.log("Sub for " + id)
-            console.log(component)
             this._updateSubscribers['ProgramItem'][id].push(component);
         }
         return this._dataById['ProgramItem'][id];

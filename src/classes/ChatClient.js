@@ -58,7 +58,6 @@ export default class ChatClient{
     async closeChatAndLeave(sid) {
         if (this.joinedChannels[sid]){
             this.joinedChannels[sid].channel.leave();
-            delete this.joinedChannels[sid];
         }
     }
     async getJoinedChannel(sid){
