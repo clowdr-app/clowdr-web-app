@@ -13,7 +13,7 @@ type Role = any
 export type UserSessionToken = string
 
 export interface ClowdrAppState {
-    spaces: Map<string, SocialSpace>;   // Crista said Dictionary, but I think she meant Map
+    spaces: Map<string, SocialSpace>;   // @Crista said Dictionary, but I think she meant Map
     user: Parse.User | null;
     userProfile: UserProfile | null;
     isAdmin: boolean;
@@ -30,7 +30,7 @@ export interface ClowdrAppState {
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
 }
 
-/*
+/* @Crista: advice about these?
 Some more fields that might belong (copied from withAuthentication.js -- are they relevant?)
 {
                 currentRoom: null,

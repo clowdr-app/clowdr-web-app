@@ -353,7 +353,7 @@ class Lobby extends React.Component {
                  .sort((i1, i2) => 
                        { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
                         // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
-                 .filter (r => !r.get("programItem"))  // BCP: Right? //JB Yep
+                 .filter (r => !r.get("programItem"))  
                  .map((item) => {
                     if (!item){
                         return <Skeleton />
