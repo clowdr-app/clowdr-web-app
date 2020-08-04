@@ -30,6 +30,16 @@ export interface ClowdrAppState {
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
 }
 
+export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+    editing: boolean;
+    dataIndex: string;
+    title: string;  // could be 'any' based on Antd website
+    inputType: 'number' | 'text';   // based on Antd website
+    record: Parse.Object;
+    index: number;
+    children: React.ReactNode;
+}
+
 /* @Crista: advice about these?
 Some more fields that might belong (copied from withAuthentication.js -- are they relevant?)
 {

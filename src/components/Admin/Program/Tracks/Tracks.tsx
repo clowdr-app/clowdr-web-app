@@ -1,5 +1,5 @@
-import React, {Fragment, useState} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Radio, Space, Spin, Table, Tabs, Checkbox, Alert, Switch} from "antd";
+import React, {useState} from 'react';
+import {Button, Form, Input, Select, Popconfirm, Radio, Space, Spin, Table, Checkbox, Alert} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {
@@ -8,19 +8,29 @@ import {
     SaveTwoTone,
     CloseCircleTwoTone
 } from '@ant-design/icons';
+import {ClowdrAppState, EditableCellProps} from "../../../../ClowdrTypes";
+import {RadioChangeEvent} from "antd/lib/radio";
+import { Store } from 'antd/lib/form/interface';
 
 const { Option } = Select;
 
-// const {TabPane} = Tabs;
-// const IconText = ({icon, text}) => (
-//     <Space>
-//         {React.createElement(icon)}
-//         {text}
-//     </Space>
-// );
+interface ProgramTracksProps {
+    auth: ClowdrAppState;
+}
 
-class Tracks extends React.Component {
-    constructor(props) {
+interface ProgramTracksState {
+    loading: boolean;
+    alert: string | undefined;
+    ProgramTracks: Parse.Object[];
+    socialSpaces: Parse.Object[];
+    editing: boolean;
+    searched: boolean;
+    searchResult: Parse.Object[];
+    visible:boolean
+}
+
+class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
+    constructor(props: ProgramTracksProps) {
         super(props);
         console.log(this.props);
         this.state = {
@@ -28,18 +38,15 @@ class Tracks extends React.Component {
             alert: undefined,
             ProgramTracks: [],
             socialSpaces: [],
-            socialSpacesLoading: true,
-            gotTracks: false,
             editing: false,
-            edt_track: undefined,
             searched: false,
-            searchResult: "",
-            test:false
+            searchResult: [],
+            visible: false    // is init val false? never used
         };
     }
 
     setVisible() {
-        this.setState({'visible': !this.state.visible});
+        this.setState({visible: !this.state.visible});
     }
 
     async componentDidMount() {
@@ -51,25 +58,25 @@ class Tracks extends React.Component {
     }
 
     componentWillUnmount() {
-        this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
+        this.props.auth.programCache.cancelSubscription("ProgramTrack", this, undefined);
     }
 
-    onChangeExhibit(record, e) {
+    onChangeExhibit(record: Parse.Object, e : RadioChangeEvent) {
         console.log("--> radio changed " + e.target.value);
         record.set("exhibit", e.target.value);
     }
 
-    onChangeChat(record) {
+    onChangeChat(record: Parse.Object) {
         record.set("perProgramItemChat", !record.get("perProgramItemChat"));
     }
 
-    onChangeVideo(record) {
+    onChangeVideo(record: Parse.Object) {
         record.set("perProgramItemVideo", !record.get("perProgramItemVideo"));
     }
 
     render() {
         // Set up editable table cell
-        const EditableCell = ({
+        const EditableCell: React.FC<EditableCellProps> = ({
             editing,
             dataIndex,
             title,
@@ -78,8 +85,8 @@ class Tracks extends React.Component {
             index,
             children,
             ...restProps
-        }) => {
-            let inputNode = null;
+        }) : JSX.Element => {
+            let inputNode: JSX.Element|null;
             switch (dataIndex) {
                 case ('name'):
                     inputNode = <Input title="Short name used internally, e.g. papers"/>;
@@ -88,7 +95,6 @@ class Tracks extends React.Component {
                     inputNode = <Input title="Name that participants see, e.g. Research Papers"/>;
                     break;
                 case ('perProgramItemChat'):
-                    //console.log(record.get("perProgramItemChat"));
                     inputNode = (
                         <span title="Do the track's items get their own text chat channels?"><Checkbox 
                             defaultChecked={record.get("perProgramItemChat")}
@@ -132,7 +138,7 @@ class Tracks extends React.Component {
                             }}
                             rules={[
                                 {
-                                    required: dataIndex == 'name' ? true : false,
+                                    required: dataIndex === 'name',
                                     message: `Please Input ${title}!`,
                                 },
                             ]}
@@ -151,9 +157,9 @@ class Tracks extends React.Component {
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.ProgramTracks);
             const [editingKey, setEditingKey] = useState('');
-            const isEditing = record => record.id === editingKey;
+            const isEditing = (record: Parse.Object) : boolean => record.id === editingKey;
 
-            const edit = record => {
+            const edit = (record: Parse.Object) : void => {
                 form.setFieldsValue({
                     name: record.get("name") ? record.get("name") : "",
                     displayName: record.get("displayName") ? record.get("displayName") : "",
@@ -164,12 +170,12 @@ class Tracks extends React.Component {
                 setEditingKey(record.id)
             }
 
-            const cancel = () => {
+            const cancel = () : void => {
                 setEditingKey('');
             };
 
-            const onDelete = record => {
-                const newTrackList = [...this.state.ProgramTracks];
+            const onDelete = (record: Parse.Object) : void => {
+                const newTrackList: Parse.Object[] = [...this.state.ProgramTracks];
                 // delete from database
                 let data = {
                     clazz: "ProgramTrack",
@@ -180,18 +186,18 @@ class Tracks extends React.Component {
                 .then(c => this.setState({alert: "delete success"}))
                 .catch(err => {
                     this.setState({alert: "delete error"})
-                    this.refreshList();
+                    // this.refreshList();
                     console.log("[Admin/Tracks]: Unable to delete: " + err)
                 })
 
             };
 
-            const save = async id => {
+            const save = async (id: string) => {
                 console.log("Entering save func");
                 try {
-                    const row = await form.validateFields();
-                    const newData = [...data];
-                    let track = newData.find(track => track.id === id);
+                    const row: Store = await form.validateFields();
+                    const newData: Parse.Object[] = [...data];
+                    let track: Parse.Object | undefined = newData.find(track => track.id === id);
 
                     if (track) {
                         track.set("name", row.name);
@@ -215,13 +221,10 @@ class Tracks extends React.Component {
                             this.setState({alert: "save error"})
                             console.log("[Admin/Tracks]: Unable to save: " + err)
                         })
-                    
                         setEditingKey('');
                     }
                     else {
-                        newData.push(row);
-                        setData(newData);
-                        setEditingKey('');
+                        newData.push(row as Parse.Object);
                     }
                 } catch (errInfo) {
                     console.log('Validate Failed:', errInfo);
@@ -230,29 +233,28 @@ class Tracks extends React.Component {
 
             const columns = [
                 {
-                    title: 'Name',
                     dataIndex: 'name',
                     key: 'name',
                     editable: true,
                     width: '50%',
-                    sorter: (a, b) => {
-                        var nameA = a.get("name") ? a.get("name"): "";
-                        var nameB = b.get("name") ? b.get("name") : "";
+                    sorter: (a: Parse.Object, b: Parse.Object) => {
+                        let nameA: string = a.get("name") ? a.get("name"): "";
+                        let nameB: string = b.get("name") ? b.get("name") : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (text, record) => <span>{record.get("name")}</span>,
+                    render: (_: string, record: Parse.Object) : JSX.Element|null => <span>{record.get("name")}</span>,
                 },
                 {
                     title: 'Display Name',
                     dataIndex: 'displayName',
                     editable: true,
                     width: '50%',
-                    sorter: (a, b) => {
-                        var displayNameA = a.get("displayName") ? a.get("displayName") : "";
-                        var displayNameB = b.get("displayName") ? b.get("displayName") : "";
+                    sorter: (a: Parse.Object, b: Parse.Object) => {
+                        let displayNameA: string = a.get("displayName") ? a.get("displayName") : "";
+                        let displayNameB: string = b.get("displayName") ? b.get("displayName") : "";
                         return displayNameA.localeCompare(displayNameB);
                     },
-                    render: (text,record) => <span>{record.get("displayName")}</span>,
+                    render: (_: string, record: Parse.Object) : JSX.Element|null => <span>{record.get("displayName")}</span>,
                     key: 'displayName',
                 },
                 {
@@ -261,7 +263,7 @@ class Tracks extends React.Component {
                     editable: true,
                     width: '5%',
                     //render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
-                    render: (text,record) =><span>{record.get("exhibit")}</span>,
+                    render: (_: string, record: Parse.Object) : JSX.Element|null => <span>{record.get("exhibit")}</span>,
                     key: 'exhibit',
                 },
                 {
@@ -270,7 +272,7 @@ class Tracks extends React.Component {
                     editable: true,
                     width: '5%',
                     //render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
-                    render: (text,record) =><Checkbox checked={record.get("perProgramItemChat") ? true : false} disabled></Checkbox>,
+                    render:(_: string, record: Parse.Object) : JSX.Element|null => <Checkbox checked={!!record.get("perProgramItemChat")} disabled></Checkbox>,
                     key: 'perProgramItemChat',
                 },
                 {
@@ -279,14 +281,14 @@ class Tracks extends React.Component {
                     editable: true,
                     width: '5%',
                     //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
-                    render: (text,record) =><Checkbox checked={record.get("perProgramItemVideo") ? true : false} disabled></Checkbox>,
+                    render: (_: string, record: Parse.Object) : JSX.Element|null => <Checkbox checked={!!record.get("perProgramItemVideo")} disabled></Checkbox>,
                     key: 'perProgramItemVideo',
                 },
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_, record) => {
-                        const editable = isEditing(record);
+                    render: (_: string, record: Parse.Object) : JSX.Element|null => {
+                        const editable: boolean = isEditing(record);
                         if (this.state.ProgramTracks.length > 0) {
                             return editable ? (
                                 <span>
@@ -304,7 +306,8 @@ class Tracks extends React.Component {
                             </span>
                             ) : (
                                 <Space size='small'>
-                                    <a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>
+                                    <a title="Edit" onClick={() => {if (editingKey === '') edit(record)}}>
+                                    {/*<a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>*/}
                                         {<EditOutlined />}
                                     </a>
                                     <Popconfirm
@@ -331,7 +334,7 @@ class Tracks extends React.Component {
                 }
                 return {
                     ...col,
-                    onCell: record => ({
+                    onCell: (record: Parse.Object) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -355,15 +358,14 @@ class Tracks extends React.Component {
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         pagination={{ defaultPageSize: 500,
-                            pageSizeOptions: [10, 20, 50, 100, 500], 
+                            pageSizeOptions: ['10', '20', '50', '100', '500'],
                             position: ['topRight', 'bottomRight']}}
                     />
                 </Form>
             );
         };
 
-        const newTrack = () => {
-
+        const newTrack = () : void => {
             let data = {
                 clazz: "ProgramTrack",
                 conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
@@ -429,10 +431,10 @@ class Tracks extends React.Component {
     }
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = (props: ProgramTracksProps) => (
             <AuthUserContext.Consumer>
-                {value => (
-                    <Tracks {...props} auth={value} />
+                {value => (value == null ? <></> :  // @ts-ignore  TS: Can value really be null here?
+                        <Tracks {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>
 );
