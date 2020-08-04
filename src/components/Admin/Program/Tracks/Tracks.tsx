@@ -233,6 +233,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
 
             const columns = [
                 {
+                    title: 'Name',
                     dataIndex: 'name',
                     key: 'name',
                     editable: true,
