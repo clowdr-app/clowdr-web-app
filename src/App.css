@@ -535,7 +535,11 @@ td.ant-table-cell.program-table-timeBand{
 }
 #sidepopoutcontainer .social-sidebar-divider{
      margin: 0;
-}
+    }
+
+span.ant-divider-inner-text {
+        color: #0264c1;
+    }    
 
 /* For Mobile */
 @media screen and (max-width: 540px) {
