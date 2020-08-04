@@ -6,10 +6,14 @@ import { EditOutlined, SaveOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import { ClowdrAppState } from "../ClowdrTypes";
 
-// import tinymce from 'tinymce/tinymce';
+// Import TinyMCE
 var tinymce = require('tinymce/tinymce');
+
+// Default icons are required for TinyMCE 5.3 or above
 require('tinymce/icons/default');
+// A theme is also required
 require('tinymce/themes/silver');
+// Any plugins you want to use have to be imported
 require('tinymce/plugins/advlist');
 require('tinymce/plugins/image');
 require('tinymce/plugins/charmap');
