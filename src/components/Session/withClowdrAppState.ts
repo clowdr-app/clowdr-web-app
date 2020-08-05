@@ -7,23 +7,53 @@ import ChatClient from "../../classes/ChatClient"
 import ProgramCache from "./ProgramCache";
 import { RoomInvalidParametersError } from 'twilio-video';
 import BreakoutRoom from '../../classes/BreakoutRoom';
+import UserProfile from '../../classes/UserProfile';
+import UserPresence from '../../classes/UserPresence';
 
 interface WithAuthenticationProps {
+    history: any;   // TS: ???
 } 
 interface WithAuthenticationState {
+    // TS: Fill in the types!
+    user: any,
+    users: any,
+    loading: boolean,
+    roles: any,
+    currentRoom: any,
+    history: any,
+    refreshUser: any,
+    getChatClient: any,
+    setSocialSpace: any,
+    getConferenceBySlackName: any,
+    setActiveRoom: any,
+    currentConference: any,
+    activeRoom: any,
+    helpers: any,
+    chatClient: any,
+    parseLive: any,
+    presences: any,
+    videoRoomsLoaded: boolean,
+    liveVideoRoomMembers: any,
+    activePublicVideoRooms: any,
+    activePrivateVideoRooms: any,
+    userProfile: UserProfile | null,  // TS: Or should it be undefined??
+    permissions: any,
 }
 
 type RoomID = string    // TS: Doesn't belong here?
+type UserID = string    // TS: Doesn't belong here?  And should this be the same as the next??
 type UserProfileID = string    // TS: Doesn't belong here?
-type Subscriber = React.Component;   // TS: Arguments?
+type Subscriber = React.Component;   // TS: What arguments?
 
-// TS: @Benjamin . Is this the same as what's happening in the /classes/*.ts files?
-// This really belongs there!
-let UserProfile = Parse.Object.extend("UserProfile");
+// TS: This belongs in some top-level utility module
+function assert(input: any): asserts input { // <-- not a typo
+    if (!input) throw new Error('Assertion failed!');
+}
 
 const withAuthentication = (Component: React.Component<WithAuthenticationProps, WithAuthenticationState>) => {
     // @Jon/@Crista/@Benjamin    (maybe ClowdrAppState can be globally renamed just ClowdrState...?)
     class WithAuthentication extends React.Component<WithAuthenticationProps, WithAuthenticationState> {
+        // TS: I (BCP) don't understand the logic here very well.  Why do we initialize all these fields of "this" and then copy most of them to this.state??
         watchedRoomMembers: Map<RoomID,BreakoutRoom>;
         authCallbacks: never[];   // @Jon: This seems never to be assigned to!
         isLoggedIn: boolean;
@@ -35,10 +65,10 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         livegneChannel: null;   // TS: Never assigned or used
         channelChangeListeners: never[]; // TS: Never assigned or used
         presenceWatchers: React.Component[];  // or: {setState: (arg0: { presences: {}) => void }
-        presences: Map<UserID, UserPresence>;   // UserPresence should be a parse object
+        presences: Map<UserID, UserPresence>;  
         newPresences: UserPresence[];
         userProfileSubscribers: Map<UserProfileID, Subscriber[]>;
-        parseLive: Parse.LiveQueryClient;   // TS: Why is it not found?
+        parseLive: any; // TS: should be Parse.LiveQueryClient, I think, but the type declaration file doesn't seem to include it!
         fetchingUsers: boolean;
         expandedProgramRoom: any;
         usersPromise: any;
@@ -47,12 +77,12 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         parseLiveActivitySub: any;
         subscribedToVideoRoomState: any;
         presenceUpdateScheduled: any;
-        presenceUpdateTimer: NodeJS.Timeout;
+        presenceUpdateTimer: NodeJS.Timeout | null;
         socialSpaceSubscription: any;
         profilesSubscription: any;
         chatClient: any;
         refreshUserPromise: any;
-        user: Parse.User<Parse.Attributes>;
+        user: Parse.User<Parse.Attributes> | null;
         userProfile: Parse.Object<Parse.Attributes> | undefined;
         activePublicVideoRooms: any;
         activePublicVideoRoomSubscribers: any;
@@ -60,20 +90,23 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
 
         constructor(props: WithAuthenticationProps) {
             super(props);
-            this.watchedRoomMembers = {};
+            this.watchedRoomMembers = new Map<RoomID,BreakoutRoom>();
             this.authCallbacks = [];
             this.isLoggedIn = false;
-            this.loadingProfiles = {};
-            this.userProfiles = {};
-            this.unwrappedProfiles = {};
+            this.loadingProfiles = new Map<UserProfileID, (_:UserProfile)=>void>();
+            this.userProfiles = new Map<UserID, Promise<UserProfile>>();
+            this.unwrappedProfiles = new Map<UserID, UserProfile>();
             this.chatWaiters = [];
             this.livegneChannel = null;
             this.channelChangeListeners = [];
             this.presenceWatchers = [];
-            this.presences = {};
+            this.presences = new Map<UserID, UserPresence>();
             this.newPresences = [];
-            this.userProfileSubscribers = {};
+            this.userProfileSubscribers = new Map<UserProfileID, Subscriber[]>();
+            this.presenceUpdateTimer = null;
+            this.user = null;
 
+            // @ts-ignore     TS: Again, this seems to exist in the Parse library but not its type declarations!
             this.parseLive = new Parse.LiveQueryClient({
                 applicationId: process.env.REACT_APP_PARSE_APP_ID,
                 serverURL: process.env.REACT_APP_PARSE_DOMAIN,
@@ -81,7 +114,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             });
             this.parseLive.open();
 
-            let exports ={
+            let exports = {
                 getBreakoutRoom: this.getBreakoutRoom.bind(this),
                 cancelBreakoutRoomSubscription: this.cancelBreakoutRoomSubscription.bind(this),
                 unwrappedProfiles: this.unwrappedProfiles,
@@ -103,8 +136,8 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                 unmountProfileDisplay: this.unmountProfileDisplay.bind(this),
                 updateMyPresence: this.updateMyPresence.bind(this),
                 userHasWritePermission: this.userHasWritePermission.bind(this)
-
             }
+
             this.state = {
                 user: null,
                 users: {},
@@ -123,30 +156,35 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                 chatClient: new ChatClient(this.setState.bind(this)),
                 parseLive: this.parseLive,
                 presences: {},
-                // video: {
                 videoRoomsLoaded: false,
                 liveVideoRoomMembers: 0,
                 activePublicVideoRooms: [],
                 activePrivateVideoRooms: [],
-                // },
+                userProfile: null,
+                permissions: null,
             };
-            this.fetchingUsers = false;
+
+            this.fetchingUsers = false;   // Does this have to be last??
         }
 
-        async updateMyPresence(presence){
-            this.presences[this.state.userProfile.id] = presence;
+        async updateMyPresence(presence: UserPresence) {
+            assert (this.state.userProfile !== null);
+            this.presences.set(this.state.userProfile.id, presence);
             for(let presenceWatcher of this.presenceWatchers){
                 presenceWatcher.setState({presences: this.presences});
             }
         }
 
-        async createOrOpenDM(profileOfUserToDM){
-            if(profileOfUserToDM == this.state.userProfile.id)
-                return
+        async createOrOpenDM(profileOfUserToDM: UserProfile) {
+            assert (this.state.userProfile !== null);
+            // @ts-ignore  @Jon/@Crista
+            // "This condition will always return 'false' since the types 'UserProfile' and 'string' have no overlap."
+            // (Should the arg just be a string?)
+            if (profileOfUserToDM == this.state.userProfile.id) return
             //Look to see if we already have a chat set up with this person
             let channels = this.state.chatClient.joinedChannels;
             if (channels) {
-                let found = Object.values(channels).find((chan) => {
+                let found = Object.values(channels).find((chan: any) => { // TS: @Crista  ????
                     if(!chan || !chan.conversation)
                         return false;
                     let convo = chan.conversation;
@@ -158,7 +196,9 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                         return true;
                 })
                 if (found) {
+                    // @ts-ignore   @Crista What is its type?
                     console.log(found.channel.sid)
+                    // @ts-ignore   @Crista What is its type?
                     this.state.chatClient.openChat(found.channel.sid);
                     return;
                 }
@@ -172,13 +212,13 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             this.state.chatClient.openChat(res.sid);
         }
 
-        ifPermission(permission, jsxElement, elseJsx){
-            if(this.state.permissions && this.state.permissions.includes(permission))
+        ifPermission(permission: any, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
+            if (this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
-            if(elseJsx)
+            if (elseJsx)
                 return elseJsx;
-            return <></>
-
+            // TS: Not sure what is wrong here  
+            return  <></>
         }
 
         setExpandedProgramRoom(programRoom) {
