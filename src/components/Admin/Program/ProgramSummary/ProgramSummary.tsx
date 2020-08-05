@@ -1,11 +1,12 @@
 import React from 'react';
-import {Button, message, Popconfirm, Select, Space, Spin, Table, Tabs, Upload} from "antd";
+import {Button, message, Popconfirm, Select, Spin, Table, Upload, Space, AutoComplete} from "antd";
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 
 import {UploadOutlined} from '@ant-design/icons';
-import { ClowdrAppState } from "../../../../ClowdrTypes";
-import { UploadChangeParam, RcFile } from 'antd/lib/upload/interface';
+import {ClowdrAppState} from "../../../../ClowdrTypes";
+import {RcFile, UploadChangeParam} from 'antd/lib/upload/interface';
+import momentTZ from 'moment-timezone';
 
 interface ProgramSummaryProps {
     auth: ClowdrAppState,
@@ -20,6 +21,8 @@ interface ProgramSummaryState {
     ProgramTracks: Parse.Object[],
     ProgramRooms: Parse.Object[],
     ProgramPersons: Parse.Object[],
+    uploadLoading: boolean,
+    uploadTimezone: string
 }
 
 const { Option } = Select;
@@ -37,6 +40,8 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
             ProgramTracks: [],
             ProgramRooms: [],
             ProgramPersons: [],
+            uploadLoading: false,
+            uploadTimezone: "UTC"
         };
         // this.currentConference = "XYZ";
         this.currentConference = this.props.auth.currentConference;
@@ -73,17 +78,21 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
 
     beforeUpload(file: RcFile) {
         const reader = new FileReader();
+        this.setState({uploadLoading: true})
         reader.onload = () => {
-            const data = {content: reader.result, conference: this.currentConference.id};
+            const data = {content: reader.result, timezone:this.state.uploadTimezone,
+                conference: this.currentConference.id};
             Parse.Cloud.run("program-upload", data)
                 .then((res) => {
-                    message.info("Success! Program has been uploaded")
-                    console.log("Upload successfully!!!" + JSON.stringify(res));
+                    message.info("Success! Program has been uploaded. Please refresh the page to see the update")
+                    this.setState({uploadLoading: false})
+
                 })
                 .catch(err => {
                     console.log('Upload failed: ' + err)
                     console.log(err);
                     message.error("Error uploading program, please see console for debugging")
+                    this.setState({uploadLoading: false});
                 });
         }
         reader.readAsText(file);
@@ -169,12 +178,19 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
         
         return (
             <div>
+               <Space>
+                   <Select showSearch style={{width: 200}} placeholder="Select timezone used in uploaded program"
+                                 options={momentTZ.tz.names().map(tzName=>({value: tzName}))}
+                   onChange={(val)=>{
+                       this.setState({uploadTimezone: val.toString()})
+                   }}></Select>
                 <Upload accept=".json, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
-                    <Button>
+                    <Button loading={this.state.uploadLoading}>
                         <UploadOutlined /> Click to upload program data
                     </Button>
                 </Upload>
                 <Popconfirm title="Are you sure you want to delete the entire program? This can't be undone." onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
+               </Space>
                 <Table
                     columns={columns} 
                     dataSource={counts}

@@ -1,10 +1,11 @@
+
 var jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
 const axios = require('axios');
 
 
-var moment = require('moment');
+var moment = require('moment-timezone');
 const Twilio = require("twilio");
 const Papa = require('./papaparse.min');
 const { response } = require('express');
@@ -128,29 +129,6 @@ Parse.Cloud.define("delete-obj", async (request) => {
         throw "Unable to delete obj: user not allowed to delete objects";
 });
 
-Parse.Cloud.define("poster-upload", async (request) => {
-    console.log('Request to upload a poster image for ' + request.params.posterId);
-    const imgData = request.params.content;
-    const conferenceId = request.params.conferenceId;
-    const posterId = request.params.posterId;
-
-    try {
-
-        var ProgramItem = Parse.Object.extend("ProgramItem");
-        var query = new Parse.Query(ProgramItem);
-        // query.equalTo("conference", conference);
-        let poster = await query.get(posterId, {useMasterKey: true});
-        let file = new Parse.File('poster-image', {base64: imgData});
-        await file.save({useMasterKey: true});
-        poster.set("posterImage", file);
-        await poster.save({}, {useMasterKey: true});
-        return {status: "OK", "file": file.url()};
-    } catch (err) {
-        console.log("Unable to update poster " + posterId);
-        console.log(err);
-        throw err;
-    }
-});
 
 Parse.Cloud.define("rooms-upload", async (request) => {
     console.log('Request to upload rooms data');
@@ -270,6 +248,7 @@ Parse.Cloud.define("program-upload", async (request) => {
     console.log('Request to upload program data');
     let data = request.params.content;
     const conferenceID = request.params.conference;
+    const timezone = request.params.timezone;
     data = JSON.parse(data);
 
     let conferoPeople = {};
@@ -469,8 +448,8 @@ Parse.Cloud.define("program-upload", async (request) => {
         if (times.length >= 2) {
             let startTime = ses.Day + ' ' + times[0];
             let endTime = ses.Day + ' ' + times[1];
-            start = moment.utc(startTime, "YYYY-MM-DD HH:mm");
-            end = moment.utc(endTime, "YYYY-MM-DD HH:mm");
+            start = moment.tz(startTime, "YYYY-MM-DD HH:mm", timezone);
+            end = moment.tz(endTime, "YYYY-MM-DD HH:mm", timezone);
 //            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
         }
 
