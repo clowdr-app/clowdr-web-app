@@ -1,12 +1,13 @@
-import React, {Fragment} from 'react';
-import {Button, DatePicker, Form, Input, message, Modal, Select, Space, Spin, Table, Tabs, Tooltip, Upload} from "antd";
+import React from 'react';
+import {Button, DatePicker, Form, Input, message, Modal, Spin, Table, Tooltip, Upload} from "antd";
 import {MailOutlined, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
-import moment from "moment";
-import * as timezone from 'moment-timezone';
 import { ClowdrAppState } from '../../../ClowdrTypes';
 import { UploadChangeParam, RcFile } from 'antd/lib/upload';
+
+var moment = require('moment');
+var timezone = require('moment-timezone');
 
 // const { Option } = Select;
 
@@ -67,7 +68,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         }
     }
 
-    onCreate(values) {
+    onCreate(values: any) { //TS: not any!
         var _this = this;
 
         let exists = this.state.regs.find(r => r.get("email") == values.email)
@@ -138,7 +139,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         }).catch(err => console.log('[Registration]: error: ' + err));
     }
 
-    refreshList(value) {
+    refreshList(value: any) { //TS: not any!
         let regs = this.state.regs;
         if (value) {
             regs = value;
@@ -232,7 +233,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                 title: 'Created',
                 dataIndex: 'created',
                 sorter: (a: Parse.Object, b: Parse.Object) => {
-                    return moment(a.get("createdAt"))- moment(b.get("createdAt"));
+                    return moment(a.get("createdAt")) - moment(b.get("createdAt"));
                 },
                 render: (_: string, record: Parse.Object) => <span>{timezone(record.get("createdAt")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'created',
@@ -267,7 +268,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                             </Upload></td>
 
                             <td>
-                                <Button type="primary" onClick={() => {this.setVisible(true); }}>New registration </Button>
+                                <Button type="primary" onClick={() => { this.setVisible(true); }}>New registration </Button>
                                     <RegistrationForm
                                         title="New Registration"
                                         visible={this.state.visible}
@@ -373,7 +374,7 @@ const RegistrationForm: React.FC<RegistrationFormState> = ({ //TS: REACT.FC corr
                 id="newRegForm"
                 initialValues={{
                     modifier: 'public',
-                    ...data
+                    //...data //TS: can this be ignored?
                 }}
                 onFinish={() => {
                     form

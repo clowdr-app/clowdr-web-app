@@ -1,5 +1,5 @@
-import React, {Fragment, useState} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, Checkbox, Alert} from "antd";
+import React, {useState} from 'react';
+import {Button, Form, Input, Popconfirm, Space, Spin, Table, Alert} from "antd";
 import Parse from "parse";
 import {
     DeleteOutlined,
@@ -7,14 +7,34 @@ import {
     SaveTwoTone,
     CloseCircleTwoTone
 } from '@ant-design/icons';
+import { ClowdrAppState, EditableCellProps } from '../../../ClowdrTypes';
+import { Store } from 'antd/lib/form/interface';
 
-class Configuration extends React.Component {
-    constructor(props) {
+interface ConfigurationProps {
+    auth: ClowdrAppState,
+}
+
+interface ConfigurationState {
+    loading: boolean,
+    initialized: boolean,
+    config: Parse.Object[],
+    searched: boolean,
+    alert: string | undefined,
+    searchResult: Parse.Object[],
+    visible: boolean
+}
+
+class Configuration extends React.Component<ConfigurationProps, ConfigurationState> {
+    constructor(props: ConfigurationProps) {
         super(props);
         this.state = {
             loading: true, 
             initialized: false,
-            config: []
+            config: [],
+            searched: false,
+            alert: "",
+            searchResult: [],
+            visible: false
         };
 
     }
@@ -26,7 +46,7 @@ class Configuration extends React.Component {
     componentDidMount() {
         // Has this conference been initialized?
         console.log('[Admin/Config]: active space ' + this.props.auth.activeSpace);
-        if (this.props.auth.activeSpace && this.props.auth.activeSpace.get('chatChannel')) {
+        if (this.props.auth.activeSpace && this.props.auth.activeSpace.get('chatChannel')) {  //TS: activeSpace?
             this.setState({initialized: true});
         }
         else
@@ -35,7 +55,7 @@ class Configuration extends React.Component {
         this.refreshList();
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: any) {
     }
 
     async refreshList() {
@@ -43,7 +63,8 @@ class Configuration extends React.Component {
         query.equalTo("instance", this.props.auth.currentConference);
         let res = await query.find();
         console.log('[Admin/Config]: Found ' + res.length + ' vars');
-        res.map(v => v.key = v.get('key')); // Add a 'key' for the rows of the table
+        //TS: seems like we are changing datatype here?
+        res.map((v: any) => v.key = v.get('key')); // Add a 'key' for the rows of the table
         this.setState({
             config: res,
             loading: false
@@ -64,7 +85,7 @@ class Configuration extends React.Component {
 
     render() {
         // Set up editable table cell
-        const EditableCell = ({
+        const EditableCell: React.FC<EditableCellProps> = ({
             editing,
             dataIndex,
             title,
@@ -116,9 +137,9 @@ class Configuration extends React.Component {
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.config);
             const [editingKey, setEditingKey] = useState('');
-            const isEditing = record => record.id === editingKey;
+            const isEditing = (record: Parse.Object) => record.id === editingKey;
 
-            const edit = record => {
+            const edit = (record: Parse.Object) => {
                 form.setFieldsValue({
                     key: record.get("key") ? record.get("key") : "",
                     value: record.get("value") ? record.get("value") : ""
@@ -130,7 +151,7 @@ class Configuration extends React.Component {
                 setEditingKey('');
             };
 
-            const onDelete = record => {
+            const onDelete = (record: Parse.Object) => {
                 const newConfigList = [...this.state.config];
                 // delete from database
                 record.destroy().then(() => {
@@ -146,10 +167,10 @@ class Configuration extends React.Component {
                 ;
             };
 
-            const save = async id => {
+            const save = async (id: string) => {
                 console.log("Entering save func");
                 try {
-                    const row = await form.validateFields();
+                    const row: Store = await form.validateFields();
                     const newData = [...data];
                     let config = newData.find(config => config.id === id);
 
@@ -164,13 +185,15 @@ class Configuration extends React.Component {
                             })
                             .catch(err => {
                                 console.log('[Admin/Config]: error when saving config: ' + err);
-                                console.log("@" + config.id);
+                                if (config) {
+                                    console.log("@" + config.id);
+                                }
                                 this.setState({alert: "save error"});
                             });
                         setEditingKey('');
                     }
                     else {
-                        newData.push(row);
+                        newData.push(row as Parse.Object);
                         setData(newData);
                         setEditingKey('');
                     }
@@ -186,30 +209,30 @@ class Configuration extends React.Component {
                     key: 'key',
                     editable: true,
                     width: '50%',
-                    sorter: (a, b) => {
+                    sorter: (a: Parse.Object, b: Parse.Object) => {
                         var nameA = a.get("key") ? a.get("key"): "";
                         var nameB = b.get("key") ? b.get("key") : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (text, record) => <span>{record.get("key")}</span>,
+                    render: (_: string,record: Parse.Object) => <span>{record.get("key")}</span>,
                 },
                 {
                     title: 'Value',
                     dataIndex: 'value',
                     editable: true,
                     width: '50%',
-                    sorter: (a, b) => {
+                    sorter: (a: Parse.Object, b: Parse.Object) => {
                         var valueA = a.get("value") ? a.get("value") : "";
                         var valueB = b.get("value") ? b.get("value") : "";
                         return valueA.localeCompare(valueB);
                     },
-                    render: (text,record) => <span>{record.get("value")}</span>,
+                    render: (_: string,record: Parse.Object) => <span>{record.get("value")}</span>,
                     key: 'value',
                 },
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_, record) => {
+                    render: (_: string,record: Parse.Object) => {
                         const editable = isEditing(record);
                         if (this.state.config.length > 0) {
                             return editable ? (
@@ -228,7 +251,8 @@ class Configuration extends React.Component {
                             </span>
                             ) : (
                                 <Space size='small'>
-                                    <a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>
+                                    <a title="Edit" onClick={() => {if (editingKey === '') edit(record)}}>
+                                    {/* <a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}> */}
                                         {<EditOutlined />}
                                     </a>
                                     <Popconfirm
@@ -255,7 +279,7 @@ class Configuration extends React.Component {
                 }
                 return {
                     ...col,
-                    onCell: record => ({
+                    onCell: (record: Parse.Object) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -297,16 +321,16 @@ class Configuration extends React.Component {
             config.setACL(acl);
             config.set("instance", this.props.auth.currentConference);
 
-            config.save().then(val => {
+            config.save().then((val: any) => { //TS: what is val?
                 config.key = val.id;
                 this.setState({alert: "add success", config: [config, ...this.state.config]})
-            }).catch(err => {
+            }).catch((err: Error) => {
                 this.setState({alert: "add error"});
                 console.log('[Admin/Config]: error: ' + err);
             }); 
         }
 
-        if (this.props.loading)
+        if (this.state.loading) // TS: Should this be state.loading or props.loading?
             return (
                 <Spin tip="Loading...">
                 </Spin>)

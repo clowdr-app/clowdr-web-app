@@ -6,34 +6,55 @@ import {
     DeleteOutlined,
     EditOutlined
 } from '@ant-design/icons';
+import { ClowdrAppState } from '../../../ClowdrTypes';
 
 const { Option } = Select;
 
-const {TabPane} = Tabs;
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
-
 const LiveVideoSources = ['', 'YouTube', 'Twitch', 'Facebook', 'iQIYI', 'ZoomUS', 'ZoomCN'];
 
-class LiveVideos extends React.Component {
-    constructor(props) {
+interface LiveVideoProps {
+    auth: ClowdrAppState,
+}
+
+interface LiveVideoState {
+    loading: boolean,
+    videos: Parse.Object[],
+    src1: string,
+    src2: string,
+    editing: boolean,
+    edt_video: videoSchema | undefined, //TS: can this be undefined?
+    visible: boolean,
+}
+
+//TS: Coment about type, name
+interface videoSchema {
+    objectId: string,
+    title: string,
+    src1: string,
+    pwd1: string,
+    id1: string,
+    src2: string,
+    id2: string,
+    pwd2: string,
+    slido: any, //TS: not any!
+}
+
+class LiveVideos extends React.Component<LiveVideoProps, LiveVideoState> {
+    constructor(props: LiveVideoProps) {
         super(props);
         console.log(this.props);
         this.state = {
             loading: false, 
             videos: [],
-            src1: undefined,
-            src2: undefined,
+            src1: '',
+            src2: '',
             editing: false,
-            edt_video: undefined
+            edt_video: undefined,
+            visible: false,
         };
     }
 
-    onCreate(values) {
+    onCreate(values: videoSchema) {
         var _this = this;
         // Create the Video record
         var Video = Parse.Object.extend("LiveVideo");
@@ -46,16 +67,17 @@ class LiveVideos extends React.Component {
         video.set("id2", values.id2);
         video.set("pwd2", values.pwd2);
         video.set("slido", values.slido);
-        video.save().then((val) => {
+        video.save().then((_: any) => { //TS: Do we need '_' here?
             _this.setState({visible: false})
             _this.refreshList();
+            // @ts-ignore no such function
             _this.createWatchers(video);
-        }).catch(err => {
+        }).catch((err: Error) => {
             console.log(err);
         });
     }
 
-    onDelete(value) {
+    onDelete(value: Parse.Object) {
         console.log("Deleting " + value + " " + value.get("id1"));
         // Delete the watchers first
         
@@ -64,7 +86,7 @@ class LiveVideos extends React.Component {
         });
     }
 
-    onEdit(video) {
+    onEdit(video: Parse.Object) {
         console.log("Editing " + JSON.stringify(video) + " " + video.get("id1") + " " + video.id);
         this.setState({
             visible: true, 
@@ -83,7 +105,7 @@ class LiveVideos extends React.Component {
         });
     }
 
-    onUpdate(values) {
+    onUpdate(values: videoSchema) {
         var _this = this;
         console.log("Updating " + values.id1 + "; " + values.objectId);
         let query = new Parse.Query("LiveVideo");
@@ -97,10 +119,10 @@ class LiveVideos extends React.Component {
                 video.set("id2", values.id2);
                 video.set("pwd2", values.pwd2);
                 video.set("slido", values.slido);
-                video.save().then((val) => {
+                video.save().then((_: any) => { //TS: do we need '_' here?
                     _this.setState({visible: false, editing: false});
                     _this.refreshList();
-                }).catch(err => {
+                }).catch((err: Error) => {
                     console.log(err + ": " + values.objectId);
                 })
             }
@@ -110,8 +132,13 @@ class LiveVideos extends React.Component {
         });
     }
 
-    setVisible() {
-        this.setState({'visible': !this.state.visible});
+    setVisible(visible: boolean) {
+        if (visible != null) {
+            this.setState({'visible': visible});
+        }
+        else { 
+            this.setState({'visible': !this.state.visible});
+        }
     }
 
     componentDidMount() {
@@ -131,6 +158,7 @@ class LiveVideos extends React.Component {
             });
         })
     }
+
     componentWillUnmount() {
         // this.sub.unsubscribe();
     }
@@ -141,56 +169,64 @@ class LiveVideos extends React.Component {
                 title: 'Title',
                 dataIndex: 'title',
                 key: 'title',
-                render: (text, record) => <span>{record.get("title")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("title")}</span>,
             },
             {
                 title: 'Main Video Source',
                 dataIndex: 'src1',
-                render: (text,record) => <span>{record.get("src1")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("src1")}</span>,
                 key: 'videosrc1',
             },
             {
                 title: 'Video ID',
                 dataIndex: 'id1',
-                render: (text,record) => <span>{record.get("id1")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("id1")}</span>,
                 key: 'videoid1',
             },
             {
                 title: 'Password',
                 dataIndex: 'pwd1',
-                render: (text,record) => <span>{record.get("pwd1")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("pwd1")}</span>,
                 key: 'pwd1',
             },
             {
                 title: 'Alt Video Source',
                 dataIndex: 'src2',
-                render: (text,record) => <span>{record.get("src2")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("src2")}</span>,
                 key: 'videosrc2',
             },
             {
                 title: 'Alt Video ID',
                 dataIndex: 'id2',
-                render: (text,record) => <span>{record.get("id2")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("id2")}</span>,
                 key: 'videoid2',
             },
             {
                 title: 'Password',
                 dataIndex: 'pwd2',
-                render: (text,record) => <span>{record.get("pwd2")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("pwd2")}</span>,
                 key: 'pwd2',
             },
             {
                 title: 'Slido',
                 dataIndex: 'slido',
-                render: (text,record) => <span>{record.get("slido")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("slido")}</span>,
                 key: 'slido',
             },
             {
                 title: 'Action',
                 key: 'action',
-                render: (text, record) => (
+                render: (_: string, record: Parse.Object) => (
                     <Space size="small">
-                        <a href="#" title="Edit" video={record} onClick={() => this.onEdit(record)}>{<EditOutlined/>}</a>
+                        <a 
+                            href="#" 
+                            title="Edit" 
+                            // @ts-ignore: why we have 'video' in anchor?
+                            //video={record} 
+                            onClick={() => this.onEdit(record)}
+                        >
+                            {<EditOutlined/>}
+                        </a>
                         <Popconfirm
                             title="Are you sure delete this video?"
                             onConfirm={()=>this.onDelete(record)}
@@ -220,14 +256,18 @@ class LiveVideos extends React.Component {
                         onCancel={() => {
                             this.setVisible(false);
                         }}
-                        onSelectPullDown1={(value) => {
+                        onSelectPullDown1={(value: string) => {
                             this.setState({src1: value});
                         }}
-                        onSelectPullDown2={(value) => {
+                        onSelectPullDown2={(value: string) => {
                             this.setState({src2: value});
                         }}
                     />
-                <Table columns={columns} dataSource={this.state.videos} rowKey={(v)=>(v.id1)}>
+                <Table 
+                    columns={columns} 
+                    dataSource={this.state.videos} 
+                    // @ts-ignore id or id1? see line 296
+                    rowKey={(v)=>(v.id1)}>
                 </Table>
             </Fragment>
             )
@@ -247,12 +287,13 @@ class LiveVideos extends React.Component {
                 onCancel={() => {
                     this.setVisible(false);
                 }}
-                onSelectPullDown1={(value) => {
+                onSelectPullDown1={(value: string) => {
                     this.setState({src1: value});
                 }}
-                onSelectPullDown2={(value) => {
+                onSelectPullDown2={(value: string) => {
                     this.setState({src2: value});
                 }}
+                data={this.state.edt_video}
             />
             <Table columns={columns} dataSource={this.state.videos} rowKey={(v)=>(v.id)}>
             </Table>
@@ -261,16 +302,34 @@ class LiveVideos extends React.Component {
 
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = (props: LiveVideoProps) => (
     <AuthUserContext.Consumer>
-        {value => (
+        {value => (value == null ? <></> :    // @ts-ignore    TS: Can it really be null??
             <LiveVideos {...props} parseLive={value.parseLive}/>
         )}
     </AuthUserContext.Consumer>
 )
 export default AuthConsumer;
 
-const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectPullDown1, onSelectPullDown2}) => {
+interface CollectionEditFormProps {
+    title: string,
+    visible: boolean,
+    data: videoSchema | undefined,
+    onAction: any, //TS: function!
+    onCancel: any,
+    onSelectPullDown1: any,
+    onSelectPullDown2: any
+}
+
+// TS: FC or C?
+const CollectionEditForm: React.FC<CollectionEditFormProps> = ({
+    title, 
+    visible, 
+    data, 
+    onAction, 
+    onCancel, 
+    onSelectPullDown1, 
+    onSelectPullDown2}) => {
     const [form] = Form.useForm();
     return (
         <Modal
@@ -327,7 +386,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                         ]}>
                             <Select placeholder="Main Source" style={{ width: '100%' }} onChange={onSelectPullDown1}>
                                 {LiveVideoSources.map(src => (
-                                    <Option key={src}>{src}</Option>
+                                    <Option value={''} key={src}>{src}</Option> //TS: can value be empty?
                                 ))}
                             </Select>
                         </Form.Item>
@@ -349,7 +408,7 @@ const CollectionEditForm = ({title, visible, data, onAction, onCancel, onSelectP
                         <Form.Item name="src2" >
                             <Select placeholder="Alt. Source" style={{ width: '100%' }} onChange={onSelectPullDown2}>
                                 {LiveVideoSources.map(src => (
-                                    <Option key={src}>{src}</Option>
+                                    <Option value={''} key={src}>{src}</Option> //TS: can value be empty?
                                 ))}
                             </Select>
                         </Form.Item>
