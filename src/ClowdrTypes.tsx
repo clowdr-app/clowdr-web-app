@@ -2,6 +2,8 @@
 
 import * as Parse from 'parse';
 import ProgramCache from "./components/Session/ProgramCache";
+import ChatClient from "./classes/ChatClient";
+import {History} from "history";
 // Is this one needed?
 // import ProgramItem from "./classes/ProgramItem";
 
@@ -27,6 +29,8 @@ export interface ClowdrAppState {
     helpers: any;
     getChatClient: any;  // should be a function (higher-order?)
     getLiveChannel: any;
+    chatClient: ChatClient;
+    history: History;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
 }
 

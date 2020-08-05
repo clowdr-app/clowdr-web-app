@@ -239,13 +239,6 @@ class LiveStreaming extends Component {
                         // </div>
                             return "";
                         }
-
-                        if (room.get("src1").includes("Zoom")) {
-                            return <div className={"space-align-block"} key={room.id} style={{width:width}}>
-                                <ZoomPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} watchers={this.state.watchers} />
-                            </div>
-                        }
-
                         return <React.Fragment key={room.id}>
                             <div className={"space-align-block"} key={room.id} style={{width:width}}>
                                 <LiveStreamingPanel auth={this.props.auth} expanded={this.state.expanded} video={room} mysessions={mySessions} when={this.props.match.params.when}
