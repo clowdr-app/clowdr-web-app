@@ -15,7 +15,7 @@ type Role = any
 export type UserSessionToken = string
 
 export interface ClowdrAppState {
-    spaces: Map<string, SocialSpace>;   // @Crista said Dictionary, but I think she meant Map
+    spaces: Map<string, SocialSpace>;   
     user: Parse.User | null;
     userProfile: UserProfile | null;
     isAdmin: boolean;
@@ -32,6 +32,16 @@ export interface ClowdrAppState {
     chatClient: ChatClient;
     history: History;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
+}
+
+export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+    editing: boolean;
+    dataIndex: string;
+    title: string;  // could be 'any' based on Antd website
+    inputType: 'number' | 'text';   // based on Antd website
+    record: Parse.Object;
+    index: number;
+    children: React.ReactNode;
 }
 
 /* @Crista: advice about these?

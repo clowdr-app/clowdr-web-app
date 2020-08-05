@@ -15,6 +15,9 @@ require('tinymce/icons/default');
 require('tinymce/themes/silver');
 // Any plugins you want to use have to be imported
 require('tinymce/plugins/advlist');
+require('tinymce/plugins/autolink');
+require('tinymce/plugins/lists');
+require('tinymce/plugins/link');
 require('tinymce/plugins/image');
 require('tinymce/plugins/charmap');
 require('tinymce/plugins/print');
@@ -150,7 +153,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
   }
 }
 
-const Landing = (props: GuardedLandingProps) => (
+const AuthConsumer = (props: {}) => (
   <AuthUserContext.Consumer>
     {value => (value == null ? <></> :   // @ts-ignore  TS: Can value really be null here?
       <GuardedLanding {...props} auth={value} />
@@ -158,4 +161,4 @@ const Landing = (props: GuardedLandingProps) => (
   </AuthUserContext.Consumer>
 );
 
-export default Landing;
+export default AuthConsumer;
