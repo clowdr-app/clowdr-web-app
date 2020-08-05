@@ -13,7 +13,7 @@ type Role = any
 export type UserSessionToken = string
 
 export interface ClowdrAppState {
-    spaces: Map<string, SocialSpace>;   // @Crista said Dictionary, but I think she meant Map
+    spaces: Map<string, SocialSpace>;   
     user: Parse.User | null;
     userProfile: UserProfile | null;
     isAdmin: boolean;

@@ -150,7 +150,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
   }
 }
 
-const Landing = (props: GuardedLandingProps) => (
+const AuthConsumer = (props: GuardedLandingProps) => (
   <AuthUserContext.Consumer>
     {value => (value == null ? <></> :   // @ts-ignore  TS: Can value really be null here?
       <GuardedLanding {...props} auth={value} />
@@ -158,4 +158,4 @@ const Landing = (props: GuardedLandingProps) => (
   </AuthUserContext.Consumer>
 );
 
-export default Landing;
+export default AuthConsumer;
