@@ -79,6 +79,8 @@ class WelcomePortal extends React.Component<WelcomePortalProps,WelcomePortalStat
         </Modal>
     }
 }
+
+// TS: @Benjamin Why do we NOT need to check that value is null here???
 const AuthConsumer = (props: WelcomePortalProps) => (
     <AuthUserContext.Consumer>
         {value => (
@@ -87,4 +89,5 @@ const AuthConsumer = (props: WelcomePortalProps) => (
     </AuthUserContext.Consumer>
 
 );
+
 export default withRouter(AuthConsumer);
