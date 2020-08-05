@@ -122,7 +122,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             }))
         }
         let roleUsers = await Promise.all(roleData);
-        // TS: BCP stopped here -- need to figure out what type find is returning!
+        // TS: @Jon -- need help to figure out what type find is returning!
         let {count, results} = (await parseUserQ.find()) as unknown as {count: number, results: any[]};
         nRetrieved = results.length;
         // @ts-ignore     Jon/Crista: Don't we need a user_id field also??

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import AuthUserContext from './context';
-import Parse from "parse";
+import Parse, { User } from "parse";
 import {notification, Spin} from "antd";
 import ChatClient from "../../classes/ChatClient"
 import ProgramCache from "./ProgramCache";
@@ -9,10 +9,12 @@ import { RoomInvalidParametersError } from 'twilio-video';
 import BreakoutRoom from '../../classes/BreakoutRoom';
 import UserProfile from '../../classes/UserProfile';
 import UserPresence from '../../classes/UserPresence';
+import SocialSpace from '../../classes/SocialSpace';
 
 interface WithAuthenticationProps {
     history: any;   // TS: ???
 } 
+
 interface WithAuthenticationState {
     // TS: Fill in the types!
     user: any,
@@ -38,12 +40,19 @@ interface WithAuthenticationState {
     activePrivateVideoRooms: any,
     userProfile: UserProfile | null,  // TS: Or should it be undefined??
     permissions: any,
+    leftSidebar: any,
+    activeSpace: any,
+    spaces: any,
+    chatChannel: any,
 }
 
 type RoomID = string    // TS: Doesn't belong here?
 type UserID = string    // TS: Doesn't belong here?  And should this be the same as the next??
 type UserProfileID = string    // TS: Doesn't belong here?
 type Subscriber = React.Component;   // TS: What arguments?
+
+// TS: This should be an enumeration of strings -- get all the possibilities from the PrivilegedAction table in the DB
+type Permission = string
 
 // TS: This belongs in some top-level utility module
 function assert(input: any): asserts input { // <-- not a typo
@@ -53,21 +62,21 @@ function assert(input: any): asserts input { // <-- not a typo
 const withAuthentication = (Component: React.Component<WithAuthenticationProps, WithAuthenticationState>) => {
     // @Jon/@Crista/@Benjamin    (maybe ClowdrAppState can be globally renamed just ClowdrState...?)
     class WithAuthentication extends React.Component<WithAuthenticationProps, WithAuthenticationState> {
-        // TS: I (BCP) don't understand the logic here very well.  Why do we initialize all these fields of "this" and then copy most of them to this.state??
-        watchedRoomMembers: Map<RoomID,BreakoutRoom>;
+        // TS: @Jon - I (BCP) don't understand the logic here very well (Crista doesn't either).  Why do we initialize all these fields of "this" and then copy most of them to this.state??
+        watchedRoomMembers: Record<RoomID,BreakoutRoom>;
         authCallbacks: never[];   // @Jon: This seems never to be assigned to!
         isLoggedIn: boolean;
         // TS: What is the difference between the next two things??
-        loadingProfiles: Map<UserProfileID, (_:UserProfile)=>void>;
-        userProfiles: Map<UserID, Promise<UserProfile>>;
-        unwrappedProfiles: Map<UserID, UserProfile>;
-        chatWaiters: never[];   // TS: Never used??
+        loadingProfiles: Record<UserProfileID, (_:UserProfile)=>void>;
+        userProfiles: Record<UserID, Promise<UserProfile>>;
+        unwrappedProfiles: Record<UserID, UserProfile>;
+        chatWaiters: never[];   // TS: Never used??  @Jon?
         livegneChannel: null;   // TS: Never assigned or used
         channelChangeListeners: never[]; // TS: Never assigned or used
         presenceWatchers: React.Component[];  // or: {setState: (arg0: { presences: {}) => void }
-        presences: Map<UserID, UserPresence>;  
+        presences: Record<UserID, UserPresence>;  
         newPresences: UserPresence[];
-        userProfileSubscribers: Map<UserProfileID, Subscriber[]>;
+        userProfileSubscribers: Record<UserProfileID, Subscriber[]>;
         parseLive: any; // TS: should be Parse.LiveQueryClient, I think, but the type declaration file doesn't seem to include it!
         fetchingUsers: boolean;
         expandedProgramRoom: any;
@@ -90,19 +99,20 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
 
         constructor(props: WithAuthenticationProps) {
             super(props);
-            this.watchedRoomMembers = new Map<RoomID,BreakoutRoom>();
+            this.fetchingUsers = false;   
+            this.watchedRoomMembers = {};
             this.authCallbacks = [];
             this.isLoggedIn = false;
-            this.loadingProfiles = new Map<UserProfileID, (_:UserProfile)=>void>();
-            this.userProfiles = new Map<UserID, Promise<UserProfile>>();
-            this.unwrappedProfiles = new Map<UserID, UserProfile>();
+            this.loadingProfiles = {};
+            this.userProfiles = {};
+            this.unwrappedProfiles = {};
             this.chatWaiters = [];
             this.livegneChannel = null;
             this.channelChangeListeners = [];
             this.presenceWatchers = [];
-            this.presences = new Map<UserID, UserPresence>();
+            this.presences = {};
             this.newPresences = [];
-            this.userProfileSubscribers = new Map<UserProfileID, Subscriber[]>();
+            this.userProfileSubscribers = {};
             this.presenceUpdateTimer = null;
             this.user = null;
 
@@ -138,7 +148,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                 userHasWritePermission: this.userHasWritePermission.bind(this)
             }
 
-            this.state = {
+            this.state = {   // (JS usage question: Should we be initializing things with null, or undefined???)
                 user: null,
                 users: {},
                 loading: true,
@@ -162,14 +172,16 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                 activePrivateVideoRooms: [],
                 userProfile: null,
                 permissions: null,
+                leftSidebar: null,
+                activeSpace: null,
+                spaces: null,
+                chatChannel: null,
             };
-
-            this.fetchingUsers = false;   // Does this have to be last??
         }
 
         async updateMyPresence(presence: UserPresence) {
             assert (this.state.userProfile !== null);
-            this.presences.set(this.state.userProfile.id, presence);
+            this.presences[this.state.userProfile.id] = presence;
             for(let presenceWatcher of this.presenceWatchers){
                 presenceWatcher.setState({presences: this.presences});
             }
@@ -177,14 +189,12 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
 
         async createOrOpenDM(profileOfUserToDM: UserProfile) {
             assert (this.state.userProfile !== null);
-            // @ts-ignore  @Jon/@Crista
-            // "This condition will always return 'false' since the types 'UserProfile' and 'string' have no overlap."
-            // (Should the arg just be a string?)
-            if (profileOfUserToDM == this.state.userProfile.id) return
-            //Look to see if we already have a chat set up with this person
+            // @Jon: Do we really want to prevent this case?  Crista likes DMing herself!
+            if (profileOfUserToDM.id == this.state.userProfile.id) return
+            // Look to see if we already have a chat set up with this person
             let channels = this.state.chatClient.joinedChannels;
             if (channels) {
-                let found = Object.values(channels).find((chan: any) => { // TS: @Crista  ????
+                let found = Object.values(channels).find((chan: any) => { // TS: Should be cleaned up after ChatClient is converted -- some kind of Twilio thing??
                     if(!chan || !chan.conversation)
                         return false;
                     let convo = chan.conversation;
@@ -196,9 +206,9 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                         return true;
                 })
                 if (found) {
-                    // @ts-ignore   @Crista What is its type?
+                    // @ts-ignore    What is its type?  (Something from Twilio?)
                     console.log(found.channel.sid)
-                    // @ts-ignore   @Crista What is its type?
+                    // @ts-ignore    What is its type?
                     this.state.chatClient.openChat(found.channel.sid);
                     return;
                 }
@@ -212,16 +222,16 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             this.state.chatClient.openChat(res.sid);
         }
 
-        ifPermission(permission: any, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
+        // TS: @Jon: Should this be polymorphic??
+        ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
             if (this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
             if (elseJsx)
                 return elseJsx;
-            // TS: Not sure what is wrong here  
-            return  <></>
+            return  <></>        
         }
 
-        setExpandedProgramRoom(programRoom) {
+        setExpandedProgramRoom(programRoom: Parse.Object) {
             this.expandedProgramRoom = programRoom;
             if (this.state.leftSidebar) {
                 this.state.leftSidebar.setExpandedProgramRoom(programRoom);
@@ -233,11 +243,13 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                     let parseUserQ = new Parse.Query(UserProfile)
                     parseUserQ.equalTo("conference", this.state.currentConference);
                     parseUserQ.limit(5000);
+                    // @ts-ignore     TS: Apparently the Parse type definitions are not up to date (this was added recently)
                     parseUserQ.withCount();
                     let nRetrieved = 0;
+                    // @ts-ignore  TS: @Jon -- need help to figure out what type find is returning!
                     let {count, results} = await parseUserQ.find();
                     nRetrieved = results.length;
-                    let allUsers = [];
+                    let allUsers: any[] = [];   // TS: ???
                     allUsers = allUsers.concat(results);
                     while (nRetrieved < count) {
                         let parseUserQ = new Parse.Query(UserProfile)
@@ -250,14 +262,13 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                         if (results)
                             allUsers = allUsers.concat(results);
                     }
-                    let usersByID = {};
-                    allUsers.forEach((u)=>usersByID[u.id]=u);
+                    let usersByID : Record<string,UserProfile> = {};
+                    allUsers.forEach((u:UserProfile)=>usersByID[u.id]=u);
                     resolve(usersByID);
                 });
             return this.usersPromise;
 
         }
-
 
         conferenceChanged(){
             if (this.parseLivePublicVideosSub) {
@@ -277,12 +288,13 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         subscribeToVideoRoomState() {
             throw new Error("Method not implemented.");
         }
-        async setActiveConference(conf) {
-            console.log('[wA]: changing conference to ' + conf.conferenceName);
+        async setActiveConference(conf: Parse.Object) {
+            console.log('[wA]: changing conference to ' + conf.get("conferenceName"));
             this.refreshUser(conf, true);
         }
 
-        async getRoleByName(role) {
+        async getRoleByName(role: Parse.Object) {
+            // @ts-ignore  TS: What is the result of find??
             let existingRoles = this.state.roles.find(i => i.get("name") == role);
             if(existingRoles)
                 return existingRoles;
@@ -304,36 +316,38 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             }
             return null;
         }
-        setActiveRoom(room) {
+
+        setActiveRoom(room: Parse.Object) {
             this.setState({activeRoom: room});
         }
 
-        async setActiveConferenceByName(confName){
+        async setActiveConferenceByName(confName: string){
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("conferenceName", confName);
             let res = await confQ.first();
             this.refreshUser(res, true);
             return res;
         }
-        async getConferenceBySlackName(teamId) {
+
+        async getConferenceBySlackName(teamId: string) {
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("slackWorkspace", teamId);
             let res = await confQ.first();
             return res;
         }
 
-        getPresences(component: { setState: (arg0: { presences: {}; }) => void; }){
+        getPresences(component: React.Component){
             this.presenceWatchers.push(component);
             component.setState({presences: this.presences});
         }
-        unmountProfileDisplay(profileID, component){
+        unmountProfileDisplay(profileID:string, component:React.Component){
             if(this.userProfileSubscribers[profileID])
                 this.userProfileSubscribers[profileID] = this.userProfileSubscribers[profileID].filter(c=>c!=component);
         }
-        cancelPresenceSubscription(component){
+        cancelPresenceSubscription(component: React.Component){
             this.presenceWatchers = this.presenceWatchers.filter(v => v!= component);
         }
-        updateProfile(profile){
+        updateProfile(profile: UserProfile){
             if(this.userProfileSubscribers[profile.id]){
                 for(let subscriber of this.userProfileSubscribers[profile.id]){
                     subscriber.setState({profile: profile});
@@ -362,16 +376,17 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             }
         }
 
-        async createSocialSpaceSubscription(user, userProfile){
+        async createSocialSpaceSubscription(user:Parse.User<Parse.Attributes>, userProfile:UserProfile){
             if(this.socialSpaceSubscription){
                 this.socialSpaceSubscription.unsubscribe();
             }
-            if(!user)
+            if (!user)
                 user = this.state.user;
-            if(!userProfile)
+            if (!userProfile) {
+                assert(this.state.userProfile !== null);
                 userProfile = this.state.userProfile;
+            }
             this.subscribeToPublicRooms()
-
 
             let query  =new Parse.Query("UserPresence");
             query.limit(1000);
@@ -384,25 +399,25 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                 this.newPresences.push(presence);
                 this.updatePresences();
             })
-            this.socialSpaceSubscription.on('enter', (presence) => {
+            this.socialSpaceSubscription.on('enter', (presence:UserPresence) => {
                 this.newPresences.push(presence);
                 this.updatePresences();
             })
-            this.socialSpaceSubscription.on('delete',(presence)=>{
+            this.socialSpaceSubscription.on('delete',(presence:UserPresence)=>{
                 delete this.presences[presence.get("user").id];
                 this.updatePresences();
             })
-            this.socialSpaceSubscription.on('leave',(presence)=>{
+            this.socialSpaceSubscription.on('leave',(presence:UserPresence)=>{
                 delete this.presences[presence.get("user").id];
                 this.updatePresences();
             })
-            this.socialSpaceSubscription.on('update', (presence)=>{
+            this.socialSpaceSubscription.on('update', (presence:UserPresence)=>{
                 this.presences[presence.get("user").id] = presence;
                 this.updatePresences();
             })
 
             let presences = await query.find();
-            let presenceByProfile = {};
+            let presenceByProfile : Record<string,UserPresence> = {};
             for(let presence of presences){
                 presenceByProfile[presence.get("user").id] = presence;
             }
@@ -412,7 +427,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             profilesQuery.equalTo("conference", this.currentConference);
             profilesQuery.limit(2000);
             this.profilesSubscription = this.state.parseLive.subscribe(profilesQuery, user.getSessionToken());
-            this.profilesSubscription.on("update", (profile)=>{
+            this.profilesSubscription.on("update", (profile:UserProfile)=>{
                 this.userProfiles[profile.id] = new Promise((resolve)=>(resolve(profile)));
                 this.updateProfile(profile);
             })
@@ -425,12 +440,11 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             throw new Error("Method not implemented.");
         }
 
-
         /*
         Call this to set the user's current social space.
         Provide either the spaceName or the space object.
          */
-        async setSocialSpace(spaceName, space, user, userProfile) {
+        async setSocialSpace(spaceName:string, space:SocialSpace, user:User, userProfile:UserProfile) {
             if (!this.state.user && !user) // user is not logged in
                 return
             if(space)
@@ -438,8 +452,10 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             if (!this.state.activeSpace || spaceName != this.state.activeSpace.get("name")) {
                 if(!user)
                     user = this.state.user;
-                if(!userProfile)
+                if(!userProfile) {
+                    assert(this.state.userProfile !== null);
                     userProfile = this.state.userProfile;
+                }
                 if(!space && this.state.spaces){
                     space = this.state.spaces[spaceName];
                 }
@@ -466,8 +482,6 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             else
                 this.chatWaiters.push(callback);
         }
-
-
 
         async getUserProfilesFromUserProfileID(id, subscriber) {
             let q = new Parse.Query(UserProfile);
