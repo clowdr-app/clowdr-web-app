@@ -1,5 +1,3 @@
-// @Jon/@Crista    Is this file correctly named, or should it be called withClowdrAppState
-
 import React from 'react';
 
 import AuthUserContext from './context';
@@ -7,15 +5,60 @@ import Parse from "parse";
 import {notification, Spin} from "antd";
 import ChatClient from "../../classes/ChatClient"
 import ProgramCache from "./ProgramCache";
+import { RoomInvalidParametersError } from 'twilio-video';
+import BreakoutRoom from '../../classes/BreakoutRoom';
 
+interface WithAuthenticationProps {
+} 
+interface WithAuthenticationState {
+}
+
+type RoomID = string    // TS: Doesn't belong here?
+type UserProfileID = string    // TS: Doesn't belong here?
+type Subscriber = React.Component;   // TS: Arguments?
+
+// TS: @Benjamin . Is this the same as what's happening in the /classes/*.ts files?
+// This really belongs there!
 let UserProfile = Parse.Object.extend("UserProfile");
 
-const withAuthentication = Component => {
-    // @Jon/@Crista    Is this file correctly named, or should it be called WithClowdrAppState
-    // (and maybe ClowdrAppState can be globally renamed just ClowdrState...?)
-    class WithAuthentication extends React.Component {
+const withAuthentication = (Component: React.Component<WithAuthenticationProps, WithAuthenticationState>) => {
+    // @Jon/@Crista/@Benjamin    (maybe ClowdrAppState can be globally renamed just ClowdrState...?)
+    class WithAuthentication extends React.Component<WithAuthenticationProps, WithAuthenticationState> {
+        watchedRoomMembers: Map<RoomID,BreakoutRoom>;
+        authCallbacks: never[];   // @Jon: This seems never to be assigned to!
+        isLoggedIn: boolean;
+        // TS: What is the difference between the next two things??
+        loadingProfiles: Map<UserProfileID, (_:UserProfile)=>void>;
+        userProfiles: Map<UserID, Promise<UserProfile>>;
+        unwrappedProfiles: Map<UserID, UserProfile>;
+        chatWaiters: never[];   // TS: Never used??
+        livegneChannel: null;   // TS: Never assigned or used
+        channelChangeListeners: never[]; // TS: Never assigned or used
+        presenceWatchers: React.Component[];  // or: {setState: (arg0: { presences: {}) => void }
+        presences: Map<UserID, UserPresence>;   // UserPresence should be a parse object
+        newPresences: UserPresence[];
+        userProfileSubscribers: Map<UserProfileID, Subscriber[]>;
+        parseLive: Parse.LiveQueryClient;   // TS: Why is it not found?
+        fetchingUsers: boolean;
+        expandedProgramRoom: any;
+        usersPromise: any;
+        parseLivePublicVideosSub: any;
+        parseLivePrivateVideosSub: any;
+        parseLiveActivitySub: any;
+        subscribedToVideoRoomState: any;
+        presenceUpdateScheduled: any;
+        presenceUpdateTimer: NodeJS.Timeout;
+        socialSpaceSubscription: any;
+        profilesSubscription: any;
+        chatClient: any;
+        refreshUserPromise: any;
+        user: Parse.User<Parse.Attributes>;
+        userProfile: Parse.Object<Parse.Attributes> | undefined;
+        activePublicVideoRooms: any;
+        activePublicVideoRoomSubscribers: any;
+        mounted: any;
 
-        constructor(props) {
+        constructor(props: WithAuthenticationProps) {
             super(props);
             this.watchedRoomMembers = {};
             this.authCallbacks = [];
@@ -191,6 +234,9 @@ const withAuthentication = Component => {
                 this.subscribeToVideoRoomState();
             }
         }
+        subscribeToVideoRoomState() {
+            throw new Error("Method not implemented.");
+        }
         async setActiveConference(conf) {
             console.log('[wA]: changing conference to ' + conf.conferenceName);
             this.refreshUser(conf, true);
@@ -236,7 +282,7 @@ const withAuthentication = Component => {
             return res;
         }
 
-        getPresences(component){
+        getPresences(component: { setState: (arg0: { presences: {}; }) => void; }){
             this.presenceWatchers.push(component);
             component.setState({presences: this.presences});
         }
@@ -294,7 +340,7 @@ const withAuthentication = Component => {
 
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
-            this.socialSpaceSubscription.on('create', (presence) => {
+            this.socialSpaceSubscription.on('create', (presence: UserPresence) => {
                 this.newPresences.push(presence);
                 this.updatePresences();
             })
@@ -334,6 +380,9 @@ const withAuthentication = Component => {
                 this.presences[presence.get("user").id] = presence;
             }
             this.updatePresences();
+        }
+        currentConference(arg0: string, currentConference: any) {
+            throw new Error("Method not implemented.");
         }
 
 
