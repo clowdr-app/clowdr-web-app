@@ -71,13 +71,6 @@ class Exhibits extends React.Component {
         return posters;
     }
 
-    getUserPosters(posters) {
-        let myposters = posters.filter(poster =>
-            poster.get("authors") && poster.get("authors").find(a =>
-            this.props.auth.userProfile.get("programPersons") &&
-            this.props.auth.userProfile.get("programPersons").find(p=>p.id==a.id))).map(p=>p.id);
-        return myposters;
-    }
 
     async componentDidMount() {
         //For social features, we need to wait for the login to complete before doing anything
@@ -116,7 +109,6 @@ class Exhibits extends React.Component {
             ProgramItems: posters,
             track: track,
             loading: false,
-            myposters: this.getUserPosters(posters),
             waitForProgram: false
         });
         this.changeChatPanel(posters);
@@ -126,51 +118,6 @@ class Exhibits extends React.Component {
         if (prevProps.match.params.track != this.props.match.params.track) {
             this.initializePosters(this.props.match.params.track);
         }
-    }
-
-    onImageUpload(programItem, file) {
-        // if (!this.state.myposter) {
-        //     console.log("[Posters]: attempt to upload poster without poster id");
-        //     return false;
-        // }
-        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-        if (!isJpgOrPng) {
-            message.error('You can only upload JPG/PNG file!');
-            return false;
-        }
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-            message.error('Image must be smaller than 2MB!');
-            return false;
-        }
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            const data = {
-                content: reader.result,
-                conferenceId: this.props.auth.currentConference.id,
-                posterId: programItem.id
-            };
-
-            Parse.Cloud.run("poster-upload", data).then(async (res) => {
-                message.info("Success! Your poster has been uploaded.");
-                // this.state.myposter.set("image", reader.result);
-                //ok lets just assume for now live query will work
-                let updatedItemQ = new Parse.Query("ProgramItem");
-                let updatedItem = await updatedItemQ.get(programItem.id);
-
-                programItem.set("posterImage", updatedItem.get("posterImage")); //well that is gross
-                console.log(res);
-                this.setState({dirty: !this.state.dirty});
-                console.log('[Posters]: Poster uploaded successfully');
-            });
-        }
-        reader.readAsDataURL(file);
-        return false;
-    }
-
-    onImageDownload() {
-        console.log("[Posters]: onImageDownload");
     }
 
     render() {
@@ -218,15 +165,7 @@ class Exhibits extends React.Component {
                     if (authorsArr.length >= 1)
                         authorstr = authorsArr.reduce((prev,curr) => [prev,", ",curr]);
 
-                    let tool = "";
-                    if (this.state.myposters && (this.state.myposters.includes(poster.id)))
-                        tool = <span title="Looks like you're an author. Replace the image? Use 3x2 ratio.">
-                                    <Upload accept=".png, .jpg" name='poster' beforeUpload={this.onImageUpload.bind(this, poster)}>
-                                    <Button type="primary">
-                                        <UploadOutlined />Upload
-                                    </Button>
-                                    </Upload>
-                                </span>;
+
 
                     let img = placeholder;
                     if (poster.get("posterImage"))
@@ -242,7 +181,6 @@ class Exhibits extends React.Component {
                                         </Tooltip>
                                     </Card>
                                 </NavLink>
-                                {tool}
                             </div>
                 })}
             </div> 

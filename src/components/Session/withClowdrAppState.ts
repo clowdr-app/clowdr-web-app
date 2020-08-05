@@ -1000,8 +1000,8 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             let acl = object.getACL();
             if(acl.getWriteAccess(this.user))
                 return true;
-            // if(this.state.roles.find(v => v.get('name') == this.state.currentConference.id+'-manager' || v.get('name') == this.state.currentConference.id+"-admin"))
-            //     return true;
+            if(this.state.roles.find(v => v.get('name') == this.state.currentConference.id+'-manager' || v.get('name') == this.state.currentConference.id+"-admin"))
+                return true;
             return false;
         }
 

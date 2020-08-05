@@ -2,6 +2,8 @@
 
 import * as Parse from 'parse';
 import ProgramCache from "./components/Session/ProgramCache";
+import ChatClient from "./classes/ChatClient";
+import {History} from "history";
 // Is this one needed?
 // import ProgramItem from "./classes/ProgramItem";
 
@@ -27,7 +29,19 @@ export interface ClowdrAppState {
     helpers: any;
     getChatClient: any;  // should be a function (higher-order?)
     getLiveChannel: any;
+    chatClient: ChatClient;
+    history: History;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
+}
+
+export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+    editing: boolean;
+    dataIndex: string;
+    title: string;  // could be 'any' based on Antd website
+    inputType: 'number' | 'text';   // based on Antd website
+    record: Parse.Object;
+    index: number;
+    children: React.ReactNode;
 }
 
 /* @Crista: advice about these?
