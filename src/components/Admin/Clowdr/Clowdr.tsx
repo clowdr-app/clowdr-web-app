@@ -1,5 +1,5 @@
-import React, {Fragment, useState} from 'react';
-import {Button, DatePicker, Form, Input, Select, Modal, Popconfirm, Space, Spin, Table, Tabs, Checkbox, Alert} from "antd";
+import React, {useState} from 'react';
+import {Button, Form, Input, Popconfirm, Space, Spin, Table, Checkbox, Alert} from "antd";
 import Parse from "parse";
 import {
     CheckCircleTwoTone,
@@ -9,14 +9,38 @@ import {
     SaveTwoTone,
     CloseCircleTwoTone
 } from '@ant-design/icons';
+import {ClowdrAppState, EditableCellProps} from "../../../ClowdrTypes";
+import { Store } from 'antd/lib/form/interface';
 
-class Clowdr extends React.Component {
-    constructor(props) {
+// TS: Since the "Props" and "State" interfaces are not exported, I
+// think it would be better to simply name them Props and
+// State (everywhere)
+
+interface AdminClowdrProps {
+    auth: ClowdrAppState;
+}
+
+interface AdminClowdrState {
+    loading: boolean;
+    initialized: boolean;
+    instances: Parse.Object[];
+    searched: boolean;
+    searchResult: Parse.Object[];
+    alert: string|undefined;
+    visible: boolean
+}
+
+class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
+    constructor(props: AdminClowdrProps) {
         super(props);
         this.state = {
             loading: true, 
             initialized: false,
-            instances: []
+            instances: [],
+            searched: false,
+            searchResult: [],
+            visible: false,
+            alert: ""
         };
 
     }
@@ -27,9 +51,6 @@ class Clowdr extends React.Component {
 
     componentDidMount() {
         this.refreshList();
-    }
-
-    componentDidUpdate(prevProps) {
     }
 
     async refreshList() {
@@ -46,14 +67,13 @@ class Clowdr extends React.Component {
     componentWillUnmount() {
     }
 
-    onChangeFeatures(record) {
+    onChangeFeatures(record: Parse.Object) {
         record.set("isIncludeAllFeatures", !record.get("isIncludeAllFeatures"));
     }
 
-
     render() {
         // Set up editable table cell
-        const EditableCell = ({
+        const EditableCell: React.FC<EditableCellProps> = ({
             editing,
             dataIndex,
             title,
@@ -62,8 +82,8 @@ class Clowdr extends React.Component {
             index,
             children,
             ...restProps
-        }) => {
-            let inputNode = null;
+        }): JSX.Element => {
+            let inputNode: JSX.Element|null;
             switch (dataIndex) {
                 case ('conferenceName'):
                     inputNode = <Input/>;
@@ -93,7 +113,7 @@ class Clowdr extends React.Component {
                     {editing ? (
                         <Form.Item
                             name={dataIndex}
-                            valuePropName={dataIndex == 'isIncludeAllFeatures' ? "checked" : "value"}
+                            valuePropName={dataIndex === 'isIncludeAllFeatures' ? "checked" : "value"}
                             style={{
                                 margin: 0,
                             }}
@@ -118,9 +138,9 @@ class Clowdr extends React.Component {
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.instances);
             const [editingKey, setEditingKey] = useState('');
-            const isEditing = record => record.id === editingKey;
+            const isEditing = (record: Parse.Object): boolean => record.id === editingKey;
 
-            const edit = record => {
+            const edit = (record: Parse.Object): void => {
                 form.setFieldsValue({
                     conferenceName: record.get("conferenceName") ? record.get("conferenceName") : "",
                     adminName: record.get("adminName") ? record.get("adminName") : "",
@@ -129,59 +149,56 @@ class Clowdr extends React.Component {
                 setEditingKey(record.id)
             }
 
-            const cancel = () => {
+            const cancel = (): void => {
                 setEditingKey('');
             };
 
-            const onActivate = record => {
+            const onActivate = (record: Parse.Object): void => {
                 let data = {
                     id: record.id
                 }
                 Parse.Cloud.run("activate-clowdr-instance", data)
-                .then(async t => {
+                .then(async (t: object) => {
                     console.log("[Admin/Clowdr]: activated " + JSON.stringify(t));
                     this.setState({alert: "activate success"});
-                    this.refreshList()
+                    await this.refreshList()
                 })
-                .catch(err => {
+                .catch((err: Error) => {
                     this.setState({alert: "activate error"})
                     console.log("[Admin/Clowdr]: Unable to activate: " + err)
                 });
             };
 
-            const onDelete = record => {
+            const onDelete = (record: Parse.Object): void => {
                 const newInstanceList = [...this.state.instances];
                 // delete from database
                 let data = {
                     id: record.id
                 }
                 Parse.Cloud.run("delete-clowdr-instance", data)
-                .then(t => {
+                .then(() => {
                     this.setState({
                         alert: "delete success", 
                         instances: newInstanceList.filter(instance => instance.id !== record.id)});
                     console.log("[Admin/Clowdr]: sent delete request to cloud");
                 })
-                .catch(err => {
+                .catch((err: Error) => {
                     this.setState({alert: "delete error"})
                     console.log("[Admin/Clowdr]: Unable to delete: " + err)
                 });
             };
 
-            const save = async id => {
+            const save = async (id: string) => {
                 console.log("Entering save func");
                 try {
-                    const row = await form.validateFields();
-                    const newData = [...data];
-                    let instance = newData.find(i => i.id === id);
-
-                    instance.set("conferenceName", row.conferenceName);
-                    instance.set("isIncludeAllFeatures", row.isIncludeAllFeatures);
-                    instance.set("adminName", row.adminName);
-                    instance.set("adminEmail", row.adminEmail);
-
+                    const row: Store = await form.validateFields();
+                    const newData: Parse.Object[] = [...data];
+                    let instance: Parse.Object|undefined = newData.find(i => i.id === id);
                     if (instance) {
-
+                        instance.set("conferenceName", row.conferenceName);
+                        instance.set("isIncludeAllFeatures", row.isIncludeAllFeatures);
+                        instance.set("adminName", row.adminName);
+                        instance.set("adminEmail", row.adminEmail);
                         let data = {
                             id: instance.id,
                             conferenceName: instance.get('conferenceName'),
@@ -191,12 +208,12 @@ class Clowdr extends React.Component {
                             adminEmail: instance.get('adminEmail')
                         }
                         Parse.Cloud.run("update-clowdr-instance", data)
-                        .then(t => {
+                        .then(() => {
                             this.setState({alert: "save success"});
                             console.log("[Admin/Clowdr]: sent updated object to cloud");
                             this.refreshList();
                         })
-                        .catch(err => {
+                        .catch((err: Error) => {
                             this.setState({alert: "add error"})
                             console.log("[Admin/Clowdr]: Unable to update: " + err)
                         })
@@ -204,7 +221,7 @@ class Clowdr extends React.Component {
                         setEditingKey('');
                     }
                     else {
-                        newData.push(row);
+                        newData.push(row as Parse.Object);
                         setData(newData);
                         setEditingKey('');
                     }
@@ -219,12 +236,12 @@ class Clowdr extends React.Component {
                     dataIndex: 'conferenceName',
                     editable: true,
                     width: '40%',
-                    sorter: (a, b) => {
-                        var valueA = a.get("conferenceName") ? a.get("conferenceName") : "";
-                        var valueB = b.get("conferenceName") ? b.get("conferenceName") : "";
+                    sorter: (a: Parse.Object, b: Parse.Object) => {
+                        let valueA: string = a.get("conferenceName") ? a.get("conferenceName") : "";
+                        let valueB: string = b.get("conferenceName") ? b.get("conferenceName") : "";
                         return valueA.localeCompare(valueB);
                     },
-                    render: (text,record) => <span>{record.get("conferenceName")}</span>,
+                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("conferenceName")}</span>,
                     key: 'conferenceName',
                 },
                 {
@@ -233,7 +250,7 @@ class Clowdr extends React.Component {
                     editable: true,
                     width: '5%',
                     //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
-                    render: (text,record) =><Checkbox checked={record.get("isIncludeAllFeatures") ? true : false} disabled></Checkbox>,
+                    render: (_: string, record: Parse.Object): JSX.Element =><Checkbox checked={!!record.get("isIncludeAllFeatures")} disabled/>,
                     key: 'isIncludeAllFeatures',
                 },
                 {
@@ -242,12 +259,12 @@ class Clowdr extends React.Component {
                     key: 'adminName',
                     editable: true,
                     width: '30%',
-                    sorter: (a, b) => {
-                        var nameA = a.get("adminName") ? a.get("adminName"): "";
-                        var nameB = b.get("adminName") ? b.get("adminName") : "";
+                    sorter: (a: Parse.Object, b: Parse.Object) => {
+                        let nameA: string = a.get("adminName") ? a.get("adminName"): "";
+                        let nameB: string = b.get("adminName") ? b.get("adminName") : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (text, record) => <span>{record.get("adminName")}</span>,
+                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("adminName")}</span>,
                 },
                 {
                     title: 'Admin Email',
@@ -255,17 +272,17 @@ class Clowdr extends React.Component {
                     key: 'adminEmail',
                     editable: true,
                     width: '20%',
-                    sorter: (a, b) => {
-                        var nameA = a.get("adminEmail") ? a.get("adminEmail"): "";
-                        var nameB = b.get("adminEmail") ? b.get("adminEmail") : "";
+                    sorter: (a: Parse.Object, b: Parse.Object) => {
+                        let nameA: string = a.get("adminEmail") ? a.get("adminEmail"): "";
+                        let nameB: string = b.get("adminEmail") ? b.get("adminEmail") : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (text, record) => <span>{record.get("adminEmail")}</span>,
+                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("adminEmail")}</span>,
                 },
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_, record) => {
+                    render: (_: string, record: Parse.Object): JSX.Element|null => {
                         let active = record.get("isInitialized") ? 
                                         <CheckCircleTwoTone twoToneColor='#52c41a' title="This instance is activated"/> :
                                         <Popconfirm
@@ -304,7 +321,8 @@ class Clowdr extends React.Component {
                             </span>
                             ) : (
                                 <Space size='small'>
-                                    <a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>
+                                    <a title="Edit" onClick={() => {if (editingKey === '') edit(record)}}>
+                                    {/*<a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>*/}
                                         {<EditOutlined />}
                                     </a>
                                     {del}
@@ -325,7 +343,7 @@ class Clowdr extends React.Component {
                 }
                 return {
                     ...col,
-                    onCell: record => ({
+                    onCell: (record: Parse.Object) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -365,7 +383,7 @@ class Clowdr extends React.Component {
                 isInitialized: false
             }
             Parse.Cloud.run("create-clowdr-instance", data)
-            .then(t => {
+            .then((t: object) => {
                 console.log("[Admin/Clowdr]: new instance " + JSON.stringify(t));
                 this.refreshList();
             })
@@ -375,7 +393,8 @@ class Clowdr extends React.Component {
             })
         }
 
-        if (this.props.loading)
+        if (this.state.loading)
+        // if (this.props.loading)
             return (
                 <Spin tip="Loading...">
                 </Spin>)

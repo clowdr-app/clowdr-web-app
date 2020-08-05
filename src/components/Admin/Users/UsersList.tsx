@@ -125,8 +125,10 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         // TS: BCP stopped here -- need to figure out what type find is returning!
         let {count, results} = (await parseUserQ.find()) as unknown as {count: number, results: any[]};
         nRetrieved = results.length;
-        // @ts-ignore     @Jon/@Crista: Don't we need a user_id field also??
+        // @ts-ignore     Jon/Crista: Don't we need a user_id field also??
         //Jon: user_id is item.id is key in this situation.
+        // BCP: @Jon: Right now the field user_id is a required part of the UsersLisetState type; should it be optional?
+        // And by the way, "item" should probably be renamed "user"
         let allUsers: ManagedUser[] = results.map((item: QueryResult) => ({
             key: item.id,
             displayName: item.get("displayName"),
