@@ -63,7 +63,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
         query.equalTo("instance", this.props.auth.currentConference);
         let res = await query.find();
         console.log('[Admin/Config]: Found ' + res.length + ' vars');
-        //TS: seems like we are changing datatype here?
+        //TS: seems like we are changing datatypes here?
         res.map((v: any) => v.key = v.get('key')); // Add a 'key' for the rows of the table
         this.setState({
             config: res,
@@ -320,8 +320,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
             acl.setRoleReadAccess(this.props.auth.currentConference.id+"-admin", true);
             config.setACL(acl);
             config.set("instance", this.props.auth.currentConference);
-
-            config.save().then((val: any) => { //TS: what is val?
+            config.save().then((val: any) => { //TS: what is val? Maybe we need a new configuration schema
                 config.key = val.id;
                 this.setState({alert: "add success", config: [config, ...this.state.config]})
             }).catch((err: Error) => {
@@ -352,15 +351,6 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
             >
                 New config variable
             </Button>
-            {/* <CollectionEditForm
-                title="Add Track"
-                visible={this.state.visible}
-                onAction={this.onCreate.bind(this)}
-                onCancel={() => {
-                    this.setVisible(false);
-                }}
-            /> */}
-
             {this.state.alert ? <Alert
                     onClose={() => this.setState({alert: undefined})}
                     style={{
@@ -372,10 +362,8 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                     showIcon
                     closable
             /> : <span> </span>}</td>
-
-            {redButton}
+                {redButton}
             </tr></tbody></table>
-
             <Input.Search
                 allowClear
                 onSearch={key => {
@@ -400,4 +388,3 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
 }
 
 export default Configuration;
-

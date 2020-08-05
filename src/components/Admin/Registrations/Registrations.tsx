@@ -9,16 +9,6 @@ import { UploadChangeParam, RcFile } from 'antd/lib/upload';
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
-// const { Option } = Select;
-
-// const {TabPane} = Tabs;
-// const IconText = ({icon, text}) => (
-//     <Space>
-//         {React.createElement(icon)}
-//         {text}
-//     </Space>
-// );
-
 interface RegistrationProps {
     auth: ClowdrAppState,
 }
@@ -27,10 +17,19 @@ interface RegistrationState {
     loading: boolean,
     searched: boolean,
     searchResult: Parse.Object[],
-    regs: any[], //TS: should not be any
+    regs: any[], //TS: should be Parse.Object[], but not sure
     filteredRegs: any[], //TS: should not be any
     visible: boolean,
     sending: boolean
+}
+
+//TS: I created a schema for the new registration form here, and it worked. See line 69. I'm not sure if we can use interfaces like that,
+//or maybe we need to find out a way to make Parse.Object work for this.
+interface RegistrationSchema {
+    email: string,
+    name: string,
+    affiliation: string
+    country: string
 }
 
 function validateEmail(email: String) {
@@ -68,7 +67,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         }
     }
 
-    onCreate(values: any) { //TS: not any!
+    onCreate(values: RegistrationSchema) {
         var _this = this;
 
         let exists = this.state.regs.find(r => r.get("email") == values.email)
@@ -86,7 +85,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             reg.set("email", values.email);
             reg.set("affiliation", values.affiliation);
             reg.set("country", values.country);
-            reg.save().then((_: any) => { //TS: any???
+            reg.save().then((_: any) => { //TS: We don't need '_' here
                 // Make local changes
                 let newRegs = [reg, ...this.state.regs];
                 _this.setState({
@@ -139,10 +138,10 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         }).catch(err => console.log('[Registration]: error: ' + err));
     }
 
-    refreshList(value: any) { //TS: not any!
+    refreshList(value: any) { //TS: should be Store
         let regs = this.state.regs;
         if (value) {
-            regs = value;
+            regs = value; // TS: Might be 'regs = value as Parse.Object[]'?
         }
         this.setState({
             filteredRegs: regs,
@@ -155,7 +154,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         // this.sub.unsubscribe();
     }
 
-    async sendInvitation(record: any){ //Should not be any
+    async sendInvitation(record: any){ // TS: Should not be any
         try {
             this.setState({sending: true})
             await Parse.Cloud.run("registrations-inviteUser", {
@@ -181,7 +180,6 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             console.log(err);
         }
     }
-
 
     render() {
         const columns = [
@@ -251,7 +249,6 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             }
         ];
 
-
         if (this.state.loading)
             return (
                 <Spin tip="Loading...">
@@ -290,7 +287,6 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
 
                                 </Form>
                             </td>
-
                             <td style={{"textAlign":"right"}}> <Tooltip mouseEnterDelay={0.5} title="Send Invitation to ALL selected">
                                     <Button danger icon={<MailOutlined />} loading={this.state.sending} onClick={this.sendInvitations.bind(this)}>Send All</Button>
                                 </Tooltip></td>
@@ -326,7 +322,6 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             </Table>
         </div>
     }
-
 }
 
 const AuthConsumer = (props: RegistrationProps) => (
@@ -342,12 +337,11 @@ interface RegistrationFormState {
     title: string, 
     visible: boolean, 
     //data: string, 
-    onAction: any, // TS: Function?
-    onCancel: any
+    onAction: Function, // TS: Function?
+    onCancel: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void
 }
 
-
-const RegistrationForm: React.FC<RegistrationFormState> = ({ //TS: REACT.FC correct?
+const RegistrationForm: React.FC<RegistrationFormState> = ({
     title, 
     visible, 
     //data, 
@@ -400,7 +394,6 @@ const RegistrationForm: React.FC<RegistrationFormState> = ({ //TS: REACT.FC corr
                 >
                     <Input placeholder="Name"/>
                 </Form.Item>
-
                 <Form.Item
                     name="email"
                     label="Email"
@@ -413,7 +406,6 @@ const RegistrationForm: React.FC<RegistrationFormState> = ({ //TS: REACT.FC corr
                 >
                     <Input placeholder="someone@somewhere.edu"/>
                 </Form.Item>
-
                 <Form.Item
                     name="affiliation"
                     label="Affiliation"
@@ -426,7 +418,6 @@ const RegistrationForm: React.FC<RegistrationFormState> = ({ //TS: REACT.FC corr
                 >
                     <Input placeholder="Affiliation"/>
                 </Form.Item>
-
                 <Form.Item
                     name="country"
                     label="Country"
