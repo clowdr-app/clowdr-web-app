@@ -22,7 +22,7 @@ for answers to frequently asked questions about running Clowdr.
 
 ## Installation
 
-If you want to run Clowdr lcoally, and help develop it, we highly recommend you do it from a Mac or Linux environment. The instructions below assume so. If you are on Windows, install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run everything from there.
+If you want to run Clowdr locally (e.g., to help develop it), we highly recommend you do it from a Mac or Linux environment. The instructions below assume so. If you are on Windows, install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run everything from there.
 
 ### Install all dependencies
 
@@ -35,7 +35,7 @@ $ npm install
 @Jon/@Crista: And maybe we need something like this (and maybe a few more dependencies):
 ```bash
 $ npm install --save typescript @types/node @types/react @types/react-dom
-@types/jest @types/parse 
+@types/jest @types/parse
 ```
 
 ### Set Up a Backend
