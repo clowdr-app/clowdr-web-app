@@ -31,6 +31,7 @@ export interface ClowdrAppState {
     getLiveChannel: any;
     chatClient: ChatClient;
     history: History;
+    activeSpace: any;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
 }
 
