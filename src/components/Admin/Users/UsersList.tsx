@@ -122,13 +122,16 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             }))
         }
         let roleUsers = await Promise.all(roleData);
-        // TS: BCP stopped here -- need to figure out what type find is returning!
+        // TS: @Jon -- need help to figure out what type find is returning!
+        //Jon: Promise.all takes an array of promises and returns an array with the result of resolving each of those promises (in the same order). So, in this case, it is an array, where each element looks like this {'role': {'name': someName}, 'users': int[]}
+
         let {count, results} = (await parseUserQ.find()) as unknown as {count: number, results: any[]};
         nRetrieved = results.length;
         // @ts-ignore     Jon/Crista: Don't we need a user_id field also??
         //Jon: user_id is item.id is key in this situation.
         // BCP: @Jon: Right now the field user_id is a required part of the UsersLisetState type; should it be optional?
         // And by the way, "item" should probably be renamed "user"
+        // Jon: Feel free to refactor that as you see fit
         let allUsers: ManagedUser[] = results.map((item: QueryResult) => ({
             key: item.id,
             displayName: item.get("displayName"),
