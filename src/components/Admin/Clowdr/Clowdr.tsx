@@ -13,7 +13,7 @@ import {ClowdrAppState, EditableCellProps} from "../../../ClowdrTypes";
 import { Store } from 'antd/lib/form/interface';
 
 // TS: Since the "Props" and "State" interfaces are not exported, I
-// think it would be better to simply name them Props and
+// think iClowdStateter to simply name them Props and
 // State (everywhere)
 
 interface AdminClowdrProps {

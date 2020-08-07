@@ -10,7 +10,7 @@ import ProgramItemDetails from "../ProgramItem/ProgramItemDetails";
 
 interface RoomProgramSummaryProps {
     appState: ClowdrAppState | null;
-    ProgramRoom: ProgramRoom;
+    ProgramRooClowdState;
 }
 
 interface PublicRoomProgramSummaryProps {

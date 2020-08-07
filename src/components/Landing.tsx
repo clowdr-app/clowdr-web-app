@@ -110,7 +110,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
           display: "inline-block",
         }}
         message={this.state.alert}
-        // @ts-ignore    TS: @Jon/@Crista This might like a real type error -- 
+        // @ts-ignore    TS: This might like a real type error -- 
         // Is alert guaranteed to be a string here, even though it is assigned a ReactElement sometimes?
           //Jon: I don't know, I didn't write this: I would suggest simply refactoring this into message.success or message.alert at the point
           //that the alert is set.
