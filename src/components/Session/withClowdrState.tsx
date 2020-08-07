@@ -19,6 +19,7 @@ interface Props {
     history: string[];   
 } 
 
+// TS: Use the ones that Jing defined in Util.ts, not these
 interface FlairUIData {color: string, tooltip: string}
 interface AllFlairData {value: string, color: string, tooltip: string, id: string, priority: number}
 
@@ -57,7 +58,7 @@ interface State {
     isManager: boolean;
     isClowdrAdmin: boolean;
     flairColors: Record<string,FlairUIData>;
-    allFlair: AllFlairData[];
+    allFlair: AllFlairData[];  // TS: Call it allFlairs??
 }
 
 type RoomID = string    // TS: Doesn't belong here?
