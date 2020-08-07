@@ -73,18 +73,24 @@ function assert(input: any): asserts input { // <-- not a typo
 
 const withAuthentication = (Component: React.Component<WithAuthenticationProps, WithAuthenticationState>) => {
     // @Jon/@Crista/@Benjamin    (maybe ClowdrAppState can be globally renamed just ClowdrState...?)
+    //Jon - yes, that would be a good refactoring
     class WithAuthentication extends React.Component<WithAuthenticationProps, WithAuthenticationState> {
         // TS: @Jon - I (BCP) don't understand the logic here very well (Crista doesn't either).  Why do we initialize all these fields of "this" and then copy most of them to this.state??
+        //Jon: When we first implemented this, we pushed updates from live queries into sub-components by modifying the state of this context object. Calling setState on the withAuthentication will result in every component on the page being re-rendered. This is not a good patten. I have been trying to refactor things away so that mostly what is in state are helper methods to expose to components, and any of the actual data is stored as fields of this.
         watchedRoomMembers: Record<RoomID,BreakoutRoom[]>;
         authCallbacks: ((_:User|null)=>void)[];   // @Jon: This seems never to be assigned to!
+        //Jon: Yes, I think this is no longer used
         isLoggedIn: boolean;
         // TS: What is the difference between the next two things??
+        //Jon: One is a list of all of the profiles that have been loaded, another of promises to load them.
         loadingProfiles: Record<UserProfileID, (_:UserProfile)=>void>;
         userProfiles: Record<UserID, Promise<UserProfile>>;
         unwrappedProfiles: Record<UserID, UserProfile>;
         chatWaiters: ((_:ChatClient)=>void)[];  
         livegneChannel: null;   // TS: @Jon   Never assigned or used?
+        //Jon: This can be deleted
         channelChangeListeners: never[]; // TS: Never assigned or used
+        //Jon: This can be deleted
         presenceWatchers: React.Component[];  // or: {setState: (arg0: { presences: {}) => void }
         presences: Record<UserID, UserPresence>;  
         newPresences: UserPresence[];
@@ -217,6 +223,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         async createOrOpenDM(profileOfUserToDM: UserProfile) {
             assert (this.state.userProfile !== null);
             // @Jon: Do we really want to prevent this case?  Crista likes DMing herself!
+            //Jon: Yes, it is confusing, and no other chat platofrm allows it...
             if (profileOfUserToDM.id == this.state.userProfile.id) return
             // Look to see if we already have a chat set up with this person
             let channels = this.state.chatClient.joinedChannels;
@@ -233,6 +240,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                         convo.get("member1").id == profileOfUserToDM.id))
                         return true;
                         // @Jon: TS noticed that not all code paths return a value, so I added this...
+                    //Jon OK. FWIW, it is OK as JS, because it would implicitly return `undefined`, which is not true
                     return false;
                 })
                 if (found) {
@@ -253,6 +261,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         }
 
         // TS: @Jon: Should this be polymorphic??
+        //Jon: I think that this was a half-baked idea and shoudl probably be factored away
         ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
             if (this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
@@ -277,6 +286,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                     parseUserQ.withCount();
                     let nRetrieved = 0;
                     // @ts-ignore  TS: @Jon -- need help to figure out what type find is returning!
+                    //Jon: an object with fields {count:int, results: UserProfile[]}
                     let {count, results} = await parseUserQ.find();
                     nRetrieved = results.length;
                     let allUsers: any[] = [];   // TS: ???
@@ -468,6 +478,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         }
 
         // @Jon: What is this???
+        //Jon: This should no longer be needed...
         currentConference(arg0: string, currentConference: ClowdrInstance) {
             throw new Error("Method not implemented.");
         }
@@ -509,6 +520,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         }
 
         // @Jon: What would be a better name for this???
+        //Jon: I need to refactor all of the chat client stuff, it's full of bad patterns and races left and right. Open to name suggestions, but eventually I want this to return a promise anyway
         getChatClient(callback: (_:ChatClient)=>void) {
             if (this.chatClient)
                 callback(this.chatClient);
@@ -684,6 +696,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                         let isClowdrAdmin = _this.state ? _this.state.isClowdrAdmin : false;
 
                         // @Jon SHould this be this.state.currentConference ??
+                        //Jon: Nope. setState is async, and we need to make sure we read the correct value here that we set above, so don't read from state.
                         let conf = _this.currentConference;
                         let currentProfileID = sessionStorage.getItem("activeProfileID");
                         let activeProfile : UserProfile | null | undefined = null;  // TS: null | undefined feels like overkill, no?
@@ -948,7 +961,8 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         handleNewParseLiveActivity(activity:LiveActivity){  // TS: ???
             if(activity.get("topic") == "privateBreakoutRooms"){
                 // @ts-ignore  @Jon    subscribeToNewPrivateRooms doesn't want an argument
-                this.subscribeToNewPrivateRooms(activity);
+                //Jon: OK, deleted it...
+                this.subscribeToNewPrivateRooms();
             }else if(activity.get("topic") == "profile"){
                 window.location.reload(true);
             }
@@ -1083,6 +1097,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
             });
 
             // @ts-ignore   @Jon: Wants two arguments???
+            //Jon: If you want to ensure that there are always two arguments passed, the best way would be to pull the code out of refreshUser that handles the cases where they are undefined.
             this.refreshUser();
             this.mounted = true;
         }
@@ -1112,6 +1127,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
                 </div>
             return (
                 // @ts-ignore    Two problems here...??  @Jon
+                //Jon: I think that the Context needs to have the clowdrappstate as a type parameter? I'm not sure how to use contexts with react+typescript.
                 <AuthUserContext.Provider value={this.state}> <Component {...this.props}  clowdrAppState={this.state} parseLive={this.state.parseLive} />
                 </AuthUserContext.Provider>
             );

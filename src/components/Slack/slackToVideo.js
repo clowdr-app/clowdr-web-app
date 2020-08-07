@@ -6,6 +6,7 @@ import {LoadingOutlined} from '@ant-design/icons';
 import LandingContainer from "../LandingContainer";
 
 // @Jon   are we ready to jettison slack yet?
+//Jon: Yeah, let's dump it.
 
 class SlackToVideo extends React.Component {
 
