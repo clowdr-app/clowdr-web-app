@@ -1,28 +1,45 @@
-import React, {Fragment} from 'react';
-import {Button, DatePicker, Form, Input, message, Modal, Select, Space, Spin, Table, Tabs, Tooltip, Upload} from "antd";
+import React from 'react';
+import {Button, DatePicker, Form, Input, message, Modal, Spin, Table, Tooltip, Upload} from "antd";
 import {MailOutlined, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
-import moment from "moment";
-import * as timezone from 'moment-timezone';
+import { ClowdrAppState } from '../../../ClowdrTypes';
+import { UploadChangeParam, RcFile } from 'antd/lib/upload';
 
-const { Option } = Select;
+var moment = require('moment');
+var timezone = require('moment-timezone');
 
-const {TabPane} = Tabs;
-const IconText = ({icon, text}) => (
-    <Space>
-        {React.createElement(icon)}
-        {text}
-    </Space>
-);
+interface RegistrationProps {
+    auth: ClowdrAppState,
+}
 
-function validateEmail(email) {
+interface RegistrationState {
+    loading: boolean,
+    searched: boolean,
+    searchResult: Parse.Object[],
+    regs: any[], //TS: should be Parse.Object[], but not sure
+    filteredRegs: any[], //TS: should not be any
+    visible: boolean,
+    sending: boolean
+}
+
+//TS: I created a schema for the new registration form here, and it worked. See line 69. I'm not sure if we can use interfaces like that,
+//or maybe we need to find out a way to make Parse.Object work for this.
+interface RegistrationSchema {
+    email: string,
+    name: string,
+    affiliation: string
+    country: string
+}
+
+function validateEmail(email: string) { 
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
 }
 
-class Registrations extends React.Component {
-    constructor(props) {
+class Registrations extends React.Component<RegistrationProps, RegistrationState>{
+    currentConference: any;
+    constructor(props: RegistrationProps) {
         super(props); // has props.auth
         console.log("Registrations starting " );
         this.state = {
@@ -30,13 +47,15 @@ class Registrations extends React.Component {
             regs: [],
             filteredRegs : [],
             searched: false,
-            searchResult: ""
+            searchResult: [],
+            visible: false,
+            sending: false
         };
         this.currentConference = props.auth.currentConference;
         console.log("Current conference is " + this.currentConference.get("conferenceName"));
     }
 
-    onChange(info) {
+    onChange(info: UploadChangeParam) {
         console.log("onChange " + info.file.status);
         if (info.file.status !== 'uploading') {
           console.log(info.file, info.fileList);
@@ -48,7 +67,7 @@ class Registrations extends React.Component {
         }
     }
 
-    onCreate(values) {
+    onCreate(values: RegistrationSchema) {
         var _this = this;
 
         let exists = this.state.regs.find(r => r.get("email") == values.email)
@@ -66,7 +85,7 @@ class Registrations extends React.Component {
             reg.set("email", values.email);
             reg.set("affiliation", values.affiliation);
             reg.set("country", values.country);
-            reg.save().then((val) => {
+            reg.save().then((_: any) => { //TS: We don't need '_' here
                 // Make local changes
                 let newRegs = [reg, ...this.state.regs];
                 _this.setState({
@@ -74,21 +93,26 @@ class Registrations extends React.Component {
                     regs: newRegs,
                     filteredRegs: newRegs
                 });
-            }).catch(err => {
+            }).catch((err: Error)=> {
                 console.log("[Admin/Registrations]: " + err );
             });
         }
     }
 
-    setVisible() {
-        this.setState({'visible': !this.state.visible});
+    setVisible(visible: boolean) {
+        if (visible != null) {
+            this.setState({'visible': visible});
+        }
+        else {
+            this.setState({'visible': !this.state.visible});
+        }
     }
 
     componentDidMount() {
         this.download();
     }
 
-    beforeUpload(file, fileList) {
+    beforeUpload(file: RcFile, _ : RcFile[]) {
         const reader = new FileReader();
         reader.onload = () => {
             const data = {content: reader.result, conference: this.currentConference.id};
@@ -114,10 +138,10 @@ class Registrations extends React.Component {
         }).catch(err => console.log('[Registration]: error: ' + err));
     }
 
-    refreshList(value) {
+    refreshList(value: any) { //TS: should be Store
         let regs = this.state.regs;
         if (value) {
-            regs = value;
+            regs = value; // TS: Might be 'regs = value as Parse.Object[]'?
         }
         this.setState({
             filteredRegs: regs,
@@ -130,7 +154,7 @@ class Registrations extends React.Component {
         // this.sub.unsubscribe();
     }
 
-    async sendInvitation(record){
+    async sendInvitation(record: any){ // TS: Should not be any
         try {
             this.setState({sending: true})
             await Parse.Cloud.run("registrations-inviteUser", {
@@ -157,26 +181,25 @@ class Registrations extends React.Component {
         }
     }
 
-
     render() {
         const columns = [
             {
                 title: 'Name',
                 dataIndex: 'name',
                 key: 'name',
-                sorter: (a, b) => {
+                sorter: (a: Parse.Object, b: Parse.Object) => {
                     var varA = a.get("name");
                     var varB = b.get("name");
                     return varA.localeCompare(varB);
                 },
-                render: (text, record) => <span>{record.get("name")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{record.get("name")}</span>,
             },
             {
                 title: 'Email',
                 dataIndex: 'email',
                 key: 'email',
-                render: (text,record) => <span>{record.get("email")}</span>,
-                sorter: (a, b) => {
+                render: (_: string, record: Parse.Object) => <span>{record.get("email")}</span>,
+                sorter: (a: Parse.Object, b: Parse.Object) => {
                     var varA = a.get("email");
                     var varB = b.get("email");
                     return varA.localeCompare(varB);
@@ -186,8 +209,8 @@ class Registrations extends React.Component {
                 title: 'Affiliation',
                 dataIndex: 'affiliation',
                 key: 'affiliation',
-                render: (text,record) => <span>{record.get("affiliation")}</span>,
-                sorter: (a, b) => {
+                render: (_: string, record: Parse.Object) => <span>{record.get("affiliation")}</span>,
+                sorter: (a: Parse.Object, b: Parse.Object) => {
                     var varA = a.get("affiliation");
                     var varB = b.get("affiliation");
                     return varA.localeCompare(varB);
@@ -197,8 +220,8 @@ class Registrations extends React.Component {
                 title: 'Country',
                 dataIndex: 'country',
                 key: 'country',
-                render: (text,record) => <span>{record.get("country")}</span>,
-                sorter: (a, b) => {
+                render: (_: string, record: Parse.Object) => <span>{record.get("country")}</span>,
+                sorter: (a: Parse.Object, b: Parse.Object) => {
                     var varA = a.get("country");
                     var varB = b.get("country");
                     return varA.localeCompare(varB);
@@ -207,16 +230,16 @@ class Registrations extends React.Component {
             {
                 title: 'Created',
                 dataIndex: 'created',
-                sorter: (a, b) => {
-                    return moment(a.get("createdAt"))- moment(b.get("createdAt"));
+                sorter: (a: Parse.Object, b: Parse.Object) => {
+                    return moment(a.get("createdAt")) - moment(b.get("createdAt"));
                 },
-                render: (text,record) => <span>{timezone(record.get("createdAt")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
+                render: (_: string, record: Parse.Object) => <span>{timezone(record.get("createdAt")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'created',
             },
             {
                 title: 'Invitation',
                 dataIndex: 'invitationSent',
-                render: (text,record) => {
+                render: (_: string, record: Parse.Object) => {
                     if(record.get("invitationSentDate"))
                     {
                         return <span>{moment(record.get("invitationSentDate")).calendar()} <Button onClick={this.sendInvitation.bind(this, record)}>Re-send</Button></span>
@@ -225,7 +248,6 @@ class Registrations extends React.Component {
                 key: 'invitationSent',
             }
         ];
-
 
         if (this.state.loading)
             return (
@@ -243,7 +265,7 @@ class Registrations extends React.Component {
                             </Upload></td>
 
                             <td>
-                                <Button type="primary" onClick={() => {this.setVisible(true); }}>New registration </Button>
+                                <Button type="primary" onClick={() => { this.setVisible(true); }}>New registration </Button>
                                     <RegistrationForm
                                         title="New Registration"
                                         visible={this.state.visible}
@@ -265,7 +287,6 @@ class Registrations extends React.Component {
 
                                 </Form>
                             </td>
-
                             <td style={{"textAlign":"right"}}> <Tooltip mouseEnterDelay={0.5} title="Send Invitation to ALL selected">
                                     <Button danger icon={<MailOutlined />} loading={this.state.sending} onClick={this.sendInvitations.bind(this)}>Send All</Button>
                                 </Tooltip></td>
@@ -285,7 +306,7 @@ class Registrations extends React.Component {
                         this.setState({
                             searched: true,
                             searchResult: this.state.regs.filter(
-                                reg => reg.get('name') && reg.get('name').toLowerCase().includes(key.toLowerCase()))
+                                (reg: Parse.Object) => reg.get('name') && reg.get('name').toLowerCase().includes(key.toLowerCase()))
                         });
                     }
                 }
@@ -296,15 +317,14 @@ class Registrations extends React.Component {
                 dataSource={this.state.searched ? this.state.searchResult : this.state.filteredRegs}
                 rowKey={(r) => (r.id)}
                 pagination={{ defaultPageSize: 500,
-                    pageSizeOptions: [10, 20, 50, 100, 500], 
+                    pageSizeOptions: ['10', '20', '50', '100', '500'], 
                     position: ['topRight', 'bottomRight']}}>
             </Table>
         </div>
     }
-
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = (props: RegistrationProps) => (
     <AuthUserContext.Consumer>
         {value => (
             <Registrations {...props} />
@@ -313,8 +333,20 @@ const AuthConsumer = (props) => (
 )
 export default AuthConsumer;
 
+interface RegistrationFormState {
+    title: string, 
+    visible: boolean, 
+    //data: string, 
+    onAction: Function, // TS: Function?
+    onCancel: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void
+}
 
-const RegistrationForm = ({title, visible, data, onAction, onCancel}) => {
+const RegistrationForm: React.FC<RegistrationFormState> = ({
+    title, 
+    visible, 
+    //data, 
+    onAction, 
+    onCancel}) => {
     const [form] = Form.useForm();
     return (
         <Modal
@@ -336,7 +368,7 @@ const RegistrationForm = ({title, visible, data, onAction, onCancel}) => {
                 id="newRegForm"
                 initialValues={{
                     modifier: 'public',
-                    ...data
+                    //...data //TS: can this be ignored?
                 }}
                 onFinish={() => {
                     form
@@ -362,7 +394,6 @@ const RegistrationForm = ({title, visible, data, onAction, onCancel}) => {
                 >
                     <Input placeholder="Name"/>
                 </Form.Item>
-
                 <Form.Item
                     name="email"
                     label="Email"
@@ -375,7 +406,6 @@ const RegistrationForm = ({title, visible, data, onAction, onCancel}) => {
                 >
                     <Input placeholder="someone@somewhere.edu"/>
                 </Form.Item>
-
                 <Form.Item
                     name="affiliation"
                     label="Affiliation"
@@ -388,7 +418,6 @@ const RegistrationForm = ({title, visible, data, onAction, onCancel}) => {
                 >
                     <Input placeholder="Affiliation"/>
                 </Form.Item>
-
                 <Form.Item
                     name="country"
                     label="Country"

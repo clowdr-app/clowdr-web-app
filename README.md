@@ -14,12 +14,15 @@ This repository contains the source code for Clowdr. If you are interested
 in using Clowdr for your event, there is no need for you to download any
 code or run your own server (unless you want to!). We can host your backend
 server for free; the only costs to your conference are for streaming video (you'll need accounts with Zoom and Twilio). Clowdr has been battle-tested by thousands of users already this year at [PLDI](https://pldi20.sigplan.org/), [ICSE](https://2020.icse-conferences.org/) and [ISSTA](https://conf.researchr.org/home/issta-2020). In August, [VL/HCC](https://conf.researchr.org/home/vlhcc2020) and [ICFP](https://icfp20.sigplan.org/) plan to use Clowdr. As we gain deployment experience, we hope to offer conference organizers a one-click installation of Clowdr. However, in the meantime, if you are considering Clowdr for your virtual conference, please email us at [hello@clowdr.org](mailto:hello@clowdr.org) and we can provide a demo and deployment for your conference.
+Please see the [Operator's
+Manual](https://docs.google.com/document/d/1-9Rbt3KnPYUTO2cz-rAPhczw8pkozbWMaBGzfPAT5Lo)
+for answers to frequently asked questions about running Clowdr.
 
 # Information for Developers
 
 ## Installation
 
-If you want to run Clowdr lcoally, and help develop it, we highly recommend you do it from a Mac or Linux environment. The instructions below assume so. If you are on Windows, install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run everything from there.
+If you want to run Clowdr locally (e.g., to help develop it), we highly recommend you do it from a Mac or Linux environment. The instructions below assume so. If you are on Windows, install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run everything from there.
 
 ### Install all dependencies
 
@@ -32,7 +35,7 @@ $ npm install
 @Jon/@Crista: And maybe we need something like this (and maybe a few more dependencies):
 ```bash
 $ npm install --save typescript @types/node @types/react @types/react-dom
-@types/jest @types/parse 
+@types/jest @types/parse
 ```
 
 ### Set Up a Backend

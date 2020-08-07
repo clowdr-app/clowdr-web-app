@@ -5,7 +5,6 @@ import ProgramSession from "../../classes/ProgramSession";
 import ProgramRoom from "../../classes/ProgramRoom";
 import moment from "moment";
 import {Collapse, Divider, Spin} from "antd";
-import ExpandableSessionDisplay from "../Lobby/ExpandableSessionDisplay";
 import ProgramItem from "../../classes/ProgramItem";
 import ProgramItemDetails from "../ProgramItem/ProgramItemDetails";
 
@@ -103,29 +102,46 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
         // if(sessions.length == 0){
         //     return <></>
         // }
-        let items = [];
-        let lastFormattedTime = null;
-        for(let session of sessions.sort(this.dateSorter)){
-            let formattedTime = moment(session.get("startTime")).calendar();
-            if(title == "Live")
-                formattedTime = "Until " + moment(session.get("endTime")).calendar();
-            if(!session)
-                continue;
-            if(formattedTime != lastFormattedTime){
-                items.push(<div key={"timeStamp"+session.id}>{formattedTime}</div>)
+        let now = new Date();
+        return sessions.map(session=> {
+            let header;
+            if(session.get("startTime") < now && session.get("endTime") < now){
+                //past
+                header = session.get("title") + " (Ended " + moment(session.get("endTime")).calendar() + ")";
             }
-            lastFormattedTime = formattedTime;
-            items.push(<ExpandableSessionDisplay session={session} key={session.id} />)
-        }
-        return <Collapse.Panel header={title} key={title}>
-            {items}
-        </Collapse.Panel>
+            else if(session.get("startTime") < now && session.get("endTime") > now){
+                //active
+                header = "Now: " + session.get("title") + " (until " + moment(session.get("endTime")).calendar() + ")";
+            } else{
+                //future
+                header = session.get("title") + " (Starting " + moment(session.get("startTime")).calendar() + ")";
+            }
+            return (<Collapse.Panel key={session.id}
+                             header={header}>
+                <Collapse onChange={(expandedKeys) => {
+                    this.setState((prevState)=>{
+                        let openItems = prevState.expandedItems;
+                        for(let item of session.get("items")){
+                            openItems[item.id] = expandedKeys.includes(item.id);
+                        }
+                        return {expandedItems: openItems};
+                    })
+
+                }}>
+                    {session.get('items') ? session.get('items').map((item: ProgramItem)=>{
+                        return <Collapse.Panel key={item.id} header={item.get("title")}>
+                            <ProgramItemDetails ProgramItem={item} isInRoom={false} openChat={this.state.expandedItems[item.id]} hiddenKeys={['joinLive','session']}/>
+                        </Collapse.Panel>
+                    }) : <></>}
+                </Collapse>
+            </Collapse.Panel>)
+        });
     }
 
     render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {
         if (this.state.loading)
             return <div>
-                <Divider className="social-sidebar-divider">Program at a Glance</Divider>
+                <Divider className="social-sidebar-divider">Program for this Room</Divider>
                 <Spin />
             </div>
 
@@ -135,34 +151,62 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
         if (this.state.curSessions.length > 0) {
             for(let session of this.state.curSessions){
                 expandedKeys.push(session.id);
-                liveSessionPanel.push(<Collapse.Panel key={session.id}
-                                                      header={"Now: " + session.get("title") + " (until " + moment(session.get("endTime")).calendar() + ")"}>
-                    <Collapse onChange={(expandedKeys) => {
-                        this.setState((prevState)=>{
-                            let openItems = prevState.expandedItems;
-                            for(let item of session.get("items")){
-                                openItems[item.id] = expandedKeys.includes(item.id);
-                            }
-                            return {expandedItems: openItems};
-                        })
-
-                    }}>
-                    {session.get('items') ? session.get('items').map((item: ProgramItem)=>{
-                        return <Collapse.Panel key={item.id} header={item.get("title")}>
-                                <ProgramItemDetails ProgramItem={item} isInRoom={false} openChat={this.state.expandedItems[item.id]} hiddenKeys={['joinLive','session']}/>
-                            </Collapse.Panel>
-                    }) : <></>}
-                    </Collapse>
-                </Collapse.Panel>)
             }
         }
 
         return <div>
-            <Divider className="social-sidebar-divider">Program at a Glance</Divider>
-            <Collapse defaultActiveKey={expandedKeys} className="program-collapse">
-                {this.sessionView(this.state.pastSessions, "Past")}
-                {liveSessionPanel}
-                {this.sessionView(this.state.futureSessions, "Upcoming")}
+            <Divider className="social-sidebar-divider">Program for this Room</Divider>
+            <Collapse defaultActiveKey={expandedKeys} className="program-collapse" onChange={(expandedKeys) => {
+                this.setState((prevState) => {
+                    let openItems = prevState.expandedItems;
+                    if (!expandedKeys.includes("Past"))
+                        for (let session of this.state.pastSessions)
+                                for (let item of session.get("items")) {
+                                    openItems[item.id] = false
+                                }
+                    if (!expandedKeys.includes("Future"))
+                        for (let session of this.state.futureSessions)
+                            for (let item of session.get("items")) {
+                                openItems[item.id] = false
+                            }
+                    for (let session of this.state.curSessions)
+                        if (!expandedKeys.includes(session.id))
+                            for (let item of session.get("items")) {
+                                openItems[item.id] = false
+                            }
+                    return {expandedItems: openItems};
+                })
+            }}>
+                <Collapse.Panel header="Past" key="Past">
+                    <Collapse className="program-collapse" onChange={(expandedKeys) => {
+                        this.setState((prevState) => {
+                            let openItems = prevState.expandedItems;
+                            for (let session of this.state.pastSessions)
+                                if (!expandedKeys.includes(session.id))
+                                    for (let item of session.get("items")) {
+                                        openItems[item.id] = false
+                                    }
+                            return {expandedItems: openItems};
+                        })
+                    }}>
+                    {this.sessionView(this.state.pastSessions, "Past")}
+                    </Collapse>
+                </Collapse.Panel>
+                {this.sessionView(this.state.curSessions, "Now")}
+                <Collapse.Panel header="Upcoming" key="Upcoming">
+                    <Collapse className="program-collapse"  onChange={(expandedKeys) => {
+                        this.setState((prevState) => {
+                            let openItems = prevState.expandedItems;
+                            for (let session of this.state.futureSessions)
+                                if (!expandedKeys.includes(session.id))
+                                    for (let item of session.get("items")) {
+                                        openItems[item.id] = false;
+                                    }
+                            return {expandedItems: openItems};
+                        })}}>
+                    {this.sessionView(this.state.futureSessions, "Upcoming")}
+                    </Collapse>
+                </Collapse.Panel>
             </Collapse>
         </div>
     }

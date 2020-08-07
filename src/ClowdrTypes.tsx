@@ -15,7 +15,7 @@ type Role = any
 export type UserSessionToken = string
 
 export interface ClowdrAppState {
-    spaces: Map<string, SocialSpace>;   
+    spaces: Map<string, SocialSpace>;   // TS: Or maybe better a Record??
     user: Parse.User | null;
     userProfile: UserProfile | null;
     isAdmin: boolean;
@@ -31,6 +31,7 @@ export interface ClowdrAppState {
     getLiveChannel: any;
     chatClient: ChatClient;
     history: History;
+    activeSpace: any;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
 }
 
@@ -44,8 +45,9 @@ export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     children: React.ReactNode;
 }
 
-/* @Crista: advice about these?
-Some more fields that might belong (copied from withAuthentication.js -- are they relevant?)
+/* 
+
+Some more fields that might be needed (copied from withAuthentication.js -- are they relevant?)
 {
                 currentRoom: null,
                 history: this.props.history,

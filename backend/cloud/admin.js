@@ -339,7 +339,10 @@ Parse.Cloud.define("init-conference-2", async (request) => {
 
         let config = await getConfig(conf);
         if (!config.TWILIO_CHAT_SERVICE_SID) {
-            let newChatService = await r.twilio.chat.services.create({friendlyName: 'clowdr_chat'});
+            if(!config.twilio)
+                config.twilio = Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
+
+            let newChatService = await config.twilio.chat.services.create({friendlyName: 'clowdr_chat'});
             let tokenConfig = new InstanceConfig();
             tokenConfig.set("value", newChatService.sid);
             tokenConfig.set("key", "TWILIO_CHAT_SERVICE_SID");
