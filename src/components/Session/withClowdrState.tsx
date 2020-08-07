@@ -72,15 +72,14 @@ function assert(input: any): asserts input { // <-- not a typo
     if (!input) throw new Error('Assertion failed!');
 }
 
-const withAuthentication = (Component: React.Component<Props, State>) => {
-    // @Jon/@Crista/@Benjamin    (maybe ClowdrState can be globally renamed just ClowdrState...?)
-    //Jon - yes, that would be a good refactoring
-    class WithAuthentication extends React.Component<Props, State> {
+const withClowdrState = (Component: React.Component<Props, State>) => {
+    class WithClowdrState extends React.Component<Props, State> {
         // TS: @Jon - I (BCP) don't understand the logic here very well (Crista doesn't either).  Why do we initialize all these fields of "this" and then copy most of them to this.state??
-        //Jon: When we first implemented this, we pushed updates from live queries into sub-components by modifying the state of this context object. Calling setState on the withAuthentication will result in every component on the page being re-rendered. This is not a good patten. I have been trying to refactor things away so that mostly what is in state are helper methods to expose to components, and any of the actual data is stored as fields of this.
+        //Jon: When we first implemented this, we pushed updates from live queries into sub-components by modifying the state of this context object. Calling setState on the WithClowdrState will result in every component on the page being re-rendered. This is not a good patten. I have been trying to refactor things away so that mostly what is in state are helper methods to expose to components, and any of the actual data is stored as fields of this.
         watchedRoomMembers: Record<RoomID,BreakoutRoom[]>;
-        authCallbacks: ((_:User|null)=>void)[];   // @Jon: This seems never to be assigned to!
+        // authCallbacks: ((_:User|null)=>void)[];   // @ Jon: This seems never to be assigned to!
         //Jon: Yes, I think this is no longer used
+        // BCP: OK, removing it (and all references to it)
         isLoggedIn: boolean;
         // TS: What is the difference between the next two things??
         //Jon: One is a list of all of the profiles that have been loaded, another of promises to load them.
@@ -88,8 +87,6 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
         userProfiles: Record<UserID, Promise<UserProfile>>;
         unwrappedProfiles: Record<UserID, UserProfile>;
         chatWaiters: ((_:ChatClient)=>void)[];  
-        livegneChannel: null;   // TS: @Jon   Never assigned or used?
-        //Jon: This can be deleted
         channelChangeListeners: never[]; // TS: Never assigned or used
         //Jon: This can be deleted
         presenceWatchers: React.Component[];  // or: {setState: (arg0: { presences: {}) => void }
@@ -124,13 +121,12 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
             super(props);
             this.fetchingUsers = false;   
             this.watchedRoomMembers = {};
-            this.authCallbacks = [];
+            // this.authCallbacks = [];
             this.isLoggedIn = false;
             this.loadingProfiles = {};
             this.userProfiles = {};
             this.unwrappedProfiles = {};
             this.chatWaiters = [];
-            this.livegneChannel = null;
             this.channelChangeListeners = [];
             this.presenceWatchers = [];
             this.presences = {};
@@ -223,8 +219,8 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
 
         async createOrOpenDM(profileOfUserToDM: UserProfile) {
             assert (this.state.userProfile !== null);
-            // @Jon: Do we really want to prevent this case?  Crista likes DMing herself!
-            //Jon: Yes, it is confusing, and no other chat platofrm allows it...
+            // @ Jon: Do we really want to prevent this case?  Crista likes DMing herself!
+            // Jon: Yes, it is confusing, and no other chat platofrm allows it...
             if (profileOfUserToDM.id == this.state.userProfile.id) return
             // Look to see if we already have a chat set up with this person
             let channels = this.state.chatClient.joinedChannels;
@@ -240,8 +236,6 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
                         (convo.get("member2").id == profileOfUserToDM.id ||
                         convo.get("member1").id == profileOfUserToDM.id))
                         return true;
-                        // @Jon: TS noticed that not all code paths return a value, so I added this...
-                    //Jon OK. FWIW, it is OK as JS, because it would implicitly return `undefined`, which is not true
                     return false;
                 })
                 if (found) {
@@ -261,8 +255,8 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
             this.state.chatClient.openChat(res.sid);
         }
 
-        // TS: @Jon: Should this be polymorphic??
-        //Jon: I think that this was a half-baked idea and shoudl probably be factored away
+        // TS: @ Jon: Should this be polymorphic??
+        // Jon: I think that this was a half-baked idea and shoudl probably be factored away
         ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
             if (this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
@@ -287,7 +281,9 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
                     parseUserQ.withCount();
                     let nRetrieved = 0;
                     // @ts-ignore  TS: @Jon -- need help to figure out what type find is returning!
-                    //Jon: an object with fields {count:int, results: UserProfile[]}
+                    // Jon: an object with fields {count:int, results: UserProfile[]}
+                    // @Jon: That is not what TS thinks:
+                    // (method) globalThis.Parse.Query<UserProfile>.find(options?: Parse.Query<T extends Parse.Object<Parse.Attributes> = Parse.Object<Parse.Attributes>>.FindOptions | undefined): Promise<UserProfile[]>
                     let {count, results} = await parseUserQ.find();
                     nRetrieved = results.length;
                     let allUsers: any[] = [];   // TS: ???
@@ -676,7 +672,7 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
 
                         if (!_this.isLoggedIn) {
                             _this.isLoggedIn = true;
-                            _this.authCallbacks.forEach((cb) => (cb(user)));
+                            // _this.authCallbacks.forEach((cb) => (cb(user)));
                         }
                         let session = await Parse.Session.current();
 
@@ -835,7 +831,7 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
                     }
                     if (_this.isLoggedIn) {
                         _this.isLoggedIn = false;
-                        _this.authCallbacks.forEach((cb) => (cb(null)));
+                        // _this.authCallbacks.forEach((cb) => (cb(null)));
                     }
                     if (_this.chatClient) {
                         await _this.chatClient.shutdown();
@@ -1135,7 +1131,7 @@ const withAuthentication = (Component: React.Component<Props, State>) => {
         }
     }
 
-    return WithAuthentication;
+    return WithClowdrState;
 };
 
-export default withAuthentication;
+export default withClowdrState;
