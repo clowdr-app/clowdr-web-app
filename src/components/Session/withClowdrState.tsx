@@ -13,14 +13,15 @@ import SocialSpace from '../../classes/SocialSpace';
 import ClowdrInstance from '../../classes/ClowdrInstance';
 import LiveActivity from '../../classes/LiveActivity';
 
-interface WithAuthenticationProps {
+// TS: Push through the change to Props/State globally!
+interface Props {
     history: string[];   
 } 
 
 interface FlairUIData {color: string, tooltip: string}
 interface AllFlairData {value: string, color: string, tooltip: string, id: string, priority: number}
 
-interface WithAuthenticationState {
+interface State {
     // TS: Fill in the types!
     user: any,
     users: any,
@@ -71,10 +72,10 @@ function assert(input: any): asserts input { // <-- not a typo
     if (!input) throw new Error('Assertion failed!');
 }
 
-const withAuthentication = (Component: React.Component<WithAuthenticationProps, WithAuthenticationState>) => {
-    // @Jon/@Crista/@Benjamin    (maybe ClowdrAppState can be globally renamed just ClowdrState...?)
+const withAuthentication = (Component: React.Component<Props, State>) => {
+    // @Jon/@Crista/@Benjamin    (maybe ClowdrState can be globally renamed just ClowdrState...?)
     //Jon - yes, that would be a good refactoring
-    class WithAuthentication extends React.Component<WithAuthenticationProps, WithAuthenticationState> {
+    class WithAuthentication extends React.Component<Props, State> {
         // TS: @Jon - I (BCP) don't understand the logic here very well (Crista doesn't either).  Why do we initialize all these fields of "this" and then copy most of them to this.state??
         //Jon: When we first implemented this, we pushed updates from live queries into sub-components by modifying the state of this context object. Calling setState on the withAuthentication will result in every component on the page being re-rendered. This is not a good patten. I have been trying to refactor things away so that mostly what is in state are helper methods to expose to components, and any of the actual data is stored as fields of this.
         watchedRoomMembers: Record<RoomID,BreakoutRoom[]>;
@@ -119,7 +120,7 @@ const withAuthentication = (Component: React.Component<WithAuthenticationProps, 
         isManager: boolean;
         isClowdrAdmin: boolean;
 
-        constructor(props: WithAuthenticationProps) {
+        constructor(props: Props) {
             super(props);
             this.fetchingUsers = false;   
             this.watchedRoomMembers = {};

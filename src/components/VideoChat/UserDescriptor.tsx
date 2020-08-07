@@ -3,7 +3,7 @@ import withLoginRequired from "../Session/withLoginRequired";
 import * as React from "react";
 import { Skeleton } from "antd";
 import { Profiler } from "inspector";
-import { ClowdrAppState } from "../../ClowdrTypes";
+import { ClowdrState } from "../../ClowdrTypes";
 
 interface UserDescriptorState {
     userID: string;
@@ -13,7 +13,7 @@ interface UserDescriptorState {
 
 interface UserDescriptorProps {
     id: string;
-    clowdrAppState: ClowdrAppState | null;
+    clowdrAppState: ClowdrState | null;
 }
 
 class UserDescriptor extends React.Component<UserDescriptorProps, UserDescriptorState>{

@@ -1,5 +1,5 @@
 import React from 'react';
-import {ClowdrAppState} from "../../ClowdrTypes";
+import {ClowdrState} from "../../ClowdrTypes";
 import ProgramSession from "../../classes/ProgramSession"
 import {Collapse, Divider, Spin} from "antd";
 import {AuthUserContext} from '../Session';
@@ -7,7 +7,7 @@ import ExpandableSessionDisplay from "./ExpandableSessionDisplay"
 import moment from "moment";
 
 interface UpcomingProgramProps {
-    auth: ClowdrAppState | null;
+    auth: ClowdrState | null;
 }
 
 interface UpcomingProgramState {

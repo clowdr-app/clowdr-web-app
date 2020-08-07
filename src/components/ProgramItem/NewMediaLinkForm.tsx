@@ -1,7 +1,7 @@
 import React from "react";
 import {Button, Form, Input, message, Modal, Select} from "antd";
 import {AuthUserContext} from "../Session";
-import {ClowdrAppState} from "../../ClowdrTypes";
+import {ClowdrState} from "../../ClowdrTypes";
 import AttachmentType from "../../classes/AttachmentType";
 import ProgramItem from "../../classes/ProgramItem";
 import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
@@ -10,7 +10,7 @@ import {RcCustomRequestOptions} from "antd/lib/upload/interface";
 
 
 interface NewMediaLinkFormProps {
-    appState: ClowdrAppState | null;
+    appState: ClowdrState | null;
     ProgramItem: ProgramItem;
 }
 interface PublicNewMediaLinkFormProps {

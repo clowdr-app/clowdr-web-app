@@ -4,7 +4,7 @@ import { AuthUserContext } from "./Session";
 import { Alert, Button, Tooltip } from "antd";
 import { EditOutlined, SaveOutlined } from '@ant-design/icons';
 import Parse from "parse";
-import { ClowdrAppState } from "../ClowdrTypes";
+import { ClowdrState } from "../ClowdrTypes";
 
 // Import TinyMCE
 var tinymce = require('tinymce/tinymce');
@@ -45,7 +45,7 @@ const defaultText = `
 </div>`;
 
 interface GuardedLandingProps {
-  auth: ClowdrAppState,
+  auth: ClowdrState,
 }
 
 interface GuardedLandingState {

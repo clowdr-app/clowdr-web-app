@@ -1,12 +1,12 @@
 import React from 'react';
-import {ClowdrAppState} from "../../ClowdrTypes";
+import {ClowdrState} from "../../ClowdrTypes";
 import {AuthUserContext} from '../Session';
 import BreakoutRoom from "../../classes/BreakoutRoom";
 import {Menu, Skeleton} from "antd";
 import UserStatusDisplay from "./UserStatusDisplay";
 
 interface BreakoutRoomDisplayProps {
-    auth: ClowdrAppState | null;
+    auth: ClowdrState | null;
     id: string;
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Avatar, Badge, Card, List, Space, Spin, Tabs } from "antd";
-import { ClowdrAppState } from "../../ClowdrTypes";
+import { ClowdrState } from "../../ClowdrTypes";
 import { timeStamp } from 'console';
 import { UserDescriptor } from 'twilio-chat/lib/userdescriptor';
 
@@ -16,7 +16,7 @@ const IconText = ({ icon, text }: IconText) => (
 */
 
 interface ActiveUsersProps {
-    auth: ClowdrAppState | null;
+    auth: ClowdrState | null;
 }
 
 interface ActiveUsersState {

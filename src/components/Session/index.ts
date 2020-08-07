@@ -1,5 +1,5 @@
 import AuthUserContext from './context';
-import withAuthentication from './withClowdrAppState';
+import withAuthentication from './withClowdrState';
 // import withAuthorization from './withAuthorization';
 // import withEmailVerification from './withEmailVerification';
 

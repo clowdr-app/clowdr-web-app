@@ -7,7 +7,7 @@ import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";
 // @ts-ignore
 import {Document, Page, pdfjs} from 'react-pdf';
 import VideoRoom from "../VideoChat/VideoRoom";
-import {ClowdrAppState} from "../../ClowdrTypes";
+import {ClowdrState} from "../../ClowdrTypes";
 import ProgramItem from "../../classes/ProgramItem";
 import ProgramPerson from "../../classes/ProgramPerson";
 import AttachmentType from "../../classes/AttachmentType";
@@ -21,7 +21,7 @@ var timezone = require('moment-timezone');
 
 
 interface ProgramItemDetailProps {
-    appState: ClowdrAppState | null;
+    appState: ClowdrState | null;
     ProgramItem: ProgramItem;
     openChat?: boolean;
     isInRoom?: boolean;

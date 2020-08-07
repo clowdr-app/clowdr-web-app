@@ -5,10 +5,10 @@ import Parse from "parse"
 import {Button, Input, message, Space, Switch, Table, Tooltip} from "antd";
 import {SearchOutlined} from "@material-ui/icons";
 import Highlighter from 'react-highlight-words';
-import { ClowdrAppState, UserSessionToken } from "../../../ClowdrTypes";
+import { ClowdrState, UserSessionToken } from "../../../ClowdrTypes";
 
 interface UsersListProps {
-    auth: ClowdrAppState,
+    auth: ClowdrState,
 }
 
 interface ManagedUser {

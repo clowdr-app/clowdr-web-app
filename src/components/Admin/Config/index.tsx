@@ -1,10 +1,10 @@
 import React from "react";
 import Configuration from "./Configuration";
 import AuthUserContext from "../../Session/context";
-import { ClowdrAppState } from "../../../ClowdrTypes";
+import { ClowdrState } from "../../../ClowdrTypes";
 
 interface ConfigurationProps {
-    auth: ClowdrAppState,
+    auth: ClowdrState,
 }
 
 const ConfigurationAdminArea = (props: ConfigurationProps) => (

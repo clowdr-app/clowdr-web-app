@@ -8,14 +8,14 @@ import {
     SaveTwoTone,
     CloseCircleTwoTone
 } from '@ant-design/icons';
-import {ClowdrAppState, EditableCellProps} from "../../../../ClowdrTypes";
+import {ClowdrState, EditableCellProps} from "../../../../ClowdrTypes";
 import {RadioChangeEvent} from "antd/lib/radio";
 import { Store } from 'antd/lib/form/interface';
 
 const { Option } = Select;
 
 interface ProgramTracksProps {
-    auth: ClowdrAppState;
+    auth: ClowdrState;
 }
 
 interface ProgramTracksState {

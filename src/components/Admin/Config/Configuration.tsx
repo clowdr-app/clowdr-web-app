@@ -7,11 +7,11 @@ import {
     SaveTwoTone,
     CloseCircleTwoTone
 } from '@ant-design/icons';
-import { ClowdrAppState, EditableCellProps } from '../../../ClowdrTypes';
+import { ClowdrState, EditableCellProps } from '../../../ClowdrTypes';
 import { Store } from 'antd/lib/form/interface';
 
 interface ConfigurationProps {
-    auth: ClowdrAppState,
+    auth: ClowdrState,
 }
 
 interface ConfigurationState {
