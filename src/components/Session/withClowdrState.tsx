@@ -12,6 +12,7 @@ import UserPresence from '../../classes/UserPresence';
 import SocialSpace from '../../classes/SocialSpace';
 import ClowdrInstance from '../../classes/ClowdrInstance';
 import LiveActivity from '../../classes/LiveActivity';
+import { assert } from '../../Util';
 
 // TS: Push through the change to Props/State globally!
 interface Props {
@@ -66,11 +67,6 @@ type Subscriber = React.Component;   // TS: What arguments?
 
 // TS: This should be an enumeration of strings -- get all the possibilities from the PrivilegedAction table in the DB
 type Permission = string
-
-// TS: This belongs in some top-level utility module
-function assert(input: any): asserts input { // <-- not a typo
-    if (!input) throw new Error('Assertion failed!');
-}
 
 const withClowdrState = (Component: React.Component<Props, State>) => {
     class WithClowdrState extends React.Component<Props, State> {
@@ -210,7 +206,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         async updateMyPresence(presence: UserPresence) {
-            assert (this.state.userProfile !== null);
+            assert (this.state.userProfile);
             this.presences[this.state.userProfile.id] = presence;
             for(let presenceWatcher of this.presenceWatchers){
                 presenceWatcher.setState({presences: this.presences});
