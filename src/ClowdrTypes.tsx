@@ -33,6 +33,7 @@ export interface ClowdrState {
     history: History;
     activeSpace: any;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
+    refreshUser(a: Parse.Object|null, b: boolean): any
 }
 
 export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
