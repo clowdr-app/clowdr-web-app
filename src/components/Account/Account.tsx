@@ -5,34 +5,92 @@ import {AuthUserContext} from "../Session";
 import Parse from "parse";
 import withLoginRequired from "../Session/withLoginRequired";
 import ProgramContext from "../Program/context";
+import {ClowdrState} from "../../ClowdrTypes";
+import {RuleObject} from "antd/lib/form";
 
-class Account extends React.Component {
-    constructor(props) {
+interface Props { //TS: Props from both context (ClowdrState) and AccountFromToken.js. Is that OK?? Cauz we will export all of them.
+    auth: ClowdrState;
+    onFinish: () => void;
+    embedded: boolean;
+}
+
+interface State {
+    user: Parse.Object|null;
+    email: string|undefined;
+    tags: Parse.Object[]|undefined;  //TS:@Jon@Crista tags is in no usage  //TS: Flair object??
+    flair: Parse.Object|undefined;   //TS: no usage
+    selectedFlair: string[]|undefined;
+    loading: boolean;
+    flairColors: Record<string, FlairColor>|undefined;
+    allFlair: FlairItem[]|undefined;
+    flairObj: Parse.Object[]|undefined;
+    topicColors: Record<string, string>;
+    allTopics: FlairItem[]|undefined;  //TS: no usage
+    topicObj: Parse.Object[]|undefined;  //TS: no usage
+    updating: boolean;
+    ProgramPersons: Parse.Object[];
+    ProgramItems: Parse.Object[];
+    username: string;                  //TS no usage
+    error: Error|undefined
+}
+
+interface FlairItem {
+    value: string;
+    id: string;
+    color: string
+}
+
+interface FlairColor {
+    color: string;
+    tooltip: string;
+}
+
+class Account extends React.Component<Props, State> {
+
+    constructor(props: Props) {
         super(props);
-        this.state={}
+        this.state={  //TS: check if all inti values are correct
+            user: null,
+            email: undefined,
+            tags: undefined,
+            flair: undefined,
+            selectedFlair: undefined,
+            loading: false,
+            flairColors: undefined,
+            allFlair: undefined,
+            flairObj: undefined,
+            topicColors: {},
+            allTopics: undefined,
+            topicObj: undefined,
+            updating: false, //TS: Is init val false or true?
+            ProgramPersons: [],
+            ProgramItems: [],
+            username: "",
+            error: undefined
+        }
     }
 
     setStateFromUser(){
-        let selectedFlair = [];
+        let selectedFlairs: string[] = [];
         if (this.props.auth.userProfile.get("tags"))
-            this.props.auth.userProfile.get("tags").forEach((tag) => {
-                selectedFlair.push(tag.get("label"));
+            this.props.auth.userProfile.get("tags").forEach((tag: Parse.Object) => {
+                selectedFlairs.push(tag.get("label"));
             });
         this.setState({
             user: this.props.auth.user,
-            email: this.props.auth.user.getEmail(),
-            tags: this.props.auth.user.get("tags"),
-            flair: this.props.auth.user.get("primaryFlair"),
-            selectedFlair: selectedFlair,
+            email: this.props.auth.user ? this.props.auth.user.getEmail() : undefined,
+            tags: this.props.auth.user ? this.props.auth.user.get("tags") : undefined,
+            flair: this.props.auth.user ? this.props.auth.user.get("primaryFlair") : undefined,
+            selectedFlair: selectedFlairs,
             loading: false
         });
         const Flair = Parse.Object.extend("Flair");
-        const query = new Parse.Query(Flair);
+        const flairQ = new Parse.Query(Flair);
         let _this = this;
-        query.find().then((u)=>{
+        flairQ.find().then((u: Parse.Object[])=>{
             //convert to something that the dom will be happier with
-            let res = [];
-            let flairColors = {};
+            let res: FlairItem[] = [];
+            let flairColors: Record<string, FlairColor> = {};
             for(let flair of u){
                 flairColors[flair.get("label")] = {color: flair.get("color"), tooltip: flair.get("tooltip")} ;
                 res.push({value: flair.get("label"), color: flair.get("color"), id: flair.id})
@@ -42,18 +100,18 @@ class Account extends React.Component {
                 allFlair: res,
                 flairObj: u
             });
-        }).catch((err)=>{
-
+        }).catch((err: Error)=>{
+            console.log(err)
         });
 
         const BioTopic = Parse.Object.extend("BioTopic");
-        const bioquery = new Parse.Query(BioTopic);
-        bioquery.find().then((u)=>{
+        const bioQuery = new Parse.Query(BioTopic);
+        bioQuery.find().then((u: Parse.Object[])=>{
             //convert to something that the dom will be happier with
-            let res = [];
-            let topicColors = {};
+            let res: FlairItem[] = [];
+            let topicColors: Record<string, string> = {};
             for(let topic of u){
-                topicColors[topic.get("label")] = topic.get("color");
+                topicColors[topic.get("label")] = topic.get("color");  //TS:@Jon @Crista no lable in BioTopic??
                 res.push({value: topic.get("label"), color: topic.get("color"), id: topic.id})
             }
             _this.setState({
@@ -61,8 +119,8 @@ class Account extends React.Component {
                 allTopics: res,
                 topicObj: u
             });
-        }).catch((err)=>{
-
+        }).catch((err: Error)=>{
+            console.log(err)
         });
 
     }
@@ -75,25 +133,18 @@ class Account extends React.Component {
             this.setStateFromUser();
         }
         this.collectProgramItems();
-        // this.userRef.once("value").then((val) => {
-        //     let data = val.val();
-        //     this.setState({
-        //         loading: false,
-        //         username: data.username,
-        //         email: data.email,
-        //         affiliation: data.affiliation
-        //     });
-        // });
     }
 
-    async updateUser(values) {
+    async updateUser(values: any) {//TS: Parse.User, but we need to define fields such as password
         this.setState({updating: true});
-        if(values.password){
-            this.props.auth.user.setPassword(values.password);
+        if(values.password && this.props.auth.user){
+            this.props.auth.user.setPassword(values.password); //TS:@Jon@Crista diff btw serPassword and set("passwordSet",true)?
             this.props.auth.user.set("passwordSet",true);
             await this.props.auth.user.save();
         }
-        this.props.auth.userProfile.set("tags", this.state.flairObj.filter((item)=>(values.flair.includes(item.get("label")))));
+        if (this.state.flairObj) {
+            this.props.auth.userProfile.set("tags", this.state.flairObj.filter((item)=>(values.flair.includes(item.get("label")))));
+        }
         this.props.auth.userProfile.set("displayName",values.displayName);
         this.props.auth.userProfile.set("affiliation", values.affiliation);
         this.props.auth.userProfile.set("country", values.country);
@@ -126,7 +177,7 @@ class Account extends React.Component {
         })
     }
 
-    tagRender(props) {
+    tagRender(props: any) { //TS: how to import CustomTagProps type in antd?
         const { value, label, id, closable, onClose } = props;
 
         if(!this.state.flairColors)
@@ -142,10 +193,10 @@ class Account extends React.Component {
         return tag;
     }
 
-    personRenderer(props){
-
-    }
-    topicRender(props) {
+    // personRenderer(props){
+    //
+    // }
+    topicRender(props: any) {   //TS:@Jon@Crista no usage
         const { value, label, id, closable, onClose } = props;
 
         if(!this.state.topicColors)
@@ -159,49 +210,16 @@ class Account extends React.Component {
 
 
     render() {
-
         if(!this.state.user){
             return <Skeleton />
         }
 
-        const {
-            username,
-            email,
-            passwordOne,
-            passwordTwo,
-            isAdmin,
-            error,
-        } = this.state;
-
-        const isInvalid =
-            passwordOne !== passwordTwo ||
-            passwordOne === '' ||
-            email === '' ||
-            username === '';
         let _this = this;
-
-        let passwordRequired = !this.props.auth.user.get("passwordSet");
-        let password1Rules = [
-            {
-                required: passwordRequired,
-                message: 'Please input your password!',
-            }
-        ];
-        let password2Rules = [
-            {
-                required: passwordRequired,
-                message: 'Please confirm your password!',
-            },
-            ({ getFieldValue }) => ({
-                validator(rule, value) {
-                    if (!value || getFieldValue('password') === value) {
-                        return Promise.resolve();
-                    }
-                    return Promise.reject('The two passwords that you entered do not match!');
-                },
-            }),
-        ];
-        let peopleToItems = {};
+        let passwordRequired:boolean = true;  //TS: is the init val True?
+        if (this.props.auth.user) {
+            passwordRequired = !this.props.auth.user.get("passwordSet");
+        }
+        let peopleToItems: Record<string, Parse.Object[]> = {};
         let programPersonOptions= [];
         let matchingPersons = [];
         if(this.state.ProgramPersons){
@@ -213,16 +231,15 @@ class Account extends React.Component {
                     peopleToItems[person.id].push(item);
                 }
             }
-            programPersonOptions = this.state.ProgramPersons.filter(person => (
+            programPersonOptions = this.state.ProgramPersons.filter((person: Parse.Object) => (
                 (person.get("userProfile") == null || person.get("userProfile").id == this.props.auth.userProfile.id)&&
-
-                peopleToItems[person.id])).map(person=>
-                ({value: person.id, label: person.get('name')+" ("+peopleToItems[person.id].map(item=>item.get("title")).join(", ") + ")"}));
-            matchingPersons = this.state.ProgramPersons.filter(person =>
+                peopleToItems[person.id])).map((person: Parse.Object) => (
+                    {value: person.id,
+                     label: person.get('name') + " (" + peopleToItems[person.id].map((item: Parse.Object) => item.get("title")).join(", ") + ")"})
+                );
+            matchingPersons = this.state.ProgramPersons.filter((person: Parse.Object) =>
                 person.get("userProfile") && person.get("userProfile").id == this.props.auth.userProfile.id
-                ).map(
-                person => (
-                    person.id));
+                ).map((person: Parse.Object) => (person.id));
         }
         else{
             return <Spin />
@@ -247,9 +264,8 @@ class Account extends React.Component {
                       position: this.props.auth.userProfile.get("position"),
                       flair: this.state.selectedFlair,
                       programPersons: matchingPersons
-
                   }}
-                  size={100}>
+                  size={'small'}>
                 <Form.Item
                     label="Display Name"
                     name="displayName"
@@ -269,7 +285,7 @@ class Account extends React.Component {
                             {value: "He/him"},
                             {value: "They/them"}]}
                         placeholder="Select or enter your preferred pronouns"
-                        filterOption={(inputValue, option) =>
+                        filterOption={(inputValue: string, option: any) =>
                             option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                         }
                     />
@@ -305,10 +321,15 @@ class Account extends React.Component {
                         />
                 </Form.Item>
 
-
                     <Form.Item label="Password"
                                name="password"
-                               rules={password1Rules}
+                               // rules={password1Rules}
+                               rules={
+                                    [{
+                                        required: passwordRequired,
+                                        message: 'Please input your password!',
+                                    }]
+                               }
                                hasFeedback
                     >
                         <Input.Password placeholder="input password"
@@ -316,7 +337,23 @@ class Account extends React.Component {
                     </Form.Item>
                     < Form.Item label="Confirm Password"
                     name="confirm"
-                    rules={password2Rules}
+                    // rules={password2Rules}
+                        rules = {
+                            [
+                                {
+                                    required: passwordRequired,
+                                    message: 'Please confirm your password!',
+                                },
+                                ({ getFieldValue }) => ({ //TS: getFieldValue is a method of Form. Should not be put outside <Form>
+                                    validator(rule: RuleObject, value: string) {
+                                        if (!value || getFieldValue('password') === value) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject('The two passwords that you entered do not match!');
+                                    },
+                                }),
+                            ]
+                        }
                     >
                     <Input.Password
                     placeholder="input password"
@@ -340,7 +377,7 @@ class Account extends React.Component {
                             {value: "Industry"}
                             ]}
                         placeholder="Select or enter your current position"
-                        filterOption={(inputValue, option) =>
+                        filterOption={(inputValue: string, option: any) =>
                             option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                         }
                     />
@@ -362,24 +399,14 @@ class Account extends React.Component {
                        />
                 </Form.Item>
                 <Form.Item label="Avatar">
-                    <Avatar userProfile={this.props.auth.userProfile} refreshUser={this.props.auth.refreshUser} />
+                    {/*// TS2339: Property 'refreshUser' does not exist on type 'ClowdrAppState'.*/}
+                    <Avatar userProfile={this.props.auth.userProfile} />
+                    {/*<Avatar userProfile={this.props.auth.userProfile} refreshUser={this.props.auth.refreshUser} />*/}
                 </Form.Item>
 
                 <Form.Item label="Profile" name="bio">
                     <Input.TextArea placeholder="Write a brief bio that other users will see when they encounter you on CLOWDR" allowClear />
                 </Form.Item>
-                {/*<Form.Item label="Topics of Interest">*/}
-                {/*    <Select*/}
-                {/*        mode="multiple"*/}
-                {/*        tagRender={this.topicRender.bind(this)}*/}
-                {/*        style={{ width: '100%' }}*/}
-                {/*        onChange={(item)=>{*/}
-                {/*            _this.setState({selectedTopics: item});*/}
-                {/*        }}*/}
-                {/*        options={(this.state.allTopics ? this.state.allTopics: [])}*/}
-                {/*    />*/}
-                {/*</Form.Item>*/}
-
                 <Form.Item label="Flair" name="flair" extra="Add tags that will be visible to other attendees when they see your virtual badge. At most one will be visible wherever your name appears on CLOWDR, and the rest will appear when attendees hover over your name.">
                     <Select
                         mode="multiple"
@@ -389,23 +416,23 @@ class Account extends React.Component {
                         options={(this.state.allFlair ? this.state.allFlair: [])}
                     />
                 </Form.Item>
-                <Button type="primary" htmlType="submit" disabled={isInvalid} onClick={this.onSubmit}
+                {/*remove disabled={isInvalid} onClick={this.onSubmit}*/}
+                <Button type="primary" htmlType="submit"
                         loading={this.state.updating}>
                     Save
                 </Button>
 
-                {error && <p>{error.message}</p>}
+                {this.state.error && <p>{this.state.error.message}</p>}
             </Form>);
     }
 }
 
-const AuthConsumerAccount = (props) => (
+const AuthConsumerAccount = (props: Props) => (
     <ProgramContext.Consumer>
         {({items}) => (
-
             <AuthUserContext.Consumer>
-                {value => (
-                    <Account auth={value} {...props} programItems={items} />
+                {value => (value === null ? <></> : // @ts-ignore  TS: Can value really be null here?
+                    <Account {...props} auth={value} programItems={items} />
                 )}
             </AuthUserContext.Consumer>
         )}</ProgramContext.Consumer>
