@@ -504,9 +504,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
-                        pagination={{
-                            onChange: cancel,
-                        }}
+                        pagination={false} //Please talk to Jon before considering re-enabling pagination here.
                     />
                 </Form>
             );
@@ -767,9 +765,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
-                        pagination={{
-                            onChange: cancel,
-                        }}
+                        pagination={false} //Please talk to Jon before considering re-enabling pagination here.
                     />
                 </Form>
             );
