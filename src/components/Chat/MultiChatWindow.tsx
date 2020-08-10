@@ -5,7 +5,7 @@ import {Button, Descriptions, Divider, Menu, message, Popconfirm, Space, Spin, T
 // @ts-ignore
 import {Document, Page, pdfjs} from 'react-pdf';
 import VideoRoom from "../VideoChat/VideoRoom";
-import {ChatChannelConsumer, ClowdrAppState, JoinedChatChannel, MultiChatApp} from "../../ClowdrTypes";
+import {ChatChannelConsumer, ClowdrState, JoinedChatChannel, MultiChatApp} from "../../ClowdrTypes";
 import ProgramItem from "../../classes/ProgramItem";
 import ProgramPerson from "../../classes/ProgramPerson";
 import AttachmentType from "../../classes/AttachmentType";
@@ -21,7 +21,7 @@ var moment = require('moment');
 var timezone = require('moment-timezone');
 
 interface MultiChatWindowProps {
-    appState: ClowdrAppState | null;
+    appState: ClowdrState | null;
     addUser: (sid: string)=>void;
     toVideo: (sid:string)=>void;
     parentRef: any;
