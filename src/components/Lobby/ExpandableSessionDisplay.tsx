@@ -1,5 +1,5 @@
 import React from 'react';
-import {ClowdrAppState} from "../../ClowdrTypes";
+import {ClowdrState} from "../../ClowdrTypes";
 import ProgramSession from "../../classes/ProgramSession"
 import {AuthUserContext} from '../Session';
 import ProgramItem from "../../classes/ProgramItem";
@@ -7,7 +7,7 @@ import { Collapse } from 'antd';
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
 
 interface ExpandableSessionDisplayProps {
-    auth: ClowdrAppState | null;
+    auth: ClowdrState | null;
     session: ProgramSession;
 }
 

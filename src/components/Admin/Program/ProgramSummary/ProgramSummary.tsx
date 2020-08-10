@@ -4,12 +4,12 @@ import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 
 import {UploadOutlined} from '@ant-design/icons';
-import {ClowdrAppState} from "../../../../ClowdrTypes";
+import {ClowdrState} from "../../../../ClowdrTypes";
 import {RcFile, UploadChangeParam} from 'antd/lib/upload/interface';
 import momentTZ from 'moment-timezone';
 
 interface ProgramSummaryProps {
-    auth: ClowdrAppState,
+    auth: ClowdrState,
 }
 
 interface ProgramSummaryState {

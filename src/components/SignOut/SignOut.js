@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import * as ROUTES from '../../constants/routes';
 import {Parse} from "../parse/parse";
-import withAuthentication from "../Session/withAuthentication";
+import withAuthentication from "../Session/withClowdrState"
 import {AuthUserContext} from "../Session";
 
 class SignOut extends Component {

@@ -3,14 +3,14 @@ import {Button, DatePicker, Form, Input, message, Modal, Spin, Table, Tooltip, U
 import {MailOutlined, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../Session";
-import { ClowdrAppState } from '../../../ClowdrTypes';
+import { ClowdrState } from '../../../ClowdrTypes';
 import { UploadChangeParam, RcFile } from 'antd/lib/upload';
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
 interface RegistrationProps {
-    auth: ClowdrAppState,
+    auth: ClowdrState,
 }
 
 interface RegistrationState {

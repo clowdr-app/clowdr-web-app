@@ -3,7 +3,7 @@ import {Button, DatePicker, Form, Input, Popconfirm, Select, Space, Spin, Table}
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
 import {DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone} from '@ant-design/icons';
-import {ClowdrAppState, EditableCellProps} from "../../../../ClowdrTypes";
+import {ClowdrState, EditableCellProps} from "../../../../ClowdrTypes";
 import {SelectValue} from "antd/es/select";
 import { Store } from 'antd/lib/form/interface';
 var moment = require('moment');
@@ -19,7 +19,7 @@ const { Option } = Select;
 // );
 
 interface ProgramSessionsProps {
-    auth: ClowdrAppState;
+    auth: ClowdrState;
 }
 
 interface ProgramSessionsState {

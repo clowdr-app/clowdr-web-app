@@ -4,7 +4,7 @@ import { AuthUserContext } from "./Session";
 import { Alert, Button, Tooltip } from "antd";
 import { EditOutlined, SaveOutlined } from '@ant-design/icons';
 import Parse from "parse";
-import { ClowdrAppState } from "../ClowdrTypes";
+import { ClowdrState } from "../ClowdrTypes";
 
 // Import TinyMCE
 var tinymce = require('tinymce/tinymce');
@@ -45,7 +45,7 @@ const defaultText = `
 </div>`;
 
 interface GuardedLandingProps {
-  auth: ClowdrAppState,
+  auth: ClowdrState,
 }
 
 interface GuardedLandingState {
@@ -110,8 +110,10 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
           display: "inline-block",
         }}
         message={this.state.alert}
-        // @ts-ignore    TS: @Jon/@Crista This might like a real type error -- 
+        // @ts-ignore    TS: This might like a real type error -- 
         // Is alert guaranteed to be a string here, even though it is assigned a ReactElement sometimes?
+          //Jon: I don't know, I didn't write this: I would suggest simply refactoring this into message.success or message.alert at the point
+          //that the alert is set.
         type={this.state.alert.includes("success") ? "success" : "error"}
         showIcon
         closable

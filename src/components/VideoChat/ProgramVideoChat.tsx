@@ -12,7 +12,7 @@ import ReportToModsButton from "./ReportToModsButton";
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import VideoRoom, { DeviceSelector } from "./VideoRoom";
 import FlipCameraIosIcon from '@material-ui/icons/FlipCameraIos';
-import { ClowdrAppState } from '../../ClowdrTypes';
+import { ClowdrState } from '../../ClowdrTypes';
 
 import { SyncOutlined } from "@material-ui/icons";
 
@@ -25,7 +25,7 @@ interface ProgramVideoChatState {
 interface ProgramVideoChatProps {
     room: any;    // TS: ???
     isInRoom: boolean;
-    clowdrAppState: ClowdrAppState | null;
+    clowdrAppState: ClowdrState | null;
 }
 class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVideoChatState>{
 

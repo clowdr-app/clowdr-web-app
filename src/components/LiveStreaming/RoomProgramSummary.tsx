@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {AuthUserContext} from "../Session";
-import {ClowdrAppState} from "../../ClowdrTypes";
+import {ClowdrState} from "../../ClowdrTypes";
 import ProgramSession from "../../classes/ProgramSession";
 import ProgramRoom from "../../classes/ProgramRoom";
 import moment from "moment";
@@ -9,7 +9,7 @@ import ProgramItem from "../../classes/ProgramItem";
 import ProgramItemDetails from "../ProgramItem/ProgramItemDetails";
 
 interface RoomProgramSummaryProps {
-    appState: ClowdrAppState | null;
+    appState: ClowdrState | null;
     ProgramRoom: ProgramRoom;
 }
 

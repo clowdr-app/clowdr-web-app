@@ -16,7 +16,7 @@ type Role = any
 
 export type UserSessionToken = string
 
-export interface ClowdrAppState {
+export interface ClowdrState {
     spaces: Map<string, SocialSpace>;   // TS: Or maybe better a Record??
     user: Parse.User | null;
     userProfile: UserProfile | null;

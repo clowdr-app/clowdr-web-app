@@ -5,7 +5,10 @@ import Parse from "parse";
 import {LoadingOutlined} from '@ant-design/icons';
 import LandingContainer from "../LandingContainer";
 
-// @Jon/@Crista    are we ready to jettison slack yet?
+// BCP: are we ready to jettison slack yet?
+// Jon: Yeah, let's dump it.
+// (but then we realized that it is still needed for the Security Shield feature...)
+// Jon: Once we get the new chat interface, there should just be a moderators channel in app
 
 class SlackToVideo extends React.Component {
 

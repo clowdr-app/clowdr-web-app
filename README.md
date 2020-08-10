@@ -32,7 +32,7 @@ Use npm to install (or upgrade) all dependencies after cloning.
 $ npm install
 ```
 
-@Jon/@Crista: And maybe we need something like this (and maybe a few more dependencies):
+@Jon/@Crista: And maybe we need something like this (and maybe a few more dependencies)... Or does doing this once mean that the dependencies get listed somewhere so that people in the future just need "npm install"??
 ```bash
 $ npm install --save typescript @types/node @types/react @types/react-dom
 @types/jest @types/parse

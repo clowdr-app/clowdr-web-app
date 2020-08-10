@@ -18,7 +18,7 @@ import {
 import {CloseCircleTwoTone, DeleteOutlined, EditOutlined, SaveTwoTone, UploadOutlined} from '@ant-design/icons';
 import Parse from "parse";
 import {AuthUserContext} from "../../../Session";
-import {ClowdrAppState, EditableCellProps} from "../../../../ClowdrTypes";
+import {ClowdrState, EditableCellProps} from "../../../../ClowdrTypes";
 import {RcFile, UploadChangeParam} from "antd/lib/upload/interface";
 import { Store } from 'antd/lib/form/interface';
 var moment = require('moment');
@@ -34,7 +34,7 @@ const {TabPane} = Tabs;
 // );
 
 interface ProgramRoomsProps {
-    auth: ClowdrAppState;
+    auth: ClowdrState;
 }
 
 interface ProgramRoomsState {

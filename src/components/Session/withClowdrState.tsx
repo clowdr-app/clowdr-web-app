@@ -1,36 +1,142 @@
-// @Jon/@Crista    Is this file correctly named, or should it be called withClowdrAppState
-
 import React from 'react';
 
 import AuthUserContext from './context';
-import Parse from "parse";
+import Parse, { User, Role } from "parse";
 import {notification, Spin} from "antd";
 import ChatClient from "../../classes/ChatClient"
 import ProgramCache from "./ProgramCache";
+import { RoomInvalidParametersError } from 'twilio-video';
+import BreakoutRoom from '../../classes/BreakoutRoom';
+import UserProfile from '../../classes/UserProfile';
+import UserPresence from '../../classes/UserPresence';
+import SocialSpace from '../../classes/SocialSpace';
+import ClowdrInstance from '../../classes/ClowdrInstance';
+import LiveActivity from '../../classes/LiveActivity';
+import { assert } from '../../Util';
 
-let UserProfile = Parse.Object.extend("UserProfile");
+// TS: Push through the change to Props/State globally!
+interface Props {
+    history: string[];   
+} 
 
-const withAuthentication = Component => {
-    // @Jon/@Crista    Is this file correctly named, or should it be called WithClowdrAppState
-    // (and maybe ClowdrAppState can be globally renamed just ClowdrState...?)
-    class WithAuthentication extends React.Component {
+// TS: Use the ones that Jing defined in Util.ts, not these
+interface FlairUIData {color: string, tooltip: string}
+interface AllFlairData {value: string, color: string, tooltip: string, id: string, priority: number}
 
-        constructor(props) {
+interface State {
+    // TS: Fill in the types!
+    user: any,
+    users: any,
+    loading: boolean,
+    roles: any,
+    currentRoom: any,
+    history: string[] | undefined,
+    refreshUser: any,
+    getChatClient: any,
+    setSocialSpace: any,
+    getConferenceBySlackName: any,
+    setActiveRoom: any,
+    currentConference: ClowdrInstance | undefined | null,  // TS: Really??
+    activeRoom: any,
+    helpers: any,
+    chatClient: any,
+    parseLive: any,
+    presences: any,
+    videoRoomsLoaded: boolean,
+    liveVideoRoomMembers: any,
+    activePublicVideoRooms: BreakoutRoom[],
+    activePrivateVideoRooms: BreakoutRoom[],
+    userProfile: UserProfile | null,  // TS: Or should it be undefined??
+    permissions: any,
+    leftSidebar: any,
+    activeSpace: any,
+    spaces: any,
+    chatChannel: any,
+    programCache: any,
+    isAdmin: boolean;
+    isModerator: boolean;
+    isManager: boolean;
+    isClowdrAdmin: boolean;
+    flairColors: Record<string,FlairUIData>;
+    allFlair: AllFlairData[];  // TS: Call it allFlairs??
+}
+
+type RoomID = string    // TS: Doesn't belong here?
+type UserID = string    // TS: Doesn't belong here?  And should this be the same as the next??
+type UserProfileID = string    // TS: Doesn't belong here?
+type Subscriber = React.Component;   // TS: What arguments?
+
+// TS: This should be an enumeration of strings -- get all the possibilities from the PrivilegedAction table in the DB
+type Permission = string
+
+const withClowdrState = (Component: React.Component<Props, State>) => {
+    class WithClowdrState extends React.Component<Props, State> {
+        // TS: @Jon - I (BCP) don't understand the logic here very well (Crista doesn't either).  Why do we initialize all these fields of "this" and then copy most of them to this.state??
+        //Jon: When we first implemented this, we pushed updates from live queries into sub-components by modifying the state of this context object. Calling setState on the WithClowdrState will result in every component on the page being re-rendered. This is not a good patten. I have been trying to refactor things away so that mostly what is in state are helper methods to expose to components, and any of the actual data is stored as fields of this.
+        watchedRoomMembers: Record<RoomID,BreakoutRoom[]>;
+        // authCallbacks: ((_:User|null)=>void)[];   // @ Jon: This seems never to be assigned to!
+        //Jon: Yes, I think this is no longer used
+        // BCP: OK, removing it (and all references to it)
+        isLoggedIn: boolean;
+        // TS: What is the difference between the next two things??
+        //Jon: One is a list of all of the profiles that have been loaded, another of promises to load them.
+        loadingProfiles: Record<UserProfileID, (_:UserProfile)=>void>;
+        userProfiles: Record<UserID, Promise<UserProfile>>;
+        unwrappedProfiles: Record<UserID, UserProfile>;
+        chatWaiters: ((_:ChatClient)=>void)[];  
+        channelChangeListeners: never[]; // TS: Never assigned or used
+        //Jon: This can be deleted
+        presenceWatchers: React.Component[];  // or: {setState: (arg0: { presences: {}) => void }
+        presences: Record<UserID, UserPresence>;  
+        newPresences: UserPresence[];
+        userProfileSubscribers: Record<UserProfileID, Subscriber[]>;
+        parseLive: any; // TS: should be Parse.LiveQueryClient, I think, but the type declaration file doesn't seem to include it!
+        fetchingUsers: boolean;
+        expandedProgramRoom: any;
+        usersPromise: any;
+        parseLivePublicVideosSub: any;
+        parseLivePrivateVideosSub: any;
+        parseLiveActivitySub: any;
+        subscribedToVideoRoomState: any;
+        presenceUpdateScheduled: any;
+        presenceUpdateTimer: NodeJS.Timeout | null;
+        socialSpaceSubscription: any;
+        profilesSubscription: any;
+        chatClient: any;
+        refreshUserPromise: any;
+        user: Parse.User<Parse.Attributes> | null;
+        userProfile: Parse.Object<Parse.Attributes> | undefined;
+        activePublicVideoRooms: any;
+        activePublicVideoRoomSubscribers: any;
+        mounted: any;
+        isAdmin: boolean;
+        isModerator: boolean;
+        isManager: boolean;
+        isClowdrAdmin: boolean;
+
+        constructor(props: Props) {
             super(props);
+            this.fetchingUsers = false;   
             this.watchedRoomMembers = {};
-            this.authCallbacks = [];
+            // this.authCallbacks = [];
             this.isLoggedIn = false;
             this.loadingProfiles = {};
             this.userProfiles = {};
             this.unwrappedProfiles = {};
             this.chatWaiters = [];
-            this.livegneChannel = null;
             this.channelChangeListeners = [];
             this.presenceWatchers = [];
             this.presences = {};
             this.newPresences = [];
             this.userProfileSubscribers = {};
+            this.presenceUpdateTimer = null;
+            this.user = null;
+            this.isAdmin = false;
+            this.isModerator = false;
+            this.isManager = false;
+            this.isClowdrAdmin = false;
 
+            // @ts-ignore     TS: Again, this seems to exist in the Parse library but not its type declarations!
             this.parseLive = new Parse.LiveQueryClient({
                 applicationId: process.env.REACT_APP_PARSE_APP_ID,
                 serverURL: process.env.REACT_APP_PARSE_DOMAIN,
@@ -38,7 +144,7 @@ const withAuthentication = Component => {
             });
             this.parseLive.open();
 
-            let exports ={
+            let exports = {
                 getBreakoutRoom: this.getBreakoutRoom.bind(this),
                 cancelBreakoutRoomSubscription: this.cancelBreakoutRoomSubscription.bind(this),
                 unwrappedProfiles: this.unwrappedProfiles,
@@ -60,9 +166,9 @@ const withAuthentication = Component => {
                 unmountProfileDisplay: this.unmountProfileDisplay.bind(this),
                 updateMyPresence: this.updateMyPresence.bind(this),
                 userHasWritePermission: this.userHasWritePermission.bind(this)
-
             }
-            this.state = {
+
+            this.state = {   // (JS usage question: Should we be initializing things with null, or undefined???)
                 user: null,
                 users: {},
                 loading: true,
@@ -74,36 +180,50 @@ const withAuthentication = Component => {
                 setSocialSpace: this.setSocialSpace.bind(this),
                 getConferenceBySlackName: this.getConferenceBySlackName.bind(this),
                 setActiveRoom: this.setActiveRoom.bind(this),
-                currentConference: null,
+                currentConference: undefined,
                 activeRoom: null,
                 helpers: exports,
                 chatClient: new ChatClient(this.setState.bind(this)),
                 parseLive: this.parseLive,
                 presences: {},
-                // video: {
                 videoRoomsLoaded: false,
                 liveVideoRoomMembers: 0,
                 activePublicVideoRooms: [],
                 activePrivateVideoRooms: [],
-                // },
+                userProfile: null,
+                permissions: null,
+                leftSidebar: null,
+                activeSpace: null,
+                spaces: null,
+                chatChannel: null,
+                programCache: null,
+                isAdmin: false,
+                isModerator: false,
+                isManager: false,
+                isClowdrAdmin: false,
+                flairColors: {},
+                allFlair: [],        
             };
-            this.fetchingUsers = false;
         }
 
-        async updateMyPresence(presence){
+        async updateMyPresence(presence: UserPresence) {
+            assert (this.state.userProfile);
             this.presences[this.state.userProfile.id] = presence;
             for(let presenceWatcher of this.presenceWatchers){
                 presenceWatcher.setState({presences: this.presences});
             }
         }
 
-        async createOrOpenDM(profileOfUserToDM){
-            if(profileOfUserToDM == this.state.userProfile.id)
-                return
-            //Look to see if we already have a chat set up with this person
+        async createOrOpenDM(profileOfUserToDM: UserProfile) {
+            assert (this.state.userProfile !== null);
+            // @ Jon: Do we really want to prevent this case?  Crista likes DMing herself!
+            // Jon: Yes, it is confusing, and no other chat platofrm allows it...
+            if (profileOfUserToDM.id == this.state.userProfile.id) return
+            // Look to see if we already have a chat set up with this person
             let channels = this.state.chatClient.joinedChannels;
             if (channels) {
-                let found = Object.values(channels).find((chan) => {
+                // TS: The "any" should be cleaned up after ChatClient is converted -- some kind of Twilio thing??
+                let found = Object.values(channels).find((chan: any) => { 
                     if(!chan || !chan.conversation)
                         return false;
                     let convo = chan.conversation;
@@ -113,14 +233,17 @@ const withAuthentication = Component => {
                         (convo.get("member2").id == profileOfUserToDM.id ||
                         convo.get("member1").id == profileOfUserToDM.id))
                         return true;
+                    return false;
                 })
                 if (found) {
+                    // @ts-ignore    What is its type?  (Something from Twilio?)
                     console.log(found.channel.sid)
+                    // @ts-ignore    What is its type?
                     this.state.chatClient.openChat(found.channel.sid);
                     return;
                 }
             }
-
+            assert(this.state.currentConference);
             let res = await Parse.Cloud.run("chat-createDM", {
                 confID: this.state.currentConference.id,
                 conversationName: profileOfUserToDM.get("displayName"),
@@ -129,16 +252,17 @@ const withAuthentication = Component => {
             this.state.chatClient.openChat(res.sid);
         }
 
-        ifPermission(permission, jsxElement, elseJsx){
-            if(this.state.permissions && this.state.permissions.includes(permission))
+        // TS: @ Jon: Should this be polymorphic??
+        // Jon: I think that this was a half-baked idea and shoudl probably be factored away
+        ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
+            if (this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
-            if(elseJsx)
+            if (elseJsx)
                 return elseJsx;
-            return <></>
-
+            return  <></>        
         }
 
-        setExpandedProgramRoom(programRoom) {
+        setExpandedProgramRoom(programRoom: Parse.Object) {
             this.expandedProgramRoom = programRoom;
             if (this.state.leftSidebar) {
                 this.state.leftSidebar.setExpandedProgramRoom(programRoom);
@@ -150,11 +274,16 @@ const withAuthentication = Component => {
                     let parseUserQ = new Parse.Query(UserProfile)
                     parseUserQ.equalTo("conference", this.state.currentConference);
                     parseUserQ.limit(5000);
+                    // @ts-ignore     TS: Apparently the Parse type definitions are not up to date (this was added recently)
                     parseUserQ.withCount();
                     let nRetrieved = 0;
+                    // @ts-ignore  TS: @Jon -- need help to figure out what type find is returning!
+                    // Jon: an object with fields {count:int, results: UserProfile[]}
+                    // @Jon: That is not what TS thinks:
+                    // (method) globalThis.Parse.Query<UserProfile>.find(options?: Parse.Query<T extends Parse.Object<Parse.Attributes> = Parse.Object<Parse.Attributes>>.FindOptions | undefined): Promise<UserProfile[]>
                     let {count, results} = await parseUserQ.find();
                     nRetrieved = results.length;
-                    let allUsers = [];
+                    let allUsers: any[] = [];   // TS: ???
                     allUsers = allUsers.concat(results);
                     while (nRetrieved < count) {
                         let parseUserQ = new Parse.Query(UserProfile)
@@ -167,14 +296,13 @@ const withAuthentication = Component => {
                         if (results)
                             allUsers = allUsers.concat(results);
                     }
-                    let usersByID = {};
-                    allUsers.forEach((u)=>usersByID[u.id]=u);
+                    let usersByID : Record<string,UserProfile> = {};
+                    allUsers.forEach((u:UserProfile)=>usersByID[u.id]=u);
                     resolve(usersByID);
                 });
             return this.usersPromise;
 
         }
-
 
         conferenceChanged(){
             if (this.parseLivePublicVideosSub) {
@@ -191,12 +319,16 @@ const withAuthentication = Component => {
                 this.subscribeToVideoRoomState();
             }
         }
-        async setActiveConference(conf) {
-            console.log('[wA]: changing conference to ' + conf.conferenceName);
+        subscribeToVideoRoomState() {
+            throw new Error("Method not implemented.");
+        }
+        async setActiveConference(conf: Parse.Object) {
+            console.log('[wA]: changing conference to ' + conf.get("conferenceName"));
             this.refreshUser(conf, true);
         }
 
-        async getRoleByName(role) {
+        async getRoleByName(role: Parse.Object) {
+            // @ts-ignore  TS: What is the result of find??
             let existingRoles = this.state.roles.find(i => i.get("name") == role);
             if(existingRoles)
                 return existingRoles;
@@ -218,36 +350,38 @@ const withAuthentication = Component => {
             }
             return null;
         }
-        setActiveRoom(room) {
+
+        setActiveRoom(room: Parse.Object) {
             this.setState({activeRoom: room});
         }
 
-        async setActiveConferenceByName(confName){
+        async setActiveConferenceByName(confName: string){
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("conferenceName", confName);
             let res = await confQ.first();
             this.refreshUser(res, true);
             return res;
         }
-        async getConferenceBySlackName(teamId) {
+
+        async getConferenceBySlackName(teamId: string) {
             let confQ = new Parse.Query("ClowdrInstance");
             confQ.equalTo("slackWorkspace", teamId);
             let res = await confQ.first();
             return res;
         }
 
-        getPresences(component){
+        getPresences(component: React.Component){
             this.presenceWatchers.push(component);
             component.setState({presences: this.presences});
         }
-        unmountProfileDisplay(profileID, component){
+        unmountProfileDisplay(profileID:string, component:React.Component){
             if(this.userProfileSubscribers[profileID])
                 this.userProfileSubscribers[profileID] = this.userProfileSubscribers[profileID].filter(c=>c!=component);
         }
-        cancelPresenceSubscription(component){
+        cancelPresenceSubscription(component: React.Component){
             this.presenceWatchers = this.presenceWatchers.filter(v => v!= component);
         }
-        updateProfile(profile){
+        updateProfile(profile: UserProfile){
             if(this.userProfileSubscribers[profile.id]){
                 for(let subscriber of this.userProfileSubscribers[profile.id]){
                     subscriber.setState({profile: profile});
@@ -276,16 +410,17 @@ const withAuthentication = Component => {
             }
         }
 
-        async createSocialSpaceSubscription(user, userProfile){
+        async createSocialSpaceSubscription(user:Parse.User<Parse.Attributes>, userProfile:UserProfile){
             if(this.socialSpaceSubscription){
                 this.socialSpaceSubscription.unsubscribe();
             }
-            if(!user)
+            if (!user)
                 user = this.state.user;
-            if(!userProfile)
+            if (!userProfile) {
+                assert(this.state.userProfile !== null);
                 userProfile = this.state.userProfile;
+            }
             this.subscribeToPublicRooms()
-
 
             let query  =new Parse.Query("UserPresence");
             query.limit(1000);
@@ -294,29 +429,29 @@ const withAuthentication = Component => {
 
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
-            this.socialSpaceSubscription.on('create', (presence) => {
+            this.socialSpaceSubscription.on('create', (presence: UserPresence) => {
                 this.newPresences.push(presence);
                 this.updatePresences();
             })
-            this.socialSpaceSubscription.on('enter', (presence) => {
+            this.socialSpaceSubscription.on('enter', (presence:UserPresence) => {
                 this.newPresences.push(presence);
                 this.updatePresences();
             })
-            this.socialSpaceSubscription.on('delete',(presence)=>{
+            this.socialSpaceSubscription.on('delete',(presence:UserPresence)=>{
                 delete this.presences[presence.get("user").id];
                 this.updatePresences();
             })
-            this.socialSpaceSubscription.on('leave',(presence)=>{
+            this.socialSpaceSubscription.on('leave',(presence:UserPresence)=>{
                 delete this.presences[presence.get("user").id];
                 this.updatePresences();
             })
-            this.socialSpaceSubscription.on('update', (presence)=>{
+            this.socialSpaceSubscription.on('update', (presence:UserPresence)=>{
                 this.presences[presence.get("user").id] = presence;
                 this.updatePresences();
             })
 
             let presences = await query.find();
-            let presenceByProfile = {};
+            let presenceByProfile : Record<string,UserPresence> = {};
             for(let presence of presences){
                 presenceByProfile[presence.get("user").id] = presence;
             }
@@ -326,7 +461,7 @@ const withAuthentication = Component => {
             profilesQuery.equalTo("conference", this.currentConference);
             profilesQuery.limit(2000);
             this.profilesSubscription = this.state.parseLive.subscribe(profilesQuery, user.getSessionToken());
-            this.profilesSubscription.on("update", (profile)=>{
+            this.profilesSubscription.on("update", (profile:UserProfile)=>{
                 this.userProfiles[profile.id] = new Promise((resolve)=>(resolve(profile)));
                 this.updateProfile(profile);
             })
@@ -336,12 +471,17 @@ const withAuthentication = Component => {
             this.updatePresences();
         }
 
+        // @Jon: What is this???
+        //Jon: This should no longer be needed...
+        currentConference(arg0: string, currentConference: ClowdrInstance) {
+            throw new Error("Method not implemented.");
+        }
 
         /*
         Call this to set the user's current social space.
         Provide either the spaceName or the space object.
          */
-        async setSocialSpace(spaceName, space, user, userProfile) {
+        async setSocialSpace(spaceName:string, space:SocialSpace, user:User, userProfile:UserProfile) {
             if (!this.state.user && !user) // user is not logged in
                 return
             if(space)
@@ -349,8 +489,10 @@ const withAuthentication = Component => {
             if (!this.state.activeSpace || spaceName != this.state.activeSpace.get("name")) {
                 if(!user)
                     user = this.state.user;
-                if(!userProfile)
+                if(!userProfile) {
+                    assert(this.state.userProfile !== null);
                     userProfile = this.state.userProfile;
+                }
                 if(!space && this.state.spaces){
                     space = this.state.spaces[spaceName];
                 }
@@ -371,16 +513,16 @@ const withAuthentication = Component => {
             }
         }
 
-        getChatClient(callback) {
+        // @Jon: What would be a better name for this???
+        //Jon: I need to refactor all of the chat client stuff, it's full of bad patterns and races left and right. Open to name suggestions, but eventually I want this to return a promise anyway
+        getChatClient(callback: (_:ChatClient)=>void) {
             if (this.chatClient)
                 callback(this.chatClient);
             else
                 this.chatWaiters.push(callback);
         }
 
-
-
-        async getUserProfilesFromUserProfileID(id, subscriber) {
+        async getUserProfilesFromUserProfileID(id:UserProfileID, subscriber:React.Component) {
             let q = new Parse.Query(UserProfile);
             let users = [];
             let toFetch = [];
@@ -405,7 +547,7 @@ const withAuthentication = Component => {
                 this.loadingProfiles[id] = resolve;
             });
             let userProfielQ = new Parse.Query(UserProfile);
-            let u;
+            let u: UserProfile | undefined;
             try{
                 u = await userProfielQ.get(id);
             }catch(err){
@@ -420,12 +562,12 @@ const withAuthentication = Component => {
 
             if (this.loadingProfiles[id]) {
                 this.loadingProfiles[id](u);
-                this.loadingProfiles[id] = null;
+                delete this.loadingProfiles[id];
             }
             return await this.userProfiles[id];
         }
 
-        async getUserProfilesFromUserIDs(ids){
+        async getUserProfilesFromUserIDs(ids:UserID[]){
             //TODO: worth caching?
             let toFetch = [];
             for(let id of ids){
@@ -440,7 +582,7 @@ const withAuthentication = Component => {
             return ret;
         }
 
-        async getUserProfilesFromUserProfileIDs(ids) {
+        async getUserProfilesFromUserProfileIDs(ids:UserID[]) {
             let users = [];
             let toFetch = [];
             for (let id of ids) {
@@ -460,13 +602,13 @@ const withAuthentication = Component => {
                 }
                 users.push(this.userProfiles[id]);
             }
-            let res = await Parse.Object.fetchAll(toFetch);
+            let res = await Parse.Object.fetchAll(toFetch, {});
             for(let u of res){
                 this.userProfiles[u.id] = new Promise((resolve)=>(resolve(u)));
                 this.unwrappedProfiles[u.id] = u;
                 if(this.loadingProfiles[u.id]){
                     this.loadingProfiles[u.id](u);
-                    this.loadingProfiles[u.id] = null;
+                    delete this.loadingProfiles[u.id];
                 }else{
                     console.log("No callback for "+ u.id);
                 }
@@ -475,7 +617,7 @@ const withAuthentication = Component => {
         }
 
 
-        async getUserRecord(uid){
+        async getUserRecord(uid:UserID){
             if(this.userProfiles && this.userProfiles[uid])
                 return this.userProfiles[uid];
             else{
@@ -493,7 +635,7 @@ const withAuthentication = Component => {
 
             }
         }
-        async populateMembers(breakoutRoom){
+        async populateMembers(breakoutRoom: BreakoutRoom){
             let promises =[];
             if(breakoutRoom.get('members')) {
                 for (let i = 0; i < breakoutRoom.get("members").length; i++) {
@@ -509,7 +651,7 @@ const withAuthentication = Component => {
             }
             return breakoutRoom;
         }
-        refreshUser(preferredConference, forceRefresh){
+        refreshUser(preferredConference:ClowdrInstance|undefined, forceRefresh:boolean){
             if(!this.refreshUserPromise || forceRefresh){
                 this.refreshUserPromise = new Promise(async (resolve)=>{
                     let user = await this._refreshUser(preferredConference);
@@ -518,7 +660,7 @@ const withAuthentication = Component => {
             }
             return this.refreshUserPromise;
         }
-        async _refreshUser(preferredConference) {
+        async _refreshUser(preferredConference:ClowdrInstance|undefined) {
 
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
@@ -527,7 +669,7 @@ const withAuthentication = Component => {
 
                         if (!_this.isLoggedIn) {
                             _this.isLoggedIn = true;
-                            _this.authCallbacks.forEach((cb) => (cb(user)));
+                            // _this.authCallbacks.forEach((cb) => (cb(user)));
                         }
                         let session = await Parse.Session.current();
 
@@ -547,9 +689,11 @@ const withAuthentication = Component => {
                         let isManager = _this.state ? _this.state.isManager : false;
                         let isClowdrAdmin = _this.state ? _this.state.isClowdrAdmin : false;
 
+                        // @Jon SHould this be this.state.currentConference ??
+                        //Jon: Nope. setState is async, and we need to make sure we read the correct value here that we set above, so don't read from state.
                         let conf = _this.currentConference;
                         let currentProfileID = sessionStorage.getItem("activeProfileID");
-                        let activeProfile = null;
+                        let activeProfile : UserProfile | null | undefined = null;  // TS: null | undefined feels like overkill, no?
                         if (currentProfileID) {
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.include("conference");
@@ -590,7 +734,7 @@ const withAuthentication = Component => {
                                 preferredConference = await confQ.first();
                             }
                             if (preferredConference) {
-                                conf = validConferences.find((c) => c.id == preferredConference.id);
+                                conf = validConferences.find((c) => preferredConference && c.id == preferredConference.id);
                                 if (!conf) {
                                     conf = validConferences[0];
                                 }
@@ -602,6 +746,7 @@ const withAuthentication = Component => {
                             profileQ.equalTo("user",user);
                             profileQ.include("tags");
                             activeProfile = await profileQ.first();
+                            assert (activeProfile !== undefined);
                             sessionStorage.setItem("activeProfileID",activeProfile.id);
 
                             window.location.reload(false);
@@ -615,7 +760,7 @@ const withAuthentication = Component => {
                         spacesQ.limit(1000);
                         spacesQ.equalTo("conference", activeProfile.get("conference"));
                         let spaces = await spacesQ.find();
-                        let spacesByName = {};
+                        let spacesByName : Record<string, Parse.Object> = {};
                         for(let space of spaces){
                             spacesByName[space.get("name")] = space;
                         }
@@ -626,16 +771,18 @@ const withAuthentication = Component => {
                         _this.state.chatClient.initChatClient(user, conf, activeProfile);
 
                         try {
+                            // @ts-ignore   TS: I guess change null to ""?
                             await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
                             await _this.createSocialSpaceSubscription(user, activeProfile);
                         } catch (err) {
                             console.log("[withAuth]: warn: " + err);
                         }
 
-                        let finishedStateFn = null;
+                        let finishedStateFn : ((value?: unknown) => void) | null = null;
                         let stateSetPromise = new Promise((resolve)=>{
                             finishedStateFn = resolve;
                         });
+                        // @ts-ignore   TS: ???
                         _this.setState((prevState) => { return ({
                             spaces: spacesByName,
                             user: user,
@@ -651,9 +798,11 @@ const withAuthentication = Component => {
                             roles: roles,
                             programCache: new ProgramCache(conf, _this.parseLive),
                         })}, ()=>{
+                            assert(finishedStateFn);
                             finishedStateFn()});
                             await stateSetPromise;
-                            if(priorConference && priorConference.id != conf.id){
+                            // @ts-ignore    TS: @Jon: ... This is why we think the initialization of conf is wrong!
+                            if(priorConference && conf && priorConference.id != conf.id){
                                 window.location.reload(false);
                             }
                         _this.forceUpdate();
@@ -679,13 +828,13 @@ const withAuthentication = Component => {
                     }
                     if (_this.isLoggedIn) {
                         _this.isLoggedIn = false;
-                        _this.authCallbacks.forEach((cb) => (cb(null)));
+                        // _this.authCallbacks.forEach((cb) => (cb(null)));
                     }
                     if (_this.chatClient) {
                         await _this.chatClient.shutdown();
                         _this.chatClient = null;
                     }
-                    let conference = null;
+                    let conference : ClowdrInstance | null | undefined = null;
                     let defaultConferenceName = _this.getDefaultConferenceName();
                     if(defaultConferenceName){
                         let confQ = new Parse.Query("ClowdrInstance")
@@ -719,10 +868,10 @@ const withAuthentication = Component => {
             return defaultConferenceName;
         }
 
-       async getBreakoutRoom(id, component){
+       async getBreakoutRoom(id: string, component: React.Component){
             if(!this.activePublicVideoRooms)
                 await this.subscribeToPublicRooms();
-            let room = this.activePublicVideoRooms.find(v=>v.id == id);
+            let room = this.activePublicVideoRooms.find((v:{id:string;})=> v.id == id);
             if(room){
                 if(!this.activePublicVideoRoomSubscribers[id])
                     this.activePublicVideoRoomSubscribers[id] = [];
@@ -730,9 +879,9 @@ const withAuthentication = Component => {
             }
             return room;
         }
-        cancelBreakoutRoomSubscription(id, component){
+        cancelBreakoutRoomSubscription(id:string, component:React.Component){
             if(this.activePublicVideoRoomSubscribers[id])
-                this.activePublicVideoRoomSubscribers[id] = this.activePublicVideoRoomSubscribers[id].filter(v=>v!=component);
+                this.activePublicVideoRoomSubscribers[id] = this.activePublicVideoRoomSubscribers[id].filter((v:React.Component)=>v!=component);
         }
         async subscribeToPublicRooms() {
             if(!this.currentConference){
@@ -760,32 +909,33 @@ const withAuthentication = Component => {
                 if (this.parseLivePublicVideosSub) {
                     this.parseLivePublicVideosSub.unsubscribe();
                 }
+                assert(this.user);
                 this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.user.getSessionToken());
-                this.parseLivePublicVideosSub.on('create', async (vid) => {
+                this.parseLivePublicVideosSub.on('create', async (vid:BreakoutRoom) => { 
                     vid = await this.populateMembers(vid);
                     this.activePublicVideoRooms.push(vid);
                     this.setState((prevState) => ({
                         activePublicVideoRooms: [vid, ...prevState.activePublicVideoRooms]
                     }))
                 })
-                this.parseLivePublicVideosSub.on("delete", vid => {
-                    this.activePublicVideoRooms = this.activePublicVideoRooms.filter(v=> v.id != vid.id);
+                this.parseLivePublicVideosSub.on("delete", (vid:BreakoutRoom) => {
+                    this.activePublicVideoRooms = this.activePublicVideoRooms.filter((v:BreakoutRoom)=> v.id != vid.id);
                     this.setState((prevState) => ({
                         activePublicVideoRooms: prevState.activePublicVideoRooms.filter((v) => (
                             v.id != vid.id
                         ))
                     }));
                 });
-                this.parseLivePublicVideosSub.on('update', async (newItem) => {
-                    newItem = await this.populateMembers(newItem);
-                    this.notifyUserOfChanges(newItem);
-                    this.activePublicVideoRooms = this.activePublicVideoRooms.map(room=>room.id == newItem.id ? newItem : room);
-                    if(this.activePublicVideoRoomSubscribers[newItem.id])
-                        for(let obj of this.activePublicVideoRoomSubscribers[newItem.id])
-                            obj.setState({BreakoutRoom : newItem});
+                this.parseLivePublicVideosSub.on('update', async (vid:BreakoutRoom) => {
+                    vid = await this.populateMembers(vid);
+                    this.notifyUserOfChanges(vid);
+                    this.activePublicVideoRooms = this.activePublicVideoRooms.map((room:BreakoutRoom)=>room.id == vid.id ? vid : room);
+                    if(this.activePublicVideoRoomSubscribers[vid.id])
+                        for(let obj of this.activePublicVideoRoomSubscribers[vid.id])
+                            obj.setState({BreakoutRoom : vid});
                     //Deliver notifications if applicable
                     this.setState((prevState) => ({
-                        activePublicVideoRooms: prevState.activePublicVideoRooms.map(room => room.id == newItem.id ? newItem : room)
+                        activePublicVideoRooms: prevState.activePublicVideoRooms.map((room:BreakoutRoom) => room.id == vid.id ? vid : room)
                     }))
                 })
             })
@@ -796,36 +946,39 @@ const withAuthentication = Component => {
             queryForPrivateActivity.equalTo("user", this.user);
             this.setState({videoRoomsLoaded: true});
             await this.subscribeToNewPrivateRooms();
+            assert(this.user);
             this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.user.getSessionToken());
             this.parseLiveActivitySub.on('create', this.handleNewParseLiveActivity.bind(this));
             this.parseLiveActivitySub.on("update", this.handleNewParseLiveActivity.bind(this));
         }
 
-        handleNewParseLiveActivity(activity){
+        handleNewParseLiveActivity(activity:LiveActivity){  // TS: ???
             if(activity.get("topic") == "privateBreakoutRooms"){
-                this.subscribeToNewPrivateRooms(activity);
+                // @ts-ignore  @Jon    subscribeToNewPrivateRooms doesn't want an argument
+                //Jon: OK, deleted it...
+                this.subscribeToNewPrivateRooms();
             }else if(activity.get("topic") == "profile"){
                 window.location.reload(true);
             }
         }
-        notifyUserOfChanges(updatedRoom){
+        notifyUserOfChanges(updatedRoom:BreakoutRoom){
             if(!this.state.userProfile)
                 return;
             let oldRoom = this.watchedRoomMembers[updatedRoom.id];
             if(!oldRoom){
                 this.watchedRoomMembers[updatedRoom.id] = [];
                 if(updatedRoom.get("members")){
-                    this.watchedRoomMembers[updatedRoom.id] = updatedRoom.get("members").filter(m=>m.id!=this.state.user.id).map(m=>m.get("displayName"));
+                    this.watchedRoomMembers[updatedRoom.id] = updatedRoom.get("members").filter((m:UserProfile)=>m.id!=this.state.user.id).map((m:UserProfile)=>m.get("displayName"));  
                 }
             }
             if(updatedRoom && oldRoom && this.state.userProfile.get("watchedRooms")){
-                if(this.state.userProfile.get("watchedRooms").find(r=>r.id == updatedRoom.id)){
+                if(this.state.userProfile.get("watchedRooms").find((r:BreakoutRoom)=>r.id == updatedRoom.id)){
                     //We have a watch on it.
 
                     //Who is new?
-                    let update = [];
+                    let update : UserProfile[] = [];
                     if(updatedRoom.get("members")){
-                        update = updatedRoom.get("members").filter(m=>m.id!=this.state.user.id).map(m=>m.get("displayName"));
+                        update = updatedRoom.get("members").filter((m:UserProfile)=>m.id!=this.state.user.id).map((m:UserProfile)=>m.get("displayName"));
                     }
                     let newUsers = update.filter(u=>!oldRoom.includes(u));
                     let goneUsers = oldRoom.filter(u=>!update.includes(u));
@@ -850,8 +1003,7 @@ const withAuthentication = Component => {
             }
         }
         async subscribeToNewPrivateRooms() {
-            if (!this.mounted)
-                return;
+            if (!this.mounted) return;
             let currentlySubscribedTo = [];
             let newRoomsQuery = new Parse.Query("BreakoutRoom");
             newRoomsQuery.equalTo("conference", this.currentConference);
@@ -862,8 +1014,7 @@ const withAuthentication = Component => {
                 this.parseLivePrivateVideosSub.unsubscribe();
             }
             let res = await newRoomsQuery.find();
-            if (!this.mounted)
-                return;
+            if (!this.mounted) return;
             res.forEach(this.notifyUserOfChanges.bind(this));
 
             let newRooms = [];
@@ -875,29 +1026,30 @@ const withAuthentication = Component => {
                 fetchedIDs.push(room.id);
             }
 
+            assert(this.user);
             this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.user.getSessionToken());
-            this.parseLivePrivateVideosSub.on("update", async (newItem) => {
-                newItem = await this.populateMembers(newItem);
-                this.notifyUserOfChanges(newItem);
+            this.parseLivePrivateVideosSub.on("update", async (vid:BreakoutRoom) => {
+                vid = await this.populateMembers(vid);
+                this.notifyUserOfChanges(vid);
 
                 this.setState((prevState) => ({
-                    activePrivateVideoRooms: prevState.activePrivateVideoRooms.map(room => room.id == newItem.id ? newItem : room)
+                    activePrivateVideoRooms: prevState.activePrivateVideoRooms.map(room => room.id == vid.id ? vid : room)
                 }))
             });
-            this.parseLivePrivateVideosSub.on("create", async (vid) => {
+            this.parseLivePrivateVideosSub.on("create", async (vid:BreakoutRoom) => {
                 vid = await this.populateMembers(vid);
                 this.setState((prevState) => ({
                     activePrivateVideoRooms: [vid, ...prevState.activePrivateVideoRooms]
                 }))
             });
-            this.parseLivePrivateVideosSub.on("delete", (vid) => {
+            this.parseLivePrivateVideosSub.on("delete", (vid:BreakoutRoom) => {
                 this.setState((prevState) => ({
                     activePrivateVideoRooms: prevState.activePrivateVideoRooms.filter((v) => (
                         v.id != vid.id
                     ))
                 }));
             })
-            this.parseLivePrivateVideosSub.on("leave", (vid) => {
+            this.parseLivePrivateVideosSub.on("leave", (vid:BreakoutRoom) => {
                 this.setState((prevState) => ({
                     activePrivateVideoRooms: prevState.activePrivateVideoRooms.filter((v) => (
                         v.id != vid.id
@@ -907,11 +1059,12 @@ const withAuthentication = Component => {
             this.setState({videoRoomsLoaded: true});
         }
 
-        userHasWritePermission(object){
+        userHasWritePermission(object:Parse.Object){
             let acl = object.getACL();
+            assert(acl && this.user);
             if(acl.getWriteAccess(this.user))
                 return true;
-            if(this.state.roles.find(v => v.get('name') == this.state.currentConference.id+'-manager' || v.get('name') == this.state.currentConference.id+"-admin"))
+            if(this.state.roles.find((v:Role) => this.state.currentConference && (v.get('name') == this.state.currentConference.id+'-manager' || v.get('name') == this.state.currentConference.id+"-admin")))
                 return true;
             return false;
         }
@@ -922,8 +1075,8 @@ const withAuthentication = Component => {
             let _this = this;
             query.find().then((u)=>{
                 //convert to something that the dom will be happier with
-                let res = [];
-                let flairColors = {};
+                let res : AllFlairData[] = [];
+                let flairColors : Record<string, FlairUIData> = {};
                 for(let flair of u){
                     flairColors[flair.get("label")] = {color: flair.get("color"), tooltip: flair.get("tooltip")} ;
                     res.push({value: flair.get("label"), color: flair.get("color"), id: flair.id, tooltip: flair.get("tooltip"),
@@ -937,6 +1090,8 @@ const withAuthentication = Component => {
 
             });
 
+            // @ts-ignore   @Jon: Wants two arguments???
+            //Jon: If you want to ensure that there are always two arguments passed, the best way would be to pull the code out of refreshUser that handles the cases where they are undefined.
             this.refreshUser();
             this.mounted = true;
         }
@@ -965,14 +1120,15 @@ const withAuthentication = Component => {
                 return <div><Spin size="large"/>
                 </div>
             return (
-                <AuthUserContext.Provider value={this.state}>
-                    <Component {...this.props}  clowdrAppState={this.state} parseLive={this.state.parseLive} />
+                // @ts-ignore    Two problems here...??  @Jon
+                //Jon: I think that the Context needs to have the clowdrappstate as a type parameter? I'm not sure how to use contexts with react+typescript.
+                <AuthUserContext.Provider value={this.state}> <Component {...this.props}  clowdrAppState={this.state} parseLive={this.state.parseLive} />
                 </AuthUserContext.Provider>
             );
         }
     }
 
-    return WithAuthentication;
+    return WithClowdrState;
 };
 
-export default withAuthentication;
+export default withClowdrState;

@@ -1,10 +1,10 @@
 import React from "react";
 import ProgramSummary from "./ProgramSummary";
 import AuthUserContext from "../../../Session/context";
-import { ClowdrAppState } from "../../../../ClowdrTypes";
+import { ClowdrState } from "../../../../ClowdrTypes";
 
 interface ProgramSummaryProps {
-    auth: ClowdrAppState,
+    auth: ClowdrState,
 }
 
 const ProgramAdminArea = (props: ProgramSummaryProps) => (

@@ -5,10 +5,10 @@ import Parse from "parse"
 import {Button, Input, message, Space, Switch, Table, Tooltip} from "antd";
 import {SearchOutlined} from "@material-ui/icons";
 import Highlighter from 'react-highlight-words';
-import { ClowdrAppState, UserSessionToken } from "../../../ClowdrTypes";
+import { ClowdrState, UserSessionToken } from "../../../ClowdrTypes";
 
 interface UsersListProps {
-    auth: ClowdrAppState,
+    auth: ClowdrState,
 }
 
 interface ManagedUser {
@@ -121,14 +121,16 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 return {'role': role, 'users': ids}
             }))
         }
-        let roleUsers = await Promise.all(roleData);
-        // TS: BCP stopped here -- need to figure out what type find is returning!
+        let roleUsers : {'role': {'name': string}, 'users': number[]}[] = await Promise.all(roleData);
+        //Jon: Promise.all takes an array of promises and returns an array with the result of resolving each of those promises (in the same order). So, in this case, it is an array, where each element looks like this {'role': {'name': someName}, 'users': int[]}
+
         let {count, results} = (await parseUserQ.find()) as unknown as {count: number, results: any[]};
         nRetrieved = results.length;
         // @ts-ignore     Jon/Crista: Don't we need a user_id field also??
         //Jon: user_id is item.id is key in this situation.
-        // BCP: @Jon: Right now the field user_id is a required part of the UsersLisetState type; should it be optional?
+        // BCP: @ Jon: Right now the field user_id is a required part of the UsersLisetState type; should it be optional?
         // And by the way, "item" should probably be renamed "user"
+        // Jon: @Benjamin Feel free to refactor that as you see fit
         let allUsers: ManagedUser[] = results.map((item: QueryResult) => ({
             key: item.id,
             displayName: item.get("displayName"),
