@@ -85,6 +85,12 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             reg.set("email", values.email);
             reg.set("affiliation", values.affiliation);
             reg.set("country", values.country);
+            let acl = new Parse.ACL();
+            acl.setPublicWriteAccess(false);
+            acl.setPublicReadAccess(false);
+            acl.setRoleReadAccess(this.props.auth.currentConference.id+"-admin", true);
+            acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
+            reg.setACL(acl);
             reg.save().then((_: any) => { //TS: We don't need '_' here
                 // Make local changes
                 let newRegs = [reg, ...this.state.regs];

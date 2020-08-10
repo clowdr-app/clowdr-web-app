@@ -49,6 +49,12 @@ function addRow(row, conferenceID, existing, toSave) {
                 // Two required fields: email and conference ID
                 reg.set("email", row.email);
                 reg.set("conference", conferenceID);
+                let acl = new Parse.ACL();
+                acl.setPublicWriteAccess(false);
+                acl.setPublicReadAccess(false);
+                acl.setRoleReadAccess(conferenceID+"-admin", true);
+                acl.setRoleWriteAccess(conferenceID+"-admin", true);
+                reg.setACL(acl);
                 // Everything else is optional
                 if (row.first && row.last)
                     reg.set("name", row.first + " " + row.last);
