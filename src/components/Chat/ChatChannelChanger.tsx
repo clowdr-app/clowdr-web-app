@@ -145,7 +145,11 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
 
                 <Menu.SubMenu key="otherPublicChannels" title={<span>Other Channels{addChannelButton}</span>}>
 
-                    {this.state.allChannels.filter(chan => chan && chan.sid && !this.state.joinedChannels.includes(chan.sid)).map((chan) => {
+                    {
+                        this.state.allChannels.filter(chan => chan && chan.sid &&
+                            //@ts-ignore
+                        (chan.attributes && chan.attributes.category != 'socialSpace') &&
+                        !this.state.joinedChannels.includes(chan.sid)).map((chan) => {
                         let className = "personHoverable";
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"

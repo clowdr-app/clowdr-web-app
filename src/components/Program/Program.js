@@ -54,9 +54,7 @@ class Program extends React.Component {
         }
         let sessions = await this.props.auth.programCache.getProgramSessions(this);
         this.setState({ProgramSessions: sessions, loading: false});
-        if(this.state.sessions && this.state.sessions.length){
-            this.programLoaded();
-        }
+        this.programLoaded(sessions);
     }
 
     formatSessionsIntoTable(sessions){
@@ -83,7 +81,7 @@ class Program extends React.Component {
                         for (let programItem of session.get("items")) {
                             if(this.state.filterByStar && !this.state.starredItems.find(item=>item.id == programItem.id))
                                 continue;
-                            row.key = programItem.id;
+                            row.key = session.id+"-"+programItem.id;
                             row.programItem = programItem.id;
                             row.confKey = programItem.get("confKey");
                             row.item = programItem;
@@ -231,10 +229,10 @@ class Program extends React.Component {
         </div>
     }
 
-    programLoaded() {
+    programLoaded(sessions) {
         // if(this.state.loading){
-        //     let days = [... new Set(this.state.sessions.map((item)=>timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D")))];
-        //     this.setState({sessionDays: days})
+            let days = [... new Set(sessions.map((item)=>timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D")))];
+            this.setState({sessionDays: days})
         // }
     }
 }

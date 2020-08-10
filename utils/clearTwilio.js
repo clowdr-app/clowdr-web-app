@@ -23,6 +23,20 @@ async function getConfig(conference){
     config.twilio = Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
     config.twilioChat = config.twilio.chat.services(config.TWILIO_CHAT_SERVICE_SID);
 
+    if (!config.TWILIO_CHAT_SERVICE_SID) {
+        if(!config.twilio)
+            config.twilio = Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
+
+        let newChatService = await config.twilio.chat.services.create({friendlyName: 'clowdr_chat'});
+        let tokenConfig = new InstanceConfig();
+        tokenConfig.set("value", newChatService.sid);
+        tokenConfig.set("key", "TWILIO_CHAT_SERVICE_SID");
+        tokenConfig.set("instance", conference);
+        await tokenConfig.save({},{useMasterKey: true});
+        config.TWILIO_CHAT_SERVICE_SID = newChatService.sid;
+
+    }
+
     if (!config.TWILIO_CALLBACK_URL) {
         config.TWILIO_CALLBACK_URL = "https://clowdr.herokuapp.com/twilio/event"
     }
@@ -72,11 +86,39 @@ async function getConfig(conference){
 
 async function fixUsers() {
     let confQ = new Parse.Query(ClowdrInstance);
-    confQ.equalTo("conferenceName", "ICSE 2020")
+    confQ.equalTo("conferenceName", "ICFP 2020")
     return confQ.find({useMasterKey: true}).then(async (confs) => {
         for (let conf of confs) {
             let config = await getConfig(conf);
             // config.twilioChat.remove();
+            let spaceQ = new Parse.Query("SocialSpace");
+            spaceQ.equalTo("conference", conf);
+            let spaces = await spaceQ.find({useMasterKey: true});
+            for(let space of spaces){
+                if (!space.get("chatChannel")) {
+                    let chat = config.twilio.chat.services(config.TWILIO_CHAT_SERVICE_SID);
+                    try {
+                        let twilioChatRoom = await chat.channels.create({
+                            friendlyName: space.get("name"),
+                            uniqueName: "socialSpace-" + space.id,
+                            type: "public",
+                            attributes: JSON.stringify({
+                                category: "socialSpace",
+                                isGlobal: true,
+                                spaceID: space.id
+                            })
+                        });
+                        space.set("chatChannel", twilioChatRoom.sid);
+                        await space.save({}, {useMasterKey: true});
+                    }catch(err){
+                        console.log("Unble to create chat channel for social space:")
+                        console.log(err);
+                        console.trace();
+                    }
+
+                    console.log('[init]: chat channel is ' + space.get('chatChannel'));
+                }
+            }
         }
     });
 }

@@ -23,7 +23,7 @@ class CollapsedChatDisplay extends React.Component{
             this.setState({title: chat.channel.sid})
             return;
         }
-        if (chat.attributes.mode == "directMessage") {
+        if (chat.attributes.mode == "directMessage" && chat.conversation) {
             let p1 = chat.conversation.get("member1");
             let p2 = chat.conversation.get("member2");
             let profileID = p1.id;

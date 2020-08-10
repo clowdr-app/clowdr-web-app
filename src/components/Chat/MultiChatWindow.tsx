@@ -118,6 +118,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
                                                               className="multiChatWindowFrame"
                              axis={"both"}
         >
+            <div className="multiChatWindowHeader">Chat</div>
             <div
                 className="multiChatWindowContent"
         >

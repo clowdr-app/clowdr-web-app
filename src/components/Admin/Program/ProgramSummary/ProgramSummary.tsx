@@ -117,9 +117,13 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
             let sessionQ = new Parse.Query("ProgramSession");
             sessionQ.equalTo("conference", this.currentConference);
             sessionQ.limit(10000);
-            let [items, persons, tracks, rooms, sessions] = await Promise.all([itemsQ.find(),
-                personsQ.find(), trackQ.find(), roomQ.find(), sessionQ.find()]);
-            await Parse.Object.destroyAll(items.concat(persons).concat(tracks).concat(rooms).concat(sessions));
+            let eventQ = new Parse.Query("ProgramSessionEvent");
+            eventQ.equalTo("conference", this.currentConference);
+            eventQ.limit(10000);
+
+            let [items, persons, tracks, rooms, sessions, events] = await Promise.all([itemsQ.find(),
+                personsQ.find(), trackQ.find(), roomQ.find(), sessionQ.find(), eventQ.find()]);
+            await Parse.Object.destroyAll(items.concat(persons).concat(tracks).concat(rooms).concat(sessions).concat(events));
             message.info("Deleted entire program");
         } catch(err) {
             message.error("Unable to delete program");
