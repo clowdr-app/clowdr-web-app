@@ -2,6 +2,7 @@ import React from "react";
 import {AuthUserContext} from "../Session";
 import {Badge, Button, Form, Input, message, Modal, Select, Skeleton, Tooltip} from "antd"
 import ChatFrame from "../Chat/ChatFrame";
+import MultiChatWindow from "../Chat/MultiChatWindow"
 import {CloseOutlined, MinusOutlined, PlusOutlined, VideoCameraAddOutlined} from "@ant-design/icons"
 import Parse from "parse";
 
@@ -147,23 +148,12 @@ class BottomChat extends React.Component {
                 </Form.Item>
             }
             return (
-                <div id="bottom-chat-container" style={this.props.style}><div id="bottom-chat-button-bar">{
-                    this.state.chats.map((sid)=>
-                        (<BottomChatWindow key={sid} open={this.state[sid]}
-                                           sid={sid}
-                                           auth={this.props.auth}
-                                           parentRef={this}
-                                           addUser={this.addUser.bind(this, sid)}
-                                           toVideo={this.toVideo.bind(this, sid)}
-                                           closeWindow={() => this.removeChannel(sid)}
-                                           toggleOpen={() => {
-                                               this.setState((prevState) => ({[sid]: !prevState[sid]}))
-                        }}
-                        chatClient={this.props.auth.chatClient}
-                        />)
-                    )
-                }
-                </div>
+                <><MultiChatWindow                                            parentRef={this}
+                                                                              addUser={this.addUser.bind(this)}
+                                                                              toVideo={this.toVideo.bind(this)}
+                                                                              closeWindow={(sid) => this.removeChannel(sid)}
+                />
+                <div id="bottom-chat-container" style={this.props.style}>
                     <Modal
                         zIndex="200"
                         title="Add a User to this Chat"
@@ -286,6 +276,7 @@ class BottomChat extends React.Component {
                         </Form>
                     </Modal>
                 </div>
+                    </>
             )
         }
         return <></>

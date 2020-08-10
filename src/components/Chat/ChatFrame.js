@@ -10,6 +10,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import {CloseOutlined} from "@material-ui/icons";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
+import InfiniteScroll from 'react-infinite-scroller';
 
 const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
@@ -110,7 +111,7 @@ class ChatFrame extends React.Component {
             if (this.currentSID != sid) {
                 return;//raced with another update
             }
-            this.activeChannel.getMessages(300).then((messages) => {
+            this.activeChannel.getMessages(30).then((messages) => {
                 if (this.currentSID != sid)
                     return;
                 this.messagesLoaded(this.activeChannel, messages)
@@ -379,7 +380,7 @@ class ChatFrame extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         let isDifferentChannel = this.props.sid != this.sid;
 
-        if(this.state.visible!= this.props.visible){
+        if(prevProps.visible!= this.props.visible){
             if(this.props.visible && this.unread){
                 //update unreads...
                 this.activeChannel.setAllMessagesConsumed();
@@ -396,6 +397,7 @@ class ChatFrame extends React.Component {
 
     loadMoreMessages() {
         if (this.activeChannel && !this.loadingMessages) {
+            console.log(this.state.loadingMessages)
             this.loadingMessages = true;
             let intendedChanelSID = this.activeChannel.sid;
             this.setState({loadingMessages: true});
@@ -404,6 +406,8 @@ class ChatFrame extends React.Component {
                     this.loadingMessages = false;
                     return;
                 }
+                console.log(messagePage)
+                console.log(messagePage.hasPrevPage)
                 this.setState({
                     hasMoreMessages: messagePage.hasPrevPage
                     //messagePage.hasPrevPage
@@ -421,6 +425,8 @@ class ChatFrame extends React.Component {
                 // this.messagesLoaded(this.activeChannel, messages)
             });
         }
+        // console.log("Load mor messages called")
+        // this.setState({hasMoreMessages: false});
 
     }
 
@@ -438,27 +444,21 @@ class ChatFrame extends React.Component {
                     {/*<Layout>*/}
                         <div
                             className="embeddedChatListContainer"
-                        //     style={{
-                        //     backgroundColor: "#f8f8f8",
-                        //     overflowY: "auto",
-                        //     overflowWrap: "break-word",
-                        //     position: "fixed",
-                        //     top: 0,
-                        //     bottom: "50px",
-                        //     paddingLeft: "10px",
-                        //     display: 'flex',
-                        //     flexDirection: 'column-reverse'
-                        // }}
                         >
                             {/*<div style={{ height:"calc(100vh - "+(topHeight + 20)+"px)", overflow: "auto"}}>*/}
                             {/*<Affix>*/}
                             {/*    <Picker onSelect={this.reactTo}/>*/}
                             {/*</Affix>*/}
-                            {/*<InfiniteScroll*/}
-                            {/*    getScrollParent={() => this.scrollParentRef}*/}
+                            <InfiniteScroll
+                                // getScrollParent={() => this.scrollParentRef}
+                                isReverse={true}
+                                useWindow={false}
 
-                            {/*    loadMore={this.loadMoreMessages.bind(this)} hasMore={!this.state.loadingMessages && this.state.hasMoreMessages}*/}
-                            {/*style={{overflow:"auto", display:"flex"}}>*/}
+                                style={{width: "100%"}}
+                                loadMore={this.loadMoreMessages.bind(this)} hasMore={!this.state.loadingMessages && this.state.hasMoreMessages}
+
+                                // className="embeddedChatListContainer"
+                            >
                             <List loading={this.state.chatLoading}
                                   style={{width: "100%"}}
                                   dataSource={this.state.groupedMessages} size="small"
@@ -510,17 +510,9 @@ class ChatFrame extends React.Component {
                                           )
                                       }
                                   }
-                                  // style={{
-                                  //     width: this.state.siderWidth,
-                                  //     // height: 'calc(100vh - '+(topHeight+90)+"px)",
-                                  //     overflow: 'auto',
-                                  //     display: 'flex',
-                                  //     flexDirection: 'column-reverse',
-                                  //     border: '1px solid #FAFAFA'
-                                  // }}
                             >
                             </List>
-                            {/*</InfiniteScroll>*/}
+                            </InfiniteScroll>
                         </div>
             {
                 this.state.readOnly? <></> :  <div

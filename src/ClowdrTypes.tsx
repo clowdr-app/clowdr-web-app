@@ -4,6 +4,8 @@ import * as Parse from 'parse';
 import ProgramCache from "./components/Session/ProgramCache";
 import ChatClient from "./classes/ChatClient";
 import {History} from "history";
+import Conversation from "./classes/Conversation";
+import {Channel} from "twilio-chat/lib/channel";
 // Is this one needed?
 // import ProgramItem from "./classes/ProgramItem";
 
@@ -45,6 +47,23 @@ export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     children: React.ReactNode;
 }
 
+export interface JoinedChatChannel {
+    attributes: any; //json object we store in twilio
+    conversation?: Conversation;
+    members: string[]; //list of userProfileIDs
+    channel: Channel;
+}
+export interface ChatChannelConsumer{
+    setJoinedChannels(channels: string[]): void;
+    setAllChannels(channels: Channel[]): void;
+}
+export interface MultiChatApp{
+    registerChannelConsumer(consumer: ChatChannelConsumer): void;
+    openChat(sid: string, dontBringIntoFocus: boolean): void;
+    registerUnreadConsumer(sid: string, consumer: any): void;
+    cancelUnreadConsumer(sid: string, consumer: any): void;
+
+}
 /* 
 
 Some more fields that might be needed (copied from withAuthentication.js -- are they relevant?)

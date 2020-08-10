@@ -141,7 +141,7 @@ Parse.Cloud.define("zoom-meeting-register", async (request) => {
     let roomQ = new Parse.Query("ZoomRoom");
     let room = await roomQ.get(roomID, {useMasterKey: true});
     if (room) {
-        if (!userInRoles(request.user, [room.get("conference").id + "-conference"])) {
+        if (!await userInRoles(request.user, [room.get("conference").id + "-conference"])) {
             throw "You are not registered to attend this conference";
         }
         let joinURL = undefined;

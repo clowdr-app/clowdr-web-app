@@ -307,59 +307,6 @@ class ContextualActiveUsers extends React.Component {
                 </div>
 
                 {programRoomSpecificContent}
-                <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title="Any chats that you take part in are shown here. Click a chat to expand it. Room-wide chats (shown on the right sidebar) can only be shown if you enter that room">Chats</Tooltip></Divider>
-                <Menu mode="inline"
-                      className="activeRoomsList"
-                    // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
-                      style={{
-                          // height: "100%",
-                          // overflow: 'auto',
-                          // display: 'flex',
-                          // flexDirection: 'column-reverse',
-                          border: '1px solid #FAFAFA'
-
-                      }}
-                      inlineIndent={0}
-                      selectedKeys={selectedKeys}
-                      defaultOpenKeys={['firstChats']}
-                      forceSubMenuRender={true}
-                      expandIcon={null}
-                >
-                    <Menu.SubMenu key="firstChats" expandIcon={<span></span>}>
-                        {
-                            this.state.chats.length == 0 ? <Menu.Item className="personHoverable">You are not in any chats</Menu.Item> : <></>
-                        }
-                        {this.state.chats.slice(0,10).map((sid) => {
-                            let className = "personHoverable";
-                            // if (this.state.filteredUser == user.id)
-                            //     className += " personFiltered"
-                            // BCP: Rats -- my attempt to add a Tooltip does not seem to work :-(
-                            // BCP: also BTW, className={className} does not look right
-                            return <Menu.Item key={sid} className={className}>
-                                <Tooltip mouseEnterDelay={0.5} title="Click to open messages">
-                                <CollapsedChatDisplay sid={sid} unread={this.state.unread[sid]}/>
-                                {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
-                            </Tooltip></Menu.Item>
-                        })
-                        }
-                    </Menu.SubMenu>{
-                    this.state.chats.length > 10 ?
-                        <Menu.SubMenu key="restChats" title={<div className="overflowHelper">{this.state.chats.length-10} more</div>}>
-
-                            {this.state.chats.slice(10).map((sid) => {
-                                let className = "personHoverable";
-                                // if (this.state.filteredUser == user.id)
-                                //     className += " personFiltered"
-                                return <Menu.Item key={sid} className={className}>
-                                    <CollapsedChatDisplay sid={sid}  />
-
-                                    {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
-                                </Menu.Item>
-                            })
-                            }
-                        </Menu.SubMenu>
-                        :<></>}
-                </Menu>
 
                 {programInfo}
 

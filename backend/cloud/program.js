@@ -46,7 +46,7 @@ Parse.Cloud.define("create-obj", async (request) => {
     delete data.clazz;
     console.log(`[create obj]: request to create ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
+    if (await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[create obj]: user has permission to create obj');
 
         let Clazz = Parse.Object.extend(clazz);
@@ -82,7 +82,7 @@ Parse.Cloud.define("update-obj", async (request) => {
     delete data.conference;
     console.log(`[update obj]: request to update ${data.id} of class ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
+    if (await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[update obj]: user has permission to update obj');
         let Clazz = Parse.Object.extend(clazz);
         let obj = await new Parse.Query(Clazz).get(id);
@@ -111,7 +111,7 @@ Parse.Cloud.define("delete-obj", async (request) => {
     let clazz = request.params.clazz;
     console.log(`[delete obj]: request to delete ${id} of class ${clazz} in ${confID}`);
 
-    if (userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
+    if (await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
         console.log('[delete obj]: user has permission to delete obj');
         let Clazz = Parse.Object.extend(clazz);
         let obj = await new Parse.Query(Clazz).get(id);
@@ -1011,7 +1011,7 @@ Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
     let room = request.object;
     if(room.isNew()) {
         let confID = room.get("conference");
-        if (!confID || !userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
+        if (!confID || !await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
             throw "You do not have permission to create a ZoomRoom for this conference";
         }
         let acl = new Parse.ACL();

@@ -1,8 +1,8 @@
 import React from "react";
-import {Badge, Button, Skeleton, Tooltip} from "antd";
+import {Badge, Button, Popconfirm, Popover, Skeleton, Space} from "antd";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
-import {CloseOutlined, } from "@ant-design/icons"
+import Parse from "parse";
 
 class CollapsedChatDisplay extends React.Component{
     constructor(props){
@@ -19,7 +19,11 @@ class CollapsedChatDisplay extends React.Component{
             return <Skeleton.Input active style={{width: '20px', height: '1em'}}/>;
         }
         this.titleSet = true;
-        if (chat.attributes && chat.attributes.mode == "directMessage") {
+        if(!chat.attributes){
+            this.setState({title: chat.channel.sid})
+            return;
+        }
+        if (chat.attributes.mode == "directMessage") {
             let p1 = chat.conversation.get("member1");
             let p2 = chat.conversation.get("member2");
             let profileID = p1.id;
@@ -33,8 +37,11 @@ class CollapsedChatDisplay extends React.Component{
             this.setState({title: "Announcements"});
         }
         else if(chat.attributes.category == "programItem"
-            || chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group") {
-            this.setState({title: chat.channel.friendlyName});
+            || chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group"
+        || chat.attributes.category =="public-global"
+        ) {
+            if(this.state.title != chat.channel.friendlyName)
+                this.setState({title: chat.channel.friendlyName});
         }
         else{
             this.setState({title: chat.channel.sid});
@@ -42,8 +49,6 @@ class CollapsedChatDisplay extends React.Component{
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(this.state.unread != this.props.unread)
-            this.setState({unread: this.props.unread})
         if(this.props.auth.chatClient.joinedChannels[this.state.sid] && !this.titleSet){
             this.getChatTitle(this.props.auth.chatClient.joinedChannels[this.state.sid])
             if(!this.listenerActivated)
@@ -65,16 +70,23 @@ class CollapsedChatDisplay extends React.Component{
     componentWillUnmount() {
         if(this.props.auth.chatClient.joinedChannels[this.state.sid])
             this.props.auth.chatClient.joinedChannels[this.state.sid].channel.off("updated",this.updateTitle.bind(this));
+        this.props.auth.chatClient.multiChatWindow.cancelUnreadConsumer(this.props.sid, this);
     }
 
     async componentDidMount() {
         this.mounted = true;
-        this.getChatTitle(this.props.auth.chatClient.joinedChannels[this.state.sid])
-        if(this.props.auth.chatClient.joinedChannels[this.state.sid]){
-            this.listenerActivated = true;
-            this.props.auth.chatClient.joinedChannels[this.state.sid].channel.on("updated",this.updateTitle.bind(this));
+        if(this.props.channel){
+            this.getChatTitle({attributes: this.props.channel.attributes,
+            channel: this.props.channel});
+        }else {
+            this.getChatTitle(this.props.auth.chatClient.joinedChannels[this.state.sid])
+            if (this.props.auth.chatClient.joinedChannels[this.state.sid]) {
+                this.listenerActivated = true;
+                this.props.auth.chatClient.joinedChannels[this.state.sid].channel.on("updated", this.updateTitle.bind(this));
+            }
         }
 
+        this.props.auth.chatClient.multiChatWindow.registerUnreadConsumer(this.props.sid, this);
         if(!this.mounted)
             return;
     }
@@ -95,7 +107,36 @@ class CollapsedChatDisplay extends React.Component{
     render() {
         if (!this.state.title)
             return <Skeleton.Input active style={{width: '100px', height: '1em'}}/>
-       return <div
+        let buttons = [];
+        buttons.push(<Button type="primary"
+                             key="leaveChat"
+                             className="smallButton"
+                             loading={this.state.removeInProgress}
+                             onClick={
+                                 // this.props.toggleOpen
+                                 this.destroyChat.bind(this)
+                             }
+        >Leave Channel</Button>)
+        if(this.props.auth.permissions.includes("moderator")){
+            buttons.push(<Popconfirm
+                key="deleteChat"
+                onConfirm={async ()=>{
+                    let res = await Parse.Cloud.run("chat-destroy", {
+                        conference: this.props.auth.currentConference.id,
+                        sid: this.state.sid
+                    });
+                }}
+                title="Are you sure you want to delete this channel and all of its messages? This can not be undone."
+            ><Button type="primary"
+                                 key="deleteChat"
+                                 className="smallButton"
+                                 danger
+                                 loading={this.state.removeInProgress}
+            >Delete Channel</Button></Popconfirm>)
+        }
+        let popoverContent = <Space>{buttons}</Space>;
+        return <Popover key={this.state.sid} mouseEnterDelay={0.5} placement="topRight"
+       content={popoverContent}><div
            className="collapsedChatDisplay"
             key={this.state.sid}
             >
@@ -104,18 +145,7 @@ class CollapsedChatDisplay extends React.Component{
                onClick={()=>{this.props.auth.chatClient.openChat(this.state.sid)}}
            ><Badge overflowCount={9} className="chat-unread-count" count={this.state.unread} /> {this.state.title}
            </div>
-           <div className="inlineactions">
-                           <Tooltip mouseEnterDelay={0.5} title="Close this chat. You will stop receiving notifications and lose access to this chat if you close it.">
-                               <Button type="text"
-                                       className="smallButton"
-                                                                                          loading={this.state.removeInProgress}
-                                                                                          onClick={
-                                                                                              // this.props.toggleOpen
-                                                                                              this.destroyChat.bind(this)
-                                                                                          }
-                               >X</Button></Tooltip>
-</div>
-        </div>
+       </div></Popover>
 
     }
 }

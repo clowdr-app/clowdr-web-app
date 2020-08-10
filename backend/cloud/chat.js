@@ -208,7 +208,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
     if(profile) {
         let config = await getConfig(conf);
         let originalChannel = await config.twilioChat.channels(sid).fetch();
-        if (originalChannel.attributes.category == 'programItem') {
+        if (originalChannel.attributes && originalChannel.attributes.category == 'programItem') {
             return {
                 status: "ok",
                 room: originalChannel.attributes.breakoutRoom
@@ -316,7 +316,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                 parseRoom.set("title", roomName);
                 parseRoom.set("conference", conf);
                 parseRoom.set("twilioID", twilioRoom.sid);
-                parseRoom.set("isPrivate", true);
+                parseRoom.set("isPrivate", false);
                 parseRoom.set("persistence", persistence);
                 parseRoom.set("mode", mode);
                 parseRoom.set("capacity", maxParticipants);
@@ -551,7 +551,27 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
     return null;
 
 });
+
+async function userInRoles(user, allowedRoles) {
+    const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
+    return roles.find(r => allowedRoles.find(allowed => r.get("name") == allowed));
+}
+
 Parse.Cloud.define("chat-destroy", async (request) => {
+    let confID = request.params.conference;
+    let sid = request.params.sid;
+    try {
+        if (!await userInRoles(request.user, [confID + "-moderator", confID + "-admin", confID + "-manager"])) {
+            throw "You are not permitted to delete this chat";
+        }
+        let conf = new ClowdrInstance();
+        conf.id = confID;
+        let config = await getConfig(conf);
+        await config.twilioChat.channels(sid).remove();
+        return {status: "OK"}
+    } catch (err) {
+        console.log(err);
+    }
 
 });
 Parse.Cloud.define("chat-createDM", async (request) => {

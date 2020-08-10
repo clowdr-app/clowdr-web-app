@@ -17,6 +17,7 @@ export default class ChatClient{
         this.channelWaiters = {};
     }
 
+
     async openChatAndJoinIfNeeded(sid){
         let channels = this.joinedChannels;
         let found = channels[sid];
@@ -119,6 +120,12 @@ export default class ChatClient{
         }
     }
 
+    initMultiChatWindow(chatWindow){
+        this.multiChatWindow = chatWindow;
+        chatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
+        chatWindow.setAllChannels(this.channels);
+    }
+
     initBottomChatBar(chatBar){
         this.chatBar = chatBar;
         chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes && c.attributes.category != "socialSpace").map(c=>c.channel.sid)});
@@ -145,15 +152,18 @@ export default class ChatClient{
         return this.chatClientPromise;
     }
 
-    openChat(chatSID, isInitialLoad) {
+    async openChat(chatSID, isInitialLoad) {
         if(!chatSID){
             console.log("No chat sid!")
             console.trace();
         }
+        if(!Object.keys(this.joinedChannels).includes(chatSID)){
+            await this.joinAndGetChannel(chatSID);
+        }
         if(!this.chats.includes(chatSID))
             this.chats.push(chatSID);
-        if (this.chatBar)
-            this.chatBar.openChat(chatSID, isInitialLoad);
+        if (this.multiChatWindow)
+            this.multiChatWindow.openChat(chatSID, isInitialLoad);
         if(this.chatList)
             this.chatList.addChannel(chatSID);
     }
@@ -233,12 +243,33 @@ export default class ChatClient{
         }
         let token = await this.getToken(user, conference);
         let twilio = await Chat.create(token);
-        let paginator = await twilio.getSubscribedChannels();
+        let [subscribedChannelsPaginator, allChannelDescriptors] = await Promise.all([twilio.getSubscribedChannels(),
+        twilio.getPublicChannelDescriptors()]);
         let promises = [];
-        for (let channel of paginator.items) {
-            promises.push(this.getChannelInfo(channel));
+        while (true) {
+            for (let channel of subscribedChannelsPaginator.items) {
+                promises.push(this.getChannelInfo(channel));
+            }
+            if (subscribedChannelsPaginator.hasNextPage) {
+                subscribedChannelsPaginator = await subscribedChannelsPaginator.nextPage();
+            } else {
+                break;
+            }
         }
-        let channelsArray = await Promise.all(promises);
+        let channelsToFetch = [];
+        while(true) {
+            for (let cd of allChannelDescriptors.items) {
+                channelsToFetch.push(cd.getChannel());
+            }
+            if(allChannelDescriptors.hasNextPage){
+                allChannelDescriptors = await allChannelDescriptors.nextPage();
+            }else{
+                break;
+            }
+        }
+        let [joinedChannels, allChannels] = await Promise.all([Promise.all(promises), Promise.all(channelsToFetch)]);
+        this.channels = allChannels;
+
         for(let sid of Object.keys(this.joinedChannels)){
             this.subscribeToChannel(sid);
         }
@@ -256,32 +287,51 @@ export default class ChatClient{
                     .filter(c => c.attributes && c.attributes.category != "socialSpace")
                     .map(c => c.channel.sid)
             });
+        if(this.multiChatWindow) {
+            this.multiChatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
+            this.multiChatWindow.setAllChannels(this.channels);
+        }
 
         twilio.on("channelAdded", (channel)=>{
+            console.log("Channel added")
+            console.log(channel);
             this.channels.push(channel);
+            this.multiChatWindow.setAllChannels(this.channels);
+            console.log(channel);
+            if(channel.attributes && channel.attributes.isAutoJoin){
+                if(!Object.keys(this.joinedChannels).includes(channel.sid)){
+                    this.joinAndGetChannel(channel.sid)
+                }
+            }
             // this.channelListeners.forEach(v=> v.channelAdded(channel));
         });
         twilio.on("channelRemoved", (channel) => {
             this.channels = this.channels.filter((v) => v.sid != channel.sid);
             this.leaveChat(channel.sid);
             this.unSubscribeToChannel(channel);
-
+            this.multiChatWindow.setAllChannels(Object.keys(this.channels));
             // this.channelListeners.forEach(v => v.channelRemoved(channel));
         });
         twilio.on("channelJoined", async (channel) => {
             let channelInfo = await this.getChannelInfo(channel);
-            if(channelInfo){
+            if (channelInfo) {
+                if (this.multiChatWindow) {
+                    this.multiChatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
+                }
                 this.subscribeToChannel(channel.sid);
-                if(channelInfo.attributes.category != "socialSpace"){
+                if (channelInfo.attributes.category != "socialSpace"){
                     this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
                 }
             }
             // this.channelListeners.forEach(v => v.channelJoined(channel));
         });
         twilio.on("channelLeft", (channel) => {
-            this.joinedChannels[channel.sid] = undefined;
+            delete this.joinedChannels[channel.sid];
             this.leaveChat(channel.sid);
-
+            console.log("Left " + channel.sid)
+            if (this.multiChatWindow){
+                this.multiChatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
+            }
             this.unSubscribeToChannel(channel);
             // this.channelListeners.forEach(v => v.channelLeft(channel));
         });
@@ -298,6 +348,13 @@ export default class ChatClient{
             })
         }
         this.twilio = twilio;
+        for(let channel of this.channels){
+            if(channel.attributes && channel.attributes.isAutoJoin){
+                if(!Object.keys(this.joinedChannels).includes(channel.sid)){
+                    this.joinAndGetChannel(channel.sid)
+                }
+            }
+        }
         return this.twilio;
     }
     addChannelListener(listener) {

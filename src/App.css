@@ -370,9 +370,9 @@ div.availabilityOptionsOpen  span.availabilityOption{
     margin: 0;
 }
 #bottom-chat-container {
-    position: fixed;
-    bottom: 0;
-    height: 25px;
+    /*position: fixed;*/
+    /*bottom: 0;*/
+    /*height: 25px;*/
 }
 #bottom-chat-button-bar{
     overflow-x: hidden;
@@ -416,6 +416,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     /*max-height: 30px;*/
     flex-grow: 100;
     flex-shrink: 100;
+    width: 100%;
     /*position: fixed;*/
     /*bottom: 50px;*/
 }
@@ -631,4 +632,138 @@ span.ant-divider-inner-text {
 .leave-zoom-button{
     position: absolute;
     right: 0;
+}
+.multiChatWindow {
+    position: fixed;
+    /*left: 300px;*/
+    /*width: 450px;*/
+    bottom: 0;
+    overflow: hidden;
+
+    padding-left: 300px;
+}
+.multiChatWindowContent{
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    height: 100%;
+}
+.multiChatChannelChanger{
+    min-width: 100px;
+    max-width: 200px;
+    flex-grow: 1;
+    background-color: #bae7ff;
+    height: 100%;
+}
+.multiChatWindowChatArea{
+    background-color: #FAFAFA;
+    /*width: 100%;*/
+    /*height: 100%;*/
+    flex-grow: 4;
+    height: 100%;
+
+    flex-direction: column;
+    display: flex;
+}
+.multiChatMessageArea{
+
+}
+.multiChatMessageEntry{
+
+}
+.multiChatWindowFrame{
+    border: 2px solid #1890FF;
+
+    box-sizing: border-box;
+}
+.react-resizable {
+    position: relative;
+}
+.react-resizable-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    box-sizing: border-box;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDYiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iNnB4Ij48ZyBvcGFjaXR5PSIwLjMwMiI+PHBhdGggZD0iTSA2IDYgTCAwIDYgTCAwIDQuMiBMIDQgNC4yIEwgNC4yIDQuMiBMIDQuMiAwIEwgNiAwIEwgNiA2IEwgNiA2IFoiIGZpbGw9IiMwMDAwMDAiLz48L2c+PC9zdmc+');
+    background-position: bottom right;
+    padding: 0 3px 3px 0;
+}
+.react-resizable-handle-sw {
+    bottom: 0;
+    left: 0;
+    cursor: sw-resize;
+    transform: rotate(90deg);
+}
+.react-resizable-handle-se {
+    bottom: 0;
+    right: 0;
+    cursor: se-resize;
+}
+.react-resizable-handle-nw {
+    top: 0;
+    left: 0;
+    cursor: nw-resize;
+    transform: rotate(180deg);
+}
+.react-resizable-handle-ne {
+    top: 0;
+    right: 0;
+    cursor: ne-resize;
+    transform: rotate(270deg);
+}
+.react-resizable-handle-w,
+.react-resizable-handle-e {
+    top: 50%;
+    margin-top: -10px;
+    cursor: ew-resize;
+}
+.react-resizable-handle-w {
+    left: 0;
+    transform: rotate(135deg);
+}
+.react-resizable-handle-e {
+    right: 0;
+    transform: rotate(315deg);
+}
+.react-resizable-handle-n,
+.react-resizable-handle-s {
+    left: 50%;
+    margin-left: -10px;
+    cursor: ns-resize;
+}
+.react-resizable-handle-n {
+    top: 0;
+    transform: rotate(225deg);
+}
+.react-resizable-handle-s {
+    bottom: 0;
+    transform: rotate(45deg);
+}
+.hiddenChat{
+    display: none;
+}
+.visibleChat{
+    /*position:fixed;*/
+    width: 100%;
+    height: 100%;
+    bottom: 0;
+    border: 2px solid #1890FF;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+
+    box-sizing: border-box;
+}
+#channelChanger{
+    height: 100%;
+    overflow-y: auto;
+}
+#channelChanger .ant-menu-sub.ant-menu-inline > .ant-menu-item{
+    line-height: 1.1;
+    height:auto;
+}
+.small-icon-button{
+
 }
