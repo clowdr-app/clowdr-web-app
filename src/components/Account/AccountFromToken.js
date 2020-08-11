@@ -94,8 +94,7 @@ class SlackToVideo extends React.Component {
             let userID = this.props.match.params.userID;
             let res = await Parse.Cloud.run("login-resendInvite", {
                 userID: userID,
-                confID: process.env.REACT_APP_DEFAULT_CONFERENCE
-
+                confID: this.props.clowdrAppState.helpers.getDefaultConferenceName()
             });
         }catch(err){
             console.log(err);

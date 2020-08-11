@@ -165,7 +165,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
                 unmountProfileDisplay: this.unmountProfileDisplay.bind(this),
                 updateMyPresence: this.updateMyPresence.bind(this),
-                userHasWritePermission: this.userHasWritePermission.bind(this)
+                userHasWritePermission: this.userHasWritePermission.bind(this),
+                getDefaultConferenceName: this.getDefaultConferenceName.bind(this)
             }
 
             this.state = {   // (JS usage question: Should we be initializing things with null, or undefined???)

@@ -71,7 +71,7 @@ class SignIn extends Component {
         console.log(process.env)
         let res = await Parse.Cloud.run("reset-password", {
             email: this.state.email,
-            confID: process.env.REACT_APP_DEFAULT_CONFERENCE
+            confID: this.props.clowdrAppState.helpers.getDefaultConferenceName()
         });
         if(res.status == "error")
             message.error(res.message);
