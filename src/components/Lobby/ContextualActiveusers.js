@@ -95,17 +95,9 @@ class ContextualActiveUsers extends React.Component {
     }
 
     removeChannel(sid) {
-        this.setState(
-            (prevState) => ({
-                chats: prevState.chats.filter(c => c != sid)
-            })
-        )
     }
 
     addChannel(sid) {
-        this.setState((prevState) => ({
-            chats: [sid, ...prevState.chats.filter(c => c != sid)]
-        }))
     }
 
     joinCall(room) {

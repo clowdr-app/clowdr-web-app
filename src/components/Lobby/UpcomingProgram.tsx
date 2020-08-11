@@ -96,9 +96,10 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     dateSorter(a: ProgramSession, b:ProgramSession) {
-        var timeA = a.get("startTime") ? a.get("startTime") : new Date();
-        var timeB = b.get("startTime") ? b.get("startTime") : new Date();
-        return timeA > timeB ? 1 : timeA == timeB ? a.get("title").localCompare(b.get("title")) : -1;
+        let now = new Date().getTime();
+        var timeA = a.get("startTime") ? a.get("startTime").getTime() : now;
+        var timeB = b.get("startTime") ? b.get("startTime").getTime() : now;
+        return timeA > timeB ? 1 : timeA == timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
     }
 
     render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {
