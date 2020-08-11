@@ -114,6 +114,23 @@ export default class ProgramCache {
         return this._dataById['ProgramItem'][id];
     }
 
+    async getProgramSessionEvent(id, component){
+        let items = await this.getProgramSessionEvents();
+        if(component) {
+            if (!this._updateSubscribers['ProgramSessionEvent'])
+                this._updateSubscribers['ProgramSessionEvent'] = {};
+            if (!this._updateSubscribers['ProgramSessionEvent'][id])
+                this._updateSubscribers['ProgramSessionEvent'][id] = [];
+            this._updateSubscribers['ProgramSessionEvent'][id].push(component);
+        }
+        return this._dataById['ProgramSessionEvent'][id];
+    }
+    async getProgramSession(id){
+        let items = await this.getProgramSessions();
+        return this._dataById['ProgramSession'][id];
+    }
+
+
     async getProgramItemByConfKey(confKey, component){
         let items = await this.getProgramItems();
         let item = items.find(v => v.get("confKey")==confKey);
@@ -170,6 +187,10 @@ export default class ProgramCache {
     async getProgramItems(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("ProgramItem",
             // ['track','breakoutRoom','programSession'],
+            objToSetStateOnUpdate);
+    }
+    async getProgramSessionEvents(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("ProgramSessionEvent",
             objToSetStateOnUpdate);
     }
     async getProgramSessions(objToSetStateOnUpdate) {

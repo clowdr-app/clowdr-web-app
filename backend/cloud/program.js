@@ -714,7 +714,7 @@ Parse.Cloud.beforeSave("ProgramItemAttachment", async (request) => {
         let programItem = attachment.get("programItem");
         await programItem.fetch();
         request.context={isNew: true};
-        if(!programItem.getACL().getWriteAccess(request.user)){
+        if(!request.master && !programItem.getACL().getWriteAccess(request.user)){
             try {
                 await programItem.save({}, {sessionToken: request.user.getSessionToken()});
             } catch (err) {
