@@ -10,35 +10,75 @@ Manual](https://docs.google.com/document/d/1S-pNNqjA4RjQ8fn2i1Z2998VFn9bSwV4adOT
 for instructions on how to use Clowdr as a conference participant.
 
 # Information for Conference Organizers
-This repository contains the source code for Clowdr. If you are interested
+
+Please see the [Clowdr Conference Organizer's
+Manual](https://docs.google.com/document/d/1-9Rbt3KnPYUTO2cz-rAPhczw8pkozbWMaBGzfPAT5Lo)
+for instructions and answers to frequently asked questions about running
+Clowdr.
+
+If you are interested
 in using Clowdr for your event, there is no need for you to download any
 code or run your own server (unless you want to!). We can host your backend
 server for free; the only costs to your conference are for streaming video (you'll need accounts with Zoom and Twilio). Clowdr has been battle-tested by thousands of users already this year at [PLDI](https://pldi20.sigplan.org/), [ICSE](https://2020.icse-conferences.org/) and [ISSTA](https://conf.researchr.org/home/issta-2020). In August, [VL/HCC](https://conf.researchr.org/home/vlhcc2020) and [ICFP](https://icfp20.sigplan.org/) plan to use Clowdr. As we gain deployment experience, we hope to offer conference organizers a one-click installation of Clowdr. However, in the meantime, if you are considering Clowdr for your virtual conference, please email us at [hello@clowdr.org](mailto:hello@clowdr.org) and we can provide a demo and deployment for your conference.
-Please see the [Operator's
-Manual](https://docs.google.com/document/d/1-9Rbt3KnPYUTO2cz-rAPhczw8pkozbWMaBGzfPAT5Lo)
-for answers to frequently asked questions about running Clowdr.
 
 # Information for Developers
 
-## Installation
+This repository contains the source code for the "web app" component of the
+Clowdr platform -- i.e., the user-interface code that runs in each client
+browser.  
 
-If you want to run Clowdr locally (e.g., to help develop it), we highly recommend you do it from a Mac or Linux environment. The instructions below assume so. If you are on Windows, install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run everything from there.
+## Front-End Setup
 
-### Install all dependencies
+If you only want to make changes to the user interface, then this is the
+only repo you need.  You can serve the code from your local copy of this
+repo directly to your web browser and connect to a remote back end for an
+existing conference.  
 
-Use npm to install (or upgrade) all dependencies after cloning.
-
-```bash
-$ npm install
+However, if you are only going to run the front end code, you will need to
+get some secret keys for some running instance of the Clowdr back end from
+whoever owns it.  Specifically, you need settings for the following variables:
+```
+REACT_APP_PARSE_APP_ID=
+REACT_APP_PARSE_JS_KEY=
+REACT_APP_PARSE_DOMAIN=
+REACT_APP_TWILIO_CALLBACK_URL=
+REACT_APP_PARSE_DATABASE_URL=
+REACT_APP_DEFAULT_CONFERENCE=
 ```
 
-@Jon/@Crista: And maybe we need something like this (and maybe a few more dependencies)... Or does doing this once mean that the dependencies get listed somewhere so that people in the future just need "npm install"??
+(We highly recommend you run Clowdr in a Mac or Linux environment. The
+instructions below assume so. If you are on Windows, install
+[WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run
+everything from there.)
+
+First, clone this repo:
 ```bash
-$ npm install --save typescript @types/node @types/react @types/react-dom
-@types/jest @types/parse
+   git clone app/clowdr-web-app.git
+   cd clowdr-web-app
 ```
 
-### Set Up a Backend
+Next, install the secret keys you've been given in a file called `.env` in
+the top-level `clowdr-web-app` directory.
+
+Then use npm (the Node.js package manager) to install or upgrade all
+dependencies.
+
+```bash
+   npm install
+```
+
+Finally start the web app like this:
+```bash
+   npm start
+```
+This should open a web browser window and connect to the Clowdr instance
+described in your `.env` profile.
+
+## Back-End Setup
+
+If you want to run a complete Clowdr system locally (e.g., to help develop
+functionality that requires changes to the database schema), you will need
+some more pieces.
 
 Clowdr uses the [Parse Platform](https://docs.parseplatform.org/js/guide/)
 as the backend. The fastest way of getting this set up is to sign up for
