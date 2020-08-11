@@ -778,7 +778,7 @@ span.ant-divider-inner-text {
 .small-icon-button{
 
 }
-.summaryProgramItem-past a, .summaryProgramItem-future a{
+.expandableProgramSummaryLive .summaryProgramItem-past a, .expandableProgramSummaryLive .summaryProgramItem-future a{
     color:#adc6ff;
     font-style: italic;
 
