@@ -269,7 +269,7 @@ class Account extends React.Component<Props, State> {
                 <Form.Item
                     label="Display Name"
                     name="displayName"
-                    extra="Feel free to customize how your name is displayed, but please use your real name."
+                    extra="Feel free to customize how your name is displayed, but please use your professional name."
                     rules={[
                         {
                             required: true,
@@ -278,25 +278,27 @@ class Account extends React.Component<Props, State> {
                     ]}
                 ><Input  /></Form.Item>
                 <Form.Item label="Preferred Pronouns"
-                name="pronouns" >
+                name="pronouns"
+                extra="Select from the list or enter your own.">
                     <AutoComplete
                         style={{ width: 200 }}
                         options={[{ value: "She/her"},
                             {value: "He/him"},
                             {value: "They/them"}]}
-                        placeholder="Select or enter your preferred pronouns"
+                        placeholder="Select or type your preferred pronouns"
                         filterOption={(inputValue: string, option: any) =>
                             option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                         }
                     />
                 </Form.Item>
                 <Form.Item label="Author record:"
-                           name="programPersons" >
+                           name="programPersons"
+                           extra="Start typing your name to identify and select your conference records (if any)." >
                     {(this.state.ProgramPersons ?
                         <Select mode="multiple"
                                 optionFilterProp="label"
                                 filterOption={ true}
-                                placeholder="Please make sure to match your profile to your publications at this conference"
+                                placeholder="Please make sure to match your profile to your activities at this conference"
                                 style={{width:'100%'}}
                                 options={programPersonOptions}
                         />
@@ -368,15 +370,17 @@ class Account extends React.Component<Props, State> {
                         type="text"
                         />
                 </Form.Item>
-                <Form.Item label="Position"
+                <Form.Item label="Role"
                 name="position">
                     <AutoComplete
                         style={{ width: 200 }}
                         options={[{ value: "Student"},
-                            {value: "Faculty"},
-                            {value: "Industry"}
+                           { value: "Academic Researcher" },
+                           { value: "Industry Researcher" },
+                           { value: "Professional Developer" },
+                           { value: "Other Computer Industry" }
                             ]}
-                        placeholder="Select or enter your current position"
+                        placeholder="Select or type your current role"
                         filterOption={(inputValue: string, option: any) =>
                             option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                         }
