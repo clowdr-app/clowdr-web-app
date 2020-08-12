@@ -267,7 +267,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                             <td><Upload accept=".txt, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
                                 <Tooltip title="Upload a CSV file with a header line and mandatory fields name,email and optional fields affiliation,country (no extra 
                                     spaces or quotes). Name can be either a single field 'name' or separate 'first' and 'last' fields.  See the Clowdr Conference Organizer's Manual for an example."><Button>
-                                    <UploadOutlined /> Upload file
+                                    <UploadOutlined /> Upload Multiple Registrations
                                 </Button></Tooltip>
                             </Upload></td>
 
