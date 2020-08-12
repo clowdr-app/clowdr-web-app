@@ -5,6 +5,7 @@ import {Collapse, Divider, Spin} from "antd";
 import {AuthUserContext} from '../Session';
 import ExpandableSessionDisplay from "./ExpandableSessionDisplay"
 import moment from "moment";
+import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
 
 interface UpcomingProgramProps {
     auth: ClowdrState | null;
@@ -14,8 +15,11 @@ interface UpcomingProgramState {
     loading: boolean,
     ProgramSessions: ProgramSession[],
     curSessions: ProgramSession[],
+    curEvents: ProgramSessionEvent[],
+    upcomingEvents: ProgramSessionEvent[],
     pastSessions: ProgramSession[],
     futureSessions: ProgramSession[],
+    ProgramSessionEvents: ProgramSessionEvent[],
     nextUpdateTime: moment.Moment
 }
 
@@ -26,6 +30,9 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         this.state = {
             loading: true,
             ProgramSessions: [],
+            ProgramSessionEvents: [],
+            curEvents: [],
+            upcomingEvents: [],
             curSessions: [],
             pastSessions: [],
             futureSessions: [],
@@ -34,17 +41,18 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     componentDidMount(): void {
-        this.props.auth?.programCache.getProgramSessions(this).then((sessions) => {
-            //find the next time we should update
-            this.setState({
-                ProgramSessions: sessions,
-                nextUpdateTime: this.getNextUpdateTime(sessions)
+        this.props.auth?.programCache.getProgramSessions(this)
+            .then((sessions) => {
+                //find the next time we should update
+                this.setState({
+                    ProgramSessions: sessions,
+                    nextUpdateTime: this.getNextUpdateTime(sessions)
+                });
             });
-        });
     }
 
     componentDidUpdate(prevProps: Readonly<UpcomingProgramProps>, prevState: Readonly<UpcomingProgramState>, snapshot?: any): void {
-        if (this.state.ProgramSessions != prevState.ProgramSessions) {
+        if (this.state.ProgramSessions != prevState.ProgramSessions || this.state.ProgramSessionEvents != prevState.ProgramSessionEvents) {
             this.updateCurrentSessions();
         }
         if (!this.state.nextUpdateTime.isSame(prevState.nextUpdateTime)) {
@@ -68,17 +76,19 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         // }
         let items = [];
         let lastFormattedTime = null;
-        for(let session of sessions.sort(this.dateSorter)){
+        let expanded = [];
+
+        for (let session of sessions.sort(this.dateSorter)) {
             let formattedTime = moment(session.get("startTime")).calendar();
-            if(title == "Live")
+            if (title == "Live")
                 formattedTime = "Until " + moment(session.get("endTime")).calendar();
-            if(!session)
+            if (!session)
                 continue;
-            if(formattedTime != lastFormattedTime){
-                items.push(<div key={"timeStamp"+session.id}>{formattedTime}</div>)
+            if (formattedTime != lastFormattedTime) {
+                items.push(<div key={"timeStamp" + session.id}>{formattedTime}</div>)
             }
             lastFormattedTime = formattedTime;
-                items.push(<ExpandableSessionDisplay session={session} key={session.id} />)
+            items.push(<ExpandableSessionDisplay session={session} key={session.id} isLive={title=="Live"} />)
         }
         return <Collapse.Panel header={title} key={title}>
             {items}
@@ -86,9 +96,10 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     dateSorter(a: ProgramSession, b:ProgramSession) {
-        var timeA = a.get("startTime") ? a.get("startTime") : new Date();
-        var timeB = b.get("startTime") ? b.get("startTime") : new Date();
-        return timeA > timeB ? 1 : timeA == timeB ? 0 : -1;
+        let now = new Date().getTime();
+        var timeA = a.get("startTime") ? a.get("startTime").getTime() : now;
+        var timeB = b.get("startTime") ? b.get("startTime").getTime() : now;
+        return timeA > timeB ? 1 : timeA == timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
     }
 
     render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {
@@ -97,6 +108,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
                 <Divider className="social-sidebar-divider">Program at a Glance</Divider>
                 <Spin />
             </div>
+
 
         let expandedKey = "";
         if (this.state.curSessions.length > 0) {

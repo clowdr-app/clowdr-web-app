@@ -2,9 +2,10 @@ import {NavLink} from "react-router-dom";
 import React from "react";
 import {Button, Skeleton, Tooltip} from "antd";
 import BreakoutRoomDisplay from "../Lobby/BreakoutRoomDisplay"
-import ProgramVideoChat from "../VideoChat/ProgramVideoChat";
 import ProgramPersonDisplay from "./ProgramPersonDisplay";
 import moment from "moment";
+import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
+
 var timezone = require('moment-timezone');
 
 export default class ProgramItemDisplay extends React.Component{
@@ -15,6 +16,17 @@ export default class ProgramItemDisplay extends React.Component{
 
     async componentDidMount() {
         let programItem = await this.props.auth.programCache.getProgramItem(this.props.id, this);
+        if(programItem.get("events")){
+            let events = programItem.get("events")
+                .map((e)=>
+                    this.props.auth?.programCache.getProgramSessionEvent(e.id, null));
+            //@ts-ignore
+            let evs = await Promise.all(events);
+            let sessions = await Promise.all(evs.map((ev)=>
+                            this.props.auth?.programCache.getProgramSession(ev.get("programSession").id, null)));
+            this.setState({events: evs, sessions: sessions});
+        }
+
         this.setState({
             ProgramItem: programItem,
             loading: false
@@ -38,7 +50,47 @@ export default class ProgramItemDisplay extends React.Component{
         let sessionInfo;
         let now = Date.now();
 
-        if(this.state.ProgramItem.get("programSession")){
+        let className = "summaryProgramItem";
+        if (this.props.event) {
+            let session = this.props.event.get("programSession");
+            let roomInfo;
+            let startTime = this.props.event.get("startTime");
+            let endTime = this.props.event.get("endTime");
+            if (endTime < now) {
+                className = "summaryProgramItem-past";
+            } else if (startTime <= now && endTime >= now) {
+                className = "summaryProgramItem-live";
+            } else if (startTime > now) {
+                className = "summaryProgramItem-future";
+            }
+        }
+        if(this.state.sessions){
+            let now = Date.now();
+
+            sessionInfo = [];
+            for(let event of this.state.events){
+                let roomInfo;
+
+                let session = this.state.sessions.find(s=>s.id==event.get("programSession").id);
+                var timeS = session.get("startTime") ? session.get("startTime") : new Date();
+                var timeE = session.get("endTime") ? session.get("endTime") : new Date();
+
+                if (session.get("room")){ // && session.get("room").get("src1") == "YouTube") {
+                    let when = "now"
+                    if(timeE >= now)
+                        roomInfo = <div><b>Presentation room: </b><Button type="primary" onClick={() => {
+                            this.props.auth.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                        }}>{session.get("room").get("name")}</Button></div>
+                    else
+                        roomInfo = <div><b>Presentation room:</b> This session has ended.</div>
+                }
+                sessionInfo.push(<div key={event.id}>
+                    <b>Session:</b> {session.get("title")} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))}){roomInfo}
+                </div>);
+
+            }
+        }
+        else if(this.state.ProgramItem.get("programSession")){
             let session = this.state.ProgramItem.get("programSession");
             let roomInfo;
             let now = Date.now();
@@ -71,7 +123,7 @@ export default class ProgramItemDisplay extends React.Component{
             }>Join Breakout Room</Button> : <>No breakout room</>}</p>
 
         </div>
-        return <div className="program-item-display">
+        return <div className={"program-item-display "+ className}>
             <Tooltip title={tooltip}><div className="text-indented"><NavLink  to={"/program/"+this.state.ProgramItem.get("confKey")}>{this.state.ProgramItem.get("title")}</NavLink></div></Tooltip>
             {this.props.showBreakoutRoom && this.state.ProgramItem.get("breakoutRoom") ? <BreakoutRoomDisplay id={this.state.ProgramItem.get("breakoutRoom").id} /> : <></>}
         </div>

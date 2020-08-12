@@ -12,6 +12,8 @@ import ProgramItem from "../../classes/ProgramItem";
 import ProgramPerson from "../../classes/ProgramPerson";
 import AttachmentType from "../../classes/AttachmentType";
 import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
+import ProgramSession from "../../classes/ProgramSession";
+import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -41,6 +43,8 @@ interface ProgramItemDetailsState {
     chatSID: string | null,
     AttachmentTypes: AttachmentType[]
     isInRoom: boolean;
+    sessions: ProgramSession[];
+    events: ProgramSessionEvent[];
 }
 
 class ProgramItemDetails extends React.Component<ProgramItemDetailProps, ProgramItemDetailsState> {
@@ -51,6 +55,8 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             ProgramItem: this.props.ProgramItem,
             chatSID: null,
             AttachmentTypes: [],
+            sessions: [],
+            events: [],
             isInRoom: this.props.isInRoom ? true : false
         };
     }
@@ -71,11 +77,26 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             chatSID: null,
             isInRoom: this.props.isInRoom ? true : false
         };
+        if(item.get("events") && item.get("events").length){
+            //load all of the sessions and times first
+            let events = item.get("events")
+                .map((e:ProgramSessionEvent)=>
+                    this.props.appState?.programCache.getProgramSessionEvent(e.id, null));
+            //@ts-ignore
+            let evs = await Promise.all(events);
+            // @ts-ignore
+            let sessions = await Promise.all(evs.map((ev)=> this.props.appState?.programCache.getProgramSession(ev.get("programSession").id, null)));
+            // @ts-ignore
+            stateUpdate.sessions = sessions;
+            // @ts-ignore
+            stateUpdate.events = evs;
+        }
         if (item.get("attachments")) {
             await Parse.Object.fetchAllIfNeeded(item.get("attachments"));
         }
         if(this.props.openChat)
             this.openChat(item);
+        // @ts-ignore
         this.setState(stateUpdate);
     }
 
@@ -143,7 +164,38 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
 
         let roomInfo = <></>;
         let showSessionInfo = !this.props.hiddenKeys || !this.props.hiddenKeys.includes("session");
-        if(this.state.ProgramItem.get("programSession")){
+        if(this.state.events.length){
+            let now = Date.now();
+            sessionInfo = [];
+            let hasValidEvents = false;
+            for(let event of this.state.events){
+                if(this.props.hiddenKeys && this.props.hiddenKeys.includes(event.id))
+                    continue;
+                hasValidEvents = true;
+               let session = this.state.sessions.find(s=>s.id==event.get("programSession").id);
+               if(session) {
+                   var timeS = event.get("startTime") ? event.get("startTime") : new Date();
+                   var timeE = event.get("endTime") ? event.get("endTime") : new Date();
+
+                   if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") == "YouTube") {
+                       let when = "now"
+                       // if (timeE >= now)
+                           roomInfo = <Button size="small" type="primary" onClick={() => {
+                               // @ts-ignore
+                               this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                           }}>Join Session</Button>
+                       console.log(roomInfo)
+                   }
+                   sessionInfo.push(<div key={event.id}>
+                       {session.get("title")} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))})
+                       {roomInfo}
+                   </div>);
+               }
+            }
+            if (!hasValidEvents)
+                showSessionInfo = false;
+        }
+        else if(this.state.ProgramItem.get("programSession")){
             let session = this.state.ProgramItem.get("programSession");
             let now = Date.now();
             var timeS = session.get("startTime") ? session.get("startTime") : new Date();
@@ -152,12 +204,13 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") == "YouTube") {
                 let when = "now"
                 if (timeE >= now)
-                    roomInfo = <Button type="primary" onClick={() => {
+                    roomInfo = <Button size="small" type="primary" onClick={() => {
                         this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                    }}>Join Live Session</Button>
+                    }}>Join Session</Button>
             }
             sessionInfo = <div>
                 {session.get("title")} ({this.formatTime(session.get("startTime"))} - {this.formatTime(session.get('endTime'))})
+                {roomInfo}
             </div>;
         }
 
@@ -227,7 +280,6 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
         }
         additionalDescription.push(<Descriptions.Item key="actions" label="Actions">
             <Space align="center">
-                {roomInfo}
                 {this.props.appState?.user  && this.state.ProgramItem.get("breakoutRoom")? <Button disabled={this.state.isInRoom} type="primary" onClick={()=>{
                     this.setState({isInRoom: true});
                 }

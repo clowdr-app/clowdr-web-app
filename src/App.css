@@ -617,9 +617,15 @@ span.ant-divider-inner-text {
     padding-bottom: 0;
     padding-top: 0;
 }
+.ant-collapse > .ant-collapse-item > .ant-collapse-header {
+    padding-bottom: 2px;
+    padding-top: 2px;
+}
 .program-collapse > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
     padding-top: 0;
     padding-bottom: 0;
+    padding-left: 4px;
+    padding-right: 4px;
 }
 .program-session-collapse > .ant-collapse-item > .ant-collapse-header{
     padding-bottom: 0;
@@ -774,5 +780,10 @@ span.ant-divider-inner-text {
     height:auto;
 }
 .small-icon-button{
+
+}
+.expandableProgramSummaryLive .summaryProgramItem-past a, .expandableProgramSummaryLive .summaryProgramItem-future a{
+    color:#adc6ff;
+    font-style: italic;
 
 }
