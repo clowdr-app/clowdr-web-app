@@ -502,7 +502,10 @@ Parse.Cloud.define("chat-getSIDForProgramItem", async (request) => {
     }
     return item.get("chatSID");
 });
-
+async function userInRoles(user, allowedRoles) {
+    const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
+    return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
+}
 Parse.Cloud.define("join-announcements-channel", async (request) => {
     let confID = request.params.conference;
     let userQ = new Parse.Query(UserProfile);
@@ -521,7 +524,7 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
         let actionQ = new Parse.Query("PrivilegedAction");
         actionQ.equalTo("action","announcement-global");
         accesToConf.matchesQuery("action", actionQ);
-        const hasAccess = await accesToConf.first({sessionToken: request.user.getSessionToken()});
+        const hasAccess = await userInRoles(request.user, [confID+ "-admin", confID+ "-manager"])) {
         console.log('--> hasAccess: ' + hasAccess);
 
         let role = config.TWILIO_CHAT_CHANNEL_OBSERVER_ROLE;
