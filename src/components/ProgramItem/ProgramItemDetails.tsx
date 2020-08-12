@@ -254,7 +254,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                     if (!url)
                         url = attachment.get("file").url();
                     externalLinks.push(<span key={attachment.id}><a href={url}
-                                                                    target="_blank">{type.get("name")}</a>{deleteButton}</span>);
+                                                                    target="_blank">{type.get("name")}</a>&nbsp;&nbsp;&nbsp;&nbsp;{deleteButton}</span>);
                 } else {
                     let url = attachment.get("url");
                     if (!url)
