@@ -167,7 +167,11 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
         if(this.state.events.length){
             let now = Date.now();
             sessionInfo = [];
+            let hasValidEvents = false;
             for(let event of this.state.events){
+                if(this.props.hiddenKeys && this.props.hiddenKeys.includes(event.id))
+                    continue;
+                hasValidEvents = true;
                let session = this.state.sessions.find(s=>s.id==event.get("programSession").id);
                if(session) {
                    var timeS = event.get("startTime") ? event.get("startTime") : new Date();
@@ -187,7 +191,9 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                        {roomInfo}
                    </div>);
                }
-           }
+            }
+            if (!hasValidEvents)
+                showSessionInfo = false;
         }
         else if(this.state.ProgramItem.get("programSession")){
             let session = this.state.ProgramItem.get("programSession");
