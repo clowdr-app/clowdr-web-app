@@ -159,36 +159,36 @@ class NewRoomForm extends React.Component {
                                 <Radio.Button value="ephemeral">Ephemeral</Radio.Button>
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-persistent",
                                     <Radio.Button value="persistent">Persistent</Radio.Button>,
-                                    <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create persistent rooms"><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
+                                    <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create persistent rooms. Please ask a moderator if you would like a persistent room."><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
                                 )}
                             </Radio.Group>
                         </Form.Item>
-                        <Form.Item
-                            name="mode"
-                            label="Room Type"
-                            extra={"Small groups and Large groups provide the best quality; Peer group rooms will allow you to see up to 9 other people at a time. Large group rooms will only show 6 active speakers at a time."}>
-                            <Radio.Group buttonStyle="solid">
-                                {this.props.auth.helpers.ifPermission("createVideoRoom-smallgroup",<Radio.Button value="group-small">Small Group (1-4)</Radio.Button>,
-                                    <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create small group rooms"><Radio.Button value="group-small" disabled={true}>Small Group (1-4)</Radio.Button></Tooltip>)}
-                                {this.props.auth.helpers.ifPermission("createVideoRoom-peer-to-peer",
-                                    <Radio.Button value="peer-to-peer">Peer Group (1-10)</Radio.Button>,
-                                    <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="peer-to-peer" disabled={true}>Peer-to-Peer (1-10)</Radio.Button></Tooltip>)}
-                                {this.props.auth.helpers.ifPermission("createVideoRoom-group",<Radio.Button value="group">Large Group (4-50)</Radio.Button>,
-                                    <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="group">Large Group (4-50)</Radio.Button></Tooltip>)}
+                        {/*<Form.Item*/}
+                        {/*    name="mode"*/}
+                        {/*    label="Room Type"*/}
+                        {/*    extra={"Small groups and Large groups provide the best quality; Peer group rooms will allow you to see up to 9 other people at a time. Large group rooms will only show 6 active speakers at a time."}>*/}
+                        {/*    <Radio.Group buttonStyle="solid">*/}
+                        {/*        {this.props.auth.helpers.ifPermission("createVideoRoom-smallgroup",<Radio.Button value="group-small">Small Group (1-4)</Radio.Button>,*/}
+                        {/*            <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create small group rooms"><Radio.Button value="group-small" disabled={true}>Small Group (1-4)</Radio.Button></Tooltip>)}*/}
+                        {/*        {this.props.auth.helpers.ifPermission("createVideoRoom-peer-to-peer",*/}
+                        {/*            <Radio.Button value="peer-to-peer">Peer Group (1-10)</Radio.Button>,*/}
+                        {/*            <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="peer-to-peer" disabled={true}>Peer-to-Peer (1-10)</Radio.Button></Tooltip>)}*/}
+                        {/*        {this.props.auth.helpers.ifPermission("createVideoRoom-group",<Radio.Button value="group">Large Group (4-50)</Radio.Button>,*/}
+                        {/*            <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create peer-to-peer rooms"><Radio.Button value="group">Large Group (4-50)</Radio.Button></Tooltip>)}*/}
 
-                            </Radio.Group>
-                        </Form.Item>
+                        {/*    </Radio.Group>*/}
+                        {/*</Form.Item>*/}
                         <Form.Item
                             name="visibility"
                             label="Visibility"
-                            extra={"'Open' video calls can be joined by any member of the " + this.props.auth.currentConference.get("conferenceName") +" slack workspace. " +
-                            "Closed rooms allow you to restrict access to specific users of the workspace"
+                            extra={"'Public' video calls can be joined by any participant of " + this.props.auth.currentConference.get("conferenceName") +". " +
+                            "Private rooms allow you to restrict access to specific users"
                             }
                         >
                             <Radio.Group buttonStyle="solid">
-                                <Radio.Button value="listed">Open</Radio.Button>
+                                <Radio.Button value="listed">Public</Radio.Button>
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-private",
-                                    <Radio.Button value="unlisted">Closed</Radio.Button>,
+                                    <Radio.Button value="unlisted">Private</Radio.Button>,
                                     <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create private rooms"><Radio.Button disabled={true} value="unlisted">Private</Radio.Button></Tooltip>
                                 )}
 
