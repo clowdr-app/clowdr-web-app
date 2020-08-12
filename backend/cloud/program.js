@@ -612,76 +612,83 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
         //so for now, don't do this mapping for new objects...
         return;
     }
-    if(programItem.dirty("authors")){
-        //Recalculate the items for each author
-        let itemQ = new Parse.Query("ProgramItem");
-        itemQ.include(["authors", "authors.userProfile"]);
-        let oldItem = null;
-        if(!programItem.isNew())
-            oldItem = await itemQ.get(programItem.id, {useMasterKey: true});
-        let newAuthors = [];
-        for(let author of programItem.get("authors")){
-            newAuthors.push(author);
-        }
-        let toSave = [];
-        if (oldItem) {
-            for (let author of oldItem.get("authors")) {
-                if (!newAuthors.find(v => v.id == author.id)) {
-                    //no longer an author
+    try {
+        if (programItem.dirty("authors")) {
+            //Recalculate the items for each author
+            let itemQ = new Parse.Query("ProgramItem");
+            itemQ.include(["authors", "authors.userProfile"]);
+            let oldItem = null;
+            if (!programItem.isNew())
+                oldItem = await itemQ.get(programItem.id, {useMasterKey: true});
+            let newAuthors = [];
+            for (let author of programItem.get("authors")) {
+                newAuthors.push(author);
+            }
+            let toSave = [];
+            if (oldItem && oldItem.get("authors")) {
+                for (let author of oldItem.get("authors")) {
+                    if (!newAuthors.find(v => v.id == author.id)) {
+                        //no longer an author
+                        let oldItems = author.get("programItems");
+                        if (oldItems) {
+                            oldItems = oldItems.filter(item => item.id != programItem.id);
+                            author.set("programItems", oldItems);
+                            toSave.push(author);
+                        }
+                        if (author.get("userProfile")) {
+                            programItem.getACL().setWriteAccess(author.get("userProfile").get('user'), false);
+                        }
+
+                    }
+                }
+            }
+            if (oldItem && oldItem.get("authors"))
+                newAuthors = newAuthors.filter(v => (!oldItem.get('authors').find(y => y.id == v.id)));
+            if (newAuthors.length > 0) {
+                try {
+                    newAuthors = await Parse.Object.fetchAllWithInclude(newAuthors, ["userProfile"], {useMasterKey: true});
+                } catch (err) {
+                    console.log(err);
+                    return;
+                }
+                let config = null;
+                let promises = [];
+                for (let author of newAuthors) {
                     let oldItems = author.get("programItems");
-                    if (oldItems) {
-                        oldItems = oldItems.filter(item => item.id != programItem.id);
+                    if (!oldItems)
+                        oldItems = [];
+                    if (!oldItems.find(v => v.id == programItem.id)) {
+                        oldItems.push(programItem);
                         author.set("programItems", oldItems);
                         toSave.push(author);
-                    }
-                    if (author.get("userProfile")) {
-                        programItem.getACL().setWriteAccess(author.get("userProfile").get('user'), false);
-                    }
-
-                }
-            }
-        }
-        if(oldItem)
-            newAuthors = newAuthors.filter(v=>(!oldItem.get('authors').find(y=>y.id==v.id)));
-        if(newAuthors.length > 0) {
-            try {
-                newAuthors = await Parse.Object.fetchAllWithInclude(newAuthors,["userProfile"], {useMasterKey: true});
-            } catch(err){
-                console.log(err);
-                return;
-            }
-            let config = null;
-            let promises = [];
-            for (let author of newAuthors) {
-                let oldItems = author.get("programItems");
-                if (!oldItems)
-                    oldItems = [];
-                if (!oldItems.find(v => v.id == programItem.id)) {
-                    oldItems.push(programItem);
-                    author.set("programItems", oldItems);
-                    toSave.push(author);
-                    programItem.getACL().setWriteAccess(author.get("userProfile").get("user"), true);
-                    if (programItem.get("chatSID") && author.get("userProfile")) {
-                        //add the author to the chat channel
-                        if (!config)
-                            config = await getConfig(programItem.get("conference"));
-                        let member = config.twilioChat.channels(programItem.get("chatSID")).members.create({
-                            identity: author.get("userProfile").id
-                        }).catch(err => {
-                            console.log(err);
-                        });
+                        if(author.get("userProfile")) {
+                            programItem.getACL().setWriteAccess(author.get("userProfile").get("user"), true);
+                        }
+                        if (programItem.get("chatSID") && author.get("userProfile")) {
+                            //add the author to the chat channel
+                            if (!config)
+                                config = await getConfig(programItem.get("conference"));
+                            let member = config.twilioChat.channels(programItem.get("chatSID")).members.create({
+                                identity: author.get("userProfile").id
+                            }).catch(err => {
+                                console.log(err);
+                            });
+                        }
                     }
                 }
             }
-        }
-        if(programItem.get("attachments")) {
-            for (let attachment of programItem.get("attachments")) {
-                attachment.setACL(programItem.getACL());
-                toSave.add(attachment);
+            if (programItem.get("attachments")) {
+                for (let attachment of programItem.get("attachments")) {
+                    attachment.setACL(programItem.getACL());
+                    toSave.add(attachment);
+                }
             }
+            if (toSave.length > 0)
+                await Parse.Object.saveAll(toSave, {useMasterKey: true});
         }
-        if(toSave.length > 0)
-            await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    }catch(err){
+        console.log(err);
+        throw err;
     }
 
 });
