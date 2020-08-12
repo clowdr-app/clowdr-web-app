@@ -277,11 +277,10 @@ class Account extends React.Component<Props, State> {
                         },
                     ]}
                 ><Input  /></Form.Item>
-                <Form.Item label="Preferred Pronouns"
+                <Form.Item label="Pronouns"
                 name="pronouns"
                 extra="Select from the list or enter your own.">
                     <AutoComplete
-                        style={{ width: 200 }}
                         options={[{ value: "She/her"},
                             {value: "He/him"},
                             {value: "They/them"}]}
@@ -298,7 +297,7 @@ class Account extends React.Component<Props, State> {
                         <Select mode="multiple"
                                 optionFilterProp="label"
                                 filterOption={ true}
-                                placeholder="Please make sure to match your profile to your activities at this conference"
+                                placeholder="Connect your profile to your activities at this conference"
                                 style={{width:'100%'}}
                                 options={programPersonOptions}
                         />
@@ -337,7 +336,7 @@ class Account extends React.Component<Props, State> {
                         <Input.Password placeholder="input password"
                         />
                     </Form.Item>
-                    < Form.Item label="Confirm Password"
+                    < Form.Item label="Confirm Pwd"
                     name="confirm"
                     // rules={password2Rules}
                         rules = {
@@ -373,7 +372,6 @@ class Account extends React.Component<Props, State> {
                 <Form.Item label="Role"
                 name="position">
                     <AutoComplete
-                        style={{ width: 200 }}
                         options={[{ value: "Student"},
                            { value: "Academic Researcher" },
                            { value: "Industry Researcher" },
