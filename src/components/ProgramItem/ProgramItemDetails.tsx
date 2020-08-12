@@ -1,7 +1,7 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
 import Parse from "parse"
-import {Button, Descriptions, message, Popconfirm, Space, Spin} from "antd";
+import {Button, Descriptions, message, Popconfirm, Space, Spin, List} from "antd";
 import NewMediaLinkForm from "./NewMediaLinkForm";
 import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";
 // @ts-ignore
@@ -177,21 +177,27 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                    var timeS = event.get("startTime") ? event.get("startTime") : new Date();
                    var timeE = event.get("endTime") ? event.get("endTime") : new Date();
 
+                   let title = session.get("title");
                    if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") == "YouTube") {
                        let when = "now"
                        // if (timeE >= now)
-                           roomInfo = <Button size="small" type="primary" onClick={() => {
-                               // @ts-ignore
-                               this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                           }}>Join Session</Button>
-                       console.log(roomInfo)
+                       //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
+                               // this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                           // }}>Join Session</Button></Space>
+                       title = <a href="#" className="sessionLink" onClick={()=>{
+                           // @ts-ignore
+                           this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                       }}>{title}</a>
                    }
-                   sessionInfo.push(<div key={event.id}>
-                       {session.get("title")} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))})
+                   sessionInfo.push(<div className="sessionListItem" key={event.id}>
+                       {title} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))})
                        {roomInfo}
                    </div>);
                }
             }
+            // sessionInfo = <List>
+            //     {sessionInfo}
+            // </List>
             if (!hasValidEvents)
                 showSessionInfo = false;
         }

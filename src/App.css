@@ -132,12 +132,10 @@
     background-color: white;
 }
 #top-content{
-    position:sticky;
     top:0;
     left: 0;
     right: 0;
     background-color: white;
-    z-index: 2;
     border-bottom: 1px solid #e7e7e7;
 }
 
@@ -328,18 +326,17 @@ background-color:#97a7b7;
     text-align: center;
 }
 .chatTab{
-    display: flex;
+    height: 100%;
+    /*display: flex;*/
     background-color: #FAFAFA;
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    padding-left:10px;
+    /*position: fixed;*/
+    /*bottom: 0;*/
+    /*right: 0;*/
 }
 .activeRoomsTab{
-    position: fixed;
-    bottom: 0;
-    left: 4px;
-    padding-right:10px;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
 }
 .ant-form-inline .ant-form-item,.aclSelector{
     flex: initial;
@@ -640,13 +637,14 @@ span.ant-divider-inner-text {
     right: 0;
 }
 .multiChatWindow {
-    position: fixed;
-    /*left: 300px;*/
-    /*width: 450px;*/
-    bottom: 0;
-    overflow: hidden;
+    background-color: white;
+    border: 2px solid #1890FF;
+    display: flex;
+    flex-direction: column;
 
-    padding-left: 300px;
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
 }
 .multiChatWindowHeader{
     background-color: #1890FF;
@@ -658,7 +656,9 @@ span.ant-divider-inner-text {
 .multiChatWindowContent{
     display: flex;
     flex: 1 1 auto;
+    flex-grow: 4;
     flex-direction: row;
+    overflow: hidden;
     height: 100%;
 }
 .multiChatChannelChanger{
@@ -674,6 +674,7 @@ span.ant-divider-inner-text {
     flex-grow: 4;
     height: 100%;
 
+    overflow: auto;
     flex-direction: column;
     display: flex;
 }
@@ -682,14 +683,6 @@ span.ant-divider-inner-text {
 }
 .multiChatMessageEntry{
 
-}
-.multiChatWindowFrame{
-    background-color: white;
-    border: 2px solid #1890FF;
-    display: flex;
-    flex-direction: column;
-
-    box-sizing: border-box;
 }
 .react-resizable {
     position: relative;
@@ -786,4 +779,64 @@ span.ant-divider-inner-text {
     color:#adc6ff;
     font-style: italic;
 
+}
+.Resizer {
+    background: #000;
+    opacity: 0.2;
+    z-index: 1;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    -moz-background-clip: padding;
+    -webkit-background-clip: padding;
+    background-clip: padding-box;
+}
+
+.Resizer:hover {
+    -webkit-transition: all 2s ease;
+    transition: all 2s ease;
+}
+
+.Resizer.horizontal {
+    height: 11px;
+    margin: -5px 0;
+    border-top: 5px solid rgba(255, 255, 255, 0);
+    border-bottom: 5px solid rgba(255, 255, 255, 0);
+    cursor: row-resize;
+    width: 100%;
+}
+
+.Resizer.horizontal:hover {
+    border-top: 5px solid rgba(0, 0, 0, 0.5);
+    border-bottom: 5px solid rgba(0, 0, 0, 0.5);
+}
+
+.Resizer.vertical {
+    width: 11px;
+    margin: 0 -5px;
+    border-left: 5px solid #cccccc;
+    border-right: 5px solid #cccccc;
+    cursor: col-resize;
+}
+
+.Resizer.vertical:hover {
+    border-left: 5px solid rgba(0, 0, 0, 0.5);
+    border-right: 5px solid rgba(0, 0, 0, 0.5);
+}
+.Resizer.disabled {
+    cursor: not-allowed;
+}
+.Resizer.disabled:hover {
+    border-color: transparent;
+}
+.middlePane{
+    height: 100%;
+}
+.page-content{
+    padding: 5px;
+    overflow: auto;
+    height: 100%;
+}
+.sessionListItem{
+    padding: 0;
 }

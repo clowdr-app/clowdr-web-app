@@ -156,7 +156,7 @@ class LiveStreamingPanel extends Component {
 
         }
         else if (!this.state.china) {
-            player = <ReactPlayer playing={this.props.playing} playsinline controls={true} muted={true} volume={1}
+            player = <ReactPlayer playing={this.props.playing} playsinline controls={true} muted={false} volume={1}
                         width="100%" height="100%" style={{position:"absolute", top:0, left:0}} url={this.state.video_url}/>
         }
         else {

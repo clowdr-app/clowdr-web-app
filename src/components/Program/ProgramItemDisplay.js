@@ -1,6 +1,6 @@
 import {NavLink} from "react-router-dom";
 import React from "react";
-import {Button, Skeleton, Tooltip} from "antd";
+import {Button, List, Skeleton, Tooltip} from "antd";
 import BreakoutRoomDisplay from "../Lobby/BreakoutRoomDisplay"
 import ProgramPersonDisplay from "./ProgramPersonDisplay";
 import moment from "moment";
@@ -38,6 +38,9 @@ export default class ProgramItemDisplay extends React.Component{
     formatTime(timestamp) {
         return moment(timestamp).tz(timezone.tz.guess()).format('LLL z')
     }
+    sortEvents(a, b){
+        return a.get("startTime")< b.get("startTime") ? -1 : 1;
+    }
     render() {
         if(this.state.loading){
             return <Skeleton.Input />
@@ -68,7 +71,7 @@ export default class ProgramItemDisplay extends React.Component{
             let now = Date.now();
 
             sessionInfo = [];
-            for(let event of this.state.events){
+            for(let event of this.state.events.sort(this.sortEvents)){
                 let roomInfo;
 
                 let session = this.state.sessions.find(s=>s.id==event.get("programSession").id);
@@ -77,18 +80,20 @@ export default class ProgramItemDisplay extends React.Component{
 
                 if (session.get("room")){ // && session.get("room").get("src1") == "YouTube") {
                     let when = "now"
-                    if(timeE >= now)
-                        roomInfo = <div><b>Presentation room: </b><Button type="primary" onClick={() => {
+                        roomInfo = <Button size="small" type="primary" onClick={() => {
                             this.props.auth.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                        }}>{session.get("room").get("name")}</Button></div>
-                    else
-                        roomInfo = <div><b>Presentation room:</b> This session has ended.</div>
+                        }}>Go to session</Button>
                 }
-                sessionInfo.push(<div key={event.id}>
-                    <b>Session:</b> {session.get("title")} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))}){roomInfo}
-                </div>);
-
+                sessionInfo.push(<List.Item key={event.id} style={{color: "white"}}>
+                    <a href="#" onClick={()=>{
+                        this.props.auth.history.push("/live/now/" + session.get("room").get("name"))
+                    }
+                    }>{session.get("title")} </a>({moment(event.get("startTime")).tz(timezone.tz.guess()).calendar()})
+                </List.Item>);
             }
+            sessionInfo = <List className="sessionListItem">
+                {sessionInfo}
+            </List>
         }
         else if(this.state.ProgramItem.get("programSession")){
             let session = this.state.ProgramItem.get("programSession");
@@ -124,7 +129,7 @@ export default class ProgramItemDisplay extends React.Component{
 
         </div>
         return <div className={"program-item-display "+ className}>
-            <Tooltip title={tooltip}><div className="text-indented"><NavLink  to={"/program/"+this.state.ProgramItem.get("confKey")}>{this.state.ProgramItem.get("title")}</NavLink></div></Tooltip>
+            <Tooltip placement="right" title={tooltip}><div className="text-indented"><NavLink  to={"/program/"+this.state.ProgramItem.get("confKey")}>{this.state.ProgramItem.get("title")}</NavLink></div></Tooltip>
             {this.props.showBreakoutRoom && this.state.ProgramItem.get("breakoutRoom") ? <BreakoutRoomDisplay id={this.state.ProgramItem.get("breakoutRoom").id} /> : <></>}
         </div>
     }

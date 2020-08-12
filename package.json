@@ -24,6 +24,7 @@
     "concurrently": "^5.1.0",
     "cors": "^2.8.5",
     "cross-env": "^7.0.2",
+    "csv-parser": "^2.3.3",
     "emoji-dictionary": "^1.0.10",
     "emoji-mart": "^3.0.0",
     "emoji-picker-react": "^3.2.1",
@@ -51,10 +52,12 @@
     "react-resizable": "^1.10.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
+    "react-split-pane": "^2.0.3",
     "tinymce": "^5.4.1",
     "twilio": "^3.48.1",
     "twilio-chat": "^3.4.0",
-    "twilio-video": "^2.7.1"
+    "twilio-video": "^2.7.1",
+    "xml2json": "^0.12.0"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [

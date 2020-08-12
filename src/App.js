@@ -1,15 +1,13 @@
 import React, {Component} from 'react';
 import {BrowserRouter, NavLink, Route} from 'react-router-dom';
 import BrowserDetection from 'react-browser-detection';
-import { message } from 'antd';
+import {Button, Layout, message, Select, Spin, Tooltip, Typography, Upload} from 'antd';
 
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
-import SignUp from "./components/SignUp"
 import SignIn from "./components/SignIn"
 import AccountFromToken from "./components/Account/AccountFromToken"
-import {Button, Layout, Select, Spin, Tooltip, Typography, Upload} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
@@ -53,8 +51,11 @@ import SidebarChat from "./components/SocialTab/SidebarChat";
 import {withRouter} from "react-router";
 import BottomChat from "./components/SocialTab/BottomChat";
 import ProgramItem from "./components/ProgramItem";
-import UserStatusDisplay from "./components/Lobby/UserStatusDisplay";
 import UsersList from "./components/Admin/Users";
+// @ts-ignore
+import SplitPane from 'react-split-pane/lib/SplitPane';
+// @ts-ignore
+import Pane from 'react-split-pane/lib/Pane'
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -330,6 +331,10 @@ class App extends Component {
                 </div>
             }
         }
+        let topHeight = 0;
+        let topElement = document.getElementById("top-content");
+        if(topElement)
+            topHeight = topElement.clientHeight;
 
         let isLoggedIn = this.props.clowdrAppState.user != null;
         return (
@@ -349,32 +354,45 @@ class App extends Component {
                         {/*    /!*</Badge>*!/*/}
                         {/*    </Header>*/}
                         </div>
-                        <div className="main-area">
-                            <Layout>
-                                {/*<div className="lobbySessionTab" style={{left: (this.state.socialCollapsed?"0px":"250px")}}><Button onClick={this.toggleLobbySider.bind(this)}  size="small">Breakout Rooms {(this.state.socialCollapsed? ">":"x")}</Button> </div>*/}
-                                {/*<div className="lobbySessionTab" style={{right: (this.state.chatCollapsed?"0px":"250px")}}><Button onClick={this.toggleChatSider.bind(this)}  size="small">{(this.state.chatCollapsed? "<":"x")} Chat</Button> </div>*/}
+                        <Layout>
 
-                                <SocialTab collapsed={this.state.socialCollapsed} setWidth={this.setLobbyWidth.bind(this)}/>
-                                <Content style={{
-                                    overflow: 'initial',
-                                    paddingRight: this.state.chatWidth,
-                                    paddingLeft: this.state.lobbyWidth
-                                }}>
-                                    <div className="site-layout-background" style={{padding: 24}}>
-                                        {this.routes()}
+                        <Content>
+
+                        <div className="main-area" style={{ height:"calc(100vh - "+(topHeight )+"px)", overflow: "auto"}}>
+
+                            <SplitPane>
+                                <Pane initialSize={"250px"}>
+                                    <SocialTab collapsed={this.state.socialCollapsed} />
+                                </Pane>
+                                <Pane>
+                                    <div className="middlePane">
+                                        <SplitPane split="horizontal">
+                                            <Pane>
+                                                <div className="page-content">
+
+                                                {/*<div className="site-layout-background" style={{padding: 24}}>*/}
+                                                {this.routes()}
+                                                {/*</div>*/}
+                                                </div>
+
+                                            </Pane>
+                                            <Pane initialSize={"300px"}>
+                                                <BottomChat/>
+
+                                            </Pane>
+                                        </SplitPane>
                                     </div>
-
-                                </Content>
-
-                                <SidebarChat collapsed={this.state.chatCollapsed} setWidth={this.setChatWidth.bind(this)}/>
-                            </Layout>
+                                {/*</Content>*/}
+                                </Pane>
+                                <Pane initialSize={"250px"}>
+                                <SidebarChat collapsed={this.state.chatCollapsed} />
+                                </Pane>
+                            </SplitPane>
                         </div>
+                        </Content>
+                        </Layout>
                     </Layout>
                     </div>
-                    <BottomChat style={{
-                        right: this.state.chatWidth,
-                        left: this.state.lobbyWidth
-                    }}/>
                     {/* <div style={{position:
                     "sticky", bottom: 0}}>
                         <Chat />

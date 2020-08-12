@@ -55,7 +55,6 @@ class SidebarChat extends React.Component {
 
     setDrawerWidth(width){
         this.setState({siderWidth: width})
-        this.props.setWidth(width);
         localStorage.setItem("chatWidth", (width == 0 ? -1 : width));
     }
 
@@ -64,11 +63,9 @@ class SidebarChat extends React.Component {
             this.user = this.props.auth.user;
             // this.changeChannel("#general");
             this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
-            this.props.setWidth(this.state.siderWidth)
         }
         else{
             this.setState({chatDisabled: true})
-            this.props.setWidth(0);
 
         }
     }
@@ -81,7 +78,6 @@ class SidebarChat extends React.Component {
 
         if(!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")){
             this.setState({visible: true});
-            this.props.setWidth(250);
         }
         if(this.state.chatDisabled && this.props.auth.user && this.props.auth.user.get("passwordSet")){
             this.setState({chatDisabled: false})
@@ -126,93 +122,16 @@ class SidebarChat extends React.Component {
         if(this.state.chatDisabled){
             return <div></div>
         }
-        let topHeight = 0;
-        let topElement = document.getElementById("top-content");
-        if (topElement)
-            topHeight = topElement.clientHeight;
-
-        const handleMouseDown = e => {
-            console.log("Mouse down")
-            document.addEventListener("mouseup", handleMouseUp, true);
-            document.addEventListener("mousemove", handleMouseMove, true);
-        };
-
-        const handleMouseUp = () => {
-            console.log("Mouse up")
-            document.removeEventListener("mouseup", handleMouseUp, true);
-            document.removeEventListener("mousemove", handleMouseMove, true);
-        };
-
-        const handleMouseMove = (e) => {
-            const newWidth = document.body.offsetWidth - e.clientX;
-            if (newWidth >= 0 && newWidth <= document.body.offsetWidth - 20)
-            {
-                this.setDrawerWidth(newWidth);
-                localStorage.setItem("chatWidth", (newWidth == 0 ? -1 : newWidth));
-            }
-        };
 
         if(!this.state.sid){
             return <div></div>
         }
-        let containerStyle = {width: this.state.siderWidth, top: topHeight};
-        if(this.state.siderWidth <5){
-            containerStyle.width="10px";
-        }
-        return <div className="chatTab" style={containerStyle}>
+        return <div className="chatTab">
             <ChatFrame sid={this.state.sid} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
-
-                <div className="dragIconMiddleRight"
-                     onClick={()=>{
-                         localStorage.setItem("chatWidth", this.state.siderWidth == 0 ? 250 : -1);
-                         this.props.setWidth((this.state.siderWidth == 0 ? 250 : 10));
-                         this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
-                     }}
-                >
-                    {this.state.siderWidth == 0 ? <Tooltip mouseEnterDelay={0.5} title="Open the chat drawer"><ChevronLeftIcon/></Tooltip>:<Tooltip mouseEnterDelay={0.5} title="Close the chat drawer"><ChevronRightIcon/></Tooltip>}
-                    {/*<Button className="collapseButton"><ChevronLeftIcon /></Button>*/}
-                </div>
-
-                <div className="roomDraggerRight" onMouseDown={e => handleMouseDown(e)} ><Badge count={this.state.unreadCount} offset={[-20,0]}  overflowCount={99} onClick={()=>{
-                    localStorage.setItem("chatWidth", this.state.siderWidth == 0 ? 250 : -1);
-                    this.props.setWidth((this.state.siderWidth == 0 ? 250 : 10));
-                    this.setState((prevState)=>({siderWidth: prevState.siderWidth == 0 ? 250 : 0}))
-                }} /></div>
-
-                {/*<div className="dragIconBottom" onMouseDown={e => handleMouseDown(e)}></div>*/}
 
             </div>
 
     }
-
-    wrapWithOptions(m, isMyMessage, data) {
-        let options = [];
-        let _this = this;
-        // options.push(<a href="#" key="react" onClick={()=>{
-        //     _this.setState({
-        //         reactingTo: m
-        //     })
-        // }}><SmileOutlined/> </a>);
-        //
-        if(isMyMessage || this.props.auth.permissions.includes("moderator"))
-            options.push( <Popconfirm
-                key="delete"
-                title="Are you sure that you want to delete this message?"
-                onConfirm={this.deleteMessage.bind(this, m)}
-                okText="Yes"
-                cancelText="No"
-            ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
-        if(options.length > 0)
-         return <Popover  key={m.sid} mouseEnterDelay={0.5} placement="topRight" content={<div style={{backgroundColor:"white"}}>
-            {options}
-        </div>}><div ref={(el) => { this.messagesEnd = el; }} className="chatMessage"><ReactMarkdown source={m.body} renderers={{ text: emojiSupport, link:linkRenderer}} /></div>
-        </Popover>
-        return <div key={m.sid} className="chatMessage"><ReactMarkdown source={m.body}
-                                                                       renderers={{text: emojiSupport, link:linkRenderer}}/></div>
-
-
-    }
-
 }
 
 const AuthConsumer = (props) => (

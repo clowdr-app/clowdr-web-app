@@ -21,6 +21,7 @@ export default class ChatClient{
     async openChatAndJoinIfNeeded(sid){
         let channels = this.joinedChannels;
         let found = channels[sid];
+        console.log(sid)
         if (!found) {
             found = await this.joinAndGetChannel(sid);
             console.log("Joining ephemerally: " + found.sid)
@@ -28,9 +29,9 @@ export default class ChatClient{
         }
         else{
             found = found.channel;
-            if(!this.chatBar.state[found.sid]){
-                this.channelsThatWeHaventMessagedIn.push(found.sid);
-            }
+            // if(!this.chatBar.state[found.sid]){
+            //     this.channelsThatWeHaventMessagedIn.push(found.sid);
+            // }
         }
         if(!found){
             console.log("Unable to find chat: " + sid)

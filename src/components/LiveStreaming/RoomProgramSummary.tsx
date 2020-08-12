@@ -8,6 +8,7 @@ import {Collapse, Divider, Spin} from "antd";
 import ProgramItem from "../../classes/ProgramItem";
 import ProgramItemDetails from "../ProgramItem/ProgramItemDetails";
 import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
+import exp from "constants";
 
 interface RoomProgramSummaryProps {
     appState: ClowdrState | null;
@@ -137,7 +138,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
             let sessionEvents: ProgramSessionEvent[] = [];
             if(session.get("events")){
                 sessionEvents = session.get("events").map((e: ProgramSessionEvent)=>this.state.ProgramSessionEvents.find(ev=>ev.id==e.id));
-                curEvents = sessionEvents.filter(ev => ev.get("startTime") <= Date.now() && ev.get("endTime") >= Date.now()).map(e=>e.id);
+                curEvents = sessionEvents.filter(ev => ev.get("startTime") <= Date.now() && ev.get("endTime") >= Date.now()).map(e=>e.get("programItem").id);
             }
             return (<Collapse.Panel key={session.id}
                              header={header}>
@@ -170,7 +171,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                             title = item.get("title") + " (Now)";
                         }
 
-                        return <Collapse.Panel key={event.id} header={title}>
+                        return <Collapse.Panel key={event.get("programItem").id} header={title}>
                             <ProgramItemDetails ProgramItem={item} isInRoom={false} openChat={this.state.expandedItems[event.get("programItem").id]} hiddenKeys={[event.id]}/>
                         </Collapse.Panel>
                     }):session.get('items') ? session.get('items').map((item: ProgramItem)=>{
@@ -258,10 +259,11 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
     }
 
     private updateCurrentSessions() {
-        let pastSessions = [];
-        let curSessions = [];
-        let futureSessions = [];
+        let pastSessions: ProgramSession[]  = [];
+        let curSessions: ProgramSession[] = [];
+        let futureSessions: ProgramSession[] = [];
         let now = this.getProgramTime();
+        let curEvents: number[] = [];
 
         let filteredSessions = this.state.ProgramSessions.filter(s => s.get("room") && s.get("room").id == this.props.ProgramRoom.id);
         for (let s of filteredSessions) {
@@ -269,16 +271,27 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
             var timeE = s.get("endTime") ? s.get("endTime") : new Date();
             if (timeS <= now && timeE >= now) {
                 curSessions.push(s);
+                if(s.get("events")){
+                    let sessionEvents = s.get("events").map((e: ProgramSessionEvent)=>this.state.ProgramSessionEvents.find(ev=>ev.id==e.id));
+                    // @ts-ignore
+                    curEvents = sessionEvents.filter(ev => ev.get("startTime") <= Date.now() && ev.get("endTime") >= Date.now()).map(e=>e.get("programItem").id);
+                }
             } else if (timeS > now) {
                 futureSessions.push(s);
             } else {
                 pastSessions.push(s);
             }
         }
-        this.setState({
-            loading: false,
+        let expanded = {};
+        for(let id of curEvents){
+            // @ts-ignore
+            expanded[id] = true;
+        }
+        this.setState((prevState) => {
+            return {loading: false,
+            expandedItems: expanded,
             nextUpdateTime: this.getNextUpdateTime(filteredSessions, this.state.ProgramSessionEvents),
-            pastSessions: pastSessions, curSessions: curSessions, futureSessions: futureSessions
+            pastSessions: pastSessions, curSessions: curSessions, futureSessions: futureSessions}
         });
     }
 

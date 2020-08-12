@@ -113,11 +113,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         // if (this.state.loading)
         //     return <Spin/>
 
-        return <div className="multiChatWindow"><ResizableBox width={800} height={300} minConstraints={[100,100]} maxConstraints={[1000,1000]}
-                             resizeHandles={['ne','n','e']}
-                                                              className="multiChatWindowFrame"
-                             axis={"both"}
-        >
+        return <div className="multiChatWindow">
             <div className="multiChatWindowHeader">Chat</div>
             <div
                 className="multiChatWindowContent"
@@ -150,7 +146,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
 
                 </div>
 
-            </div></ResizableBox></div>
+            </div></div>
         }
 }
 
