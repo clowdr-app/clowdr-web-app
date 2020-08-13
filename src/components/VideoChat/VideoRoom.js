@@ -376,8 +376,18 @@ class VideoRoom extends Component {
     }
 
     onError(err) {
-        message.error({content: "Unable to join room. " + err.toString()})
-        // this.props.history.push(ROUTES.LOBBY_SESSION);
+        let errorMsg = <div>
+            <Typography.Title level={3}>Error: unable to acquire camera</Typography.Title>
+            We were not able to acquire access to your camera and/or microphone. You must have a webcam and allow Clowdr access to it in order to join this call.
+            Please double check that your webcam is plugged in, then refresh this page. If you continue to have difficulties,
+             please be sure that you have allowed Clowdr access to your camera and microphone by following these instructions:
+            <br />
+            <b>Safari</b>: Go to the 'Safari' Menu, then select 'Settings for this website' and be sure that both camera and microphone are set to 'allow'.<br />
+            <b>Chrome</b>: Go to <a href="chrome://settings/content" target="_new">chrome://settings/content</a>, then select this website and be sure that camera and microphone are both set to 'Allow'. After completing these steps, please refresh the page to try again.
+            <br />
+           <br />
+            Internal error message: {err.toString()}</div>
+        message.error(errorMsg, 0)
     }
     async toggleWatch(){
         this.setState({watchLoading: true})
@@ -546,6 +556,10 @@ class VideoRoom extends Component {
             // their individual bandwidth constraints. This has no effect if you are
             // using Peer-to-Peer Rooms.
             preferredVideoCodecs: [{codec: 'VP8', simulcast: false}],
+
+            onError: (err)=>{
+                message.error("Unable to connect to video: unable to acquire browser permissions for camera " + err.toString());
+            }
         };
         if (isP2P) {
             connectionOptions = {
