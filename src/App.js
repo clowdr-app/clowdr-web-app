@@ -56,6 +56,7 @@ import UsersList from "./components/Admin/Users";
 import SplitPane from 'react-split-pane/lib/SplitPane';
 // @ts-ignore
 import Pane from 'react-split-pane/lib/Pane'
+import ActiveUsersList from "./components/SocialTab/ActiveUsersList";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -385,7 +386,10 @@ class App extends Component {
                                 {/*</Content>*/}
                                 </Pane>
                                 <Pane initialSize={"250px"}>
-                                <SidebarChat collapsed={this.state.chatCollapsed} />
+                                    <div className="chatTab" id="rightPopout">
+                                        <div id="activeUsersList"><ActiveUsersList /></div>
+                                        <div id="sidebarChat"><SidebarChat collapsed={this.state.chatCollapsed} /></div>
+                                    </div>
                                 </Pane>
                             </SplitPane>
                         </div>

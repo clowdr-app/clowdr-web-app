@@ -1,5 +1,7 @@
 import {AuthUserContext} from "../Session";
 import Parse from "parse";
+import {emojiIndex, Picker} from 'emoji-mart'
+import {emojify} from 'react-emojione';
 
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
@@ -11,8 +13,11 @@ import ReactMarkdown from "react-markdown";
 import {CloseOutlined} from "@material-ui/icons";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import InfiniteScroll from 'react-infinite-scroller';
+import EmojiPickerPopover from "./EmojiPickerPopover";
 
-const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
+// const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emojiIndex.search(name).map(o=>o.native));
+
+const emojiSupport = text => emojify(text.value, {output: 'unicode'});
 
 
 const {Header, Content, Footer, Sider} = Layout;
@@ -80,7 +85,7 @@ class ChatFrame extends React.Component {
                 loadingMessages: true
             });
             if (!this.client) {
-                this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference, this.props.auth.userProfile);
+                this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference, this.props.auth.userProfile, this.props.auth);
             }
             // console.log("Prepared client for " + uniqueNameOrSID + ", " + this.currentUniqueNameOrSID)
             if (this.currentSID != sid) {
@@ -349,7 +354,7 @@ class ChatFrame extends React.Component {
                 , {
                     method: 'POST',
                     body: JSON.stringify({
-                        conference: this.props.auth.currentConference.get("slackWorkspace"),
+                        conference: this.props.auth.currentConference.id,
                         identity: idToken,
                         room: message.channel.sid,
                         message: message.sid,
@@ -534,6 +539,9 @@ class ChatFrame extends React.Component {
                                 autoSize={{minRows: 1, maxRows: 6}}
                                 onPressEnter={this.sendMessage}
                             />
+                            {/*<EmojiPickerPopover emojiSelected={(emoji)=>{*/}
+                            {/*    console.log(emoji)*/}
+                            {/*}} />*/}
                         </Form.Item>
                     </Form>
                 </div>
@@ -557,7 +565,7 @@ class ChatFrame extends React.Component {
         if(m.attributes && m.attributes.linkTo){
             actionButton = <Button onClick={()=>{this.props.auth.history.push(m.attributes.path)}}>Join Video</Button>
         }
-        if (isMyMessage || this.props.auth.permissions.includes("moderator"))
+        // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
             options.push(<Popconfirm
                 key="delete"
                 title="Are you sure that you want to delete this message?"

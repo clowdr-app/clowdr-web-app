@@ -1,6 +1,7 @@
 import Chat from "twilio-chat";
 import Parse from "parse";
 import React from "react";
+import {message} from "antd";
 
 export default class ChatClient{
     constructor(setGlobalState) {
@@ -10,6 +11,7 @@ export default class ChatClient{
         this.joinedChannels = {};
         this.chatUser = null;
         this.twilio = null;
+        this.rightSideChat = null;
         this.chats = [];
         this.ephemerallyOpenedChats = [];
         this.channelListeners = {};
@@ -18,14 +20,15 @@ export default class ChatClient{
     }
 
 
-    async openChatAndJoinIfNeeded(sid){
+    async openChatAndJoinIfNeeded(sid, openOnRight=false){
         let channels = this.joinedChannels;
         let found = channels[sid];
-        console.log(sid)
         if (!found) {
             found = await this.joinAndGetChannel(sid);
-            console.log("Joining ephemerally: " + found.sid)
-            this.ephemerallyOpenedChats.push(found.sid);
+            if(!found){
+                return;
+            }
+            // this.ephemerallyOpenedChats.push(found.sid);
         }
         else{
             found = found.channel;
@@ -37,7 +40,12 @@ export default class ChatClient{
             console.log("Unable to find chat: " + sid)
         }
         else{
-            this.openChat(found.sid);
+            if(openOnRight){
+                this.appController.setState({chatChannel: sid});
+            }
+            else {
+                this.openChat(found.sid);
+            }
             return found.sid;
         }
 
@@ -127,6 +135,9 @@ export default class ChatClient{
         chatWindow.setAllChannels(this.channels);
     }
 
+    initChatSidebar(rightChat){
+        this.rightSideChat = rightChat;
+    }
     initBottomChatBar(chatBar){
         this.chatBar = chatBar;
         chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes && c.attributes.category != "socialSpace").map(c=>c.channel.sid)});
@@ -141,9 +152,11 @@ export default class ChatClient{
     }
 
 
-    initChatClient(user, conference, userProfile) {
+    initChatClient(user, conference, userProfile, appController) {
         this.userProfile = userProfile;
         this.conference = conference;
+        if(appController && appController.setState)
+            this.appController = appController;
         if (!this.chatClientPromise) {
             this.chatClientPromise = new Promise(async (resolve) => {
                 let ret = await this._initChatClient(user, conference);

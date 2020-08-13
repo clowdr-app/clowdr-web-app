@@ -215,6 +215,11 @@
 .personHoverable:hover{
     background-color: white;
 }
+#rightPopout .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
+    line-height:1.1;
+    height: auto;
+}
+
 #sidepopoutcontainer .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
     line-height:1.1;
     height: auto;
@@ -230,6 +235,10 @@
 .slido{
     height: 500px;
     width: 100%;
+}
+#rightPopout .ant-menu-sub.ant-menu-inline > .ant-menu-item {
+    line-height: 1.1;
+    height:auto;
 }
 #sidepopoutcontainer .ant-menu-sub.ant-menu-inline > .ant-menu-item{
     line-height: 1.1;
@@ -327,11 +336,18 @@ background-color:#97a7b7;
 }
 .chatTab{
     height: 100%;
-    /*display: flex;*/
+    display: flex;
+    flex-direction: column;
     background-color: #FAFAFA;
     /*position: fixed;*/
     /*bottom: 0;*/
     /*right: 0;*/
+    overflow-y: scroll;
+}
+#activeUsersList{
+}
+#sidebarChat{
+    overflow-y: hidden;
 }
 .activeRoomsTab{
     height: 100%;

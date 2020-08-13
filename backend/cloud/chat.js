@@ -468,7 +468,41 @@ Parse.Cloud.define("chat-addToSID", async (request) => {
     }
     return null;
 });
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function getOrCreateChatForProgramItem(item){
+    let config = await getConfig(item.get("conference"));
+    let attributes = {
+        category: "programItem",
+        programItemID: item.id
+    }
+    try{
+        let chatRoom = await config.twilioChat.channels.create(
+            {friendlyName: item.get('title'),
+                uniqueName: 'programItem-'+item.id,
+                type: 'public',
+                attributes: JSON.stringify(attributes)});
+        item.set("chatSID", chatRoom.sid);
+        await item.save({}, {useMasterKey: true});
+    }
+    catch(err){
+        if(err.code == 20429){
+            //Back off, try again
+            item = await item.fetch({useMasterKey: true});
+            if(item.get("chatSID")){
+                return item.get("chatSID");
+            }
+            await timeout(2000);
+        }
+        //Raced with another client creating the chat room
+        let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
+        // item.set("chatSID", chatRoom.sid);
+        // await item.save({}, {useMasterKey: true});
 
+        return chatRoom.sid;
+    }
+}
 Parse.Cloud.define("chat-getSIDForProgramItem", async (request) => {
     let programItemID = request.params.programItem;
     let itemQ = new Parse.Query("ProgramItem");
@@ -476,29 +510,7 @@ Parse.Cloud.define("chat-getSIDForProgramItem", async (request) => {
     let item = await itemQ.get(programItemID, {useMasterKey: true});
     if(item.get("track").get("perProgramItemChat") && !item.get("chatSID")){
         //Create room
-        let config = await getConfig(item.get("conference"));
-        let attributes = {
-            category: "programItem",
-            programItemID: programItemID
-        }
-        try{
-            let chatRoom = await config.twilioChat.channels.create(
-                {friendlyName: item.get('title'),
-                    uniqueName: 'programItem-'+item.id,
-                    type: 'public',
-                    attributes: JSON.stringify(attributes)});
-            item.set("chatSID", chatRoom.sid);
-            await item.save({}, {useMasterKey: true});
-        }
-        catch(err){
-            console.log(err);
-            //Raced with another client creating the chat room
-            let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
-            // item.set("chatSID", chatRoom.sid);
-            // await item.save({}, {useMasterKey: true});
-
-            return chatRoom.sid;
-        }
+        await getOrCreateChatForProgramItem(item);
     }
     return item.get("chatSID");
 });

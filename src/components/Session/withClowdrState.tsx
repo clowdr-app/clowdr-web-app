@@ -397,6 +397,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             else{
                 this.presenceUpdateScheduled = true;
                 this.presenceUpdateTimer = setTimeout(async ()=>{
+                    console.log("Doing update")
                     let newPresences = this.newPresences;
                     this.newPresences = [];
                     this.presenceUpdateScheduled = false;
@@ -405,9 +406,12 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         this.presences[presence.get("user").id] = presence;
                     }
                     for(let presenceWatcher of this.presenceWatchers){
+                        console.log(presenceWatcher)
+                        console.log(this.presences)
                         presenceWatcher.setState({presences: this.presences});
                     }
-                }, 10000 + Math.random() * 5000);
+                }, //10000 + Math.random() * 5000);
+                10);
             }
         }
 
@@ -424,12 +428,13 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             this.subscribeToPublicRooms()
 
             let query  =new Parse.Query("UserPresence");
-            query.limit(1000);
+            query.limit(2000);
             query.equalTo("conference", this.currentConference);
             query.equalTo("isOnline", true);
 
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
+            console.log("Subscribed" +  user.getSessionToken())
             this.socialSpaceSubscription.on('create', (presence: UserPresence) => {
                 this.newPresences.push(presence);
                 this.updatePresences();
@@ -448,6 +453,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             })
             this.socialSpaceSubscription.on('update', (presence:UserPresence)=>{
                 this.presences[presence.get("user").id] = presence;
+                console.log("Update: " + presence.get("user").id)
+                console.log(presence.get("socialSpace").id)
                 this.updatePresences();
             })
 
@@ -482,7 +489,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         Call this to set the user's current social space.
         Provide either the spaceName or the space object.
          */
-        async setSocialSpace(spaceName:string, space:SocialSpace, user:User, userProfile:UserProfile) {
+        async setSocialSpace(spaceName:string, space:SocialSpace, user:User, userProfile:UserProfile, ignoreChatChannel?:boolean) {
             if (!this.state.user && !user) // user is not logged in
                 return
             if(space)
@@ -507,10 +514,15 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     presence.set("socialSpace", space);
                     presence.save();
                 }
-                this.setState({
+                let stateUpdate = {
                     activeSpace: space,
-                    chatChannel: space ? space.get("chatChannel") : undefined
-                });
+                    chatChannel:  space ? space.get("chatChannel") : undefined
+                }
+                if(ignoreChatChannel)
+                {
+                    stateUpdate.chatChannel = "@chat-ignore"
+                }
+                this.setState(stateUpdate);
             }
         }
 
@@ -677,7 +689,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         // Valid conferences for this user
                         let profiles = await user.relation("profiles").query().include("conference").find();
                         let validConferences = profiles.map(p => p.get("conference"));
-                        console.log(validConferences)
                         // console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
 
                         // Roles for this user
@@ -769,7 +780,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         _this.currentConference = conf;
                         _this.user = user;
                         _this.userProfile = activeProfile;
-                        _this.state.chatClient.initChatClient(user, conf, activeProfile);
+                        _this.state.chatClient.initChatClient(user, conf, activeProfile, _this);
 
                         try {
                             // @ts-ignore   TS: I guess change null to ""?
