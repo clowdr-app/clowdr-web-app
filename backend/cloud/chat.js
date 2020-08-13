@@ -524,7 +524,7 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
         let actionQ = new Parse.Query("PrivilegedAction");
         actionQ.equalTo("action","announcement-global");
         accesToConf.matchesQuery("action", actionQ);
-        const hasAccess = await userInRoles(request.user, [confID+ "-admin", confID+ "-manager"])) {
+        const hasAccess = await userInRoles(request.user, [confID+ "-admin", confID+ "-manager"]);
         console.log('--> hasAccess: ' + hasAccess);
 
         let role = config.TWILIO_CHAT_CHANNEL_OBSERVER_ROLE;
