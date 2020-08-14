@@ -176,7 +176,7 @@ Parse.Cloud.define("rooms-upload", async (request) => {
                 // let data = getIDAndPwd(row.YouTube);
                 let data = row.YouTube;
                 room.set("src1", "YouTube")
-                room.set("id1", data[0]);
+                room.set("id1", data);
                 if (row.iQIYI) {
                     let data2 = getIDAndPwd(row.iQIYI)
                     room.set("src2", "iQIYI")
