@@ -449,8 +449,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             })
             this.socialSpaceSubscription.on('update', (presence:UserPresence)=>{
                 this.presences[presence.get("user").id] = presence;
-                console.log("Update: " + presence.get("user").id)
-                console.log(presence.get("socialSpace").id)
                 this.updatePresences();
             })
 

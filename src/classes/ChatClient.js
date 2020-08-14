@@ -312,7 +312,7 @@ export default class ChatClient{
             this.channels.push(channel);
             this.multiChatWindow.setAllChannels(this.channels);
             console.log(channel);
-            if(channel.attributes && channel.attributes.isAutoJoin){
+            if(channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin != "false"){
                 if(!Object.keys(this.joinedChannels).includes(channel.sid)){
                     this.joinAndGetChannel(channel.sid)
                 }
@@ -363,7 +363,7 @@ export default class ChatClient{
         }
         this.twilio = twilio;
         for(let channel of this.channels){
-            if(channel.attributes && channel.attributes.isAutoJoin){
+            if(channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin != "false"){
                 if(!Object.keys(this.joinedChannels).includes(channel.sid)){
                     this.joinAndGetChannel(channel.sid)
                 }

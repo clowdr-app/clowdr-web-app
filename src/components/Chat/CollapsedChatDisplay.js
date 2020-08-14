@@ -117,7 +117,7 @@ class CollapsedChatDisplay extends React.Component{
                                  this.destroyChat.bind(this)
                              }
         >Leave Channel</Button>)
-        if(this.props.auth.permissions.includes("moderator")){
+        if(this.props.auth.isModerator){
             buttons.push(<Popconfirm
                 key="deleteChat"
                 onConfirm={async ()=>{
