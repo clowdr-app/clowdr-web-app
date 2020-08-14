@@ -11,6 +11,8 @@ const Papa = require('./papaparse.min');
 const { response } = require('express');
 let UserProfile = Parse.Object.extend("UserProfile");
 let ProgramPerson = Parse.Object.extend("ProgramPerson");
+let ZoomRoom = Parse.Object.extend("ZoomRoom");
+var jwt = require('jsonwebtoken');
 
 
 // Is the given user in any of the given roles?
@@ -148,7 +150,9 @@ Parse.Cloud.define("rooms-upload", async (request) => {
     var rquery = new Parse.Query(Room);
     rquery.equalTo("conference", conference);
     rquery.limit(1000);
-    rquery.find().then(existing => {
+    let config = await getConfig(conference);
+
+    rquery.find().then(async (existing) => {
         let toSave = [];
         let acl = new Parse.ACL();
         acl.setPublicWriteAccess(false);
@@ -156,44 +160,21 @@ Parse.Cloud.define("rooms-upload", async (request) => {
         acl.setRoleWriteAccess(conferenceID+"-manager", true);
         acl.setRoleWriteAccess(conferenceID+"-admin", true);
     
-        rows = Papa.parse(data, {header: true});
-        rows.data.forEach(element => {
-            addRow(element, conference, existing, toSave, acl);
-        });
-        console.log(`--> Saving ${toSave.length} rooms`)
-
-        Parse.Object.saveAll(toSave, {useMasterKey: true})
-        .then(res => console.log("[Rooms]: Done saving all rooms "))
-        .catch(err => console.log('[Rooms]: error: ' + err));
-    }).catch(err => console.log('[Rooms]: Problem fetching rooms ' + err));
-
-});
-
-function getIDAndPwd(str) {
-    let url = new URL(str)
-    let id = "";
-    let pwd ="";
-    if (url.pathname) {
-        let parts = url.pathname.split('/');
-        id = parts[parts.length-1];
-    }
-    if (url.searchParams) {
-        pwd = url.searchParams.get('pwd');
-    }
-    return [id, pwd];
-}
-
-function addRow(row, conference, existing, toSave, acl) {
-    if (row.Name) {
-        let name = row.Name.trim();
-        if (!existing.find(r => r.get("name").trim() == name)) {
-            var Room = Parse.Object.extend("ProgramRoom");
-            var room = new Room();
-            room.set("conference", conference);
-            room.set("name", name);
-            room.setACL(acl);
+        let rows = Papa.parse(data, {header: true});
+        // rows.data.forEach(element => {
+        //     addRow(element, conference, existing, toSave, acl);
+        // });
+        for(let row of rows.data){
+            let name = row.Name.trim();
+            if(!name)
+                continue;
+            let room = existing.find(r => r.get("name").trim() == name);
+            if(!room){
+                throw "Unable to find room: "+ row.name;
+            }
             if (row.YouTube) {
-                let data = getIDAndPwd(row.YouTube);
+                // let data = getIDAndPwd(row.YouTube);
+                let data = row.YouTube;
                 room.set("src1", "YouTube")
                 room.set("id1", data[0]);
                 if (row.iQIYI) {
@@ -213,15 +194,121 @@ function addRow(row, conference, existing, toSave, acl) {
                 room.set("id2", data[0]);
                 room.set('pwd2', data[1]);
             }
-            else
-                return
-
             toSave.push(room);
         }
-        else
-            console.log('[Rooms]: Skipping existing room ' + row.Name);
+        console.log(`--> Saving ${toSave.length} rooms`)
+        for(let room of toSave){
+            if(room.get("src1") == "ZoomUS"){
+                let zoomRoom = room.get("zoomRoom");
+                if(!zoomRoom){
+                    zoomRoom = new ZoomRoom();
+                    zoomRoom.set("programRoom", room);
+                    zoomRoom.set('conference', conference);
+                    zoomRoom.setACL(room.getACL());
+                }
+                let id = room.get("id1");
+                let payload = {
+                    iss: config.ZOOM_API_KEY,
+                    exp: ((new Date()).getTime() + 5000)
+                };
+                let token = jwt.sign(payload, config.ZOOM_API_SECRET);
+                try {
+                    let res = await axios({
+                        method: 'get',
+                        url: 'https://api.zoom.us/v2/meetings/' + id,
+                        data: {
+                            status: "active"
+                        },
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'User-Agent': 'Zoom-api-Jwt-Request',
+                            'content-type': 'application/json'
+                        }
+                    });
+                    zoomRoom.set("meetingID", room.get("id1"));
+                    zoomRoom.set("meetingPassword", res.data.password);
+                    zoomRoom.set("start_url", res.data.start_url);
+                    zoomRoom.set("start_url_expiration", moment().add(2, "hours").toDate());
+                    zoomRoom.set("requireRegistration", false);
+                    zoomRoom.set("join_url", res.data.join_url);
+                    await zoomRoom.save({}, {useMasterKey: true});
+                    room.set("zoomRoom", zoomRoom);
+                    await room.save({},{useMasterKey: true})
+                    // payload = {
+                    //     iss: config.ZOOM_API_KEY,
+                    //     exp: ((new Date()).getTime() + 5000)
+                    // };
+                    // token = jwt.sign(payload, config.ZOOM_API_SECRET);
+                }catch(err){
+                    console.log("Unable to fetch meeting " + id)
+                    console.log(err);
+                }
+            }
+        }
+
+        Parse.Object.saveAll(toSave, {useMasterKey: true})
+            .then(res => console.log("[Rooms]: Done saving all rooms "))
+            .catch(err => console.log('[Rooms]: error: ' + err));
+    }).catch(err => {
+        console.log('[Rooms]: Problem fetching rooms ' + err);
+        throw err
+    });
+
+});
+
+function getIDAndPwd(str) {
+    let url = new URL(str)
+    let id = "";
+    let pwd ="";
+    if (url.pathname) {
+        let parts = url.pathname.split('/');
+        id = parts[parts.length-1];
     }
+    if (url.searchParams) {
+        pwd = url.searchParams.get('pwd');
+    }
+    return [id, pwd];
 }
+
+// function addRow(row, conference, existing, toSave, acl) {
+//     if (row.Name) {
+//         let name = row.Name.trim();
+//         if (!existing.find(r => r.get("name").trim() == name)) {
+//             var Room = Parse.Object.extend("ProgramRoom");
+//             var room = new Room();
+//             room.set("conference", conference);
+//             room.set("name", name);
+//             room.setACL(acl);
+//             if (row.YouTube) {
+//                 let data = getIDAndPwd(row.YouTube);
+//                 room.set("src1", "YouTube")
+//                 room.set("id1", data[0]);
+//                 if (row.iQIYI) {
+//                     let data2 = getIDAndPwd(row.iQIYI)
+//                     room.set("src2", "iQIYI")
+//                     room.set("id2", data2[0]);
+//
+//                 }
+//                 room.set("qa", (row.QA ? row.QA : ""));
+//             }
+//             else if (row.Zoom) {
+//                 room.set("src1", "ZoomUS")
+//                 room.set("src2", "ZoomCN")
+//                 let data = getIDAndPwd(row.Zoom);
+//                 room.set("id1", data[0]);
+//                 room.set('pwd1', data[1]);
+//                 room.set("id2", data[0]);
+//                 room.set('pwd2', data[1]);
+//             }
+//             else
+//                 return
+//
+//             toSave.push(room);
+//         }
+//         else
+//             console.log('[Rooms]: Skipping existing room ' + row.Name);
+//     }
+// }
 
 let allPeople = {};
 let allItems = {};
@@ -1027,7 +1114,7 @@ Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
     let room = request.object;
     if(room.isNew()) {
         let confID = room.get("conference");
-        if (!confID || !await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
+        if (!confID || !(request.master || await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"]))) {
             throw "You do not have permission to create a ZoomRoom for this conference";
         }
         let acl = new Parse.ACL();

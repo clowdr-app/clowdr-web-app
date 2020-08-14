@@ -46,7 +46,7 @@ class ExpandableSessionDisplay extends React.Component<ExpandableSessionDisplayP
 
         let items;
         let expandedKeys: React.ReactText[] = [];
-        if (this.props.session.get("events")) {
+        if (this.props.session.get("events") && this.state.events.length) {
             if(!this.state.events.length)
                 return <div></div>
             let events = this.state.events.sort(this.dateSorter);

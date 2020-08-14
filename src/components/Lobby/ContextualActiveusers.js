@@ -199,12 +199,13 @@ class ContextualActiveUsers extends React.Component {
 
             let activeSpace = this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : "Nowhere";
             let programInfo = <UpcomingProgram />
-            tabs = <div>
+            tabs = <div id="socialTabContainer">
 
                 {programRoomSpecificContent}
 
                 {programInfo}
 
+                <div id="videoChatListContainer">
                 <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
                 + activeSpace}>Video chat rooms</Tooltip></Divider>
 
@@ -322,11 +323,13 @@ class ContextualActiveUsers extends React.Component {
                     <NewRoomForm type="secondary" text="New video chat room" />
                 </div>
             </div>
+            </div>
         }
         return (
 
 
                         <div
+                            id="contextualActiveUsers"
                             // style={{backgroundColor: '#f0f2f5'}}>
                             >
                             {tabs}

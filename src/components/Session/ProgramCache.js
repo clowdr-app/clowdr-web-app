@@ -172,6 +172,19 @@ export default class ProgramCache {
         }
         return person;
     }
+
+    getTrackNameFromEvent(programSessionEventID) {
+        if (!this._dataById['ProgramSessionEvent'])
+            return null;
+        let ev = this._dataById['ProgramSessionEvent'][programSessionEventID];
+        if (!ev || !ev.get("programTrack"))
+            return "Talk";
+        let track = this._dataById['ProgramTrack'][ev.get("programTrack").id];
+        if (!track)
+            return null;
+        return track.get("displayName");
+    }
+
     async getUserProfiles(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("UserProfile",  objToSetStateOnUpdate);
     }

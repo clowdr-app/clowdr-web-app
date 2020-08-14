@@ -363,7 +363,6 @@ background-color:#97a7b7;
 .activeRoomsTab{
     height: 100%;
     width: 100%;
-    overflow-y: auto;
 }
 .ant-form-inline .ant-form-item,.aclSelector{
     flex: initial;
@@ -869,4 +868,31 @@ span.ant-divider-inner-text {
 }
 .chat-search{
     width: 100%;
+}
+#sidepopoutcontainer{
+    height: 100%;
+}
+#contextualActiveUsers{
+    height: 100%;
+}
+#socialTabContainer{
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+}
+#upcomingProgramContainer{
+    overflow-y: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+#upcomingProgram{
+    overflow-y: scroll;
+    height: 100%;
+}
+.programTime{
+    background-color: #bae7ff;
+    text-align: center;
 }

@@ -406,8 +406,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     for(let presenceWatcher of this.presenceWatchers){
                         presenceWatcher.setState({presences: this.presences});
                     }
-                }, //10000 + Math.random() * 5000);
-                10);
+                }, 10000 + Math.random() * 5000);
             }
         }
 
