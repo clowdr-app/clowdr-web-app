@@ -500,7 +500,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult.filter(r=>!r.get("zoomRoom")) : this.state.ProgramRooms.filter(r=>!r.get("zoomRoom"))}
+                        dataSource={this.state.searched ? this.state.searchResult.filter(r=>!r.get("zoomRoom") || r.get("id1")) : this.state.ProgramRooms.filter(r=>!r.get("zoomRoom") || r.get("id1"))}
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
@@ -761,7 +761,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult.filter(r=>r.get("zoomRoom")) : this.state.ProgramRooms.filter(r=>r.get("zoomRoom"))}
+                        dataSource={this.state.searched ? this.state.searchResult.filter(r=>!r.get("id1") && r.get("zoomRoom")) : this.state.ProgramRooms.filter(r=>!r.get("id1") && r.get("zoomRoom"))}
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
