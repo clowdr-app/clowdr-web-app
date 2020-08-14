@@ -69,6 +69,8 @@ class VideoRoom extends Component {
     componentWillUnmount() {
         console.log("Unmounting video room")
         this.props.clowdrAppState.helpers.setGlobalState({currentRoom: null});
+        this.props.clowdrAppState.setSocialSpace("Lobby");
+
     }
     async joinCallFromProps(){
         if (!this.props.match) {
@@ -238,8 +240,8 @@ class VideoRoom extends Component {
                 // window.location.reload(false);
             }
         }, timeout);
-        if(room.get("socialSpace"))
-            this.props.clowdrAppState.setSocialSpace(null,room.get("socialSpace"));
+        // if(room.get("socialSpace"))
+        //     this.props.clowdrAppState.setSocialSpace(null,room.get("socialSpace"));
 
         room = await this.props.clowdrAppState.helpers.populateMembers(room);
         console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
@@ -253,11 +255,12 @@ class VideoRoom extends Component {
         let user = this.props.clowdrAppState.user;
 
         if (user) {
-            if(room.get("twilioChatID"))
-            this.props.clowdrAppState.chatClient.initChatClient(user, this.props.clowdrAppState.currentConference, this.props.clowdrAppState.userProfile).then(()=>{
-                this.props.clowdrAppState.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
-                })
-            });
+            if (room.get("twilioChatID"))
+                this.props.clowdrAppState.chatClient.initChatClient(user, this.props.clowdrAppState.currentConference, this.props.clowdrAppState.userProfile).then(() => {
+                    // this.props.clowdrAppState.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
+                    // })
+                    this.props.clowdrAppState.helpers.setGlobalState({chatChannel: room.get("twilioChatID")});
+                });
             let idToken = user.getSessionToken();
             const data = fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
@@ -376,7 +379,11 @@ class VideoRoom extends Component {
     }
 
     onError(err) {
-        let errorMsg = <div>
+        let errorMsg;
+        if(err.toString().includes("Room not found")){
+            errorMsg =<div>Error - this room no longer exists. <Button onClick={()=>{message.destroy()}} type="primary">Dismiss</Button></div>
+        }else
+        errorMsg = <div style={{width: "300px"}}>
             <Typography.Title level={3}>Error: unable to acquire camera</Typography.Title>
             We were not able to acquire access to your camera and/or microphone. You must have a webcam and allow Clowdr access to it in order to join this call.
             Please double check that your webcam is plugged in, then refresh this page. If you continue to have difficulties,
@@ -386,7 +393,7 @@ class VideoRoom extends Component {
             <b>Chrome</b>: Go to <a href="chrome://settings/content" target="_new">chrome://settings/content</a>, then select this website and be sure that camera and microphone are both set to 'Allow'. After completing these steps, please refresh the page to try again.
             <br />
            <br />
-            Internal error message: {err.toString()}</div>
+            Internal error message: {err.toString()}<br /><Button onClick={()=>{message.destroy()}} type="primary">Dismiss</Button> </div>
         message.error(errorMsg, 0)
     }
     async toggleWatch(){

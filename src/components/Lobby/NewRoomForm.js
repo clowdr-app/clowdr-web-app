@@ -143,14 +143,14 @@ class NewRoomForm extends React.Component {
                         >
                             <Input/>
                         </Form.Item>
-                        <Form.Item
-                            name="socialSpace"
-                            label="Parent Room"
-                            extra="Help attendees find your new chat room by associating it with an existing room"
-                        >
-                            <Select options={selectOptions}>
-                            </Select>
-                        </Form.Item>
+                        {/*<Form.Item*/}
+                        {/*    name="socialSpace"*/}
+                        {/*    label="Parent Room"*/}
+                        {/*    extra="Help attendees find your new chat room by associating it with an existing room"*/}
+                        {/*>*/}
+                        {/*    <Select options={selectOptions}>*/}
+                        {/*    </Select>*/}
+                        {/*</Form.Item>*/}
                         <Form.Item
                             name="persistence"
                             label="Persistence"

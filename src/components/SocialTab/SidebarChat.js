@@ -71,8 +71,8 @@ class SidebarChat extends React.Component {
         }
     }
 
-
-    async componentDidUpdate(prevProps, prevState, snapshot) {
+    async componentDidUpdate
+(prevProps, prevState, snapshot) {
         let isDifferentUser = this.user != this.props.auth.user;
         this.user = this.props.auth.user;
         let isDifferentChannel = this.props.auth.chatChannel != this.state.channel;

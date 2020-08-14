@@ -172,6 +172,9 @@ export default class ProgramCache {
         }
         return person;
     }
+    async getUserProfiles(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("UserProfile",  objToSetStateOnUpdate);
+    }
     async getAttachmentTypes(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("AttachmentType",  objToSetStateOnUpdate);
     }

@@ -891,83 +891,92 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
     fp.id = profileID;
     existingPersonsQ.equalTo("userProfile", fp);
 
-    let requestedPersonIDs = [];
-    let newPersonsToFetch = [];
-    for(let pid of personsIDs){
-        let p = new ProgramPerson();
-        p.id = pid;
-        newPersonsToFetch.push(p);
-        requestedPersonIDs.push(p);
-    }
+    try {
+        let requestedPersonIDs = [];
+        let newPersonsToFetch = [];
+        for (let pid of personsIDs) {
+            let p = new ProgramPerson();
+            p.id = pid;
+            newPersonsToFetch.push(p);
+            requestedPersonIDs.push(p);
+        }
 
-    let profileQ = new Parse.Query("UserProfile");
-    let [profile, alreadyClaimedPersons
-        , newPersonsToClaim
+        let profileQ = new Parse.Query("UserProfile");
+
+        let [profile, alreadyClaimedPersons
+            , newPersonsToClaim
         ] = await
-        Promise.all([profileQ.get(profileID, {useMasterKey: true}),
-            existingPersonsQ.find({useMasterKey: true}),
-        Parse.Object.fetchAll(newPersonsToFetch, {useMasterKey: true})
-        ]);
+            Promise.all([profileQ.get(profileID, {useMasterKey: true}),
+                existingPersonsQ.find({useMasterKey: true}),
+                Parse.Object.fetchAll(newPersonsToFetch, {useMasterKey: true})
+            ]);
 
-    if(profile.get("user").id != user.id)
-        throw "Invalid profile ID";
-    //Check to see what the changes if any are
-    let dirty = false;
-    let toSave = [];
-    for(let p of newPersonsToClaim){
-        if(!alreadyClaimedPersons.find(v => v.id==p.id)){
-            p.set("userProfile", profile);
-            toSave.push(p);
-            let config = null;
-            if (p.get("programItems")) {
-                Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
-                    let config = null;
-                    for (let item of items) {
-                        item.getACL().setWriteAccess(user.id,true);
-                        if(item.get("attachments")){
-                            for(let attachment of item.get("attachments")){
+        if (profile.get("user").id != user.id)
+            throw "Invalid profile ID";
+        console.log(newPersonsToClaim)
+        console.log(alreadyClaimedPersons)
+        //Check to see what the changes if any are
+        let dirty = false;
+        let toSave = [];
+        for (let p of newPersonsToClaim) {
+            if (!alreadyClaimedPersons.find(v => v.id == p.id)) {
+                p.set("userProfile", profile);
+                toSave.push(p);
+                let config = null;
+                if (p.get("programItems")) {
+                    Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
+                        let config = null;
+                        for (let item of items) {
+                            item.getACL().setWriteAccess(user.id, true);
+                            if (item.get("attachments")) {
+                                for (let attachment of item.get("attachments")) {
+                                    attachment.setACL(item.getACL());
+                                }
+                                Parse.Object.saveAll(item.get("attachments"));
+                            }
+                            if (item.get("chatSID")) {
+                                //add the author to the chat channel
+                                if (!config)
+                                    config = await getConfig(item.get("conference"));
+                                let member = config.twilioChat.channels(item.get("chatSID")).members.create({
+                                    identity: profile.id
+                                }).catch(err => {
+                                    console.log(err);
+                                });
+                            }
+                        }
+                        Parse.Object.saveAll(items, {useMasterKey: true});
+                    }));
+                }
+            }
+        }
+        for (let p of alreadyClaimedPersons) {
+            if (!requestedPersonIDs.find(v => v.id == p.id)) {
+                p.set("userProfile", null);
+                if (p.get("programItems")) {
+                    Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
+                        for (let item of items) {
+                            item.getACL().setWriteAccess(user.id, false);
+                            for (let attachment of item.get("attachments")) {
                                 attachment.setACL(item.getACL());
                             }
                             Parse.Object.saveAll(item.get("attachments"));
                         }
-                        if (item.get("chatSID")) {
-                            //add the author to the chat channel
-                            if (!config)
-                                config = await getConfig(item.get("conference"));
-                            let member = config.twilioChat.channels(item.get("chatSID")).members.create({
-                                identity: profile.id
-                            }).catch(err => {
-                                console.log(err);
-                            });
-                        }
-                    }
-                    Parse.Object.saveAll(items, {useMasterKey: true});
-                }));
-            }
-        }
-    }
-    for (let p of alreadyClaimedPersons) {
-        if(!requestedPersonIDs.find(v => v.id==p.id)){
-            p.set("userProfile", null);
-            if (p.get("programItems")) {
-                Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
-                    for (let item of items) {
-                        item.getACL().setWriteAccess(user.id,false);
-                        for(let attachment of item.get("attachments")){
-                            attachment.setACL(item.getACL());
-                        }
-                        Parse.Object.saveAll(item.get("attachments"));
-                    }
-                    Parse.Object.saveAll(items, {useMasterKey: true});
+                        Parse.Object.saveAll(items, {useMasterKey: true});
 
-                }));
+                    }));
+                }
+                toSave.push(p);
             }
-            toSave.push(p);
         }
+        console.log(toSave)
+        profile.set("programPersons", newPersonsToClaim);
+        toSave.push(profile);
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    }catch(err){
+        console.log(err);
+        throw err;
     }
-    profile.set("programPersons", newPersonsToClaim);
-    toSave.push(profile);
-    await Parse.Object.saveAll(toSave,{useMasterKey: true});
 });
 function generateRandomString(length) {
     return new Promise((resolve, reject) => {

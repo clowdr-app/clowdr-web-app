@@ -333,9 +333,9 @@ export default class ChatClient{
                     this.multiChatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
                 }
                 this.subscribeToChannel(channel.sid);
-                if (channelInfo.attributes.category != "socialSpace"){
-                    this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
-                }
+                // if (channelInfo.attributes.category != "socialSpace"){
+                //     this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
+                // }
             }
             // this.channelListeners.forEach(v => v.channelJoined(channel));
         });

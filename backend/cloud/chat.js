@@ -595,6 +595,7 @@ Parse.Cloud.define("chat-createDM", async (request) => {
     let messageWith = request.params.messageWith;
     let visibility="private";
 
+    console.log("Create DM called " + conversationName)
     let userQ = new Parse.Query(UserProfile);
     let conf = new ClowdrInstance();
     conf.id = confID;
@@ -658,6 +659,7 @@ Parse.Cloud.define("chat-createDM", async (request) => {
             mode: "directMessage",
             parseID: convo.id
         }
+        console.log("Creating dm")
         let chatRoom = await config.twilioChat.channels.create(
             {friendlyName: conversationName, type: visibility,
             attributes: JSON.stringify(attributes)});

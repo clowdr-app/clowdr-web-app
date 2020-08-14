@@ -237,20 +237,19 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     return false;
                 })
                 if (found) {
-                    // @ts-ignore    What is its type?  (Something from Twilio?)
-                    console.log(found.channel.sid)
                     // @ts-ignore    What is its type?
                     this.state.chatClient.openChat(found.channel.sid);
                     return;
                 }
             }
             assert(this.state.currentConference);
+            console.log("calling create DM")
             let res = await Parse.Cloud.run("chat-createDM", {
                 confID: this.state.currentConference.id,
                 conversationName: profileOfUserToDM.get("displayName"),
                 messageWith: profileOfUserToDM.id
             });
-            this.state.chatClient.openChat(res.sid);
+            await this.state.chatClient.openChat(res.sid);
         }
 
         // TS: @ Jon: Should this be polymorphic??
@@ -397,7 +396,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             else{
                 this.presenceUpdateScheduled = true;
                 this.presenceUpdateTimer = setTimeout(async ()=>{
-                    console.log("Doing update")
                     let newPresences = this.newPresences;
                     this.newPresences = [];
                     this.presenceUpdateScheduled = false;
@@ -406,8 +404,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         this.presences[presence.get("user").id] = presence;
                     }
                     for(let presenceWatcher of this.presenceWatchers){
-                        console.log(presenceWatcher)
-                        console.log(this.presences)
                         presenceWatcher.setState({presences: this.presences});
                     }
                 }, //10000 + Math.random() * 5000);

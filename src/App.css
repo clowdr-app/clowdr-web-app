@@ -215,6 +215,13 @@
 .personHoverable:hover{
     background-color: white;
 }
+#channelChanger .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
+    font-weight: bold;
+    line-height:1.1;
+    height: auto;
+    border-bottom: 1px solid #2A3746;
+}
+
 #rightPopout .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
     line-height:1.1;
     height: auto;
@@ -342,12 +349,16 @@ background-color:#97a7b7;
     /*position: fixed;*/
     /*bottom: 0;*/
     /*right: 0;*/
-    overflow-y: scroll;
+    overflow-y: hidden;
 }
 #activeUsersList{
+    overflow-y: scroll;
 }
 #sidebarChat{
     overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 .activeRoomsTab{
     height: 100%;
@@ -855,4 +866,7 @@ span.ant-divider-inner-text {
 }
 .sessionListItem{
     padding: 0;
+}
+.chat-search{
+    width: 100%;
 }

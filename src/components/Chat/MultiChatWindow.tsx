@@ -76,7 +76,6 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         this.channelConsumers.push(consumer);
     }
     openChat(sid: string, dontBringIntoFocus: boolean): void {
-        console.log("Opening chat: " + sid)
         this.setState({activeChatSID: sid});
     }
 

@@ -41,8 +41,14 @@ class UserStatusDisplay extends React.Component{
         }
     }
 
-    openDM(){
-        this.props.auth.helpers.createOrOpenDM(this.state.profile);
+    async openDM(){
+        if(!this.loading){
+            this.loading = true;
+            this.setState({loading: true})
+            await this.props.auth.helpers.createOrOpenDM(this.state.profile);
+            this.setState({loading: false})
+            this.loading = false;
+        }
     }
     linkRenderer = (props) => {
         let currentDomain = window.location.origin;
@@ -141,7 +147,7 @@ class UserStatusDisplay extends React.Component{
                     {this.state.profile.get("webpage")}</a>
                 </div>;
         }
-        let dmButton = <Button className="dmButton" type="primary" onClick={onClick}>Send a message to {this.state.profile.get("displayName")}</Button>
+        let dmButton = <Button className="dmButton" type="primary" loading={this.state.loading} onClick={onClick}>Send a message to {this.state.profile.get("displayName")}</Button>
         let firstLine =
             <div>
               {dntWaiver}
