@@ -406,13 +406,13 @@ class ChatFrame extends React.Component {
             this.loadingMessages = true;
             let intendedChanelSID = this.activeChannel.sid;
             this.setState({loadingMessages: true});
+            if(!this.currentPage[this.activeChannel.sid])
+                return;
             this.currentPage[this.activeChannel.sid].prevPage().then(messagePage => {
                 if (this.activeChannel.sid != intendedChanelSID) {
                     this.loadingMessages = false;
                     return;
                 }
-                console.log(messagePage)
-                console.log(messagePage.hasPrevPage)
                 this.setState({
                     hasMoreMessages: messagePage.hasPrevPage
                     //messagePage.hasPrevPage
