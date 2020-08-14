@@ -37,12 +37,10 @@ class ProgramItem extends React.Component {
         } else {
             let stateUpdate = {loading: false, error: null, ProgramItem: item};
             if (user) {
-                if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
-                    //set the social space...
-                    let ss = item.get("programSession").get("room").get("socialSpace");
-                    this.props.auth.setSocialSpace(ss.get("name"));
-                    this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+                if(item.get("chatSID")){
+                    this.props.auth.helpers.setGlobalState({forceChatOpen: true, chatChannel: item.get("chatSID")});
                 }
+
             }
             this.setState(stateUpdate);
         }

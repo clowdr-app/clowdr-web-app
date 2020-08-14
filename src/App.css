@@ -893,6 +893,26 @@ span.ant-divider-inner-text {
     height: 100%;
 }
 .programTime{
-    background-color: #bae7ff;
+    background-color: #efefef;
     text-align: center;
+}
+.program-item-display{
+    padding-left: 3px;
+    padding-right: 3px;
+}
+.summaryProgramEvent-past a{
+    color: #1890ff;
+}
+.summaryProgramEvent-past a:hover{
+    color: #2998FF;
+}
+.summaryProgramEvent-live{
+    background-color: #2f54eb;
+    border-bottom: 2px solid white;
+}
+.summaryProgramEvent-live a{
+    color: white;
+}
+.program-scroll-button{
+
 }

@@ -184,7 +184,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                         }
 
                         return <Collapse.Panel key={event.get("programItem").id} header={title}>
-                            <ProgramItemDetails ProgramItem={item} isInRoom={false} openChat={this.state.expandedItems[event.get("programItem").id]} hiddenKeys={[event.id]}/>
+                            <ProgramItemDetails ProgramItem={item} isInRoom={false} openChat={this.state.expandedItems[event.get("programItem").id]} />
                         </Collapse.Panel>
                     }):session.get('items') ? session.get('items').map((item: ProgramItem)=>{
                         return <Collapse.Panel key={item.id} header={item.get("title")}>
