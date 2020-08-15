@@ -69,7 +69,7 @@ class NewRoomForm extends React.Component {
                     <Typography.Paragraph>
                         CLOWDR lets you create video chat rooms with other conference participants.
                         You can create a new room, or join existing rooms. Public rooms are open to all
-                        conference participants, and private rooms use a simple access control list:
+                        conference participants, while private rooms use a simple access control list:
                         you can add any conference participant to be able to see the room, and then
                         they will have the same options to add more people.
                     </Typography.Paragraph>
@@ -154,12 +154,12 @@ class NewRoomForm extends React.Component {
                         <Form.Item
                             name="persistence"
                             label="Persistence"
-                            extra={"Ephemeral rooms disappear five minutes after the last participant leaves. Please use Ephemeral unless you have a specific reason for wanting this room to persist."}>
+                            extra={"Ephemeral rooms disappear five minutes after the last participant leaves.  Persistent rooms last until deleted by a platform moderator."}>
                             <Radio.Group buttonStyle="solid">
                                 <Radio.Button value="ephemeral">Ephemeral</Radio.Button>
                                 {this.props.auth.helpers.ifPermission("createVideoRoom-persistent",
                                     <Radio.Button value="persistent">Persistent</Radio.Button>,
-                                    <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create persistent rooms. Please ask a moderator if you would like a persistent room."><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
+                                    <Tooltip mouseEnterDelay={0.5} title="You do not have enough permissions to create persistent rooms. Please ask a moderator if you need a persistent room."><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
                                 )}
                             </Radio.Group>
                         </Form.Item>

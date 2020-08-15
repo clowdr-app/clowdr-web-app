@@ -117,7 +117,7 @@ class LinkMenu extends React.Component {
                         })}
                     </SubMenu>,
 
-                    <Menu.Item key='/lobby' icon={<WechatOutlined/>}><NavLink to="/lobby">People</NavLink></Menu.Item>,
+                    <Menu.Item key='/lobby' icon={<WechatOutlined/>}><NavLink to="/lobby">People/Places</NavLink></Menu.Item>,
 
                     <Menu.Item key='/account' icon={<UserOutlined/>}><NavLink to="/account">My Account</NavLink></Menu.Item>,
 
