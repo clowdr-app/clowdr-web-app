@@ -100,6 +100,7 @@ class CollapsedChatDisplay extends React.Component{
             this.props.auth.chatClient.joinedChannels[this.state.sid].channel.leave();
         }
     }
+    
     openDM(){
         this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
@@ -138,7 +139,7 @@ class CollapsedChatDisplay extends React.Component{
         let popoverContent = <Space>{buttons}</Space>;
         return <Popover key={this.state.sid} mouseEnterDelay={0.5} placement="topRight"
        content={popoverContent}><div
-           className="collapsedChatDisplay"
+            className="collapsedChatDisplay"
             key={this.state.sid}
             >
            <div

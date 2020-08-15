@@ -7,7 +7,6 @@ import NewRoomForm from "./NewRoomForm";
 import UserStatusDisplay from "./UserStatusDisplay";
 import Parse from "parse";
 import PresenceForm from "./PresenceForm";
-import CollapsedChatDisplay from "../Chat/CollapsedChatDisplay";
 import UpcomingProgram from "./UpcomingProgram";
 
 

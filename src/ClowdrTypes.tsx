@@ -33,7 +33,7 @@ export interface ClowdrState {
     getLiveChannel: any;
     chatClient: ChatClient;
     history: History;
-    activeSpace: any;
+    activeSpace: SocialSpace;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
     refreshUser(a: Parse.Object|null, b: boolean): any
 }

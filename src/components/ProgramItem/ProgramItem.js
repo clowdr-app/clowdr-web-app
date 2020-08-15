@@ -40,7 +40,6 @@ class ProgramItem extends React.Component {
                 if(item.get("chatSID")){
                     this.props.auth.helpers.setGlobalState({forceChatOpen: true, chatChannel: item.get("chatSID")});
                 }
-
             }
             this.setState(stateUpdate);
         }

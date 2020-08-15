@@ -117,13 +117,14 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         }
         return timeA > timeB ? 1 : timeA == timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
     }
+    
     scrollToNow(){
         if(this.currentProgramTimeRef.current)
             this.currentProgramTimeRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         // window.scrollTo(0, this.currentProgramTimeRef.current.offsetTop);
     }
 
-    render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {
+    render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> {
         if (this.state.loading)
             return <div>
                 <Divider className="social-sidebar-divider">Program at a Glance</Divider>
