@@ -54,11 +54,13 @@ export default class ProgramSessionEventDisplay extends React.Component{
         let now = Date.now();
 
         let className = "summaryProgramEvent";
+        let linkTo = "/program/"+this.state.ProgramItem.get("confKey");
         let startTime = this.state.ProgramSessionEvent.get("startTime");
         let endTime = this.state.ProgramSessionEvent.get("endTime");
         if (endTime < now) {
             className = "summaryProgramEvent-past";
         } else if (startTime <= now && endTime >= now) {
+            linkTo = "/live/now/"+this.state.room.get("name");
             className = "summaryProgramEvent-live";
         } else if (startTime > now) {
             className = "summaryProgramEvent-future";
@@ -84,7 +86,7 @@ export default class ProgramSessionEventDisplay extends React.Component{
         </div>
         return <div className={"program-item-display "+ className}>
             <Tooltip placement="right" title={tooltip}>
-                <NavLink  to={"/live/now/"+this.state.room.get("name")}>{badge} {this.state.ProgramItem.get("title")}</NavLink></Tooltip>
+                <NavLink  to={linkTo}>{badge} {this.state.ProgramItem.get("title")}</NavLink></Tooltip>
         </div>
 
     }
