@@ -75,7 +75,7 @@ class ProgramItem extends React.Component {
                 type="error"
             />
         }
-        return <ProgramItemDetails ProgramItem={this.state.ProgramItem} isInRoom={this.state.isInRoom} openChat={true} />
+        return <ProgramItemDetails ProgramItem={this.state.ProgramItem} isInRoom={this.state.isInRoom} openChat={false} />
     }
 }
 

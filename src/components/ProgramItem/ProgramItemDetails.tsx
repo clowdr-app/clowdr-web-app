@@ -116,7 +116,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                         programItem: item.id
                     });
                 }
-                if (chatSID)
+                if (chatSID) 
                     this.props.appState?.chatClient.openChatAndJoinIfNeeded(chatSID).then((sid)=>{
                         this.setState({chatSID: sid});
                     });
