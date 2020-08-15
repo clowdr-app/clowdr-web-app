@@ -207,7 +207,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             }}
                                onCreate={this.createNewChannel.bind(this)}/>
             <Select showSearch={true}
-                    placeholder="Find a chat"
+                    placeholder="Search"
                     className="chat-search"
                     value={this.state.filter}
                     showArrow={false}
