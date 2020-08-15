@@ -474,7 +474,7 @@ class Lobby extends React.Component {
             //     <TabPane tab="Breakout Areas" key="1">
             <div>
                 <AboutModal />
-                <Typography.Title level={2}>People</Typography.Title>
+                <Typography.Title level={2}>People and Places</Typography.Title>
 
                 <Typography.Paragraph>
                 Some say that the most valuable part of an academic conference is outside the official sessions, when
@@ -487,7 +487,7 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>
-                When you are looking for casual conversation or hoping to meet new people,  head over to one of the small-group rooms labeled "Coffee Break 1", "Coffee Break 2", etc.  You can either join a room at random or else pick an empty room and wait for others to join you there.
+                When you are looking for casual conversation or hoping to meet new people, head over to one of the small-group rooms labeled "Coffee Break 1", "Coffee Break 2", etc.  You can either join a room at random or else pick an empty room and wait for others to join you there.
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>

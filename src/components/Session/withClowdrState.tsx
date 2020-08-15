@@ -253,7 +253,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         // TS: @ Jon: Should this be polymorphic??
-        // Jon: I think that this was a half-baked idea and shoudl probably be factored away
+        // Jon: I think that this was a half-baked idea and should probably be factored away
         ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
             if (this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;

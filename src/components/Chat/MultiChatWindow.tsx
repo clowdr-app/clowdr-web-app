@@ -113,7 +113,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         //     return <Spin/>
 
         return <div className="multiChatWindow">
-            <div className="multiChatWindowHeader">Chat</div>
+            <div className="multiChatWindowHeader">Text Chats</div>
             <div
                 className="multiChatWindowContent"
         >
