@@ -19,7 +19,6 @@ export default class ChatClient{
         this.channelWaiters = {};
     }
 
-
     async openChatAndJoinIfNeeded(sid, openOnRight=false){
         let channels = this.joinedChannels;
         let found = channels[sid];
@@ -48,8 +47,8 @@ export default class ChatClient{
             }
             return found.sid;
         }
-
     }
+
     closeChatAndLeaveIfUnused(sid){
        if(this.channelsThatWeHaventMessagedIn.includes(sid)){
            if(this.ephemerallyOpenedChats.includes(sid))
@@ -70,6 +69,7 @@ export default class ChatClient{
             this.joinedChannels[sid].channel.leave();
         }
     }
+
     async getJoinedChannel(sid){
         let chan = this.joinedChannels[sid];
         if(!chan)
@@ -83,6 +83,7 @@ export default class ChatClient{
         }
         return chan.channel;
     }
+
     async joinAndGetChannel(uniqueName) {
         if(!this.twilio){
             await this.chatClientPromise;
@@ -138,6 +139,7 @@ export default class ChatClient{
     initChatSidebar(rightChat){
         this.rightSideChat = rightChat;
     }
+
     initBottomChatBar(chatBar){
         this.chatBar = chatBar;
         chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes && c.attributes.category != "socialSpace").map(c=>c.channel.sid)});
@@ -150,7 +152,6 @@ export default class ChatClient{
                 .filter(c=>c.attributes && c.attributes.category != "socialSpace")
                 .map(c=>c.channel.sid)});
     }
-
 
     initChatClient(user, conference, userProfile, appController) {
         this.userProfile = userProfile;
@@ -181,6 +182,7 @@ export default class ChatClient{
         if(this.chatList)
             this.chatList.addChannel(chatSID);
     }
+    
     leaveChat(chatSID){
         this.chats = this.chats.filter(c=>c != chatSID);
         if(this.chatBar)
@@ -188,6 +190,7 @@ export default class ChatClient{
         if(this.chatList)
             this.chatList.removeChannel(chatSID);
     }
+
     async getChannelInfo(channel){
 
         let ret = {};
