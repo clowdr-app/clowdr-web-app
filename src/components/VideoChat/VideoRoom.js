@@ -646,7 +646,7 @@ class VideoRoom extends Component {
                                     </VideoContext.Consumer>
                                         <Tooltip mouseEnterDelay={0.5} title={"This room was created as a " +
                                         this.state.room.get("mode") + " room with a capacity of " +
-                                        this.state.room.get("capacity") +", there's currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
+                                        this.state.room.get("capacity") +"; currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
                                         {fullLabel}{visibilityDescription}
                                         {privacyDescription}</h3>)}
 
@@ -673,6 +673,7 @@ class VideoRoom extends Component {
 
                                 {ACLdescription}
 
+                            // @Jon: Not quite right? -- should be manager permissions, not moderator, I think, but more importantly the button appears even for non-moderators...
                             {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
