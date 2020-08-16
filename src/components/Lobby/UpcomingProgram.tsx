@@ -117,8 +117,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         }
         return timeA > timeB ? 1 : timeA == timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
     }
-    
-    scrollToNow(){
+    scrollToNow() {
         if(this.currentProgramTimeRef.current)
             this.currentProgramTimeRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         // window.scrollTo(0, this.currentProgramTimeRef.current.offsetTop);
@@ -135,22 +134,32 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         let programDetails =[];
         let lastFormattedTime = null;
 
-        let labeledNow = false;
         let now = new Date();
         let lastStartTimeStillCurrent = null;
-        for(let item of this.state.curItems){
-            if(item.get("startTime") < now && item.get("endTime") > now){
-                if(!lastStartTimeStillCurrent)
+        let currentItem = null;
+        for (let item of this.state.curItems) {
+            if (item.get("startTime") < now && item.get("endTime") > now) {
+                currentItem = item;
+                if (!lastStartTimeStillCurrent)
                     lastStartTimeStillCurrent = item.get("startTime");
-                else if(moment(item.get("startTime")).diff(moment(lastStartTimeStillCurrent)) > 60000){
+                else if (moment(item.get("startTime")).diff(moment(lastStartTimeStillCurrent)) > 60000){
                     lastStartTimeStillCurrent = item.get('startTime');
                 }
             }
         }
+        if (!currentItem) {
+            let timeDiff = 1000000000;
+            for (let item of this.state.curItems) {
+                if (item.get("startTime") > now && moment(item.get("startTime")).diff(now) < timeDiff) {
+                    timeDiff = moment(item.get("startTime")).diff(now);
+                    currentItem = item;
+                }
+            }
+        }
+
         this.lastRenderedNow = lastStartTimeStillCurrent;
-        for(let item of this.state.curItems){
-            if(item.get("startTime") &&lastStartTimeStillCurrent &&  !labeledNow && item.get("startTime").getTime() == lastStartTimeStillCurrent.getTime()){
-                labeledNow = true;
+        for(let item of this.state.curItems) {
+            if (item == currentItem) {
                 programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider">Now</Divider></div>)
             }
             let formattedTime = moment(item.get("startTime")).calendar();
@@ -218,7 +227,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
             curItems: items,
             nextUpdateTime: this.getNextUpdateTime(this.state.ProgramSessions)
         },() => {
-            console.log("SCrolling")
+            console.log("Scrolling")
             this.scrollToNow();
             }
         );
