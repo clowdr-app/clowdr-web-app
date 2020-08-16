@@ -300,13 +300,13 @@ class ChatFrame extends React.Component {
                 notification.info(args);
             })
         }
-
     };
 
     messageRemoved = (channel, message) => {
         this.messages[channel.sid] = this.messages[channel.sid].filter((v) => v.sid != message.sid)
         this.groupMessages(this.messages[channel.sid]);
     };
+
     messageUpdated = (channel, message) => {
         this.messages[channel.sid] = this.messages[channel.sid].map(m => m.sid == message.sid ? message : m)
         this.groupMessages(this.messages[channel.sid]);
@@ -339,7 +339,6 @@ class ChatFrame extends React.Component {
             if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
                 this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
             }
-
         }
     };
 

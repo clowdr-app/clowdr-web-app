@@ -315,7 +315,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         }
                     </Menu.SubMenu>
 
-                <Menu.SubMenu key="otherPublicChannels" title={<span>Unsubscribed Channels{addChannelButton}</span>}>
+                <Menu.SubMenu key="otherPublicChannels" title={<span>More Channels{addChannelButton}</span>}>
                     {
                         this.state.allChannels.filter(chan => chan && chan.sid &&
                             //@ts-ignore

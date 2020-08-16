@@ -3,7 +3,6 @@ import React, {Component} from 'react';
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-
 import {
     Avatar,
     Badge,
@@ -23,7 +22,7 @@ import {
     Tabs,
     Tag,
     Tooltip
-} from 'antd';
+    } from 'antd';
 import {ArrowUpOutlined, CloseOutlined, SmileOutlined, ToolOutlined, VideoCameraAddOutlined} from '@ant-design/icons'
 import {AuthUserContext} from "../Session";
 import Meta from "antd/lib/card/Meta";
@@ -54,7 +53,6 @@ const INITIAL_STATE = {
 class ChatContainer extends Component {
     constructor(props) {
         super(props);
-
         this.state = {...INITIAL_STATE};
     }
 
@@ -100,9 +98,7 @@ class ChatContainer extends Component {
             this.setState({user:null});
             this.cleanup();
         }
-
     }
-
 
     componentWillUnmount() {
       this.cleanup();
@@ -111,7 +107,6 @@ class ChatContainer extends Component {
     messagesLoaded = (channel, messagePage) => {
         this.setState({["messages"+channel.uniqueName]: messagePage.items, chatLoading: false});
     };
-
 
     onMessageChanged = event => {
         this.setState({newMessage: event.target.value});
@@ -138,8 +133,8 @@ class ChatContainer extends Component {
         let room = await newChannel.join();
         this.setState({newChannelVisible: false, activeChannel: newChannel.uniqueName});
         this.channel = newChannel;
-
     }
+
     messageAdded = (channel, message) => {
         this.setState((prevState, props) => ({
             ["messages"+channel.uniqueName]: [...prevState["messages"+channel.uniqueName], message],
@@ -151,12 +146,12 @@ class ChatContainer extends Component {
             ["messages"+channel.uniqueName]: prevState["messages"+channel.uniqueName].filter((v)=>v.sid!=message.sid)
         }));
     };
+
     messageUpdated = (channel, message) => {
         this.setState((prevState, props) => ({
             ["messages"+channel.uniqueName]: prevState["messages"+channel.uniqueName].map(m => m.sid==message.sid ? message:m)
         }));
     };
-
 
     async changeActiveChannel(channel) {
         let _this = this;
@@ -224,7 +219,6 @@ class ChatContainer extends Component {
         } else {
             console.log("Unable to get our token?");
         }
-
     }
 
     async deleteChatRoom(chan) {
@@ -248,6 +242,7 @@ class ChatContainer extends Component {
             console.log("Unable to get our token?");
         }
     }
+
     async updateChannel(values) {
         let idToken = this.state.user.getSessionToken();
         let _this = this;
@@ -268,14 +263,11 @@ class ChatContainer extends Component {
         } else {
             console.log("Unable to get our token?");
         }
-
     }
 
     deleteMessage(message) {
         message.remove();
     }
-
-
 
     groupMessages(messages) {
         let ret = [];
@@ -312,8 +304,8 @@ class ChatContainer extends Component {
         if (lastMessage)
             ret.push(lastMessage);
         return ret;
-
     }
+
     joinVideoRoom(chatRoom){
         console.log(chatRoom);
         let idToken = this.state.user.getSessionToken();
@@ -368,8 +360,7 @@ class ChatContainer extends Component {
                             {this.state.expanded ?
                                 <Layout>
                                     <Sider style={{backgroundColor: "white"}}>
-                                        <Divider style={{verticalAlign: 'middle'}}>Channels <Popover
-                             mouseEnterDelay={0.5}
+                                        <Divider style={{verticalAlign: 'middle'}}>Channels <Popover mouseEnterDelay={0.5}
                                             content={<span onClick={()=>{this.setState({newChannelVisible: true})}}><a href="#">New channel</a></span>}
                                         ><ToolOutlined /></Popover></Divider>
 
@@ -381,8 +372,7 @@ class ChatContainer extends Component {
                                                           values={this.state.editingChannel} />
                                         {this.state.channels ?
                                             <Menu theme="light" style={{height:"100%"}} selectedKeys={[_this.state.activeChannel]}>
-                                            {
-                                                this.state.channels.map(function(item){
+                                            { this.state.channels.map(function(item){
                                                     let isJoined = false;
 
                                                     if(_this.state.joinedChannels)
@@ -497,10 +487,8 @@ class ChatContainer extends Component {
                                     </Layout>
                                 </Layout> : <div></div>
                             }
-
                         </TabPane>
                     </Tabs>
-
                 </div>
             );
         }
@@ -538,7 +526,6 @@ class ChatContainer extends Component {
             {options}
         </div>}><div className="chatMessage"><ReactMarkdown source={m.body} renderers={{ text: emojiSupport }} /></div>
         </Popover>
-
     }
 }
 
@@ -687,11 +674,11 @@ const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
         </Modal>
     );
 };
+
 const AuthConsumer = (props) => (
             <AuthUserContext.Consumer>
                 {value => (
                     <ChatContainer {...props}  parseLive={value.parseLive} auth={value} />
                 )}
             </AuthUserContext.Consumer>
-
 );

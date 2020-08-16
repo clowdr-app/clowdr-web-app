@@ -21,7 +21,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
-
 interface ProgramItemDetailProps {
     appState: ClowdrState | null;
     ProgramItem: ProgramItem;

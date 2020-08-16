@@ -374,6 +374,7 @@ export default class ChatClient{
         }
         return this.twilio;
     }
+
     addChannelListener(listener) {
         this.channelListeners.push(listener);
     }
@@ -381,7 +382,6 @@ export default class ChatClient{
     removeChannelListener(listener) {
         this.channelListeners = this.channelListeners.filter((v) => v != listener);
     }
-
 
     async cleanup() {
         if (this.twilio) {
