@@ -1,4 +1,5 @@
 import React from 'react';
+import {NavLink} from "react-router-dom";
 import {ClowdrState} from "../../ClowdrTypes";
 import ProgramSession from "../../classes/ProgramSession"
 import {Collapse, Divider, Spin, Button} from "antd";
@@ -160,7 +161,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         this.lastRenderedNow = lastStartTimeStillCurrent;
         for(let item of this.state.curItems) {
             if (item == currentItem) {
-                programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider">Now</Divider></div>)
+                programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
             }
             let formattedTime = moment(item.get("startTime")).calendar();
             if(formattedTime != lastFormattedTime)
