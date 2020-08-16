@@ -563,7 +563,7 @@ class ChatFrame extends React.Component {
         if(m.attributes && m.attributes.linkTo){
             actionButton = <Button onClick={()=>{this.props.auth.history.push(m.attributes.path)}}>Join Video</Button>
         }
-        options.push(<span className="timestamp">{moment(m.timestamp).format("LL LTS")}</span>);
+        options.push(<span key={m.sid} className="timestamp">{moment(m.timestamp).format("LL LTS")}</span>);
         // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
             options.push(<Popconfirm
                 key="delete"
