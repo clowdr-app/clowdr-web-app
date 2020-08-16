@@ -94,7 +94,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
         if (item.get("attachments")) {
             await Parse.Object.fetchAllIfNeeded(item.get("attachments"));
         }
-        if(this.props.openChat)
+        if (this.props.openChat)
             this.openChat(item);
         // @ts-ignore
         this.setState(stateUpdate);
@@ -127,6 +127,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
     maybeCloseChat(){
         this.props.appState?.chatClient.closeChatAndLeaveIfUnused(this.state.chatSID);
     }
+    
     componentDidUpdate(prevProps: Readonly<ProgramItemDetailProps>, prevState: Readonly<ProgramItemDetailsState>, snapshot?: any): void {
         if(!this.props.openChat && prevProps.openChat)
         {

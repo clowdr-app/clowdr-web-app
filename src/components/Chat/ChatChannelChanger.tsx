@@ -98,6 +98,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             this.setState({ProgramItems: items});
         })
     }
+
     async createChannel(title: string, description: string, autoJoin: boolean) : Promise<Channel>{
         let twilio = this.props.appState?.chatClient.twilio;
         if(!twilio)
@@ -115,6 +116,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             attributes: attributes
         });
     }
+
     async createNewChannel(values: any) {
         var _this = this;
         let newChannel = await this.createChannel(
@@ -289,42 +291,36 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                   forceSubMenuRender={true}
             >
                 <Menu.SubMenu key="dms" title="Direct Messages">
-
                     {dms.map((chan) => {
                         let className = "personHoverable";
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan} className={className}>
                             <CollapsedChatDisplay sid={chan}  />
-
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })
                     }
                 </Menu.SubMenu>
                 <Menu.SubMenu key="programChannels" title="Paper Chats">
-
                     {programChats.map((chan) => {
                         let className = "personHoverable";
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan} className={className}>
                             <CollapsedChatDisplay sid={chan}  />
-
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })
                     }
                 </Menu.SubMenu>
                     <Menu.SubMenu key="joinedChannels" title="Your Channels">
-
                         {otherChannels.map((chan) => {
                             let className = "personHoverable";
                             // if (this.state.filteredUser == user.id)
                             //     className += " personFiltered"
                             return <Menu.Item key={chan} className={className}>
                                 <CollapsedChatDisplay sid={chan}  />
-
                                 {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                             </Menu.Item>
                         })
@@ -332,7 +328,6 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     </Menu.SubMenu>
 
                 <Menu.SubMenu key="otherPublicChannels" title={<span>Other Channels{addChannelButton}</span>}>
-
                     {
                         this.state.allChannels.filter(chan => chan && chan.sid &&
                             //@ts-ignore
@@ -343,7 +338,6 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         //     className += " personFiltered"
                         return <Menu.Item key={chan.sid} className={className}>
                             <CollapsedChatDisplay sid={chan.sid} channel={chan} />
-
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })

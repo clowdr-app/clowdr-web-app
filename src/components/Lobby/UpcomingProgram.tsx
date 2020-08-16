@@ -123,7 +123,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         // window.scrollTo(0, this.currentProgramTimeRef.current.offsetTop);
     }
 
-    render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {
+    render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> {
         if (this.state.loading)
             return <div>
                 <Divider className="social-sidebar-divider">Program at a Glance</Divider>

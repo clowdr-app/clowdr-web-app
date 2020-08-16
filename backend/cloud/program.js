@@ -177,11 +177,16 @@ Parse.Cloud.define("rooms-upload", async (request) => {
                 let data = row.YouTube;
                 room.set("src1", "YouTube")
                 room.set("id1", data);
+                // BCP: Is this the right way to clear out the other fields?
+                room.set("pwd1", "");
+                room.set("pwd2", "");
                 if (row.iQIYI) {
                     let data2 = getIDAndPwd(row.iQIYI)
                     room.set("src2", "iQIYI")
                     room.set("id2", data2[0]);
-
+                } else { // BCP: Is this the right way to clear out the other fields?
+                    room.set("src2", "")
+                    room.set("id2", "");
                 }
                 room.set("qa", (row.QA ? row.QA : ""));
             }

@@ -25,6 +25,7 @@ export default class ProgramSessionEventDisplay extends React.Component{
             room: this.props.auth.programCache.getProgramRoomForEvent(event)
         })
     }
+    
     componentWillUnmount() {
         if(this.props.id)
         this.props.auth.programCache.cancelSubscription("ProgramSessionEvent", this, this.props.id);
@@ -33,9 +34,11 @@ export default class ProgramSessionEventDisplay extends React.Component{
         if(this.state.ProgramItem)
             this.props.auth.programCache.cancelSubscription("ProgramItem", this, this.state.ProgramItem.id);
     }
+
     formatTime(timestamp) {
         return moment(timestamp).tz(timezone.tz.guess()).format('LLL z')
     }
+
     render() {
         if(this.state.loading){
             return <Skeleton.Input />

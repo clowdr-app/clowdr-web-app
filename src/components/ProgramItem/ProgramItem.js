@@ -38,9 +38,9 @@ class ProgramItem extends React.Component {
             let stateUpdate = {loading: false, error: null, ProgramItem: item};
             if (user) {
                 if(item.get("chatSID")){
+                    // This sets the right-hand sidebar display to this channel
                     this.props.auth.helpers.setGlobalState({forceChatOpen: true, chatChannel: item.get("chatSID")});
                 }
-
             }
             this.setState(stateUpdate);
         }

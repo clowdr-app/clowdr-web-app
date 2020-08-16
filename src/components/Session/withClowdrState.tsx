@@ -485,7 +485,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         async setSocialSpace(spaceName:string, space:SocialSpace, user:User, userProfile:UserProfile, ignoreChatChannel?:boolean) {
             if (!this.state.user && !user) // user is not logged in
                 return
-            if(space)
+            if (space)
                 spaceName = space.get("name");
             if (!this.state.activeSpace || spaceName != this.state.activeSpace.get("name")) {
                 if(!user)
@@ -526,7 +526,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             }
         }
 
-        // @Jon: What would be a better name for this???
+        // @ Jon: What would be a better name for this???
         //Jon: I need to refactor all of the chat client stuff, it's full of bad patterns and races left and right. Open to name suggestions, but eventually I want this to return a promise anyway
         getChatClient(callback: (_:ChatClient)=>void) {
             if (this.chatClient)

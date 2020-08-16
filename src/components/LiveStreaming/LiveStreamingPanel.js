@@ -21,7 +21,6 @@ class LiveStreamingPanel extends Component {
         };
     }
 
-
     joinChatChannels() {
         var items = [];
         this.props.mysessions.map(session => {

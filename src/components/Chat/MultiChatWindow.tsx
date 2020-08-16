@@ -11,7 +11,6 @@ import ProgramPerson from "../../classes/ProgramPerson";
 import AttachmentType from "../../classes/AttachmentType";
 import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
 import { Resizable, ResizableBox } from 'react-resizable';
-import CollapsedChatDisplay from "./CollapsedChatDisplay";
 import ChatChannelChanger from "./ChatChannelChanger"
 import ChatFrame from "./ChatFrame"
 import ChatChannelArea from "./ChatChannelArea"
@@ -59,6 +58,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         //@ts-ignore
         this.unreadConsumers.get(sid).push(consumer);
     }
+
     cancelUnreadConsumer(sid: string, consumer: any): void {
         if(this.unreadConsumers.get(sid)){
             //@ts-ignore
@@ -75,6 +75,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         }
         this.channelConsumers.push(consumer);
     }
+
     openChat(sid: string, dontBringIntoFocus: boolean): void {
         this.setState({activeChatSID: sid});
     }
@@ -94,6 +95,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         }
         // this.setState({channels: channels, loading: false});
     }
+
     componentDidMount(): void {
         this.props.appState?.chatClient.initMultiChatWindow(this);
     }
@@ -111,7 +113,6 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
     render() {
         // if (this.state.loading)
         //     return <Spin/>
-
         return <div className="multiChatWindow">
             <div className="multiChatWindowHeader">Text Chats</div>
             <div
