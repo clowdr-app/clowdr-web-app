@@ -673,8 +673,7 @@ class VideoRoom extends Component {
 
                                 {ACLdescription}
 
-                            {/* @Jon/@Crista: @URGENT Not quite right? -- should be manager permissions, not moderator, I think, but more importantly the button appears even for non-moderators... */}
-                            {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
+                            {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.isManager ? <Popconfirm title="Are you sure you want to delete and end this room?"
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             {!this.props.hideInfo ? <div>

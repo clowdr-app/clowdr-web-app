@@ -49,8 +49,8 @@ class NewRoomForm extends React.Component {
                 return {label: c.get("name"), value: c.id }
             });
         }
-        return this.props.auth.helpers.ifPermission("createVideoRoom",
-            <div>
+        return <div> // BCP: Anybody can create video rooms
+                     // this.props.auth.helpers.ifPermission("createVideoRoom",
                 <Button type={buttonType} onClick={this.showModal} style={this.props.style}>
                     {buttonText}
                 </Button>
@@ -157,10 +157,10 @@ class NewRoomForm extends React.Component {
                             extra={"Ephemeral rooms disappear five minutes after the last participant leaves.  Persistent rooms last until deleted by a platform moderator."}>
                             <Radio.Group buttonStyle="solid">
                                 <Radio.Button value="ephemeral">Ephemeral</Radio.Button>
-                                {this.props.auth.helpers.ifPermission("createVideoRoom-persistent",
-                                    <Radio.Button value="persistent">Persistent</Radio.Button>,
-                                    <Tooltip mouseEnterDelay={0.5} title="You do not have enough permissions to create persistent rooms. Please ask a moderator if you need a persistent room."><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
-                                )}
+                                {this.props.auth.isModerator 
+                                  ? <Radio.Button value="persistent">Persistent</Radio.Button> 
+                                  : <Tooltip mouseEnterDelay={0.5} title="You do not have enough permissions to create persistent rooms. Please ask a moderator if you need a persistent room."><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
+                                }
                             </Radio.Group>
                         </Form.Item>
                         {/*<Form.Item*/}
@@ -187,17 +187,16 @@ class NewRoomForm extends React.Component {
                         >
                             <Radio.Group buttonStyle="solid">
                                 <Radio.Button value="listed">Public</Radio.Button>
-                                {this.props.auth.helpers.ifPermission("createVideoRoom-private",
-                                    <Radio.Button value="unlisted">Private</Radio.Button>,
-                                    <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create private rooms"><Radio.Button disabled={true} value="unlisted">Private</Radio.Button></Tooltip>
-                                )}
-
+                                {  // BCP: Ripping out this permission check: everybody can create private rooms
+                                    // this.props.auth.helpers.ifPermission("createVideoRoom-private",
+                                    <Radio.Button value="unlisted">Private</Radio.Button>
+                                    // , <Tooltip mouseEnterDelay={0.5} title="You do not have access permissions to create private rooms"><Radio.Button disabled={true} value="unlisted">Private</Radio.Button></Tooltip> )
+                                }
                             </Radio.Group>
                         </Form.Item>
                     </Form>
                 </Modal>
             </div>
-        );
     }
 }
 const AuthConsumer = (props) => (

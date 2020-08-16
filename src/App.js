@@ -124,7 +124,6 @@ class App extends Component {
         }
         reader.readAsDataURL(file);
         return false;
-
     }
 
     siteHeader() {
@@ -148,7 +147,7 @@ class App extends Component {
                     }
                 </Select>
                 clowdrActionButtons = <span>
-                {(this.props.clowdrAppState.user && this.props.clowdrAppState.permissions.includes("moderator") ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
+                {(this.props.clowdrAppState.user && this.props.clowdrAppState.isModerator ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
                     <Tooltip mouseEnterDelay={0.5} title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
                 <Tooltip mouseEnterDelay={0.5} title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
                 <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>

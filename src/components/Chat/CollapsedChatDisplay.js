@@ -118,8 +118,7 @@ class CollapsedChatDisplay extends React.Component{
                                  this.destroyChat.bind(this)
                              }
         >Leave Channel</Button>)
-        // @Jon: @URGENT Should be isManager, no?  Also, what is the difference between isModerator and permissions.includes('moderator')?
-        if(this.props.auth.isModerator){
+        if(this.props.auth.isManager){
             buttons.push(<Popconfirm
                 key="deleteChat"
                 onConfirm={async ()=>{
