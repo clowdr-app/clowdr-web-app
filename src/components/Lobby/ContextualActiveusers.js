@@ -205,6 +205,7 @@ class ContextualActiveUsers extends React.Component {
                 {programInfo}
 
                 <div id="videoChatListContainer">
+                <Divider className="sidebar-section-separator"></Divider>
                 <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
                 + activeSpace}>Video chat rooms</Tooltip></Divider>
 

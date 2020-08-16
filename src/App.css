@@ -557,9 +557,16 @@ td.ant-table-cell.program-table-timeBand{
  td.ant-table-cell.program-table-programItem{
     padding: 2px;
 }
+
 #sidepopoutcontainer .social-sidebar-divider{
-     margin: 0;
-    }
+    margin: 0;
+   }
+
+.sidebar-section-separator{
+    height: 2px;
+    background-color: #198fff;
+    margin: 0;
+ }
 
 span.ant-divider-inner-text {
         color: #0264c1;
@@ -880,7 +887,6 @@ span.ant-divider-inner-text {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-
 }
 #upcomingProgramContainer{
     overflow-y: hidden;
@@ -914,5 +920,8 @@ span.ant-divider-inner-text {
     color: white;
 }
 .program-scroll-button{
+}
 
+.icon-text{
+    font-size: xx-small;
 }

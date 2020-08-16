@@ -1,8 +1,7 @@
 import React, {Component} from 'react';
 import {BrowserRouter, NavLink, Route} from 'react-router-dom';
 import BrowserDetection from 'react-browser-detection';
-import {Button, Layout, message, Select, Spin, Tooltip, Typography, Upload} from 'antd';
-
+import {Button, Divider, Layout, message, Select, Spin, Tooltip, Typography, Upload} from 'antd';
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
@@ -388,6 +387,7 @@ class App extends Component {
                                 <Pane initialSize={"250px"}>
                                     <div className="chatTab" id="rightPopout">
                                         <div id="activeUsersList"><ActiveUsersList /></div>
+                                        <Divider className="sidebar-section-separator"></Divider>
                                         <div id="sidebarChat"><SidebarChat collapsed={this.state.chatCollapsed} /></div>
                                     </div>
                                 </Pane>
