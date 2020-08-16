@@ -159,7 +159,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 getUserProfilesFromUserIDs: this.getUserProfilesFromUserIDs.bind(this),
                 getUserProfilesFromUserProfileIDs: this.getUserProfilesFromUserProfileIDs.bind(this),
                 getUserProfilesFromUserProfileID: this.getUserProfilesFromUserProfileID.bind(this),
-                ifPermission: this.ifPermission.bind(this),
+                // ifPermission: this.ifPermission.bind(this),
                 getUserRecord: this.getUserRecord.bind(this),
                 getPresences: this.getPresences.bind(this),
                 cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
@@ -254,14 +254,15 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
         // TS: @ Jon: Should this be polymorphic??
         // Jon: I think that this was a half-baked idea and should probably be factored away
-        ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
+        // BCP it is also wrong, apparently -- removing
+/*         ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
             if (this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
             if (elseJsx)
                 return elseJsx;
             return  <></>        
         }
-
+ */
         setExpandedProgramRoom(programRoom: Parse.Object) {
             this.expandedProgramRoom = programRoom;
             if (this.state.leftSidebar) {

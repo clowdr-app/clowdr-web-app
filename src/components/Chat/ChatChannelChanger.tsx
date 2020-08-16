@@ -134,7 +134,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         // if (this.state.loading)
         //     return <Spin/>
         let addChannelButton = <></>
-        if(this.props.appState?.permissions.includes("moderator"))
+        if(this.props.appState?.ismoderator)
             addChannelButton = <Button size="small"
                                        onClick={()=>{this.setState({newChannelVisible: true})}
                                        } type="primary"
@@ -302,19 +302,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     })
                     }
                 </Menu.SubMenu>
-                <Menu.SubMenu key="programChannels" title="Paper Chats">
-                    {programChats.map((chan) => {
-                        let className = "personHoverable";
-                        // if (this.state.filteredUser == user.id)
-                        //     className += " personFiltered"
-                        return <Menu.Item key={chan} className={className}>
-                            <CollapsedChatDisplay sid={chan}  />
-                            {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
-                        </Menu.Item>
-                    })
-                    }
-                </Menu.SubMenu>
-                    <Menu.SubMenu key="joinedChannels" title="Your Channels">
+                    <Menu.SubMenu key="joinedChannels" title="Subscribed Channels">
                         {otherChannels.map((chan) => {
                             let className = "personHoverable";
                             // if (this.state.filteredUser == user.id)
@@ -327,7 +315,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         }
                     </Menu.SubMenu>
 
-                <Menu.SubMenu key="otherPublicChannels" title={<span>Other Channels{addChannelButton}</span>}>
+                <Menu.SubMenu key="otherPublicChannels" title={<span>Unsubscribed Channels{addChannelButton}</span>}>
                     {
                         this.state.allChannels.filter(chan => chan && chan.sid &&
                             //@ts-ignore
@@ -343,6 +331,19 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     })
                     }
                 </Menu.SubMenu>
+                <Menu.SubMenu key="programChannels" title="Paper Channels">
+                    {programChats.map((chan) => {
+                        let className = "personHoverable";
+                        // if (this.state.filteredUser == user.id)
+                        //     className += " personFiltered"
+                        return <Menu.Item key={chan} className={className}>
+                            <CollapsedChatDisplay sid={chan}  />
+                            {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
+                        </Menu.Item>
+                    })
+                    }
+                </Menu.SubMenu>
+
             </Menu>
         </div>
     }

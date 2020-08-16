@@ -699,7 +699,7 @@ class VideoRoom extends Component {
 
                                 {ACLdescription}
 
-                            {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.isModerator ? <Popconfirm title="Are you sure you want to delete and end this room?"
+                            {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.isManager ? <Popconfirm title="Are you sure you want to delete and end this room?"
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             {!this.props.hideInfo ? <div>
