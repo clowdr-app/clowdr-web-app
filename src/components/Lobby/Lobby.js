@@ -502,7 +502,7 @@ class Lobby extends React.Component {
                 <div className="lobby-section-header">
                 Video Chat Rooms
                 </div>
-                {this.summarizeRooms(allActiveRooms.filter(r=>!r.get("programItem")))}
+                {this.summarizeRooms(allActiveRooms.filter(r => !r.get("programItem")))}
 
                 {
                     this.state.breakoutRoomsForTracks ? Object.keys(this.state.breakoutRoomsForTracks).sort((i1, i2) => {

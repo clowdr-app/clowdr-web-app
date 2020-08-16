@@ -259,7 +259,7 @@ class VideoRoom extends Component {
         //     this.props.clowdrAppState.setSocialSpace(null,room.get("socialSpace"));
 
         room = await this.props.clowdrAppState.helpers.populateMembers(room);
-        console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
+        console.log("Joining room " + room.id + ", setting chat channel: " + room.get("twilioChatID"))
         // this.props.clowdrAppState.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         let watchedByMe = false;
         if(this.props.clowdrAppState.userProfile.get("watchedRooms")){
