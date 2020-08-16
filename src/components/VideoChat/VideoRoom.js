@@ -51,34 +51,41 @@ const {Paragraph} = Typography;
 class VideoRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {members: []};
+        this.state = {
+            members: [], 
+            isMounted: false
+        };
     }
 
     async componentDidMount() {
         try {
-            if(this.props.room){
+            if (this.props.room){
                 await this.joinCallEmbedded(this.props.room, this.props.conference);
-            }else{
+            } else {
                 await this.joinCallFromProps();
             }
-        }catch(err){
+            this.setState({isMounted: true})
+        } catch(err){
             console.log(err);
         }
     }
 
     componentWillUnmount() {
         console.log("Unmounting video room")
+        this.setState({isMounted: false});
         this.props.clowdrAppState.helpers.setGlobalState({currentRoom: null});
         this.props.clowdrAppState.setSocialSpace("Lobby");
 
     }
+
     async joinCallFromProps(){
         if (!this.props.match) {
             return;
         }
         if(!this.props.clowdrAppState.user || (this.props.match.params.conf && this.props.match.params.conf != this.props.clowdrAppState.currentConference.get("conferenceName"))){
             this.props.clowdrAppState.refreshUser(this.props.match.params.conf).then((u)=>{
-                this.joinCallFromPropsWithCurrentUser()
+                if (this.state.isMounted)
+                    this.joinCallFromPropsWithCurrentUser()
             })
         }
         else{
@@ -108,33 +115,37 @@ class VideoRoom extends Component {
                         'Content-Type': 'application/json'
                     }
                 }).then(res => {
-                if (res.status == 500) {
-                    console.log("Error")
-                    this.setState({
-                        error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a
-                            href="mailto:help@clowdr.org">help@clowdr.org</a></span>
-                    });
+                    if (this.state.isMounted) {
+                        if (res.status == 500) {
+                            console.log("Error")
+                            this.setState({
+                                error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a
+                                    href="mailto:help@clowdr.org">help@clowdr.org</a></span>
+                            });
 
-                } else {
+                        } else {
 
-                    res.json().then((data) => {
-                        localStorage.setItem("videoReloads", 0);
-                        localStorage.setItem("videoLoadTimeout", 0);
-                        _this.setState(
-                            {
-                                error: undefined,
-                                meeting: room.id,
-                                token: data.token,
-                                loadingMeeting: false,
-                                meetingName: room.get("title")
-                            }
-                        )
-                        if (_this.loadingMessage) {
-                            _this.loadingMessage();
+                            res.json().then((data) => {
+                                if (this.state.isMounted) {
+                                    localStorage.setItem("videoReloads", 0);
+                                    localStorage.setItem("videoLoadTimeout", 0);
+                                    _this.setState(
+                                        {
+                                            error: undefined,
+                                            meeting: room.id,
+                                            token: data.token,
+                                            loadingMeeting: false,
+                                            meetingName: room.get("title")
+                                        }
+                                    )
+                                    if (_this.loadingMessage) {
+                                        _this.loadingMessage();
+                                    }
+                                    _this.loadingVideo = false;
+                                }
+                            })
                         }
-                        _this.loadingVideo = false;
-                    })
-                }
+                    }
             }).catch((err) => {
                 console.log("Error")
                 this.loadingVideo = false;
@@ -142,6 +153,7 @@ class VideoRoom extends Component {
             });
         }
     }
+
     async deleteRoom(){
         let idToken = this.props.clowdrAppState.user.getSessionToken();
         this.setState({roomDeleteInProgress: true})
@@ -159,9 +171,11 @@ class VideoRoom extends Component {
                     'Content-Type': 'application/json'
                 }
             }).then(()=>{
-                this.setState({roomDeleteInProgress: false});
+                if (this.state.isMounted)
+                    this.setState({roomDeleteInProgress: false});
         })
     }
+
     async joinCallFromPropsWithCurrentUser() {
         console.log("Joining")
 
@@ -211,6 +225,7 @@ class VideoRoom extends Component {
         if(Number(window.localStorage.getItem("videoReloads") > 3)){
             localStorage.setItem("videoReloads", 0);
             localStorage.setItem("videoLoadTimeout", 0);
+
             this.setState({error: <span>Sorry, but we were unable to connect you to the video room, likely due to a bug in this frontend. If this issue persists, please contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
             this.loadingVideo = false;
             return;
@@ -250,6 +265,7 @@ class VideoRoom extends Component {
         if(this.props.clowdrAppState.userProfile.get("watchedRooms")){
             watchedByMe = this.props.clowdrAppState.userProfile.get("watchedRooms").find(v =>v.id ==room.id);
         }
+
         this.setState({loadingMeeting: 'true', room: room, watchedByMe: watchedByMe})
 
         let user = this.props.clowdrAppState.user;
@@ -259,7 +275,8 @@ class VideoRoom extends Component {
                 this.props.clowdrAppState.chatClient.initChatClient(user, this.props.clowdrAppState.currentConference, this.props.clowdrAppState.userProfile).then(() => {
                     // this.props.clowdrAppState.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
                     // })
-                    this.props.clowdrAppState.helpers.setGlobalState({chatChannel: room.get("twilioChatID")});
+                    if (this.state.isMounted)
+                        this.props.clowdrAppState.helpers.setGlobalState({chatChannel: room.get("twilioChatID")});
                 });
             let idToken = user.getSessionToken();
             const data = fetch(
@@ -276,33 +293,37 @@ class VideoRoom extends Component {
                         'Content-Type': 'application/json'
                     }
                 }).then(res => {
-                if (res.status == 500) {
-                    console.log("Error")
-                    this.setState({error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
+                    if (this.state.isMounted) {
+                        if (res.status == 500) {
+                            console.log("Error")
+                            this.setState({error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
 
-                } else {
+                        } else {
 
-                    res.json().then((data) => {
-                        localStorage.setItem("videoReloads", 0);
-                        localStorage.setItem("videoLoadTimeout", 0);
-                        _this.setState(
-                            {
-                                error: undefined,
-                                meeting: room.id,
-                                token: data.token,
-                                loadingMeeting: false,
-                                meetingName: room.get("title")
-                            }
-                        )
-                        if(_this.loadingMessage){
-                            _this.loadingMessage();
+                            res.json().then((data) => {
+                                localStorage.setItem("videoReloads", 0);
+                                localStorage.setItem("videoLoadTimeout", 0);
+
+                                _this.setState(
+                                    {
+                                        error: undefined,
+                                        meeting: room.id,
+                                        token: data.token,
+                                        loadingMeeting: false,
+                                        meetingName: room.get("title")
+                                    }
+                                )
+                                if(_this.loadingMessage){
+                                    _this.loadingMessage();
+                                }
+                                _this.loadingVideo = false;
+                            })
                         }
-                        _this.loadingVideo = false;
-                    })
-                }
+                    }
             }).catch((err) => {
                 console.log("Error")
                 this.loadingVideo = false;
+
                 this.setState({error: "authentication"});
             });
         } else {
@@ -334,12 +355,13 @@ class VideoRoom extends Component {
                 {
                     this.confName = null;
                     this.roomID = null;
+
                     this.setState({conf: conf, meetingName: roomID, token: null, error: null});
                     await this.joinCallFromProps();
                 }
             }
         }
-        if(this.state.room && this.state.room.get("members")){
+        if (this.state.room && this.state.room.get("members")){
             let hadChange = false;
             for(let member of this.state.room.get("members")){
                 if(!this.state.members.find(v=>v.id == member.id)){
@@ -361,8 +383,9 @@ class VideoRoom extends Component {
                     // });
                 }
             }
-            if(hadChange)
+            if (hadChange) {
                 this.setState({members: this.state.room.get("members")});
+            }
         }
         // if (this.state.room && this.state.room.get("isPrivate")) {
             //Was there an update to the ACL?
@@ -396,6 +419,7 @@ class VideoRoom extends Component {
             Internal error message: {err.toString()}<br /><Button onClick={()=>{message.destroy()}} type="primary">Dismiss</Button> </div>
         message.error(errorMsg, 0)
     }
+
     async toggleWatch(){
         this.setState({watchLoading: true})
         let idToken = this.props.clowdrAppState.user.getSessionToken();
@@ -451,6 +475,7 @@ class VideoRoom extends Component {
 
 
     }
+
     render() {
         if (this.state.error) {
             let description;
@@ -586,7 +611,6 @@ class VideoRoom extends Component {
             connectionOptions.video= {height: 480, frameRate: 24, width: 640};
         }
 
-        console.log("moderator? --> " + this.props.clowdrAppState.isModerator);
         return (
             <div>
                 <AboutModal />
@@ -719,11 +743,13 @@ function FlipCameraButton() {
         videoTrack.stop();
 
         getLocalVideoTrack({ facingMode: newFacingMode }).then(newVideoTrack => {
-            const localTrackPublication = localParticipant.unpublishTrack(videoTrack);
-            // TODO: remove when SDK implements this event. See: https://issues.corp.twilio.com/browse/JSDK-2592
-            localParticipant.emit('trackUnpublished', localTrackPublication);
+            if (this.state.isMounted) {
+                const localTrackPublication = localParticipant.unpublishTrack(videoTrack);
+                // TODO: remove when SDK implements this event. See: https://issues.corp.twilio.com/browse/JSDK-2592
+                localParticipant.emit('trackUnpublished', localTrackPublication);
 
-            localParticipant.publishTrack(newVideoTrack, { priority: 'low' });
+                localParticipant.publishTrack(newVideoTrack, { priority: 'low' });
+            }
         });
     }, [facingMode, getLocalVideoTrack, localParticipant, videoTrack]);
 
@@ -790,6 +816,7 @@ class RoomVisibilityController extends React.Component {
     async updateACL(values) {
         if (this.state.loading)
             return;
+
         this.setState({pendingSave: true});
         let users = values.users;
         let idToken = this.props.clowdrAppState.user.getSessionToken();
