@@ -148,10 +148,10 @@ class BottomChat extends React.Component {
                 </Form.Item>
             }
             return (
-                <><MultiChatWindow                                            parentRef={this}
-                                                                              addUser={this.addUser.bind(this)}
-                                                                              toVideo={this.toVideo.bind(this)}
-                                                                              closeWindow={(sid) => this.removeChannel(sid)}
+                <><MultiChatWindow  parentRef={this}
+                                    addUser={this.addUser.bind(this)}
+                                    toVideo={this.toVideo.bind(this)}
+                                    closeWindow={(sid) => this.removeChannel(sid)}
                 />
                 <div id="bottom-chat-container" style={this.props.style}>
                     <Modal
