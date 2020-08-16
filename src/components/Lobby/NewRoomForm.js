@@ -49,8 +49,9 @@ class NewRoomForm extends React.Component {
                 return {label: c.get("name"), value: c.id }
             });
         }
-        return <div> // BCP: Anybody can create video rooms
-                     // this.props.auth.helpers.ifPermission("createVideoRoom",
+         // BCP: Anybody can create video rooms
+         // this.props.auth.helpers.ifPermission("createVideoRoom",
+        return <div>
                 <Button type={buttonType} onClick={this.showModal} style={this.props.style}>
                     {buttonText}
                 </Button>
