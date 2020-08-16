@@ -485,7 +485,6 @@ class ChatFrame extends React.Component {
                                           let addDate = this.lastDate && this.lastDate != moment(item.timestamp).day();
                                           this.lastDate = moment(item.timestamp).day();
 
-
                                           return (
                                               <List.Item style={{padding: '0', width: "100%", textAlign: 'left'}}
                                                          key={item.sid}>
@@ -497,13 +496,11 @@ class ChatFrame extends React.Component {
                                                           // bodyStyle={{padding: '5px', backgroundColor: "#f8f8f8"}}
                                                           //   style={{border: 'none', width: "100%"}}
                                                       >
-
                                                               <div>
                                                                   <UserStatusDisplay
                                                                                      popover={true}
-                                                                                     profileID={item.author}/>&nbsp;
-                                                                  <span
-                                                                      className="timestamp">{this.formatTime(item.timestamp)}</span>
+                                                                                     profileID={item.author}/>
+                                                                  {/* &nbsp; <span className="timestamp">{this.formatTime(item.timestamp)}</span> */}
                                                               </div>
                                                           <div>
                                                               {item.messages.map((m) =>
@@ -565,6 +562,7 @@ class ChatFrame extends React.Component {
         if(m.attributes && m.attributes.linkTo){
             actionButton = <Button onClick={()=>{this.props.auth.history.push(m.attributes.path)}}>Join Video</Button>
         }
+        options.push(<span className="timestamp">{moment(m.timestamp).format("LL")}</span>);
         // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
             options.push(<Popconfirm
                 key="delete"
