@@ -194,7 +194,7 @@
     font-size: 2.2ex;
     text-overflow: ellipsis;
     /*overflow-y: auto;*/
-    overflow:hidden;
+    /* overflow:hidden; */
 }
 .smallButton{
     padding: 0;
