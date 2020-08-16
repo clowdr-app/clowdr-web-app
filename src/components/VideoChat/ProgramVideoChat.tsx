@@ -8,7 +8,6 @@ import { MuiThemeProvider } from "@material-ui/core/styles";
 import theme from "./theme";
 import AppStateProvider from "clowdr-video-frontend/lib/state";
 import { VideoContext, VideoProvider } from "clowdr-video-frontend/lib/components/VideoProvider";
-import ReportToModsButton from "./ReportToModsButton";
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import VideoRoom, { DeviceSelector } from "./VideoRoom";
 import FlipCameraIosIcon from '@material-ui/icons/FlipCameraIos';
