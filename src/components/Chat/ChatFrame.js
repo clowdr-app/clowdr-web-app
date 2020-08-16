@@ -500,7 +500,8 @@ class ChatFrame extends React.Component {
                                                                   <UserStatusDisplay
                                                                                      popover={true}
                                                                                      profileID={item.author}/>
-                                                                  {/* &nbsp; <span className="timestamp">{this.formatTime(item.timestamp)}</span> */}
+                                                                  {/* BCP: Moved this to the hover text:
+                                                                      &nbsp; <span className="timestamp">{this.formatTime(item.timestamp)}</span> */}
                                                               </div>
                                                           <div>
                                                               {item.messages.map((m) =>
@@ -562,7 +563,7 @@ class ChatFrame extends React.Component {
         if(m.attributes && m.attributes.linkTo){
             actionButton = <Button onClick={()=>{this.props.auth.history.push(m.attributes.path)}}>Join Video</Button>
         }
-        options.push(<span className="timestamp">{moment(m.timestamp).format("LL")}</span>);
+        options.push(<span className="timestamp">{moment(m.timestamp).format("LL LTS")}</span>);
         // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
             options.push(<Popconfirm
                 key="delete"
