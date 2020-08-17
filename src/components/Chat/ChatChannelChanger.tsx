@@ -134,7 +134,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         // if (this.state.loading)
         //     return <Spin/>
         let addChannelButton = <></>
-        if(this.props.appState?.ismoderator)
+        if(this.props.appState?.isModerator)
             addChannelButton = <Button size="small"
                                        onClick={()=>{this.setState({newChannelVisible: true})}
                                        } type="primary"
