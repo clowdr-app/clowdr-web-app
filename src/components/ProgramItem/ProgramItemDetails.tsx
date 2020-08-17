@@ -184,10 +184,12 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                        //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
                                // this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
                            // }}>Join Session</Button></Space>
+                        /* BCP: Crista and i decided it doesn't make sense any more to have these links be live (because it's not clear where they should go)...
                        title = <a href="#" className="sessionLink" onClick={()=>{
                            // @ts-ignore
                            this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
                        }}>{title}</a>
+                       */
                    }
                    sessionInfo.push(<div className="sessionListItem" key={event.id}>
                        {title} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))})
@@ -309,7 +311,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                 <h3>{this.state.ProgramItem.get('title')}</h3>
                 <Descriptions layout="horizontal" column={1} bordered>
                     <Descriptions.Item label="Authors">{authorstr}</Descriptions.Item>
-                    {showSessionInfo ? <Descriptions.Item label="Session">{sessionInfo}</Descriptions.Item> : <></>}
+                    {showSessionInfo ? <Descriptions.Item label="Schedule">{sessionInfo}</Descriptions.Item> : <></>}
                     <Descriptions.Item label="Abstract">{this.state.ProgramItem.get("abstract")}</Descriptions.Item>
                     {additionalDescription}
                 </Descriptions>
