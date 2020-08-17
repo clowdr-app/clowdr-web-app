@@ -23,6 +23,7 @@ interface MultiChatWindowProps {
     appState: ClowdrState | null;
     addUser: (sid: string)=>void;
     toVideo: (sid:string)=>void;
+    setChatWindowHeight: (heightWithPxSuffix:string)=>void;
     parentRef: any;
 }
 
@@ -125,7 +126,8 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
     changeSize(expand: boolean) {
         if (!expand) { // Collapse
             console.log("--> collapsing");
-            this.props.parentRef.setState({chatHeight: "50px"});
+            // this.props.parentRef.setState({chatHeight: "50px"});
+            this.props.setChatWindowHeight('50px');
         }
     }
 

@@ -387,7 +387,7 @@ class App extends Component {
 
                                             </Pane>
                                             <Pane initialSize={this.chatSize}>
-                                                <BottomChat/>
+                                                <BottomChat setChatWindowHeight={(height)=>this.setState({chatHeight: height})}/>
                                             </Pane>
                                         </SplitPane>
                                     </div>

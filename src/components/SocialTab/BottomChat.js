@@ -149,6 +149,7 @@ class BottomChat extends React.Component {
             }
             return (
                 <><MultiChatWindow  parentRef={this}
+                                    setChatWindowHeight={this.props.setChatWindowHeight}
                                     addUser={this.addUser.bind(this)}
                                     toVideo={this.toVideo.bind(this)}
                                     closeWindow={(sid) => this.removeChannel(sid)}
