@@ -925,3 +925,9 @@ span.ant-divider-inner-text {
 .icon-text{
     font-size: xx-small;
 }
+.bottomChatIdentity  a{
+    color: #f0f5ff;
+}
+.bottomChatIdentity a:hover{
+    color: #adc6ff;
+}

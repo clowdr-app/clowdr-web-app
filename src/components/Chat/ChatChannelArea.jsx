@@ -6,6 +6,8 @@ import {Button, message, Skeleton, Tooltip} from "antd";
 import ProgramItem from "../../classes/ProgramItem";
 import ChatFrame from "./ChatFrame"
 import {CloseOutlined, MinusOutlined, PlusOutlined, VideoCameraAddOutlined} from "@ant-design/icons"
+import UserStatusDisplay from "../Lobby/UserStatusDisplay";
+import ProgramItemDisplay from "../Program/ProgramItemDisplay";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -36,16 +38,18 @@ class ChatChannelArea extends React.Component {
             let profileID = p1.id;
             if (profileID == this.props.auth.userProfile.id)
                 profileID = p2.id;
-            this.props.auth.helpers.getUserProfilesFromUserProfileID(profileID).then((profile) => {
-                this.setState({title: profile.get("displayName")})
+            this.setState({
+                title: <UserStatusDisplay profileID={profileID} hideLink={true} />
             })
             return;
         } else {
             let title = chat.channel.friendlyName;
             if (chat.attributes.category == "announcements-global") {
                 title = "Announcements";
-            } else if (chat.attributes.category == "programItem" ||
-                chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group") {
+            } else if(chat.attributes.category == "programItem" && chat.attributes.programItemID){
+                console.log(chat.attributes.programItemID)
+                title = <ProgramItemDisplay auth={this.props.appState} id={chat.attributes.programItemID} />
+            }else if (chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group") {
                 title = chat.channel.friendlyName;
             } else {
                 title = chat.channel.friendlyName;
