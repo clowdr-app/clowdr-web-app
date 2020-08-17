@@ -235,15 +235,15 @@ class ContextualActiveUsers extends React.Component {
                     let tag, joinInfo;
                     if(item.get("mode") == "group"){
                     //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                        joinInfo = "Click to join this big group room (up to " + capacity + " callers). Up to 5 speakers are allowed at once."
+                        joinInfo = "Click to join this big group room (up to " + capacity + " participants). Displays live video for the most recent speakers."
                     }
                     else if(item.get("mode") == "peer-to-peer"){
                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
-                        joinInfo ="Click to join this peer-to-peer room (up to " + capacity + " callers)."
+                        joinInfo ="Click to join this peer-to-peer room (up to " + capacity + " participants)."
                     }
                     else if(item.get("mode") == "group-small"){
                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
-                        joinInfo = "Click to join this small group room (up to " + capacity + " callers)."
+                        joinInfo = "Click to join this small group room (up to " + capacity + " participants)."
                     }
 
                     let isModOverride = false;

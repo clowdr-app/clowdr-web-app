@@ -6,7 +6,6 @@ import Parse from "parse";
 
 class NewRoomForm extends React.Component {
 
-
     constructor(props) {
         super(props);
         this.form = React.createRef();
@@ -31,6 +30,7 @@ class NewRoomForm extends React.Component {
         });
 
     };
+
     componentDidMount() {
     }
 
@@ -50,7 +50,7 @@ class NewRoomForm extends React.Component {
             });
         }
          // BCP: Anybody can create video rooms
-         // this.props.auth.helpers.ifPermission("createVideoRoom",
+         //     this.props.auth.helpers.ifPermission("createVideoRoom",
         return <div>
                 <Button type={buttonType} onClick={this.showModal} style={this.props.style}>
                     {buttonText}

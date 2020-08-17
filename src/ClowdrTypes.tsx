@@ -35,7 +35,10 @@ export interface ClowdrState {
     history: History;
     activeSpace: SocialSpace;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
-    refreshUser(a: Parse.Object|null, b: boolean): any
+    refreshUser(a: Parse.Object|null, b: boolean): any;
+    isModerator: boolean;
+    isManager: boolean;
+    isAdmininstrator: boolean;
 }
 
 export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
