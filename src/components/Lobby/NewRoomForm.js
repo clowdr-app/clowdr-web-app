@@ -161,7 +161,7 @@ class NewRoomForm extends React.Component {
                                 <Radio.Button value="ephemeral">Ephemeral</Radio.Button>
                                 {this.props.auth.isModerator 
                                   ? <Radio.Button value="persistent">Persistent</Radio.Button> 
-                                  : <Tooltip mouseEnterDelay={0.5} title="You do not have enough permissions to create persistent rooms. Please ask a moderator if you need a persistent room."><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
+                                  : <Tooltip mouseEnterDelay={0.5} title="You do not have enough permissions to create persistent rooms. Please ask a moderator (e.g. by posting on the Tech Support channel) if you need a persistent room."><Radio.Button disabled={true} value="persistent">Persistent</Radio.Button></Tooltip>
                                 }
                             </Radio.Group>
                         </Form.Item>
