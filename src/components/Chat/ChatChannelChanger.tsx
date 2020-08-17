@@ -1,4 +1,4 @@
-import React from "react";
+import React, {ReactNode} from "react";
 import {AuthUserContext} from "../Session";
 import {Button, Form, Input, Menu, message, Modal, Select, Spin, Switch} from "antd";
 import {ChatChannelConsumer, ClowdrState, MultiChatApp} from "../../ClowdrTypes";
@@ -8,6 +8,9 @@ import {PlusOutlined} from "@ant-design/icons"
 import ProgramItem from "../../classes/ProgramItem";
 import UserProfile from "../../classes/UserProfile";
 import Parse from "parse";
+import UserStatusDisplay from "../Lobby/UserStatusDisplay";
+import ProgramItemDisplay from "../Program/ProgramItemDisplay";
+import { Create } from "@material-ui/icons";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -31,15 +34,17 @@ interface ChatChannelChangerState {
     filter?: string,
     searchLoading: boolean,
     openingChat: boolean,
-    searchOptions: {label:string, value:string, object: ProgramItem|UserProfile|Channel}[]
+    searchOptions: {label:string|ReactNode, value:string, object: ProgramItem|UserProfile|Channel, labeltext: string}[]
 }
 
 class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatChannelChangerState> implements ChatChannelConsumer {
     private fetchingSearchOptions: boolean;
+    private haveProgram: boolean;
     private searchBox: React.RefObject<Select>;
     constructor(props: ChatChannelChangerProps) {
         super(props);
         this.searchBox = React.createRef();
+        this.haveProgram = false;
         this.fetchingSearchOptions = false;
         this.state = {
             loading: true,
@@ -63,13 +68,15 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         this.setState({allChannels: channels});
     }
     componentDidUpdate(prevProps: Readonly<ChatChannelChangerProps>, prevState: Readonly<ChatChannelChangerState>, snapshot?: any): void {
-        if(this.state.ProgramItems != prevState.ProgramItems || this.state.UserProfiles != prevState.UserProfiles || this.state.allChannels != prevState.allChannels){
+        if(this.haveProgram && (this.state.ProgramItems != prevState.ProgramItems || this.state.UserProfiles != prevState.UserProfiles || this.state.allChannels != prevState.allChannels)){
             let options = [];
-            options = this.state.ProgramItems.filter(item=>item.get("chatSID") != null).map(item => ({label: item.get("title"), value: item.id, object: item}));
+            options = this.state.ProgramItems.filter(item=>item.get("chatSID") != null).map(item => ({labeltext: item.get("title"), value: item.id, object: item,
+            label: <ProgramItemDisplay id={item.id} auth={this.props.appState} hideLink={true} />}));
             options = options.concat(this.state.UserProfiles.map(profile => ({
-                label: profile.get("displayName"),
+                labeltext: profile.get("displayName"),
                 value: profile.id,
-                object: profile
+                object: profile,
+                label: <UserStatusDisplay profileID={profile.id} hideLink={true} />
             })));
             let moreOptions = this.state.allChannels.filter(chan => {
                 if(chan){
@@ -81,19 +88,25 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                 return false;
             }).map(chan=>{
 
-                return {label: chan.friendlyName, value: chan.sid, object: chan};
+                return {label: chan.friendlyName, value: chan.sid, object: chan, labeltext: chan.friendlyName};
             });
             // @ts-ignore
             options = options.concat(moreOptions);
-            this.setState({searchOptions: options});
+            if(this.state.UserProfiles.length)
+                this.setState({searchOptions: options});
         }
     }
 
     componentDidMount(): void {
-        this.props.multiChatWindow.registerChannelConsumer(this);
-        this.props.appState?.programCache.getProgramItems(this).then((items:ProgramItem[])=>{
-            this.setState({ProgramItems: items});
-        })
+        //@ts-ignore
+        this.props.appState?.refreshUser(null, false).then((user)=>{
+            this.props.multiChatWindow.registerChannelConsumer(this);
+            this.props.appState?.programCache.getProgramItems(this).then((items:ProgramItem[])=>{
+                this.haveProgram = true;
+                this.setState({ProgramItems: items});
+            })
+        });
+
     }
 
     async createChannel(title: string, description: string, autoJoin: boolean) : Promise<Channel>{
@@ -133,10 +146,9 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         let addChannelButton = <></>
         if(this.props.appState?.isModerator)
             addChannelButton = <Button size="small"
-                                       onClick={()=>{this.setState({newChannelVisible: true})}
-                                       } type="primary"
-                                       shape="circle" icon={
-                <PlusOutlined/>}/>
+                                       onClick={()=>{this.setState({newChannelVisible: true})}}
+                                       type="primary"
+                                       >New text channel</Button>
 
         let sorted = this.state.joinedChannels.filter(sid => {
             // @ts-ignore   TS: fixme  
@@ -209,10 +221,10 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         return <div id="channelChanger">
             <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={() => {
                 this.setState({'newChannelVisible': false})
-            }}
-                               onCreate={this.createNewChannel.bind(this)}/>
+                }}
+                onCreate={this.createNewChannel.bind(this)}/>
             <Select showSearch={true}
-                    placeholder="Search"
+                    placeholder="Search for user/paper/chat"
                     className="chat-search"
                     value={this.state.filter}
                     showArrow={false}
@@ -220,8 +232,8 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     options={this.state.searchOptions}
                     filterOption={(input, option) =>
                     {
-                        if(option && option.label){
-                            let label = option.label;
+                        if(option && option.labeltext){
+                            let label = option.labeltext;
                             //@ts-ignore
                             return label.toLowerCase().indexOf(input.toLowerCase()) >= 0;
                         }
@@ -267,6 +279,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     }
                     }
             />
+            {addChannelButton}
             {/*<UpdateCreateForm visible={this.state.editChannelVisible}*/}
             {/*                  onCancel={()=>{this.setState({'editChannelVisible': false})}}*/}
             {/*                  onCreate={this.updateChannel.bind(this)}*/}
@@ -318,7 +331,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         }
                     </Menu.SubMenu>
 
-                <Menu.SubMenu key="otherPublicChannels" title={<span>More Channels{addChannelButton}</span>}>
+                <Menu.SubMenu key="otherPublicChannels" title={<span>More Channels</span>}>
                     {
                         this.state.allChannels.filter(chan => chan && chan.sid &&
                             //@ts-ignore
@@ -429,7 +442,7 @@ const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
     return (
         <Modal
             visible={visible}
-            title="Create a channel"
+            title="Create a text channel"
             // okText="Create"
             footer={[
                 <Button form="myForm" key="submit" type="primary" htmlType="submit">

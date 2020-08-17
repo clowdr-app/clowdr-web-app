@@ -74,7 +74,7 @@ class UserStatusDisplay extends React.Component{
             badgeColor = "grey";
         }
         let onClick = ()=>{};
-        if (this.props.auth.userProfile.id != this.state.profile.id){
+        if (this.props.auth.userProfile.id != this.state.profile.id && !this.props.hideLink){
             onClick = this.openDM.bind(this);
         }
         let avatar, inlineAvatar;

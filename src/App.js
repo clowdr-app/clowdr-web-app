@@ -68,12 +68,15 @@ class App extends Component {
         super(props);
         // this.state ={'activeKey'=routing}
 
+        this.chatSize = "300px";
+        this.chatPaneRef = React.createRef();
         // if(this.props.match.)
         this.state = {
             conference: null,
             showingLanding: this.props.clowdrAppState.showingLanding,
             socialCollapsed: false,
             chatCollapsed: false,
+            chatHeight: this.chatSize,
             dirty: false
         }
 
@@ -207,6 +210,10 @@ class App extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!prevProps.clowdrAppState || prevProps.clowdrAppState.currentConference != this.props.clowdrAppState.currentConference) {
             this.refreshConferenceInformation();
+        }
+        if(this.state.chatHeight != prevState.chatHeight && this.state.chatHeight != this.chatSize){
+            this.chatSize = this.state.chatHeight;
+            this.chatPaneRef.current.setState({sizes: ["1", this.state.chatHeight]});
         }
         if (this.props.clowdrAppState.showingLanding != this.state.showingLanding) {
             this.setState({showingLanding: this.props.clowdrAppState.showingLanding});
@@ -365,7 +372,9 @@ class App extends Component {
                                 </Pane>
                                 <Pane>
                                     <div className="middlePane">
-                                        <SplitPane split="horizontal">
+                                        <SplitPane split="horizontal" ref={this.chatPaneRef} onChange={(sizes)=>{
+                                            this.chatSize=sizes[1];
+                                        }}>
                                             <Pane>
                                                 <div className="page-content">
 
@@ -375,9 +384,8 @@ class App extends Component {
                                                 </div>
 
                                             </Pane>
-                                            <Pane initialSize={"300px"}>
+                                            <Pane initialSize={this.chatSize}>
                                                 <BottomChat/>
-
                                             </Pane>
                                         </SplitPane>
                                     </div>

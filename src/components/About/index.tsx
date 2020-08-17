@@ -9,7 +9,7 @@ class About extends Component {
                 <a href="https://www.clowdr.org/" target="_blank">CLOWDR</a> is
                     an open source tool suite to make it easier to run interactive and engaging virtual
                     conferences.
-                    Imagine that your conference attendees could video and text chat with each other and easily drift
+                    Imagine that your conference attendees could interact by video and text and easily drift
                     between different conversations in different rooms. Now imagine that this app also integrated your
                     conference
                     program (directly imported from <a href="https://conf.researchr.org">conf.researchr.org</a>), and
