@@ -688,7 +688,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         let session = await Parse.Session.current();
 
                         // Valid conferences for this user
-                        let profiles = await user.relation("profiles").query().include("conference").find();
+                        let profiles = await user.relation("profiles").query().include(["conference", "conference.loggedInText"]).find();
                         let validConferences = profiles.map(p => p.get("conference"));
                         // console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
 
