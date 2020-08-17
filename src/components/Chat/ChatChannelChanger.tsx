@@ -312,7 +312,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan} className={className}>
-                            <CollapsedChatDisplay sid={chan}  />
+                            <CollapsedChatDisplay sid={chan}  category="dm"/>
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })
@@ -324,7 +324,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                             // if (this.state.filteredUser == user.id)
                             //     className += " personFiltered"
                             return <Menu.Item key={chan} className={className}>
-                                <CollapsedChatDisplay sid={chan}  />
+                                <CollapsedChatDisplay sid={chan}  category="subscriptions"/>
                                 {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                             </Menu.Item>
                         })
@@ -341,7 +341,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan.sid} className={className}>
-                            <CollapsedChatDisplay sid={chan.sid} channel={chan} />
+                            <CollapsedChatDisplay sid={chan.sid} channel={chan} category="others"/>
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })
@@ -353,7 +353,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan} className={className}>
-                            <CollapsedChatDisplay sid={chan}  />
+                            <CollapsedChatDisplay sid={chan} category="papers" />
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })

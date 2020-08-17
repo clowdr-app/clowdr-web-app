@@ -86,7 +86,7 @@ class CollapsedChatDisplay extends React.Component{
             }
         }
 
-        this.props.auth.chatClient.multiChatWindow.registerUnreadConsumer(this.props.sid, this);
+        this.props.auth.chatClient.multiChatWindow.registerUnreadConsumer(this.props.sid, this.props.category, this);
         if(!this.mounted)
             return;
     }
@@ -136,15 +136,25 @@ class CollapsedChatDisplay extends React.Component{
             >Delete Channel</Button></Popconfirm>)
         }
         let popoverContent = <Space>{buttons}</Space>;
+        let color = "";
+        if (this.props.category == "dm")
+            color = 'red';
+        else if (this.props.category == "subscriptions")
+            color = '#CD2EC9';
+        else if (this.props.category == "others")
+            color = '#151388';
+        else if (this.props.category == "papers")
+            color = '#087C1D';
+
         return <Popover key={this.state.sid} mouseEnterDelay={0.5} placement="topRight"
-       content={popoverContent}><div
-            className="collapsedChatDisplay"
-            key={this.state.sid}
+                content={popoverContent}><div
+                className="collapsedChatDisplay"
+                key={this.state.sid}
             >
            <div
                className="userTag"
                onClick={()=>{this.props.auth.chatClient.openChat(this.state.sid)}}
-           ><Badge overflowCount={9} className="chat-unread-count" count={this.state.unread} /> {this.state.title}
+           ><Badge overflowCount={9} className="chat-unread-count" count={this.state.unread} style={{ backgroundColor: color }}/> {this.state.title}
            </div>
        </div></Popover>
 

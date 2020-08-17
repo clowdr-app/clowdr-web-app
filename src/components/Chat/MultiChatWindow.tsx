@@ -33,9 +33,9 @@ interface MultiChatWindowState {
     joinedChannels: string[],
     expanded: boolean,
     nDMs: number,
-    nMyChannelMessages: number,
-    nOtherChannelMessages: number,
-    nPaperChannelMessages: number
+    nSubscribedMessages: number,
+    nOtherMessages: number,
+    nPaperMessages: number
 
 }
 
@@ -45,30 +45,34 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
     private allChannels: Channel[];
     private channelConsumers: ChatChannelConsumer[];
     private unreadConsumers: Map<string, object[]>;
+    private unreadCounts: Map<string, {count : number, category : string}>; // sid -> {count, category}
     constructor(props: MultiChatWindowProps) {
         super(props);
         this.unreadConsumers = new Map<string, object[]>();
+        this.unreadCounts = new Map<string, {count : number, category : string}>();
         this.state = {
             loading: true,
             activeChatSID: undefined,
             joinedChannels: [],
             expanded: true,
             nDMs: 0,
-            nMyChannelMessages: 0,
-            nOtherChannelMessages: 0,
-            nPaperChannelMessages: 0                    
+            nSubscribedMessages: 0,
+            nOtherMessages: 0,
+            nPaperMessages: 0                    
         };
         this.joinedChannels = [];
         this.allChannels = [];
         this.channelConsumers = [];
     }
 
-    registerUnreadConsumer(sid: string, consumer: any): void {
+    registerUnreadConsumer(sid: string, category: string, consumer: any): void {
         if(!this.unreadConsumers?.get(sid)){
             this.unreadConsumers.set(sid, []);
         }
         //@ts-ignore
         this.unreadConsumers.get(sid).push(consumer);
+
+        this.unreadCounts.set(sid, {count: 0, category: category});
     }
 
     cancelUnreadConsumer(sid: string, consumer: any): void {
@@ -116,10 +120,24 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         if (this.unreadConsumers.get(sid)){
             //@ts-ignore
             for (let consumer of this.unreadConsumers.get(sid)){
-                // console.log("--> sid: " + sid + " count: " + count);
                 //@ts-ignore
                 consumer.setState({unread: count});
             }
+        }
+        let obj = this.unreadCounts.get(sid);
+        if (obj) {
+            let oldCount = obj.count;
+            let cat = obj.category;
+            if (cat == "dm")
+                this.setState({nDMs: Math.max(0, this.state.nDMs + count - oldCount)});
+            else if (cat =="subscriptions")
+                this.setState({nSubscribedMessages: Math.max(0, this.state.nSubscribedMessages + count - oldCount)});
+            else if (cat =="others")
+                this.setState({nOtherMessages: Math.max(0, this.state.nOtherMessages + count - oldCount)});
+            else if (cat =="papers")
+                this.setState({nPaperMessages: Math.max(0, this.state.nPaperMessages + count - oldCount)});
+
+            this.unreadCounts.set(sid, {count: count, category: cat});
         }
     }
 
@@ -140,10 +158,10 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         }
 
         let notifications = <span className="notifications">
-            <Badge count={nMessages.nDMs}  title="New DMs" />&nbsp;
-            <Badge count={nMessages.nMyChannelMessages}  title="New messages in subscribed channels" />&nbsp;
-            <Badge count={nMessages.otherChannelMessages}  title="New messages in other channels" />&nbsp;
-            <Badge count={nMessages.paperChannelMessages}  title="New messages in paper channels" />
+            <Badge count={this.state.nDMs}  title="New DMs" />&nbsp;
+            <Badge count={this.state.nSubscribedMessages}  title="New messages in subscribed channels" style={{ backgroundColor: '#CD2EC9' }}/>&nbsp;
+            <Badge count={this.state.nOtherMessages}  title="New messages in other channels" style={{ backgroundColor: '#151388' }}/>&nbsp;
+            <Badge count={this.state.nPaperMessages}  title="New messages in paper channels" style={{ backgroundColor: '#087C1D' }}/>
             </span>;
 
         let icon = this.state.expanded ? <ShrinkOutlined title="Minimize panel"/> : <ExpandAltOutlined title="Expand panel"/>

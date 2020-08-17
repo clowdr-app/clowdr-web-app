@@ -64,7 +64,7 @@ export interface ChatChannelConsumer{
 export interface MultiChatApp{
     registerChannelConsumer(consumer: ChatChannelConsumer): void;
     openChat(sid: string, dontBringIntoFocus: boolean): void;
-    registerUnreadConsumer(sid: string, consumer: any): void;
+    registerUnreadConsumer(sid: string, category: string, consumer: any): void;
     cancelUnreadConsumer(sid: string, consumer: any): void;
 
 }
