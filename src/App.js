@@ -211,7 +211,9 @@ class App extends Component {
         if (!prevProps.clowdrAppState || prevProps.clowdrAppState.currentConference != this.props.clowdrAppState.currentConference) {
             this.refreshConferenceInformation();
         }
+        console.log("--> App updated! " + this.state.chatHeight + " " + prevState.chatHeight + " " + this.chatSize + " " + this.props.chatHeight);
         if(this.state.chatHeight != prevState.chatHeight && this.state.chatHeight != this.chatSize){
+            console.log("--> " + this.state.chatHeight); 
             this.chatSize = this.state.chatHeight;
             this.chatPaneRef.current.setState({sizes: ["1", this.state.chatHeight]});
         }
@@ -385,7 +387,7 @@ class App extends Component {
 
                                             </Pane>
                                             <Pane initialSize={this.chatSize}>
-                                                <BottomChat/>
+                                                <BottomChat setChatWindowHeight={(height)=>this.setState({chatHeight: height})}/>
                                             </Pane>
                                         </SplitPane>
                                     </div>

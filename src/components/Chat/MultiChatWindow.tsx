@@ -1,7 +1,8 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
 import Parse from "parse"
-import {Button, Descriptions, Divider, Menu, message, Popconfirm, Space, Spin, Tooltip} from "antd";
+import {Badge, Button} from "antd";
+import {ShrinkOutlined, ExpandAltOutlined} from "@ant-design/icons";
 // @ts-ignore
 import {Document, Page, pdfjs} from 'react-pdf';
 import VideoRoom from "../VideoChat/VideoRoom";
@@ -10,7 +11,6 @@ import ProgramItem from "../../classes/ProgramItem";
 import ProgramPerson from "../../classes/ProgramPerson";
 import AttachmentType from "../../classes/AttachmentType";
 import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
-import { Resizable, ResizableBox } from 'react-resizable';
 import ChatChannelChanger from "./ChatChannelChanger"
 import ChatFrame from "./ChatFrame"
 import ChatChannelArea from "./ChatChannelArea"
@@ -23,13 +23,20 @@ interface MultiChatWindowProps {
     appState: ClowdrState | null;
     addUser: (sid: string)=>void;
     toVideo: (sid:string)=>void;
+    setChatWindowHeight: (heightWithPxSuffix:string)=>void;
     parentRef: any;
 }
 
 interface MultiChatWindowState {
     loading: boolean,
     activeChatSID?: string,
-    joinedChannels: string[]
+    joinedChannels: string[],
+    expanded: boolean,
+    nDMs: number,
+    nMyChannelMessages: number,
+    nOtherChannelMessages: number,
+    nPaperChannelMessages: number
+
 }
 
 
@@ -44,7 +51,12 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         this.state = {
             loading: true,
             activeChatSID: undefined,
-            joinedChannels: []
+            joinedChannels: [],
+            expanded: true,
+            nDMs: 0,
+            nMyChannelMessages: 0,
+            nOtherChannelMessages: 0,
+            nPaperChannelMessages: 0                    
         };
         this.joinedChannels = [];
         this.allChannels = [];
@@ -104,17 +116,44 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         if(this.unreadConsumers.get(sid)){
             //@ts-ignore
             for(let consumer of this.unreadConsumers.get(sid)){
+                // console.log("--> sid: " + sid + " count: " + count);
                 //@ts-ignore
                 consumer.setState({unread: count});
             }
         }
     }
 
+    changeSize(expand: boolean) {
+        if (!expand) { // Collapse
+            console.log("--> collapsing");
+            // this.props.parentRef.setState({chatHeight: "50px"});
+            this.props.setChatWindowHeight('50px');
+        }
+    }
+
     render() {
         // if (this.state.loading)
         //     return <Spin/>
+        let nMessages = {
+            nDMs: 0,
+            nMyChannelMessages: 0,
+            otherChannelMessages: 0,
+            paperChannelMessages: 0
+        }
+
+        let notifications = <span className="notifications">
+            <Badge count={nMessages.nDMs}  title="New DMs" />&nbsp;
+            <Badge count={nMessages.nMyChannelMessages}  title="New messages in subscribed channels" />&nbsp;
+            <Badge count={nMessages.otherChannelMessages}  title="New messages in other channels" />&nbsp;
+            <Badge count={nMessages.paperChannelMessages}  title="New messages in paper channels" />
+            </span>;
+
+        let actions = this.state.expanded ? <span className="actions"><Button type="primary" shape="round" icon={<ShrinkOutlined title="Minimize panel"/>}
+                        onClick={this.changeSize.bind(this, false)}/></span> :
+                        <span className="actions"><ExpandAltOutlined title="Expand panel"/></span>
+        
         return <div className="multiChatWindow">
-            <div className="multiChatWindowHeader">Text Channels</div>
+            <div className="multiChatWindowHeader"><span className="title">Text Chats</span> {notifications} {actions}</div>
             <div
                 className="multiChatWindowContent"
         >
