@@ -68,6 +68,9 @@ export default class ProgramSessionEventDisplay extends React.Component{
         } else if (startTime > now) {
             className = "summaryProgramEvent-future";
         }
+        if(this.state.ProgramSessionEvent.get("directLink")){
+            linkTo = this.state.ProgramSessionEvent.get("directLink");
+        }
 
         let badge = <></>
         if(this.state.ProgramTrack && this.state.ProgramTrack.get("badgeText")){
