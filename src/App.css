@@ -686,6 +686,18 @@ span.ant-divider-inner-text {
     text-align: center;
 }
 
+.multiChatWindowHeader .title {
+    float: left;
+}
+
+.multiChatWindowHeader .notifications {
+    float: center;
+}
+
+.multiChatWindowHeader .actions {
+    float: right;
+}
+
 .multiChatWindowContent{
     display: flex;
     flex: 1 1 auto;
