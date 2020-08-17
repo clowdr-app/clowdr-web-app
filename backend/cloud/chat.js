@@ -269,7 +269,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                                     linkTo: "breakoutRoom",
                                     path: "/video/" + parseRoom.id
                                 }),
-                                body: "I just created and joined a video chat",
+                                body: "I just created a video chat: Join me there!",
                             });
                             return {
                                 status: "ok",
@@ -351,7 +351,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                         linkTo: "breakoutRoom",
                         path: "/video/" + profile.get("conference").get("conferenceName") + "/" + roomName
                     }),
-                    body: "I just created and joined a video chat",
+                    body: "I just created a video chat: Join me there!",
                 });
                 return {
                    status: "ok",
