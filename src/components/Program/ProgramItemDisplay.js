@@ -17,7 +17,6 @@ export default class ProgramItemDisplay extends React.Component{
     async componentDidMount() {
         let programItem = await this.props.auth.programCache.getProgramItem(this.props.id, this);
         if(!programItem){
-            console.log("Unable to find " + this.props.id)
             return;
         }
         if(programItem.get("events")){
