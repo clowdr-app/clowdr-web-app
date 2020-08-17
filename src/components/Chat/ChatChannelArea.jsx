@@ -172,13 +172,14 @@ class ChatChannelArea extends React.Component {
                         <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}
                                 loading={this.state.newVideoChatLoading}
                                 icon={<VideoCameraAddOutlined/>}
-                                onClick={this.toVideo.bind(this)}/>
+                                onClick={this.toVideo.bind(this)}>Launch video</Button>
                     </Tooltip>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Tooltip mouseEnterDelay={0.5} title="Add someone to this chat">
                         <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}
                                 icon={<PlusOutlined/>}
                                 onClick={this.props.addUser}
-                        /></Tooltip>
+                        >Add people</Button></Tooltip>
                 </div>
             </div>
         </div>
