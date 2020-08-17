@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Space, Typography } from 'antd';
+import { Button, Space, Typography, Popconfirm } from 'antd';
 import Parse from "parse";
 
 class ZoomPanel extends Component {
@@ -108,21 +108,28 @@ class ZoomPanel extends Component {
                     <Button type="primary" disabled={this.state.zoomLoading}
                         href={this.state.personalJoinLink} target="_blank"
                         loading={!this.state.personalJoinLink}>
-                        Join By Zoom App</Button>
+                        Join By Zoom App
+                    </Button>
                     <Button
-                        type="primary" onClick={() => {
-                            this.joinZoomByBrowser();
-                        }
-                        } loading={this.state.zoomLoading}>Join by Browser</Button>
+                        type="primary"
+                        onClick={() => { this.joinZoomByBrowser(); }}
+                        loading={this.state.zoomLoading}>
+                        Join by Browser</Button>
                     {this.props.auth.isModerator
-                        ? <Button
-                            type="primary" href={this.state.start_url}
-                            target="_blank" danger
-                            loading={!this.state.start_url} disabled={this.state.zoomLoading}>
-                            Join As Host
-                        </Button>
-                        : <></>}</Space></div>
+                        ? // BCP: Not sure how to do a popconfirm around an href, so for now just make the button scarier
+                          // <Popconfirm title="Are you sure?">
+                            <Button
+                                type="primary"
+                                href={this.state.start_url}
+                                target="_blank" danger
+                                loading={!this.state.start_url}
+                                disabled={this.state.zoomLoading}>
+                                Join As Host (use with care!)</Button>
+                          // </Popconfirm>
+                        : <></>}
+                </Space></div>
         }
+        // BCP: Unreachable?
         return <div className={wrapperClassName}>{player}</div>
     }
 }
