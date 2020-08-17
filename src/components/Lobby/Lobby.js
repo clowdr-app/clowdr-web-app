@@ -527,7 +527,7 @@ class Lobby extends React.Component {
                     }) : <></>
                 }
                 <div className="lobby-section-header">
-                  Participants not currently in a room
+                  Participants not currently in a video chat room
                 </div>
 
                 <div className="lobby-participant-list">

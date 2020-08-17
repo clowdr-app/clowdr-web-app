@@ -10,6 +10,7 @@ import UserProfile from "../../classes/UserProfile";
 import Parse from "parse";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
+import { Create } from "@material-ui/icons";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -145,10 +146,9 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         let addChannelButton = <></>
         if(this.props.appState?.isModerator)
             addChannelButton = <Button size="small"
-                                       onClick={()=>{this.setState({newChannelVisible: true})}
-                                       } type="primary"
-                                       shape="circle" icon={
-                <PlusOutlined/>}/>
+                                       onClick={()=>{this.setState({newChannelVisible: true})}}
+                                       type="primary"
+                                       >New text channel</Button>
 
         let sorted = this.state.joinedChannels.filter(sid => {
             // @ts-ignore   TS: fixme  
@@ -221,8 +221,8 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         return <div id="channelChanger">
             <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={() => {
                 this.setState({'newChannelVisible': false})
-            }}
-                               onCreate={this.createNewChannel.bind(this)}/>
+                }}
+                onCreate={this.createNewChannel.bind(this)}/>
             <Select showSearch={true}
                     placeholder="Search for user/paper/chat"
                     className="chat-search"
@@ -279,6 +279,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     }
                     }
             />
+            {addChannelButton}
             {/*<UpdateCreateForm visible={this.state.editChannelVisible}*/}
             {/*                  onCancel={()=>{this.setState({'editChannelVisible': false})}}*/}
             {/*                  onCreate={this.updateChannel.bind(this)}*/}
@@ -330,7 +331,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         }
                     </Menu.SubMenu>
 
-                <Menu.SubMenu key="otherPublicChannels" title={<span>More Channels{addChannelButton}</span>}>
+                <Menu.SubMenu key="otherPublicChannels" title={<span>More Channels</span>}>
                     {
                         this.state.allChannels.filter(chan => chan && chan.sid &&
                             //@ts-ignore
@@ -441,7 +442,7 @@ const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
     return (
         <Modal
             visible={visible}
-            title="Create a channel"
+            title="Create a text channel"
             // okText="Create"
             footer={[
                 <Button form="myForm" key="submit" type="primary" htmlType="submit">
