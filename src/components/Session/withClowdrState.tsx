@@ -916,7 +916,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     }
                 }
                 res.forEach(this.notifyUserOfChanges.bind(this));
-                this.activePublicVideoRooms = res;
+                this.activePublicVideoRooms = [...res];
                 this.activePublicVideoRoomSubscribers = {};
                 this.setState({activePublicVideoRooms: res})
                 if (this.parseLivePublicVideosSub) {
