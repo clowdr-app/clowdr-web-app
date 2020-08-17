@@ -47,7 +47,7 @@ class ChatChannelArea extends React.Component {
             if (chat.attributes.category == "announcements-global") {
                 title = "Announcements";
             } else if(chat.attributes.category == "programItem" && chat.attributes.programItemID){
-                console.log(chat.attributes.programItemID)
+                // console.log(chat.attributes.programItemID)
                 title = <ProgramItemDisplay auth={this.props.appState} id={chat.attributes.programItemID} />
             }else if (chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group") {
                 title = chat.channel.friendlyName;

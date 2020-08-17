@@ -1,7 +1,7 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
 import Parse from "parse"
-import {Badge} from "antd";
+import {Badge, Button} from "antd";
 import {ShrinkOutlined, ExpandAltOutlined} from "@ant-design/icons";
 // @ts-ignore
 import {Document, Page, pdfjs} from 'react-pdf';
@@ -115,7 +115,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         if(this.unreadConsumers.get(sid)){
             //@ts-ignore
             for(let consumer of this.unreadConsumers.get(sid)){
-                console.log("--> sid: " + sid + " count: " + count);
+                // console.log("--> sid: " + sid + " count: " + count);
                 //@ts-ignore
                 consumer.setState({unread: count});
             }
@@ -123,19 +123,20 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
     }
 
     changeSize(expand: boolean) {
-        // if (!expand) { // Collapse
-        //     this.props.appState.
-        // }
+        if (!expand) { // Collapse
+            console.log("--> collapsing");
+            this.props.parentRef.setState({chatHeight: "50px"});
+        }
     }
 
     render() {
         // if (this.state.loading)
         //     return <Spin/>
         let nMessages = {
-            nDMs: 10,
-            nMyChannelMessages: 130,
-            otherChannelMessages: 1,
-            paperChannelMessages: 5
+            nDMs: 0,
+            nMyChannelMessages: 0,
+            otherChannelMessages: 0,
+            paperChannelMessages: 0
         }
 
         let notifications = <span className="notifications">
@@ -145,7 +146,8 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
             <Badge count={nMessages.paperChannelMessages}  title="New messages in paper channels" />
             </span>;
 
-        let actions = this.state.expanded ? <span className="actions"><a href="#" onClick={this.changeSize.bind(this, false)}><ShrinkOutlined title="Minimize panel"/></a></span> :
+        let actions = this.state.expanded ? <span className="actions"><Button type="primary" shape="round" icon={<ShrinkOutlined title="Minimize panel"/>}
+                        onClick={this.changeSize.bind(this, false)}/></span> :
                         <span className="actions"><ExpandAltOutlined title="Expand panel"/></span>
         
         return <div className="multiChatWindow">
