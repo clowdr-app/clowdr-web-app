@@ -629,7 +629,6 @@ async function getConfig(conference){
     return config;
 }
 
-
 async function createBreakoutRoomForProgramItem(programItem){
     let config = await getConfig(programItem.get("conference"));
 

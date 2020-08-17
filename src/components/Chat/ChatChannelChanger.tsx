@@ -1,8 +1,7 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
 import {Button, Form, Input, Menu, message, Modal, Select, Spin, Switch} from "antd";
-// @ts-ignore
-import {ChatChannelConsumer, ClowdrAppState, MultiChatApp} from "../../ClowdrTypes";
+import {ChatChannelConsumer, ClowdrState, MultiChatApp} from "../../ClowdrTypes";
 import CollapsedChatDisplay from "./CollapsedChatDisplay";
 import {Channel} from "twilio-chat/lib/channel";
 import {PlusOutlined} from "@ant-design/icons"
@@ -10,13 +9,11 @@ import ProgramItem from "../../classes/ProgramItem";
 import UserProfile from "../../classes/UserProfile";
 import Parse from "parse";
 
-
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
-
 interface ChatChannelChangerProps {
-    appState: ClowdrAppState | null;
+    appState: ClowdrState | null;
     multiChatWindow: MultiChatApp;
 }
 interface PublicChannelChangerProps {
@@ -134,7 +131,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         // if (this.state.loading)
         //     return <Spin/>
         let addChannelButton = <></>
-        if(this.props.appState?.ismoderator)
+        if(this.props.appState?.isModerator)
             addChannelButton = <Button size="small"
                                        onClick={()=>{this.setState({newChannelVisible: true})}
                                        } type="primary"
@@ -142,6 +139,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                 <PlusOutlined/>}/>
 
         let sorted = this.state.joinedChannels.filter(sid => {
+            // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
             if (chan) {
                 if (chan.attributes && (chan.attributes.category != "socialSpace" && chan.attributes.category != "breakoutRoom"))
@@ -149,7 +147,9 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             }
             return false;
         }).sort((sid1, sid2) => {
+                        // @ts-ignore   TS: fixme  
                 let chan1 = this.props.appState?.chatClient.joinedChannels[sid1];
+                            // @ts-ignore   TS: fixme  
                 let chan2 = this.props.appState?.chatClient.joinedChannels[sid2];
                 if (!chan1 || !chan2)
                     return 0;
@@ -180,6 +180,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             }
         );
         let dms = sorted.filter(sid => {
+                        // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
             if (chan) {
                 if (chan.attributes && (chan.attributes.mode == "directMessage"))
@@ -188,6 +189,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             return false;
         });
         let programChats = sorted.filter(sid => {
+                        // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
             if(chan){
                 if(chan.attributes && (chan.attributes.category == 'programItem'))
@@ -196,6 +198,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             return false;
         });
         let otherChannels = sorted.filter(sid => {
+                        // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
             if(chan){
                 if(chan.attributes && (chan.attributes.mode != "directMessage" && chan.attributes.category != 'socialSpace' && chan.attributes.category != 'programItem'))
@@ -239,15 +242,15 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                                     });
                             }
                             if(sid){
-                                await this.props.appState.chatClient.openChatAndJoinIfNeeded(sid, false);
+                                await this.props.appState?.chatClient.openChatAndJoinIfNeeded(sid, false);
                             }
                             else{
                                 message.error("Unable to find chat ID for " + obj.get("title"))
                             }
                         }else if(obj instanceof UserProfile){
-                            await this.props.appState.helpers.createOrOpenDM(obj);
+                            await this.props.appState?.helpers.createOrOpenDM(obj);
                         }else if(obj instanceof Channel){
-                            await this.props.appState.chatClient.openChatAndJoinIfNeeded(obj.sid, false);
+                            await this.props.appState?.chatClient.openChatAndJoinIfNeeded(obj.sid, false);
                         }
                         // @ts-ignore
                         this.setState({openingChat: false, filter: undefined})
@@ -258,7 +261,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         if(!this.fetchingSearchOptions){
                             this.fetchingSearchOptions = true;
                             this.setState({searchLoading: true});
-                            let profiles = await this.props.appState.programCache.getUserProfiles(this);
+                            let profiles = await this.props.appState?.programCache.getUserProfiles(this);
                             this.setState({UserProfiles: profiles, searchLoading: false})
                         }
                     }
