@@ -169,16 +169,15 @@ class ChatChannelArea extends React.Component {
                 <div className="bottomChatIdentity">{title}</div>
                 <div className="bottomChatClose">
                     <Tooltip mouseEnterDelay={0.5} title="Launch a video chat room">
-                        <Button size="small" type="primary" 
-                                variant="outline-primary"
-                                shape="circle" style={{minWidth: "initial"}}
+                        <Button size="small" type="text" 
+                                style={{minWidth: "initial"}}
                                 loading={this.state.newVideoChatLoading}
                                 icon={<VideoCameraAddOutlined/>}
                                 onClick={this.toVideo.bind(this)}>Launch video</Button>
                     </Tooltip>
                     &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Tooltip mouseEnterDelay={0.5} title="Add someone to this chat">
-                        <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}
+                    <Tooltip mouseEnterDelay={0.5} title="Add someone to this channel">
+                        <Button size="small" type="text" style={{minWidth: "initial"}}
                                 icon={<PlusOutlined/>}
                                 onClick={this.props.addUser}
                         >Add people</Button></Tooltip>

@@ -455,16 +455,18 @@ class BottomChatWindow extends React.Component{
                 </Tooltip>
                 &nbsp;&nbsp;
                 <Tooltip mouseEnterDelay={0.5} title="Add someone to this chat">
-                    <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}  icon={<PlusOutlined />}
+                    <Button size="small" type="primary" 
+                    style={{minWidth: "initial"}}  icon={<PlusOutlined />}
                                                               onClick={this.props.addUser}
-                >Add people</Button></Tooltip>
-                <Tooltip mouseEnterDelay={0.5} title="Close this chat"><Button size="small" type="primary" shape="circle"
+                >Add people</Button>
+                </Tooltip>
+                <Tooltip mouseEnterDelay={0.5} title="Close this chat"><Button size="small" type="primary" 
                                                               style={{minWidth: "initial"}}  icon={<CloseOutlined />}
             onClick={
                 this.closeChat.bind(this)
             }
             /></Tooltip>
-                <Tooltip mouseEnterDelay={0.5} title="Minimize this window"><Button size="small" type="primary" shape="circle"
+                <Tooltip mouseEnterDelay={0.5} title="Minimize this window"><Button size="small" type="primary" 
                                                               style={{minWidth: "initial"}}  icon={<MinusOutlined />}
                                                               onClick={
                                                                   this.props.toggleOpen
