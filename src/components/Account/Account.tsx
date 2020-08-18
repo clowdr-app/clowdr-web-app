@@ -28,8 +28,7 @@ interface State {
     allTopics: FlairItem[]|undefined;  //TS: no usage
     topicObj: Parse.Object[]|undefined;  //TS: no usage
     updating: boolean;
-    ProgramPersons: Parse.Object[];
-    ProgramItems: Parse.Object[];
+    authorRecords: string[];
     username: string;                  //TS no usage
     error: Error|undefined
 }
@@ -46,6 +45,9 @@ interface FlairColor {
 }
 
 class Account extends React.Component<Props, State> {
+    ProgramPersons: Parse.Object[];
+    ProgramItems: Parse.Object[];
+    programPersonOptions: {value: string, label: string}[];
 
     constructor(props: Props) {
         super(props);
@@ -55,7 +57,7 @@ class Account extends React.Component<Props, State> {
             tags: undefined,
             flair: undefined,
             selectedFlair: undefined,
-            loading: false,
+            loading: true,
             flairColors: undefined,
             allFlair: undefined,
             flairObj: undefined,
@@ -63,11 +65,13 @@ class Account extends React.Component<Props, State> {
             allTopics: undefined,
             topicObj: undefined,
             updating: false, //TS: Is init val false or true?
-            ProgramPersons: [],
-            ProgramItems: [],
+            authorRecords: [],
             username: "",
             error: undefined
         }
+        this.ProgramPersons = [];
+        this.ProgramItems = [];
+        this.programPersonOptions = [];
     }
 
     setStateFromUser(){
@@ -81,8 +85,7 @@ class Account extends React.Component<Props, State> {
             email: this.props.auth.user ? this.props.auth.user.getEmail() : undefined,
             tags: this.props.auth.user ? this.props.auth.user.get("tags") : undefined,
             flair: this.props.auth.user ? this.props.auth.user.get("primaryFlair") : undefined,
-            selectedFlair: selectedFlairs,
-            loading: false
+            selectedFlair: selectedFlairs
         });
         const Flair = Parse.Object.extend("Flair");
         const flairQ = new Parse.Query(Flair);
@@ -124,6 +127,7 @@ class Account extends React.Component<Props, State> {
         });
 
     }
+
     componentDidMount() {
         let _this = this;
         if(!_this.state.user){
@@ -159,7 +163,7 @@ class Account extends React.Component<Props, State> {
                 programPersonIDs: values.programPersons
             })
 
-    ]).then(() => {
+        ]).then(() => {
                 this.setState({updating: false});
                 this.setStateFromUser();
                 if(this.props.onFinish)
@@ -167,13 +171,39 @@ class Account extends React.Component<Props, State> {
 
         });
     }
+
     async collectProgramItems(){
         let [persons, items] = await Promise.all([
             this.props.auth.programCache.getProgramPersons(this),
             this.props.auth.programCache.getProgramItems(this)]);
+
+        this.ProgramPersons = persons;
+        this.ProgramItems = items;
+
+        let peopleToItems: Record<string, Parse.Object[]> = {};
+        let matchingPersons = [];
+
+        for (let item of this.ProgramItems){
+            for (let person of item.get("authors"))
+            {
+                if (!peopleToItems[person.id])
+                    peopleToItems[person.id] = [];
+                peopleToItems[person.id].push(item);
+            }
+        }
+        this.programPersonOptions = this.ProgramPersons.filter((person: Parse.Object) => (
+            (person.get("userProfile") == null || person.get("userProfile").id == this.props.auth.userProfile.id) &&
+             peopleToItems[person.id])).map((person: Parse.Object) => (
+                {value: person.id,
+                 label: person.get('name') + " (" + peopleToItems[person.id].map((item: Parse.Object) => item.get("title")).join(", ") + ")"})
+            );
+        matchingPersons = this.ProgramPersons.filter((person: Parse.Object) =>
+            person.get("userProfile") && person.get("userProfile").id == this.props.auth.userProfile.id
+            ).map((person: Parse.Object) => (person.id));
+
         this.setState({
-            ProgramPersons: persons,
-            ProgramItems: items
+            authorRecords: matchingPersons,
+            loading: false
         })
     }
 
@@ -193,9 +223,6 @@ class Account extends React.Component<Props, State> {
         return tag;
     }
 
-    // personRenderer(props){
-    //
-    // }
     topicRender(props: any) {   //TS:@Jon@Crista no usage
         const { value, label, id, closable, onClose } = props;
 
@@ -219,29 +246,7 @@ class Account extends React.Component<Props, State> {
         if (this.props.auth.user) {
             passwordRequired = !this.props.auth.user.get("passwordSet");
         }
-        let peopleToItems: Record<string, Parse.Object[]> = {};
-        let programPersonOptions= [];
-        let matchingPersons = [];
-        if(this.state.ProgramPersons){
-            for(let item of this.state.ProgramItems){
-                for(let person of item.get("authors"))
-                {
-                    if(!peopleToItems[person.id])
-                        peopleToItems[person.id] = [];
-                    peopleToItems[person.id].push(item);
-                }
-            }
-            programPersonOptions = this.state.ProgramPersons.filter((person: Parse.Object) => (
-                (person.get("userProfile") == null || person.get("userProfile").id == this.props.auth.userProfile.id)&&
-                peopleToItems[person.id])).map((person: Parse.Object) => (
-                    {value: person.id,
-                     label: person.get('name') + " (" + peopleToItems[person.id].map((item: Parse.Object) => item.get("title")).join(", ") + ")"})
-                );
-            matchingPersons = this.state.ProgramPersons.filter((person: Parse.Object) =>
-                person.get("userProfile") && person.get("userProfile").id == this.props.auth.userProfile.id
-                ).map((person: Parse.Object) => (person.id));
-        }
-        else{
+        if (this.state.loading) {
             return <Spin />
         }
 
@@ -263,7 +268,7 @@ class Account extends React.Component<Props, State> {
                       pronouns: this.props.auth.userProfile.get("pronouns"),
                       position: this.props.auth.userProfile.get("position"),
                       flair: this.state.selectedFlair,
-                      programPersons: matchingPersons
+                      programPersons: this.state.authorRecords
                   }}
                   size={'small'}>
                 <Form.Item
@@ -293,13 +298,13 @@ class Account extends React.Component<Props, State> {
                 <Form.Item label="Author record:"
                            name="programPersons"
                            extra="Start typing your name to identify and select your conference records (if any)." >
-                    {(this.state.ProgramPersons ?
+                    {(this.ProgramPersons ?
                         <Select mode="multiple"
                                 optionFilterProp="label"
-                                filterOption={ true}
+                                filterOption={true}
                                 placeholder="Connect your profile to your activities at this conference"
                                 style={{width:'100%'}}
-                                options={programPersonOptions}
+                                options={this.programPersonOptions}
                         />
                     : <Skeleton.Input />)}
                 </Form.Item>
