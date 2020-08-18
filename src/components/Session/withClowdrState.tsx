@@ -159,7 +159,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 getUserProfilesFromUserIDs: this.getUserProfilesFromUserIDs.bind(this),
                 getUserProfilesFromUserProfileIDs: this.getUserProfilesFromUserProfileIDs.bind(this),
                 getUserProfilesFromUserProfileID: this.getUserProfilesFromUserProfileID.bind(this),
-                ifPermission: this.ifPermission.bind(this),
+                // ifPermission: this.ifPermission.bind(this),
                 getUserRecord: this.getUserRecord.bind(this),
                 getPresences: this.getPresences.bind(this),
                 cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
@@ -237,32 +237,32 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     return false;
                 })
                 if (found) {
-                    // @ts-ignore    What is its type?  (Something from Twilio?)
-                    console.log(found.channel.sid)
                     // @ts-ignore    What is its type?
                     this.state.chatClient.openChat(found.channel.sid);
                     return;
                 }
             }
             assert(this.state.currentConference);
+            console.log("calling create DM")
             let res = await Parse.Cloud.run("chat-createDM", {
                 confID: this.state.currentConference.id,
                 conversationName: profileOfUserToDM.get("displayName"),
                 messageWith: profileOfUserToDM.id
             });
-            this.state.chatClient.openChat(res.sid);
+            await this.state.chatClient.openChat(res.sid);
         }
 
         // TS: @ Jon: Should this be polymorphic??
-        // Jon: I think that this was a half-baked idea and shoudl probably be factored away
-        ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
+        // Jon: I think that this was a half-baked idea and should probably be factored away
+        // BCP it is also wrong, apparently -- removing
+/*         ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
             if (this.state.permissions && this.state.permissions.includes(permission))
                 return jsxElement;
             if (elseJsx)
                 return elseJsx;
             return  <></>        
         }
-
+ */
         setExpandedProgramRoom(programRoom: Parse.Object) {
             this.expandedProgramRoom = programRoom;
             if (this.state.leftSidebar) {
@@ -424,12 +424,13 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             this.subscribeToPublicRooms()
 
             let query  =new Parse.Query("UserPresence");
-            query.limit(1000);
+            query.limit(2000);
             query.equalTo("conference", this.currentConference);
             query.equalTo("isOnline", true);
 
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
+            console.log("Subscribed" +  user.getSessionToken())
             this.socialSpaceSubscription.on('create', (presence: UserPresence) => {
                 this.newPresences.push(presence);
                 this.updatePresences();
@@ -482,10 +483,10 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         Call this to set the user's current social space.
         Provide either the spaceName or the space object.
          */
-        async setSocialSpace(spaceName:string, space:SocialSpace, user:User, userProfile:UserProfile) {
+        async setSocialSpace(spaceName:string, space:SocialSpace, user:User, userProfile:UserProfile, ignoreChatChannel?:boolean) {
             if (!this.state.user && !user) // user is not logged in
                 return
-            if(space)
+            if (space)
                 spaceName = space.get("name");
             if (!this.state.activeSpace || spaceName != this.state.activeSpace.get("name")) {
                 if(!user)
@@ -507,14 +508,26 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     presence.set("socialSpace", space);
                     presence.save();
                 }
-                this.setState({
+                let stateUpdate = {
                     activeSpace: space,
-                    chatChannel: space ? space.get("chatChannel") : undefined
-                });
+                    chatChannel:  space ? space.get("chatChannel") : undefined
+                }
+                if(ignoreChatChannel)
+                {
+                    stateUpdate.chatChannel = "@chat-ignore"
+                }
+                this.setState(stateUpdate);
+            }
+            else if(this.state.activeSpace && this.state.activeSpace.get("name") == spaceName){
+                if(!space && this.state.spaces){
+                    space = this.state.spaces[spaceName];
+                }
+                if(this.state.chatChannel != space.get("chatChannel"))
+                    this.setState({chatChannel: space.get("chatChannel")});
             }
         }
 
-        // @Jon: What would be a better name for this???
+        // @ Jon: What would be a better name for this???
         //Jon: I need to refactor all of the chat client stuff, it's full of bad patterns and races left and right. Open to name suggestions, but eventually I want this to return a promise anyway
         getChatClient(callback: (_:ChatClient)=>void) {
             if (this.chatClient)
@@ -675,9 +688,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         let session = await Parse.Session.current();
 
                         // Valid conferences for this user
-                        let profiles = await user.relation("profiles").query().include("conference").find();
+                        let profiles = await user.relation("profiles").query().include(["conference", "conference.loggedInText"]).find();
                         let validConferences = profiles.map(p => p.get("conference"));
-                        console.log(validConferences)
                         // console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
 
                         // Roles for this user
@@ -769,7 +781,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         _this.currentConference = conf;
                         _this.user = user;
                         _this.userProfile = activeProfile;
-                        _this.state.chatClient.initChatClient(user, conf, activeProfile);
+                        _this.state.chatClient.initChatClient(user, conf, activeProfile, _this);
 
                         try {
                             // @ts-ignore   TS: I guess change null to ""?
@@ -904,7 +916,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     }
                 }
                 res.forEach(this.notifyUserOfChanges.bind(this));
-                this.activePublicVideoRooms = res;
+                this.activePublicVideoRooms = [...res];
                 this.activePublicVideoRoomSubscribers = {};
                 this.setState({activePublicVideoRooms: res})
                 if (this.parseLivePublicVideosSub) {

@@ -1,8 +1,7 @@
 import React, {Component} from 'react';
 import {BrowserRouter, NavLink, Route} from 'react-router-dom';
 import BrowserDetection from 'react-browser-detection';
-import {Button, Layout, message, Select, Spin, Tooltip, Typography, Upload} from 'antd';
-
+import {Button, Divider, Layout, message, Select, Spin, Tooltip, Typography, Upload} from 'antd';
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
@@ -56,6 +55,7 @@ import UsersList from "./components/Admin/Users";
 import SplitPane from 'react-split-pane/lib/SplitPane';
 // @ts-ignore
 import Pane from 'react-split-pane/lib/Pane'
+import ActiveUsersList from "./components/SocialTab/ActiveUsersList";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -68,12 +68,15 @@ class App extends Component {
         super(props);
         // this.state ={'activeKey'=routing}
 
+        this.chatSize = "300px";
+        this.chatPaneRef = React.createRef();
         // if(this.props.match.)
         this.state = {
             conference: null,
             showingLanding: this.props.clowdrAppState.showingLanding,
             socialCollapsed: false,
             chatCollapsed: false,
+            chatHeight: this.chatSize,
             dirty: false
         }
 
@@ -124,7 +127,6 @@ class App extends Component {
         }
         reader.readAsDataURL(file);
         return false;
-
     }
 
     siteHeader() {
@@ -148,7 +150,7 @@ class App extends Component {
                     }
                 </Select>
                 clowdrActionButtons = <span>
-                {(this.props.clowdrAppState.user && this.props.clowdrAppState.permissions.includes("moderator") ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
+                {(this.props.clowdrAppState.user && this.props.clowdrAppState.isModerator ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
                     <Tooltip mouseEnterDelay={0.5} title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
                 <Tooltip mouseEnterDelay={0.5} title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
                 <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
@@ -208,6 +210,10 @@ class App extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!prevProps.clowdrAppState || prevProps.clowdrAppState.currentConference != this.props.clowdrAppState.currentConference) {
             this.refreshConferenceInformation();
+        }
+        if(this.state.chatHeight != prevState.chatHeight && this.state.chatHeight != this.chatSize){
+            this.chatSize = this.state.chatHeight;
+            this.chatPaneRef.current.setState({sizes: ["1", this.state.chatHeight]});
         }
         if (this.props.clowdrAppState.showingLanding != this.state.showingLanding) {
             this.setState({showingLanding: this.props.clowdrAppState.showingLanding});
@@ -366,7 +372,9 @@ class App extends Component {
                                 </Pane>
                                 <Pane>
                                     <div className="middlePane">
-                                        <SplitPane split="horizontal">
+                                        <SplitPane split="horizontal" ref={this.chatPaneRef} onChange={(sizes)=>{
+                                            this.chatSize=sizes[1];
+                                        }}>
                                             <Pane>
                                                 <div className="page-content">
 
@@ -376,16 +384,19 @@ class App extends Component {
                                                 </div>
 
                                             </Pane>
-                                            <Pane initialSize={"300px"}>
-                                                <BottomChat/>
-
+                                            <Pane initialSize={this.chatSize}>
+                                                <BottomChat setChatWindowHeight={(height)=>this.setState({chatHeight: height})}/>
                                             </Pane>
                                         </SplitPane>
                                     </div>
                                 {/*</Content>*/}
                                 </Pane>
                                 <Pane initialSize={"250px"}>
-                                <SidebarChat collapsed={this.state.chatCollapsed} />
+                                    <div className="chatTab" id="rightPopout">
+                                        <div id="activeUsersList"><ActiveUsersList /></div>
+                                        <Divider className="sidebar-section-separator"></Divider>
+                                        <div id="sidebarChat"><SidebarChat collapsed={this.state.chatCollapsed} /></div>
+                                    </div>
                                 </Pane>
                             </SplitPane>
                         </div>

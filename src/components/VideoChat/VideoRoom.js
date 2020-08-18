@@ -51,32 +51,41 @@ const {Paragraph} = Typography;
 class VideoRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {members: []};
+        this.state = {
+            members: [], 
+            isMounted: false
+        };
     }
 
     async componentDidMount() {
         try {
-            if(this.props.room){
+            if (this.props.room){
                 await this.joinCallEmbedded(this.props.room, this.props.conference);
-            }else{
+            } else {
                 await this.joinCallFromProps();
             }
-        }catch(err){
+            this.setState({isMounted: true})
+        } catch(err){
             console.log(err);
         }
     }
 
     componentWillUnmount() {
         console.log("Unmounting video room")
+        this.setState({isMounted: false});
         this.props.clowdrAppState.helpers.setGlobalState({currentRoom: null});
+        this.props.clowdrAppState.setSocialSpace("Lobby");
+
     }
+
     async joinCallFromProps(){
         if (!this.props.match) {
             return;
         }
         if(!this.props.clowdrAppState.user || (this.props.match.params.conf && this.props.match.params.conf != this.props.clowdrAppState.currentConference.get("conferenceName"))){
             this.props.clowdrAppState.refreshUser(this.props.match.params.conf).then((u)=>{
-                this.joinCallFromPropsWithCurrentUser()
+                if (this.state.isMounted)
+                    this.joinCallFromPropsWithCurrentUser()
             })
         }
         else{
@@ -106,33 +115,37 @@ class VideoRoom extends Component {
                         'Content-Type': 'application/json'
                     }
                 }).then(res => {
-                if (res.status == 500) {
-                    console.log("Error")
-                    this.setState({
-                        error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a
-                            href="mailto:help@clowdr.org">help@clowdr.org</a></span>
-                    });
+                    if (this.state.isMounted) {
+                        if (res.status == 500) {
+                            console.log("Error")
+                            this.setState({
+                                error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a
+                                    href="mailto:help@clowdr.org">help@clowdr.org</a></span>
+                            });
 
-                } else {
+                        } else {
 
-                    res.json().then((data) => {
-                        localStorage.setItem("videoReloads", 0);
-                        localStorage.setItem("videoLoadTimeout", 0);
-                        _this.setState(
-                            {
-                                error: undefined,
-                                meeting: room.id,
-                                token: data.token,
-                                loadingMeeting: false,
-                                meetingName: room.get("title")
-                            }
-                        )
-                        if (_this.loadingMessage) {
-                            _this.loadingMessage();
+                            res.json().then((data) => {
+                                if (this.state.isMounted) {
+                                    localStorage.setItem("videoReloads", 0);
+                                    localStorage.setItem("videoLoadTimeout", 0);
+                                    _this.setState(
+                                        {
+                                            error: undefined,
+                                            meeting: room.id,
+                                            token: data.token,
+                                            loadingMeeting: false,
+                                            meetingName: room.get("title")
+                                        }
+                                    )
+                                    if (_this.loadingMessage) {
+                                        _this.loadingMessage();
+                                    }
+                                    _this.loadingVideo = false;
+                                }
+                            })
                         }
-                        _this.loadingVideo = false;
-                    })
-                }
+                    }
             }).catch((err) => {
                 console.log("Error")
                 this.loadingVideo = false;
@@ -140,6 +153,7 @@ class VideoRoom extends Component {
             });
         }
     }
+
     async deleteRoom(){
         let idToken = this.props.clowdrAppState.user.getSessionToken();
         this.setState({roomDeleteInProgress: true})
@@ -157,9 +171,11 @@ class VideoRoom extends Component {
                     'Content-Type': 'application/json'
                 }
             }).then(()=>{
-                this.setState({roomDeleteInProgress: false});
+                if (this.state.isMounted)
+                    this.setState({roomDeleteInProgress: false});
         })
     }
+
     async joinCallFromPropsWithCurrentUser() {
         console.log("Joining")
 
@@ -209,6 +225,7 @@ class VideoRoom extends Component {
         if(Number(window.localStorage.getItem("videoReloads") > 3)){
             localStorage.setItem("videoReloads", 0);
             localStorage.setItem("videoLoadTimeout", 0);
+
             this.setState({error: <span>Sorry, but we were unable to connect you to the video room, likely due to a bug in this frontend. If this issue persists, please contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
             this.loadingVideo = false;
             return;
@@ -238,26 +255,29 @@ class VideoRoom extends Component {
                 // window.location.reload(false);
             }
         }, timeout);
-        if(room.get("socialSpace"))
-            this.props.clowdrAppState.setSocialSpace(null,room.get("socialSpace"));
+        // if(room.get("socialSpace"))
+        //     this.props.clowdrAppState.setSocialSpace(null,room.get("socialSpace"));
 
         room = await this.props.clowdrAppState.helpers.populateMembers(room);
-        console.log("Joining room, setting chat channel: " + room.get("twilioChatID"))
+        console.log("Joining room " + room.id + ", setting chat channel: " + room.get("twilioChatID"))
         // this.props.clowdrAppState.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         let watchedByMe = false;
         if(this.props.clowdrAppState.userProfile.get("watchedRooms")){
             watchedByMe = this.props.clowdrAppState.userProfile.get("watchedRooms").find(v =>v.id ==room.id);
         }
+
         this.setState({loadingMeeting: 'true', room: room, watchedByMe: watchedByMe})
 
         let user = this.props.clowdrAppState.user;
 
         if (user) {
-            if(room.get("twilioChatID"))
-            this.props.clowdrAppState.chatClient.initChatClient(user, this.props.clowdrAppState.currentConference, this.props.clowdrAppState.userProfile).then(()=>{
-                this.props.clowdrAppState.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
-                })
-            });
+            if (room.get("twilioChatID"))
+                this.props.clowdrAppState.chatClient.initChatClient(user, this.props.clowdrAppState.currentConference, this.props.clowdrAppState.userProfile).then(() => {
+                    // this.props.clowdrAppState.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
+                    // })
+                    if (this.state.isMounted)
+                        this.props.clowdrAppState.helpers.setGlobalState({chatChannel: room.get("twilioChatID")});
+                });
             let idToken = user.getSessionToken();
             const data = fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
@@ -273,33 +293,37 @@ class VideoRoom extends Component {
                         'Content-Type': 'application/json'
                     }
                 }).then(res => {
-                if (res.status == 500) {
-                    console.log("Error")
-                    this.setState({error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
+                    if (this.state.isMounted) {
+                        if (res.status == 500) {
+                            console.log("Error")
+                            this.setState({error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
 
-                } else {
+                        } else {
 
-                    res.json().then((data) => {
-                        localStorage.setItem("videoReloads", 0);
-                        localStorage.setItem("videoLoadTimeout", 0);
-                        _this.setState(
-                            {
-                                error: undefined,
-                                meeting: room.id,
-                                token: data.token,
-                                loadingMeeting: false,
-                                meetingName: room.get("title")
-                            }
-                        )
-                        if(_this.loadingMessage){
-                            _this.loadingMessage();
+                            res.json().then((data) => {
+                                localStorage.setItem("videoReloads", 0);
+                                localStorage.setItem("videoLoadTimeout", 0);
+
+                                _this.setState(
+                                    {
+                                        error: undefined,
+                                        meeting: room.id,
+                                        token: data.token,
+                                        loadingMeeting: false,
+                                        meetingName: room.get("title")
+                                    }
+                                )
+                                if(_this.loadingMessage){
+                                    _this.loadingMessage();
+                                }
+                                _this.loadingVideo = false;
+                            })
                         }
-                        _this.loadingVideo = false;
-                    })
-                }
+                    }
             }).catch((err) => {
                 console.log("Error")
                 this.loadingVideo = false;
+
                 this.setState({error: "authentication"});
             });
         } else {
@@ -331,12 +355,13 @@ class VideoRoom extends Component {
                 {
                     this.confName = null;
                     this.roomID = null;
+
                     this.setState({conf: conf, meetingName: roomID, token: null, error: null});
                     await this.joinCallFromProps();
                 }
             }
         }
-        if(this.state.room && this.state.room.get("members")){
+        if (this.state.room && this.state.room.get("members")){
             let hadChange = false;
             for(let member of this.state.room.get("members")){
                 if(!this.state.members.find(v=>v.id == member.id)){
@@ -358,8 +383,9 @@ class VideoRoom extends Component {
                     // });
                 }
             }
-            if(hadChange)
+            if (hadChange) {
                 this.setState({members: this.state.room.get("members")});
+            }
         }
         // if (this.state.room && this.state.room.get("isPrivate")) {
             //Was there an update to the ACL?
@@ -376,9 +402,24 @@ class VideoRoom extends Component {
     }
 
     onError(err) {
-        message.error({content: "Unable to join room. " + err.toString()})
-        // this.props.history.push(ROUTES.LOBBY_SESSION);
+        let errorMsg;
+        if(err.toString().includes("Room not found")){
+            errorMsg =<div>Error - this room no longer exists. <Button onClick={()=>{message.destroy()}} type="primary">Dismiss</Button></div>
+        }else
+        errorMsg = <div style={{width: "300px"}}>
+            <Typography.Title level={3}>Error: unable to acquire camera</Typography.Title>
+            We were not able to acquire access to your camera and/or microphone. You must have a webcam and allow Clowdr access to it in order to join this call.
+            Please double check that your webcam is plugged in, then refresh this page. If you continue to have difficulties,
+             please be sure that you have allowed Clowdr access to your camera and microphone by following these instructions:
+            <br />
+            <b>Safari</b>: Go to the 'Safari' Menu, then select 'Settings for this website' and be sure that both camera and microphone are set to 'allow'.<br />
+            <b>Chrome</b>: Go to <a href="chrome://settings/content" target="_new">chrome://settings/content</a>, then select this website and be sure that camera and microphone are both set to 'Allow'. After completing these steps, please refresh the page to try again.
+            <br />
+           <br />
+            Internal error message: {err.toString()}<br /><Button onClick={()=>{message.destroy()}} type="primary">Dismiss</Button> </div>
+        message.error(errorMsg, 0)
     }
+
     async toggleWatch(){
         this.setState({watchLoading: true})
         let idToken = this.props.clowdrAppState.user.getSessionToken();
@@ -434,6 +475,7 @@ class VideoRoom extends Component {
 
 
     }
+
     render() {
         if (this.state.error) {
             let description;
@@ -546,6 +588,10 @@ class VideoRoom extends Component {
             // their individual bandwidth constraints. This has no effect if you are
             // using Peer-to-Peer Rooms.
             preferredVideoCodecs: [{codec: 'VP8', simulcast: false}],
+
+            onError: (err)=>{
+                message.error("Unable to connect to video: unable to acquire browser permissions for camera " + err.toString());
+            }
         };
         if (isP2P) {
             connectionOptions = {
@@ -564,6 +610,7 @@ class VideoRoom extends Component {
             connectionOptions.bandwidthProfile.video.maxSubscriptionBitrate = 2500000;
             connectionOptions.video= {height: 480, frameRate: 24, width: 640};
         }
+
         return (
             <div>
                 <AboutModal />
@@ -625,7 +672,7 @@ class VideoRoom extends Component {
                                     </VideoContext.Consumer>
                                         <Tooltip mouseEnterDelay={0.5} title={"This room was created as a " +
                                         this.state.room.get("mode") + " room with a capacity of " +
-                                        this.state.room.get("capacity") +", there's currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
+                                        this.state.room.get("capacity") +"; currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
                                         {fullLabel}{visibilityDescription}
                                         {privacyDescription}</h3>)}
 
@@ -652,11 +699,11 @@ class VideoRoom extends Component {
 
                                 {ACLdescription}
 
-                            {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.permissions.includes("moderator") ? <Popconfirm title="Are you sure you want to delete and end this room?"
+                            {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.isManager ? <Popconfirm title="Are you sure you want to delete and end this room?"
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             {!this.props.hideInfo ? <div>
-                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to 50 participants, but will only show the video of the most active participants. Click a participant to pin them to always show their video. </span> :
+                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to {this.state.room.get("capacity")} participants, but will only show the video of the most active participants. Click a participant to pin them to always show their video. </span> :
                                     this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
                             </div> :<></>}
                         <div className={"videoEmbed"}>
@@ -696,11 +743,13 @@ function FlipCameraButton() {
         videoTrack.stop();
 
         getLocalVideoTrack({ facingMode: newFacingMode }).then(newVideoTrack => {
-            const localTrackPublication = localParticipant.unpublishTrack(videoTrack);
-            // TODO: remove when SDK implements this event. See: https://issues.corp.twilio.com/browse/JSDK-2592
-            localParticipant.emit('trackUnpublished', localTrackPublication);
+            if (this.state.isMounted) {
+                const localTrackPublication = localParticipant.unpublishTrack(videoTrack);
+                // TODO: remove when SDK implements this event. See: https://issues.corp.twilio.com/browse/JSDK-2592
+                localParticipant.emit('trackUnpublished', localTrackPublication);
 
-            localParticipant.publishTrack(newVideoTrack, { priority: 'low' });
+                localParticipant.publishTrack(newVideoTrack, { priority: 'low' });
+            }
         });
     }, [facingMode, getLocalVideoTrack, localParticipant, videoTrack]);
 
@@ -767,6 +816,7 @@ class RoomVisibilityController extends React.Component {
     async updateACL(values) {
         if (this.state.loading)
             return;
+
         this.setState({pendingSave: true});
         let users = values.users;
         let idToken = this.props.clowdrAppState.user.getSessionToken();

@@ -1,6 +1,7 @@
 import Chat from "twilio-chat";
 import Parse from "parse";
 import React from "react";
+import {message} from "antd";
 
 export default class ChatClient{
     constructor(setGlobalState) {
@@ -10,6 +11,7 @@ export default class ChatClient{
         this.joinedChannels = {};
         this.chatUser = null;
         this.twilio = null;
+        this.rightSideChat = null;
         this.chats = [];
         this.ephemerallyOpenedChats = [];
         this.channelListeners = {};
@@ -17,15 +19,15 @@ export default class ChatClient{
         this.channelWaiters = {};
     }
 
-
-    async openChatAndJoinIfNeeded(sid){
+    async openChatAndJoinIfNeeded(sid, openOnRight=false){
         let channels = this.joinedChannels;
         let found = channels[sid];
-        console.log(sid)
         if (!found) {
             found = await this.joinAndGetChannel(sid);
-            console.log("Joining ephemerally: " + found.sid)
-            this.ephemerallyOpenedChats.push(found.sid);
+            if(!found){
+                return;
+            }
+            // this.ephemerallyOpenedChats.push(found.sid);
         }
         else{
             found = found.channel;
@@ -37,11 +39,16 @@ export default class ChatClient{
             console.log("Unable to find chat: " + sid)
         }
         else{
-            this.openChat(found.sid);
+            if(openOnRight){
+                this.appController.setState({chatChannel: sid});
+            }
+            else {
+                this.openChat(found.sid);
+            }
             return found.sid;
         }
-
     }
+
     closeChatAndLeaveIfUnused(sid){
        if(this.channelsThatWeHaventMessagedIn.includes(sid)){
            if(this.ephemerallyOpenedChats.includes(sid))
@@ -62,6 +69,7 @@ export default class ChatClient{
             this.joinedChannels[sid].channel.leave();
         }
     }
+
     async getJoinedChannel(sid){
         let chan = this.joinedChannels[sid];
         if(!chan)
@@ -75,6 +83,7 @@ export default class ChatClient{
         }
         return chan.channel;
     }
+
     async joinAndGetChannel(uniqueName) {
         if(!this.twilio){
             await this.chatClientPromise;
@@ -127,6 +136,10 @@ export default class ChatClient{
         chatWindow.setAllChannels(this.channels);
     }
 
+    initChatSidebar(rightChat){
+        this.rightSideChat = rightChat;
+    }
+
     initBottomChatBar(chatBar){
         this.chatBar = chatBar;
         chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes && c.attributes.category != "socialSpace").map(c=>c.channel.sid)});
@@ -140,10 +153,11 @@ export default class ChatClient{
                 .map(c=>c.channel.sid)});
     }
 
-
-    initChatClient(user, conference, userProfile) {
+    initChatClient(user, conference, userProfile, appController) {
         this.userProfile = userProfile;
         this.conference = conference;
+        if(appController && appController.setState)
+            this.appController = appController;
         if (!this.chatClientPromise) {
             this.chatClientPromise = new Promise(async (resolve) => {
                 let ret = await this._initChatClient(user, conference);
@@ -168,6 +182,7 @@ export default class ChatClient{
         if(this.chatList)
             this.chatList.addChannel(chatSID);
     }
+    
     leaveChat(chatSID){
         this.chats = this.chats.filter(c=>c != chatSID);
         if(this.chatBar)
@@ -175,6 +190,7 @@ export default class ChatClient{
         if(this.chatList)
             this.chatList.removeChannel(chatSID);
     }
+
     async getChannelInfo(channel){
 
         let ret = {};
@@ -299,7 +315,7 @@ export default class ChatClient{
             this.channels.push(channel);
             this.multiChatWindow.setAllChannels(this.channels);
             console.log(channel);
-            if(channel.attributes && channel.attributes.isAutoJoin){
+            if(channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin != "false"){
                 if(!Object.keys(this.joinedChannels).includes(channel.sid)){
                     this.joinAndGetChannel(channel.sid)
                 }
@@ -320,9 +336,9 @@ export default class ChatClient{
                     this.multiChatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
                 }
                 this.subscribeToChannel(channel.sid);
-                if (channelInfo.attributes.category != "socialSpace"){
-                    this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
-                }
+                // if (channelInfo.attributes.category != "socialSpace"){
+                //     this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
+                // }
             }
             // this.channelListeners.forEach(v => v.channelJoined(channel));
         });
@@ -350,7 +366,7 @@ export default class ChatClient{
         }
         this.twilio = twilio;
         for(let channel of this.channels){
-            if(channel.attributes && channel.attributes.isAutoJoin){
+            if(channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin != "false"){
                 if(!Object.keys(this.joinedChannels).includes(channel.sid)){
                     this.joinAndGetChannel(channel.sid)
                 }
@@ -358,6 +374,7 @@ export default class ChatClient{
         }
         return this.twilio;
     }
+
     addChannelListener(listener) {
         this.channelListeners.push(listener);
     }
@@ -365,7 +382,6 @@ export default class ChatClient{
     removeChannelListener(listener) {
         this.channelListeners = this.channelListeners.filter((v) => v != listener);
     }
-
 
     async cleanup() {
         if (this.twilio) {

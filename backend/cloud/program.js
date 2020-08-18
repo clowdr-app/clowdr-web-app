@@ -11,6 +11,8 @@ const Papa = require('./papaparse.min');
 const { response } = require('express');
 let UserProfile = Parse.Object.extend("UserProfile");
 let ProgramPerson = Parse.Object.extend("ProgramPerson");
+let ZoomRoom = Parse.Object.extend("ZoomRoom");
+var jwt = require('jsonwebtoken');
 
 
 // Is the given user in any of the given roles?
@@ -148,7 +150,9 @@ Parse.Cloud.define("rooms-upload", async (request) => {
     var rquery = new Parse.Query(Room);
     rquery.equalTo("conference", conference);
     rquery.limit(1000);
-    rquery.find().then(existing => {
+    let config = await getConfig(conference);
+
+    rquery.find().then(async (existing) => {
         let toSave = [];
         let acl = new Parse.ACL();
         acl.setPublicWriteAccess(false);
@@ -156,16 +160,104 @@ Parse.Cloud.define("rooms-upload", async (request) => {
         acl.setRoleWriteAccess(conferenceID+"-manager", true);
         acl.setRoleWriteAccess(conferenceID+"-admin", true);
     
-        rows = Papa.parse(data, {header: true});
-        rows.data.forEach(element => {
-            addRow(element, conference, existing, toSave, acl);
-        });
+        let rows = Papa.parse(data, {header: true});
+        // rows.data.forEach(element => {
+        //     addRow(element, conference, existing, toSave, acl);
+        // });
+        for(let row of rows.data){
+            let name = row.Name.trim();
+            if(!name)
+                continue;
+            let room = existing.find(r => r.get("name").trim() == name);
+            if(!room){
+                throw "Unable to find room: "+ row.name;
+            }
+            if (row.YouTube) {
+                // let data = getIDAndPwd(row.YouTube);
+                let data = row.YouTube;
+                room.set("src1", "YouTube")
+                room.set("id1", data);
+                // BCP: Is this the right way to clear out the other fields?
+                room.set("pwd1", "");
+                room.set("pwd2", "");
+                if (row.iQIYI) {
+                    let data2 = getIDAndPwd(row.iQIYI)
+                    room.set("src2", "iQIYI")
+                    room.set("id2", data2[0]);
+                } else { // BCP: Is this the right way to clear out the other fields?
+                    room.set("src2", "")
+                    room.set("id2", "");
+                }
+                room.set("qa", (row.QA ? row.QA : ""));
+            }
+            else if (row.Zoom) {
+                room.set("src1", "ZoomUS")
+                room.set("src2", "ZoomCN")
+                let data = getIDAndPwd(row.Zoom);
+                room.set("id1", data[0]);
+                room.set('pwd1', data[1]);
+                room.set("id2", data[0]);
+                room.set('pwd2', data[1]);
+            }
+            toSave.push(room);
+        }
         console.log(`--> Saving ${toSave.length} rooms`)
+        for(let room of toSave){
+            if(room.get("src1") == "ZoomUS"){
+                let zoomRoom = room.get("zoomRoom");
+                if(!zoomRoom){
+                    zoomRoom = new ZoomRoom();
+                    zoomRoom.set("programRoom", room);
+                    zoomRoom.set('conference', conference);
+                    zoomRoom.setACL(room.getACL());
+                }
+                let id = room.get("id1");
+                let payload = {
+                    iss: config.ZOOM_API_KEY,
+                    exp: ((new Date()).getTime() + 5000)
+                };
+                let token = jwt.sign(payload, config.ZOOM_API_SECRET);
+                try {
+                    let res = await axios({
+                        method: 'get',
+                        url: 'https://api.zoom.us/v2/meetings/' + id,
+                        data: {
+                            status: "active"
+                        },
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'User-Agent': 'Zoom-api-Jwt-Request',
+                            'content-type': 'application/json'
+                        }
+                    });
+                    zoomRoom.set("meetingID", room.get("id1"));
+                    zoomRoom.set("meetingPassword", res.data.password);
+                    zoomRoom.set("start_url", res.data.start_url);
+                    zoomRoom.set("start_url_expiration", moment().add(2, "hours").toDate());
+                    zoomRoom.set("requireRegistration", false);
+                    zoomRoom.set("join_url", res.data.join_url);
+                    await zoomRoom.save({}, {useMasterKey: true});
+                    room.set("zoomRoom", zoomRoom);
+                    await room.save({},{useMasterKey: true})
+                    // payload = {
+                    //     iss: config.ZOOM_API_KEY,
+                    //     exp: ((new Date()).getTime() + 5000)
+                    // };
+                    // token = jwt.sign(payload, config.ZOOM_API_SECRET);
+                }catch(err){
+                    console.log("Unable to fetch meeting " + id)
+                    console.log(err);
+                }
+            }
+        }
 
         Parse.Object.saveAll(toSave, {useMasterKey: true})
-        .then(res => console.log("[Rooms]: Done saving all rooms "))
-        .catch(err => console.log('[Rooms]: error: ' + err));
-    }).catch(err => console.log('[Rooms]: Problem fetching rooms ' + err));
+            .then(res => console.log("[Rooms]: Done saving all rooms "))
+            .catch(err => console.log('[Rooms]: error: ' + err));
+    }).catch(err => {
+        console.log('[Rooms]: Problem fetching rooms ' + err);
+        throw err
+    });
 
 });
 
@@ -183,45 +275,45 @@ function getIDAndPwd(str) {
     return [id, pwd];
 }
 
-function addRow(row, conference, existing, toSave, acl) {
-    if (row.Name) {
-        let name = row.Name.trim();
-        if (!existing.find(r => r.get("name").trim() == name)) {
-            var Room = Parse.Object.extend("ProgramRoom");
-            var room = new Room();
-            room.set("conference", conference);
-            room.set("name", name);
-            room.setACL(acl);
-            if (row.YouTube) {
-                let data = getIDAndPwd(row.YouTube);
-                room.set("src1", "YouTube")
-                room.set("id1", data[0]);
-                if (row.iQIYI) {
-                    let data2 = getIDAndPwd(row.iQIYI)
-                    room.set("src2", "iQIYI")
-                    room.set("id2", data2[0]);
-
-                }
-                room.set("qa", (row.QA ? row.QA : ""));
-            }
-            else if (row.Zoom) {
-                room.set("src1", "ZoomUS")
-                room.set("src2", "ZoomCN")
-                let data = getIDAndPwd(row.Zoom);
-                room.set("id1", data[0]);
-                room.set('pwd1', data[1]);
-                room.set("id2", data[0]);
-                room.set('pwd2', data[1]);
-            }
-            else
-                return
-
-            toSave.push(room);
-        }
-        else
-            console.log('[Rooms]: Skipping existing room ' + row.Name);
-    }
-}
+// function addRow(row, conference, existing, toSave, acl) {
+//     if (row.Name) {
+//         let name = row.Name.trim();
+//         if (!existing.find(r => r.get("name").trim() == name)) {
+//             var Room = Parse.Object.extend("ProgramRoom");
+//             var room = new Room();
+//             room.set("conference", conference);
+//             room.set("name", name);
+//             room.setACL(acl);
+//             if (row.YouTube) {
+//                 let data = getIDAndPwd(row.YouTube);
+//                 room.set("src1", "YouTube")
+//                 room.set("id1", data[0]);
+//                 if (row.iQIYI) {
+//                     let data2 = getIDAndPwd(row.iQIYI)
+//                     room.set("src2", "iQIYI")
+//                     room.set("id2", data2[0]);
+//
+//                 }
+//                 room.set("qa", (row.QA ? row.QA : ""));
+//             }
+//             else if (row.Zoom) {
+//                 room.set("src1", "ZoomUS")
+//                 room.set("src2", "ZoomCN")
+//                 let data = getIDAndPwd(row.Zoom);
+//                 room.set("id1", data[0]);
+//                 room.set('pwd1', data[1]);
+//                 room.set("id2", data[0]);
+//                 room.set('pwd2', data[1]);
+//             }
+//             else
+//                 return
+//
+//             toSave.push(room);
+//         }
+//         else
+//             console.log('[Rooms]: Skipping existing room ' + row.Name);
+//     }
+// }
 
 let allPeople = {};
 let allItems = {};
@@ -537,7 +629,6 @@ async function getConfig(conference){
     return config;
 }
 
-
 async function createBreakoutRoomForProgramItem(programItem){
     let config = await getConfig(programItem.get("conference"));
 
@@ -612,76 +703,83 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
         //so for now, don't do this mapping for new objects...
         return;
     }
-    if(programItem.dirty("authors")){
-        //Recalculate the items for each author
-        let itemQ = new Parse.Query("ProgramItem");
-        itemQ.include(["authors", "authors.userProfile"]);
-        let oldItem = null;
-        if(!programItem.isNew())
-            oldItem = await itemQ.get(programItem.id, {useMasterKey: true});
-        let newAuthors = [];
-        for(let author of programItem.get("authors")){
-            newAuthors.push(author);
-        }
-        let toSave = [];
-        if (oldItem) {
-            for (let author of oldItem.get("authors")) {
-                if (!newAuthors.find(v => v.id == author.id)) {
-                    //no longer an author
+    try {
+        if (programItem.dirty("authors")) {
+            //Recalculate the items for each author
+            let itemQ = new Parse.Query("ProgramItem");
+            itemQ.include(["authors", "authors.userProfile"]);
+            let oldItem = null;
+            if (!programItem.isNew())
+                oldItem = await itemQ.get(programItem.id, {useMasterKey: true});
+            let newAuthors = [];
+            for (let author of programItem.get("authors")) {
+                newAuthors.push(author);
+            }
+            let toSave = [];
+            if (oldItem && oldItem.get("authors")) {
+                for (let author of oldItem.get("authors")) {
+                    if (!newAuthors.find(v => v.id == author.id)) {
+                        //no longer an author
+                        let oldItems = author.get("programItems");
+                        if (oldItems) {
+                            oldItems = oldItems.filter(item => item.id != programItem.id);
+                            author.set("programItems", oldItems);
+                            toSave.push(author);
+                        }
+                        if (author.get("userProfile")) {
+                            programItem.getACL().setWriteAccess(author.get("userProfile").get('user'), false);
+                        }
+
+                    }
+                }
+            }
+            if (oldItem && oldItem.get("authors"))
+                newAuthors = newAuthors.filter(v => (!oldItem.get('authors').find(y => y.id == v.id)));
+            if (newAuthors.length > 0) {
+                try {
+                    newAuthors = await Parse.Object.fetchAllWithInclude(newAuthors, ["userProfile"], {useMasterKey: true});
+                } catch (err) {
+                    console.log(err);
+                    return;
+                }
+                let config = null;
+                let promises = [];
+                for (let author of newAuthors) {
                     let oldItems = author.get("programItems");
-                    if (oldItems) {
-                        oldItems = oldItems.filter(item => item.id != programItem.id);
+                    if (!oldItems)
+                        oldItems = [];
+                    if (!oldItems.find(v => v.id == programItem.id)) {
+                        oldItems.push(programItem);
                         author.set("programItems", oldItems);
                         toSave.push(author);
-                    }
-                    if (author.get("userProfile")) {
-                        programItem.getACL().setWriteAccess(author.get("userProfile").get('user'), false);
-                    }
-
-                }
-            }
-        }
-        if(oldItem)
-            newAuthors = newAuthors.filter(v=>(!oldItem.get('authors').find(y=>y.id==v.id)));
-        if(newAuthors.length > 0) {
-            try {
-                newAuthors = await Parse.Object.fetchAllWithInclude(newAuthors,["userProfile"], {useMasterKey: true});
-            } catch(err){
-                console.log(err);
-                return;
-            }
-            let config = null;
-            let promises = [];
-            for (let author of newAuthors) {
-                let oldItems = author.get("programItems");
-                if (!oldItems)
-                    oldItems = [];
-                if (!oldItems.find(v => v.id == programItem.id)) {
-                    oldItems.push(programItem);
-                    author.set("programItems", oldItems);
-                    toSave.push(author);
-                    programItem.getACL().setWriteAccess(author.get("userProfile").get("user"), true);
-                    if (programItem.get("chatSID") && author.get("userProfile")) {
-                        //add the author to the chat channel
-                        if (!config)
-                            config = await getConfig(programItem.get("conference"));
-                        let member = config.twilioChat.channels(programItem.get("chatSID")).members.create({
-                            identity: author.get("userProfile").id
-                        }).catch(err => {
-                            console.log(err);
-                        });
+                        if(author.get("userProfile")) {
+                            programItem.getACL().setWriteAccess(author.get("userProfile").get("user"), true);
+                        }
+                        if (programItem.get("chatSID") && author.get("userProfile")) {
+                            //add the author to the chat channel
+                            if (!config)
+                                config = await getConfig(programItem.get("conference"));
+                            let member = config.twilioChat.channels(programItem.get("chatSID")).members.create({
+                                identity: author.get("userProfile").id
+                            }).catch(err => {
+                                console.log(err);
+                            });
+                        }
                     }
                 }
             }
-        }
-        if(programItem.get("attachments")) {
-            for (let attachment of programItem.get("attachments")) {
-                attachment.setACL(programItem.getACL());
-                toSave.add(attachment);
+            if (programItem.get("attachments")) {
+                for (let attachment of programItem.get("attachments")) {
+                    attachment.setACL(programItem.getACL());
+                    toSave.add(attachment);
+                }
             }
+            if (toSave.length > 0)
+                await Parse.Object.saveAll(toSave, {useMasterKey: true});
         }
-        if(toSave.length > 0)
-            await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    }catch(err){
+        console.log(err);
+        throw err;
     }
 
 });
@@ -809,8 +907,58 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
         //     TODO Make sure no tracks have breakout rooms still...
         }
     }
+    if(track.dirty("perProgramItemChat")){
+        if(track.get("perProgramItemChat")){
+            let itemQ = new Parse.Query("ProgramItem");
+            itemQ.equalTo("track", track);
+            itemQ.limit(1000);
+            let config = await getConfig(track.get("conference"));
+            let items = await itemQ.find({useMasterKey: true});
+            for (let item of items) {
+                await getOrCreateChatForProgramItem(item, config);
+            }
+
+
+        }
+    }
 
 });
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function getOrCreateChatForProgramItem(item, config){
+    let attributes = {
+        category: "programItem",
+        programItemID: item.id
+    }
+    try{
+        let chatRoom = await config.twilioChat.channels.create(
+            {friendlyName: item.get('title'),
+                uniqueName: 'programItem-'+item.id,
+                type: 'public',
+                attributes: JSON.stringify(attributes)});
+        item.set("chatSID", chatRoom.sid);
+        await item.save({}, {useMasterKey: true});
+    }
+    catch(err){
+        if(err.code == 20429){
+            //Back off, try again
+            await timeout(2000);
+            item = await item.fetch({useMasterKey: true});
+            if(!item.get("chatSID")){
+                return getOrCreateChatForProgramItem(item, config);
+            }
+        }
+        //Raced with another client creating the chat room
+        let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
+        // item.set("chatSID", chatRoom.sid);
+        // await item.save({}, {useMasterKey: true});
+
+        return chatRoom.sid;
+    }
+}
+
 function eqInclNull(a,b){
     if(!a && !b)
         return true;
@@ -884,83 +1032,92 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
     fp.id = profileID;
     existingPersonsQ.equalTo("userProfile", fp);
 
-    let requestedPersonIDs = [];
-    let newPersonsToFetch = [];
-    for(let pid of personsIDs){
-        let p = new ProgramPerson();
-        p.id = pid;
-        newPersonsToFetch.push(p);
-        requestedPersonIDs.push(p);
-    }
+    try {
+        let requestedPersonIDs = [];
+        let newPersonsToFetch = [];
+        for (let pid of personsIDs) {
+            let p = new ProgramPerson();
+            p.id = pid;
+            newPersonsToFetch.push(p);
+            requestedPersonIDs.push(p);
+        }
 
-    let profileQ = new Parse.Query("UserProfile");
-    let [profile, alreadyClaimedPersons
-        , newPersonsToClaim
+        let profileQ = new Parse.Query("UserProfile");
+
+        let [profile, alreadyClaimedPersons
+            , newPersonsToClaim
         ] = await
-        Promise.all([profileQ.get(profileID, {useMasterKey: true}),
-            existingPersonsQ.find({useMasterKey: true}),
-        Parse.Object.fetchAll(newPersonsToFetch, {useMasterKey: true})
-        ]);
+            Promise.all([profileQ.get(profileID, {useMasterKey: true}),
+                existingPersonsQ.find({useMasterKey: true}),
+                Parse.Object.fetchAll(newPersonsToFetch, {useMasterKey: true})
+            ]);
 
-    if(profile.get("user").id != user.id)
-        throw "Invalid profile ID";
-    //Check to see what the changes if any are
-    let dirty = false;
-    let toSave = [];
-    for(let p of newPersonsToClaim){
-        if(!alreadyClaimedPersons.find(v => v.id==p.id)){
-            p.set("userProfile", profile);
-            toSave.push(p);
-            let config = null;
-            if (p.get("programItems")) {
-                Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
-                    let config = null;
-                    for (let item of items) {
-                        item.getACL().setWriteAccess(user.id,true);
-                        if(item.get("attachments")){
-                            for(let attachment of item.get("attachments")){
+        if (profile.get("user").id != user.id)
+            throw "Invalid profile ID";
+        console.log(newPersonsToClaim)
+        console.log(alreadyClaimedPersons)
+        //Check to see what the changes if any are
+        let dirty = false;
+        let toSave = [];
+        for (let p of newPersonsToClaim) {
+            if (!alreadyClaimedPersons.find(v => v.id == p.id)) {
+                p.set("userProfile", profile);
+                toSave.push(p);
+                let config = null;
+                if (p.get("programItems")) {
+                    Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
+                        let config = null;
+                        for (let item of items) {
+                            item.getACL().setWriteAccess(user.id, true);
+                            if (item.get("attachments")) {
+                                for (let attachment of item.get("attachments")) {
+                                    attachment.setACL(item.getACL());
+                                }
+                                Parse.Object.saveAll(item.get("attachments"));
+                            }
+                            if (item.get("chatSID")) {
+                                //add the author to the chat channel
+                                if (!config)
+                                    config = await getConfig(item.get("conference"));
+                                let member = config.twilioChat.channels(item.get("chatSID")).members.create({
+                                    identity: profile.id
+                                }).catch(err => {
+                                    console.log(err);
+                                });
+                            }
+                        }
+                        Parse.Object.saveAll(items, {useMasterKey: true});
+                    }));
+                }
+            }
+        }
+        for (let p of alreadyClaimedPersons) {
+            if (!requestedPersonIDs.find(v => v.id == p.id)) {
+                p.set("userProfile", null);
+                if (p.get("programItems")) {
+                    Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
+                        for (let item of items) {
+                            item.getACL().setWriteAccess(user.id, false);
+                            for (let attachment of item.get("attachments")) {
                                 attachment.setACL(item.getACL());
                             }
                             Parse.Object.saveAll(item.get("attachments"));
                         }
-                        if (item.get("chatSID")) {
-                            //add the author to the chat channel
-                            if (!config)
-                                config = await getConfig(item.get("conference"));
-                            let member = config.twilioChat.channels(item.get("chatSID")).members.create({
-                                identity: profile.id
-                            }).catch(err => {
-                                console.log(err);
-                            });
-                        }
-                    }
-                    Parse.Object.saveAll(items, {useMasterKey: true});
-                }));
-            }
-        }
-    }
-    for (let p of alreadyClaimedPersons) {
-        if(!requestedPersonIDs.find(v => v.id==p.id)){
-            p.set("userProfile", null);
-            if (p.get("programItems")) {
-                Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
-                    for (let item of items) {
-                        item.getACL().setWriteAccess(user.id,false);
-                        for(let attachment of item.get("attachments")){
-                            attachment.setACL(item.getACL());
-                        }
-                        Parse.Object.saveAll(item.get("attachments"));
-                    }
-                    Parse.Object.saveAll(items, {useMasterKey: true});
+                        Parse.Object.saveAll(items, {useMasterKey: true});
 
-                }));
+                    }));
+                }
+                toSave.push(p);
             }
-            toSave.push(p);
         }
+        console.log(toSave)
+        profile.set("programPersons", newPersonsToClaim);
+        toSave.push(profile);
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    }catch(err){
+        console.log(err);
+        throw err;
     }
-    profile.set("programPersons", newPersonsToClaim);
-    toSave.push(profile);
-    await Parse.Object.saveAll(toSave,{useMasterKey: true});
 });
 function generateRandomString(length) {
     return new Promise((resolve, reject) => {
@@ -1011,7 +1168,7 @@ Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
     let room = request.object;
     if(room.isNew()) {
         let confID = room.get("conference");
-        if (!confID || !await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"])) {
+        if (!confID || !(request.master || await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"]))) {
             throw "You do not have permission to create a ZoomRoom for this conference";
         }
         let acl = new Parse.ACL();

@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Spin} from 'antd';
+import {Alert, Spin} from 'antd';
 import moment from 'moment';
 import LiveStreamingPanel from "./LiveStreamingPanel";
 import ZoomPanel from "./ZoomPanel";
@@ -286,6 +286,12 @@ class LiveStreaming extends Component {
                         // return <div className={"space-align-block"} key={room.id} style={{width:width}}>
                         //     <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
                         // </div>
+                        if(this.state.expanded && room.id == this.state.expanded_video.id){
+                            return <div key={room.id}>
+                                <Alert type="error" message={"Error: The organizers of this conference have not yet configured a streaming source for this room. This is not a bug in Clowdr, but is a configuration error in the conference. Please contact your conference organizers and ask them to check the configuration for the '" + room.get("name") + "' room." }/>
+                            </div>
+                        }
+
                         return ""
 
                     }

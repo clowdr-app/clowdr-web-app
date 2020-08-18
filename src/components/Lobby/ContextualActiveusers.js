@@ -7,7 +7,6 @@ import NewRoomForm from "./NewRoomForm";
 import UserStatusDisplay from "./UserStatusDisplay";
 import Parse from "parse";
 import PresenceForm from "./PresenceForm";
-import CollapsedChatDisplay from "../Chat/CollapsedChatDisplay";
 import UpcomingProgram from "./UpcomingProgram";
 
 
@@ -40,9 +39,7 @@ class ContextualActiveUsers extends React.Component {
     async componentDidMount() {
         let user = this.props.auth.user;
         if (user) {
-            this.props.auth.helpers.getPresences(this);
             this.setState({loggedIn: true});
-            this.props.auth.chatClient.initJoinedChatList(this);
         } else {
             this.setState({loggedIn: false});
         }
@@ -161,8 +158,8 @@ class ContextualActiveUsers extends React.Component {
             allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
         }
 
-        let programRooms = allActiveRooms.filter(r => r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id));
-        allActiveRooms = allActiveRooms.filter(r => !r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.state.activeSpace.id))
+        let programRooms = allActiveRooms.filter(r => r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.props.auth.activeSpace.id));
+        allActiveRooms = allActiveRooms.filter(r => !r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.props.auth.activeSpace.id))
         //Also make a fake rom for the lobby.
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 
@@ -171,22 +168,6 @@ class ContextualActiveUsers extends React.Component {
             allActiveRooms = allActiveRooms.filter(r=>r.id == this.state.filteredRoom);
         let searchOptions = [];
 
-
-        let lobbyMembers = [];
-        if (this.state.presences && this.state.activeSpace)
-            lobbyMembers = Object.values(this.state.presences)
-                .filter(p =>
-                    p
-                    && p.get("socialSpace")
-                    && p.get("socialSpace").id == this.state.activeSpace.id
-                    && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
-                ).map(p => p.get("user")).sort(compareNames);
-        let latestLobbyMembers = lobbyMembers.concat().sort((i1, i2) => {
-            return (i1 && i2 && i1.get("updatedAt") > i2.get("updatedAt") ? 1 : -1)
-        }).slice(0,10);
-        for(let u of lobbyMembers){
-            searchOptions.push({label: "@"+u.get("displayName"), value: u.id+"@-lobby"});
-        }
 
         for (let room of allActiveRooms) {
             searchOptions.push({label: "#" + room.get("title"), value: room.id});
@@ -213,95 +194,18 @@ class ContextualActiveUsers extends React.Component {
                 </div>
 
             }
-            let selectedKeys = [];
-            if(this.props.auth.currentRoom)
-                selectedKeys.push(this.props.auth.currentRoom.id);
-            if(this.state.filteredRoom)
-                selectedKeys.push(this.state.filteredRoom);
-            if(this.state.filteredUser)
-                selectedKeys.push(this.state.filteredUser);
+
 
             let activeSpace = this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : "Nowhere";
             let programInfo = <UpcomingProgram />
-            tabs = <div>
-                <div>
-                    <div style={{height:'6px', background:'white'}}/>
-
-                    <Select style={{width: "100%"}} showSearch
-                            allowClear={true}
-                            onChange={this.filterList.bind(this)}
-                            filterOption={(input, option) =>{
-                                if(!option.label)
-                                    return false;
-                                if(!input)
-                                    return false;
-                                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                            }}
-
-                            options={searchOptions} placeholder="Search for people and rooms"></Select>
-
-                    <div style={{height:'6px', background:'white'}}/>
-
-                    <div><PresenceForm /></div>
-
-                    <div style={{height:'6px', background:'white'}}/>
-
-                    <Divider className="social-sidebar-divider">
-                        <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{activeSpace}</Tooltip>
-                    </Divider>
-
-                        <Menu mode="inline"
-                              className="activeRoomsList"
-                            // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
-                              style={{
-                                  // height: "100%",
-                                  // overflow: 'auto',
-                                  // display: 'flex',
-                                  // flexDirection: 'column-reverse',
-                                  border: '1px solid #FAFAFA'
-
-                              }}
-                              inlineIndent={0}
-
-                              selectedKeys={selectedKeys}
-                              defaultOpenKeys={['firstUsers']}
-                              forceSubMenuRender={true}
-                              expandIcon={null}
-                        >
-                            <Menu.SubMenu key="firstUsers" expandIcon={<span></span>}>
-
-                            {latestLobbyMembers.map((user) => {
-                                let className = "personHoverable";
-                                if (this.state.filteredUser == user.id)
-                                    className += " personFiltered"
-                                return <Menu.Item key={"latest"+user.id} className={className}>
-                                    <UserStatusDisplay popover={true} profileID={user.id}/>
-                                </Menu.Item>
-                            })
-                            }
-                            </Menu.SubMenu>{
-                            <Menu.SubMenu key="restUsers"
-                                          title={<div className="overflowHelper">{lobbyMembers.length} total</div>}>
-
-                                {lobbyMembers.map((user) => {
-                                    let className = "personHoverable";
-                                    if (this.state.filteredUser == user.id)
-                                        className += " personFiltered"
-                                    return <Menu.Item key={user.id} className={className}>
-                                        <UserStatusDisplay popover={true} profileID={user.id}/>
-                                    </Menu.Item>
-                                })
-                                }
-                            </Menu.SubMenu>
-                        }
-                        </Menu>
-
-                </div>
+            tabs = <div id="socialTabContainer">
 
                 {programRoomSpecificContent}
 
                 {programInfo}
 
+                <div id="videoChatListContainer">
+                <Divider className="sidebar-section-separator"></Divider>
                 <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
                 + activeSpace}>Video chat rooms</Tooltip></Divider>
 
@@ -315,7 +219,6 @@ class ContextualActiveUsers extends React.Component {
                       forceSubMenuRender={true}
                       openKeys={allActiveRooms.map(r=>r.id)}
                       expandIcon={null}
-                      selectedKeys={selectedKeys}
                 >
                 {allActiveRooms ? allActiveRooms.sort((i1, i2) => {
                     return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
@@ -325,21 +228,22 @@ class ContextualActiveUsers extends React.Component {
                     }
 
                     let membersCount = 0;
+                    let capacity  =item.get("capacity");
                     if (item.get("members")) {
                         membersCount = item.get("members").length;
                     }
                     let tag, joinInfo;
                     if(item.get("mode") == "group"){
                     //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                        joinInfo = "Click to join this big group room (up to 50 callers). Up to 5 speakers are allowed at once."
+                        joinInfo = "Click to join this big group room (up to " + capacity + " participants). Displays live video for the most recent speakers."
                     }
                     else if(item.get("mode") == "peer-to-peer"){
                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
-                        joinInfo ="Click to join this peer-to-peer room (up to 10 callers)."
+                        joinInfo ="Click to join this peer-to-peer room (up to " + capacity + " participants)."
                     }
                     else if(item.get("mode") == "group-small"){
                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
-                        joinInfo = "Click to join this small group room (up to 4 callers)."
+                        joinInfo = "Click to join this small group room (up to " + capacity + " participants)."
                     }
 
                     let isModOverride = false;
@@ -420,11 +324,13 @@ class ContextualActiveUsers extends React.Component {
                     <NewRoomForm type="secondary" text="New video chat room" />
                 </div>
             </div>
+            </div>
         }
         return (
 
 
                         <div
+                            id="contextualActiveUsers"
                             // style={{backgroundColor: '#f0f2f5'}}>
                             >
                             {tabs}

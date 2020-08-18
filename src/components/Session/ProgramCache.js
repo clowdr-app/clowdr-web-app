@@ -129,6 +129,18 @@ export default class ProgramCache {
         let items = await this.getProgramSessions();
         return this._dataById['ProgramSession'][id];
     }
+    async getProgramTrack(id, component){
+        let tracks = await this.getProgramTracks();
+        if(component) {
+            if (!this._updateSubscribers['ProgramTrack'])
+                this._updateSubscribers['ProgramTrack'] = {};
+            if (!this._updateSubscribers['ProgramTrack'][id])
+                this._updateSubscribers['ProgramTrack'][id] = [];
+            this._updateSubscribers['ProgramTrack'][id].push(component);
+        }
+        return this._dataById['ProgramTrack'][id];
+    }
+
 
 
     async getProgramItemByConfKey(confKey, component){
@@ -171,6 +183,10 @@ export default class ProgramCache {
             this.subscribeComponentToIDOnTable("ProgramPerson", personID, component);
         }
         return person;
+    }
+
+    async getUserProfiles(objToSetStateOnUpdate) {
+        return this._fetchTableAndSubscribe("UserProfile",  objToSetStateOnUpdate);
     }
     async getAttachmentTypes(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("AttachmentType",  objToSetStateOnUpdate);
@@ -224,6 +240,13 @@ export default class ProgramCache {
         let [items, track] = await Promise.all([this.getProgramItems(),
         this.getProgramTrackByName(trackName)])
         return items.filter(item => item.get("track") && item.get("track").id == track.id);
+    }
+
+    getProgramRoomForEvent(programSessionEvent){
+        let s = programSessionEvent.get("programSession");
+        let session = this._dataById["ProgramSession"][s.id];
+        let room = session.get("room");
+        return room;
     }
 
     async getEntireProgram(objToSetStateOnUpdate) {

@@ -16,6 +16,9 @@ export default class ProgramItemDisplay extends React.Component{
 
     async componentDidMount() {
         let programItem = await this.props.auth.programCache.getProgramItem(this.props.id, this);
+        if(!programItem){
+            return;
+        }
         if(programItem.get("events")){
             let events = programItem.get("events")
                 .map((e)=>
@@ -121,13 +124,20 @@ export default class ProgramItemDisplay extends React.Component{
             <div><i>{authorstr}</i></div>
             {sessionInfo}
             {/*<p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>*/}
-            <p><b>Breakout Room: </b>
-            {(this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")) ? <Button onClick={()=>{
+            {(this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")) ?
+                <p><b>Breakout Room: </b>
+                <Button onClick={()=>{
                 this.props.auth.history.push("/breakoutRoom/" + this.state.ProgramItem.get("confKey"))
             }
-            }>Join Breakout Room</Button> : <>No breakout room</>}</p>
+                }>Join Breakout Room</Button></p> : <></>}
 
         </div>
+        if(this.props.hideLink)
+            return <div className={"program-item-display "+ className}>
+                <Tooltip placement="right" title={tooltip}>
+                    <div className="text-indented">
+                            {this.state.ProgramItem.get("title")}</div></Tooltip>
+            </div>
         return <div className={"program-item-display "+ className}>
             <Tooltip placement="right" title={tooltip}><div className="text-indented"><NavLink  to={"/program/"+this.state.ProgramItem.get("confKey")}>{this.state.ProgramItem.get("title")}</NavLink></div></Tooltip>
             {this.props.showBreakoutRoom && this.state.ProgramItem.get("breakoutRoom") ? <BreakoutRoomDisplay id={this.state.ProgramItem.get("breakoutRoom").id} /> : <></>}

@@ -45,7 +45,7 @@ class SidebarChat extends React.Component {
             siderWidth = 250;
         else if(siderWidth == -1)
             siderWidth = 0;
-        this.state = {...INITIAL_STATE, chatChannel: "#general", siderWidth: siderWidth, hasMoreMessages: false, loadingMessages: true,
+        this.state = {...INITIAL_STATE, siderWidth: siderWidth, hasMoreMessages: false, loadingMessages: true,
             priorWidth: siderWidth,
         numMessagesDisplayed: 0}
         this.form = React.createRef();
@@ -62,7 +62,8 @@ class SidebarChat extends React.Component {
         if(this.props.auth.user && this.props.auth.user.get('passwordSet')){
             this.user = this.props.auth.user;
             // this.changeChannel("#general");
-            this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
+            this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile, this.props.auth);
+            this.props.auth.chatClient.initChatSidebar(this);
         }
         else{
             this.setState({chatDisabled: true})
@@ -70,11 +71,15 @@ class SidebarChat extends React.Component {
         }
     }
 
-
-    async componentDidUpdate(prevProps, prevState, snapshot) {
+    async componentDidUpdate (prevProps, prevState, snapshot) {
         let isDifferentUser = this.user != this.props.auth.user;
         this.user = this.props.auth.user;
         let isDifferentChannel = this.props.auth.chatChannel != this.state.channel;
+        if(this.props.auth.chatChannel == "@chat-ignore"){
+            if(!this.state.chatDisabled)
+                this.setState({chatDisabled: true});
+            return;
+        }
 
         if(!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")){
             this.setState({visible: true});
@@ -100,7 +105,7 @@ class SidebarChat extends React.Component {
             if (this.desiredChannel == newChannel)
                 return;
             this.desiredChannel = newChannel;
-            this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
+            this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile, this.props.auth);
             //check to make sure we are a member
             let channels = this.props.auth.chatClient.joinedChannels;
             let found = channels[newChannel];
@@ -126,10 +131,7 @@ class SidebarChat extends React.Component {
         if(!this.state.sid){
             return <div></div>
         }
-        return <div className="chatTab">
-            <ChatFrame sid={this.state.sid} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
-
-            </div>
+        return <ChatFrame sid={this.state.sid} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
 
     }
 }

@@ -73,6 +73,9 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
     onChangeVideo(record: Parse.Object) {
         record.set("perProgramItemVideo", !record.get("perProgramItemVideo"));
     }
+    onToggle(record: Parse.Object, key: string) { //why did nobody write this like this?? :(
+        record.set(key, !record.get(key));
+    }
 
     render() {
         // Set up editable table cell
@@ -96,7 +99,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     break;
                 case ('perProgramItemChat'):
                     inputNode = (
-                        <span title="Do the track's items get their own text chat channels?"><Checkbox 
+                        <span title="Do the track's items get their own text channels?"><Checkbox 
                             defaultChecked={record.get("perProgramItemChat")}
                             onChange={this.onChangeChat.bind(this, record)}
                         >
@@ -112,6 +115,15 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                         </Checkbox></span>
                     );
                     break;
+                case ('showAsEvents'):
+                    inputNode = (
+                        <span title="Do the track's items show as individual events in the program (default is grouped as sessions)?"><Checkbox
+                            defaultChecked={record.get("showAsEvents")}
+                            onChange= {this.onToggle.bind(this, record, "showAsEvents")}
+                        >
+                        </Checkbox></span>
+                    );
+                    break;
                 case ('exhibit'):
                     inputNode = (
                         <Radio.Group onChange={this.onChangeExhibit.bind(this, record)} 
@@ -121,6 +133,12 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                             <Radio value="Grid"><span title="Show in Exhibit Hall as a grid of images, one per item">Grid</span></Radio>
                         </Radio.Group>
                     );
+                    break;
+                case ('badgeText'):
+                    inputNode = <Input title="Short tag to appear next to events in this track"/>;
+                    break;
+                case ('badgeColor'):
+                    inputNode = <Input title="Color of the tag to appear next to events in this track"/>;
                     break;
                 default:
                     inputNode = null;
@@ -165,7 +183,10 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     displayName: record.get("displayName") ? record.get("displayName") : "",
                     exhibit: record.get("exhibit") ? record.get("exhibit") : "",
                     perProgramItemChat: record.get("perProgramItemChat"),
-                    perProgramItemVideo: record.get("perProgramItemVideo")
+                    perProgramItemVideo: record.get("perProgramItemVideo"),
+                    badgeText: record.get("badgeText"),
+                    badgeColor: record.get("badgeColor"),
+                    showAsEvents: record.get("showAsEvents")
                 });
                 setEditingKey(record.id)
             }
@@ -202,25 +223,9 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     if (track) {
                         track.set("name", row.name);
                         track.set("displayName", row.displayName);
-                        setData(newData);
-
-                        let data = {
-                            clazz: "ProgramTrack",
-                            conference: {clazz: "ClowdrInstance", id: track.get("conference").id},
-                            id: track.id,
-                            name: track.get("name"),
-                            displayName: track.get("displayName"),
-                            exhibit: track.get("exhibit"),
-                            perProgramItemChat: track.get("perProgramItemChat"),
-                            perProgramItemVideo: track.get("perProgramItemVideo")
-                        }
-                        console.log(data)
-                        Parse.Cloud.run("update-obj", data)
-                        .then(c => this.setState({alert: "save success"}))
-                        .catch(err => {
-                            this.setState({alert: "save error"})
-                            console.log("[Admin/Tracks]: Unable to save: " + err)
-                        })
+                        track.set("badgeText", row.badgeText);
+                        track.set("badgeColor", row.badgeColor);
+                        await track.save();
                         setEditingKey('');
                     }
                     else {
@@ -237,7 +242,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     dataIndex: 'name',
                     key: 'name',
                     editable: true,
-                    width: '50%',
+                    width: '20%',
                     sorter: (a: Parse.Object, b: Parse.Object) => {
                         let nameA: string = a.get("name") ? a.get("name"): "";
                         let nameB: string = b.get("name") ? b.get("name") : "";
@@ -249,7 +254,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     title: 'Display Name',
                     dataIndex: 'displayName',
                     editable: true,
-                    width: '50%',
+                    width: '20%',
                     sorter: (a: Parse.Object, b: Parse.Object) => {
                         let displayNameA: string = a.get("displayName") ? a.get("displayName") : "";
                         let displayNameB: string = b.get("displayName") ? b.get("displayName") : "";
@@ -268,7 +273,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     key: 'exhibit',
                 },
                 {
-                    title: 'Text Chats',
+                    title: 'Text Channels',
                     dataIndex: 'perProgramItemChat',
                     editable: true,
                     width: '5%',
@@ -285,6 +290,30 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     render: (_: string, record: Parse.Object) : JSX.Element|null => <Checkbox checked={!!record.get("perProgramItemVideo")} disabled></Checkbox>,
                     key: 'perProgramItemVideo',
                 },
+                {
+                    title: 'Show as Events',
+                    dataIndex: 'showAsEvents',
+                    editable: true,
+                    width: '5%',
+                    //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
+                    render: (_: string, record: Parse.Object) : JSX.Element|null => <Checkbox checked={!!record.get("showAsEvents")} disabled></Checkbox>,
+                    key: 'showAsEvents',
+                },
+                {
+                    title: 'Tag Text',
+                    dataIndex: 'badgeText',
+                    editable: true,
+                    render: (_: string, record: Parse.Object) : JSX.Element|null => <span>{record.get("badgeText")}</span>,
+                    key: 'badgeText',
+                },
+                {
+                    title: 'Tag Color',
+                    dataIndex: 'badgeColor',
+                    editable: true,
+                    render: (_: string, record: Parse.Object) : JSX.Element|null => <span>{record.get("badgeColor")}</span>,
+                    key: 'badgeColor',
+                },
+
                 {
                     title: 'Action',
                     dataIndex: 'action',

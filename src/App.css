@@ -194,7 +194,7 @@
     font-size: 2.2ex;
     text-overflow: ellipsis;
     /*overflow-y: auto;*/
-    overflow:hidden;
+    /* overflow:hidden; */
 }
 .smallButton{
     padding: 0;
@@ -215,6 +215,18 @@
 .personHoverable:hover{
     background-color: white;
 }
+#channelChanger .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
+    font-weight: bold;
+    line-height:1.1;
+    height: auto;
+    border-bottom: 1px solid #2A3746;
+}
+
+#rightPopout .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
+    line-height:1.1;
+    height: auto;
+}
+
 #sidepopoutcontainer .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title{
     line-height:1.1;
     height: auto;
@@ -230,6 +242,10 @@
 .slido{
     height: 500px;
     width: 100%;
+}
+#rightPopout .ant-menu-sub.ant-menu-inline > .ant-menu-item {
+    line-height: 1.1;
+    height:auto;
 }
 #sidepopoutcontainer .ant-menu-sub.ant-menu-inline > .ant-menu-item{
     line-height: 1.1;
@@ -327,16 +343,26 @@ background-color:#97a7b7;
 }
 .chatTab{
     height: 100%;
-    /*display: flex;*/
+    display: flex;
+    flex-direction: column;
     background-color: #FAFAFA;
     /*position: fixed;*/
     /*bottom: 0;*/
     /*right: 0;*/
+    overflow-y: hidden;
+}
+#activeUsersList{
+    overflow-y: scroll;
+}
+#sidebarChat{
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 .activeRoomsTab{
     height: 100%;
     width: 100%;
-    overflow-y: auto;
 }
 .ant-form-inline .ant-form-item,.aclSelector{
     flex: initial;
@@ -531,9 +557,16 @@ td.ant-table-cell.program-table-timeBand{
  td.ant-table-cell.program-table-programItem{
     padding: 2px;
 }
+
 #sidepopoutcontainer .social-sidebar-divider{
-     margin: 0;
-    }
+    margin: 0;
+   }
+
+.sidebar-section-separator{
+    height: 2px;
+    background-color: #198fff;
+    margin: 0;
+ }
 
 span.ant-divider-inner-text {
         color: #0264c1;
@@ -651,6 +684,18 @@ span.ant-divider-inner-text {
     color: white;
     font-weight: bold;
     text-align: center;
+}
+
+.multiChatWindowHeader .title {
+    float: left;
+}
+
+.multiChatWindowHeader .notifications {
+    float: center;
+}
+
+.multiChatWindowHeader .actions {
+    float: right;
 }
 
 .multiChatWindowContent{
@@ -839,4 +884,62 @@ span.ant-divider-inner-text {
 }
 .sessionListItem{
     padding: 0;
+}
+.chat-search{
+    width: 100%;
+}
+#sidepopoutcontainer{
+    height: 100%;
+}
+#contextualActiveUsers{
+    height: 100%;
+}
+#socialTabContainer{
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+#upcomingProgramContainer{
+    overflow-y: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+#upcomingProgram{
+    overflow-y: scroll;
+    height: 100%;
+}
+.programTime{
+    background-color: #efefef;
+    text-align: center;
+}
+.program-item-display{
+    padding-left: 3px;
+    padding-right: 3px;
+}
+.summaryProgramEvent-past a{
+    color: #1890ff;
+}
+.summaryProgramEvent-past a:hover{
+    color: #2998FF;
+}
+.summaryProgramEvent-live{
+    background-color: #2f54eb;
+    border-bottom: 2px solid white;
+}
+.summaryProgramEvent-live a{
+    color: white;
+}
+.program-scroll-button{
+}
+
+.icon-text{
+    font-size: xx-small;
+}
+.bottomChatIdentity  a{
+    color: #f0f5ff;
+}
+.bottomChatIdentity a:hover{
+    color: #adc6ff;
 }

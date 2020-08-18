@@ -33,9 +33,12 @@ export interface ClowdrState {
     getLiveChannel: any;
     chatClient: ChatClient;
     history: History;
-    activeSpace: any;
+    activeSpace: SocialSpace;
     getUserProfile(authorID: string, arg1: (u: any) => void) : any;   // ???
-    refreshUser(a: Parse.Object|null, b: boolean): any
+    refreshUser(a: Parse.Object|null, b: boolean): any;
+    isModerator: boolean;
+    isManager: boolean;
+    isAdmininstrator: boolean;
 }
 
 export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -61,7 +64,7 @@ export interface ChatChannelConsumer{
 export interface MultiChatApp{
     registerChannelConsumer(consumer: ChatChannelConsumer): void;
     openChat(sid: string, dontBringIntoFocus: boolean): void;
-    registerUnreadConsumer(sid: string, consumer: any): void;
+    registerUnreadConsumer(sid: string, category: string, consumer: any): void;
     cancelUnreadConsumer(sid: string, consumer: any): void;
 
 }

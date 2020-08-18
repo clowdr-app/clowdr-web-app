@@ -6,6 +6,8 @@ import {Button, message, Skeleton, Tooltip} from "antd";
 import ProgramItem from "../../classes/ProgramItem";
 import ChatFrame from "./ChatFrame"
 import {CloseOutlined, MinusOutlined, PlusOutlined, VideoCameraAddOutlined} from "@ant-design/icons"
+import UserStatusDisplay from "../Lobby/UserStatusDisplay";
+import ProgramItemDisplay from "../Program/ProgramItemDisplay";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -36,16 +38,18 @@ class ChatChannelArea extends React.Component {
             let profileID = p1.id;
             if (profileID == this.props.auth.userProfile.id)
                 profileID = p2.id;
-            this.props.auth.helpers.getUserProfilesFromUserProfileID(profileID).then((profile) => {
-                this.setState({title: profile.get("displayName")})
+            this.setState({
+                title: <UserStatusDisplay profileID={profileID} hideLink={true} />
             })
             return;
         } else {
             let title = chat.channel.friendlyName;
             if (chat.attributes.category == "announcements-global") {
                 title = "Announcements";
-            } else if (chat.attributes.category == "programItem" ||
-                chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group") {
+            } else if(chat.attributes.category == "programItem" && chat.attributes.programItemID){
+                // console.log(chat.attributes.programItemID)
+                title = <ProgramItemDisplay auth={this.props.appState} id={chat.attributes.programItemID} />
+            }else if (chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group") {
                 title = chat.channel.friendlyName;
             } else {
                 title = chat.channel.friendlyName;
@@ -165,16 +169,18 @@ class ChatChannelArea extends React.Component {
                 <div className="bottomChatIdentity">{title}</div>
                 <div className="bottomChatClose">
                     <Tooltip mouseEnterDelay={0.5} title="Launch a video chat room">
-                        <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}
+                        <Button size="small" type="text" 
+                                style={{minWidth: "initial"}}
                                 loading={this.state.newVideoChatLoading}
                                 icon={<VideoCameraAddOutlined/>}
-                                onClick={this.toVideo.bind(this)}/>
+                                onClick={this.toVideo.bind(this)}>Launch video</Button>
                     </Tooltip>
-                    <Tooltip mouseEnterDelay={0.5} title="Add someone to this chat">
-                        <Button size="small" type="primary" shape="circle" style={{minWidth: "initial"}}
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <Tooltip mouseEnterDelay={0.5} title="Add someone to this channel">
+                        <Button size="small" type="text" style={{minWidth: "initial"}}
                                 icon={<PlusOutlined/>}
                                 onClick={this.props.addUser}
-                        /></Tooltip>
+                        >Add people</Button></Tooltip>
                 </div>
             </div>
         </div>

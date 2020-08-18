@@ -406,10 +406,11 @@ class Account extends React.Component<Props, State> {
                     {/*<Avatar userProfile={this.props.auth.userProfile} refreshUser={this.props.auth.refreshUser} />*/}
                 </Form.Item>
 
-                <Form.Item label="Profile" name="bio">
-                    <Input.TextArea placeholder="Write a brief bio that other users will see when they encounter you on CLOWDR" allowClear />
+                <Form.Item label="Profile" name="bio" extra="Include anything else you want people to know about you -- e.g., a brief CV, current projects, links to some papers, hobbies, ...">
+                    <Input.TextArea placeholder="Write a brief bio that other users will see when they encounter you on CLOWDR" allowClear 
+                      />
                 </Form.Item>
-                <Form.Item label="Flair" name="flair" extra="Add tags that will be visible to other attendees when they see your virtual badge. At most one will be visible wherever your name appears on CLOWDR, and the rest will appear when attendees hover over your name.">
+                <Form.Item label="Flair" name="flair" extra="Add tags as appropriate that will be visible to other attendees when they see your virtual badge. A limited number will be visible wherever your name appears on CLOWDR, and the rest will appear when attendees hover over your name.  OC = Organizing Committee, PC = Program Committee, SV = Student Volunteer.">
                     <Select
                         mode="multiple"
 

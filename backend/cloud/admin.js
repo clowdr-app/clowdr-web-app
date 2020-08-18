@@ -125,6 +125,7 @@ var privilegeRoles = {
 
 };
 let PrivilegedAction = Parse.Object.extend("PrivilegedAction");
+let PrivilegedInstanceDetails = Parse.Object.extend("PrivilegedInstanceDetails");
 let InstancePermission = Parse.Object.extend("InstancePermission");
 
 var adminRole;
@@ -289,7 +290,39 @@ async function activate(instance) {
         });    
     });
 }
+Parse.Cloud.define("init-loggedIn-homepage", async (request) => {
+    let confID = request.params.id;
 
+    let confQ = new Parse.Query(ClowdrInstance);
+    confQ.include("loggedInText")
+    try {
+        let conf = await confQ.get(confID, {useMasterKey: true});
+        if (!await userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+            throw "You are not an admin for this conference"
+        }
+        if (conf.get("loggedInText")) {
+            return {status: "OK"}
+        } else {
+            let newConfig = new PrivilegedInstanceDetails();
+            newConfig.set("key", "LOGGED_IN_HOMEPAGE");
+            newConfig.set("value", conf.get("landingPage"));
+            newConfig.set("instance", conf);
+            let acl = new Parse.ACL();
+            acl.setPublicWriteAccess(false);
+            acl.setPublicReadAccess(false);
+            acl.setRoleReadAccess(conf.id + "-conference", true);
+            acl.setRoleWriteAccess(conf.id + "-admin", true);
+            newConfig.setACL(acl);
+            await newConfig.save({}, {useMasterKey: true});
+            conf.set("loggedInText", newConfig);
+            await conf.save({}, {useMasterKey: true});
+            return {status: "OK"};
+        }
+    }catch(err){
+        console.log(err);
+    }
+
+});
 Parse.Cloud.define("activate-clowdr-instance", async (request) => {
 
     let confID = request.params.id;
@@ -301,7 +334,7 @@ Parse.Cloud.define("activate-clowdr-instance", async (request) => {
     if (!conf)
         throw "Invalid conference"
 
-    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+    if (await userInRoles(request.user, ["ClowdrSysAdmin"])) {
         await activate(conf);
 
         conf.set("isInitialized", true);
@@ -334,7 +367,7 @@ Parse.Cloud.define("init-conference-2", async (request) => {
     let confQ = new Parse.Query(ClowdrInstance);
     let conf = await confQ.get(confID, {useMasterKey: true});
 
-    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+    if (await userInRoles(request.user, ["ClowdrSysAdmin"])) {
 
 
         let config = await getConfig(conf);
@@ -384,7 +417,7 @@ Parse.Cloud.define("create-clowdr-instance", async (request) => {
     let data = request.params;
     console.log(`[create clowdr]: request to create instance`);
 
-    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+    if (await userInRoles(request.user, ["ClowdrSysAdmin"])) {
         console.log('[create clowdr]: user has permission to create instance');
 
         let Clazz = Parse.Object.extend("ClowdrInstance");
@@ -408,7 +441,7 @@ Parse.Cloud.define("delete-clowdr-instance", async (request) => {
     let id = request.params.id;
     console.log(`[delete instance]: request to delete insstance ${id}`);
 
-    if (userInRoles(request.user, ["ClowdrSysAdmin"])) {
+    if (await userInRoles(request.user, ["ClowdrSysAdmin"])) {
         console.log('[delete instance]: user has permission to delete instance');
         let obj = await new Parse.Query(ClowdrInstance).get(id);
         if (obj) {
@@ -436,7 +469,7 @@ Parse.Cloud.define("update-clowdr-instance", async (request) => {
         throw "Conference " + id + ": " + err
     }
 
-    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+    if (await userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
         console.log('[update instance]: user has permission to save');
         let res = await conf.save(data, {useMasterKey: true});
         if (!res) {
@@ -473,7 +506,7 @@ Parse.Cloud.define("admin-userProfiles-by-role", async (request) => {
         throw "Conference " + id + ": Not valid";
     }
 
-    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+    if (await userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
         let roleQuery = new Parse.Query(Parse.Role);
         roleQuery.equalTo("name",id+"-"+roleName);
         console.log(id+"-"+roleName)
@@ -503,7 +536,7 @@ Parse.Cloud.define("admin-role", async (request) => {
         throw "Conference " + id + ": Not valid";
     }
 
-    if (userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
+    if (await userInRoles(request.user, [conf.id + "-admin", "ClowdrSysAdmin"])) {
         let roleQuery = new Parse.Query(Parse.Role);
         roleQuery.equalTo("name",id+"-"+roleName);
         let profileQ = new Parse.Query('UserProfile');

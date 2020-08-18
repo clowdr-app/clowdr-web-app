@@ -39,7 +39,6 @@ class SocialTab extends Component {
 
         return <div className="activeRoomsTab">
 
-            <div>
 
             {/*<Layout.Sider collapsible collapsed={this.state.siderWidth == 0}*/}
             {/*                 trigger={null}*/}
@@ -63,7 +62,6 @@ class SocialTab extends Component {
                 </div>
         {/*</Layout.Sider>*/}
 
-            </div>
             </div>
     }
 }

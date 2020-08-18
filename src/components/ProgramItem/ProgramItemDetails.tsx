@@ -21,7 +21,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
-
 interface ProgramItemDetailProps {
     appState: ClowdrState | null;
     ProgramItem: ProgramItem;
@@ -94,7 +93,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
         if (item.get("attachments")) {
             await Parse.Object.fetchAllIfNeeded(item.get("attachments"));
         }
-        if(this.props.openChat)
+        if (this.props.openChat)
             this.openChat(item);
         // @ts-ignore
         this.setState(stateUpdate);
@@ -116,7 +115,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                         programItem: item.id
                     });
                 }
-                if (chatSID)
+                if (chatSID) 
                     this.props.appState?.chatClient.openChatAndJoinIfNeeded(chatSID).then((sid)=>{
                         this.setState({chatSID: sid});
                     });
@@ -127,6 +126,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
     maybeCloseChat(){
         this.props.appState?.chatClient.closeChatAndLeaveIfUnused(this.state.chatSID);
     }
+    
     componentDidUpdate(prevProps: Readonly<ProgramItemDetailProps>, prevState: Readonly<ProgramItemDetailsState>, snapshot?: any): void {
         if(!this.props.openChat && prevProps.openChat)
         {
@@ -184,10 +184,12 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                        //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
                                // this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
                            // }}>Join Session</Button></Space>
+                        /* BCP: Crista and i decided it doesn't make sense any more to have these links be live (because it's not clear where they should go)...
                        title = <a href="#" className="sessionLink" onClick={()=>{
                            // @ts-ignore
                            this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
                        }}>{title}</a>
+                       */
                    }
                    sessionInfo.push(<div className="sessionListItem" key={event.id}>
                        {title} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))})
@@ -254,7 +256,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                     if (!url)
                         url = attachment.get("file").url();
                     externalLinks.push(<span key={attachment.id}><a href={url}
-                                                                    target="_blank">{type.get("name")}</a>{deleteButton}</span>);
+                                                                    target="_blank">{type.get("name")}</a>&nbsp;&nbsp;&nbsp;&nbsp;{deleteButton}</span>);
                 } else {
                     let url = attachment.get("url");
                     if (!url)
@@ -309,7 +311,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                 <h3>{this.state.ProgramItem.get('title')}</h3>
                 <Descriptions layout="horizontal" column={1} bordered>
                     <Descriptions.Item label="Authors">{authorstr}</Descriptions.Item>
-                    {showSessionInfo ? <Descriptions.Item label="Session">{sessionInfo}</Descriptions.Item> : <></>}
+                    {showSessionInfo ? <Descriptions.Item label="Schedule">{sessionInfo}</Descriptions.Item> : <></>}
                     <Descriptions.Item label="Abstract">{this.state.ProgramItem.get("abstract")}</Descriptions.Item>
                     {additionalDescription}
                 </Descriptions>

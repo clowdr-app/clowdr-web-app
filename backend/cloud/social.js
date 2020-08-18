@@ -35,6 +35,30 @@ async function getConfig(conference){
     }
     return config;
 }
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function createWithRetry(config, roomName, socialSpace, attributes){
+    try {
+        let chatRoom = await config.twilioChat.channels.create(
+            {
+                friendlyName: roomName,
+                uniqueName: 'socialSpace-' + socialSpace.id,
+                type: 'public',
+                attributes: JSON.stringify(attributes)
+            });
+        return chatRoom;
+    }catch(err){
+        if(err.code == 20429){
+            //Back off, try again
+            await timeout(2000 + Math.random()*4000);
+            return await createWithRetry(config, roomName, socialSpace, attributes);
+        }
+        else{
+            throw err;
+        }
+    }
+}
 Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
     let room = request.object;
     let socialSpace = room.get("socialSpace");
@@ -59,13 +83,7 @@ Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
             spaceID: socialSpace.id
         }
         try {
-            let chatRoom = await config.twilioChat.channels.create(
-                {
-                    friendlyName: roomName,
-                    uniqueName: 'socialSpace-' + socialSpace.id,
-                    type: 'public',
-                    attributes: JSON.stringify(attributes)
-                });
+            let chatRoom = await createWithRetry(config, roomName, socialSpace, attributes);;;
             socialSpace.set("chatChannel", chatRoom.sid);
             await socialSpace.save({}, {useMasterKey: true});
             room.set("socialSpace", socialSpace);

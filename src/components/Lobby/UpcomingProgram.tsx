@@ -1,11 +1,16 @@
 import React from 'react';
+import {NavLink} from "react-router-dom";
 import {ClowdrState} from "../../ClowdrTypes";
 import ProgramSession from "../../classes/ProgramSession"
-import {Collapse, Divider, Spin} from "antd";
+import {Collapse, Divider, Spin, Button} from "antd";
 import {AuthUserContext} from '../Session';
 import ExpandableSessionDisplay from "./ExpandableSessionDisplay"
 import moment from "moment";
 import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
+import ProgramItem from "../../classes/ProgramItem";
+import ProgramItemDisplay from "../Program/ProgramItemDisplay";
+import ProgramSessionEventDisplay from "../Program/ProgramSessionEventDisplay";
+import ProgramTrack from "../../classes/ProgramTrack";
 
 interface UpcomingProgramProps {
     auth: ClowdrState | null;
@@ -14,38 +19,39 @@ interface UpcomingProgramProps {
 interface UpcomingProgramState {
     loading: boolean,
     ProgramSessions: ProgramSession[],
-    curSessions: ProgramSession[],
-    curEvents: ProgramSessionEvent[],
-    upcomingEvents: ProgramSessionEvent[],
-    pastSessions: ProgramSession[],
-    futureSessions: ProgramSession[],
+    curItems: (ProgramSession|ProgramSessionEvent)[],
     ProgramSessionEvents: ProgramSessionEvent[],
+    ProgramTracks: ProgramTrack[],
     nextUpdateTime: moment.Moment
 }
 
 class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProgramState> {
     private updateTimer?: number;
+    private currentProgramTimeRef: React.RefObject<any>;
+    private lastRenderedNow?: Date;
+    private lastScrolledNow?: Date;
     constructor(props: UpcomingProgramProps) {
         super(props);
+        this.currentProgramTimeRef = React.createRef();
         this.state = {
             loading: true,
             ProgramSessions: [],
             ProgramSessionEvents: [],
-            curEvents: [],
-            upcomingEvents: [],
-            curSessions: [],
-            pastSessions: [],
-            futureSessions: [],
+            ProgramTracks: [],
+            curItems: [],
             nextUpdateTime: moment().add(1, "hour")
         }
     }
 
     componentDidMount(): void {
-        this.props.auth?.programCache.getProgramSessions(this)
-            .then((sessions) => {
+        Promise.all([this.props.auth?.programCache.getProgramSessions(this), this.props.auth?.programCache.getProgramSessionEvents(this),
+        this.props.auth?.programCache.getProgramTracks(this)])
+            .then(([sessions, events, tracks]) => {
                 //find the next time we should update
                 this.setState({
                     ProgramSessions: sessions,
+                    ProgramSessionEvents: events,
+                    ProgramTracks: tracks,
                     nextUpdateTime: this.getNextUpdateTime(sessions)
                 });
             });
@@ -54,6 +60,11 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     componentDidUpdate(prevProps: Readonly<UpcomingProgramProps>, prevState: Readonly<UpcomingProgramState>, snapshot?: any): void {
         if (this.state.ProgramSessions != prevState.ProgramSessions || this.state.ProgramSessionEvents != prevState.ProgramSessionEvents) {
             this.updateCurrentSessions();
+        }
+
+        if(this.lastRenderedNow != this.lastScrolledNow){
+            this.lastScrolledNow = this.lastRenderedNow;
+            this.scrollToNow();
         }
         if (!this.state.nextUpdateTime.isSame(prevState.nextUpdateTime)) {
             if(this.updateTimer){
@@ -68,6 +79,8 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
 
     componentWillUnmount(): void {
         this.props.auth?.programCache.cancelSubscription("ProgramSession", this, null);
+        this.props.auth?.programCache.cancelSubscription("ProgramSessionEvent", this, null);
+        this.props.auth?.programCache.cancelSubscription("ProgramTrack", this, null);
     }
 
     sessionView(sessions: ProgramSession[], title: string) {
@@ -95,14 +108,23 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         </Collapse.Panel>
     }
 
-    dateSorter(a: ProgramSession, b:ProgramSession) {
+    dateSorter(a: ProgramSession|ProgramSessionEvent, b:ProgramSession|ProgramSessionEvent) {
         let now = new Date().getTime();
         var timeA = a.get("startTime") ? a.get("startTime").getTime() : now;
         var timeB = b.get("startTime") ? b.get("startTime").getTime() : now;
+        if(timeA == timeB){
+            timeA = b.get("endTime").getTime();
+            timeB = a.get("endTime").getTime();
+        }
         return timeA > timeB ? 1 : timeA == timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
     }
+    scrollToNow() {
+        if(this.currentProgramTimeRef.current)
+            this.currentProgramTimeRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // window.scrollTo(0, this.currentProgramTimeRef.current.offsetTop);
+    }
 
-    render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {
+    render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> {
         if (this.state.loading)
             return <div>
                 <Divider className="social-sidebar-divider">Program at a Glance</Divider>
@@ -110,22 +132,43 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
             </div>
 
 
-        let expandedKey = "";
-        if (this.state.curSessions.length > 0) {
-            expandedKey = "Live";
-        } else if (this.state.futureSessions.length > 0) {
-            expandedKey = "Upcoming";
-        } else if (this.state.pastSessions.length > 0) {
-            expandedKey = "Past";
+        let programDetails =[];
+        let lastFormattedTime = null;
+
+        let now = new Date();
+
+        let addedNow = false;
+        for(let item of this.state.curItems) {
+            if (!addedNow && item.get("startTime") < now && item.get("endTime") > now) {
+                programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
+                addedNow = true;
+                this.lastRenderedNow = item.get("startTime");
+            }
+            let formattedTime = moment(item.get("startTime")).calendar();
+            if(formattedTime != lastFormattedTime)
+                programDetails.push(<div className="programTime" key={"program-time"+item.id}>{formattedTime}</div>)
+            lastFormattedTime = formattedTime;
+            if(item instanceof ProgramSession){
+                programDetails.push(<ExpandableSessionDisplay session={item} isLive={false} key={item.id}/>)
+            }else if(item instanceof ProgramSessionEvent){
+                let isCurrent = item.get("startTime") <= now && item.get("endTime") >=now;
+                programDetails.push(<ProgramSessionEventDisplay key={item.id} id={item.id} auth={this.props.auth} className={isCurrent ? "programEventLive" : "programEvent"}/>)
+            }else{
+                console.log(item)
+            }
         }
 
-        return <div>
+        return <div id="upcomingProgramContainer">
             <Divider className="social-sidebar-divider">Program at a Glance</Divider>
-            <Collapse defaultActiveKey={[expandedKey]} className="program-collapse">
-            {this.sessionView(this.state.pastSessions, "Past")}
-            {this.sessionView(this.state.curSessions, "Live")}
-            {this.sessionView(this.state.futureSessions, "Upcoming")}
-            </Collapse>
+            <Button type="primary" onClick={this.scrollToNow.bind(this)} className="program-scroll-button" size="small">Jump to Now</Button>
+            <div id="upcomingProgram">
+                {programDetails}
+            </div>
+            {/*<Collapse defaultActiveKey={[expandedKey]} className="program-collapse">*/}
+            {/*{this.sessionView(this.state.pastSessions, "Past")}*/}
+            {/*{this.sessionView(this.state.curSessions, "Live")}*/}
+            {/*{this.sessionView(this.state.futureSessions, "Upcoming")}*/}
+            {/*</Collapse>*/}
         </div>
     }
 
@@ -141,27 +184,35 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     private updateCurrentSessions() {
-        let pastSessions = [];
-        let curSessions = [];
-        let futureSessions = [];
         let now = Date.now();
 
+        let items: (ProgramSession | ProgramSessionEvent)[] = [];
+
         for (let s of this.state.ProgramSessions) {
-            var timeS = s.get("startTime") ? s.get("startTime") : new Date();
-            var timeE = s.get("endTime") ? s.get("endTime") : new Date();
-            if (timeS <= now && timeE >= now) {
-                curSessions.push(s);
-            } else if (timeS > now) {
-                futureSessions.push(s);
-            } else {
-                pastSessions.push(s);
+            let displayAsEvents = false;
+            if(s.get("programTrack")){
+                let t = this.state.ProgramTracks.find(v=>v.id==s.get("programTrack").id);
+                if(t)
+                    displayAsEvents = t.get("showAsEvents");
+            }
+            if(!displayAsEvents){
+                items.push(s);
+            }
+            else if(s.get("events") && s.get("events").length){
+                let sessionEvents = s.get("events").map((ev: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(e=>e.id==ev.id)).filter((e:ProgramSessionEvent)=>e!=null);
+                items = items.concat(sessionEvents);
             }
         }
+        items = items.sort(this.dateSorter);
         this.setState({
             loading: false,
-            nextUpdateTime: this.getNextUpdateTime(this.state.ProgramSessions),
-            pastSessions: pastSessions, curSessions: curSessions, futureSessions: futureSessions
-        });
+            curItems: items,
+            nextUpdateTime: this.getNextUpdateTime(this.state.ProgramSessions)
+        },() => {
+            console.log("Scrolling")
+            this.scrollToNow();
+            }
+        );
     }
 }
 const AuthConsumer = () => (

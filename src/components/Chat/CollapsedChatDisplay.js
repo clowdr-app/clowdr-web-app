@@ -86,7 +86,7 @@ class CollapsedChatDisplay extends React.Component{
             }
         }
 
-        this.props.auth.chatClient.multiChatWindow.registerUnreadConsumer(this.props.sid, this);
+        this.props.auth.chatClient.multiChatWindow.registerUnreadConsumer(this.props.sid, this.props.category, this);
         if(!this.mounted)
             return;
     }
@@ -100,6 +100,7 @@ class CollapsedChatDisplay extends React.Component{
             this.props.auth.chatClient.joinedChannels[this.state.sid].channel.leave();
         }
     }
+    
     openDM(){
         this.props.auth.helpers.createOrOpenDM(this.state.profile);
     }
@@ -117,7 +118,7 @@ class CollapsedChatDisplay extends React.Component{
                                  this.destroyChat.bind(this)
                              }
         >Leave Channel</Button>)
-        if(this.props.auth.permissions.includes("moderator")){
+        if(this.props.auth.isManager){
             buttons.push(<Popconfirm
                 key="deleteChat"
                 onConfirm={async ()=>{
@@ -126,7 +127,7 @@ class CollapsedChatDisplay extends React.Component{
                         sid: this.state.sid
                     });
                 }}
-                title="Are you sure you want to delete this channel and all of its messages? This can not be undone."
+                title="Are you sure you want to delete this channel and all of its messages? This cannot be undone."
             ><Button type="primary"
                                  key="deleteChat"
                                  className="smallButton"
@@ -135,15 +136,25 @@ class CollapsedChatDisplay extends React.Component{
             >Delete Channel</Button></Popconfirm>)
         }
         let popoverContent = <Space>{buttons}</Space>;
+        let color = "";
+        if (this.props.category == "dm")
+            color = 'red';
+        else if (this.props.category == "subscriptions")
+            color = '#CD2EC9';
+        else if (this.props.category == "others")
+            color = '#151388';
+        else if (this.props.category == "papers")
+            color = '#087C1D';
+
         return <Popover key={this.state.sid} mouseEnterDelay={0.5} placement="topRight"
-       content={popoverContent}><div
-           className="collapsedChatDisplay"
-            key={this.state.sid}
+                content={popoverContent}><div
+                className="collapsedChatDisplay"
+                key={this.state.sid}
             >
            <div
                className="userTag"
                onClick={()=>{this.props.auth.chatClient.openChat(this.state.sid)}}
-           ><Badge overflowCount={9} className="chat-unread-count" count={this.state.unread} /> {this.state.title}
+           ><Badge overflowCount={9} className="chat-unread-count" count={this.state.unread} style={{ backgroundColor: color }}/> {this.state.title}
            </div>
        </div></Popover>
 

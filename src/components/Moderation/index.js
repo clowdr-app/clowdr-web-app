@@ -154,11 +154,10 @@ class Moderation extends React.Component{
                 text
             )
         },
-
     });
 
     render() {
-        if(!this.props.auth.permissions.includes("moderator"))
+        if(!this.props.auth.isModerator)
             return <div></div>
         if(this.state.loading)
             return <div>Loading...</div>

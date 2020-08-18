@@ -269,7 +269,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                                     linkTo: "breakoutRoom",
                                     path: "/video/" + parseRoom.id
                                 }),
-                                body: "I just created and joined a video chat",
+                                body: "I just created a video chat: Join me there!",
                             });
                             return {
                                 status: "ok",
@@ -351,7 +351,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                         linkTo: "breakoutRoom",
                         path: "/video/" + profile.get("conference").get("conferenceName") + "/" + roomName
                     }),
-                    body: "I just created and joined a video chat",
+                    body: "I just created a video chat: Join me there!",
                 });
                 return {
                    status: "ok",
@@ -468,7 +468,44 @@ Parse.Cloud.define("chat-addToSID", async (request) => {
     }
     return null;
 });
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function getOrCreateChatForProgramItem(item){
+    let config = await getConfig(item.get("conference"));
+    let attributes = {
+        category: "programItem",
+        programItemID: item.id
+    }
+    try{
+        let chatRoom = await config.twilioChat.channels.create(
+            {friendlyName: item.get('title'),
+                uniqueName: 'programItem-'+item.id,
+                type: 'public',
+                attributes: JSON.stringify(attributes)});
+        item.set("chatSID", chatRoom.sid);
+        await item.save({}, {useMasterKey: true});
+    }
+    catch(err){
+        if(err.code == 20429){
+            //Back off, try again
+            await timeout(2000);
+            item = await item.fetch({useMasterKey: true});
+            if(!item.get("chatSID")){
+                return getOrCreateChatForProgramItem(item);
+            }
+            else{
+                return item.get('chatSID');
+            }
+        }
+        //Raced with another client creating the chat room
+        let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
+        // item.set("chatSID", chatRoom.sid);
+        // await item.save({}, {useMasterKey: true});
 
+        return chatRoom.sid;
+    }
+}
 Parse.Cloud.define("chat-getSIDForProgramItem", async (request) => {
     let programItemID = request.params.programItem;
     let itemQ = new Parse.Query("ProgramItem");
@@ -476,33 +513,14 @@ Parse.Cloud.define("chat-getSIDForProgramItem", async (request) => {
     let item = await itemQ.get(programItemID, {useMasterKey: true});
     if(item.get("track").get("perProgramItemChat") && !item.get("chatSID")){
         //Create room
-        let config = await getConfig(item.get("conference"));
-        let attributes = {
-            category: "programItem",
-            programItemID: programItemID
-        }
-        try{
-            let chatRoom = await config.twilioChat.channels.create(
-                {friendlyName: item.get('title'),
-                    uniqueName: 'programItem-'+item.id,
-                    type: 'public',
-                    attributes: JSON.stringify(attributes)});
-            item.set("chatSID", chatRoom.sid);
-            await item.save({}, {useMasterKey: true});
-        }
-        catch(err){
-            console.log(err);
-            //Raced with another client creating the chat room
-            let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
-            // item.set("chatSID", chatRoom.sid);
-            // await item.save({}, {useMasterKey: true});
-
-            return chatRoom.sid;
-        }
+        await getOrCreateChatForProgramItem(item);
     }
     return item.get("chatSID");
 });
-
+async function userInRoles(user, allowedRoles) {
+    const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
+    return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
+}
 Parse.Cloud.define("join-announcements-channel", async (request) => {
     let confID = request.params.conference;
     let userQ = new Parse.Query(UserProfile);
@@ -521,7 +539,7 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
         let actionQ = new Parse.Query("PrivilegedAction");
         actionQ.equalTo("action","announcement-global");
         accesToConf.matchesQuery("action", actionQ);
-        const hasAccess = await accesToConf.first({sessionToken: request.user.getSessionToken()});
+        const hasAccess = await userInRoles(request.user, [confID+ "-admin", confID+ "-manager"]);
         console.log('--> hasAccess: ' + hasAccess);
 
         let role = config.TWILIO_CHAT_CHANNEL_OBSERVER_ROLE;
@@ -580,6 +598,7 @@ Parse.Cloud.define("chat-createDM", async (request) => {
     let messageWith = request.params.messageWith;
     let visibility="private";
 
+    console.log("Create DM called " + conversationName)
     let userQ = new Parse.Query(UserProfile);
     let conf = new ClowdrInstance();
     conf.id = confID;
@@ -643,6 +662,7 @@ Parse.Cloud.define("chat-createDM", async (request) => {
             mode: "directMessage",
             parseID: convo.id
         }
+        console.log("Creating dm")
         let chatRoom = await config.twilioChat.channels.create(
             {friendlyName: conversationName, type: visibility,
             attributes: JSON.stringify(attributes)});

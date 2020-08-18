@@ -1,5 +1,7 @@
 import {AuthUserContext} from "../Session";
 import Parse from "parse";
+import {emojiIndex, Picker} from 'emoji-mart'
+import {emojify} from 'react-emojione';
 
 import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
@@ -11,8 +13,11 @@ import ReactMarkdown from "react-markdown";
 import {CloseOutlined} from "@material-ui/icons";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import InfiniteScroll from 'react-infinite-scroller';
+import EmojiPickerPopover from "./EmojiPickerPopover";
 
-const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
+// const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emojiIndex.search(name).map(o=>o.native));
+
+const emojiSupport = text => emojify(text.value, {output: 'unicode'});
 
 
 const {Header, Content, Footer, Sider} = Layout;
@@ -80,7 +85,7 @@ class ChatFrame extends React.Component {
                 loadingMessages: true
             });
             if (!this.client) {
-                this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference, this.props.auth.userProfile);
+                this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference, this.props.auth.userProfile, this.props.auth);
             }
             // console.log("Prepared client for " + uniqueNameOrSID + ", " + this.currentUniqueNameOrSID)
             if (this.currentSID != sid) {
@@ -295,13 +300,13 @@ class ChatFrame extends React.Component {
                 notification.info(args);
             })
         }
-
     };
 
     messageRemoved = (channel, message) => {
         this.messages[channel.sid] = this.messages[channel.sid].filter((v) => v.sid != message.sid)
         this.groupMessages(this.messages[channel.sid]);
     };
+
     messageUpdated = (channel, message) => {
         this.messages[channel.sid] = this.messages[channel.sid].map(m => m.sid == message.sid ? message : m)
         this.groupMessages(this.messages[channel.sid]);
@@ -334,7 +339,6 @@ class ChatFrame extends React.Component {
             if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
                 this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
             }
-
         }
     };
 
@@ -349,7 +353,7 @@ class ChatFrame extends React.Component {
                 , {
                     method: 'POST',
                     body: JSON.stringify({
-                        conference: this.props.auth.currentConference.get("slackWorkspace"),
+                        conference: this.props.auth.currentConference.id,
                         identity: idToken,
                         room: message.channel.sid,
                         message: message.sid,
@@ -401,13 +405,13 @@ class ChatFrame extends React.Component {
             this.loadingMessages = true;
             let intendedChanelSID = this.activeChannel.sid;
             this.setState({loadingMessages: true});
+            if(!this.currentPage[this.activeChannel.sid])
+                return;
             this.currentPage[this.activeChannel.sid].prevPage().then(messagePage => {
                 if (this.activeChannel.sid != intendedChanelSID) {
                     this.loadingMessages = false;
                     return;
                 }
-                console.log(messagePage)
-                console.log(messagePage.hasPrevPage)
                 this.setState({
                     hasMoreMessages: messagePage.hasPrevPage
                     //messagePage.hasPrevPage
@@ -480,7 +484,6 @@ class ChatFrame extends React.Component {
                                           let addDate = this.lastDate && this.lastDate != moment(item.timestamp).day();
                                           this.lastDate = moment(item.timestamp).day();
 
-
                                           return (
                                               <List.Item style={{padding: '0', width: "100%", textAlign: 'left'}}
                                                          key={item.sid}>
@@ -492,13 +495,12 @@ class ChatFrame extends React.Component {
                                                           // bodyStyle={{padding: '5px', backgroundColor: "#f8f8f8"}}
                                                           //   style={{border: 'none', width: "100%"}}
                                                       >
-
                                                               <div>
                                                                   <UserStatusDisplay
                                                                                      popover={true}
-                                                                                     profileID={item.author}/>&nbsp;
-                                                                  <span
-                                                                      className="timestamp">{this.formatTime(item.timestamp)}</span>
+                                                                                     profileID={item.author}/>
+                                                                  {/* BCP: Moved this to the hover text:
+                                                                      &nbsp; <span className="timestamp">{this.formatTime(item.timestamp)}</span> */}
                                                               </div>
                                                           <div>
                                                               {item.messages.map((m) =>
@@ -534,6 +536,9 @@ class ChatFrame extends React.Component {
                                 autoSize={{minRows: 1, maxRows: 6}}
                                 onPressEnter={this.sendMessage}
                             />
+                            {/*<EmojiPickerPopover emojiSelected={(emoji)=>{*/}
+                            {/*    console.log(emoji)*/}
+                            {/*}} />*/}
                         </Form.Item>
                     </Form>
                 </div>
@@ -557,7 +562,8 @@ class ChatFrame extends React.Component {
         if(m.attributes && m.attributes.linkTo){
             actionButton = <Button onClick={()=>{this.props.auth.history.push(m.attributes.path)}}>Join Video</Button>
         }
-        if (isMyMessage || this.props.auth.permissions.includes("moderator"))
+        options.push(<span key={m.sid} className="timestamp">{moment(m.timestamp).format("LL LTS")}</span>);
+        // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
             options.push(<Popconfirm
                 key="delete"
                 title="Are you sure that you want to delete this message?"

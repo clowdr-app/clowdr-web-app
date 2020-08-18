@@ -1,19 +1,22 @@
-import React from "react";
+import React, {ReactNode} from "react";
 import {AuthUserContext} from "../Session";
-import {Button, Form, Input, Menu, Modal, Switch} from "antd";
-// @ts-ignore
-import {ChatChannelConsumer, ClowdrAppState, MultiChatApp} from "../../ClowdrTypes";
+import {Button, Form, Input, Menu, message, Modal, Select, Spin, Switch} from "antd";
+import {ChatChannelConsumer, ClowdrState, MultiChatApp} from "../../ClowdrTypes";
 import CollapsedChatDisplay from "./CollapsedChatDisplay";
 import {Channel} from "twilio-chat/lib/channel";
 import {PlusOutlined} from "@ant-design/icons"
-
+import ProgramItem from "../../classes/ProgramItem";
+import UserProfile from "../../classes/UserProfile";
+import Parse from "parse";
+import UserStatusDisplay from "../Lobby/UserStatusDisplay";
+import ProgramItemDisplay from "../Program/ProgramItemDisplay";
+import { Create } from "@material-ui/icons";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
-
 interface ChatChannelChangerProps {
-    appState: ClowdrAppState | null;
+    appState: ClowdrState | null;
     multiChatWindow: MultiChatApp;
 }
 interface PublicChannelChangerProps {
@@ -26,17 +29,35 @@ interface ChatChannelChangerState {
     allChannels: Channel[], //list of sid's
     newChannelVisible: boolean,
     editChannelVisible: boolean
+    ProgramItems: ProgramItem[],
+    UserProfiles: UserProfile[],
+    filter?: string,
+    searchLoading: boolean,
+    openingChat: boolean,
+    searchOptions: {label:string|ReactNode, value:string, object: ProgramItem|UserProfile|Channel, labeltext: string}[]
 }
 
 class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatChannelChangerState> implements ChatChannelConsumer {
+    private fetchingSearchOptions: boolean;
+    private haveProgram: boolean;
+    private searchBox: React.RefObject<Select>;
     constructor(props: ChatChannelChangerProps) {
         super(props);
+        this.searchBox = React.createRef();
+        this.haveProgram = false;
+        this.fetchingSearchOptions = false;
         this.state = {
             loading: true,
             joinedChannels: [],
             allChannels: [],
             newChannelVisible: false,
-            editChannelVisible: false
+            editChannelVisible: false,
+            ProgramItems: [],
+            UserProfiles: [],
+            filter: undefined,
+            searchLoading: false,
+            searchOptions: [],
+            openingChat: false
         };
     }
 
@@ -46,10 +67,48 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
     setAllChannels(channels: Channel[]){
         this.setState({allChannels: channels});
     }
-    componentDidMount(): void {
-        // this.props.appState?.chatClient.initMultiChatWindow(this);
-        this.props.multiChatWindow.registerChannelConsumer(this);
+    componentDidUpdate(prevProps: Readonly<ChatChannelChangerProps>, prevState: Readonly<ChatChannelChangerState>, snapshot?: any): void {
+        if(this.haveProgram && (this.state.ProgramItems != prevState.ProgramItems || this.state.UserProfiles != prevState.UserProfiles || this.state.allChannels != prevState.allChannels)){
+            let options = [];
+            options = this.state.ProgramItems.filter(item=>item.get("chatSID") != null).map(item => ({labeltext: item.get("title"), value: item.id, object: item,
+            label: <ProgramItemDisplay id={item.id} auth={this.props.appState} hideLink={true} />}));
+            options = options.concat(this.state.UserProfiles.map(profile => ({
+                labeltext: profile.get("displayName"),
+                value: profile.id,
+                object: profile,
+                label: <UserStatusDisplay profileID={profile.id} hideLink={true} />
+            })));
+            let moreOptions = this.state.allChannels.filter(chan => {
+                if(chan){
+                    // @ts-ignore
+                    if(chan.attributes && (chan.attributes.mode != "directMessage" && chan.attributes.category != 'socialSpace' && chan.attributes.category != 'programItem' && chan.attributes.category != "breakoutRoom"
+                        ))
+                        return true;
+                }
+                return false;
+            }).map(chan=>{
+
+                return {label: chan.friendlyName, value: chan.sid, object: chan, labeltext: chan.friendlyName};
+            });
+            // @ts-ignore
+            options = options.concat(moreOptions);
+            if(this.state.UserProfiles.length)
+                this.setState({searchOptions: options});
+        }
     }
+
+    componentDidMount(): void {
+        //@ts-ignore
+        this.props.appState?.refreshUser(null, false).then((user)=>{
+            this.props.multiChatWindow.registerChannelConsumer(this);
+            this.props.appState?.programCache.getProgramItems(this).then((items:ProgramItem[])=>{
+                this.haveProgram = true;
+                this.setState({ProgramItems: items});
+            })
+        });
+
+    }
+
     async createChannel(title: string, description: string, autoJoin: boolean) : Promise<Channel>{
         let twilio = this.props.appState?.chatClient.twilio;
         if(!twilio)
@@ -67,6 +126,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             attributes: attributes
         });
     }
+
     async createNewChannel(values: any) {
         var _this = this;
         let newChannel = await this.createChannel(
@@ -84,16 +144,142 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         // if (this.state.loading)
         //     return <Spin/>
         let addChannelButton = <></>
-        if(this.props.appState?.permissions.includes("moderator"))
+        if(this.props.appState?.isModerator)
             addChannelButton = <Button size="small"
-                                       onClick={()=>{this.setState({newChannelVisible: true})}
-                                       } type="primary"
-                                       shape="circle" icon={
-                <PlusOutlined/>}/>
+                                       onClick={()=>{this.setState({newChannelVisible: true})}}
+                                       type="primary"
+                                       >New text channel</Button>
 
+        let sorted = this.state.joinedChannels.filter(sid => {
+            // @ts-ignore   TS: fixme  
+            let chan = this.props.appState?.chatClient.joinedChannels[sid];
+            if (chan) {
+                if (chan.attributes && (chan.attributes.category != "socialSpace" && chan.attributes.category != "breakoutRoom"))
+                    return true;
+            }
+            return false;
+        }).sort((sid1, sid2) => {
+                        // @ts-ignore   TS: fixme  
+                let chan1 = this.props.appState?.chatClient.joinedChannels[sid1];
+                            // @ts-ignore   TS: fixme  
+                let chan2 = this.props.appState?.chatClient.joinedChannels[sid2];
+                if (!chan1 || !chan2)
+                    return 0;
+                let s1 = chan1.friendlyName;
+                let s2 = chan2.friendlyName;
+                if (!s1)
+                    s1 = sid1;
+                if (!s2)
+                    s2 = sid2;
+                if (chan1.attributes && chan1.attributes.category == "programItem") {
+                    let i1 = chan1.attributes.programItemID;
+                    let i = this.state.ProgramItems.find(i => i.id == i1);
+                    if (i) {
+                        s1 = i.get("title");
+                    }
+                }
+                if (chan2.attributes && chan2.attributes.category == "programItem") {
+                    let i2 = chan2.attributes.programItemID;
+                    let i = this.state.ProgramItems.find(i => i.id == i2);
+                    if (i) {
+                        s2 = i.get("title");
+                    }
+                }
+                if (s1 && s2) {
+                    return s1.localeCompare(s2);
+                }
+                return 0;
+            }
+        );
+        let dms = sorted.filter(sid => {
+                        // @ts-ignore   TS: fixme  
+            let chan = this.props.appState?.chatClient.joinedChannels[sid];
+            if (chan) {
+                if (chan.attributes && (chan.attributes.mode == "directMessage"))
+                    return true;
+            }
+            return false;
+        });
+        let programChats = sorted.filter(sid => {
+                        // @ts-ignore   TS: fixme  
+            let chan = this.props.appState?.chatClient.joinedChannels[sid];
+            if(chan){
+                if(chan.attributes && (chan.attributes.category == 'programItem'))
+                    return true;
+            }
+            return false;
+        });
+        let otherChannels = sorted.filter(sid => {
+                        // @ts-ignore   TS: fixme  
+            let chan = this.props.appState?.chatClient.joinedChannels[sid];
+            if(chan){
+                if(chan.attributes && (chan.attributes.mode != "directMessage" && chan.attributes.category != 'socialSpace' && chan.attributes.category != 'programItem'))
+                    return true;
+            }
+            return false;
+        });
         return <div id="channelChanger">
-            <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={()=>{this.setState({'newChannelVisible': false})}}
-                               onCreate={this.createNewChannel.bind(this)} />
+            <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={() => {
+                this.setState({'newChannelVisible': false})
+                }}
+                onCreate={this.createNewChannel.bind(this)}/>
+            <Select showSearch={true}
+                    placeholder="Search for user/paper/chat"
+                    className="chat-search"
+                    value={this.state.filter}
+                    showArrow={false}
+                    dropdownMatchSelectWidth={false}
+                    options={this.state.searchOptions}
+                    filterOption={(input, option) =>
+                    {
+                        if(option && option.labeltext){
+                            let label = option.labeltext;
+                            //@ts-ignore
+                            return label.toLowerCase().indexOf(input.toLowerCase()) >= 0;
+                        }
+                       return false;
+                    }
+                    }
+                    loading={this.state.openingChat}
+                    onSelect={async (item, option)=>{
+                        let obj = option.object;
+                        let sid;
+                        // @ts-ignore
+                        this.setState({openingChat: true, filter: option.label})
+                        if(obj instanceof ProgramItem){
+                            sid = obj.get("chatSID");
+                            if(!sid){
+                                    sid = await Parse.Cloud.run("chat-getSIDForProgramItem", {
+                                        programItem: obj.id
+                                    });
+                            }
+                            if(sid){
+                                await this.props.appState?.chatClient.openChatAndJoinIfNeeded(sid, false);
+                            }
+                            else{
+                                message.error("Unable to find chat ID for " + obj.get("title"))
+                            }
+                        }else if(obj instanceof UserProfile){
+                            await this.props.appState?.helpers.createOrOpenDM(obj);
+                        }else if(obj instanceof Channel){
+                            await this.props.appState?.chatClient.openChatAndJoinIfNeeded(obj.sid, false);
+                        }
+                        // @ts-ignore
+                        this.setState({openingChat: false, filter: undefined})
+                    }
+                    }
+                    notFoundContent={this.state.searchLoading ? <Spin size="small" /> : null}
+                    onSearch={async (val) => {
+                        if(!this.fetchingSearchOptions){
+                            this.fetchingSearchOptions = true;
+                            this.setState({searchLoading: true});
+                            let profiles = await this.props.appState?.programCache.getUserProfiles(this);
+                            this.setState({UserProfiles: profiles, searchLoading: false})
+                        }
+                    }
+                    }
+            />
+            {addChannelButton}
             {/*<UpdateCreateForm visible={this.state.editChannelVisible}*/}
             {/*                  onCancel={()=>{this.setState({'editChannelVisible': false})}}*/}
             {/*                  onCreate={this.updateChannel.bind(this)}*/}
@@ -117,50 +303,63 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                       }
                   }}
                   // selectedKeys={selectedKeys}
-                  defaultOpenKeys={['joinedChannels','otherPublicChannels']}
+                  defaultOpenKeys={['joinedChannels','dms','programChannels','otherPublicChannels']}
                   forceSubMenuRender={true}
             >
-                    <Menu.SubMenu key="joinedChannels" title="Your Channels">
-
-                        {this.state.joinedChannels.filter(sid=>{
-                            // @ts-ignore
-                            let chan = this.props.appState?.chatClient.joinedChannels[sid];
-                            if(chan){
-                                if(chan.attributes && chan.attributes.category != 'socialSpace')
-                                    return true;
-                            }
-                            return false;
-                        }).map((chan) => {
+                <Menu.SubMenu key="dms" title="Direct Messages">
+                    {dms.map((chan) => {
+                        let className = "personHoverable";
+                        // if (this.state.filteredUser == user.id)
+                        //     className += " personFiltered"
+                        return <Menu.Item key={chan} className={className}>
+                            <CollapsedChatDisplay sid={chan}  category="dm"/>
+                            {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
+                        </Menu.Item>
+                    })
+                    }
+                </Menu.SubMenu>
+                    <Menu.SubMenu key="joinedChannels" title="Subscribed Channels">
+                        {otherChannels.map((chan) => {
                             let className = "personHoverable";
                             // if (this.state.filteredUser == user.id)
                             //     className += " personFiltered"
                             return <Menu.Item key={chan} className={className}>
-                                <CollapsedChatDisplay sid={chan}  />
-
+                                <CollapsedChatDisplay sid={chan}  category="subscriptions"/>
                                 {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                             </Menu.Item>
                         })
                         }
                     </Menu.SubMenu>
 
-                <Menu.SubMenu key="otherPublicChannels" title={<span>Other Channels{addChannelButton}</span>}>
-
+                <Menu.SubMenu key="otherPublicChannels" title={<span>More Channels</span>}>
                     {
                         this.state.allChannels.filter(chan => chan && chan.sid &&
                             //@ts-ignore
-                        (chan.attributes && chan.attributes.category != 'socialSpace') &&
+                        (chan.attributes && chan.attributes.category != 'socialSpace') && chan.attributes.category != 'breakoutRoom' && chan.attributes.category != "programItem" &&
                         !this.state.joinedChannels.includes(chan.sid)).map((chan) => {
                         let className = "personHoverable";
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan.sid} className={className}>
-                            <CollapsedChatDisplay sid={chan.sid} channel={chan} />
-
+                            <CollapsedChatDisplay sid={chan.sid} channel={chan} category="others"/>
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })
                     }
                 </Menu.SubMenu>
+                <Menu.SubMenu key="programChannels" title="Paper Channels">
+                    {programChats.map((chan) => {
+                        let className = "personHoverable";
+                        // if (this.state.filteredUser == user.id)
+                        //     className += " personFiltered"
+                        return <Menu.Item key={chan} className={className}>
+                            <CollapsedChatDisplay sid={chan} category="papers" />
+                            {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
+                        </Menu.Item>
+                    })
+                    }
+                </Menu.SubMenu>
+
             </Menu>
         </div>
     }
@@ -243,7 +442,7 @@ const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
     return (
         <Modal
             visible={visible}
-            title="Create a channel"
+            title="Create a text channel"
             // okText="Create"
             footer={[
                 <Button form="myForm" key="submit" type="primary" htmlType="submit">

@@ -323,19 +323,20 @@ class Lobby extends React.Component {
                                 }
 
                                 let membersCount = 0;
-                                if (item.get("members")) {
+                            let capacity  =item.get("capacity");
+                            if (item.get("members")) {
                                     membersCount = item.get("members").length;
                                 }
                                 let tag, joinInfo;
                                 if (item.get("mode") == "group") {
                                     //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
-                                    joinInfo = "Click to join this big group room (up to 50 callers). Up to 5 speakers are allowed at once."
+                                    joinInfo = "Click to join this big group room (up to " + capacity + " callers). Up to 5 speakers are allowed at once."
                                 } else if (item.get("mode") == "peer-to-peer") {
                                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
-                                    joinInfo = "Click to join this peer-to-peer room (up to 10 callers)."
+                                    joinInfo = "Click to join this peer-to-peer room (up to " + capacity + " callers)."
                                 } else if (item.get("mode") == "group-small") {
                                     //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
-                                    joinInfo = "Click to join this small group room (up to 4 callers)."
+                                    joinInfo = "Click to join this small group room (up to " + capacity + ")."
                                 }
 
                                 let isModOverride = false;
@@ -474,7 +475,7 @@ class Lobby extends React.Component {
             //     <TabPane tab="Breakout Areas" key="1">
             <div>
                 <AboutModal />
-                <Typography.Title level={2}>People</Typography.Title>
+                <Typography.Title level={2}>People and Places</Typography.Title>
 
                 <Typography.Paragraph>
                 Some say that the most valuable part of an academic conference is outside the official sessions, when
@@ -487,7 +488,7 @@ class Lobby extends React.Component {
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>
-                When you are looking for casual conversation or hoping to meet new people,  head over to one of the small-group rooms labeled "Public Hangout 1", "Public Hangout 2", etc.  You can either join a room at random or else pick an empty room and wait for others to join you there.
+                When you are looking for casual conversation or hoping to meet new people, head over to one of the small-group rooms labeled "Coffee Break 1", "Coffee Break 2", etc.  You can either join a room at random or else pick an empty room and wait for others to join you there.
                 </Typography.Paragraph>
 
                 <Typography.Paragraph>
@@ -502,7 +503,7 @@ class Lobby extends React.Component {
                 <div className="lobby-section-header">
                 Video Chat Rooms
                 </div>
-                {this.summarizeRooms(allActiveRooms.filter(r=>!r.get("programItem")))}
+                {this.summarizeRooms(allActiveRooms.filter(r => !r.get("programItem")))}
 
                 {
                     this.state.breakoutRoomsForTracks ? Object.keys(this.state.breakoutRoomsForTracks).sort((i1, i2) => {
@@ -526,7 +527,7 @@ class Lobby extends React.Component {
                     }) : <></>
                 }
                 <div className="lobby-section-header">
-                  Participants not currently in a room
+                  Participants not currently in a video chat room
                 </div>
 
                 <div className="lobby-participant-list">
