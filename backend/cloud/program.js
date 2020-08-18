@@ -907,8 +907,58 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
         //     TODO Make sure no tracks have breakout rooms still...
         }
     }
+    if(track.dirty("perProgramItemChat")){
+        if(track.get("perProgramItemChat")){
+            let itemQ = new Parse.Query("ProgramItem");
+            itemQ.equalTo("track", track);
+            itemQ.limit(1000);
+            let config = await getConfig(track.get("conference"));
+            let items = await itemQ.find({useMasterKey: true});
+            for (let item of items) {
+                await getOrCreateChatForProgramItem(item, config);
+            }
+
+
+        }
+    }
 
 });
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function getOrCreateChatForProgramItem(item, config){
+    let attributes = {
+        category: "programItem",
+        programItemID: item.id
+    }
+    try{
+        let chatRoom = await config.twilioChat.channels.create(
+            {friendlyName: item.get('title'),
+                uniqueName: 'programItem-'+item.id,
+                type: 'public',
+                attributes: JSON.stringify(attributes)});
+        item.set("chatSID", chatRoom.sid);
+        await item.save({}, {useMasterKey: true});
+    }
+    catch(err){
+        if(err.code == 20429){
+            //Back off, try again
+            await timeout(2000);
+            item = await item.fetch({useMasterKey: true});
+            if(!item.get("chatSID")){
+                return getOrCreateChatForProgramItem(item, config);
+            }
+        }
+        //Raced with another client creating the chat room
+        let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
+        // item.set("chatSID", chatRoom.sid);
+        // await item.save({}, {useMasterKey: true});
+
+        return chatRoom.sid;
+    }
+}
+
 function eqInclNull(a,b){
     if(!a && !b)
         return true;
