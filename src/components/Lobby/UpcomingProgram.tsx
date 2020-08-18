@@ -136,32 +136,13 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         let lastFormattedTime = null;
 
         let now = new Date();
-        let lastStartTimeStillCurrent = null;
-        let currentItem = null;
-        for (let item of this.state.curItems) {
-            if (item.get("startTime") < now && item.get("endTime") > now) {
-                currentItem = item;
-                if (!lastStartTimeStillCurrent)
-                    lastStartTimeStillCurrent = item.get("startTime");
-                else if (moment(item.get("startTime")).diff(moment(lastStartTimeStillCurrent)) > 60000){
-                    lastStartTimeStillCurrent = item.get('startTime');
-                }
-            }
-        }
-        if (!currentItem) {
-            let timeDiff = 1000000000;
-            for (let item of this.state.curItems) {
-                if (item.get("startTime") > now && moment(item.get("startTime")).diff(now) < timeDiff) {
-                    timeDiff = moment(item.get("startTime")).diff(now);
-                    currentItem = item;
-                }
-            }
-        }
 
-        this.lastRenderedNow = lastStartTimeStillCurrent;
+        let addedNow = false;
         for(let item of this.state.curItems) {
-            if (item == currentItem) {
+            if (!addedNow && item.get("startTime") < now && item.get("endTime") > now) {
                 programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
+                addedNow = true;
+                this.lastRenderedNow = item.get("startTime");
             }
             let formattedTime = moment(item.get("startTime")).calendar();
             if(formattedTime != lastFormattedTime)
@@ -179,7 +160,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
 
         return <div id="upcomingProgramContainer">
             <Divider className="social-sidebar-divider">Program at a Glance</Divider>
-            <Button onClick={this.scrollToNow.bind(this)} className="program-scroll-button" size="small">Jump to Now</Button>
+            <Button type="primary" onClick={this.scrollToNow.bind(this)} className="program-scroll-button" size="small">Jump to Now</Button>
             <div id="upcomingProgram">
                 {programDetails}
             </div>
