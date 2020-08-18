@@ -37,25 +37,25 @@ class ZoomPanel extends Component {
                 }
             })
         }
-        if (this.props.auth.isModerator && this.props.room) {
-            //Get the start url
-            let zoomRoom = this.props.room.get("zoomRoom");
-            if (zoomRoom) {
-                let rooms = await this.props.auth.programCache.getZoomRooms();
-                zoomRoom = rooms.find(v => v.id == zoomRoom.id);
-                let start_url = zoomRoom.get("start_url");
-                if (zoomRoom.get("start_url_expiration") < Date.now()) {
-                    let res = await Parse.Cloud.run("zoom-refresh-start-url", {
-                        room: zoomRoom.id
-                    });
-                    start_url = res.start_url;
-                }
-                this.setState({
-                    start_url: start_url
-                });
-
-            }
-        }
+        // if (this.props.auth.isModerator && this.props.room) {
+        //     //Get the start url
+        //     let zoomRoom = this.props.room.get("zoomRoom");
+        //     if (zoomRoom) {
+        //         let rooms = await this.props.auth.programCache.getZoomRooms();
+        //         zoomRoom = rooms.find(v => v.id == zoomRoom.id);
+        //         let start_url = zoomRoom.get("start_url");
+        //         if (zoomRoom.get("start_url_expiration") < Date.now()) {
+        //             let res = await Parse.Cloud.run("zoom-refresh-start-url", {
+        //                 room: zoomRoom.id
+        //             });
+        //             start_url = res.start_url;
+        //         }
+        //         this.setState({
+        //             start_url: start_url
+        //         });
+        //
+        //     }
+        // }
 
     }
 
@@ -115,18 +115,18 @@ class ZoomPanel extends Component {
                         onClick={() => { this.joinZoomByBrowser(); }}
                         loading={this.state.zoomLoading}>
                         Join by Browser</Button>
-                    {this.props.auth.isModerator
-                        ? // BCP: Not sure how to do a popconfirm around an href, so for now just make the button scarier
-                          // <Popconfirm title="Are you sure?">
-                            <Button
-                                type="primary"
-                                href={this.state.start_url}
-                                target="_blank" danger
-                                loading={!this.state.start_url}
-                                disabled={this.state.zoomLoading}>
-                                Join As Host (use with care!)</Button>
-                          // </Popconfirm>
-                        : <></>}
+                    {/*{this.props.auth.isModerator*/}
+                    {/*    ? // BCP: Not sure how to do a popconfirm around an href, so for now just make the button scarier*/}
+                    {/*      // <Popconfirm title="Are you sure?">*/}
+                    {/*        <Button*/}
+                    {/*            type="primary"*/}
+                    {/*            href={this.state.start_url}*/}
+                    {/*            target="_blank" danger*/}
+                    {/*            loading={!this.state.start_url}*/}
+                    {/*            disabled={this.state.zoomLoading}>*/}
+                    {/*            Join As Host (use with care!)</Button>*/}
+                    {/*      // </Popconfirm>*/}
+                    {/*    : <></>}*/}
                 </Space></div>
         }
         // BCP: Unreachable?
