@@ -170,7 +170,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
                         onClick={this.changeSize.bind(this, !this.state.expanded)}/></span> 
         
         return <div className="multiChatWindow">
-            <div className="multiChatWindowHeader"><span className="title">Text Chats</span> {notifications} {actions}</div>
+            <div className="multiChatWindowHeader"><span className="title">Text Channels</span> {notifications} {actions}</div>
             <div
                 className="multiChatWindowContent"
         >

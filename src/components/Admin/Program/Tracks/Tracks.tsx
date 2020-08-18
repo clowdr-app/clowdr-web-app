@@ -99,7 +99,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     break;
                 case ('perProgramItemChat'):
                     inputNode = (
-                        <span title="Do the track's items get their own text chat channels?"><Checkbox 
+                        <span title="Do the track's items get their own text channels?"><Checkbox 
                             defaultChecked={record.get("perProgramItemChat")}
                             onChange={this.onChangeChat.bind(this, record)}
                         >
@@ -117,7 +117,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     break;
                 case ('showAsEvents'):
                     inputNode = (
-                        <span title="Do the track's items show as events (default is sessions)?"><Checkbox
+                        <span title="Do the track's items show as individual events in the program (default is grouped as sessions)?"><Checkbox
                             defaultChecked={record.get("showAsEvents")}
                             onChange= {this.onToggle.bind(this, record, "showAsEvents")}
                         >
@@ -273,7 +273,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     key: 'exhibit',
                 },
                 {
-                    title: 'Text Chats',
+                    title: 'Text Channels',
                     dataIndex: 'perProgramItemChat',
                     editable: true,
                     width: '5%',
