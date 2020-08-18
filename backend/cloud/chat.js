@@ -489,11 +489,14 @@ async function getOrCreateChatForProgramItem(item){
     catch(err){
         if(err.code == 20429){
             //Back off, try again
-            item = await item.fetch({useMasterKey: true});
-            if(item.get("chatSID")){
-                return item.get("chatSID");
-            }
             await timeout(2000);
+            item = await item.fetch({useMasterKey: true});
+            if(!item.get("chatSID")){
+                return getOrCreateChatForProgramItem(item);
+            }
+            else{
+                return item.get('chatSID');
+            }
         }
         //Raced with another client creating the chat room
         let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
