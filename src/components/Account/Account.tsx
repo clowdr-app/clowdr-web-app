@@ -295,7 +295,7 @@ class Account extends React.Component<Props, State> {
                         }
                     />
                 </Form.Item>
-                <Form.Item label="Author record:"
+                <Form.Item label="Author records:"
                            name="programPersons"
                            extra="Start typing your name to identify and select your conference records (if any)." >
                     {(this.ProgramPersons ?
