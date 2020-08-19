@@ -174,8 +174,8 @@ class Account extends React.Component<Props, State> {
 
     async collectProgramItems(){
         let [persons, items] = await Promise.all([
-            this.props.auth.programCache.getProgramPersons(this),
-            this.props.auth.programCache.getProgramItems(this)]);
+            this.props.auth.programCache.getProgramPersons(null),
+            this.props.auth.programCache.getProgramItems(null)]);
 
         this.ProgramPersons = persons;
         this.ProgramItems = items;
