@@ -369,9 +369,9 @@ class App extends Component {
                         <div className="main-area" style={{ height:"calc(100vh - "+(topHeight )+"px)", overflow: "auto"}}>
 
                             <SplitPane>
-                                {/*<Pane initialSize={"250px"}>*/}
-                                {/*    <SocialTab collapsed={this.state.socialCollapsed} />*/}
-                                {/*</Pane>*/}
+                                <Pane initialSize={"250px"}>
+                                    <SocialTab collapsed={this.state.socialCollapsed} />
+                                </Pane>
                                 <Pane>
                                     <div className="middlePane">
                                         <SplitPane split="horizontal" ref={this.chatPaneRef} onChange={(sizes)=>{
