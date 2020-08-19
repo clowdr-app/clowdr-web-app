@@ -1,9 +1,9 @@
 import {AuthUserContext} from "../Session";
 import Parse from "parse";
-import {emojiIndex, Picker} from 'emoji-mart'
+import {Emoji, emojiIndex, Picker} from 'emoji-mart'
 import {emojify} from 'react-emojione';
 
-import emoji from 'emoji-dictionary';
+// import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
 import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification, Button} from 'antd';
@@ -13,12 +13,10 @@ import ReactMarkdown from "react-markdown";
 import {CloseOutlined} from "@material-ui/icons";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import InfiniteScroll from 'react-infinite-scroller';
-import EmojiPickerPopover from "./EmojiPickerPopover";
-
-// const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emojiIndex.search(name).map(o=>o.native));
+// import EmojiPickerPopover from "./EmojiPickerPopover";
+import styled from 'styled-components';
 
 const emojiSupport = text => emojify(text.value, {output: 'unicode'});
-
 
 const {Header, Content, Footer, Sider} = Layout;
 
@@ -28,6 +26,7 @@ const INITIAL_STATE = {
     token: '',
     chatReady: false,
     messages: [],
+    reactions: {},
     profiles: [],
     authors: {},
     loadingChannels: true,
@@ -210,8 +209,10 @@ class ChatFrame extends React.Component {
         }
     }
 
-    groupMessages(messages) {
+    groupMessages(messages, channelId) {
         let ret = [];
+        let reactions = {};
+        let myReactions = {};
         let lastMessage = undefined;
         if (!messages)
             return undefined;
@@ -233,13 +234,28 @@ class ChatFrame extends React.Component {
                 lastMessage = {
                     author: message.author,
                     timestamp: message.timestamp,
-                    messages: [message],
+                    messages: message.attributes.associatedMessage ? [] : [message],
                     sid: message.sid
                 };
             } else {
-                lastMessage.messages.push(message);
+                if (message.attributes.associatedMessage) {
+                    let messageWithObj = reactions[message.attributes.associatedMessage] === undefined ? {} : reactions[message.attributes.associatedMessage];
+                    let emojiObj = messageWithObj[message.body] === undefined ? {count: 0, emojiMessage: null} : messageWithObj[message.body];
+
+                    if (message.author === this.props.auth.userProfile.id) {
+                        let newCount = emojiObj.emojiMessage ? emojiObj.count : emojiObj.count + 1;
+                        emojiObj = {...emojiObj, emojiMessage: message, count: newCount};
+                    } else {
+                        emojiObj = {...emojiObj, count: emojiObj.count + 1};
+                    }
+                    messageWithObj = {...messageWithObj, [message.body]: emojiObj};
+                    reactions = {...reactions, [message.attributes.associatedMessage]: messageWithObj};
+                } else {
+                    lastMessage.messages.push(message);
+                }
             }
         }
+
         if (lastMessage)
             ret.push(lastMessage);
         if(this.props.visible){
@@ -256,8 +272,10 @@ class ChatFrame extends React.Component {
         }
         this.props.auth.helpers.getUserProfilesFromUserProfileIDs(Object.keys(authorIDs));
 
-        this.setState({groupedMessages: ret});
-
+        this.setState({
+            groupedMessages: ret,
+            reactions
+        });
     }
 
     messagesLoaded = (channel, messagePage) => {
@@ -265,7 +283,7 @@ class ChatFrame extends React.Component {
         if (messagePage.items && messagePage.items.length > 0)
             this.currentPage[channel.sid] = messagePage;
         this.messages[channel.sid] = messagePage.items
-        this.groupMessages(this.messages[channel.sid]);
+        this.groupMessages(this.messages[channel.sid], channel.sid);
         this.setState({hasMoreMessages: messagePage.hasPrevPage, loadingMessages: false})
     };
     linkRenderer = (props) => {
@@ -276,8 +294,11 @@ class ChatFrame extends React.Component {
     };
 
     messageAdded = (channel, message) => {
+        console.log("WF: message added listener: ")
+        console.log(message.attributes.associatedMessage);
+        // do not display a reaction message
         this.messages[channel.sid].push(message);
-        this.groupMessages(this.messages[channel.sid]);
+        this.groupMessages(this.messages[channel.sid], channel.sid);
         if(this.isAnnouncements){
             //get the sender
             this.props.auth.helpers.getUserProfilesFromUserProfileID(message.author).then((profile)=>{
@@ -300,16 +321,17 @@ class ChatFrame extends React.Component {
                 notification.info(args);
             })
         }
+
     };
 
     messageRemoved = (channel, message) => {
+        console.log("WF: msg removed")
         this.messages[channel.sid] = this.messages[channel.sid].filter((v) => v.sid != message.sid)
-        this.groupMessages(this.messages[channel.sid]);
+        this.groupMessages(this.messages[channel.sid], channel.sid);
     };
-
     messageUpdated = (channel, message) => {
         this.messages[channel.sid] = this.messages[channel.sid].map(m => m.sid == message.sid ? message : m)
-        this.groupMessages(this.messages[channel.sid]);
+        this.groupMessages(this.messages[channel.sid], channel.sid);
     };
 
     onMessageChanged = event => {
@@ -339,10 +361,22 @@ class ChatFrame extends React.Component {
             if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
                 this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
             }
+
         }
     };
 
+    sendReaction(message, event) {
+        if (this.state.reactions?.[message.sid]?.[event.id]?.emojiMessage) {
+            console.log("revoke an emoji sent by me <======")
+            this.state.reactions[message.sid][event.id].emojiMessage.remove();
+            return;
+        }
+        this.activeChannel.sendMessage(event.id, {associatedMessage: message.sid});
+    }
+
     deleteMessage(message) {
+        console.log("WF: message to be deleted is: ");
+        console.log(message);
         if (message.author == this.props.auth.userProfile.id)
             message.remove();
         else {
@@ -434,6 +468,7 @@ class ChatFrame extends React.Component {
 
     }
 
+
     render() {
         if (this.state.chatDisabled) {
             return <div></div>
@@ -484,30 +519,31 @@ class ChatFrame extends React.Component {
                                           let addDate = this.lastDate && this.lastDate != moment(item.timestamp).day();
                                           this.lastDate = moment(item.timestamp).day();
 
+
                                           return (
                                               <List.Item style={{padding: '0', width: "100%", textAlign: 'left'}}
                                                          key={item.sid}>
                                                   <div style={{width: "100%"}}>
-                                                      {(addDate ? <Divider
+                                                      {(addDate && item.messages.length > 0 ? <Divider
                                                           style={{margin: '0'}}>{moment(item.timestamp).format("LL")}</Divider> : "")}
-                                                      <div
-                                                          className={"chatMessageContainer"}
-                                                          // bodyStyle={{padding: '5px', backgroundColor: "#f8f8f8"}}
-                                                          //   style={{border: 'none', width: "100%"}}
-                                                      >
+                                                      {item.messages.length > 0 &&
+                                                          <div className={"chatMessageContainer"}>
                                                               <div>
                                                                   <UserStatusDisplay
-                                                                                     popover={true}
-                                                                                     profileID={item.author}/>
-                                                                  {/* BCP: Moved this to the hover text:
-                                                                      &nbsp; <span className="timestamp">{this.formatTime(item.timestamp)}</span> */}
+                                                                      popover={true}
+                                                                      profileID={item.author}/>&nbsp;
+                                                                  <span
+                                                                      className="timestamp">{this.formatTime(item.timestamp)}</span>
                                                               </div>
-                                                          <div>
-                                                              {item.messages.map((m) =>
-                                                                  this.wrapWithOptions(m, isMyMessage)
-                                                              )}
+
+                                                              <div>
+                                                                  {item.messages.map((m) =>
+                                                                      this.wrapWithOptions(m, isMyMessage)
+                                                                  )}
+                                                              </div>
                                                           </div>
-                                                      </div></div>
+                                                      }
+                                                  </div>
                                               </List.Item>
                                           )
                                       }
@@ -549,6 +585,7 @@ class ChatFrame extends React.Component {
 
     }
 
+
     wrapWithOptions(m, isMyMessage, data) {
         let options = [];
         let _this = this;
@@ -562,33 +599,88 @@ class ChatFrame extends React.Component {
         if(m.attributes && m.attributes.linkTo){
             actionButton = <Button onClick={()=>{this.props.auth.history.push(m.attributes.path)}}>Join Video</Button>
         }
-        options.push(<span key={m.sid} className="timestamp">{moment(m.timestamp).format("LL LTS")}</span>);
         // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
-            options.push(<Popconfirm
-                key="delete"
-                title="Are you sure that you want to delete this message?"
-                onConfirm={this.deleteMessage.bind(this, m)}
-                okText="Yes"
-                cancelText="No"
-            ><a href="#"><CloseOutlined style={{color: "red"}}/></a></Popconfirm>)
+        options.push(
+            <div>
+                <Picker set='google' include={['people', 'recent']} onClick={this.sendReaction.bind(this, m)}/>
+            </div>
+        );
+
+
+        options.push(
+            <div>
+                <Popconfirm
+                    key="delete"
+                    title="Are you sure that you want to delete this message?"
+                    onConfirm={this.deleteMessage.bind(this, m)}
+                    okText="Yes"
+                    cancelText="No"
+                >
+                    <a href="#" style={{'color': 'red'}}>Delete the message</a>
+                </Popconfirm>
+            </div>
+
+        )
+
+        const ReactionWrapper = styled.div`
+            height: 20px;
+            overflow: scroll;
+            padding: 0 10px 5px;
+            margin-left: -10px;
+            border-bottom: 1px solid #dcdcdc;
+        `;
+
+        const SingleReactionWrapper = styled.div`
+            float: left;
+            height: 15px;
+            width: auto;
+            margin-left: 8px;
+            border-radius: 10px;
+            .reaction-number {
+                width: 10px;
+                height: 10px;
+                margin-bottom: 2.5px;
+            }   
+        `;
+
         if (options.length > 0)
-            return <Popover key={m.sid} mouseEnterDelay={0.5} placement="topRight" content={<div style={{backgroundColor: "white"}}>
-                {options}
-            </div>}>
+            return <Popover key={m.sid} mouseEnterDelay={0.5} placement="leftTop"
+                            content={<div style={{backgroundColor: "white"}}>
+                                {options}
+                            </div>}>
                 <div ref={(el) => {
-                    this.messagesEnd = el;
-                }} className="chatMessage"><ReactMarkdown source={m.body}
-                                                          renderers={{text: emojiSupport, link: this.linkRenderer}}/>{actionButton}</div>
+                    this.messagesEnd = el;}} className="chatMessage">
+                    <ReactMarkdown source={m.body} renderers={{text: emojiSupport, link: this.linkRenderer}}/>
+                    {actionButton}
+                </div>
+                {
+                    Object.keys(this.state.reactions).filter(mwe => mwe === m.sid).length === 0 ? null : (
+                    <ReactionWrapper>
+                        {
+                            Object.keys(this.state.reactions[m.sid]).map(emojiId => (
+                                this.state.reactions[m.sid][emojiId] <= 0 ? null :
+                                <SingleReactionWrapper key={emojiId}>
+                                    <Emoji size={15} emoji={emojiId} onClick={this.sendReaction.bind(this, m)}/>
+                                    <span className='reaction-number'>
+                                {this.state.reactions[m.sid][emojiId].count}
+                            </span>
+                                </SingleReactionWrapper>
+                            ))
+                        }
+
+                    </ReactionWrapper>
+                )}
             </Popover>
-        return <div key={m.sid} className="chatMessage"><ReactMarkdown source={m.body}
-                                                                       renderers={{
-                                                                           text: emojiSupport,
-                                                                           link: this.linkRenderer
-                                                                       }}/>{actionButton}</div>
 
-
+        return <div
+            key={m.sid} className="chatMessage">
+            <ReactMarkdown source={m.body}
+               renderers={{
+                   text: emojiSupport,
+                   link: this.linkRenderer}}
+            />
+               {actionButton}</div>
     }
-
 }
 
 const AuthConsumer = (props) => (
