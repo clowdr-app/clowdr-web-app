@@ -6,15 +6,14 @@ import {emojify} from 'react-emojione';
 // import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification, Button} from 'antd';
+import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification, Button, Tag} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import {CloseOutlined} from "@material-ui/icons";
+import {SmileOutlined} from "@ant-design/icons"
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import InfiniteScroll from 'react-infinite-scroller';
 // import EmojiPickerPopover from "./EmojiPickerPopover";
-import styled from 'styled-components';
 
 const emojiSupport = text => emojify(text.value, {output: 'unicode'});
 
@@ -240,7 +239,7 @@ class ChatFrame extends React.Component {
             } else {
                 if (message.attributes.associatedMessage) {
                     let messageWithObj = reactions[message.attributes.associatedMessage] === undefined ? {} : reactions[message.attributes.associatedMessage];
-                    let emojiObj = messageWithObj[message.body] === undefined ? {count: 0, emojiMessage: null} : messageWithObj[message.body];
+                    let emojiObj = messageWithObj[message.body] === undefined ? {count: 0, emojiMessage: null, authors: []} : messageWithObj[message.body];
 
                     if (message.author === this.props.auth.userProfile.id) {
                         let newCount = emojiObj.emojiMessage ? emojiObj.count : emojiObj.count + 1;
@@ -248,6 +247,7 @@ class ChatFrame extends React.Component {
                     } else {
                         emojiObj = {...emojiObj, count: emojiObj.count + 1};
                     }
+                    emojiObj.authors.push(message.author);
                     messageWithObj = {...messageWithObj, [message.body]: emojiObj};
                     reactions = {...reactions, [message.attributes.associatedMessage]: messageWithObj};
                 } else {
@@ -294,8 +294,6 @@ class ChatFrame extends React.Component {
     };
 
     messageAdded = (channel, message) => {
-        console.log("WF: message added listener: ")
-        console.log(message.attributes.associatedMessage);
         // do not display a reaction message
         this.messages[channel.sid].push(message);
         this.groupMessages(this.messages[channel.sid], channel.sid);
@@ -366,17 +364,15 @@ class ChatFrame extends React.Component {
     };
 
     sendReaction(message, event) {
-        if (this.state.reactions?.[message.sid]?.[event.id]?.emojiMessage) {
-            console.log("revoke an emoji sent by me <======")
-            this.state.reactions[message.sid][event.id].emojiMessage.remove();
+        let emoji = event.colons? event.colons: event.id;
+        if (this.state.reactions?.[message.sid]?.[emoji]?.emojiMessage) {
+            this.state.reactions[message.sid][emoji].emojiMessage.remove();
             return;
         }
-        this.activeChannel.sendMessage(event.id, {associatedMessage: message.sid});
+        this.activeChannel.sendMessage(emoji, {associatedMessage: message.sid});
     }
 
     deleteMessage(message) {
-        console.log("WF: message to be deleted is: ");
-        console.log(message);
         if (message.author == this.props.auth.userProfile.id)
             message.remove();
         else {
@@ -601,14 +597,16 @@ class ChatFrame extends React.Component {
         }
         // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
         options.push(
-            <div>
-                <Picker set='google' include={['people', 'recent']} onClick={this.sendReaction.bind(this, m)}/>
+            <div key="emojiPicker">
+                <Tag key="add-react" onClick={(event)=>{
+                    this.props.auth.chatClient.openEmojiPicker(m, event, this);
+                }}><SmileOutlined /></Tag>
             </div>
         );
 
-
+        if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
         options.push(
-            <div>
+            <div key="deleteButton" className="deleteButton">
                 <Popconfirm
                     key="delete"
                     title="Are you sure that you want to delete this message?"
@@ -616,70 +614,69 @@ class ChatFrame extends React.Component {
                     okText="Yes"
                     cancelText="No"
                 >
-                    <a href="#" style={{'color': 'red'}}>Delete the message</a>
+                    <a href="#">X</a>
                 </Popconfirm>
             </div>
 
         )
+/*
 
-        const ReactionWrapper = styled.div`
-            height: 20px;
-            overflow: scroll;
-            padding: 0 10px 5px;
-            margin-left: -10px;
-            border-bottom: 1px solid #dcdcdc;
-        `;
-
-        const SingleReactionWrapper = styled.div`
-            float: left;
-            height: 15px;
-            width: auto;
-            margin-left: 8px;
-            border-radius: 10px;
-            .reaction-number {
-                width: 10px;
-                height: 10px;
-                margin-bottom: 2.5px;
-            }   
-        `;
-
-        if (options.length > 0)
-            return <Popover key={m.sid} mouseEnterDelay={0.5} placement="leftTop"
+<Popover key={m.sid} mouseEnterDelay={0.5} placement="leftTop"
                             content={<div style={{backgroundColor: "white"}}>
                                 {options}
                             </div>}>
+ */
+        let reactions = null;
+        if(this.state.reactions && this.state.reactions[m.sid])
+            reactions = this.state.reactions[m.sid];
+            return <div key={m.sid}>
                 <div ref={(el) => {
                     this.messagesEnd = el;}} className="chatMessage">
+                    <div className="messageActions">
+                        {options}
+
+                    </div>
                     <ReactMarkdown source={m.body} renderers={{text: emojiSupport, link: this.linkRenderer}}/>
                     {actionButton}
                 </div>
                 {
-                    Object.keys(this.state.reactions).filter(mwe => mwe === m.sid).length === 0 ? null : (
-                    <ReactionWrapper>
+                    !reactions ? <></> : (
+                    <div className="reactionWrapper">
                         {
-                            Object.keys(this.state.reactions[m.sid]).map(emojiId => (
-                                this.state.reactions[m.sid][emojiId] <= 0 ? null :
-                                <SingleReactionWrapper key={emojiId}>
-                                    <Emoji size={15} emoji={emojiId} onClick={this.sendReaction.bind(this, m)}/>
-                                    <span className='reaction-number'>
-                                {this.state.reactions[m.sid][emojiId].count}
-                            </span>
-                                </SingleReactionWrapper>
-                            ))
+                            Object.keys(reactions).map(emojiId => {
+                                if(this.state.reactions[m.sid][emojiId] <= 0)
+                                return <></>;
+                                let hasMyReaction = this.state.reactions[m.sid][emojiId].emojiMessage;
+                                let tagClassname = (hasMyReaction ? "emojiReact-mine" : "emojiReact");
+                                // let authors = this.state.reactions[m.sid][emojiId].
+                                let reactors = this.state.reactions[m.sid][emojiId].authors.map((id)=><UserStatusDisplay
+                                profileID={id}
+                                inline={true}
+                                key={id}
+                                />)
+                                if(reactors.length == 1){
+                                    reactors = reactors[0];
+                                }
+                                else if(reactors.length > 1){
+                                    reactors = reactors.reduce((prev,cur)=>[prev, ", ", cur]);
+                                }
+                                return this.state.reactions[m.sid][emojiId] <= 0 ? null :
+                                    <Tooltip key={emojiId}
+                                             title={<div>{reactors} reacted with a {emojiId}</div>}
+                                    ><Tag.CheckableTag className={tagClassname} checked={hasMyReaction}
+                                                      onChange={this.sendReaction.bind(this, m, {id: emojiId})}>
+                                        <Emoji size={15} emoji={emojiId} />
+                                        {this.state.reactions[m.sid][emojiId].count}
+                                    </Tag.CheckableTag></Tooltip>
+                            })
                         }
+                        <Tag key="add-react" onClick={(event)=>{
+                            this.props.auth.chatClient.openEmojiPicker(m, event, this);
+                        }}><SmileOutlined /></Tag>
 
-                    </ReactionWrapper>
+                    </div>
                 )}
-            </Popover>
-
-        return <div
-            key={m.sid} className="chatMessage">
-            <ReactMarkdown source={m.body}
-               renderers={{
-                   text: emojiSupport,
-                   link: this.linkRenderer}}
-            />
-               {actionButton}</div>
+            </div>
     }
 }
 

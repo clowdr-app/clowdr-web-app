@@ -182,6 +182,68 @@ export default class ChatClient{
         if(this.chatList)
             this.chatList.addChannel(chatSID);
     }
+
+    openEmojiPicker(message, event, chatFrame){
+        if(this.emojiPickerRef.current){
+            let boundingTargetRect = event.target.getBoundingClientRect();
+            let newFromTop = boundingTargetRect.y
+            let newFromLeft = boundingTargetRect.x;
+            this.emojiClickTarget = event.target;
+            let boxWidth = this.emojiPickerRef.current.clientWidth;
+            let boxHeight = this.emojiPickerRef.current.clientHeight;
+            if(boxHeight == 0)
+                boxHeight = 425;
+            if(boxWidth == 0)
+                boxWidth = 353;
+            let screenWidth = window.screenX;
+            let screenHeight = window.screenY;
+            if(boxWidth + newFromLeft > screenWidth)
+            {
+                //place the picker to the right of the cursor
+                newFromLeft = newFromLeft- boxWidth;
+            }
+            if(newFromTop - boxHeight > 0){
+                newFromTop = newFromTop - boxHeight;
+            }
+            if(newFromLeft < 0)
+                newFromLeft = 0;
+            this.emojiPickerRef.current.style.display = "block";
+            this.emojiPickerRef.current.style.left = newFromLeft+"px";
+            this.emojiPickerRef.current.style.top = newFromTop+"px";
+            this.reactingTo = message;
+            this.reactingToFrame = chatFrame;
+            if(!this.emojiPickerCancelEvent){
+                this.emojiPickerCancelEvent = true;
+                document.addEventListener("click", (evt)=>{
+                    if(this.reactingTo){
+                        let targetElement = evt.target;
+                        do {
+                            if (targetElement == this.emojiPickerRef.current || targetElement == this.emojiClickTarget) {
+                                return;
+                            }
+                            // Go up the DOM
+                            targetElement = targetElement.parentNode;
+                        } while (targetElement);
+                        this.reactingTo  = null;
+                        this.reactingToFrame = null;
+                        this.emojiPickerRef.current.style.display = "none";
+                    }
+                });
+            }
+
+        }
+    }
+    initEmojiPicker(ref){
+        this.emojiPickerRef = ref;
+    }
+    emojiSelected(event){
+        if(this.reactingTo){
+            this.reactingToFrame.sendReaction(this.reactingTo, event);
+            this.reactingTo = null;
+            this.reactingToFrame = null;
+            this.emojiPickerRef.current.style.display = "none";
+        }
+    }
     
     leaveChat(chatSID){
         this.chats = this.chats.filter(c=>c != chatSID);

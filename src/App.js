@@ -56,6 +56,7 @@ import SplitPane from 'react-split-pane/lib/SplitPane';
 // @ts-ignore
 import Pane from 'react-split-pane/lib/Pane'
 import ActiveUsersList from "./components/SocialTab/ActiveUsersList";
+import EmojiPickerPopover from "./components/Chat/EmojiPickerPopover";
 
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
@@ -345,6 +346,7 @@ class App extends Component {
         let isLoggedIn = this.props.clowdrAppState.user != null;
         return (
                 <div className="App">
+                    <EmojiPickerPopover />
                     <div>
                     <Layout className="site-layout">
                         <div id="top-content">
@@ -367,9 +369,9 @@ class App extends Component {
                         <div className="main-area" style={{ height:"calc(100vh - "+(topHeight )+"px)", overflow: "auto"}}>
 
                             <SplitPane>
-                                <Pane initialSize={"250px"}>
-                                    <SocialTab collapsed={this.state.socialCollapsed} />
-                                </Pane>
+                                {/*<Pane initialSize={"250px"}>*/}
+                                {/*    <SocialTab collapsed={this.state.socialCollapsed} />*/}
+                                {/*</Pane>*/}
                                 <Pane>
                                     <div className="middlePane">
                                         <SplitPane split="horizontal" ref={this.chatPaneRef} onChange={(sizes)=>{

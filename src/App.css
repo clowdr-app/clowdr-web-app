@@ -124,8 +124,34 @@
     height: 26px;
 }
 
+.chatMessage {
+    position: relative;
+}
+
 .chatMessage :hover {
     background-color: #f0f2f5;
+}
+.chatMessage:hover .messageActions{
+    display: flex;
+    flex-direction: row;
+}
+.chatMessage .messageActions {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #d1d1d1;
+    border-radius: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+    /*display: flex;*/
+    /*flex-direction: row;*/
+    display: none;
+    top: 0;
+    right: 0;
+    z-index: 10;
+}
+.deleteButton a{
+    color: red;
+    font-weight: bold;
 }
 
 .ant-layout {
@@ -478,7 +504,6 @@ div.availabilityOptionsOpen  span.availabilityOption{
 }
 .bottomChatHeader{
     background-color: #1890FF;
-
     border-bottom: 1px solid #6666;
     /*flex: 1 1 5%;*/
     flex-grow: 1;
@@ -942,4 +967,53 @@ span.ant-divider-inner-text {
 }
 .bottomChatIdentity a:hover{
     color: #adc6ff;
+}
+
+.reactionWrapper{
+    /*padding: 0 10px 5px;*/
+    /*border-bottom: 1px solid #dcdcdc;*/
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.reactionWrapper > .ant-tag {
+    border-radius: 10px;
+    color: black;
+    background-color: #CFCFCF;
+}
+.reactionWrapper > .ant-tag-checkable-checked {
+    background-color: #E8F5FA;
+    border-color: #1A8BBB;
+}
+.reactionWrapper > .ant-tag > button{
+    height: 15px;
+}
+
+.emojiReact-mine {
+
+}
+.reaction-number {
+    width: 10px;
+    height: 10px;
+    /*margin-bottom: 2.5px;*/
+}
+.reactionWrapper > .ant-tag > span {
+    height: 15px;
+}
+.userDisplay .userName{
+    color: black;
+}
+.bottomChatHeader .userName{
+    color: white;
+}
+.bottomChatClose button{
+    color: white;
+}
+.bottomChatClose button:hover{
+    color: #E8F5FA;
+}
+#messageReactionPicker{
+    z-index: 1000;
+    position: absolute;
 }
