@@ -678,7 +678,7 @@ class ChatFrame extends React.Component {
                     !reactions ? <></> : (
                     <div className="reactionWrapper">
                         {
-                            Object.keys(reactions).map(emojiId => {
+                            Object.keys(reactions).sort().map(emojiId => {
                                 if(this.state.reactions[m.sid][emojiId] <= 0)
                                 return <></>;
                                 let hasMyReaction = this.state.reactions[m.sid][emojiId].emojiMessage;
