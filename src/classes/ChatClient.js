@@ -215,7 +215,7 @@ export default class ChatClient{
             if(!this.emojiPickerCancelEvent){
                 this.emojiPickerCancelEvent = true;
                 document.addEventListener("click", (evt)=>{
-                    if(this.reactingTo){
+                    if(this.reactingToFrame){
                         let targetElement = evt.target;
                         do {
                             if (targetElement == this.emojiPickerRef.current || targetElement == this.emojiClickTarget) {
@@ -237,7 +237,7 @@ export default class ChatClient{
         this.emojiPickerRef = ref;
     }
     emojiSelected(event){
-        if(this.reactingTo){
+        if(this.reactingToFrame){
             this.reactingToFrame.sendReaction(this.reactingTo, event);
             this.reactingTo = null;
             this.reactingToFrame = null;
