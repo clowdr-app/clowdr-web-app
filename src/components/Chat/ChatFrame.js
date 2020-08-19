@@ -50,6 +50,7 @@ class ChatFrame extends React.Component {
         }
         this.form = React.createRef();
         this.lastConsumedMessageIndex= -1;
+        this.lastSeenMessageIndex = -1;
     }
 
     formatTime(timestamp) {
@@ -198,6 +199,9 @@ class ChatFrame extends React.Component {
             let unread = lastTotal - lastConsumed;
             if(unread < 0)
                 unread = 0;
+            if(lastConsumed == null){
+                unread++;
+            }
             if (unread != this.unread) {
                 if (this.props.setUnreadCount)
                     this.props.setUnreadCount(unread);
@@ -217,7 +221,7 @@ class ChatFrame extends React.Component {
             return undefined;
         let _this = this;
         let lastSID;
-        let lastIndex = 0;
+        let lastIndex = -1;
 
         let authorIDs = {};
         for (let message of messages) {
@@ -258,17 +262,17 @@ class ChatFrame extends React.Component {
 
         if (lastMessage)
             ret.push(lastMessage);
-        if(this.props.visible){
+        if(this.props.visible && lastIndex >= 0){
             this.activeChannel.setAllMessagesConsumed();
             this.updateUnreadCount(lastIndex, lastIndex);
         }else if(!this.props.visible){
             //TODO lastConsumedMessageIndex is wrong, not actually last seen
             let lastConsumed = this.lastConsumedMessageIndex;
-            if(lastConsumed < 0){
+            if(lastConsumed < 0 && lastIndex >=0){
                 lastConsumed = this.activeChannel.lastConsumedMessageIndex;
             }
-            if(lastConsumed !== undefined)
-            this.updateUnreadCount(lastConsumed, lastIndex);
+            if(lastConsumed !== undefined && lastIndex >= 0)
+                this.updateUnreadCount(lastConsumed, lastIndex);
         }
         this.props.auth.helpers.getUserProfilesFromUserProfileIDs(Object.keys(authorIDs));
 
