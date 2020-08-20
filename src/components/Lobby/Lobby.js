@@ -527,8 +527,8 @@ class Lobby extends React.Component {
                     }) : <></>
                 }
 
-                // BCP: We decided to remove the list of active video chats from the PaaG sidebar
                 {/*
+                // BCP: We decided to remove the list of active video chats from the PaaG sidebar
                 <div className="lobby-section-header">
                     Participants not currently in a video chat room
                 </div>
