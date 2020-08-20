@@ -133,7 +133,7 @@ class CollapsedChatDisplay extends React.Component{
                                  className="smallButton"
                                  danger
                                  loading={this.state.removeInProgress}
-            >Delete Channel</Button></Popconfirm>)
+            >Delete Channel (use with care!)</Button></Popconfirm>)
         }
         let popoverContent = <Space>{buttons}</Space>;
         let color = "";
