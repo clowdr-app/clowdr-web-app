@@ -209,7 +209,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
             curItems: items,
             nextUpdateTime: this.getNextUpdateTime(this.state.ProgramSessions)
         },() => {
-            console.log("Scrolling")
+            // console.log("Scrolling")
             this.scrollToNow();
             }
         );
