@@ -167,9 +167,7 @@ class ContextualActiveUsers extends React.Component {
             let activeSpace = this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : "Nowhere";
             let programInfo = <UpcomingProgram />
 
-            let videoChatRooms = <></>
-            /*
-            <div id="videoChatListContainer">
+            let videoChatRooms = <div id="videoChatListContainer">
                     <Divider className="sidebar-section-separator"></Divider>
                     <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
                         + activeSpace}>Video chat rooms</Tooltip></Divider>
@@ -280,25 +278,22 @@ class ContextualActiveUsers extends React.Component {
                                     {list}
                                 </Menu.SubMenu>
                                 // </Menu.Item>
-                            )
-                        }
-                        )
+                            )})
                             : <Collapse.Panel showArrow={false} header={<Skeleton />}></Collapse.Panel>}
                     </Menu>
                     <div style={{ textAlign: 'center' }}>
                         <NewRoomForm type="secondary" text="New video chat room" />
                     </div>
                 </div>
-            */
+
             tabs = <div id="socialTabContainer">
                 {programRoomSpecificContent}
                 {programInfo}
-                {videoChatRooms}
+                {/*videoChatRooms*/}
             </div>
         }
+        
         return (
-
-
             <div
                 id="contextualActiveUsers"
             // style={{backgroundColor: '#f0f2f5'}}>
