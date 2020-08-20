@@ -737,7 +737,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.user.getSessionToken());
                 this.parseLivePublicVideosSub.on('create', async (vid:BreakoutRoom) => { 
                     this.activePublicVideoRooms.push(vid);
-                    console.log("Created: " + vid)
                     for(let obj of this.activeRoomSubscribers){
                         obj.setState({activePublicVideoRooms: this.activePublicVideoRooms.concat([])});
                     }
@@ -751,7 +750,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 this.parseLivePublicVideosSub.on('update', async (vid:BreakoutRoom) => {
                     this.notifyUserOfChanges(vid);
                     this.activePublicVideoRooms = this.activePublicVideoRooms.map((room:BreakoutRoom)=>room.id == vid.id ? vid : room);
-                    console.log("Updated: " + vid.id)
                     for(let obj of this.activeRoomSubscribers){
                         obj.setState({activePublicVideoRooms: this.activePublicVideoRooms.concat([])});
                     }
