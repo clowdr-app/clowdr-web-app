@@ -78,7 +78,8 @@ class App extends Component {
             socialCollapsed: false,
             chatCollapsed: false,
             chatHeight: this.chatSize,
-            dirty: false
+            dirty: false,
+            isShowOtherPanes: false,
         }
 
         if(window.location.pathname.startsWith("/fromSlack") &&!this.props.clowdrAppState.user){
@@ -222,12 +223,16 @@ class App extends Component {
         if (this.state.isMagicLogin && (!window.location.pathname.startsWith("/fromSlack") || this.props.clowdrAppState.user)) {
             this.setState({isMagicLogin: false});
         }
+        if(!this.state.isShowOtherPanes && this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
+            this.setState({isShowOtherPanes: true});
     }
 
     componentDidMount() {
         if (this.props.clowdrAppState.currentConference)
             this.refreshConferenceInformation();
         this.props.clowdrAppState.history = this.props.history;
+        if(this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
+            this.setState({isShowOtherPanes: true});
 
     }
 
@@ -343,7 +348,6 @@ class App extends Component {
         if(topElement)
             topHeight = topElement.clientHeight;
 
-        let isLoggedIn = this.props.clowdrAppState.user != null;
         return (
                 <div className="App">
                     <EmojiPickerPopover />
@@ -369,7 +373,7 @@ class App extends Component {
                         <div className="main-area" style={{ height:"calc(100vh - "+(topHeight )+"px)", overflow: "auto"}}>
 
                             <SplitPane>
-                                <Pane initialSize={"250px"}>
+                                <Pane initialSize={this.state.isShowOtherPanes ? "250px" : 0}>
                                     <SocialTab collapsed={this.state.socialCollapsed} />
                                 </Pane>
                                 <Pane>
@@ -386,14 +390,14 @@ class App extends Component {
                                                 </div>
 
                                             </Pane>
-                                            <Pane initialSize={this.chatSize}>
+                                            <Pane initialSize={this.state.isShowOtherPanes ? this.chatSize : 0}>
                                                 <BottomChat setChatWindowHeight={(height)=>this.setState({chatHeight: height})}/>
                                             </Pane>
                                         </SplitPane>
                                     </div>
                                 {/*</Content>*/}
                                 </Pane>
-                                <Pane initialSize={"250px"}>
+                                <Pane initialSize={this.state.isShowOtherPanes ? "250px" : 0}>
                                     <div className="chatTab" id="rightPopout">
                                         <div id="activeUsersList"><ActiveUsersList /></div>
                                         <Divider className="sidebar-section-separator"></Divider>

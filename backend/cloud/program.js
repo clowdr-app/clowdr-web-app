@@ -1138,32 +1138,32 @@ Parse.Cloud.beforeDelete("ProgramRoom", async (request) => {
     }
 
 });
-Parse.Cloud.beforeDelete("ZoomRoom", async (request) => {
-    let room = request.object;
-    if(room.get("meetingID")){
-        let config = await getConfig(room.get("conference"));
-        const payload = {
-            iss: config.ZOOM_API_KEY,
-            exp: ((new Date()).getTime() + 5000)
-        };
-        const token = jwt.sign(payload, config.ZOOM_API_SECRET);
-        try {
-            //If we are changing the account, delete the meeting from zoom.
-            let res = await axios({
-                method: 'delete',
-                url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID"),
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'User-Agent': 'Zoom-api-Jwt-Request',
-                    'content-type': 'application/json'
-                }
-            });
-        }catch(err){
-            console.log(err);
-        }
-
-    }
-});
+// Parse.Cloud.beforeDelete("ZoomRoom", async (request) => {
+//     let room = request.object;
+//     if(room.get("meetingID")){
+//         let config = await getConfig(room.get("conference"));
+//         const payload = {
+//             iss: config.ZOOM_API_KEY,
+//             exp: ((new Date()).getTime() + 5000)
+//         };
+//         const token = jwt.sign(payload, config.ZOOM_API_SECRET);
+//         try {
+//             //If we are changing the account, delete the meeting from zoom.
+//             let res = await axios({
+//                 method: 'delete',
+//                 url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID"),
+//                 headers: {
+//                     'Authorization': 'Bearer ' + token,
+//                     'User-Agent': 'Zoom-api-Jwt-Request',
+//                     'content-type': 'application/json'
+//                 }
+//             });
+//         }catch(err){
+//             console.log(err);
+//         }
+//
+//     }
+// });
 Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
     let room = request.object;
     if(room.isNew()) {

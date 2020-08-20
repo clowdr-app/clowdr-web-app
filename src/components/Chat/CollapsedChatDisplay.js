@@ -30,7 +30,7 @@ class CollapsedChatDisplay extends React.Component{
             if(profileID == this.props.auth.userProfile.id)
                 profileID = p2.id;
             this.setState({title: "Loading..."});
-            this.props.auth.helpers.getUserProfilesFromUserProfileID(profileID).then((profile) => {
+            this.props.auth.programCache.getUserProfileByProfileID(profileID, null).then((profile) => {
                 this.setState({title: profile.get("displayName")})
             })
         } else if (chat.attributes.category == "announcements-global") {
@@ -133,7 +133,7 @@ class CollapsedChatDisplay extends React.Component{
                                  className="smallButton"
                                  danger
                                  loading={this.state.removeInProgress}
-            >Delete Channel</Button></Popconfirm>)
+            >Delete Channel (use with care!)</Button></Popconfirm>)
         }
         let popoverContent = <Space>{buttons}</Space>;
         let color = "";

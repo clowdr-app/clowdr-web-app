@@ -83,7 +83,9 @@ export default class ChatClient{
         }
         return chan.channel;
     }
-
+    async timeout(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
     async joinAndGetChannel(uniqueName) {
         if(!this.twilio){
             await this.chatClientPromise;
@@ -99,7 +101,13 @@ export default class ChatClient{
             await this.getChannelInfo(membership);
             return membership;
         }catch(err){
-            if(err.code ==50403) {
+            if(err.code == 20429){
+                //Back off, try again
+                this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
+                await this.timeout(1000 + Math.random()*4000);
+                return this.joinAndGetChannel(uniqueName);
+            }
+            else if(err.code ==50403) {
                 this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
                 console.log("Asking for bonded channel for " + channel.sid)
                 let res = await Parse.Cloud.run("chat-getBondedChannelForSID", {
@@ -215,7 +223,7 @@ export default class ChatClient{
             if(!this.emojiPickerCancelEvent){
                 this.emojiPickerCancelEvent = true;
                 document.addEventListener("click", (evt)=>{
-                    if(this.reactingTo){
+                    if(this.reactingToFrame){
                         let targetElement = evt.target;
                         do {
                             if (targetElement == this.emojiPickerRef.current || targetElement == this.emojiClickTarget) {
@@ -237,7 +245,7 @@ export default class ChatClient{
         this.emojiPickerRef = ref;
     }
     emojiSelected(event){
-        if(this.reactingTo){
+        if(this.reactingToFrame){
             this.reactingToFrame.sendReaction(this.reactingTo, event);
             this.reactingTo = null;
             this.reactingToFrame = null;

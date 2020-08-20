@@ -1017,3 +1017,30 @@ span.ant-divider-inner-text {
     z-index: 1000;
     position: absolute;
 }
+.notifications .ant-tag{
+    border-radius: 5px;
+    background-color: #f5222d;
+    color: white;
+    border: none;
+
+}
+.notifications .ant-tag .ant-badge{
+    padding-right: 5px;
+    /*padding-top: 4px;*/
+    /*padding-bottom: 4px;*/
+}
+.notifications .ant-tag .ant-badge-count{
+    background-color: #f5222d;
+}
+.chatEntryWrapper{
+    display: flex;
+    flex-direction: row;
+}
+.chatEntryWrapper > .ant-row{
+    margin-bottom: 0;
+    flex-grow: 10;
+}
+.emojiPickerButton{
+    padding: 5px;
+
+}

@@ -5,6 +5,7 @@ import ChatFrame from "../Chat/ChatFrame";
 import MultiChatWindow from "../Chat/MultiChatWindow"
 import {CloseOutlined, MinusOutlined, PlusOutlined, VideoCameraAddOutlined} from "@ant-design/icons"
 import Parse from "parse";
+import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
 class BottomChat extends React.Component {
     constructor(props) {
@@ -77,7 +78,7 @@ class BottomChat extends React.Component {
         if (!this.triggeredUserLoad) {
             this.setState({loading: true})
             this.triggeredUserLoad = true;
-            let users = await this.props.auth.helpers.getUsers();
+            let users = await this.props.auth.programCache.getUserProfiles(null);
             const options = Object.keys(users).map(d => {
                 if(!users[d].get('displayName'))
                     return {
@@ -308,7 +309,7 @@ class BottomChatWindow extends React.Component{
             let profileID = p1.id;
             if(profileID == this.props.auth.userProfile.id)
                 profileID = p2.id;
-            this.props.auth.helpers.getUserProfilesFromUserProfileID(profileID).then((profile) => {
+            this.props.auth.programCache.getUserProfileByProfileID(profileID, null).then((profile) => {
                 this.setState({title: profile.get("displayName")})
             })
             return;
@@ -323,13 +324,18 @@ class BottomChatWindow extends React.Component{
                 title = chat.channel.sid;
             }
             try{
-                let profiles = await this.props.auth.helpers.getUserProfilesFromUserProfileIDs(chat.members);
-                if(profiles.length != chat.members.length){
-                    console.log(chat.members)
-                    console.log(profiles)
-                    throw "didn't get back all profiles";
-                }
                 let membersStr = "In this chat: " + profiles.map(p => p.get("displayName")).join(', ');
+                let profiles = chat.members.map((id)=><UserStatusDisplay
+                    profileID={id}
+                    inline={true}
+                    key={id}
+                />)
+                if(profiles.length == 1){
+                    profiles = profiles[0];
+                }
+                else if(profiles.length > 1){
+                    profiles = profiles.reduce((prev,cur)=>[prev, ", ", cur]);
+                }
                 this.setState({members: membersStr, title: title, membersCount: chat.members.length});
             }
             catch(err){

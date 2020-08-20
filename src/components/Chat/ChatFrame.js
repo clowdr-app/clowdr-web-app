@@ -6,7 +6,20 @@ import {emojify} from 'react-emojione';
 // import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {Divider, Form, Input, Layout, List, Popconfirm, Popover, Tooltip, notification, Button, Tag} from 'antd';
+import {
+    Divider,
+    Form,
+    Input,
+    Layout,
+    List,
+    Popconfirm,
+    Popover,
+    Tooltip,
+    notification,
+    Button,
+    Tag,
+    message
+} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -51,6 +64,7 @@ class ChatFrame extends React.Component {
         this.form = React.createRef();
         this.lastConsumedMessageIndex= -1;
         this.lastSeenMessageIndex = -1;
+        this.pendingReactions = {};
     }
 
     formatTime(timestamp) {
@@ -148,13 +162,7 @@ class ChatFrame extends React.Component {
             if(chanInfo.attributes.category == "announcements-global"){
                 this.isAnnouncements = true;
                 //find out if we are able to write to this.
-                const accesToConf = new Parse.Query('InstancePermission');
-                accesToConf.equalTo("conference", this.props.auth.currentConference);
-                let actionQ = new Parse.Query("PrivilegedAction");
-                actionQ.equalTo("action","announcement-global");
-                accesToConf.matchesQuery("action", actionQ);
-                const hasAccess = await accesToConf.first();
-                if(!hasAccess){
+                if(!this.props.auth.isModerator && !this.props.auth.isAdmin && !this.props.auth.isManager){
                     console.log("read only")
                     stateUpdate.readOnly = true;
                 }
@@ -278,7 +286,6 @@ class ChatFrame extends React.Component {
             if (lastConsumed !== undefined && lastIndex >= 0)
                 this.updateUnreadCount(lastConsumed, lastIndex);
         }
-        this.props.auth.helpers.getUserProfilesFromUserProfileIDs(Object.keys(authorIDs));
 
         this.setState({
             groupedMessages: ret,
@@ -307,7 +314,7 @@ class ChatFrame extends React.Component {
         this.groupMessages(this.messages[channel.sid], channel.sid);
         if (this.isAnnouncements){
             //get the sender
-            this.props.auth.helpers.getUserProfilesFromUserProfileID(message.author).then((profile)=>{
+            this.props.auth.programCache.getUserProfileByProfileID(message.author,null).then((profile)=>{
                 const args = {
                     message: <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
                     description:
@@ -331,7 +338,6 @@ class ChatFrame extends React.Component {
     };
 
     messageRemoved = (channel, message) => {
-        console.log("WF: msg removed")
         this.messages[channel.sid] = this.messages[channel.sid].filter((v) => v.sid != message.sid)
         this.groupMessages(this.messages[channel.sid], channel.sid);
     };
@@ -371,13 +377,31 @@ class ChatFrame extends React.Component {
         }
     };
 
-    sendReaction(message, event) {
-        let emoji = event.colons? event.colons: event.id;
-        if (this.state.reactions?.[message.sid]?.[emoji]?.emojiMessage) {
-            this.state.reactions[message.sid][emoji].emojiMessage.remove();
+    sendReaction(msg, event) {
+        if(msg == null){
+            //add to the current input
+            let message = this.form.current.getFieldValue("message");
+            if(message === undefined)
+                message = "";
+
+            let values={message: message + event.native}
+            this.form.current.setFieldsValue(values);
             return;
         }
-        this.activeChannel.sendMessage(emoji, {associatedMessage: message.sid});
+        if(this.pendingReactions[msg.sid]){
+            return;
+        }
+        this.pendingReactions[msg.sid] = true;
+        let emoji = event.colons? event.colons: event.id;
+        if (this.state.reactions?.[msg.sid]?.[emoji]?.emojiMessage) {
+            this.state.reactions[msg.sid][emoji].emojiMessage.remove().then(()=>{
+                this.pendingReactions[msg.sid] = false;
+            });
+            return;
+        }
+        this.activeChannel.sendMessage(emoji, {associatedMessage: msg.sid}).then(()=>{
+            this.pendingReactions[msg.sid] = false;
+        });
     }
 
     deleteMessage(message) {
@@ -567,7 +591,8 @@ class ChatFrame extends React.Component {
                     //}}
                 >
                     <Form ref={this.form} className="embeddedChatMessageEntry" name={"chat"+this.props.sid}>
-                        <Form.Item style={{width:"100%", marginBottom: "0px"}} name="message">
+                        <div className="chatEntryWrapper">
+                        <Form.Item name="message">
                             <Input.TextArea
                                 disabled={this.state.readOnly}
                                 className="embeddedChatMessage"
@@ -575,10 +600,15 @@ class ChatFrame extends React.Component {
                                 autoSize={{minRows: 1, maxRows: 6}}
                                 onPressEnter={this.sendMessage}
                             />
+
                             {/*<EmojiPickerPopover emojiSelected={(emoji)=>{*/}
                             {/*    console.log(emoji)*/}
                             {/*}} />*/}
                         </Form.Item>
+                            <Button className="emojiPickerButton" onClick={(event)=>{
+                                this.props.auth.chatClient.openEmojiPicker(null, event, this);
+                            }}><SmileOutlined /></Button>
+                        </div>
                     </Form>
                 </div>
             }
@@ -607,7 +637,7 @@ class ChatFrame extends React.Component {
             <div key="emojiPicker">
                 <Tag key="add-react" onClick={(event)=>{
                     this.props.auth.chatClient.openEmojiPicker(m, event, this);
-                }}><SmileOutlined /></Tag>
+                }}><SmileOutlined />+</Tag>
             </div>
         );
 
@@ -650,8 +680,8 @@ class ChatFrame extends React.Component {
                     !reactions ? <></> : (
                     <div className="reactionWrapper">
                         {
-                            Object.keys(reactions).map(emojiId => {
-                                if (this.state.reactions[m.sid][emojiId] <= 0)
+                            Object.keys(reactions).sort().map(emojiId => {
+                                if(this.state.reactions[m.sid][emojiId] <= 0)
                                 return <></>;
                                 let hasMyReaction = this.state.reactions[m.sid][emojiId].emojiMessage;
                                 let tagClassname = (hasMyReaction ? "emojiReact-mine" : "emojiReact");
@@ -679,7 +709,7 @@ class ChatFrame extends React.Component {
                         }
                         <Tag key="add-react" onClick={(event)=>{
                             this.props.auth.chatClient.openEmojiPicker(m, event, this);
-                        }}><SmileOutlined /></Tag>
+                        }}><SmileOutlined />+</Tag>
 
                     </div>
                 )}
