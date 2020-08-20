@@ -28,9 +28,7 @@ class ContextualActiveUsers extends React.Component {
 
     setExpandedProgramRoom(programRoom) {
         this.setState({ programRoom: programRoom });
-
     }
-
 
     async componentDidMount() {
         let user = this.props.auth.user;
@@ -40,7 +38,6 @@ class ContextualActiveUsers extends React.Component {
         } else {
             this.setState({ loggedIn: false });
         }
-
     }
 
     areEqualID(o1, o2) {
