@@ -26,7 +26,6 @@ class ContextualActiveUsers extends React.Component {
         this.props.auth.leftSidebar = this;
     }
 
-
     setExpandedProgramRoom(programRoom) {
         this.setState({ programRoom: programRoom });
 
@@ -115,7 +114,6 @@ class ContextualActiveUsers extends React.Component {
         }
         this.setState({ filteredRoom: roomID, filteredUser: userID });
     }
-
 
     render() {
         if (!this.state.loggedIn) {
@@ -303,9 +301,6 @@ class ContextualActiveUsers extends React.Component {
 
         );
     }
-
-
-
 }
 
 const AuthConsumer = (props) => (
