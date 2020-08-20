@@ -732,8 +732,8 @@ span.ant-divider-inner-text {
     height: 100%;
 }
 .multiChatChannelChanger{
-    min-width: 100px;
-    max-width: 200px;
+    min-width: 200px;
+    max-width: 250px;
     flex-grow: 1;
     height: 100%;
 }
