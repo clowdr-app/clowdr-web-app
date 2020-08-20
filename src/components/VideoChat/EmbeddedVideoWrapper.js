@@ -37,6 +37,7 @@ import ToggleScreenShareButton
 import EndCallButton from "clowdr-video-frontend/lib/components/Controls/EndCallButton/EndCallButton";
 import AuthUserContext from "../Session/context";
 import useLocalTracks from "clowdr-video-frontend/lib/components/VideoProvider/useLocalTracks/useLocalTracks";
+import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
 let backgroundImg = require('../../clowdr-background.jpg');
 const Main = styled('main')({
@@ -325,27 +326,6 @@ const useStyles = makeStyles((theme) =>
     })
 );
 
-class UserProfileDisplay extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {name: this.props.id, loading: true};
-    }
-
-    async componentDidMount() {
-        let profile = await this.props.clowdrAppState.helpers.getUserRecord(this.props.id);
-        if (profile)
-            this.setState({name: profile.get("displayName"), loading: false});
-
-    }
-
-    render() {
-        if (this.state.loading) {
-            return <Skeleton.Input active style={{width: '200px'}}/>
-        }
-        return <span>{this.state.name}</span>
-    }
-}
-
 function ParticipantInfo({participant, onClick, isSelected, children}) {
     const publications = usePublications(participant);
 
@@ -378,7 +358,7 @@ function ParticipantInfo({participant, onClick, isSelected, children}) {
                 <div className={classes.infoRow}>
                     <h4 className={classes.identity}>
                         <ParticipantConnectionIndicator participant={participant}/>
-                        <UserProfileDisplay clowdrAppState={clowdrAppState} id={participant.identity}/>
+                        <UserStatusDisplay inline={true} profileID={participant.identity}/>
                     </h4>
                     <NetworkQualityLevel qualityLevel={networkQualityLevel}/>
                 </div>

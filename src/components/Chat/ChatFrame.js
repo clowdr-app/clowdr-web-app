@@ -282,7 +282,6 @@ class ChatFrame extends React.Component {
             if(lastConsumed !== undefined && lastIndex >= 0)
                 this.updateUnreadCount(lastConsumed, lastIndex);
         }
-        this.props.auth.helpers.getUserProfilesFromUserProfileIDs(Object.keys(authorIDs));
 
         this.setState({
             groupedMessages: ret,
@@ -311,7 +310,7 @@ class ChatFrame extends React.Component {
         this.groupMessages(this.messages[channel.sid], channel.sid);
         if(this.isAnnouncements){
             //get the sender
-            this.props.auth.helpers.getUserProfilesFromUserProfileID(message.author).then((profile)=>{
+            this.props.auth.programCache.getUserProfileByProfileID(message.author,null).then((profile)=>{
                 const args = {
                     message: <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
                     description:

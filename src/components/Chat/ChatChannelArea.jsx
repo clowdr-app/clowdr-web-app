@@ -55,13 +55,18 @@ class ChatChannelArea extends React.Component {
                 title = chat.channel.friendlyName;
             }
             try {
-                let profiles = await this.props.auth.helpers.getUserProfilesFromUserProfileIDs(chat.members);
-                if (profiles.length != chat.members.length) {
-                    console.log(chat.members)
-                    console.log(profiles)
-                    throw "didn't get back all profiles";
+                let profiles = chat.members.map((id)=><UserStatusDisplay
+                    profileID={id}
+                    inline={true}
+                    key={id}
+                />)
+                if(profiles.length == 1){
+                    profiles = profiles[0];
                 }
-                let membersStr = "In this chat: " + profiles.map(p => p.get("displayName")).join(', ');
+                else if(profiles.length > 1){
+                    profiles = profiles.reduce((prev,cur)=>[prev, ", ", cur]);
+                }
+                let membersStr = <div>In this chat: {profiles}</div>
                 this.setState({members: membersStr, title: title, membersCount: chat.members.length});
             } catch (err) {
                 console.log(chat.channel.sid)
