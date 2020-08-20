@@ -162,19 +162,14 @@ class ContextualActiveUsers extends React.Component {
                     <Divider>Questions for Speaker</Divider>
                     <iframe className="slido" title={this.state.programRoom.get("name")} src={q_url} allowFullScreen />
                 </div>
-
             }
-
 
             let activeSpace = this.props.auth.activeSpace ? this.props.auth.activeSpace.get("name") : "Nowhere";
             let programInfo = <UpcomingProgram />
-            tabs = <div id="socialTabContainer">
 
-                {programRoomSpecificContent}
-
-                {programInfo}
-
-                <div id="videoChatListContainer">
+            let videoChatRooms = <></>
+            /*
+            <div id="videoChatListContainer">
                     <Divider className="sidebar-section-separator"></Divider>
                     <Divider className="social-sidebar-divider"><Tooltip mouseEnterDelay={0.5} title={"These rooms feature video and chat, and are associated with the room that you are currently in - "
                         + activeSpace}>Video chat rooms</Tooltip></Divider>
@@ -294,6 +289,11 @@ class ContextualActiveUsers extends React.Component {
                         <NewRoomForm type="secondary" text="New video chat room" />
                     </div>
                 </div>
+            */
+            tabs = <div id="socialTabContainer">
+                {programRoomSpecificContent}
+                {programInfo}
+                {videoChatRooms}
             </div>
         }
         return (
