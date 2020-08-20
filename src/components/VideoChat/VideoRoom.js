@@ -59,6 +59,7 @@ class VideoRoom extends Component {
 
     async componentDidMount() {
         try {
+            this.mounted = true;
             if (this.props.room){
                 await this.joinCallEmbedded(this.props.room, this.props.conference);
             } else {
@@ -72,6 +73,7 @@ class VideoRoom extends Component {
 
     componentWillUnmount() {
         console.log("Unmounting video room")
+        this.mounted = false;
         this.setState({isMounted: false});
         this.props.clowdrAppState.helpers.setGlobalState({currentRoom: null});
         this.props.clowdrAppState.setSocialSpace("Lobby");
@@ -94,6 +96,7 @@ class VideoRoom extends Component {
     }
 
     async joinCallEmbedded(room, conf) {
+        console.log("Join call embedded: " + room.id)
         let user = this.props.clowdrAppState.user;
 
         this.setState({loadingMeeting: 'true', room: room})
@@ -193,6 +196,7 @@ class VideoRoom extends Component {
         this.confName = confName;
         this.roomID = roomID;
 
+
         //find the room in parse...
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
         let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
@@ -257,8 +261,8 @@ class VideoRoom extends Component {
         }, timeout);
         // if(room.get("socialSpace"))
         //     this.props.clowdrAppState.setSocialSpace(null,room.get("socialSpace"));
-
-        room = await this.props.clowdrAppState.helpers.populateMembers(room);
+        if(!this.mounted)
+            return;
         console.log("Joining room " + room.id + ", setting chat channel: " + room.get("twilioChatID"))
         // this.props.clowdrAppState.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         let watchedByMe = false;
@@ -483,11 +487,11 @@ class VideoRoom extends Component {
             let roomID = this.props.match.params.roomName;
 
             if(this.state.error == "authentication"){
-                description = <span>Sorry, we were not able to validate your access for the room '{roomID}'. Please double check that the room exists, and if it is a private room, that you have access to it. You might also try to re-login by typing '/video' in {conf} Slack, and selecting the room.</span>
+                description = <span>Sorry, an internal error ocurred - please refresh your browser and try again</span>
             }
             else if(this.state.error == "invalidRoom"){
                description = <span>Sorry, but we are unable to find a video room called '{roomID}'
-                   in the CLOWDR instance for Slack Team "{conf}".
+                   in the CLOWDR instance for "{conf}".
                     Most rooms automatically garbage collect 5 minutes after the last member departs, so the room may have ceased to exist.
                     Please try to select a video room from the list on the left, or create a new room.
                <NewRoomForm /></span>
@@ -793,10 +797,25 @@ class RoomVisibilityController extends React.Component {
 
         this.setState({hasChange: hasChange, isError: isError})
     }
+    async getUserProfilesFromUserIDs(ids){
+        //TODO: worth caching?
+        let toFetch = [];
+        for(let id of ids){
+            let u = new Parse.User();
+            u.id = id;
+            toFetch.push(u);
+        }
+        let q = new Parse.Query('UserProfile');
+        q.containedIn("user", toFetch);
+        q.equalTo("conference", this.props.clowdrAppState.currentConference);
+        let ret = await q.find();
+        return ret;
+    }
 
     async componentDidMount() {
         let selected = Object.keys(this.props.acl.permissionsById).filter(v=>!v.startsWith("role"));
-        let profiles = await this.props.clowdrAppState.helpers.getUserProfilesFromUserIDs(selected);
+
+        let profiles = await this.getUserProfilesFromUserIDs(selected)
         let selectedIDs = profiles.map(p=>p.get("user").id);
         this.setState({selected: selectedIDs, users: profiles});
     }
@@ -849,8 +868,12 @@ class RoomVisibilityController extends React.Component {
         if (!this.triggeredUserLoad) {
             this.setState({loading: true})
             this.triggeredUserLoad = true;
-            let users = await this.props.clowdrAppState.helpers.getUsers();
-            this.setState({loading: false, users: users});
+            let users = await this.props.clowdrAppState.programCache.getUserProfiles();
+            let usersByID = {};
+            for(let user of users){
+                usersByID[user.id] = user;
+            }
+            this.setState({loading: false, users: usersByID});
         }
     }
 

@@ -185,6 +185,21 @@ export default class ProgramCache {
         return person;
     }
 
+    async getUserProfileByProfileID(id, component){
+        let items = await this.getUserProfiles();
+        if(component) {
+            if (!this._updateSubscribers['UserProfile'])
+                this._updateSubscribers['UserProfile'] = {};
+            if (!this._updateSubscribers['UserProfile'][id])
+                this._updateSubscribers['UserProfile'][id] = [];
+            this._updateSubscribers['UserProfile'][id].push(component);
+        }
+        return this._dataById['UserProfile'][id];
+    }
+
+    unsafeGetProfileByID(id){
+        return this._dataById['UserProfile'][id];
+    }
     async getUserProfiles(objToSetStateOnUpdate) {
         return this._fetchTableAndSubscribe("UserProfile",  objToSetStateOnUpdate);
     }

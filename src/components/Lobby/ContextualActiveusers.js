@@ -1,12 +1,11 @@
 import * as React from "react";
 import {AuthUserContext} from "../Session";
-import {Collapse, Divider, Menu, Popconfirm, Select, Skeleton, Tooltip, Typography} from "antd";
+import {Collapse, Divider, Menu, Popconfirm, Skeleton, Tooltip, Typography} from "antd";
 import {withRouter} from "react-router-dom";
 import {LockTwoTone} from "@ant-design/icons"
 import NewRoomForm from "./NewRoomForm";
 import UserStatusDisplay from "./UserStatusDisplay";
 import Parse from "parse";
-import PresenceForm from "./PresenceForm";
 import UpcomingProgram from "./UpcomingProgram";
 
 
@@ -17,8 +16,6 @@ class ContextualActiveUsers extends React.Component {
         this.state = {
             loading: this.props.auth.videoRoomsLoaded, currentRoom: this.props.auth.currentRoom,
             collapsed: this.props.collapsed,
-            activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms,
-            activePublicVideoRooms: this.props.auth.activePublicVideoRooms,
             currentSocialSpaceMembers: [],
             user: this.props.auth.user,
             activeSpace: this.props.auth.activeSpace,
@@ -39,6 +36,7 @@ class ContextualActiveUsers extends React.Component {
     async componentDidMount() {
         let user = this.props.auth.user;
         if (user) {
+            this.props.auth.subscribeToBreakoutRooms(this);
             this.setState({loggedIn: true});
         } else {
             this.setState({loggedIn: false});
@@ -63,15 +61,6 @@ class ContextualActiveUsers extends React.Component {
             if (this.props.auth.user) {
                 stateUpdate.loggedIn = true;
             }
-        }
-        if (this.props.auth.videoRoomsLoaded != this.state.loading) {
-            stateUpdate.loading = this.props.auth.videoRoomsLoaded;
-        }
-        if (this.props.auth.activePrivateVideoRooms != this.state.activePrivateVideoRooms) {
-            stateUpdate.activePrivateVideoRooms = this.props.auth.activePrivateVideoRooms;
-        }
-        if (this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms) {
-            stateUpdate.activePublicVideoRooms = this.props.auth.activePublicVideoRooms;
         }
         if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
             stateUpdate.currentRoom = this.props.auth.currentRoom;
@@ -148,7 +137,6 @@ class ContextualActiveUsers extends React.Component {
             topHeight = topElement.clientHeight;
 
         let tabs = "";
-        let liveMembers = 0   // BCP: Seems not to be used??
         let allActiveRooms = [];
         if(!this.state.activePrivateVideoRooms)
             allActiveRooms = this.state.activePublicVideoRooms;
@@ -163,24 +151,6 @@ class ContextualActiveUsers extends React.Component {
         //Also make a fake rom for the lobby.
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 
-
-        if(this.state.filteredRoom)
-            allActiveRooms = allActiveRooms.filter(r=>r.id == this.state.filteredRoom);
-        let searchOptions = [];
-
-
-        for (let room of allActiveRooms) {
-            searchOptions.push({label: "#" + room.get("title"), value: room.id});
-            if (room && room.get("members")) {
-                searchOptions = searchOptions.concat(room.get("members").map(u => {
-                    if(u)
-                        return {label: "@" + u.get("displayName"), value: u.id + "@" + room.id}
-                    else
-                        return {label: "@???", value: "??"}
-                }));
-                liveMembers += room.get("members").length;
-            }
-        }
 
         if (!this.state.collapsed) {
 
@@ -294,9 +264,10 @@ class ContextualActiveUsers extends React.Component {
                         }
                     let list;
                     let header = joinLink;
-                        if (item.get("members") && item.get("members").length > 0)
-                            list = item.get("members").map(user=>{
-                                if(user) {
+                        if (item.get("members") && item.get("members").length > 0) {
+                            list = item.get("members").map(user => {
+                                if (user) {
+                                    console.log(user)
                                     let className = "personHoverable";
                                     if (this.state.filteredUser == user.id)
                                         className += " personFiltered"
@@ -305,7 +276,7 @@ class ContextualActiveUsers extends React.Component {
                                     </Menu.Item>
                                 }
                             }) //}>
-                        else
+                        } else
                             list = <></>
                         return (
                             // <Menu.Item key={item.id}>

@@ -19,7 +19,7 @@ class UserStatusDisplay extends React.Component{
     componentDidMount() {
         this.mounted = true;
 
-        this.props.auth.helpers.getUserProfilesFromUserProfileID(this.state.id, this).then(profile=>{
+        this.props.auth.programCache.getUserProfileByProfileID(this.state.id, this).then(profile=>{
             if(!this.mounted)
                 return;
             let userStatus = this.props.auth.helpers.presences[this.state.id];

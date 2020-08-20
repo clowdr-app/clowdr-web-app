@@ -1,7 +1,7 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
 import Parse from "parse"
-import {Badge, Button} from "antd";
+import {Badge, Button, Tag, Tooltip} from "antd";
 import {ShrinkOutlined, ExpandAltOutlined} from "@ant-design/icons";
 // @ts-ignore
 import {Document, Page, pdfjs} from 'react-pdf';
@@ -15,6 +15,7 @@ import ChatChannelChanger from "./ChatChannelChanger"
 import ChatFrame from "./ChatFrame"
 import ChatChannelArea from "./ChatChannelArea"
 import {Channel} from "twilio-chat/lib/channel";
+import MultiChatWindowHeader from "./MultiChatWindowHeader";
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -46,6 +47,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
     private channelConsumers: ChatChannelConsumer[];
     private unreadConsumers: Map<string, object[]>;
     private unreadCounts: Map<string, {count : number, category : string}>; // sid -> {count, category}
+    private notificationHeader?: MultiChatWindowHeader;
     constructor(props: MultiChatWindowProps) {
         super(props);
         this.unreadConsumers = new Map<string, object[]>();
@@ -129,13 +131,13 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
             let oldCount = obj.count;
             let cat = obj.category;
             if (cat == "dm")
-                this.setState({nDMs: Math.max(0, this.state.nDMs + count - oldCount)});
+                this.notificationHeader?.setState({nDMs: Math.max(0, this.notificationHeader?.state.nDMs + count - oldCount)});
             else if (cat =="subscriptions")
-                this.setState({nSubscribedMessages: Math.max(0, this.state.nSubscribedMessages + count - oldCount)});
+                this.notificationHeader?.setState({nSubscribedMessages: Math.max(0, this.notificationHeader?.state.nSubscribedMessages + count - oldCount)});
             else if (cat =="others")
-                this.setState({nOtherMessages: Math.max(0, this.state.nOtherMessages + count - oldCount)});
+                this.notificationHeader?.setState({nOtherMessages: Math.max(0, this.notificationHeader?.state.nOtherMessages + count - oldCount)});
             else if (cat =="papers")
-                this.setState({nPaperMessages: Math.max(0, this.state.nPaperMessages + count - oldCount)});
+                this.notificationHeader?.setState({nPaperMessages: Math.max(0, this.notificationHeader?.state.nPaperMessages + count - oldCount)});
 
             this.unreadCounts.set(sid, {count: count, category: cat});
         }
@@ -147,22 +149,11 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         this.setState({expanded: expand})
     }
 
+
     render() {
         // if (this.state.loading)
         //     return <Spin/>
-        let nMessages = {
-            nDMs: 0,
-            nMyChannelMessages: 0,
-            otherChannelMessages: 0,
-            paperChannelMessages: 0
-        }
 
-        let notifications = <span className="notifications">
-            <Badge count={this.state.nDMs}  title="New DMs" />&nbsp;
-            <Badge count={this.state.nSubscribedMessages}  title="New messages in subscribed channels" style={{ backgroundColor: '#CD2EC9' }}/>&nbsp;
-            <Badge count={this.state.nOtherMessages}  title="New messages in other channels" style={{ backgroundColor: '#151388' }}/>&nbsp;
-            <Badge count={this.state.nPaperMessages}  title="New messages in paper channels" style={{ backgroundColor: '#087C1D' }}/>
-            </span>;
 
         let icon = this.state.expanded ? <ShrinkOutlined title="Minimize panel"/> : <ExpandAltOutlined title="Expand panel"/>
         let actions = <span className="actions">
@@ -170,7 +161,9 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
                         onClick={this.changeSize.bind(this, !this.state.expanded)}/></span> 
         
         return <div className="multiChatWindow">
-            <div className="multiChatWindowHeader"><span className="title">Text Channels</span> {notifications} {actions}</div>
+            <div className="multiChatWindowHeader"><span className="title">Text Channels</span> <MultiChatWindowHeader onMount={(header)=>{
+                this.notificationHeader = header;
+            }}/> {actions}</div>
             <div
                 className="multiChatWindowContent"
         >

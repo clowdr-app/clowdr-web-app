@@ -84,6 +84,7 @@ class SlackToVideo extends React.Component {
     async setPassword(values){
         this.setState({updating: true});
         this.props.clowdrAppState.user.setPassword(values.password);
+        this.props.clowdrAppState.user.set("loginKey",null);
         this.props.clowdrAppState.user.set("passwordSet",true);
         await this.props.clowdrAppState.user.save();
         this.setState({updating: false, step: 2});

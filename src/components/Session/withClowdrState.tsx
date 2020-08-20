@@ -35,6 +35,8 @@ interface State {
     getChatClient: any,
     setSocialSpace: any,
     getConferenceBySlackName: any,
+    subscribeToBreakoutRooms: any;
+    cancelBreakoutRoomsSubscription: any;
     setActiveRoom: any,
     currentConference: ClowdrInstance | undefined | null,  // TS: Really??
     activeRoom: any,
@@ -42,10 +44,6 @@ interface State {
     chatClient: any,
     parseLive: any,
     presences: any,
-    videoRoomsLoaded: boolean,
-    liveVideoRoomMembers: any,
-    activePublicVideoRooms: BreakoutRoom[],
-    activePrivateVideoRooms: BreakoutRoom[],
     userProfile: UserProfile | null,  // TS: Or should it be undefined??
     permissions: any,
     leftSidebar: any,
@@ -78,12 +76,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         //Jon: Yes, I think this is no longer used
         // BCP: OK, removing it (and all references to it)
         isLoggedIn: boolean;
-        // TS: What is the difference between the next two things??
-        //Jon: One is a list of all of the profiles that have been loaded, another of promises to load them.
-        loadingProfiles: Record<UserProfileID, (_:UserProfile)=>void>;
-        userProfiles: Record<UserID, Promise<UserProfile>>;
-        unwrappedProfiles: Record<UserID, UserProfile>;
-        chatWaiters: ((_:ChatClient)=>void)[];  
+        chatWaiters: ((_:ChatClient)=>void)[];
         channelChangeListeners: never[]; // TS: Never assigned or used
         //Jon: This can be deleted
         presenceWatchers: React.Component[];  // or: {setState: (arg0: { presences: {}) => void }
@@ -93,7 +86,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         parseLive: any; // TS: should be Parse.LiveQueryClient, I think, but the type declaration file doesn't seem to include it!
         fetchingUsers: boolean;
         expandedProgramRoom: any;
-        usersPromise: any;
         parseLivePublicVideosSub: any;
         parseLivePrivateVideosSub: any;
         parseLiveActivitySub: any;
@@ -113,6 +105,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         isModerator: boolean;
         isManager: boolean;
         isClowdrAdmin: boolean;
+        activeRoomSubscribers: React.Component[];
+        activePrivateVideoRooms: BreakoutRoom[];
 
         constructor(props: Props) {
             super(props);
@@ -120,9 +114,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             this.watchedRoomMembers = {};
             // this.authCallbacks = [];
             this.isLoggedIn = false;
-            this.loadingProfiles = {};
-            this.userProfiles = {};
-            this.unwrappedProfiles = {};
             this.chatWaiters = [];
             this.channelChangeListeners = [];
             this.presenceWatchers = [];
@@ -135,6 +126,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             this.isModerator = false;
             this.isManager = false;
             this.isClowdrAdmin = false;
+            this.activeRoomSubscribers = [];
+            this.activePrivateVideoRooms = [];
 
             // @ts-ignore     TS: Again, this seems to exist in the Parse library but not its type declarations!
             this.parseLive = new Parse.LiveQueryClient({
@@ -147,20 +140,13 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             let exports = {
                 getBreakoutRoom: this.getBreakoutRoom.bind(this),
                 cancelBreakoutRoomSubscription: this.cancelBreakoutRoomSubscription.bind(this),
-                unwrappedProfiles: this.unwrappedProfiles,
                 setExpandedProgramRoom: this.setExpandedProgramRoom.bind(this),
                 presences: this.presences,
-                getUsers: this.getUsers.bind(this),
                 createOrOpenDM: this.createOrOpenDM.bind(this),
                 getRoleByName: this.getRoleByName.bind(this),
                 setActiveConference: this.setActiveConference.bind(this),
-                populateMembers: this.populateMembers.bind(this),
                 setGlobalState: this.setState.bind(this),//well that seems dangerous...
-                getUserProfilesFromUserIDs: this.getUserProfilesFromUserIDs.bind(this),
-                getUserProfilesFromUserProfileIDs: this.getUserProfilesFromUserProfileIDs.bind(this),
-                getUserProfilesFromUserProfileID: this.getUserProfilesFromUserProfileID.bind(this),
                 // ifPermission: this.ifPermission.bind(this),
-                getUserRecord: this.getUserRecord.bind(this),
                 getPresences: this.getPresences.bind(this),
                 cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
                 unmountProfileDisplay: this.unmountProfileDisplay.bind(this),
@@ -184,13 +170,11 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 currentConference: undefined,
                 activeRoom: null,
                 helpers: exports,
+                subscribeToBreakoutRooms: this.subscribeToBreakoutRooms.bind(this),
+                cancelBreakoutRoomsSubscription: this.cancelBreakoutRoomsSubscription.bind(this),
                 chatClient: new ChatClient(this.setState.bind(this)),
                 parseLive: this.parseLive,
                 presences: {},
-                videoRoomsLoaded: false,
-                liveVideoRoomMembers: 0,
-                activePublicVideoRooms: [],
-                activePrivateVideoRooms: [],
                 userProfile: null,
                 permissions: null,
                 leftSidebar: null,
@@ -268,41 +252,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             if (this.state.leftSidebar) {
                 this.state.leftSidebar.setExpandedProgramRoom(programRoom);
             }
-        }
-        getUsers() {
-            if (!this.usersPromise)
-                this.usersPromise = new Promise(async (resolve, reject) => {
-                    let parseUserQ = new Parse.Query(UserProfile)
-                    parseUserQ.equalTo("conference", this.state.currentConference);
-                    parseUserQ.limit(5000);
-                    // @ts-ignore     TS: Apparently the Parse type definitions are not up to date (this was added recently)
-                    parseUserQ.withCount();
-                    let nRetrieved = 0;
-                    // @ts-ignore  TS: @Jon -- need help to figure out what type find is returning!
-                    // Jon: an object with fields {count:int, results: UserProfile[]}
-                    // @Jon: That is not what TS thinks:
-                    // (method) globalThis.Parse.Query<UserProfile>.find(options?: Parse.Query<T extends Parse.Object<Parse.Attributes> = Parse.Object<Parse.Attributes>>.FindOptions | undefined): Promise<UserProfile[]>
-                    let {count, results} = await parseUserQ.find();
-                    nRetrieved = results.length;
-                    let allUsers: any[] = [];   // TS: ???
-                    allUsers = allUsers.concat(results);
-                    while (nRetrieved < count) {
-                        let parseUserQ = new Parse.Query(UserProfile)
-                        parseUserQ.skip(nRetrieved);
-                        parseUserQ.equalTo("conference", this.state.currentConference);
-                        parseUserQ.limit(5000);
-                        let results = await parseUserQ.find();
-                        // results = dat.results;
-                        nRetrieved += results.length;
-                        if (results)
-                            allUsers = allUsers.concat(results);
-                    }
-                    let usersByID : Record<string,UserProfile> = {};
-                    allUsers.forEach((u:UserProfile)=>usersByID[u.id]=u);
-                    resolve(usersByID);
-                });
-            return this.usersPromise;
-
         }
 
         conferenceChanged(){
@@ -400,7 +349,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     let newPresences = this.newPresences;
                     this.newPresences = [];
                     this.presenceUpdateScheduled = false;
-                    await this.getUserProfilesFromUserProfileIDs(newPresences.map(p=>p.get("user").id));
                     for(let presence of newPresences){
                         this.presences[presence.get("user").id] = presence;
                     }
@@ -430,7 +378,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
 
             this.socialSpaceSubscription = this.state.parseLive.subscribe(query, user.getSessionToken());
-            console.log("Subscribed" +  user.getSessionToken())
             this.socialSpaceSubscription.on('create', (presence: UserPresence) => {
                 this.newPresences.push(presence);
                 this.updatePresences();
@@ -453,20 +400,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             })
 
             let presences = await query.find();
-            let presenceByProfile : Record<string,UserPresence> = {};
-            for(let presence of presences){
-                presenceByProfile[presence.get("user").id] = presence;
-            }
-            //trigger a big fetch of all of the profiles at once
-            await this.getUserProfilesFromUserProfileIDs(Object.keys(presenceByProfile));
-            let profilesQuery = new Parse.Query("UserProfile");
-            profilesQuery.equalTo("conference", this.currentConference);
-            profilesQuery.limit(2000);
-            this.profilesSubscription = this.state.parseLive.subscribe(profilesQuery, user.getSessionToken());
-            this.profilesSubscription.on("update", (profile:UserProfile)=>{
-                this.userProfiles[profile.id] = new Promise((resolve)=>(resolve(profile)));
-                this.updateProfile(profile);
-            })
             for(let presence of presences){
                 this.presences[presence.get("user").id] = presence;
             }
@@ -536,135 +469,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 this.chatWaiters.push(callback);
         }
 
-        async getUserProfilesFromUserProfileID(id:UserProfileID, subscriber:React.Component) {
-            let q = new Parse.Query(UserProfile);
-            let users = [];
-            let toFetch = [];
-            if(subscriber){
-                if(!this.userProfileSubscribers[id]){
-                    this.userProfileSubscribers[id] = [];
-                }
-                this.userProfileSubscribers[id].push(subscriber);
-            }
-            if (this.userProfiles[id]) {
-                let p = await this.userProfiles[id];
-                return p;
-            }
-            this.userProfiles[id] = new Promise(async (resolve, reject) => {
-                if (this.userProfiles[id]) {
-                    let p = await this.userProfiles[id];
-                    resolve(p);
-                }
-                if (this.loadingProfiles[id]) {
-                    reject("Assertion failure?")
-                }
-                this.loadingProfiles[id] = resolve;
-            });
-            let userProfielQ = new Parse.Query(UserProfile);
-            let u: UserProfile | undefined;
-            try{
-                u = await userProfielQ.get(id);
-            }catch(err){
-                console.log("Error on " + id)
-                console.log(err);
-                return null;
-                // u = p;
-                // p.set("displayName", id);
-            }
-            this.userProfiles[id] = new Promise((resolve) => (resolve(u)));
-            this.unwrappedProfiles[id] = u;
-
-            if (this.loadingProfiles[id]) {
-                this.loadingProfiles[id](u);
-                delete this.loadingProfiles[id];
-            }
-            return await this.userProfiles[id];
-        }
-
-        async getUserProfilesFromUserIDs(ids:UserID[]){
-            //TODO: worth caching?
-            let toFetch = [];
-            for(let id of ids){
-                let u = new Parse.User();
-                u.id = id;
-                toFetch.push(u)
-            }
-            let q = new Parse.Query(UserProfile);
-            q.containedIn("user", toFetch);
-            q.equalTo("conference", this.state.currentConference);
-            let ret = await q.find();
-            return ret;
-        }
-
-        async getUserProfilesFromUserProfileIDs(ids:UserID[]) {
-            let users = [];
-            let toFetch = [];
-            for (let id of ids) {
-                if (!this.userProfiles[id]) {
-                    let u = new UserProfile();
-                    u.id = id;
-                    toFetch.push(u);
-                    this.userProfiles[id] = new Promise(async (resolve, reject) => {
-                        if (this.userProfiles[id]) {
-                            resolve(this.userProfiles[id]);
-                        }
-                        if (this.loadingProfiles[id]) {
-                            reject("Assertion failure?")
-                        }
-                        this.loadingProfiles[id] = resolve;
-                    });
-                }
-                users.push(this.userProfiles[id]);
-            }
-            let res = await Parse.Object.fetchAll(toFetch, {});
-            for(let u of res){
-                this.userProfiles[u.id] = new Promise((resolve)=>(resolve(u)));
-                this.unwrappedProfiles[u.id] = u;
-                if(this.loadingProfiles[u.id]){
-                    this.loadingProfiles[u.id](u);
-                    delete this.loadingProfiles[u.id];
-                }else{
-                    console.log("No callback for "+ u.id);
-                }
-            }
-            return await Promise.all(users);
-        }
-
-
-        async getUserRecord(uid:UserID){
-            if(this.userProfiles && this.userProfiles[uid])
-                return this.userProfiles[uid];
-            else{
-                console.log("Fetching single user record:" + uid);
-                try {
-                    let uq = new Parse.Query(UserProfile);
-                    let ret = await uq.get(uid);
-                    this.state.users[uid] = ret;
-                    this.unwrappedProfiles[uid] = ret;
-                    return ret;
-                }catch(err){
-                    console.log(err);
-                    return null;
-                }
-
-            }
-        }
-        async populateMembers(breakoutRoom: BreakoutRoom){
-            let promises =[];
-            if(breakoutRoom.get('members')) {
-                for (let i = 0; i < breakoutRoom.get("members").length; i++) {
-                    let member = breakoutRoom.get("members")[i];
-                    if (!member.get("displayName")) {
-                        promises.push(this.getUserRecord(member.id).then((fullUser) => {
-                                breakoutRoom.get("members")[i] = fullUser;
-                            }
-                        ))
-                    }
-                }
-                return Promise.all(promises).then(()=>breakoutRoom);
-            }
-            return breakoutRoom;
-        }
         refreshUser(preferredConference:ClowdrInstance|undefined, forceRefresh:boolean){
             if(!this.refreshUserPromise || forceRefresh){
                 this.refreshUserPromise = new Promise(async (resolve)=>{
@@ -856,7 +660,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     }
                     _this.setState({
                         user: null,
-                        videoRoomsLoaded: false,
                         currentConference: conference,
                         programCache: new ProgramCache(conference, _this.parseLive),
                         loading: false,
@@ -881,9 +684,18 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             return defaultConferenceName;
         }
 
+        cancelBreakoutRoomsSubscription(component: React.Component){
+            this.activeRoomSubscribers = this.activeRoomSubscribers.filter(v=>v != component);
+        }
+        subscribeToBreakoutRooms(component: React.Component){
+            this.activeRoomSubscribers.push(component);
+            component.setState({
+                activePublicVideoRooms: this.activePublicVideoRooms,
+                activePrivateVideoRooms: this.activePrivateVideoRooms
+            })
+        }
+
        async getBreakoutRoom(id: string, component: React.Component){
-            if(!this.activePublicVideoRooms)
-                await this.subscribeToPublicRooms();
             let room = this.activePublicVideoRooms.find((v:{id:string;})=> v.id == id);
             if(room){
                 if(!this.activePublicVideoRoomSubscribers[id])
@@ -918,38 +730,34 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 res.forEach(this.notifyUserOfChanges.bind(this));
                 this.activePublicVideoRooms = [...res];
                 this.activePublicVideoRoomSubscribers = {};
-                this.setState({activePublicVideoRooms: res})
                 if (this.parseLivePublicVideosSub) {
                     this.parseLivePublicVideosSub.unsubscribe();
                 }
                 assert(this.user);
                 this.parseLivePublicVideosSub = this.state.parseLive.subscribe(query, this.user.getSessionToken());
                 this.parseLivePublicVideosSub.on('create', async (vid:BreakoutRoom) => { 
-                    vid = await this.populateMembers(vid);
                     this.activePublicVideoRooms.push(vid);
-                    this.setState((prevState) => ({
-                        activePublicVideoRooms: [vid, ...prevState.activePublicVideoRooms]
-                    }))
+                    console.log("Created: " + vid)
+                    for(let obj of this.activeRoomSubscribers){
+                        obj.setState({activePublicVideoRooms: this.activePublicVideoRooms.concat([])});
+                    }
                 })
                 this.parseLivePublicVideosSub.on("delete", (vid:BreakoutRoom) => {
                     this.activePublicVideoRooms = this.activePublicVideoRooms.filter((v:BreakoutRoom)=> v.id != vid.id);
-                    this.setState((prevState) => ({
-                        activePublicVideoRooms: prevState.activePublicVideoRooms.filter((v) => (
-                            v.id != vid.id
-                        ))
-                    }));
+                    for(let obj of this.activeRoomSubscribers){
+                        obj.setState({activePublicVideoRooms: this.activePublicVideoRooms.concat([])});
+                    }
                 });
                 this.parseLivePublicVideosSub.on('update', async (vid:BreakoutRoom) => {
-                    vid = await this.populateMembers(vid);
                     this.notifyUserOfChanges(vid);
                     this.activePublicVideoRooms = this.activePublicVideoRooms.map((room:BreakoutRoom)=>room.id == vid.id ? vid : room);
+                    console.log("Updated: " + vid.id)
+                    for(let obj of this.activeRoomSubscribers){
+                        obj.setState({activePublicVideoRooms: this.activePublicVideoRooms.concat([])});
+                    }
                     if(this.activePublicVideoRoomSubscribers[vid.id])
                         for(let obj of this.activePublicVideoRoomSubscribers[vid.id])
                             obj.setState({BreakoutRoom : vid});
-                    //Deliver notifications if applicable
-                    this.setState((prevState) => ({
-                        activePublicVideoRooms: prevState.activePublicVideoRooms.map((room:BreakoutRoom) => room.id == vid.id ? vid : room)
-                    }))
                 })
             })
 
@@ -957,7 +765,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             queryForPrivateActivity.equalTo("conference", this.currentConference);
             // queryForPrivateActivity.equalTo("topic", "privateBreakoutRooms");
             queryForPrivateActivity.equalTo("user", this.user);
-            this.setState({videoRoomsLoaded: true});
             await this.subscribeToNewPrivateRooms();
             assert(this.user);
             this.parseLiveActivitySub = this.state.parseLive.subscribe(queryForPrivateActivity, this.user.getSessionToken());
@@ -1032,9 +839,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
             let newRooms = [];
             let fetchedIDs = [];
-            this.setState({
-                activePrivateVideoRooms: res
-            });
+            this.activePrivateVideoRooms = res;
             for (let room of res) {
                 fetchedIDs.push(room.id);
             }
@@ -1042,34 +847,29 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             assert(this.user);
             this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.user.getSessionToken());
             this.parseLivePrivateVideosSub.on("update", async (vid:BreakoutRoom) => {
-                vid = await this.populateMembers(vid);
-                this.notifyUserOfChanges(vid);
-
-                this.setState((prevState) => ({
-                    activePrivateVideoRooms: prevState.activePrivateVideoRooms.map(room => room.id == vid.id ? vid : room)
-                }))
+                this.activePrivateVideoRooms = this.activePrivateVideoRooms.map((room:BreakoutRoom)=>room.id == vid.id ? vid : room);
+                for(let obj of this.activeRoomSubscribers){
+                    obj.setState({activePrivateVideoRooms: this.activePrivateVideoRooms});
+                }
             });
             this.parseLivePrivateVideosSub.on("create", async (vid:BreakoutRoom) => {
-                vid = await this.populateMembers(vid);
-                this.setState((prevState) => ({
-                    activePrivateVideoRooms: [vid, ...prevState.activePrivateVideoRooms]
-                }))
+                this.activePrivateVideoRooms.push(vid);
+                for(let obj of this.activeRoomSubscribers){
+                    obj.setState({activePrivateVideoRooms: this.activePrivateVideoRooms});
+                }
             });
             this.parseLivePrivateVideosSub.on("delete", (vid:BreakoutRoom) => {
-                this.setState((prevState) => ({
-                    activePrivateVideoRooms: prevState.activePrivateVideoRooms.filter((v) => (
-                        v.id != vid.id
-                    ))
-                }));
+                this.activePrivateVideoRooms = this.activePrivateVideoRooms.filter((v:BreakoutRoom)=> v.id != vid.id);
+                for(let obj of this.activeRoomSubscribers){
+                    obj.setState({activePrivateVideoRooms: this.activePrivateVideoRooms});
+                }
             })
             this.parseLivePrivateVideosSub.on("leave", (vid:BreakoutRoom) => {
-                this.setState((prevState) => ({
-                    activePrivateVideoRooms: prevState.activePrivateVideoRooms.filter((v) => (
-                        v.id != vid.id
-                    ))
-                }));
+                this.activePrivateVideoRooms = this.activePrivateVideoRooms.filter((v:BreakoutRoom)=> v.id != vid.id);
+                for(let obj of this.activeRoomSubscribers){
+                    obj.setState({activePrivateVideoRooms: this.activePrivateVideoRooms});
+                }
             })
-            this.setState({videoRoomsLoaded: true});
         }
 
         userHasWritePermission(object:Parse.Object){

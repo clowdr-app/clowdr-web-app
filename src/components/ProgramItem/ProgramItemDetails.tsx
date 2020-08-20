@@ -14,6 +14,7 @@ import AttachmentType from "../../classes/AttachmentType";
 import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
 import ProgramSession from "../../classes/ProgramSession";
 import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
+import ReactMarkdown from "react-markdown";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -312,7 +313,8 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                 <Descriptions layout="horizontal" column={1} bordered>
                     <Descriptions.Item label="Authors">{authorstr}</Descriptions.Item>
                     {showSessionInfo ? <Descriptions.Item label="Schedule">{sessionInfo}</Descriptions.Item> : <></>}
-                    <Descriptions.Item label="Abstract">{this.state.ProgramItem.get("abstract")}</Descriptions.Item>
+                    <Descriptions.Item label="Abstract"><ReactMarkdown source={this.state.ProgramItem.get("abstract")} renderers={{link:
+                    this.linkRenderer}}/></Descriptions.Item>
                     {additionalDescription}
                 </Descriptions>
             </div>
@@ -321,6 +323,13 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             </div>
         </div>
     }
+    linkRenderer = (props: any) => {
+        let currentDomain = window.location.origin;
+        if(props.href && props.href.startsWith(currentDomain))
+            return <a href="#" onClick={()=>{this.props.appState?.history.push(props.href.replace(currentDomain,""))}}>{props.children}</a>;
+        return <a href={props.href} target="_blank">{props.children}</a>;
+    };
+
 }
 
 const

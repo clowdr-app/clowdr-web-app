@@ -26,7 +26,8 @@ class MeetingSummary extends React.Component {
     constructor(props) {
         super(props);
         this.state = {loadingMeeting: false, loading: false, members: this.props.item.members, profiles: {},
-            videoRoomsLoaded: this.props.auth.videoRoomsLoaded,
+            activePublicRooms: [],
+            activePrivateRooms: [],
             breakoutRoomsForTracks: {}};
     }
 
@@ -138,9 +139,9 @@ class Lobby extends React.Component {
             showModal =true;
         }
 
-        this.state = {videoRoomsLoaded: this.props.auth.videoRoomsLoaded, 'visible': showModal, requestedName: newName, maxDisplayedRooms: 10,
-            activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms,
-            activePublicVideoRooms: this.props.auth.activePublicVideoRooms
+        this.state = {'visible': showModal, requestedName: newName, maxDisplayedRooms: 10,
+            activePrivateVideoRooms: [],
+            activePublicVideoRooms: []
         };
     }
 
@@ -152,6 +153,7 @@ class Lobby extends React.Component {
             // const data = {spaceID:'TOCVe54R2j', confID: this.props.auth.currentConference.id};
             // Parse.Cloud.run("presence-addToPage", data);
 
+            this.props.auth.subscribeToBreakoutRooms(this);
             let [items, tracks] = await Promise.all([this.props.auth.programCache.getProgramItems(this),
                 this.props.auth.programCache.getProgramTracks(this)]);
             this.props.auth.setSocialSpace("Lobby");
@@ -169,6 +171,8 @@ class Lobby extends React.Component {
         // const data = {spaceID:'TOCVe54R2j', confID: this.props.auth.currentConference.id};
         // Parse.Cloud.run("presence-removeFromPage", data);
         this.mounted = false;
+        this.props.auth.cancelBreakoutRoomsSubscription(this);
+
         this.props.auth.helpers.cancelPresenceSubscription(this);
         this.props.auth.programCache.cancelSubscription("ProgramItem", this);
         this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
@@ -187,11 +191,7 @@ class Lobby extends React.Component {
             return;
         let stateUpdate = {};
 
-        if (this.props.auth.activePrivateVideoRooms != this.state.activePrivateVideoRooms) {
-            stateUpdate.activePrivateVideoRooms = this.props.auth.activePrivateVideoRooms;
-        }
-        if (this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms || (this.state.ProgramItems && this.state.ProgramTracks && !this.state.breakoutRoomsForTracksLoaded)) {
-            stateUpdate.activePublicVideoRooms = this.props.auth.activePublicVideoRooms;
+        if (prevState.activePublicVideoRooms != this.state.activePublicVideoRooms || (this.state.ProgramItems && this.state.ProgramTracks && !this.state.breakoutRoomsForTracksLoaded)) {
             //re-calculate the rooms-by-track
             let breakoutRoomsForTracks = {};
             if(this.state.ProgramItems && this.state.ProgramTracks){
@@ -202,7 +202,7 @@ class Lobby extends React.Component {
                 }
                 for(let item of this.state.ProgramItems){
                     if(item.get("breakoutRoom")){
-                        let room = this.props.auth.activePublicVideoRooms.find(v=>v.id == item.get("breakoutRoom").id);
+                        let room = this.state.activePublicVideoRooms.find(v=>v.id == item.get("breakoutRoom").id);
                         if(room && breakoutRoomsForTracks[item.get('track').id]){
                             breakoutRoomsForTracks[item.get("track").id].push(room);
                         }
@@ -448,8 +448,8 @@ class Lobby extends React.Component {
         };
 
         const compareNames = (i, j) => {
-            let a = this.props.auth.helpers.unwrappedProfiles[i];
-            let b = this.props.auth.helpers.unwrappedProfiles[j];
+            let a = this.props.auth.programCache.unsafeGetProfileByID(i);
+            let b = this.props.auth.programCache.unsafeGetProfileByID(j);
             if (!a)
                 return -1;
             if (!b) return 1;

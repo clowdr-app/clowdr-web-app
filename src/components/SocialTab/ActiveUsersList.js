@@ -1,7 +1,6 @@
 import React from "react";
 import {AuthUserContext} from "../Session";
 import {withRouter} from "react-router-dom";
-import ActiveUsers from "../Lobby/ActiveUsers";
 import {Divider, Menu, Tooltip} from "antd";
 import PresenceForm from "../Lobby/PresenceForm";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
