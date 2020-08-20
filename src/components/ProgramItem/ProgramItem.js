@@ -40,6 +40,13 @@ class ProgramItem extends React.Component {
                 if(item.get("chatSID")){
                     // This sets the right-hand sidebar display to this channel
                     this.props.auth.helpers.setGlobalState({forceChatOpen: true, chatChannel: item.get("chatSID")});
+                }else{
+                    if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
+                        //set the social space...
+                        let ss = item.get("programSession").get("room").get("socialSpace");
+                        this.props.auth.setSocialSpace(ss.get("name"));
+                        this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+                    }
                 }
             }
             this.setState(stateUpdate);

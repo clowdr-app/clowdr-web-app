@@ -104,7 +104,7 @@ class ChatFrame extends React.Component {
             if (this.currentSID != sid) {
                 return;//raced with another update
             }
-            if (this.activeChannel) {
+            if (this.activeChannel && this.props.leaveOnChange) {
                 //leave the current channel
                 this.activeChannel.removeAllListeners("messageAdded");
                 this.activeChannel.removeAllListeners("messageRemoved");
@@ -233,11 +233,12 @@ class ChatFrame extends React.Component {
 
         let authorIDs = {};
         for (let message of messages) {
-            if (lastSID && lastSID == message.sid)
+            if (lastSID && lastSID == message.sid) {
                 continue;
+            }
             lastSID = message.sid;
-            lastIndex = message.index
-            if (!lastMessage || message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5) {
+            lastIndex = message.index;
+            if (!lastMessage || (!message.attributes.associatedMessage && (message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5))) {
                 if (lastMessage)
                     ret.push(lastMessage);
                 let authorID = message.author;
@@ -253,15 +254,18 @@ class ChatFrame extends React.Component {
                     let messageWithObj = reactions[message.attributes.associatedMessage] === undefined ? {} : reactions[message.attributes.associatedMessage];
                     let emojiObj = messageWithObj[message.body] === undefined ? {count: 0, emojiMessage: null, authors: []} : messageWithObj[message.body];
 
-                    if (message.author === this.props.auth.userProfile.id) {
-                        let newCount = emojiObj.emojiMessage ? emojiObj.count : emojiObj.count + 1;
-                        emojiObj = {...emojiObj, emojiMessage: message, count: newCount};
-                    } else {
-                        emojiObj = {...emojiObj, count: emojiObj.count + 1};
+                    if (!emojiObj.authors.includes(message.author)) {
+                        if (message.author === this.props.auth.userProfile.id) {
+                            let newCount = emojiObj.emojiMessage ? emojiObj.count : emojiObj.count + 1;
+                            emojiObj = {...emojiObj, emojiMessage: message, count: newCount};
+                        } else {
+                            emojiObj = {...emojiObj, count: emojiObj.count + 1};
+                        }
+                        emojiObj.authors.push(message.author);
                     }
-                    emojiObj.authors.push(message.author);
                     messageWithObj = {...messageWithObj, [message.body]: emojiObj};
                     reactions = {...reactions, [message.attributes.associatedMessage]: messageWithObj};
+
                 } else {
                     lastMessage.messages.push(message);
                 }
@@ -270,22 +274,22 @@ class ChatFrame extends React.Component {
 
         if (lastMessage)
             ret.push(lastMessage);
-        if(this.props.visible && lastIndex >= 0){
+        if (this.props.visible && lastIndex >= 0){
             this.activeChannel.setAllMessagesConsumed();
             this.updateUnreadCount(lastIndex, lastIndex);
-        }else if(!this.props.visible){
+        } else if(!this.props.visible){
             //TODO lastConsumedMessageIndex is wrong, not actually last seen
             let lastConsumed = this.lastConsumedMessageIndex;
-            if(lastConsumed < 0 && lastIndex >=0){
+            if (lastConsumed < 0 && lastIndex >=0){
                 lastConsumed = this.activeChannel.lastConsumedMessageIndex;
             }
-            if(lastConsumed !== undefined && lastIndex >= 0)
+            if (lastConsumed !== undefined && lastIndex >= 0)
                 this.updateUnreadCount(lastConsumed, lastIndex);
         }
 
         this.setState({
             groupedMessages: ret,
-            reactions
+            reactions: reactions
         });
     }
 
@@ -308,7 +312,7 @@ class ChatFrame extends React.Component {
         // do not display a reaction message
         this.messages[channel.sid].push(message);
         this.groupMessages(this.messages[channel.sid], channel.sid);
-        if(this.isAnnouncements){
+        if (this.isAnnouncements){
             //get the sender
             this.props.auth.programCache.getUserProfileByProfileID(message.author,null).then((profile)=>{
                 const args = {
@@ -459,7 +463,6 @@ class ChatFrame extends React.Component {
 
     loadMoreMessages() {
         if (this.activeChannel && !this.loadingMessages) {
-            console.log(this.state.loadingMessages)
             this.loadingMessages = true;
             let intendedChanelSID = this.activeChannel.sid;
             this.setState({loadingMessages: true});
@@ -587,7 +590,7 @@ class ChatFrame extends React.Component {
                     // paddingLeft: "10px"
                     //}}
                 >
-                    <Form ref={this.form} className="embeddedChatMessageEntry" name={"chat"+this.props.sid}>
+                    <Form ref={this.form} className="embeddedChatMessageEntry" name={"chat"+this.props.sid+Math.random()}>
                         <div className="chatEntryWrapper">
                         <Form.Item name="message">
                             <Input.TextArea
@@ -661,7 +664,7 @@ class ChatFrame extends React.Component {
                             </div>}>
  */
         let reactions = null;
-        if(this.state.reactions && this.state.reactions[m.sid])
+        if (this.state.reactions && this.state.reactions[m.sid])
             reactions = this.state.reactions[m.sid];
             return <div key={m.sid}>
                 <div ref={(el) => {

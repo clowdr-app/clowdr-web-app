@@ -113,9 +113,11 @@ class SidebarChat extends React.Component {
                 found = await this.props.auth.chatClient.joinAndGetChannel(newChannel);
                 if (this.desiredChannel != newChannel)
                     return;
+                this.shouldLeaveChannel = true;
             }
             else{
                 found = found.channel;
+                this.shouldLeaveChannel = false;
             }
             if(found)
                 this.setState({sid: found.sid, channel: found});
@@ -131,7 +133,7 @@ class SidebarChat extends React.Component {
         if(!this.state.sid){
             return <div></div>
         }
-        return <ChatFrame sid={this.state.sid} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
+        return <ChatFrame sid={this.state.sid} leaveOnChange={this.shouldLeaveChannel} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
 
     }
 }
