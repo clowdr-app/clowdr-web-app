@@ -146,8 +146,9 @@ Parse.Cloud.define("login-fromToken", async (request) => {
     let userQ = new Parse.Query(Parse.User);
     let user = await userQ.get(userID, {useMasterKey: true});
     if (user.get("loginKey") && user.get('loginKey') == token) {
-        user.set("loginKey",null);
-        await user.save({},{useMasterKey: true});
+        console.log("Logging in from token: " + user.get("displayname"));
+        // user.set("loginKey",null);
+        // await user.save({},{useMasterKey: true});
         let fakeSession = Parse.Object.extend("_Session");
         let newSession = new fakeSession();
         // console.log(user)
