@@ -81,7 +81,10 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             let moreOptions = this.state.allChannels.filter(chan => {
                 if(chan){
                     // @ts-ignore
-                    if(chan.attributes && (chan.attributes.mode != "directMessage" && chan.attributes.category != 'socialSpace' && chan.attributes.category != 'programItem' && chan.attributes.category != "breakoutRoom"
+                    if(chan.attributes && (chan.attributes.mode != "directMessage"
+                        // && chan.attributes.category != 'socialSpace'
+                            //@ts-ignore
+                        && chan.attributes.category != 'programItem' && chan.attributes.category != "breakoutRoom"
                         ))
                         return true;
                 }
@@ -154,7 +157,8 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
             if (chan) {
-                if (chan.attributes && (chan.attributes.category != "socialSpace" && chan.attributes.category != "breakoutRoom"))
+                if (chan.attributes && (//chan.attributes.category != "socialSpace" &&
+                    chan.attributes.category != "breakoutRoom"))
                     return true;
             }
             return false;
@@ -213,7 +217,8 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
             if(chan){
-                if(chan.attributes && (chan.attributes.mode != "directMessage" && chan.attributes.category != 'socialSpace' && chan.attributes.category != 'programItem'))
+                if(chan.attributes && (chan.attributes.mode != "directMessage" //&& chan.attributes.category != 'socialSpace'
+                    && chan.attributes.category != 'programItem'))
                     return true;
             }
             return false;
@@ -335,7 +340,8 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     {
                         this.state.allChannels.filter(chan => chan && chan.sid &&
                             //@ts-ignore
-                        (chan.attributes && chan.attributes.category != 'socialSpace') && chan.attributes.category != 'breakoutRoom' && chan.attributes.category != "programItem" &&
+                        // (chan.attributes && chan.attributes.category != 'socialSpace') &&
+                            chan.attributes.category != 'breakoutRoom' && chan.attributes.category != "programItem" &&
                         !this.state.joinedChannels.includes(chan.sid)).map((chan) => {
                         let className = "personHoverable";
                         // if (this.state.filteredUser == user.id)

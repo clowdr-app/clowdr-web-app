@@ -104,7 +104,7 @@ class ChatFrame extends React.Component {
             if (this.currentSID != sid) {
                 return;//raced with another update
             }
-            if (this.activeChannel) {
+            if (this.activeChannel && this.props.leaveOnChange) {
                 //leave the current channel
                 this.activeChannel.removeAllListeners("messageAdded");
                 this.activeChannel.removeAllListeners("messageRemoved");
@@ -590,7 +590,7 @@ class ChatFrame extends React.Component {
                     // paddingLeft: "10px"
                     //}}
                 >
-                    <Form ref={this.form} className="embeddedChatMessageEntry" name={"chat"+this.props.sid}>
+                    <Form ref={this.form} className="embeddedChatMessageEntry" name={"chat"+this.props.sid+Math.random()}>
                         <div className="chatEntryWrapper">
                         <Form.Item name="message">
                             <Input.TextArea

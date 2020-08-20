@@ -150,14 +150,18 @@ export default class ChatClient{
 
     initBottomChatBar(chatBar){
         this.chatBar = chatBar;
-        chatBar.setState({chats: Object.values(this.joinedChannels).filter(c=>c.attributes && c.attributes.category != "socialSpace").map(c=>c.channel.sid)});
-        chatBar.setState({Initialchats: Object.values(this.joinedChannels).filter(c=>c.attributes && c.attributes.category != "socialSpace").map(c=>c.channel.sid)});
+        chatBar.setState({chats: Object.values(this.joinedChannels)
+                // .filter(c=>c.attributes && c.attributes.category != "socialSpace")
+                .map(c=>c.channel.sid)});
+        chatBar.setState({Initialchats: Object.values(this.joinedChannels)
+                // .filter(c=>c.attributes && c.attributes.category != "socialSpace")
+                .map(c=>c.channel.sid)});
     }
 
     initJoinedChatList(chatList){
         this.chatList = chatList;
         chatList.setState({chats: Object.values(this.joinedChannels)
-                .filter(c=>c.attributes && c.attributes.category != "socialSpace")
+                // .filter(c=>c.attributes && c.attributes.category != "socialSpace")
                 .map(c=>c.channel.sid)});
     }
 
@@ -365,13 +369,13 @@ export default class ChatClient{
         if (this.chatList)
             this.chatList.setState({
                     chats: Object.values(this.joinedChannels)
-                        .filter(c => c.attributes && c.attributes.category != "socialSpace")
+                        // .filter(c => c.attributes && c.attributes.category != "socialSpace")
                         .map(c => c.channel.sid)
             });
         if (this.chatBar)
             this.chatBar.setState({
                 chats: Object.values(this.joinedChannels)
-                    .filter(c => c.attributes && c.attributes.category != "socialSpace")
+                    // .filter(c => c.attributes && c.attributes.category != "socialSpace")
                     .map(c => c.channel.sid)
             });
         if(this.multiChatWindow) {

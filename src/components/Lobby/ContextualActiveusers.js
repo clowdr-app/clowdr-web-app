@@ -257,7 +257,6 @@ class ContextualActiveUsers extends React.Component {
                             if (item.get("members") && item.get("members").length > 0) {
                                 list = item.get("members").map(user => {
                                     if (user) {
-                                        console.log(user)
                                         let className = "personHoverable";
                                         if (this.state.filteredUser == user.id)
                                             className += " personFiltered"

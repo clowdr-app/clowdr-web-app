@@ -44,7 +44,7 @@ class CollapsedChatDisplay extends React.Component{
                 this.setState({title: chat.channel.friendlyName});
         }
         else{
-            this.setState({title: chat.channel.sid});
+            this.setState({title: chat.channel.friendlyName ? chat.channel.friendlyName: chat.channel.sid});
         }
     }
 
