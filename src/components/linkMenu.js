@@ -141,7 +141,7 @@ class LinkMenu extends React.Component {
                 <Menu.Item key='/signin' icon={<DesktopOutlined/>}><NavLink to="/signin">Sign In</NavLink></Menu.Item>
                 ];
         }
-        return <Menu theme={"dark"} mode={"inline"} selectedKeys={[this.props.location.pathname]} mode="horizontal">
+        return <Menu theme={"dark"} mode={"horizontal"} selectedKeys={[this.props.location.pathname]} >
                 <Menu.Item key='/' icon={<HomeOutlined/>}><NavLink to="/">Home</NavLink></Menu.Item>
                 {userTools}
         </Menu>;

@@ -8,6 +8,26 @@
     background: #141414;
 }
 
+.logo {
+    width: 120px;
+    height: 64px;
+    /* background: rgba(255, 255, 255, 0.2); */
+    /* margin: 0px 10px 0px 0px; */
+    float: left;
+}
+
+.logo .img {
+    vertical-align: top;
+}
+
+.missing-logo {
+    width: 120px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.2);
+    /* margin: 0px 10px 0px 0px; */
+    float: left;
+}
+
 .space-align-container {
     display: flex;
     align-item: flex-start;
@@ -733,7 +753,7 @@ span.ant-divider-inner-text {
 }
 .multiChatChannelChanger{
     min-width: 200px;
-    max-width: 250px;
+    max-width: 200px;
     flex-grow: 1;
     height: 100%;
 }

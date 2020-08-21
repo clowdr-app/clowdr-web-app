@@ -1,25 +1,10 @@
 import {AuthUserContext} from "../Session";
-import Parse from "parse";
-import {Emoji, emojiIndex, Picker} from 'emoji-mart'
+import {Emoji} from 'emoji-mart'
 import {emojify} from 'react-emojione';
-
 // import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import {
-    Divider,
-    Form,
-    Input,
-    Layout,
-    List,
-    Popconfirm,
-    Popover,
-    Tooltip,
-    notification,
-    Button,
-    Tag,
-    message
-} from 'antd';
+import {Button, Divider, Form, Input, Layout, List, notification, Popconfirm, Tag, Tooltip} from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -106,15 +91,10 @@ class ChatFrame extends React.Component {
             }
             if (this.activeChannel && this.props.leaveOnChange) {
                 //leave the current channel
-                this.activeChannel.removeAllListeners("messageAdded");
-                this.activeChannel.removeAllListeners("messageRemoved");
-                this.activeChannel.removeAllListeners("messageUpdated");
-                this.activeChannel.removeAllListeners("memberJoined");
-                this.activeChannel.removeAllListeners("memberLeft");
-
                 //we never actually leave a private channel because it's very hard to get back in
                 // - we need to be invited by the server, and that's a pain...
                 //we kick users out when they lose their privileges to private channels.
+                console.log("Leaving channel: " + this.activeChannel.sid + " " + this.activeChannel.friendlyName)
                 if (this.activeChannel.type !== "private")
                     await this.activeChannel.leave();
             }
@@ -129,23 +109,25 @@ class ChatFrame extends React.Component {
             if (this.currentSID != sid) {
                 return;//raced with another update
             }
+            if (this.chanInfo) {
+                this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v => v != this);
+                this.chanInfo.components = this.chanInfo.components.filter(v => v != this);
+            }
             this.activeChannel.getMessages(30).then((messages) => {
                 if (this.currentSID != sid)
                     return;
                 this.messagesLoaded(this.activeChannel, messages)
-                //Load the unread counts.
-                this.activeChannel.on('messageAdded', this.messageAdded.bind(this, this.activeChannel));
-                this.activeChannel.on("messageRemoved", this.messageRemoved.bind(this, this.activeChannel));
-                this.activeChannel.on("messageUpdated", this.messageUpdated.bind(this, this.activeChannel));
             });
 
 
             this.members = [];
             this.activeChannel.getMembers().then(members => this.members = members);
-            this.activeChannel.on("memberLeft", (member)=> this.members = this.members.filter(m=>m.sid != member.sid));
-            this.activeChannel.on("memberJoined", (member)=> this.members.push(member));
 
             let chanInfo = this.props.auth.chatClient.joinedChannels[sid];
+            this.chanInfo = chanInfo;
+            chanInfo.components.push(this);
+            if(this.props.visible)
+                chanInfo.visibleComponents.push(this);
             this.dmOtherUser = null;
             if(chanInfo.attributes.mode == "directMessage"){
                 let p1 = chanInfo.conversation.get("member1").id;
@@ -191,12 +173,9 @@ class ChatFrame extends React.Component {
 
     }
     componentWillUnmount() {
-        if(this.activeChannel) {
-            this.activeChannel.removeAllListeners("messageAdded");
-            this.activeChannel.removeAllListeners("messageRemoved");
-            this.activeChannel.removeAllListeners("messageUpdated");
-            this.activeChannel.removeAllListeners("memberJoined");
-            this.activeChannel.removeAllListeners("memberLeft");
+        if(this.chanInfo){
+            this.chanInfo.components = this.chanInfo.components.filter(v=>v!=this);
+            this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v=>v!=this);
         }
     }
 
@@ -274,10 +253,11 @@ class ChatFrame extends React.Component {
 
         if (lastMessage)
             ret.push(lastMessage);
-        if (this.props.visible && lastIndex >= 0){
+        let atLeastOneIsVisible = this.chanInfo.visibleComponents.length > 0;
+        if ((this.props.visible || atLeastOneIsVisible) && lastIndex >= 0){
             this.activeChannel.setAllMessagesConsumed();
             this.updateUnreadCount(lastIndex, lastIndex);
-        } else if(!this.props.visible){
+        } else if(!(this.props.visible || atLeastOneIsVisible)){
             //TODO lastConsumedMessageIndex is wrong, not actually last seen
             let lastConsumed = this.lastConsumedMessageIndex;
             if (lastConsumed < 0 && lastIndex >=0){
@@ -287,10 +267,15 @@ class ChatFrame extends React.Component {
                 this.updateUnreadCount(lastConsumed, lastIndex);
         }
 
-        this.setState({
-            groupedMessages: ret,
-            reactions: reactions
-        });
+        if(!this.props.visible){
+            this.deferredGroupedMessages = ret;
+            this.deferredReactions = reactions;
+        }else {
+            this.setState({
+                groupedMessages: ret,
+                reactions: reactions
+            });
+        }
     }
 
     messagesLoaded = (channel, messagePage) => {
@@ -307,6 +292,15 @@ class ChatFrame extends React.Component {
             return <a href="#" onClick={()=>{this.props.auth.history.push(props.href.replace(currentDomain,""))}}>{props.children}</a>;
         return <a href={props.href} target="_blank">{props.children}</a>;
     };
+
+
+    memberLeft = (member)=>{
+        this.members = this.members.filter(m=>m.sid != member.sid);
+    }
+
+    memberJoined = (member)=>{
+        this.members.push(member);
+    }
 
     messageAdded = (channel, message) => {
         // do not display a reaction message
@@ -447,6 +441,22 @@ class ChatFrame extends React.Component {
         let isDifferentChannel = this.props.sid != this.sid;
 
         if(prevProps.visible!= this.props.visible){
+            if(this.chanInfo) {
+                if (this.props.visible)
+                    this.chanInfo.visibleComponents.push(this);
+                else {
+                    this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v => v != this);
+                }
+            }
+
+            if(this.props.visible && this.deferredGroupedMessages){
+                this.setState({
+                    groupedMessages: this.deferredGroupedMessages,
+                    reactions: this.deferredReactions
+                });
+                this.deferredReactions = null;
+                this.deferredGroupedMessages = null;
+            }
             if(this.props.visible && this.unread){
                 //update unreads...
                 this.activeChannel.setAllMessagesConsumed();

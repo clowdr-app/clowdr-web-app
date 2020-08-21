@@ -39,7 +39,8 @@ class ProgramItem extends React.Component {
             if (user) {
                 if(item.get("chatSID")){
                     // This sets the right-hand sidebar display to this channel
-                    this.props.auth.helpers.setGlobalState({forceChatOpen: true, chatChannel: item.get("chatSID")});
+                    // this.props.auth.helpers.setGlobalState({forceChatOpen: true, chatChannel: item.get("chatSID")});
+                    this.props.auth.chatClient.setRightSideChat(item.get("chatSID"));
                 }else{
                     if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
                         //set the social space...
@@ -56,7 +57,6 @@ class ProgramItem extends React.Component {
     componentWillUnmount() {
         if(this.state.ProgramItem)
             this.props.auth.programCache.cancelSubscription("ProgramItem", this, this.state.ProgramItem.id);
-        this.props.auth.helpers.setGlobalState({chatChannel: null, forceChatOpen: false});
         this.props.auth.setSocialSpace("Lobby");
     }
 

@@ -443,11 +443,13 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 }
                 let stateUpdate = {
                     activeSpace: space,
-                    chatChannel:  space ? space.get("chatChannel") : undefined
                 }
                 if(ignoreChatChannel)
                 {
-                    stateUpdate.chatChannel = "@chat-ignore"
+                    this.state.chatClient.disableRightSideChat();
+                }
+                else{
+                    this.state.chatClient.setRightSideChat(space.get("chatChannel"));
                 }
                 this.setState(stateUpdate);
             }
@@ -455,8 +457,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 if(!space && this.state.spaces){
                     space = this.state.spaces[spaceName];
                 }
-                if(this.state.chatChannel != space.get("chatChannel"))
-                    this.setState({chatChannel: space.get("chatChannel")});
+                this.state.chatClient.setRightSideChat(space.get("chatChannel"));
             }
         }
 
