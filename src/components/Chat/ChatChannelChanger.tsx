@@ -41,11 +41,13 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
     private fetchingSearchOptions: boolean;
     private haveProgram: boolean;
     private searchBox: React.RefObject<Select>;
+    private allSearchOptions: {label:string|ReactNode, value:string, object: ProgramItem|UserProfile|Channel, labeltext: string}[];
     constructor(props: ChatChannelChangerProps) {
         super(props);
         this.searchBox = React.createRef();
         this.haveProgram = false;
         this.fetchingSearchOptions = false;
+        this.allSearchOptions = [];
         this.state = {
             loading: true,
             joinedChannels: [],
@@ -67,6 +69,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
     setAllChannels(channels: Channel[]){
         this.setState({allChannels: channels});
     }
+
     componentDidUpdate(prevProps: Readonly<ChatChannelChangerProps>, prevState: Readonly<ChatChannelChangerState>, snapshot?: any): void {
         if(this.haveProgram && (this.state.ProgramItems != prevState.ProgramItems || this.state.UserProfiles != prevState.UserProfiles || this.state.allChannels != prevState.allChannels)){
             let options = [];
@@ -95,8 +98,9 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             });
             // @ts-ignore
             options = options.concat(moreOptions);
-            if(this.state.UserProfiles.length)
-                this.setState({searchOptions: options});
+            if (this.state.UserProfiles.length) {
+                this.allSearchOptions = options;
+            }
         }
     }
 
@@ -223,11 +227,8 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             }
             return false;
         });
+
         return <div id="channelChanger">
-            <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={() => {
-                this.setState({'newChannelVisible': false})
-                }}
-                onCreate={this.createNewChannel.bind(this)}/>
             <Select showSearch={true}
                     placeholder="Search for user/paper/chat"
                     className="chat-search"
@@ -237,12 +238,13 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     options={this.state.searchOptions}
                     filterOption={(input, option) =>
                     {
-                        if(option && option.labeltext){
+
+                        if (input.length >= 3 && option && option.labeltext){
                             let label = option.labeltext;
                             //@ts-ignore
                             return label.toLowerCase().indexOf(input.toLowerCase()) >= 0;
                         }
-                       return false;
+                        return false;
                     }
                     }
                     loading={this.state.openingChat}
@@ -275,15 +277,24 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     }
                     notFoundContent={this.state.searchLoading ? <Spin size="small" /> : null}
                     onSearch={async (val) => {
-                        if(!this.fetchingSearchOptions){
+                        if (!this.fetchingSearchOptions) {
                             this.fetchingSearchOptions = true;
                             this.setState({searchLoading: true});
                             let profiles = await this.props.appState?.programCache.getUserProfiles(this);
                             this.setState({UserProfiles: profiles, searchLoading: false})
                         }
+                        if (val.length == 3 && this.state.searchOptions.length != this.allSearchOptions.length) 
+                            this.setState({searchOptions: this.allSearchOptions});
+                        if (val.length == 2 && this.state.searchOptions.length == this.allSearchOptions.length) 
+                            this.setState({searchOptions: []});
                     }
                     }
             />
+            <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={() => {
+                this.setState({'newChannelVisible': false})
+                }}
+                onCreate={this.createNewChannel.bind(this)}/>
+
             {addChannelButton}
             {/*<UpdateCreateForm visible={this.state.editChannelVisible}*/}
             {/*                  onCancel={()=>{this.setState({'editChannelVisible': false})}}*/}
