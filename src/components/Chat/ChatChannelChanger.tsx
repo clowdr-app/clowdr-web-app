@@ -82,9 +82,9 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                 label: <UserStatusDisplay profileID={profile.id} hideLink={true} />
             })));
             let moreOptions = this.state.allChannels.filter(chan => {
-                if(chan){
+                if (chan) {
                     // @ts-ignore
-                    if(chan.attributes && (chan.attributes.mode != "directMessage"
+                    if (chan.attributes && (chan.attributes.mode != "directMessage"
                         // && chan.attributes.category != 'socialSpace'
                             //@ts-ignore
                         && chan.attributes.category != 'programItem' && chan.attributes.category != "breakoutRoom"
@@ -93,7 +93,6 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                 }
                 return false;
             }).map(chan=>{
-
                 return {label: chan.friendlyName, value: chan.sid, object: chan, labeltext: chan.friendlyName};
             });
             // @ts-ignore
@@ -253,26 +252,27 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         let sid;
                         // @ts-ignore
                         this.setState({openingChat: true, filter: option.label})
-                        if(obj instanceof ProgramItem){
+                        if (obj instanceof ProgramItem) {
                             sid = obj.get("chatSID");
-                            if(!sid){
+                            if (!sid){
                                     sid = await Parse.Cloud.run("chat-getSIDForProgramItem", {
                                         programItem: obj.id
                                     });
                             }
-                            if(sid){
+                            if (sid) {
                                 await this.props.appState?.chatClient.openChatAndJoinIfNeeded(sid, false);
                             }
-                            else{
+                            else {
                                 message.error("Unable to find chat ID for " + obj.get("title"))
                             }
-                        }else if(obj instanceof UserProfile){
+                        } else if (obj instanceof UserProfile) {
                             await this.props.appState?.helpers.createOrOpenDM(obj);
-                        }else if(obj instanceof Channel){
+                        // } else if (obj instanceof Channel) {  This does not work!
+                        } else if (obj.sid) {
                             await this.props.appState?.chatClient.openChatAndJoinIfNeeded(obj.sid, false);
                         }
                         // @ts-ignore
-                        this.setState({openingChat: false, filter: undefined})
+                        this.setState({openingChat: false, filter: undefined, searchOptions: []})
                     }
                     }
                     notFoundContent={this.state.searchLoading ? <Spin size="small" /> : null}
