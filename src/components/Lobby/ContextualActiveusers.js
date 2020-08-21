@@ -310,3 +310,5 @@ const AuthConsumer = (props) => (
     // )}</Router.Consumer>
 
 );
+
+export default withRouter(AuthConsumer)
