@@ -124,19 +124,16 @@ class SidebarChat extends React.Component {
         }
     }
 
-
     render() {
         if(this.state.chatDisabled){
             return <div></div>
         }
-
         if(!this.state.sid){
             return <div></div>
         }
         return <ChatFrame sid={this.state.sid} leaveOnChange={this.shouldLeaveChannel} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<br/>}/>
         // <ChatFrame sid={this.state.sid} leaveOnChange={this.shouldLeaveChannel} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}}/>
         // <ChatFrame sid={this.state.sid} leaveOnChange={this.shouldLeaveChannel} visible={this.state.siderWidth > 0} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Chat: {this.state.channel.friendlyName}</div>}/>
-
     }
 }
 
