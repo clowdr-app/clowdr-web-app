@@ -157,47 +157,47 @@ class App extends Component {
                 <Tooltip mouseEnterDelay={0.5} title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
                 <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
                 </span>
-            }
 
-            if(confSwitcher){
-                confSwitcher = <span style={{float: "right"}}>{confSwitcher} {clowdrActionButtons}</span>
-            }
-            else
-                confSwitcher= <span style={{float: "right"}}>{clowdrActionButtons}</span>;
-
-            if (headerImage) {
-                let logo = ""
-                if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
-                    logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
-                               <img src={headerImage.url()} className="App-logo" height="75" alt="logo" title="Click to replace logo"/> 
-                           </Upload>
+                if (confSwitcher){
+                    confSwitcher = <span style={{float: "right"}}>{confSwitcher} {clowdrActionButtons}</span>
                 }
                 else
-                    logo = <img src={headerImage.url()} className="App-logo" height="75" alt="logo"/> 
-    
-                return <table className="site-layout-background" style={{height: "75px", clear: "both"}}>
-                        <tbody><tr>
-                        <td>{logo}</td>
-                        <td><Typography.Title style={{display: "inherit"}}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
-                        </tr></tbody></table>
-            }
-            else if (headerText) {
-                let logo = "";
-                if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
-                    logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
-                                    <Button type="primary" size="small" title="Upload conference logo">
-                                        <UploadOutlined />
-                                    </Button>
+                    confSwitcher= <span style={{float: "right"}}>{clowdrActionButtons}</span>;
+
+                if (headerImage) {
+                    let logo = ""
+                    if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
+                        logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
+                                <img src={headerImage.url()} className="App-logo" height="75" alt="logo" title="Click to replace logo"/> 
                             </Upload>
+                    }
+                    else
+                        logo = <img src={headerImage.url()} className="App-logo" height="75" alt="logo"/> 
+        
+                    return <table className="site-layout-background" style={{height: "75px", clear: "both"}}>
+                            <tbody><tr>
+                            <td>{logo}</td>
+                            <td><Typography.Title style={{display: "inherit"}}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
+                            </tr></tbody></table>
                 }
-                return <table className="site-layout-background" style={{height: "75px", clear: "both"}}>
-                        <tbody><tr>
-                            <td>{logo}</td><td><Typography.Title style={{display: 'inherit'}}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
-                        </tr></tbody></table>
-            } else
-                return <div className="site-layout-background" style={{clear:'both' }}>
-                   <div style={{float:'left'}}><Typography.Title>
-                       {this.state.conference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</div>
+                else if (headerText) {
+                    let logo = "";
+                    if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
+                        logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
+                                        <Button type="primary" size="small" title="Upload conference logo">
+                                            <UploadOutlined />
+                                        </Button>
+                                </Upload>
+                    }
+                    return <table className="site-layout-background" style={{height: "75px", clear: "both"}}>
+                            <tbody><tr>
+                                <td>{logo}</td><td><Typography.Title style={{display: 'inherit'}}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
+                            </tr></tbody></table>
+                } else
+                    return <div className="site-layout-background" style={{clear:'both' }}>
+                    <div style={{float:'left'}}><Typography.Title>
+                        {this.state.conference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</div>
+            }
         }
     }
 
@@ -205,7 +205,32 @@ class App extends Component {
         if (this.isSlackAuthOnly()) {
             return <div></div>
         }
-        return <Header><LinkMenu/></Header>
+
+        let logo = undefined;
+        let className="logo"
+        let headerImage = this.state.conference.get("headerImage");
+        if (headerImage) {
+            if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
+                logo = <Upload style={{verticalAlign:"top"}} accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
+                           <img src={headerImage.url()} height="50" alt="logo" title="Click to replace logo"/> 
+                       </Upload>
+            }
+            else
+                logo = <img src={headerImage.url()}  height="50" alt="logo"/> 
+
+        }
+        else {
+            if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
+                logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
+                                <Button type="primary" size="small" title="Upload conference logo">
+                                    <UploadOutlined />
+                                </Button>
+                        </Upload>
+            }
+            if (!logo)
+                className = "missing-logo";
+        }
+        return <Header><div className={className}>{logo}</div><LinkMenu/></Header>
 
     }
 
@@ -356,17 +381,7 @@ class App extends Component {
                         <div id="top-content">
                             {this.siteHeader()}
                             {this.navBar()}
-                        {/*<Header className="action-bar">*/}
-                        {/*    /!*<Badge*!/*/}
-                        {/*    /!*    title={this.props.clowdrAppState.liveVideoRoomMembers + " user"+(this.props.clowdrAppState.liveVideoRoomMembers == 1 ? " is" : "s are")+" in video chats"}*!/*/}
-                        {/*    /!*    showZero={true} style={{backgroundColor: '#52c41a'}} count={this.props.clowdrAppState.liveVideoRoomMembers} offset={[0,-5]}>*!/*/}
-                        {/*    <Button style={lobbySiderButtonStyle} onClick={this.toggleLobbySider.bind(this)} size="small" >Breakout Rooms <RightOutlined /></Button>*/}
-                        {/*    <Button style={chatSiderButtonStyle} onClick={this.toggleChatSider.bind(this)} size="small" >Chat</Button>*/}
-
-                        {/*    /!*</Badge>*!/*/}
-                        {/*    </Header>*/}
                         </div>
-                        <Layout>
 
                         <Content>
 
@@ -407,7 +422,6 @@ class App extends Component {
                             </SplitPane>
                         </div>
                         </Content>
-                        </Layout>
                     </Layout>
                     </div>
                     {/* <div style={{position:
