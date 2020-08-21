@@ -246,7 +246,6 @@ export default class ChatClient{
                 boxWidth = 353;
             let screenWidth = window.innerWidth;
             let screenHeight = window.innerHeight;
-            console.log(`bw=${boxWidth}  nfl=${newFromLeft}  sw=${screenWidth} sl=${window.screenLeft}`);
             if (boxWidth + newFromLeft > screenWidth)
             {
                 //place the picker to the right of the cursor
