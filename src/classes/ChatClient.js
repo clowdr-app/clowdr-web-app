@@ -232,7 +232,7 @@ export default class ChatClient{
             this.chatList.addChannel(chatSID);
     }
 
-    openEmojiPicker(message, event, chatFrame){
+    openEmojiPicker(message, event, chatFrame) {
         if(this.emojiPickerRef.current){
             let boundingTargetRect = event.target.getBoundingClientRect();
             let newFromTop = boundingTargetRect.y
@@ -240,21 +240,22 @@ export default class ChatClient{
             this.emojiClickTarget = event.target;
             let boxWidth = this.emojiPickerRef.current.clientWidth;
             let boxHeight = this.emojiPickerRef.current.clientHeight;
-            if(boxHeight == 0)
+            if (boxHeight == 0)
                 boxHeight = 425;
-            if(boxWidth == 0)
+            if (boxWidth == 0)
                 boxWidth = 353;
-            let screenWidth = window.screenX;
-            let screenHeight = window.screenY;
-            if(boxWidth + newFromLeft > screenWidth)
+            let screenWidth = window.innerWidth;
+            let screenHeight = window.innerHeight;
+            console.log(`bw=${boxWidth}  nfl=${newFromLeft}  sw=${screenWidth} sl=${window.screenLeft}`);
+            if (boxWidth + newFromLeft > screenWidth)
             {
                 //place the picker to the right of the cursor
-                newFromLeft = newFromLeft- boxWidth;
+                newFromLeft = newFromLeft - boxWidth;
             }
-            if(newFromTop - boxHeight > 0){
+            if (newFromTop - boxHeight > 0){
                 newFromTop = newFromTop - boxHeight;
             }
-            if(newFromLeft < 0)
+            if (newFromLeft < 0)
                 newFromLeft = 0;
             this.emojiPickerRef.current.style.display = "block";
             this.emojiPickerRef.current.style.left = newFromLeft+"px";
