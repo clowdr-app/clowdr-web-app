@@ -433,6 +433,9 @@ class App extends Component {
     }
 }
 
+function capitalizeFirstLetter(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 let RouteredApp = withRouter(App);
 class ClowdrApp extends React.Component{
@@ -442,8 +445,8 @@ class ClowdrApp extends React.Component{
         edge: this.okBrowser,
         safari: this.okBrowser,
         default: (browser) => {
-            message.error(<span>The browser that you are using, {browser} is not known to be supported by Clowdr. <br />Clowdr is still in
-                beta mode, and we would suggest using Chrome, Safari, or Edge for the best experience.</span>,0)
+            message.error(<span>The browser that you are using, {capitalizeFirstLetter(browser)}, may not work well with Clowdr. <br />Clowdr is still in
+                beta mode, and has only been tested with Chrome, Safari, and Edge.</span>, 30)
             return <></>
         }
     };
