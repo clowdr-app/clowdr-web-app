@@ -15,7 +15,7 @@ class CollapsedChatDisplay extends React.Component{
 
     getChatTitle(chat) {
         if(!chat){
-            console.log("No chat!")
+            console.log("No chat!" + " " + this.state.sid)
             return <Skeleton.Input active style={{width: '20px', height: '1em'}}/>;
         }
         this.titleSet = true;

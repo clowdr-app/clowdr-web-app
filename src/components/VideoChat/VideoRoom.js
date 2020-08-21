@@ -280,7 +280,7 @@ class VideoRoom extends Component {
                     // this.props.clowdrAppState.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
                     // })
                     if (this.state.isMounted)
-                        this.props.clowdrAppState.helpers.setGlobalState({chatChannel: room.get("twilioChatID")});
+                        this.chatClient.setRightSideChat(room.get("twilioChatID"));
                 });
             let idToken = user.getSessionToken();
             const data = fetch(

@@ -1,7 +1,6 @@
 import Chat from "twilio-chat";
 import Parse from "parse";
 import React from "react";
-import {message} from "antd";
 
 export default class ChatClient{
     constructor(setGlobalState) {
@@ -146,6 +145,11 @@ export default class ChatClient{
 
     initChatSidebar(rightChat){
         this.rightSideChat = rightChat;
+        if(!this.rhsChatPromise){
+            this.rhsChatPromise = new Promise(resolve=>{resolve()});
+        }else{
+            this.rhsChatResolve();
+        }
     }
 
     initBottomChatBar(chatBar){
@@ -163,6 +167,39 @@ export default class ChatClient{
         chatList.setState({chats: Object.values(this.joinedChannels)
                 // .filter(c=>c.attributes && c.attributes.category != "socialSpace")
                 .map(c=>c.channel.sid)});
+    }
+
+    async disableRightSideChat(){
+        if(this.rightSideChat)
+            this.rightSideChat.setChatDisabled(true);
+    }
+    async setRightSideChat(newChannelSID){
+        if(this.desiredRHSChat == newChannelSID)
+            return;
+        this.desiredRHSChat = newChannelSID;
+        if (!this.rhsChatPromise) {
+            this.rhsChatPromise = new Promise(async (resolve) => {
+                this.rhsChatResolve = resolve;
+                if (this.rightSideChat) {
+                    resolve();
+                }
+            });
+            await this.rhsChatPromise;
+        }
+        let channel = null;
+        let found = this.joinedChannels[newChannelSID];
+        let shouldLeaveWhenChanges = false;
+        if(found){
+            channel = found.channel;
+        }
+        else{
+            channel = await this.joinAndGetChannel(newChannelSID)
+            if(!this.desiredRHSChat == newChannelSID)
+                return;
+            shouldLeaveWhenChanges = true;
+        }
+        if(channel)
+            await this.rightSideChat.setChannel(channel, shouldLeaveWhenChanges);
     }
 
     initChatClient(user, conference, userProfile, appController) {
@@ -284,7 +321,34 @@ export default class ChatClient{
         let members = await channel.getMembers();
         ret.members = members.map(m=>m.identity); //.filter(m=>m!= this.userProfile.id);
         ret.channel  =channel;
-
+        ret.components = [];
+        ret.visibleComponents = [];
+        ret.messages = [];
+        ret.channel.on("messageAdded", (message)=>{
+            for(let component of ret.components){
+                component.messageAdded(ret.channel, message);
+            }
+        });
+        ret.channel.on("messageRemoved", (message) =>{
+            for(let component of ret.components){
+                component.messageRemoved(ret.channel, message);
+            }
+        });
+        ret.channel.on("messageUpdated", (message) =>{
+            for(let component of ret.components){
+                component.messageUpdated(ret.channel, message);
+            }
+        })
+        ret.channel.on("memberJoined", (member)=>{
+            for(let component of ret.components){
+                component.memberJoined(ret.channel, member);
+            }
+        })
+        ret.channel.on("memberLeft", (member)=>{
+            for(let component of ret.components){
+                component.memberLeft(ret.channel, member);
+            }
+        })
         this.joinedChannels[channel.sid] = ret;
         if(this.channelWaiters[channel.sid]){
             this.channelWaiters[channel.sid](ret.channel);
