@@ -147,13 +147,10 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
     }
 
     sortChannels(chan1: any, chan2: any) {
-        console.log(chan1);
-        console.log(chan2);
         if (!chan1 || !chan2)
             return 0;
         let s1 = chan1.channelState.friendlyName;
         let s2 = chan2.channelState.friendlyName;
-        console.log(chan1);
 
         if (s1 === '#general')
             s1 = chan1.sid;
@@ -174,7 +171,6 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                 s2 = i.get("title");
             }
         }
-        console.log(s1 + ' ' + s2);
         if (s1 && s2) {
             return s1.localeCompare(s2);
         }
