@@ -8,9 +8,21 @@
     background: #141414;
 }
 
+.ant-layout {
+    background-color: white;
+}
+
+.ant-layout-header {
+    height: 50px;
+    padding: 0 0px;
+    color: rgba(0, 0, 0, 0.65);
+    line-height: 50px;
+    background: #001529;
+}
+
 .logo {
     width: 120px;
-    height: 64px;
+    height: 50px;
     /* background: rgba(255, 255, 255, 0.2); */
     /* margin: 0px 10px 0px 0px; */
     float: left;
@@ -26,6 +38,14 @@
     background: rgba(255, 255, 255, 0.2);
     /* margin: 0px 10px 0px 0px; */
     float: left;
+}
+
+#top-content{
+    top:0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border-bottom: 1px solid #e7e7e7;
 }
 
 .space-align-container {
@@ -172,17 +192,6 @@
 .deleteButton a{
     color: red;
     font-weight: bold;
-}
-
-.ant-layout {
-    background-color: white;
-}
-#top-content{
-    top:0;
-    left: 0;
-    right: 0;
-    background-color: white;
-    border-bottom: 1px solid #e7e7e7;
 }
 
 .lobbySessionTab {
