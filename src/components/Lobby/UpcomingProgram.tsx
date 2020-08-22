@@ -137,25 +137,34 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
 
         let now = new Date();
 
-        let addedNow = false;
-        for(let item of this.state.curItems) {
-            if (!addedNow && item.get("startTime") < now && item.get("endTime") > now) {
+        // Find the item at, or closest to, "now"
+        let currentItem = this.state.curItems.find(item => item.get("startTime") <= now && item.get("endTime") >= now);
+        if (!currentItem) 
+            currentItem = this.state.curItems.find(item => item.get("startTime") > now);
+
+        console.log("Current: " + currentItem?.get("title"));
+        for (let item of this.state.curItems) {
+            if (item == currentItem) {
                 programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
-                addedNow = true;
                 this.lastRenderedNow = item.get("startTime");
             }
             let formattedTime = moment(item.get("startTime")).calendar();
-            if(formattedTime != lastFormattedTime)
+            if (formattedTime != lastFormattedTime)
                 programDetails.push(<div className="programTime" key={"program-time"+item.id}>{formattedTime}</div>)
             lastFormattedTime = formattedTime;
-            if(item instanceof ProgramSession){
+            if (item instanceof ProgramSession){
                 programDetails.push(<ExpandableSessionDisplay session={item} isLive={false} key={item.id}/>)
-            }else if(item instanceof ProgramSessionEvent){
+            } else if (item instanceof ProgramSessionEvent){
                 let isCurrent = item.get("startTime") <= now && item.get("endTime") >=now;
                 programDetails.push(<ProgramSessionEventDisplay key={item.id} id={item.id} auth={this.props.auth} className={isCurrent ? "programEventLive" : "programEvent"}/>)
-            }else{
+            } else{
                 console.log(item)
             }
+        }
+        if (!currentItem) {
+            let item = this.state.curItems[this.state.curItems.length - 1];
+            programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
+            this.lastRenderedNow = item.get("startTime");
         }
 
         return <div id="upcomingProgramContainer">
