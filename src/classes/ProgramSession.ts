@@ -7,7 +7,7 @@ export default class ProgramSession extends Parse.Object{
     }
     // TS: Is there a better way than writing this out manually???
     getItems(){
-        return <ProgramItem[]>this.get("items");
+        return this.get("items") as ProgramItem[];
     }
 }
 Parse.Object.registerSubclass('ProgramSession', ProgramSession);

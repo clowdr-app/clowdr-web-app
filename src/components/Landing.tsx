@@ -7,7 +7,7 @@ import Parse from "parse";
 import {ClowdrState} from "../ClowdrTypes";
 
 // Import TinyMCE
-var tinymce = require('tinymce/tinymce');
+require('tinymce/tinymce');
 
 // Default icons are required for TinyMCE 5.3 or above
 require('tinymce/icons/default');
