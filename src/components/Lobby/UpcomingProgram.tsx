@@ -142,7 +142,6 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         if (!currentItem) 
             currentItem = this.state.curItems.find(item => item.get("startTime") > now);
 
-        console.log("Current: " + currentItem?.get("title"));
         for (let item of this.state.curItems) {
             if (item == currentItem) {
                 programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
