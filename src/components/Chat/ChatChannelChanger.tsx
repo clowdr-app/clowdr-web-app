@@ -146,6 +146,41 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
 
     }
 
+    sortChannels(chan1: any, chan2: any) {
+        console.log(chan1);
+        console.log(chan2);
+        if (!chan1 || !chan2)
+            return 0;
+        let s1 = chan1.channelState.friendlyName;
+        let s2 = chan2.channelState.friendlyName;
+        console.log(chan1);
+
+        if (s1 === '#general')
+            s1 = chan1.sid;
+        if (s2 === '#general')
+            s2 = chan2.sid;
+
+        if (chan1.attributes && chan1.attributes.category == "programItem") {
+            let i1 = chan1.attributes.programItemID;
+            let i = this.state.ProgramItems.find(i => i.id == i1);
+            if (i) {
+                s1 = i.get("title");
+            }
+        }
+        if (chan2.attributes && chan2.attributes.category == "programItem") {
+            let i2 = chan2.attributes.programItemID;
+            let i = this.state.ProgramItems.find(i => i.id == i2);
+            if (i) {
+                s2 = i.get("title");
+            }
+        }
+        console.log(s1 + ' ' + s2);
+        if (s1 && s2) {
+            return s1.localeCompare(s2);
+        }
+        return 0;
+    }
+
     render() {
         // if (this.state.loading)
         //     return <Spin/>
@@ -165,37 +200,12 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     return true;
             }
             return false;
-        }).sort((sid1, sid2) => {
-                        // @ts-ignore   TS: fixme  
+        }).sort((sid1: string, sid2: string) => {
+                // @ts-ignore   TS: fixme  
                 let chan1 = this.props.appState?.chatClient.joinedChannels[sid1];
-                            // @ts-ignore   TS: fixme  
+                // @ts-ignore   TS: fixme  
                 let chan2 = this.props.appState?.chatClient.joinedChannels[sid2];
-                if (!chan1 || !chan2)
-                    return 0;
-                let s1 = chan1.friendlyName;
-                let s2 = chan2.friendlyName;
-                if (!s1)
-                    s1 = sid1;
-                if (!s2)
-                    s2 = sid2;
-                if (chan1.attributes && chan1.attributes.category == "programItem") {
-                    let i1 = chan1.attributes.programItemID;
-                    let i = this.state.ProgramItems.find(i => i.id == i1);
-                    if (i) {
-                        s1 = i.get("title");
-                    }
-                }
-                if (chan2.attributes && chan2.attributes.category == "programItem") {
-                    let i2 = chan2.attributes.programItemID;
-                    let i = this.state.ProgramItems.find(i => i.id == i2);
-                    if (i) {
-                        s2 = i.get("title");
-                    }
-                }
-                if (s1 && s2) {
-                    return s1.localeCompare(s2);
-                }
-                return 0;
+                return this.sortChannels(chan1.channel, chan2.channel);
             }
         );
         let dms = sorted.filter(sid => {
@@ -349,19 +359,24 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
 
                 <Menu.SubMenu key="otherPublicChannels" title={<span>More Channels</span>}>
                     {
-                        this.state.allChannels.filter(chan => chan && chan.sid &&
+                        this.state.allChannels
+                            .filter(chan => chan && chan.sid &&
                             //@ts-ignore
-                        // (chan.attributes && chan.attributes.category != 'socialSpace') &&
-                            chan.attributes.category != 'breakoutRoom' && chan.attributes.category != "programItem" &&
-                        !this.state.joinedChannels.includes(chan.sid)).map((chan) => {
-                        let className = "personHoverable";
-                        // if (this.state.filteredUser == user.id)
-                        //     className += " personFiltered"
-                        return <Menu.Item key={chan.sid} className={className}>
-                            <CollapsedChatDisplay sid={chan.sid} channel={chan} category="others"/>
-                            {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
-                        </Menu.Item>
-                    })
+                            // (chan.attributes && chan.attributes.category != 'socialSpace') && 
+                                chan.attributes.category != 'breakoutRoom' && chan.attributes.category != "programItem" && 
+                                !this.state.joinedChannels.includes(chan.sid))
+                            .sort((chan1, chan2) => {
+                                return this.sortChannels(chan1, chan2);
+                            })
+                            .map((chan) => {
+                                let className = "personHoverable";
+                                // if (this.state.filteredUser == user.id)
+                                //     className += " personFiltered"
+                                return <Menu.Item key={chan.sid} className={className}>
+                                    <CollapsedChatDisplay sid={chan.sid} channel={chan} category="others"/>
+                                    {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
+                                </Menu.Item>
+                            })
                     }
                 </Menu.SubMenu>
                 <Menu.SubMenu key="programChannels" title="Paper Channels">
