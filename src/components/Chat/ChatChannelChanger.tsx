@@ -283,9 +283,9 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                             let profiles = await this.props.appState?.programCache.getUserProfiles(this);
                             this.setState({UserProfiles: profiles, searchLoading: false})
                         }
-                        if (val.length == 3 && this.state.searchOptions.length != this.allSearchOptions.length) 
+                        if (val.length >= 3 && this.state.searchOptions.length != this.allSearchOptions.length) 
                             this.setState({searchOptions: this.allSearchOptions});
-                        if (val.length == 2 && this.state.searchOptions.length == this.allSearchOptions.length) 
+                        if (val.length <= 2 && this.state.searchOptions.length == this.allSearchOptions.length) 
                             this.setState({searchOptions: []});
                     }
                     }
