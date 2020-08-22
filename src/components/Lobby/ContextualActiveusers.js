@@ -179,7 +179,7 @@ class ContextualActiveUsers extends React.Component {
                         expandIcon={null}
                     >
                         {allActiveRooms ? allActiveRooms.sort((i1, i2) => {
-                            return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1)
+                            return (i1 && i2 && i1.get("title").localeCompare(i2.get("title")))
                         }).map((item) => {
                             if (!item) {
                                 return <Skeleton />
