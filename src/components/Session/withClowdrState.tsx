@@ -233,7 +233,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 conversationName: profileOfUserToDM.get("displayName"),
                 messageWith: profileOfUserToDM.id
             });
-            await this.state.chatClient.openChat(res.sid);
+            if (res.status == "ok")
+                await this.state.chatClient.openChat(res.sid);
         }
 
         // TS: @ Jon: Should this be polymorphic??
@@ -417,6 +418,9 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         Provide either the spaceName or the space object.
          */
         async setSocialSpace(spaceName:string, space:SocialSpace, user:User, userProfile:UserProfile, ignoreChatChannel?:boolean) {
+            // let name = space ? space.get("name") : "-"
+            // console.log(`setSocialSpace: spaceName=${spaceName} space=${space} (${name}) ignoreChannel=${ignoreChatChannel}`);
+            // console.trace();
             if (!this.state.user && !user) // user is not logged in
                 return
             if (space)

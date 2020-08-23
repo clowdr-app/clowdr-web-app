@@ -645,12 +645,12 @@ Parse.Cloud.define("chat-createDM", async (request) => {
         let acl =new Parse.ACL();
         acl.setPublicReadAccess(false)
         acl.setPublicWriteAccess(false)
-        if(visibility == "private"){
+        if (visibility == "private"){
             acl.setWriteAccess(profile.get("user"), true);
             acl.setReadAccess(profile.get("user"), true);
             acl.setWriteAccess(parseUser2.get("user"), true);
             acl.setReadAccess(parseUser2.get("user"), true);
-        }else{
+        } else {
             acl.setRoleReadAccess(conf.id+"-conference", true);
             acl.setRoleWriteAccess(conf.id+"-conference", true);
         }
@@ -666,13 +666,18 @@ Parse.Cloud.define("chat-createDM", async (request) => {
         let chatRoom = await config.twilioChat.channels.create(
             {friendlyName: conversationName, type: visibility,
             attributes: JSON.stringify(attributes)});
+
+        if (!chatRoom || !chatRoom.sid) { // Something went bad
+            convo.destroy({useMasterKey: true});
+            return {"status": "error", "message": "unable to create chat in Twilio"};;
+        }
+
         //create the twilio room
         let member = await config.twilioChat.channels(chatRoom.sid).members.create({identity: profile.id,
         roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
 
         // let member2 = await config.twilioChat.channels(chatRoom.sid).members.create({identity: messageWith,
         //     roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
-
 
         convo.set("sid", chatRoom.sid);
         await convo.save({},{useMasterKey: true});
