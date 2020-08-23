@@ -233,7 +233,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 conversationName: profileOfUserToDM.get("displayName"),
                 messageWith: profileOfUserToDM.id
             });
-            await this.state.chatClient.openChat(res.sid);
+            if (res.status == "ok")
+                await this.state.chatClient.openChat(res.sid);
         }
 
         // TS: @ Jon: Should this be polymorphic??
