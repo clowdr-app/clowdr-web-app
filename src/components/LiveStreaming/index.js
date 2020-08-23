@@ -195,7 +195,6 @@ class LiveStreaming extends Component {
                 this.setState({expanded: false, expanded_video: null, expandedRoomName: null})
             }
             this.props.auth.setSocialSpace("Lobby");
-
         }
     }
     expandVideoByName(roomName){

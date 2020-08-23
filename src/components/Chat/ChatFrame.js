@@ -65,6 +65,7 @@ class ChatFrame extends React.Component {
     }
 
     async changeChannel(sid) {
+        // console.log("currentSID: " + this.currentSID + " sid: " + sid + " activeChannel: " + this.activeChannel);
         let user = this.props.auth.user;
         if (!sid) {
             this.setState({chatDisabled: true});
@@ -303,6 +304,10 @@ class ChatFrame extends React.Component {
     }
 
     messageAdded = (channel, message) => {
+        if (!this.messages[channel.sid]) {
+            console.log("[ChatFrame]: attempt to add message to non-existing channel " + channel.sid);
+            return;
+        }
         // do not display a reaction message
         this.messages[channel.sid].push(message);
         this.groupMessages(this.messages[channel.sid], channel.sid);

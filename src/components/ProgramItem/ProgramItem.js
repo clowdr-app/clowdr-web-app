@@ -31,33 +31,36 @@ class ProgramItem extends React.Component {
 
         //For social features, we need to wait for the login to complete before doing anything
         let [user, item] = await Promise.all([this.props.auth.refreshUser(), this.props.auth.programCache.getProgramItemByConfKey(itemKey, this)]);
-
+        let inLobby = true;
         if (!item) {
             this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
         } else {
             let stateUpdate = {loading: false, error: null, ProgramItem: item};
             if (user) {
-                if(item.get("chatSID")){
+                if (item.get("chatSID")){
                     // This sets the right-hand sidebar display to this channel
                     // this.props.auth.helpers.setGlobalState({forceChatOpen: true, chatChannel: item.get("chatSID")});
                     this.props.auth.chatClient.setRightSideChat(item.get("chatSID"));
-                }else{
-                    if(item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
+                    inLobby = false;
+                } else {
+                    if (item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
                         //set the social space...
                         let ss = item.get("programSession").get("room").get("socialSpace");
                         this.props.auth.setSocialSpace(ss.get("name"));
                         this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+                        inLobby = false;
                     }
                 }
             }
             this.setState(stateUpdate);
         }
+        if (inLobby)
+            this.props.auth.setSocialSpace("Lobby");
     }
 
     componentWillUnmount() {
-        if(this.state.ProgramItem)
+        if (this.state.ProgramItem)
             this.props.auth.programCache.cancelSubscription("ProgramItem", this, this.state.ProgramItem.id);
-        this.props.auth.setSocialSpace("Lobby");
     }
 
     async componentDidUpdate(prevProps) {
