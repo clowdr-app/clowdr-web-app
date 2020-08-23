@@ -40,7 +40,7 @@ export default class MultiChatWindowHeader extends React.Component<MultiChatWind
     notificationSummary(unreadCount: number, tooltipText: string, className: string, shortName: string){
         if(unreadCount <= 0)
             return "";
-        return <Tooltip title={tooltipText} key={shortName}><Tag><Badge count={unreadCount} className={className} overflowCount={30} />{shortName}</Tag></Tooltip>
+        return <Tooltip title={tooltipText} key={shortName}><Tag><Badge count={unreadCount} className={className} overflowCount={99} />{shortName}</Tag></Tooltip>
     }
     render() {
         // if (this.state.loading)
