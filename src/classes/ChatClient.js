@@ -449,11 +449,9 @@ export default class ChatClient{
         }
 
         twilio.on("channelAdded", (channel)=>{
-            console.log("Channel added")
-            console.log(channel);
+            console.log("Channel added: " + channel)
             this.channels.push(channel);
             this.multiChatWindow.setAllChannels(this.channels);
-            console.log(channel);
             if(channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin != "false"){
                 if(!Object.keys(this.joinedChannels).includes(channel.sid)){
                     this.joinAndGetChannel(channel.sid)
