@@ -622,8 +622,10 @@ Parse.Cloud.define("chat-createDM", async (request) => {
         otherQ.equalTo("member2", parseUser2);
 
         let convo = await Parse.Query.or(convoQ, otherQ).first({useMasterKey: true});
-        console.log(convo)
-        if (convo) {
+        if(convo && !convo.get("sid")){
+            await convo.destroy({useMasterKey: true});
+        }
+        else if (convo) {
             //Now make sure that both users are still members of the twilio room;
             let members = await config.twilioChat.channels(convo.get("sid")).members.list({limit: 20});
 
@@ -662,26 +664,46 @@ Parse.Cloud.define("chat-createDM", async (request) => {
             mode: "directMessage",
             parseID: convo.id
         }
-        console.log("Creating dm")
-        let chatRoom = await config.twilioChat.channels.create(
-            {friendlyName: conversationName, type: visibility,
-            attributes: JSON.stringify(attributes)});
+        try {
+            let chatRoom = await createDMWithRetry(config, conversationName, visibility, attributes);
+            //create the twilio room
+            let member = await config.twilioChat.channels(chatRoom.sid).members.create({
+                identity: profile.id,
+                roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE
+            });
 
-        if (!chatRoom || !chatRoom.sid) { // Something went bad
-            convo.destroy({useMasterKey: true});
-            return {"status": "error", "message": "unable to create chat in Twilio"};;
+            // let member2 = await config.twilioChat.channels(chatRoom.sid).members.create({identity: messageWith,
+            //     roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
+
+            convo.set("sid", chatRoom.sid);
+            await convo.save({}, {useMasterKey: true});
+            return {"status":"ok",sid:chatRoom.sid};
+        }catch(err){
+            await convo.destroy({useMasterKey: true});
+            throw err;
         }
-
-        //create the twilio room
-        let member = await config.twilioChat.channels(chatRoom.sid).members.create({identity: profile.id,
-        roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
-
-        // let member2 = await config.twilioChat.channels(chatRoom.sid).members.create({identity: messageWith,
-        //     roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
-
-        convo.set("sid", chatRoom.sid);
-        await convo.save({},{useMasterKey: true});
-        return {"status":"ok",sid:chatRoom.sid};
     }
     return {"status":"error","message":"Not authorized to create channels for this conference"};
 });
+
+async function createDMWithRetry(config, conversationName, visibility, attributes){
+    try {
+        console.log("Creating DM: " + conversationName + JSON.stringify(attributes));
+        let chatRoom = await config.twilioChat.channels.create(
+            {
+                friendlyName: conversationName, type: visibility,
+                attributes: JSON.stringify(attributes)
+            });
+        return chatRoom;
+    } catch (err) {
+        if (err.code == 20429) {
+            //Back off, try again
+            await timeout(2000 + Math.random() * 4000);
+            let ret = await createDMWithRetry(conversationName, visibility, attributes);
+            return ret;
+        } else {
+            throw err;
+        }
+    }
+
+}
