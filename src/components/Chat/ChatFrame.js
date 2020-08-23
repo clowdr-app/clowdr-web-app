@@ -518,7 +518,7 @@ class ChatFrame extends React.Component {
         if (!this.props.auth.user) {
             return <div></div>
         }
-
+        let date_stamp_arr = [];
         return <div className="embeddedChatFrame"
         >
             {this.props.header}
@@ -558,15 +558,22 @@ class ChatFrame extends React.Component {
                                           //         href="#"><CloseOutlined/></a></Tooltip></Popconfirm>
                                           let initials = "";
                                           let authorID = item.author;
-                                          let addDate = this.lastDate && this.lastDate != moment(item.timestamp).day();
-                                          this.lastDate = moment(item.timestamp).day();
+                                          let addDate = false;
+                                          if (item.messages.length > 0) {
+                                              let date = moment(item.timestamp).date()
+                                              if (!date_stamp_arr.includes(date)) {
+                                                date_stamp_arr.push(date);
+                                                addDate = true;
+                                              }
+                                          }
+
 
 
                                           return (
                                               <List.Item style={{padding: '0', width: "100%", textAlign: 'left'}}
                                                          key={item.sid}>
                                                   <div style={{width: "100%"}}>
-                                                      {(addDate && item.messages.length > 0 ? <Divider
+                                                    {(addDate ? <Divider
                                                           style={{margin: '0'}}>{moment(item.timestamp).format("LL")}</Divider> : "")}
                                                       {item.messages.length > 0 &&
                                                           <div className={"chatMessageContainer"}>

@@ -196,7 +196,8 @@ export default class ChatClient{
             channel = await this.joinAndGetChannel(newChannelSID)
             if(!this.desiredRHSChat == newChannelSID)
                 return;
-            shouldLeaveWhenChanges = true;
+            if(channel.friendlyName && channel.friendlyName.startsWith("socialSpace-"))
+                shouldLeaveWhenChanges = true;
         }
         if(channel)
             await this.rightSideChat.setChannel(channel, shouldLeaveWhenChanges);

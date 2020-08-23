@@ -454,8 +454,8 @@ div.availabilityOptionsOpen  span.availabilityOption{
     /*height: 25px;*/
 }
 .bottomChatIdentity {
-    color: #0264c1;
-    background-color: #b5d6fc;
+    color: black;
+    background-color: #d6e4ff;
 }
 #bottom-chat-button-bar{
     overflow-x: hidden;
@@ -469,8 +469,8 @@ div.availabilityOptionsOpen  span.availabilityOption{
     margin-right: 2px;
 }
 .chatIdentitySidebar {
-    color: #0264c1;
-    background-color: #b5d6fc;
+    color: black;
+    background-color: #d6e4ff;
 }
 .chatButtonCollapsed{
     text-overflow: ellipsis;
@@ -622,16 +622,25 @@ td.ant-table-cell.program-table-timeBand{
 
 #sidepopoutcontainer .social-sidebar-divider{
     margin: 0;
-    background-color: #b5d6fc;
+    background-color: #d6e4ff;
     border: 0;
    }
+.social-sidebar-divider a {
+    color: black;
+}
 
 .social-sidebar-divider{
     margin: 0;
-    background-color: #b5d6fc;
+    background-color: #d6e4ff;
     border: 0;
    }
 
+.social-sidebar-divider.ant-divider-horizontal.ant-divider-with-text{
+    margin: 0;
+}
+.social-sidebar-divider .ant-divider-inner-text {
+    color: black;
+}
 .sidebar-section-separator{
     height: 2px;
     background-color: #198fff;
@@ -756,10 +765,21 @@ span.ant-divider-inner-text {
     height: 100%;
     width: 100%;
 }
+.multiChatWindowHeader button.ant-btn-primary{
+    background-color: #d6e4ff;
+    text-shadow: none;
+    border: none;
+    color: black;
+}
+.multiChatWindowHeader button.ant-btn-primary:hover{
+    background-color: #597ef7;
+    border: none;
+    color: black;
+}
 .multiChatWindowHeader{
     /* background-color: #1890FF; */
-    background-color: #b5d6fc;
-    color: #0264c1;
+    background-color: #d6e4ff;
+    color: black;
     /* font-weight: bold; */
     font-size: 16px;
     text-align: center;
@@ -770,7 +790,6 @@ span.ant-divider-inner-text {
 }
 
 .multiChatWindowHeader .notifications {
-    float: center;
 }
 
 .multiChatWindowHeader .actions {
@@ -1073,19 +1092,23 @@ span.ant-divider-inner-text {
 }
 .notifications .ant-tag{
     border-radius: 5px;
-    background-color: #f5222d;
+    background-color: #fc858b;
     color: white;
     border: none;
-
+}
+.ant-badge-count {
+    background-color: #fc858b;
 }
 .notifications .ant-tag .ant-badge{
     padding-right: 5px;
     /*padding-top: 4px;*/
     /*padding-bottom: 4px;*/
 }
+/*
 .notifications .ant-tag .ant-badge-count{
-    background-color: #f5222d;
+    background-color: #ff9ca1;
 }
+*/
 .chatEntryWrapper{
     display: flex;
     flex-direction: row;
