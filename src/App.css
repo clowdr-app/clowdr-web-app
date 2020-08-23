@@ -1079,10 +1079,7 @@ span.ant-divider-inner-text {
 .userDisplay .userName{
     color: black;
 }
-.bottomChatHeader .userName{
-/*    color: #0264c1; */   
-    color: #d6e4ff;  /* BCP: Changed, but not sure if this is used */
-}
+
 .bottomChatClose button{
    /* color: white; */
    color: gray;
