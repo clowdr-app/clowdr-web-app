@@ -349,14 +349,32 @@ class ChatFrame extends React.Component {
         // if (event.target.value != '\n')
         //     this.setState({newMessage: event.target.value});
     };
+    timeout = async (ms) => {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    sendMessageWithRetry = async(message, data) => {
+        try {
+            await this.activeChannel.sendMessage(message, data);
+        } catch (err) {
+            if(err.code == 20429){
+                await this.timeout(1000+Math.random()*4000);
+                return await this.sendMessageWithRetry(message, data);
+            }
+        }
+    };
 
-    sendMessage = event => {
+    sendMessage = async (event) => {
         event.preventDefault();
         if (!event.getModifierState("Shift")) {
-            let message = this.form.current.getFieldValue("message");
-            if (message)
-                message = message.replace(/\n/g, "  \n");
-            this.activeChannel.sendMessage(message);
+            let msg = this.form.current.getFieldValue("message");
+            if (msg)
+                msg = msg.replace(/\n/g, "  \n");
+            try {
+                await this.sendMessageWithRetry(msg);
+            } catch(err){
+                msg.error("Unable to send message, please try again.");
+                return;
+            }
             if(!this.clearedTempFlag){
                 this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c=>c!=this.activeChannel.sid);
                 this.clearedTempFlag = true;
@@ -376,7 +394,7 @@ class ChatFrame extends React.Component {
         }
     };
 
-    sendReaction(msg, event) {
+    async sendReaction(msg, event) {
         if(msg == null){
             //add to the current input
             let message = this.form.current.getFieldValue("message");
@@ -398,9 +416,8 @@ class ChatFrame extends React.Component {
             });
             return;
         }
-        this.activeChannel.sendMessage(emoji, {associatedMessage: msg.sid}).then(()=>{
-            this.pendingReactions[msg.sid] = false;
-        });
+        await this.sendMessageWithRetry(emoji, {associatedMessage: msg.sid});
+        this.pendingReactions[msg.sid] = false;
     }
 
     deleteMessage(message) {
