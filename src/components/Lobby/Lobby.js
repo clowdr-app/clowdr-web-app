@@ -498,7 +498,7 @@ class Lobby extends React.Component {
                 <Space />
 
                 <div className="new-breakout-room-button">
-                    <NewRoomForm type="secondary" text="New video chat room" />
+                    <NewRoomForm type="primary" text="New video chat room" />
                 </div>
                 <div className="lobby-section-header">
                     Video Chat Rooms

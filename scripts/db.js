@@ -26,7 +26,7 @@ const defaultText = `
                 <li>If you are a presenter, consider starting a video chat right after your session, so others can talk to you.</li>
                 <li>If you are a senior member of the community, consider volunteering for one-on-one or small group mentoring sessions. Meet up with younger people 
                     either in one of the existing video chat rooms or in your own video room.</li>
-                <li>If you'd like to organize an informal public gathering, create one using the "New video chat room" button (please give it a meaningful name!), and announce it in
+                <li>If you'd like to organize an informal public gathering, create one using the "Create a new video chat" button (please give it a meaningful name!), and announce it in
                     the Lobby.</li>
                 <li> If you're just looking for casual conversation, feel free to drop into one of the "hallway track" rooms anytime. Or head to an empty Public Hangout room 
                     and see who else shows up.  You can also set your status to let people know what you're up to. </li>
