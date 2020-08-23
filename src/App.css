@@ -453,10 +453,6 @@ div.availabilityOptionsOpen  span.availabilityOption{
     /*bottom: 0;*/
     /*height: 25px;*/
 }
-.bottomChatIdentity {
-    color: black;
-    background-color: #d6e4ff;
-}
 #bottom-chat-button-bar{
     overflow-x: hidden;
     display: flex;
@@ -486,7 +482,6 @@ div.availabilityOptionsOpen  span.availabilityOption{
     bottom: 0;
     width: 100%;
     height: 100%;
-
     flex-direction: column;
     display: flex;
 }
@@ -540,7 +535,9 @@ div.availabilityOptionsOpen  span.availabilityOption{
     display: flex;
 }
 .bottomChatHeader{
-    background-color: #1890FF;
+    /* background-color: #1890FF;  */
+    background-color: #d6e4ff;
+     /* BCP: check */
     border-bottom: 1px solid #6666;
     /*flex: 1 1 5%;*/
     flex-grow: 1;
@@ -574,14 +571,23 @@ div.availabilityOptionsOpen  span.availabilityOption{
 }
 
 .bottomChatIdentity{
-    color: white;
+    background-color: #d6e4ff;
+    color: black;
     padding-left: 2px;
     flex-grow: 2;
     /* font-weight:bolder; */
 }
-
-.bottomChatClose{
+.bottomChatIdentity  a{
+    color: #f0f5ff;
 }
+.bottomChatIdentity a:hover{
+    color: #adc6ff;
+}
+
+/* 
+.bottomChatClose{
+} 
+*/
 
 .programContainer{
     display: flex;
@@ -643,7 +649,7 @@ td.ant-table-cell.program-table-timeBand{
 }
 .sidebar-section-separator{
     height: 2px;
-    background-color: #198fff;
+    background-color: #198fff; /* BCP: unused now, I think? */
     margin: 0;
  }
 
@@ -655,7 +661,7 @@ td.ant-table-cell.program-table-timeBand{
  */
 
 span.ant-divider-inner-text {
-        color: #0264c1;
+        color: #0264c1;  /* BCP: Not sure what this does */
     }    
 
 /* For Mobile */
@@ -757,7 +763,8 @@ span.ant-divider-inner-text {
 }
 .multiChatWindow {
     background-color: white;
-    border: 2px solid #1890FF;
+ /*   border: 2px solid #1890FF; */ /* BCP: Changed (I think this looks right) */
+    border: 2px solid #d6e4ff;
     display: flex;
     flex-direction: column;
 
@@ -900,7 +907,8 @@ span.ant-divider-inner-text {
     width: 100%;
     height: 100%;
     bottom: 0;
-    border: 2px solid #1890FF;
+    /* border: 2px solid #1890FF; */
+    border: 2px solid #d6e4ff;
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
@@ -1035,12 +1043,6 @@ span.ant-divider-inner-text {
 .icon-text{
     font-size: xx-small;
 }
-.bottomChatIdentity  a{
-    color: #f0f5ff;
-}
-.bottomChatIdentity a:hover{
-    color: #adc6ff;
-}
 
 .reactionWrapper{
     /*padding: 0 10px 5px;*/
@@ -1078,10 +1080,12 @@ span.ant-divider-inner-text {
     color: black;
 }
 .bottomChatHeader .userName{
-    color: #0264c1;
+/*    color: #0264c1; */   
+    color: #d6e4ff;  /* BCP: Changed, but not sure if this is used */
 }
 .bottomChatClose button{
-    color: white;
+   /* color: white; */
+   color: gray;
 }
 .bottomChatClose button:hover{
     color: #E8F5FA;

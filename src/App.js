@@ -415,7 +415,6 @@ class App extends Component {
                                 <Pane initialSize={this.state.isShowOtherPanes ? "250px" : 0}>
                                     <div className="chatTab" id="rightPopout">
                                         <div id="activeUsersList"><ActiveUsersList /></div>
-                                        <Divider className="sidebar-section-separator"></Divider>
                                         <div id="sidebarChat"><SidebarChat collapsed={this.state.chatCollapsed} /></div>
                                     </div>
                                 </Pane>
