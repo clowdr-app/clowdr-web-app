@@ -1077,6 +1077,9 @@ span.ant-divider-inner-text {
     color: white;
     border: none;
 }
+.ant-badge-count {
+    background-color: #fc858b;
+}
 .notifications .ant-tag .ant-badge{
     padding-right: 5px;
     /*padding-top: 4px;*/
