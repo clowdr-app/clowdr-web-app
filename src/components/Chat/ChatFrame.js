@@ -337,10 +337,18 @@ class ChatFrame extends React.Component {
     };
 
     messageRemoved = (channel, message) => {
+        if (this.messages[channel.sid]) {
+            console.log("[ChatFrame]: attempt to remove message from non-existing channel " + channel.sid);
+            return;
+        }
         this.messages[channel.sid] = this.messages[channel.sid].filter((v) => v.sid != message.sid)
         this.groupMessages(this.messages[channel.sid], channel.sid);
     };
     messageUpdated = (channel, message) => {
+        if (this.messages[channel.sid]) {
+            console.log("[ChatFrame]: attempt to update message in non-existing channel " + channel.sid);
+            return;
+        }
         this.messages[channel.sid] = this.messages[channel.sid].map(m => m.sid == message.sid ? message : m)
         this.groupMessages(this.messages[channel.sid], channel.sid);
     };
