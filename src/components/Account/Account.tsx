@@ -1,5 +1,5 @@
 import React from 'react';
-import {AutoComplete, Button, Form, Input, Select, Skeleton, Spin, Tag, Tooltip} from "antd";
+import {AutoComplete, Button, Form, Input, Select, Skeleton, Spin, Tag, Tooltip, Typography} from "antd";
 import Avatar from "./Avatar";
 import {AuthUserContext} from "../Session";
 import Parse from "parse";
@@ -251,6 +251,8 @@ class Account extends React.Component<Props, State> {
         }
 
         return (
+            <div>
+            <Typography.Title level={2}>My Account</Typography.Title>
             <Form onFinish={this.updateUser.bind(this)} labelCol={{
                 span: 4,
             }}
@@ -431,7 +433,8 @@ class Account extends React.Component<Props, State> {
                 </Button>
 
                 {this.state.error && <p>{this.state.error.message}</p>}
-            </Form>);
+            </Form>
+            </div>);
     }
 }
 
