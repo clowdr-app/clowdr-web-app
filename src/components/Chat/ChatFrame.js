@@ -568,9 +568,8 @@ class ChatFrame extends React.Component {
                                                               <div>
                                                                   <UserStatusDisplay
                                                                       popover={true}
-                                                                      profileID={item.author}/>&nbsp;
-                                                                  <span
-                                                                      className="timestamp">{this.formatTime(item.timestamp)}</span>
+                                                                      profileID={item.author}
+                                                                      timestamp={this.formatTime(item.timestamp)}/>
                                                               </div>
 
                                                               <div>

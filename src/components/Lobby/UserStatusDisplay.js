@@ -160,6 +160,11 @@ class UserStatusDisplay extends React.Component{
         // in different contexts; I am going to make them all the same for now
         if (this.props.popover)
 */
+        let timestamp = "";
+        if (this.props.timestamp) {
+            timestamp = <span className="timestamp">{this.props.timestamp}</span>
+        }
+
         if(this.props.inline){
             return <span className="userDisplay" style={this.props.style}
                         onClick={onClick}>
@@ -169,6 +174,7 @@ class UserStatusDisplay extends React.Component{
                 </Popover>
             </span>
         }
+
         return <div className="userDisplay" style={this.props.style}
                     onClick={onClick}>
                     <Popover
@@ -180,6 +186,7 @@ class UserStatusDisplay extends React.Component{
                       <span className="highlightedTags">{tagsToHighlight}</span>
 
                     </Popover>
+                    {timestamp}
               </div>
 /*
     else return <div
