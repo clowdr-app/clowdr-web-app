@@ -125,7 +125,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
     }
 
     maybeCloseChat(){
-        this.props.appState?.chatClient.closeChatAndLeaveIfUnused(this.state.chatSID);
+        // this.props.appState?.chatClient.closeChatAndLeaveIfUnused(this.state.chatSID);
     }
     
     componentDidUpdate(prevProps: Readonly<ProgramItemDetailProps>, prevState: Readonly<ProgramItemDetailsState>, snapshot?: any): void {

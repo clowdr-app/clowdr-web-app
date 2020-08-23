@@ -72,7 +72,8 @@ class SidebarChat extends React.Component {
     }
 
     async setChannel(channel, leaveWhenChanges){
-        this.shouldLeaveChannel = leaveWhenChanges;
+        // this.shouldLeaveChannel = leaveWhenChanges;
+        this.shouldLeaveChannel = false;
         this.setState({sid: channel.sid, channel: channel, chatDisabled: false});
     }
 
