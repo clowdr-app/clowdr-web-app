@@ -625,6 +625,9 @@ td.ant-table-cell.program-table-timeBand{
     background-color: #d6e4ff;
     border: 0;
    }
+.social-sidebar-divider a {
+    color: black;
+}
 
 .social-sidebar-divider{
     margin: 0;
