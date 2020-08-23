@@ -103,7 +103,7 @@ class SidebarChat extends React.Component {
         if(!this.state.sid){
             return <div></div>
         }
-        return <ChatFrame sid={this.state.sid} leaveOnChange={this.shouldLeaveChannel} visible={true} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Channel: {this.state.channel.friendlyName}</div>}/>
+        return <ChatFrame sid={this.state.sid} leaveOnChange={this.shouldLeaveChannel} visible={true} setUnreadCount={(c)=>{this.setState({unreadCount: c})}} header={<div className="chatIdentitySidebar">Context Channel: {this.state.channel.friendlyName}</div>}/>
     }
 }
 

@@ -393,7 +393,8 @@ background-color:#97a7b7;
     cursor: ew-resize;
 }
 .chatIdentitySidebar{
-    font-weight: bold;
+    /* font-weight: bold; */
+    /* font-size: 16px;*/
     text-align: center;
 }
 .chatTab{
@@ -452,6 +453,10 @@ div.availabilityOptionsOpen  span.availabilityOption{
     /*bottom: 0;*/
     /*height: 25px;*/
 }
+.bottomChatIdentity {
+    color: #0264c1;
+    background-color: #b5d6fc;
+}
 #bottom-chat-button-bar{
     overflow-x: hidden;
     display: flex;
@@ -463,7 +468,10 @@ div.availabilityOptionsOpen  span.availabilityOption{
     margin-left: 2px;
     margin-right: 2px;
 }
-
+.chatIdentitySidebar {
+    color: #0264c1;
+    background-color: #b5d6fc;
+}
 .chatButtonCollapsed{
     text-overflow: ellipsis;
     width: 238px;
@@ -569,7 +577,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
     color: white;
     padding-left: 2px;
     flex-grow: 2;
-    font-weight:bolder;
+    /* font-weight:bolder; */
 }
 
 .bottomChatClose{
@@ -614,6 +622,14 @@ td.ant-table-cell.program-table-timeBand{
 
 #sidepopoutcontainer .social-sidebar-divider{
     margin: 0;
+    background-color: #b5d6fc;
+    border: 0;
+   }
+
+.social-sidebar-divider{
+    margin: 0;
+    background-color: #b5d6fc;
+    border: 0;
    }
 
 .sidebar-section-separator{
@@ -621,6 +637,13 @@ td.ant-table-cell.program-table-timeBand{
     background-color: #198fff;
     margin: 0;
  }
+
+/* Doesn't work! 
+ .ant-divider-horizontal > .ant-divider-with-text {
+    border: 0;
+    margin: 0;
+ }
+ */
 
 span.ant-divider-inner-text {
         color: #0264c1;
@@ -734,9 +757,11 @@ span.ant-divider-inner-text {
     width: 100%;
 }
 .multiChatWindowHeader{
-    background-color: #1890FF;
-    color: white;
-    font-weight: bold;
+    /* background-color: #1890FF; */
+    background-color: #b5d6fc;
+    color: #0264c1;
+    /* font-weight: bold; */
+    font-size: 16px;
     text-align: center;
 }
 
@@ -1034,7 +1059,7 @@ span.ant-divider-inner-text {
     color: black;
 }
 .bottomChatHeader .userName{
-    color: white;
+    color: #0264c1;
 }
 .bottomChatClose button{
     color: white;
