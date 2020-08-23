@@ -666,7 +666,7 @@ async function createBreakoutRoomForProgramItem(programItem){
                 space = spaces[1];
         }
         else{
-            throw "Error: Program item '" + programItem.get('title') + "' is not mapped to a session, so we can't tell where to put the breakout room. Please map this program item to a session.";
+            throw "Error: Program item '" + programItem.get('title') + "' is not mapped to a session, so we can't tell where to put the chat room. Please map this program item to a session.";
         }
     }
     parseRoom.set("socialSpace", space);

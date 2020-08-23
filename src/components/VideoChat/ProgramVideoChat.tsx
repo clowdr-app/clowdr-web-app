@@ -48,7 +48,7 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
     render() {
         if (!this.state.isInRoom) {
             return <div>
-                <Button type="primary" loading={this.state.loading} onClick={this.joinRoom.bind(this)}>Join the breakout room</Button>
+                <Button type="primary" loading={this.state.loading} onClick={this.joinRoom.bind(this)}>Join the video chat room</Button>
             </div>
         }
         return <VideoRoom

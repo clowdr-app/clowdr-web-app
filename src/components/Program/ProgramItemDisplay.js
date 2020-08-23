@@ -125,11 +125,11 @@ export default class ProgramItemDisplay extends React.Component{
             {sessionInfo}
             {/*<p><b>Abstract: </b> {this.state.ProgramItem.get("abstract")}</p>*/}
             {(this.props.auth.user  && this.state.ProgramItem.get("breakoutRoom")) ?
-                <p><b>Breakout Room: </b>
+                <p><b>Video Chat Room: </b>
                 <Button onClick={()=>{
                 this.props.auth.history.push("/breakoutRoom/" + this.state.ProgramItem.get("confKey"))
             }
-                }>Join Breakout Room</Button></p> : <></>}
+                }>Join Video Chat Room</Button></p> : <></>}
 
         </div>
         if(this.props.hideLink)

@@ -276,7 +276,7 @@ class ContextualActiveUsers extends React.Component {
                             : <Collapse.Panel showArrow={false} header={<Skeleton />}></Collapse.Panel>}
                     </Menu>
                     <div style={{ textAlign: 'center' }}>
-                        <NewRoomForm type="secondary" text="New video chat room" />
+                        <NewRoomForm type="secondary" text="Create a new video chat room" />
                     </div>
                 </div>
 

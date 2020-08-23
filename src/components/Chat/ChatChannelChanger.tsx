@@ -143,7 +143,6 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         let room = await newChannel.join();
         this.setState({newChannelVisible: false});
         this.props.appState?.chatClient.openChat(newChannel.sid, false);
-
     }
 
     render() {
@@ -154,7 +153,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             addChannelButton = <Button size="small"
                                        onClick={()=>{this.setState({newChannelVisible: true})}}
                                        type="primary"
-                                       >New text channel</Button>
+                                       >Create a new text channel</Button>
 
         let sorted = this.state.joinedChannels.filter(sid => {
             // @ts-ignore   TS: fixme  
@@ -334,7 +333,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     })
                     }
                 </Menu.SubMenu>
-                    <Menu.SubMenu key="joinedChannels" title="Subscribed Channels">
+                    <Menu.SubMenu key="joinedChannels" title="Subscribed">
                         {otherChannels.map((chan) => {
                             let className = "personHoverable";
                             // if (this.state.filteredUser == user.id)
@@ -347,7 +346,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         }
                     </Menu.SubMenu>
 
-                <Menu.SubMenu key="otherPublicChannels" title={<span>More Channels</span>}>
+                <Menu.SubMenu key="otherPublicChannels" title={<span>Not subscribed</span>}>
                     {
                         this.state.allChannels.filter(chan => chan && chan.sid &&
                             //@ts-ignore
