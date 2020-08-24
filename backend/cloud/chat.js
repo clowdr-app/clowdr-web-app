@@ -6,7 +6,7 @@ let BondedChannel = Parse.Object.extend("BondedChannel");
 let TwilioChannelMirror = Parse.Object.extend("TwilioChannelMirror");
 let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 let SocialSpace = Parse.Object.extend("SocialSpace");
-const backOff = require('exponential-backoff');
+const backOff = require('exponential-backoff').backOff;
 
 const Twilio = require("twilio");
 async function callWithRetry(twilioFunctionToCall) {

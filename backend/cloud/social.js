@@ -6,7 +6,8 @@ let Converation = Parse.Object.extend("Conversation");
 let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
 const Twilio = require("twilio");
-const backOff = require('exponential-backoff');
+const backOff = require('exponential-backoff').backOff;
+
 
 async function getConfig(conference){
     let configQ = new Parse.Query(InstanceConfig);

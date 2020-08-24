@@ -14,7 +14,7 @@ let ProgramPerson = Parse.Object.extend("ProgramPerson");
 let ZoomRoom = Parse.Object.extend("ZoomRoom");
 var jwt = require('jsonwebtoken');
 
-const backOff = require('exponential-backoff');
+const backOff = require('exponential-backoff').backOff;
 async function callWithRetry(twilioFunctionToCall) {
     const response = await backOff(twilioFunctionToCall,
         {
