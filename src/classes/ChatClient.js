@@ -20,6 +20,8 @@ export default class ChatClient{
     }
 
     async openChatAndJoinIfNeeded(sid, openOnRight=false){
+        console.log("CC--> " + sid + " " + openOnRight);
+
         let channels = this.joinedChannels;
         let found = channels[sid];
         if (!found) {
@@ -40,9 +42,11 @@ export default class ChatClient{
         }
         else{
             if(openOnRight){
-                this.appController.setState({chatChannel: sid});
+                console.log("CC--> 1");
+                this.setRightSideChat(sid);
             }
             else {
+                console.log("CC--> 2");
                 this.openChat(found.sid);
             }
             return found.sid;
