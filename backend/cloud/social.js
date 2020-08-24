@@ -6,6 +6,8 @@ let Converation = Parse.Object.extend("Conversation");
 let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
 const Twilio = require("twilio");
+const backOff = require('exponential-backoff').backOff;
+
 
 async function getConfig(conference){
     let configQ = new Parse.Query(InstanceConfig);
@@ -38,25 +40,33 @@ async function getConfig(conference){
 function timeout(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+async function callWithRetry(twilioFunctionToCall) {
+    const response = await backOff(twilioFunctionToCall,
+        {
+            startingDelay: 500,
+            retry: (err, attemptNum) => {
+                if (err && err.code == 20429)
+                    return true;
+                console.log(err);
+                return false;
+            }
+        });
+    return response;
+}
 async function createWithRetry(config, roomName, socialSpace, attributes){
     try {
-        let chatRoom = await config.twilioChat.channels.create(
+        let chatRoom = await callWithRetry(()=>config.twilioChat.channels.create(
             {
                 friendlyName: roomName,
                 uniqueName: 'socialSpace-' + socialSpace.id,
                 type: 'public',
                 attributes: JSON.stringify(attributes)
-            });
+            }));
         return chatRoom;
     }catch(err){
-        if(err.code == 20429){
-            //Back off, try again
-            await timeout(2000 + Math.random()*4000);
-            return await createWithRetry(config, roomName, socialSpace, attributes);
-        }
-        else{
+        console.log("Unable to create social space room")
+        console.log(err);
             throw err;
-        }
     }
 }
 Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
@@ -100,7 +110,7 @@ Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
 
             //update name
             socialSpace.set("name", roomName);
-            let twilioUpdate = config.twilioChat.channels(socialSpace.get("chatChannel")).update({friendlyName: roomName});
+            let twilioUpdate = await callWithRetry(()=>config.twilioChat.channels(socialSpace.get("chatChannel")).update({friendlyName: roomName}));
             await Promise.all([twilioUpdate, socialSpace.save({},{useMasterKey: true})]);
             return room;
         }

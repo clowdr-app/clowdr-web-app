@@ -156,7 +156,7 @@ class CollapsedChatDisplay extends React.Component{
             >
            <div
                className="userTag"
-               onClick={()=>{this.props.auth.chatClient.openChat(this.state.sid)}}
+               onClick={()=>{if(!this.props.noLink) this.props.auth.chatClient.openChat(this.state.sid)}}
            ><Badge overflowCount={9} className="chat-unread-count" count={this.state.unread} style={{ backgroundColor: color }}/> {this.state.title}
            </div>
        </div></Popover>

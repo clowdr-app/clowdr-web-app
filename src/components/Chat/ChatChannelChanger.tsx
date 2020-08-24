@@ -333,7 +333,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan} className={className}>
-                            <CollapsedChatDisplay sid={chan}  category="dm"/>
+                            <CollapsedChatDisplay sid={chan}  category="dm" noLink={true}/>
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })
@@ -345,7 +345,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                             // if (this.state.filteredUser == user.id)
                             //     className += " personFiltered"
                             return <Menu.Item key={chan} className={className}>
-                                <CollapsedChatDisplay sid={chan}  category="subscriptions"/>
+                                <CollapsedChatDisplay sid={chan}  category="subscriptions" noLink={true}/>
                                 {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                             </Menu.Item>
                         })
@@ -368,7 +368,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                                 // if (this.state.filteredUser == user.id)
                                 //     className += " personFiltered"
                                 return <Menu.Item key={chan.sid} className={className}>
-                                    <CollapsedChatDisplay sid={chan.sid} channel={chan} category="others"/>
+                                    <CollapsedChatDisplay sid={chan.sid} channel={chan} category="others" noLink={true}/>
                                     {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                                 </Menu.Item>
                             })
@@ -380,7 +380,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         // if (this.state.filteredUser == user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan} className={className}>
-                            <CollapsedChatDisplay sid={chan} category="papers" />
+                            <CollapsedChatDisplay sid={chan} category="papers"  noLink={true}/>
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })

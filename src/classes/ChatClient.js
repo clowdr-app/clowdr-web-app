@@ -2,7 +2,7 @@ import Chat from "twilio-chat";
 import Parse from "parse";
 import React from "react";
 import {backOff} from "exponential-backoff";
-
+import {message} from "antd"
 export default class ChatClient{
     constructor(setGlobalState) {
         this.channelListeners = [];
@@ -114,23 +114,25 @@ export default class ChatClient{
             return membership;
         }catch(err){
             if(err.code ==50403) {
-                this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
-                console.log("Asking for bonded channel for " + channel.sid)
-                let res = await Parse.Cloud.run("chat-getBondedChannelForSID", {
-                    conference: this.conference.id,
-                    sid: channel.sid
-                });
-                this.channelsThatWeHaventMessagedIn.push(res);
-                channel = await this.callWithRetry(()=>this.twilio.getChannelByUniqueName(res));
-                try{
-                    let membership = await this.callWithRetry(()=>channel.join());
-                    await this.getChannelInfo(membership);
-                    return membership;
-                }catch(er2){
-                    //We are in fact already in this channel!
-                    console.log(er2)
-                    return channel;
-                }
+                message.error("Sorry, the text channel that you selected is currently at full capacity (currently, channels support a max of 1,000 users).")
+                return null;
+                // this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
+                // console.log("Asking for bonded channel for " + channel.sid)
+                // let res = await Parse.Cloud.run("chat-getBondedChannelForSID", {
+                //     conference: this.conference.id,
+                //     sid: channel.sid
+                // });
+                // this.channelsThatWeHaventMessagedIn.push(res);
+                // channel = await this.callWithRetry(()=>this.twilio.getChannelByUniqueName(res));
+                // try{
+                //     let membership = await this.callWithRetry(()=>channel.join());
+                //     await this.getChannelInfo(membership);
+                //     return membership;
+                // }catch(er2){
+                //     //We are in fact already in this channel!
+                //     console.log(er2)
+                //     return channel;
+                // }
             }
             else{
                 console.log(err);

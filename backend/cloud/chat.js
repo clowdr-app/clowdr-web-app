@@ -6,8 +6,24 @@ let BondedChannel = Parse.Object.extend("BondedChannel");
 let TwilioChannelMirror = Parse.Object.extend("TwilioChannelMirror");
 let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 let SocialSpace = Parse.Object.extend("SocialSpace");
+const backOff = require('exponential-backoff').backOff;
 
 const Twilio = require("twilio");
+async function callWithRetry(twilioFunctionToCall) {
+    const response = await backOff(twilioFunctionToCall,
+        {
+            startingDelay: 500,
+            retry: (err, attemptNum) => {
+                console.log(err);
+                if (err && err.code == 20429)
+                    return true;
+                console.log("Unexpected error:")
+                console.log(err);
+                return false;
+            }
+        });
+    return response;
+}
 
 async function getConfig(conference){
     let configQ = new Parse.Query(InstanceConfig);
@@ -102,6 +118,7 @@ async function getBondedChannel(conf, config, originalChatSID){
     bondedChanQ.include("children");
     let chan = await bondedChanQ.first({useMasterKey: true});
     if(!chan){
+        console.log("Making a new channel")
         //Create a new bonding
         chan = new BondedChannel();
         chan.set("masterSID", originalChatSID);
@@ -110,13 +127,15 @@ async function getBondedChannel(conf, config, originalChatSID){
             await chan.save({},{useMasterKey: true});
 
             //Create the webhook
-            await config.twilioChat.channels(originalChatSID).webhooks.create({type:
-            'webhook',
-            configuration: {
-                url: 'https://back.clowdr.org/twilio/bondedChannel/'+chan.id+'/event',
-                method: "POST",
-                filters: 'onMessageSent',
-            }});
+            await callWithRetry(() => config.twilioChat.channels(originalChatSID).webhooks.create({
+                type:
+                    'webhook',
+                configuration: {
+                    url: 'https://back.clowdr.org/twilio/bondedChannel/' + chan.id + '/event',
+                    method: "POST",
+                    filters: 'onMessageSent',
+                }
+            }));
         }catch(err){
             console.log(err);
             chan = await bondedChanQ.first({useMasterKey: true});
@@ -124,41 +143,42 @@ async function getBondedChannel(conf, config, originalChatSID){
     }
     let childrenRelation = chan.relation("children");
     let childrenQ = childrenRelation.query();
-    childrenQ.lessThan("numMembers", 900);
+    // childrenQ.lessThan("numMembers", 900);
     let mirrorChan = await childrenQ.first({useMasterKey: true});
     if (!mirrorChan) {
         mirrorChan = new TwilioChannelMirror();
         mirrorChan.set("parent", chan);
-        let originalChannel = await config.twilioChat.channels(originalChatSID).fetch();
-        let oldAttrs = await originalChannel.attributes;
+        console.log("Fetching original channel")
+        let originalChannel = await callWithRetry(()=>config.twilioChat.channels(originalChatSID).fetch());
+        let oldAttrs = originalChannel.attributes;
         let attributes = JSON.parse(oldAttrs);
         attributes.bondedTo = originalChatSID;
+        console.log(attributes)
         let oldType = originalChannel.type;
-        let chatRoom = await config.twilioChat.channels.create(
+        let chatRoom = await callWithRetry(()=>config.twilioChat.channels.create(
             {friendlyName: originalChannel.friendlyName,
                 type: oldType,
-                attributes: JSON.stringify(attributes)});
+                attributes: JSON.stringify(attributes)}));
         mirrorChan.set("sid",chatRoom.sid);
         //copy over the old messages
-        let oldMessages = await config.twilioChat.channels(originalChatSID).messages.list({limit: 100, order: 'desc'});
+        let oldMessages = await callWithRetry(()=>config.twilioChat.channels(originalChatSID).messages.list({limit: 100, order: 'desc'}));
         let sorted = oldMessages.sort((m1,m2)=>(m1.index < m2.index ? -1 : 1));
         let promises = [];
         for(let message of sorted){
-            promises.push(config.twilioChat.channels(chatRoom.sid).messages.create({
+            await callWithRetry(()=>config.twilioChat.channels(chatRoom.sid).messages.create({
                 from: message.from,
                 attributes: message.attributes,
                 body: message.body,
-            }))
+            }));
         }
-        await Promise.all(promises);
         //Make sure web hooks are set up
-        await config.twilioChat.channels(chatRoom.sid).webhooks.create({type:
+        await callWithRetry(()=>config.twilioChat.channels(chatRoom.sid).webhooks.create({type:
                 'webhook',
             configuration: {
                 url: 'https://back.clowdr.org/twilio/bondedChannel/'+chan.id+'/event',
                 method: "POST",
                 filters: 'onMessageSent',
-            }});
+            }}));
 
         await mirrorChan.save({},{useMasterKey: true});
         chan.relation("children").add(mirrorChan);
@@ -207,7 +227,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
     let profile = await userQ.first({useMasterKey: true});
     if(profile) {
         let config = await getConfig(conf);
-        let originalChannel = await config.twilioChat.channels(sid).fetch();
+        let originalChannel = await callWithRetry(()=>config.twilioChat.channels(sid).fetch());
         if (originalChannel.attributes && originalChannel.attributes.category == 'programItem') {
             return {
                 status: "ok",
@@ -258,25 +278,25 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                             await parseRoom.save({}, {useMasterKey: true});
 
                             attributes.breakoutRoom = parseRoom.id;
-                            await config.twilioChat.channels(sid).update({
+                            await callWithRetry(()=>config.twilioChat.channels(sid).update({
                                 attributes: JSON.stringify(attributes)
-                            });
+                            }));
 
                             //send a message to the chat channel that the user spawned off a video chat
-                            config.twilioChat.channels(sid).messages.create({
+                            await callWithRetry(() => config.twilioChat.channels(sid).messages.create({
                                 from: profile.id,
                                 attributes: JSON.stringify({
                                     linkTo: "breakoutRoom",
                                     path: "/video/" + parseRoom.id
                                 }),
                                 body: "I just created a video chat: Join me there!",
-                            });
+                            }));
                             return {
                                 status: "ok",
                                 room: parseRoom.id,
                             };
                         }catch(err){
-                            let originalChannel = await config.twilioChat.channels(sid).fetch();
+                            let originalChannel = await callWithRetry(()=>config.twilioChat.channels(sid).fetch());
                             let attributes = originalChannel.attributes;
                             if (attributes)
                                 attributes = JSON.parse(attributes);
@@ -335,24 +355,24 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                     category: "breakoutRoom",
                     roomID: parseRoom.id
                 }
-                let twilioChatRoom = await chat.channels.create({
+                let twilioChatRoom = await callWithRetry(()=>chat.channels.create({
                     friendlyName: roomName,
                     attributes: JSON.stringify(attributes),
                     type:
                         "public"
-                });
+                }));
                 parseRoom.set("twilioChatID", twilioChatRoom.sid);
                 await parseRoom.save({},{useMasterKey: true});
 
                 //send a message to the chat channel that the user spawned off a video chat
-                config.twilioChat.channels(sid).messages.create({
+                await callWithRetry(()=>config.twilioChat.channels(sid).messages.create({
                     from: profile.id,
                     attributes: JSON.stringify({
                         linkTo: "breakoutRoom",
                         path: "/video/" + profile.get("conference").get("conferenceName") + "/" + roomName
                     }),
                     body: "I just created a video chat: Join me there!",
-                });
+                }));
                 return {
                    status: "ok",
                     room: parseRoom.id,
@@ -384,7 +404,7 @@ Parse.Cloud.define("chat-addToSID", async (request) => {
     if (profile) {
         //is it a private channel?
         let config = await getConfig(conf);
-        let originalChannel = await config.twilioChat.channels(sid).fetch();
+        let originalChannel = await callWithRetry(()=>config.twilioChat.channels(sid).fetch());
         if (originalChannel.type == "private") {
             //Is it a DM or a conversation?
             let attributes =  originalChannel.attributes;
@@ -429,8 +449,8 @@ Parse.Cloud.define("chat-addToSID", async (request) => {
                             convo.set("isDM", false);
                             convo.set("friendlyName", title);
                             attributes.mode='group';
-                            await config.twilioChat.channels(sid).update({friendlyName: title,
-                                attributes: JSON.stringify(attributes)});
+                            await callWithRetry(()=>config.twilioChat.channels(sid).update({friendlyName: title,
+                                attributes: JSON.stringify(attributes)}));
                             console.log("Updated name")
                         }
 
@@ -439,10 +459,10 @@ Parse.Cloud.define("chat-addToSID", async (request) => {
                         if (request.params.users)
                             for (let uid of request.params.users) {
                                 console.log("Adding " + uid + " to " + sid)
-                                promises.push(config.twilioChat.channels(sid).members.create({
+                                promises.push(callWithRetry(()=>config.twilioChat.channels(sid).members.create({
                                     identity: uid,
                                     roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE
-                                }).catch(err => console.log));
+                                })).catch(err => console.log));
                             }
                         await Promise.all(promises);
 
@@ -459,18 +479,15 @@ Parse.Cloud.define("chat-addToSID", async (request) => {
         }
         let promises = [];
         for (let uid of request.params.users) {
-            promises.push(config.twilioChat.channels(sid).members.create({
+            promises.push(callWithRetry(()=>config.twilioChat.channels(sid).members.create({
                 identity: uid
-            }));
+            })));
         }
         await Promise.all(promises);
 
     }
     return null;
 });
-function timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 async function getOrCreateChatForProgramItem(item){
     let config = await getConfig(item.get("conference"));
     let attributes = {
@@ -478,28 +495,17 @@ async function getOrCreateChatForProgramItem(item){
         programItemID: item.id
     }
     try{
-        let chatRoom = await config.twilioChat.channels.create(
+        let chatRoom = await callWithRetry(()=>config.twilioChat.channels.create(
             {friendlyName: item.get('title'),
                 uniqueName: 'programItem-'+item.id,
                 type: 'public',
-                attributes: JSON.stringify(attributes)});
+                attributes: JSON.stringify(attributes)}));
         item.set("chatSID", chatRoom.sid);
         await item.save({}, {useMasterKey: true});
     }
     catch(err){
-        if(err.code == 20429){
-            //Back off, try again
-            await timeout(2000);
-            item = await item.fetch({useMasterKey: true});
-            if(!item.get("chatSID")){
-                return getOrCreateChatForProgramItem(item);
-            }
-            else{
-                return item.get('chatSID');
-            }
-        }
         //Raced with another client creating the chat room
-        let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
+        let chatRoom = await callWithRetry(()=>config.twilioChat.channels('programItem-'+item.id).fetch());
         // item.set("chatSID", chatRoom.sid);
         // await item.save({}, {useMasterKey: true});
 
@@ -547,19 +553,28 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
             role = config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE;
         }
         try {
-            let member = await config.twilioChat.channels(config.TWILIO_ANNOUNCEMENTS_CHANNEL).members.create({
+            let member = await callWithRetry(()=>config.twilioChat.channels(config.TWILIO_ANNOUNCEMENTS_CHANNEL).members.create({
                 identity: profile.id,
                 roleSid: role
-            });
+            }));
             console.log(profile.id + " join directly " + config.TWILIO_ANNOUNCEMENTS_CHANNEL);
         } catch (err) {
+            console.log("Caught error:")
+            console.log(err);
             if (err.code == 50403) {
-                let newChan = await getBondedChannel(conf, config, config.TWILIO_ANNOUNCEMENTS_CHANNEL);
-                let member = await config.twilioChat.channels(newChan).members.create({
-                    identity: profile.id,
-                    roleSid: role
-                });
-                console.log(profile.id + " join bonded " + newChan);
+                console.log("Getting bonded channel")
+                try {
+                    let newChan = await getBondedChannel(conf, config, config.TWILIO_ANNOUNCEMENTS_CHANNEL);
+                    console.log("Bonded channel: " + newChan)
+                    let member = await callWithRetry(() => config.twilioChat.channels(newChan).members.create({
+                        identity: profile.id,
+                        roleSid: role
+                    }));
+                    console.log(profile.id + " join bonded " + newChan);
+                }catch(e2){
+                    console.log(e2);
+                    throw e2;
+                }
             } else {
                 console.log(err);
             }
@@ -585,7 +600,7 @@ Parse.Cloud.define("chat-destroy", async (request) => {
         let conf = new ClowdrInstance();
         conf.id = confID;
         let config = await getConfig(conf);
-        await config.twilioChat.channels(sid).remove();
+        await callWithRetry(()=>config.twilioChat.channels(sid).remove());
         return {status: "OK"}
     } catch (err) {
         console.log(err);
@@ -627,13 +642,13 @@ Parse.Cloud.define("chat-createDM", async (request) => {
         }
         else if (convo) {
             //Now make sure that both users are still members of the twilio room;
-            let members = await config.twilioChat.channels(convo.get("sid")).members.list({limit: 20});
+            let members = await callWithRetry(()=>config.twilioChat.channels(convo.get("sid")).members.list({limit: 20}));
 
             if (!members.find(m => m.identity == profile.id)) {
-                let member = await config.twilioChat.channels(convo.get("sid")).members.create({
+                let member = await callWithRetry(()=>config.twilioChat.channels(convo.get("sid")).members.create({
                     identity: profile.id,
                     roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE
-                });
+                }));
                 console.log(member)
             }
             return {"status": "ok", sid: convo.get("sid")};
@@ -667,10 +682,10 @@ Parse.Cloud.define("chat-createDM", async (request) => {
         try {
             let chatRoom = await createDMWithRetry(config, conversationName, visibility, attributes);
             //create the twilio room
-            let member = await config.twilioChat.channels(chatRoom.sid).members.create({
+            let member = await callWithRetry(()=>config.twilioChat.channels(chatRoom.sid).members.create({
                 identity: profile.id,
                 roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE
-            });
+            }));
 
             // let member2 = await config.twilioChat.channels(chatRoom.sid).members.create({identity: messageWith,
             //     roleSid: config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE});
@@ -686,24 +701,12 @@ Parse.Cloud.define("chat-createDM", async (request) => {
     return {"status":"error","message":"Not authorized to create channels for this conference"};
 });
 
-async function createDMWithRetry(config, conversationName, visibility, attributes){
-    try {
-        console.log("Creating DM: " + conversationName + JSON.stringify(attributes));
-        let chatRoom = await config.twilioChat.channels.create(
-            {
-                friendlyName: conversationName, type: visibility,
-                attributes: JSON.stringify(attributes)
-            });
-        return chatRoom;
-    } catch (err) {
-        if (err.code == 20429) {
-            //Back off, try again
-            await timeout(2000 + Math.random() * 4000);
-            let ret = await createDMWithRetry(conversationName, visibility, attributes);
-            return ret;
-        } else {
-            throw err;
-        }
-    }
-
+async function createDMWithRetry(config, conversationName, visibility, attributes) {
+    console.log("Creating DM: " + conversationName + JSON.stringify(attributes));
+    let chatRoom = await callWithRetry(() => config.twilioChat.channels.create(
+        {
+            friendlyName: conversationName, type: visibility,
+            attributes: JSON.stringify(attributes)
+        }));
+    return chatRoom;
 }

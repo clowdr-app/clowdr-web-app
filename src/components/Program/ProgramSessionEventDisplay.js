@@ -4,6 +4,7 @@ import {Tag, Button, Skeleton, Tooltip} from "antd";
 import BreakoutRoomDisplay from "../Lobby/BreakoutRoomDisplay"
 import ProgramPersonDisplay from "./ProgramPersonDisplay";
 import moment from "moment";
+import {startTImeOffsetForProgramDisplay} from "../../globals";
 
 var timezone = require('moment-timezone');
 
@@ -55,6 +56,9 @@ export default class ProgramSessionEventDisplay extends React.Component{
 
         </div>
         let now = Date.now();
+        // console.log("now =                " + now.toString());
+        let littleBitAfterNow = now + 60000*startTImeOffsetForProgramDisplay;
+        // console.log("littleBitAfterNow = " + littleBitAfterNow.toString());
 
         let className = "summaryProgramEvent";
         let linkTo = "/program/"+this.state.ProgramItem.get("confKey");
@@ -62,10 +66,10 @@ export default class ProgramSessionEventDisplay extends React.Component{
         let endTime = this.state.ProgramSessionEvent.get("endTime");
         if (endTime < now) {
             className = "summaryProgramEvent-past";
-        } else if (startTime <= now && endTime >= now) {
+        } else if (startTime <= littleBitAfterNow && endTime >= now) {
             linkTo = "/live/now/"+this.state.room.get("name");
             className = "summaryProgramEvent-live";
-        } else if (startTime > now) {
+        } else if (startTime > littleBitAfterNow) {
             className = "summaryProgramEvent-future";
         }
         if(this.state.ProgramSessionEvent.get("directLink")){

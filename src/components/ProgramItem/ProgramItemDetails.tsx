@@ -175,12 +175,18 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                 hasValidEvents = true;
                let session = this.state.sessions.find(s=>s.id==event.get("programSession").id);
                if(session) {
-                   var timeS = event.get("startTime") ? event.get("startTime") : new Date();
-                   var timeE = event.get("endTime") ? event.get("endTime") : new Date();
+                   var timeS = session.get("startTime") ? session.get("startTime") : new Date();
+                   var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
                    let title = session.get("title");
                    if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") == "YouTube") {
                        let when = "now"
+                       if(timeS <= now && timeE >= now)
+                           title = <a href="#" className="sessionLink" onClick={()=>{
+                               // @ts-ignore
+                               this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                           }}>{title}</a>
+
                        // if (timeE >= now)
                        //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
                                // this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
