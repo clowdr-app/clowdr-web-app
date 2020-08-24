@@ -14,6 +14,21 @@ let ProgramPerson = Parse.Object.extend("ProgramPerson");
 let ZoomRoom = Parse.Object.extend("ZoomRoom");
 var jwt = require('jsonwebtoken');
 
+const backOff = require('exponential-backoff');
+async function callWithRetry(twilioFunctionToCall) {
+    const response = await backOff(twilioFunctionToCall,
+        {
+            startingDelay: 500,
+            retry: (err, attemptNum) => {
+                if (err && err.code == 20429)
+                    return true;
+                console.log(err);
+                return false;
+            }
+        });
+    return response;
+}
+
 
 // Is the given user in any of the given roles?
 async function userInRoles(user, allowedRoles) {
@@ -759,11 +774,11 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
                             //add the author to the chat channel
                             if (!config)
                                 config = await getConfig(programItem.get("conference"));
-                            let member = config.twilioChat.channels(programItem.get("chatSID")).members.create({
+                            let member = callWithRetry(()=>config.twilioChat.channels(programItem.get("chatSID")).members.create({
                                 identity: author.get("userProfile").id
                             }).catch(err => {
                                 console.log(err);
-                            });
+                            }));
                         }
                     }
                 }
@@ -933,25 +948,17 @@ async function getOrCreateChatForProgramItem(item, config){
         programItemID: item.id
     }
     try{
-        let chatRoom = await config.twilioChat.channels.create(
+        let chatRoom = await callWithRetry(()=>config.twilioChat.channels.create(
             {friendlyName: item.get('title'),
                 uniqueName: 'programItem-'+item.id,
                 type: 'public',
-                attributes: JSON.stringify(attributes)});
+                attributes: JSON.stringify(attributes)}));
         item.set("chatSID", chatRoom.sid);
         await item.save({}, {useMasterKey: true});
     }
     catch(err){
-        if(err.code == 20429){
-            //Back off, try again
-            await timeout(2000);
-            item = await item.fetch({useMasterKey: true});
-            if(!item.get("chatSID")){
-                return getOrCreateChatForProgramItem(item, config);
-            }
-        }
         //Raced with another client creating the chat room
-        let chatRoom = await config.twilioChat.channels('programItem-'+item.id).fetch();
+        let chatRoom = await callWithRetry(()=>config.twilioChat.channels('programItem-'+item.id).fetch());
         // item.set("chatSID", chatRoom.sid);
         // await item.save({}, {useMasterKey: true});
 
@@ -1079,9 +1086,9 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
                                 //add the author to the chat channel
                                 if (!config)
                                     config = await getConfig(item.get("conference"));
-                                let member = config.twilioChat.channels(item.get("chatSID")).members.create({
+                                let member = callWithRetry(()=>config.twilioChat.channels(item.get("chatSID")).members.create({
                                     identity: profile.id
-                                }).catch(err => {
+                                })).catch(err => {
                                     console.log(err);
                                 });
                             }
