@@ -259,6 +259,9 @@ class App extends Component {
         if(this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
             this.setState({isShowOtherPanes: true});
 
+        localStorage.setItem('leftPaneSize', '250');
+        localStorage.setItem('rightPaneSize', '250');
+
     }
 
     refreshConferenceInformation() {
@@ -373,6 +376,9 @@ class App extends Component {
         if(topElement)
             topHeight = topElement.clientHeight;
 
+        let leftPaneSize = localStorage.getItem("leftPaneSize") ? localStorage.getItem("leftPaneSize") + "px" : "250px";
+        let rightPaneSize = localStorage.getItem("rightPaneSize") ? localStorage.getItem("rightPaneSize") + "px" : "250px";
+
         return (
                 <div className="App">
                     <EmojiPickerPopover />
@@ -387,10 +393,17 @@ class App extends Component {
 
                         <div className="main-area" style={{ height:"calc(100vh - "+(topHeight )+"px)", overflow: "auto"}}>
 
-                            <SplitPane>
-                                <Pane initialSize={this.state.isShowOtherPanes ? "250px" : 0}>
+                            <SplitPane 
+                                onChange={(sizes) => {
+                                    localStorage.setItem('leftPaneSize', sizes[0]);
+                                    localStorage.setItem('rightPaneSize', sizes[2]);
+                                }}
+                            >
+                                {/* Left side Pane */}
+                                <Pane initialSize={this.state.isShowOtherPanes ? leftPaneSize : 0}>
                                     <SocialTab collapsed={this.state.socialCollapsed} />
                                 </Pane>
+                                {/* Middle Pane */}
                                 <Pane>
                                     <div className="middlePane">
                                         <SplitPane split="horizontal" ref={this.chatPaneRef} onChange={(sizes)=>{
@@ -410,9 +423,9 @@ class App extends Component {
                                             </Pane>
                                         </SplitPane>
                                     </div>
-                                {/*</Content>*/}
                                 </Pane>
-                                <Pane initialSize={this.state.isShowOtherPanes ? "250px" : 0}>
+                                {/* Right side Pane */}
+                                <Pane initialSize={this.state.isShowOtherPanes ? rightPaneSize : 0}>
                                     <div className="chatTab" id="rightPopout">
                                         <div id="activeUsersList"><ActiveUsersList /></div>
                                         <div id="sidebarChat"><SidebarChat collapsed={this.state.chatCollapsed} /></div>
