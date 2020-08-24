@@ -14,8 +14,10 @@ async function callWithRetry(twilioFunctionToCall) {
         {
             startingDelay: 500,
             retry: (err, attemptNum) => {
+                console.log(err);
                 if (err && err.code == 20429)
                     return true;
+                console.log("Unexpected error:")
                 console.log(err);
                 return false;
             }
@@ -116,6 +118,7 @@ async function getBondedChannel(conf, config, originalChatSID){
     bondedChanQ.include("children");
     let chan = await bondedChanQ.first({useMasterKey: true});
     if(!chan){
+        console.log("Making a new channel")
         //Create a new bonding
         chan = new BondedChannel();
         chan.set("masterSID", originalChatSID);
@@ -140,41 +143,42 @@ async function getBondedChannel(conf, config, originalChatSID){
     }
     let childrenRelation = chan.relation("children");
     let childrenQ = childrenRelation.query();
-    childrenQ.lessThan("numMembers", 900);
+    // childrenQ.lessThan("numMembers", 900);
     let mirrorChan = await childrenQ.first({useMasterKey: true});
     if (!mirrorChan) {
         mirrorChan = new TwilioChannelMirror();
         mirrorChan.set("parent", chan);
-        let originalChannel = await config.twilioChat.channels(originalChatSID).fetch();
-        let oldAttrs = await originalChannel.attributes;
+        console.log("Fetching original channel")
+        let originalChannel = await callWithRetry(()=>config.twilioChat.channels(originalChatSID).fetch());
+        let oldAttrs = originalChannel.attributes;
         let attributes = JSON.parse(oldAttrs);
         attributes.bondedTo = originalChatSID;
+        console.log(attributes)
         let oldType = originalChannel.type;
-        let chatRoom = await config.twilioChat.channels.create(
+        let chatRoom = await callWithRetry(()=>config.twilioChat.channels.create(
             {friendlyName: originalChannel.friendlyName,
                 type: oldType,
-                attributes: JSON.stringify(attributes)});
+                attributes: JSON.stringify(attributes)}));
         mirrorChan.set("sid",chatRoom.sid);
         //copy over the old messages
-        let oldMessages = await config.twilioChat.channels(originalChatSID).messages.list({limit: 100, order: 'desc'});
+        let oldMessages = await callWithRetry(()=>config.twilioChat.channels(originalChatSID).messages.list({limit: 100, order: 'desc'}));
         let sorted = oldMessages.sort((m1,m2)=>(m1.index < m2.index ? -1 : 1));
         let promises = [];
         for(let message of sorted){
-            promises.push(config.twilioChat.channels(chatRoom.sid).messages.create({
+            await callWithRetry(()=>config.twilioChat.channels(chatRoom.sid).messages.create({
                 from: message.from,
                 attributes: message.attributes,
                 body: message.body,
-            }))
+            }));
         }
-        await Promise.all(promises);
         //Make sure web hooks are set up
-        await config.twilioChat.channels(chatRoom.sid).webhooks.create({type:
+        await callWithRetry(()=>config.twilioChat.channels(chatRoom.sid).webhooks.create({type:
                 'webhook',
             configuration: {
                 url: 'https://back.clowdr.org/twilio/bondedChannel/'+chan.id+'/event',
                 method: "POST",
                 filters: 'onMessageSent',
-            }});
+            }}));
 
         await mirrorChan.save({},{useMasterKey: true});
         chan.relation("children").add(mirrorChan);
@@ -555,13 +559,22 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
             }));
             console.log(profile.id + " join directly " + config.TWILIO_ANNOUNCEMENTS_CHANNEL);
         } catch (err) {
+            console.log("Caught error:")
+            console.log(err);
             if (err.code == 50403) {
-                let newChan = await getBondedChannel(conf, config, config.TWILIO_ANNOUNCEMENTS_CHANNEL);
-                let member = await callWithRetry(()=>config.twilioChat.channels(newChan).members.create({
-                    identity: profile.id,
-                    roleSid: role
-                }));
-                console.log(profile.id + " join bonded " + newChan);
+                console.log("Getting bonded channel")
+                try {
+                    let newChan = await getBondedChannel(conf, config, config.TWILIO_ANNOUNCEMENTS_CHANNEL);
+                    console.log("Bonded channel: " + newChan)
+                    let member = await callWithRetry(() => config.twilioChat.channels(newChan).members.create({
+                        identity: profile.id,
+                        roleSid: role
+                    }));
+                    console.log(profile.id + " join bonded " + newChan);
+                }catch(e2){
+                    console.log(e2);
+                    throw e2;
+                }
             } else {
                 console.log(err);
             }
