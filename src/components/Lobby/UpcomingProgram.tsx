@@ -11,6 +11,7 @@ import ProgramItem from "../../classes/ProgramItem";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
 import ProgramSessionEventDisplay from "../Program/ProgramSessionEventDisplay";
 import ProgramTrack from "../../classes/ProgramTrack";
+import {startTImeOffsetForProgramDisplay} from "../../globals";
 
 interface UpcomingProgramProps {
     auth: ClowdrState | null;
@@ -183,8 +184,10 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     private getNextUpdateTime(sessions: ProgramSession[]) {
         let nextUpdateTime = moment().add(1,"hour");
         let now = Date.now();
+        let littleBitAfterNow = now + 60000*startTImeOffsetForProgramDisplay;
+
         for(let session of sessions){
-            if(session.get("startTime") > now && moment(session.get("startTime")) < nextUpdateTime){
+            if(session.get("startTime") >= littleBitAfterNow && moment(session.get("startTime")) < nextUpdateTime){
                 nextUpdateTime = moment(session.get('startTime'));
             }
         }
