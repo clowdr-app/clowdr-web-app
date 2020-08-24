@@ -126,11 +126,11 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             mode: 'group',
             type: 'public'
         };
-        return await twilio.createChannel({
+        return this.props.appState?.chatClient.callWithRetry(()=>twilio?.createChannel({
             friendlyName: title,
             isPrivate: false,
             attributes: attributes
-        });
+        }));
     }
 
     async createNewChannel(values: any) {
@@ -140,7 +140,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             values.description,
             values.autoJoin
         );
-        let room = await newChannel.join();
+        let room = await this.props.appState?.chatClient.callWithRetry(()=>newChannel.join());
         this.setState({newChannelVisible: false});
         this.props.appState?.chatClient.openChat(newChannel.sid, false);
     }

@@ -1,6 +1,7 @@
 import Chat from "twilio-chat";
 import Parse from "parse";
 import React from "react";
+import {backOff} from "exponential-backoff";
 
 export default class ChatClient{
     constructor(setGlobalState) {
@@ -82,31 +83,37 @@ export default class ChatClient{
         }
         return chan.channel;
     }
-    async timeout(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+
+    async callWithRetry(twilioFunctionToCall) {
+        const response = await backOff(twilioFunctionToCall,
+            {
+                startingDelay: 500,
+                retry: (err, attemptNum) => {
+                    if (err && err.code == 20429)
+                        return true;
+                    console.log(err);
+                    return false;
+                }
+            });
+        return response;
+
     }
     async joinAndGetChannel(uniqueName) {
         if(!this.twilio){
             await this.chatClientPromise;
         }
-        let channel = await this.twilio.getChannelByUniqueName(uniqueName);
+        let channel = await this.callWithRetry(()=>this.twilio.getChannelByUniqueName(uniqueName));
         let chan = this.joinedChannels[channel.sid];
         this.channelsThatWeHaventMessagedIn.push(channel.sid);
         if(chan){
             return chan.channel;
         }
         try{
-            let membership = await channel.join();
+            let membership = await this.callWithRetry(() => channel.join());
             await this.getChannelInfo(membership);
             return membership;
         }catch(err){
-            if(err.code == 20429){
-                //Back off, try again
-                this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
-                await this.timeout(1000 + Math.random()*4000);
-                return this.joinAndGetChannel(uniqueName);
-            }
-            else if(err.code ==50403) {
+            if(err.code ==50403) {
                 this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!=channel.sid);
                 console.log("Asking for bonded channel for " + channel.sid)
                 let res = await Parse.Cloud.run("chat-getBondedChannelForSID", {
@@ -114,9 +121,9 @@ export default class ChatClient{
                     sid: channel.sid
                 });
                 this.channelsThatWeHaventMessagedIn.push(res);
-                channel = await this.twilio.getChannelByUniqueName(res);
+                channel = await this.callWithRetry(()=>this.twilio.getChannelByUniqueName(res));
                 try{
-                    let membership = await channel.join();
+                    let membership = await this.callWithRetry(()=>channel.join());
                     await this.getChannelInfo(membership);
                     return membership;
                 }catch(er2){
@@ -306,7 +313,7 @@ export default class ChatClient{
     async getChannelInfo(channel){
 
         let ret = {};
-        ret.attributes = await channel.getAttributes();
+        ret.attributes = await this.callWithRetry(()=>channel.getAttributes());
         let convoQ = new Parse.Query("Conversation");
         let shouldHaveParseConvo  = ret.attributes.category == "userCreated";
         if(shouldHaveParseConvo) {
@@ -319,7 +326,7 @@ export default class ChatClient{
                 return;
             }
         }
-        let members = await channel.getMembers();
+        let members = await this.callWithRetry(()=>channel.getMembers());
         ret.members = members.map(m=>m.identity); //.filter(m=>m!= this.userProfile.id);
         ret.channel  =channel;
         ret.components = [];
@@ -341,13 +348,21 @@ export default class ChatClient{
             }
         })
         ret.channel.on("memberJoined", (member)=>{
+            ret.members.push(member);
             for(let component of ret.components){
                 component.memberJoined(ret.channel, member);
             }
+            if(this.chatBar){
+                this.chatBar.membersUpdated(ret.channel.sid);
+            }
         })
         ret.channel.on("memberLeft", (member)=>{
+            ret.members = ret.members.filter(m=>m.sid != member.sid);
             for(let component of ret.components){
                 component.memberLeft(ret.channel, member);
+            }
+            if(this.chatBar){
+                this.chatBar.membersUpdated(ret.channel.sid);
             }
         })
         this.joinedChannels[channel.sid] = ret;
@@ -356,33 +371,6 @@ export default class ChatClient{
             this.channelWaiters[channel.sid] = undefined;
         }
         return ret;
-    }
-
-    subscribeToChannel(sid){
-        if(this.channelListeners[sid]){
-            console.log("Duplicate subscribe called")
-            return;
-        }
-        const updateMembers = async ()=>{
-            let container = this.joinedChannels[sid];
-            if(!container){
-                //we have left this channel
-                return;
-            }
-            let members = await container.channel.getMembers();
-            members = members.map(m=>m.identity);
-            this.joinedChannels[sid].members = members;
-            if(this.chatBar){
-                this.chatBar.membersUpdated(sid);
-            }
-
-        };
-        let channel = this.joinedChannels[sid].channel;
-        this.channelListeners[sid] =[
-            channel.on('memberJoined',updateMembers),
-            channel.on("memberLeft", updateMembers)
-        ];
-
     }
 
     unSubscribeToChannel(channel) {
@@ -399,8 +387,8 @@ export default class ChatClient{
         }
         let token = await this.getToken(user, conference);
         let twilio = await Chat.create(token);
-        let [subscribedChannelsPaginator, allChannelDescriptors] = await Promise.all([twilio.getSubscribedChannels(),
-        twilio.getPublicChannelDescriptors()]);
+        let [subscribedChannelsPaginator, allChannelDescriptors] = await Promise.all([this.callWithRetry(()=>twilio.getSubscribedChannels()),
+        this.callWithRetry(()=>twilio.getPublicChannelDescriptors())]);
         let promises = [];
         while (true) {
             for (let channel of subscribedChannelsPaginator.items) {
@@ -415,7 +403,7 @@ export default class ChatClient{
         let channelsToFetch = [];
         while(true) {
             for (let cd of allChannelDescriptors.items) {
-                channelsToFetch.push(cd.getChannel());
+                channelsToFetch.push(this.callWithRetry(()=>cd.getChannel()));
             }
             if(allChannelDescriptors.hasNextPage){
                 allChannelDescriptors = await allChannelDescriptors.nextPage();
@@ -425,10 +413,6 @@ export default class ChatClient{
         }
         let [joinedChannels, allChannels] = await Promise.all([Promise.all(promises), Promise.all(channelsToFetch)]);
         this.channels = allChannels;
-
-        for(let sid of Object.keys(this.joinedChannels)){
-            this.subscribeToChannel(sid);
-        }
 
         //Make sure that the bottom chat bar and chat list have everything we have so far
         if (this.chatList)
@@ -472,7 +456,6 @@ export default class ChatClient{
                 if (this.multiChatWindow) {
                     this.multiChatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
                 }
-                this.subscribeToChannel(channel.sid);
                 // if (channelInfo.attributes.category != "socialSpace"){
                 //     this.openChat(channel.sid, channelInfo.attributes.category == "announcements-global");
                 // }

@@ -50,6 +50,7 @@ class ChatFrame extends React.Component {
         this.lastConsumedMessageIndex= -1;
         this.lastSeenMessageIndex = -1;
         this.pendingReactions = {};
+        this.consumptionFrontier = 0;
     }
 
     formatTime(timestamp) {
@@ -114,7 +115,7 @@ class ChatFrame extends React.Component {
                 this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v => v != this);
                 this.chanInfo.components = this.chanInfo.components.filter(v => v != this);
             }
-            this.activeChannel.getMessages(30).then((messages) => {
+            this.props.auth.chatClient.callWithRetry(()=>this.activeChannel.getMessages(30)).then((messages) => {
                 if (this.currentSID != sid)
                     return;
                 this.messagesLoaded(this.activeChannel, messages)
@@ -122,7 +123,7 @@ class ChatFrame extends React.Component {
 
 
             this.members = [];
-            this.activeChannel.getMembers().then(members => this.members = members);
+            this.props.auth.chatClient.callWithRetry(()=>this.activeChannel.getMembers()).then(members => this.members = members);
 
             let chanInfo = this.props.auth.chatClient.joinedChannels[sid];
             this.chanInfo = chanInfo;
@@ -256,7 +257,13 @@ class ChatFrame extends React.Component {
             ret.push(lastMessage);
         let atLeastOneIsVisible = this.chanInfo.visibleComponents.length > 0;
         if ((this.props.visible || atLeastOneIsVisible) && lastIndex >= 0){
-            this.activeChannel.setAllMessagesConsumed();
+            this.consumptionFrontier++;
+            let idx = this.consumptionFrontier;
+            this.props.auth.chatClient.callWithRetry(()=>{
+                if(this.consumptionFrontier != idx)
+                    return;
+                return this.activeChannel.setAllMessagesConsumed()});
+
             this.updateUnreadCount(lastIndex, lastIndex);
         } else if(!(this.props.visible || atLeastOneIsVisible)){
             //TODO lastConsumedMessageIndex is wrong, not actually last seen
@@ -325,7 +332,14 @@ class ChatFrame extends React.Component {
                     onClose: ()=>{
                         if(message.index > this.lastConsumedMessageIndex){
                             this.updateUnreadCount(message.index, -1);
-                            channel.advanceLastConsumedMessageIndex(message.index)
+                            let idx = message.index;
+                            this.settingConsumedIdx = idx;
+                            this.props.auth.chatClient.callWithRetry(
+                                ()=>{
+                                    if(idx < this.settingConsumedIdx)
+                                        return;
+                                    return channel.advanceLastConsumedMessageIndex(idx);
+                                });
                         }
                     },
                     duration: 600,
@@ -360,15 +374,11 @@ class ChatFrame extends React.Component {
     timeout = async (ms) => {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    sendMessageWithRetry = async(message, data) => {
-        try {
-            await this.activeChannel.sendMessage(message, data);
-        } catch (err) {
-            if(err.code == 20429){
-                await this.timeout(1000+Math.random()*4000);
-                return await this.sendMessageWithRetry(message, data);
+    sendMessageWithRetry = async (message, data) => {
+        return this.props.auth.chatClient.callWithRetry(() => {
+                return this.activeChannel.sendMessage(message, data)
             }
-        }
+        );
     };
 
     sendMessage = async (event) => {
@@ -489,7 +499,12 @@ class ChatFrame extends React.Component {
             }
             if(this.props.visible && this.unread){
                 //update unreads...
-                this.activeChannel.setAllMessagesConsumed();
+                this.consumptionFrontier++;
+                let idx = this.consumptionFrontier;
+                this.props.auth.chatClient.callWithRetry(()=>{
+                    if(this.consumptionFrontier != idx)
+                        return;
+                    return this.activeChannel.setAllMessagesConsumed()});
                 this.updateUnreadCount(this.lastSeenMessageIndex, this.lastSeenMessageIndex);
             }
             this.setState({visible: this.props.visible});

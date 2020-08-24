@@ -29,6 +29,7 @@
     "emoji-dictionary": "^1.0.11",
     "emoji-mart": "^3.0.0",
     "emoji-picker-react": "^3.2.1",
+    "exponential-backoff": "^3.1.0",
     "fscreen": "^1.0.2",
     "gh-pages": "^2.2.0",
     "googleapis": "^51.0.0",
