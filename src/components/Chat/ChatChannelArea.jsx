@@ -163,6 +163,7 @@ class ChatChannelArea extends React.Component {
 
     render() {
         // if (this.state.loading)
+
         //     return <Spin/>
         let title = this.state.title;
         if (this.state.members) {
