@@ -700,6 +700,19 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         item.set("confKey", item.get("track").id + "/" + item.id);
     }
     await Parse.Object.saveAll(itemsToFix, {useMasterKey: true});
+    let sessionQ = new Parse.Query("ProgramSession");
+    sessionQ.equalTo("conference", conf)
+    sessionQ.limit(1000);
+    let storedSessions = await sessionQ.find({useMasterKey: true});
+    for (let session of storedSessions) {
+        let itemsByTitle = {};
+        let eventsQ = new Parse.Query("ProgramSessionEvent");
+        eventsQ.equalTo("programSession", session)
+        eventsQ.limit(1000);
+        let events = await eventsQ.find({useMasterKey: true});
+        session.set("events", events);
+    }
+    await Parse.Object.saveAll(storedSessions, {useMasterKey: true});
     return {status: "ok"}
 }
 
