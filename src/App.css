@@ -488,7 +488,7 @@ div.availabilityOptionsOpen  span.availabilityOption{
 .embeddedChatListContainer{
     align-items: flex-start;
     align-content: flex-start;
-    overflow-y: auto;
+    overflow-y: visible;
     display: flex;
     flex-direction: column-reverse;
     overflow-wrap: break-word;
