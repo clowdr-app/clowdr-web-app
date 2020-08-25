@@ -13,6 +13,7 @@ let UserProfile = Parse.Object.extend("UserProfile");
 let ProgramPerson = Parse.Object.extend("ProgramPerson");
 let ZoomRoom = Parse.Object.extend("ZoomRoom");
 var jwt = require('jsonwebtoken');
+var xml2json = require('xml2json');
 
 const backOff = require('exponential-backoff').backOff;
 async function callWithRetry(twilioFunctionToCall) {
@@ -333,7 +334,6 @@ function getIDAndPwd(str) {
 let allPeople = {};
 let allItems = {};
 let allSessions = {};
-let daysTillStart = moment("2020-10-06", "YYYY-MM-DD").subtract(moment(moment().format("YYYY-MM-DD")));
 
 function getAuthors(authorKeys) {
     let authors = [];
@@ -347,15 +347,363 @@ function getAuthors(authorKeys) {
     return authors;
 }
 
-
+function timeFromConfTime(date, time, timezone){
+    let startTime = date + ' ' + time;
+    return moment.tz(startTime, "YYYY/MM/DD HH:mm", timezone)
+        // .subtract(10,'days')
+        .toDate();
+}
+function removeHTMLEntities(str){
+    return str.replace(/&amp;/g,"&").replace(/&amp;/g,"&");
+}
 
 let i = 0;
-
 Parse.Cloud.define("program-upload", async (request) => {
-    console.log('Request to upload program data');
     let data = request.params.content;
     const conferenceID = request.params.conference;
     const timezone = request.params.timezone;
+    const format = request.params.format;
+    console.log('Request to upload program data ' + format);
+    if(format == "conf-json"){
+        return uploadProgramFromConfJSON(data ,conferenceID, timezone);
+    }else if(format == "conf-xml"){
+        return uploadProgramFromConfXML(data, conferenceID, timezone);
+    }
+    else{
+        throw "Unknown upload format: " + format;
+    }
+});
+
+async function uploadProgramFromConfXML(data, conferenceID, timezone){
+    data = JSON.parse(xml2json.toJson(data));
+
+    let cache = {};
+    let allPeople = {};
+    let allItems ={};
+    let allSessions = {};
+    let toSave = [];
+    let conferoPeople = {};
+    let tracks = {};
+
+    let newTracks = {};
+    let newRooms = {}
+    let newItems = {};
+    let newEvents = {};
+    let newItemSchedules = {}
+    let newPersons ={};
+    let newSessions = {};
+
+    for (let session of data.event.subevent) {
+        if (session.timeslot) {
+            if (!session.timeslot.length)
+                session.timeslot = [session.timeslot]
+            let ses = {
+                Title: session.title,
+                Abstract: session.description,
+                room: session.room,
+                startTime: timeFromConfTime(session.date, session['start_time'], timezone),
+                endTime: timeFromConfTime(session.date, session['end_time'], timezone),
+                track: session.tracks.track,
+                items: [],
+                id: session.subevent_id
+            }
+            newSessions[session.subevent_id] = ses;
+            for (let item of session.timeslot) {
+                let authors = [];
+                if(item.title.startsWith("Session: ")){
+                    ses.startTime = timeFromConfTime(item.date, item['start_time'], timezone);
+                    ses.endTime = timeFromConfTime(item.date, item['end_time'], timezone);
+                    continue;
+                }
+                if (item.persons && item.persons.person) {
+                    if (!item.persons.person.length)
+                        item.persons.person = [item.persons.person];
+                    for (let person of item.persons.person) {
+                        let concatName = person['first_name'] + " " + person["last_name"];
+                        concatName = concatName.trim();
+                        newPersons[concatName] = {
+                            name: concatName,
+                            affiliation: person.affiliation
+                        }
+                        authors.push(concatName);
+                    }
+                }
+                let i = {
+                    title: item.title,
+                    authors: authors,
+                    abstract: removeHTMLEntities(item.description),
+                    track: (item.tracks.length ? item.tracks[0].track : item.tracks.track),
+                    startTime: timeFromConfTime(item.date, item['start_time'], timezone),
+                    endTime: timeFromConfTime(item.date, item['end_time'], timezone),
+                    session: session.subevent_id
+
+                };
+                ses.items.push(item.title);
+                if(newItems[item.title] && (newItems[item.title].abstract != "undefined" || (newItems[item.title].authors
+                    && newItems[item.title].authors.length))){
+
+                }else{
+                    newItems[item.title] = i
+                }
+                if(!newEvents[item.title]){
+                    newEvents[item.title] = [];
+                }
+                newEvents[item.title].push(i);
+                newRooms[item.room] = {};
+                newTracks[i.track] = {}
+            }
+        }
+    }
+
+
+    let confQ = new Parse.Query("ClowdrInstance")
+    confQ.equalTo("objectId", conferenceID)
+    let conf = await confQ.first();
+
+    let acl = new Parse.ACL();
+    acl.setPublicWriteAccess(false);
+    acl.setPublicReadAccess(true);
+    acl.setRoleWriteAccess(conf.id+"-manager", true);
+    acl.setRoleWriteAccess(conf.id+"-admin", true);
+
+    let ProgramTrack = Parse.Object.extend('ProgramTrack');
+    var qt = new Parse.Query(ProgramTrack);
+    qt.equalTo("conference", conf);
+    qt.limit(1000);
+    var existingTracks = await qt.find({useMasterKey: true});
+    for(let name of Object.keys(newTracks)){
+        let existing = existingTracks.find(r=>r.get("name") == name);
+        if(existing){
+            newTracks[name] = existing;
+        }
+        else{
+            let nt = new ProgramTrack();
+            nt.setACL(acl);
+            nt.set("conference", conf);
+            nt.set("name", name);
+            toSave.push(nt);
+            newTracks[name] = nt;
+        }
+    }
+    try {
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    } catch(err){
+        console.log(err);
+    }
+    console.log('TRacks saved: ' + toSave.length);
+    toSave = [];
+
+    let ProgramRoom = Parse.Object.extend('ProgramRoom');
+    var qr = new Parse.Query(ProgramRoom);
+    qr.equalTo("conference", conf);
+    qr.limit(1000);
+    var existingRooms = await qr.find({useMasterKey: true});
+    for (let name of Object.keys(newRooms)){
+        let simplifiedName = name.replace("Online |","").trim();
+        if (existingRooms.find(r => r.get('name') == simplifiedName)) {
+            newRooms[name] = existingRooms.find(r=>r.get("name") == simplifiedName);
+            console.log('Room already exists: ' + name);
+            continue;
+        }
+        let newRoom = new ProgramRoom();
+        newRoom.set('name', simplifiedName);
+        newRoom.set('conference', conf);
+        newRoom.set("isEventFocusedRoom", true)
+        newRoom.setACL(acl);
+        toSave.push(newRoom);
+        existingRooms.push(newRoom);
+        newRooms[name] = newRoom;
+    }
+    try {
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    } catch(err){
+        console.log(err);
+    }
+    console.log('Rooms saved: ' + toSave.length);
+    toSave = [];
+
+    // Create People next
+    let ProgramPerson = Parse.Object.extend("ProgramPerson");
+    let qp = new Parse.Query(ProgramPerson);
+    qp.equalTo("conference", conf);
+    qp.limit(10000);
+    let people = await qp.find({useMasterKey: true});
+    people.forEach((person) => {
+        allPeople[person.get("name")] = person;
+    })
+    let newPeople = [];
+    for (const name of Object.keys(newPersons)) {
+        let person  =newPersons[name];
+        if (allPeople[person.name.trim()]) {
+            newPersons[person.name.trim()] = allPeople[person.name.trim()];
+            continue
+        }
+
+        let newPerson = new ProgramPerson();
+        person.name ? newPerson.set("name", person.name.trim()) : newPerson.set("name", person.name);
+        person.affiliation ? newPerson.set("affiliation", person.affiliation.trim()) : newPerson.set("affiliation", person.affiliation);
+        newPerson.set("conference", conf);
+        newPerson.setACL(acl);
+        toSave.push(newPerson);
+        newPersons[name] = newPerson;
+    }
+    try {
+        console.log("People saved: " + toSave.length);
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    } catch(err){
+        console.log(err);
+    }
+    toSave = [];
+
+    // Create Items
+    let ProgramItem = Parse.Object.extend("ProgramItem");
+    let q = new Parse.Query(ProgramItem);
+    q.equalTo("conference", conf);
+    q.limit(1000);
+    let items = await q.find({useMasterKey: true});
+    items.forEach((item) => {
+        allItems[item.get("confKey")] = item;
+    })
+
+    let authorsToSave = {};
+    toSave = [];
+    for (const item of Object.values(newItems)) {
+        if (allItems[item.title.trim()]) {
+            continue
+        }
+        let trackName = item.track;
+        let track = newTracks[trackName];
+        if (!track)
+            console.log('Warning: Adding item without track: ' + item.Key);
+
+        let newItem = new ProgramItem();
+        item.title ? newItem.set("title", item.title.trim()) : newItem.set("title", item.title);
+        // item.Type ? newItem.set("type", item.Type.trim()) : newItem.set("type", '');
+        if(item.abstract == "undefined")
+            item.abstract ="";
+        item.abstract ? newItem.set("abstract", item.abstract.trim()) : newItem.set("abstract", item.abstract);
+        let authors = [];
+        if(item.authors){
+            authors = item.authors.map(name => newPersons[name]);
+        }
+        newItem.set("authors", authors);
+        newItem.set("conference", conf);
+        newItem.set('track', track);
+        newItem.setACL(acl);
+        // get authors pointers
+        for(let author of authors){
+            console.log(author)
+            if(!author.get("programItems"))
+                author.set("programItems",[]);
+            let items = author.get("programItems");
+            items.push(newItem);
+            authorsToSave[author.get("name")] = author;
+        }
+        toSave.push(newItem);
+        newItems[newItem.get("title")] = newItem;
+    }
+    try {
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+        await Parse.Object.saveAll(Object.values(authorsToSave), {useMasterKey: true});
+    } catch(err){
+        console.log(err);
+    }
+    console.log("Items saved: " + toSave.length);
+
+    // Create Sessions
+    let ProgramSession = Parse.Object.extend("ProgramSession");
+    let qs = new Parse.Query(ProgramSession);
+    qs.limit(10000);
+    let sessions = await qs.find({useMasterKey: true});
+    sessions.forEach((session) => {
+        allSessions[session.get("confKey")] = session;
+    })
+
+    toSave = [];
+    for (const id of Object.keys(newSessions)) {
+        let ses = newSessions[id];
+        let session = new ProgramSession();
+
+        ses.Title ? session.set("title", ses.Title.trim().replace("Session: ","")) : session.set("title", ses.Title);
+        ses.Abstract ? session.set("abstract", ses.Abstract.trim()) : session.set("abstract", ses.Abstract);
+        // ses.Type ? session.set("type", ses.Type.trim()) : session.set("type", '');
+        session.set("startTime", ses.startTime);
+        session.set("endTime", ses.endTime);
+        let trackName = ses.track;
+        let track = newTracks[trackName];
+
+        session.set("programTrack", track)
+        session.set("conference", conf);
+        session.set("room", newRooms[ses.room])
+        session.setACL(acl);
+
+        // Find the pointer to the room
+        // Find the pointers to the items
+        let items = [];
+        if (ses.items) {
+            ses.items.forEach((k) => {
+                if(newItems[k])
+                    items.push(newItems[k]);
+                else
+                    console.log("Could not find item: " + k);
+            });
+        }
+        session.set("items", items);
+        newSessions[id] = session;
+        toSave.push(session);
+    }
+    try{
+        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    } catch(err){
+        console.log(err);
+    }
+    let ProgramSessionEvent = Parse.Object.extend("ProgramSessionEvent");
+
+    let updateItems = [];
+    toSave = [];
+    //last, make all of the event entries
+    for(let itemTitle of Object.keys(newEvents)){
+        let events = newEvents[itemTitle];
+        let item = newItems[itemTitle];
+        for(let event of events){
+            let e = new ProgramSessionEvent();
+            let trackName = event.track;
+            let track = newTracks[trackName];
+            if (!track)
+                console.log('Warning: Adding item without track: ' + item.Key);
+
+            e.set("conference", conf);
+            e.setACL(acl);
+            e.set("programItem", item);
+            e.set("programSession", newSessions[event.session])
+            e.set("programTrack", track);
+            e.set("startTime", event.startTime);
+            e.set("endTime", event.endTime);
+            toSave.push(e);
+            if(!item.get("events")){
+                item.set("events", []);
+            }
+            item.get("events").push(e);
+        }
+        updateItems.push(item);
+    }
+    console.log('Adding sessions items: ' + toSave.length);
+
+    await Parse.Object.saveAll(toSave, {useMasterKey: true});
+    await Parse.Object.saveAll(updateItems, {useMasterKey: true});
+    let itemQ = new Parse.Query("ProgramItem");
+    itemQ.equalTo("conference", conf);
+    itemQ.doesNotExist("confKey");
+    itemQ.limit(100000);
+    let itemsToFix = await itemQ.find({useMasterKey: true});
+    for (let item of itemsToFix) {
+        item.set("confKey", item.get("track").id + "/" + item.id);
+    }
+    await Parse.Object.saveAll(itemsToFix, {useMasterKey: true});
+    return {status: "ok"}
+}
+
+async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
     data = JSON.parse(data);
 
     let conferoPeople = {};
@@ -622,9 +970,7 @@ Parse.Cloud.define("program-upload", async (request) => {
         console.log(err);
     }
     return {status: 'ok'};
-
-
-});
+}
 
 //=======
 let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
