@@ -41,7 +41,10 @@ Require stack:
 ```
 
 In the above example, `package.json` had not been uploaded to Cloud Code and
-needed to be so the relevant module could be found during loading.
+needed to be so the relevant module could be found during loading. After
+uploading `package.json`, it defaults into the `public` folder, so it is
+necessary to click and drag it into the `cloud` folder. [See also this
+page.](https://help.back4app.com/hc/en-us/articles/360002038772-How-to-install-an-NPM-module-at-Back4App-)
 
 Back4App has a nasty fail-unsafe behaviour: it will enable whatever code it
 succeeded in loading up to the failure point, and ignore everything else (so
