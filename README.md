@@ -86,7 +86,7 @@ free app hosting in [Back4App](https://www.back4app.com/) and
 create an app space for Clowdr with any name you like. The instructions
 here assume you have done so.
 
-Although you do not have to run MongoDB when using Back4App, you will need to install mongodb in your local computer in order to initialize Clowdr. Installing MongoDB locally is used only for calling the `mongodbrestore` command that sets up the database schema with the right permissions. Install [MongoDB](https://docs.mongodb.com/manual/administration/install-community/).
+Although you do not have to run MongoDB when using Back4App, you will need to install the MongoDB Database Tools in your local computer in order to initialize Clowdr. These are used only for calling the `mongodbrestore` command that sets up the database schema with the right permissions. Install [MongoDB Database Tools](https://docs.mongodb.com/database-tools/mongorestore/#installation) by following the Installation instructions on that page. (Note: You do not need 'MongoDB Server' installed locally).
 
 ### Environment variables
 
