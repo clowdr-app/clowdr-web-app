@@ -132,7 +132,7 @@ name you give it, `YOUR_APP_NAME` matches the environment variable
 #### Cloud Functions
 
 Go to Cloud Code (also called "Cloud Code Functions") in your Back4App
-workspace, upload all files with .js extension under backend/cloud, and click "deploy".
+workspace, upload all files with .js and .json extensions under backend/cloud, and click "deploy".
 
 #### Developing and Debugging Cloud Functions
 It's *much* easier to debug and develop cloud functions by running a local parse server, so that changes to cloud code just require restarting your local server. I don't know how to make it work with live query or with uploaded files - this should be doable, but I haven't found the magic strings yet. However, this is sufficient for testing cloud functions that don't involve files.
