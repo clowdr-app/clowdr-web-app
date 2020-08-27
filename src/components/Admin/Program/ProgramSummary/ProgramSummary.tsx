@@ -22,7 +22,8 @@ interface ProgramSummaryState {
     ProgramRooms: Parse.Object[],
     ProgramPersons: Parse.Object[],
     uploadLoading: boolean,
-    uploadTimezone: string
+    uploadTimezone: string,
+    uploadFormat: string
 }
 
 const { Option } = Select;
@@ -41,6 +42,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
             ProgramRooms: [],
             ProgramPersons: [],
             uploadLoading: false,
+            uploadFormat: "conf-xml",
             uploadTimezone: "UTC"
         };
         // this.currentConference = "XYZ";
@@ -81,6 +83,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
         this.setState({uploadLoading: true})
         reader.onload = () => {
             const data = {content: reader.result, timezone:this.state.uploadTimezone,
+                format: this.state.uploadFormat,
                 conference: this.currentConference.id};
             Parse.Cloud.run("program-upload", data)
                 .then((res) => {
@@ -188,12 +191,18 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                    onChange={(val)=>{
                        this.setState({uploadTimezone: val.toString()})
                    }}></Select>
-                <Upload accept=".json, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
+                   <Select style={{width: 200}} placeholder="Select upload format"
+                           options={[{label: "XML ('ACM DL') export from conf.researchr.org", value: "conf-xml"},
+                               {label: "JSON ('confero') export from conf.researchr.org", value: "conf-json"}]}
+                           onChange={(val)=>{
+                               this.setState({uploadFormat: val.toString()})
+                           }}></Select>
+                <Upload accept=".json, .xml" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
                     <Button loading={this.state.uploadLoading}>
                         <UploadOutlined /> Click to upload program data
                     </Button>
                 </Upload>
-                <Popconfirm title="Are you sure you want to delete the entire program? This can't be undone." onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
+                <Popconfirm title={"Are you sure you want to delete the entire program? This can't be undone. Conference: "+this.currentConference.get("conferenceName")} onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
                </Space>
                 <Table
                     columns={columns} 

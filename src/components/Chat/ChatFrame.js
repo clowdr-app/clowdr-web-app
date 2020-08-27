@@ -559,6 +559,10 @@ class ChatFrame extends React.Component {
             return <div></div>
         }
         let date_stamp_arr = [];
+        // BCP: A good idea that doesn't quite work: chats are fine, but DMs show sender's name, not receiver's...
+        let toWhom = this.chanInfo?.attributes?.mode == "directMessage" 
+                     ? "Send a direct message" 
+                     : this.activeChannel?.friendlyName ? "Send a message to " + this.activeChannel.friendlyName : "Send a message to this channel";
         return <div className="embeddedChatFrame"
         >
             {this.props.header}
@@ -657,7 +661,7 @@ class ChatFrame extends React.Component {
                             <Input.TextArea
                                 disabled={this.state.readOnly}
                                 className="embeddedChatMessage"
-                                placeholder={this.state.readOnly? "This channel is read-only" : "Send a message"}
+                                placeholder={this.state.readOnly? "This channel is read-only" : toWhom}
                                 autoSize={{minRows: 1, maxRows: 6}}
                                 onPressEnter={this.sendMessage}
                             />
