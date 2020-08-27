@@ -161,7 +161,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
                 console.log(item)
             }
         }
-        if (!currentItem && this.state.curItems.length) {
+        if (this.state.curItems.length > 0 && !currentItem) {
             let item = this.state.curItems[this.state.curItems.length - 1];
             programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
             this.lastRenderedNow = item.get("startTime");
