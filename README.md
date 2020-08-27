@@ -111,12 +111,7 @@ Run the following script to add and initialize a minimal database:
 $ npm run init-app
 ```
 
-After this command runs, you should be able to see all tables with some essential data stored in the database in Back4App.
-
-@Jon/@Crista: Pressing tab in my browser (safari) selected the URL bar at the top!
-right arrow might have worked.
-
-Select the `InstanceConfiguration` table, and click on the security icon on the top-right (a shield-like icon). Double check that Public read and write are unchecked, then add the role name `ClowdrSysAdmin` (press the tab key after typing this word), and check both Read and Write permissions for this role. Click save.
+After this command runs, you should be able to see all tables with some essential data stored in the database in Back4App. For verification, please check the ClowdrInstance table -- there should be one row there for a conference instance named XYZ. Check also the UserProfile table, and verify that there is one row there for user Clowdr Admin. You can check the few other tables that have data on them.
 
 #### Set Up Hosting and Live Query
 
@@ -131,8 +126,7 @@ name you give it, `YOUR_APP_NAME` matches the environment variable
 
 #### Cloud Functions
 
-Go to Cloud Code (also called "Cloud Code Functions") in your Back4App
-workspace, upload all files with .js extension under backend/cloud, and click "deploy".
+Deploying the cloud functions requires the installation of the [Back2App console client](https://www.back4app.com/docs/platform/parse-cli). Follow the instructions there. Clowdr's cloud code can be found under the folder `backend`; both of the subfolders in there must be deployed to Back4App. If, during the setup of the b4a CLI, you get an error saying that it can't use the existing `backend` folder, create a parallel `back4app` folder under the clowdr-web-app, and copy the two subfolders of `backend`, and their entire contents, there. Then, before deploying, change to `back4app/cloud` and do `$ npm init`. After this, you can do `$ b4a deploy`.
 
 #### Developing and Debugging Cloud Functions
 It's *much* easier to debug and develop cloud functions by running a local parse server, so that changes to cloud code just require restarting your local server. I don't know how to make it work with live query or with uploaded files - this should be doable, but I haven't found the magic strings yet. However, this is sufficient for testing cloud functions that don't involve files.
