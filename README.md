@@ -60,11 +60,6 @@ REACT_APP_PARSE_DATABASE_URL=
 REACT_APP_DEFAULT_CONFERENCE=
 ```
 
-(We highly recommend you run Clowdr in a Mac or Linux environment. The
-instructions below assume so. If you are on Windows, install
-[WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and run
-everything from there.)
-
 First, clone this repo:
 ```bash
    git clone app/clowdr-web-app.git
