@@ -242,7 +242,7 @@ async function activate(instance) {
                 const roleACL = new Parse.ACL();
                 roleACL.setPublicReadAccess(true);
                 roleACL.setPublicWriteAccess(false);
-
+                roleACL.setWriteAccess(instance.id+"-admin", true);
                 let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference']
                 if (instance.get("adminName") == "Clowdr Admin") {
                     roleNames.push("ClowdrSysAdmin");
@@ -257,15 +257,6 @@ async function activate(instance) {
                 })
                         
                 try {
-                    await Parse.Object.saveAll(roles, {useMasterKey: true});
-                    for(let role of roles){
-                        let acl = role.getACL();
-                        acl.setWriteAccess(instance.id+"-admin", true);
-                        if(!role.get("name").contains("admin")){
-                            role.relation("groups").add(instance.id+"-admin");
-                        }
-                        role.setACL(acl);
-                    }
                     await Parse.Object.saveAll(roles, {useMasterKey: true});
                     console.log('[activate]: Roles created successfully');
 

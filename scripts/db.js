@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path'); 
 const { exec } = require('child_process');
 const { SSL_OP_ALL } = require('constants');
-const {activate} = require('../cloud/admin');
 var readline = require('readline');
 var rl = readline.createInterface({
     input: process.stdin,
@@ -71,7 +70,7 @@ q.first().then(version => {
                 version.save().then(res => {
                     console.log("Schema version set to 0");
                 });
-                addRequiredData();
+                await addRequiredData();
             }
         });
     }
@@ -122,7 +121,100 @@ async function addRequiredData() {
     instance.setACL(acl);
 
     instance.save().then(async i => {
-        activate(i);
+        await activate(i);
     }).catch(err => console.log('Instance saved:' + err));
 
+}
+
+// This is very similar  to an existing cloud function, but it's too much of a hassle to
+// class it from here. So copy-paste-tweak.
+async function activate(instance) {
+
+    let SocialSpace = Parse.Object.extend('SocialSpace');
+    let ss = new SocialSpace();
+    ss.set('conference', instance);
+    ss.set('name', 'Lobby');
+    ss.set('isGlobal', true);
+    try {
+        await ss.save({}, {useMasterKey: true})
+        console.log('Lobby created successfully');
+    } catch(err) {
+         console.log('SocialSpace: ' + err)
+    };
+
+    // Check if the user already exists
+    let userQ = new Parse.Query(Parse.User);
+    userQ.equalTo("email", instance.get("adminEmail"));
+    let user = await userQ.first({useMasterKey: true});
+    if (!user) {
+        console.log("[activate]: user not found. Creating it " + instance.get("adminEmail"));
+        user = new Parse.User();
+        user.set('username', instance.get("adminName"));
+        user.set('password', 'admin');
+        user.set('email', instance.get("adminEmail"))
+        user.set('passwordSet', true);
+        user = await user.signUp({}, {useMasterKey: true});
+    } else {
+        console.log(`[activate]: user ${instance.get("adminEmail")} already exists. Updating`);
+    }
+
+    user.save({}, {useMasterKey: true}).then(async (u) => {
+        console.log(`[activate]: user ${u.get("email")} saved`);
+        let UserProfile = Parse.Object.extend('UserProfile');
+        let userprofile = new UserProfile();
+        userprofile.set('realName', instance.get("adminName"));
+        userprofile.set('displayName', instance.get("adminName"));
+        userprofile.set('user', u);
+        userprofile.set('conference', instance);
+
+        let profileACL = new Parse.ACL();
+        profileACL.setRoleReadAccess(instance.id + "-conference", true);
+        profileACL.setWriteAccess(user, true);
+        userprofile.setACL(profileACL);
+        userprofile = await userprofile.save({}, {useMasterKey: true});
+
+        userprofile.save({}, {useMasterKey: true}).then(async up => {
+            console.log(`[activate]: user profile ${up.get("realName")} saved`);
+
+            let profiles = u.relation('profiles');
+            profiles.add(up);
+            let u2 = await u.save();
+
+            const roleACL = new Parse.ACL();
+            roleACL.setPublicReadAccess(true);
+            roleACL.setPublicWriteAccess(false);
+            roleACL.setWriteAccess(instance.id+"-admin", true);
+            let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference', 'ClowdrAdmin']
+            let roles = [];
+
+            roleNames.map(r => {
+                let role = new Parse.Role(r, roleACL);
+                let users = role.relation('users');
+                users.add(u2);
+                roles.push(role)    
+            })
+                    
+            try {
+                await Parse.Object.saveAll(roles, {useMasterKey: true});
+                console.log('[activate]: Roles created successfully');
+
+            } catch(err) {
+                console.log('Roles saved: ' + err);
+            }
+
+            let userACL = u2.getACL();
+            if(!userACL)
+                userACL = new Parse.ACL();
+            userACL.setPublicReadAccess(false);
+            userACL.setPublicWriteAccess(false);
+            userACL.setWriteAccess(user.id, true);
+            userACL.setReadAccess(user.id, true);
+            userACL.setRoleReadAccess(instance.id + "-manager", true);
+            userACL.setRoleReadAccess("ClowdrSysAdmin", true);
+            u2.setACL(userACL);
+            await u2.save({}, {useMasterKey: true});
+            console.log('User ACL saved successfully');
+
+        });    
+    });
 }
