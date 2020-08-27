@@ -113,6 +113,8 @@ $ npm run init-app
 
 After this command runs, you should be able to see all tables with some essential data stored in the database in Back4App. For verification, please check the ClowdrInstance table -- there should be one row there for a conference instance named XYZ. Check also the UserProfile table, and verify that there is one row there for user Clowdr Admin. You can check the few other tables that have data on them.
 
+One more things: select the `InstanceConfiguration` table, and click on the security icon on the top-right (a shield-like icon). Double check that Public read and write are unchecked, then add the role name `ClowdrSysAdmin` (press the tab key after typing this word), and check both Read and Write permissions for this role. Click save.
+
 #### Set Up Hosting and Live Query
 
 From the app created in back4app, turn on live queries for the tables in the
