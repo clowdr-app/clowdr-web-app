@@ -69,8 +69,8 @@ q.first().then(version => {
                 version.set("version", 0);
                 version.save().then(res => {
                     console.log("Schema version set to 0");
+                    addRequiredData();
                 });
-                await addRequiredData();
             }
         });
     }
