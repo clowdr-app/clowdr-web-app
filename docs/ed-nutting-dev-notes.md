@@ -49,3 +49,24 @@ page.](https://help.back4app.com/hc/en-us/articles/360002038772-How-to-install-a
 Back4App has a nasty fail-unsafe behaviour: it will enable whatever code it
 succeeded in loading up to the failure point, and ignore everything else (so
 some stuff will work, and some won't).
+
+## Twilio: Invalid Access Token issuer/subject
+
+This may be a symptom of the Twilio "User Updated" callback not working properly.
+To fix:
+
+1. Stop all your running services - i.e. shutdown clowdr-web-app and
+   clowdr-backend locally.
+1. Ensure you've carefully followed the directions for configuring
+   clowdr-web-app environment variables.
+1. Ensure you've carefully followed the directions for configuring the cloudr-backend
+   and Twilio API correctly.
+    * Hint: In the WebHooks configuration for Twilio Programmable Chat, there
+      are two sections: "Pre-Event Webhooks" and "Post-Event Webhooks". We want
+      the "Post-Event Webhooks" `onUserUpdated` - NOT `onUserUpdate` from the
+      "Pre-Event Webhooks"!
+    * Anytime you change the Twilio config, it's important to stop the cloudr
+      services locally, restart the cloudr-backend, then restart the
+      cloudr-web-app. Then log back in and it should work again.
+
+[See also this Twilio documentation](https://www.twilio.com/docs/api/errors/20103).
