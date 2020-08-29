@@ -456,11 +456,7 @@ class ClowdrApp extends React.Component{
         chrome: this.okBrowser,
         edge: this.okBrowser,
         safari: this.okBrowser,
-        default: (browser) => {
-            message.error(<span>The browser that you are using, {capitalizeFirstLetter(browser)}, may not work well with Clowdr. <br />Clowdr is still in
-                beta mode, and has only been tested with Chrome, Safari, and Edge.</span>, 30)
-            return <></>
-        }
+        default: this.okBrowser
     };
 
    render() {
