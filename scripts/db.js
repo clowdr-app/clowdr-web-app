@@ -87,7 +87,7 @@ q.first().then(version => {
         fs.readdirSync('./db')
                       .filter(file => ((file.match(/^\d/)) && (path.extname(file) === '.js')))
                       .sort()
-                      .map(f => {
+                      .forEach(f => {
                           let name = f.slice(0, -4); // without the extension
                           let n = parseInt(name);
                           if (n > v) {
@@ -194,13 +194,13 @@ async function activate(instance) {
             let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference', 'ClowdrSysAdmin']
             let roles = [];
 
-            roleNames.map(r => {
+            roleNames.forEach(r => {
                 let role = new Parse.Role(r, roleACL);
                 let users = role.relation('users');
                 users.add(u2);
-                roles.push(role)    
-            })
-                    
+                roles.push(role);
+            });
+
             try {
                 await Parse.Object.saveAll(roles, {useMasterKey: true});
                 console.log('[activate]: Roles created successfully');
