@@ -57,7 +57,14 @@ const Version = Parse.Object.extend('Version');
 let q = new Parse.Query(Version);
 q.first().then(version => {
     if (!version) { // Does not exist. This is the initial setup
-        const cmd = `mongorestore --host ${process.env.MONGODB_HOST} --username admin --password ${process.env.MONGODB_PASSWORD} --db ${process.env.MONGODB_DB} ./db/schema-base`;
+        let cmd = "";
+        if (process.env.MONGODB_PASSWORD) {
+            cmd = `mongorestore --host ${process.env.MONGODB_HOST} --username admin --password ${process.env.MONGODB_PASSWORD} --db ${process.env.MONGODB_DB} ./db/schema-base`;
+        }
+        else {
+            cmd = `mongorestore --host ${process.env.MONGODB_HOST} --db ${process.env.MONGODB_DB} ./db/schema-base`;
+        }
+
         console.log('> ' + cmd);
         exec(cmd, (err, stdout, stderr) => {
             if (err) {
