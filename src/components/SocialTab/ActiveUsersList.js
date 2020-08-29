@@ -40,8 +40,8 @@ class ActiveUsersList extends React.Component {
                 .filter(p =>
                     p
                     && p.get("socialSpace")
-                    && p.get("socialSpace").id == this.props.auth.activeSpace.id
-                    && (!this.state.filteredUser || this.state.filteredUser == p.get("user").id)
+                    && p.get("socialSpace").id === this.props.auth.activeSpace.id
+                    && (!this.state.filteredUser || this.state.filteredUser === p.get("user").id)
                 ).map(p => p.get("user")).sort(compareNames);
         }
         let latestLobbyMembers = lobbyMembers.concat().sort((i1, i2) => {
@@ -75,7 +75,7 @@ class ActiveUsersList extends React.Component {
 
                     {latestLobbyMembers.map((user) => {
                         let className = "personHoverable";
-                        if (this.state.filteredUser == user.id)
+                        if (this.state.filteredUser === user.id)
                             className += " personFiltered"
                         return <Menu.Item key={"latest"+user.id} className={className}>
                             <UserStatusDisplay popover={true} profileID={user.id}/>
@@ -88,7 +88,7 @@ class ActiveUsersList extends React.Component {
 
                     {lobbyMembers.map((user) => {
                         let className = "personHoverable";
-                        if (this.state.filteredUser == user.id)
+                        if (this.state.filteredUser === user.id)
                             className += " personFiltered"
                         return <Menu.Item key={user.id} className={className}>
                             <UserStatusDisplay popover={true} profileID={user.id}/>

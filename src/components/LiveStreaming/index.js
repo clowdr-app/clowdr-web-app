@@ -60,7 +60,7 @@ class LiveStreaming extends Component {
         let currentSessions = sessions.filter(s => {
             var timeS = s.get("startTime") ? s.get("startTime") : new Date();
             var timeE = s.get("endTime") ? s.get("endTime") : new Date();
-            if (when == "past") {
+            if (when === "past") {
                 return (s.get("room") && now >= moment(timeE).add(10, 'm').toDate().getTime());
             }
             else { // live sessions
@@ -75,21 +75,21 @@ class LiveStreaming extends Component {
         else
             console.log('No current sessions');
 
-        liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r && room && r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
-        liveRooms.sort((a, b) => (a.get("name") == "Practice Room" ? 1
-            : b.get("name") == "Practice Room" ? -1 : a.get('name').localeCompare(b.get('name'))));
+        liveRooms = liveRooms.reduce((acc, room) => acc.find(r => r && room && r.id === room.id) ? acc : [...acc, room], []); // remove duplicates
+        liveRooms.sort((a, b) => (a.get("name") === "Practice Room" ? 1
+            : b.get("name") === "Practice Room" ? -1 : a.get('name').localeCompare(b.get('name'))));
 
         // Upcoming
         let upcomingSessions = []
         let upcomingRooms = [];
-        if (when == "now") {
+        if (when === "now") {
             upcomingSessions = sessions.filter(s => {
                 var timeS = s.get("startTime") ? s.get("startTime") : new Date();
                 let ts_window = moment(timeS).subtract(30, 'd').toDate().getTime();
                 return (timeS > now && ts_window < now && s.get("room"));
             }).sort(this.dateSorter);
 
-            if (upcomingSessions.length == 0) {
+            if (upcomingSessions.length === 0) {
                 // Widen the time window
                 upcomingSessions = sessions.filter(s => {
                     var timeS = s.get("startTime") ? s.get("startTime") : new Date();
@@ -105,7 +105,7 @@ class LiveStreaming extends Component {
             else
                 console.log('No upcoming sessions');
 
-            upcomingRooms = upcomingRooms.reduce((acc, room) => acc.find(r => r && room && r.id == room.id) ? acc : [...acc, room], []); // remove duplicates
+            upcomingRooms = upcomingRooms.reduce((acc, room) => acc.find(r => r && room && r.id === room.id) ? acc : [...acc, room], []); // remove duplicates
             // upcomingRooms.sort((a, b) => a.get('name').localeCompare(b.get('name')));
             // console.log('--> Upcoming rooms: ' + upcomingRooms.length);
         }
@@ -176,7 +176,7 @@ class LiveStreaming extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.match.params.when != this.props.match.params.when) {
+        if (prevProps.match.params.when !== this.props.match.params.when) {
             if (this.state.expanded) {
                 this.toggleExpanded();
             }
@@ -198,14 +198,14 @@ class LiveStreaming extends Component {
         }
     }
     expandVideoByName(roomName){
-        if(!this.state.expandedRoomName || !this.state.expanded || roomName != this.state.expandedRoomName){
-           let room = this.state.rooms.find(r=>(r.get("name") == roomName));
+        if(!this.state.expandedRoomName || !this.state.expanded || roomName !== this.state.expandedRoomName){
+           let room = this.state.rooms.find(r=>(r.get("name") === roomName));
             if(!room)
-                room = this.state.liveRooms.find(r=>(r.get("name") == roomName)); //I don't understand why we have rooms vs liveRooms...
+                room = this.state.liveRooms.find(r=>(r.get("name") === roomName)); //I don't understand why we have rooms vs liveRooms...
             if(!room)
-                room = this.state.upcomingRooms.find(r=>(r.get("name") == roomName));//...?
+                room = this.state.upcomingRooms.find(r=>(r.get("name") === roomName));//...?
            if(room){
-               // if(this.props.match.params.when == "now" && room.get("qa")){
+               // if(this.props.match.params.when === "now" && room.get("qa")){
                    this.props.auth.helpers.setExpandedProgramRoom(room);
                // }
                this.setState({expanded: true, expanded_video: room, expandedRoomName: roomName})
@@ -224,7 +224,7 @@ class LiveStreaming extends Component {
 
         let header = "";
         let upcoming = ""
-        if (!this.state.expanded && this.props.match.params.when == "now") {
+        if (!this.state.expanded && this.props.match.params.when === "now") {
             header = <h3>Happening now:</h3>
             upcoming = <div><h3>Upcoming:</h3>
                 <div className={"space-align-container"}>
@@ -252,13 +252,13 @@ class LiveStreaming extends Component {
 
             </div>
         }
-        if (!this.state.expanded && this.props.match.params.when == "past") {
+        if (!this.state.expanded && this.props.match.params.when === "past") {
             header = <h3>Past live sessions:</h3>
         }
 
         let rooms = this.state.liveRooms;
         if (this.state.expanded) {
-            rooms = rooms.concat(this.state.upcomingRooms).filter(r => r.id == this.state.expanded_video.id);
+            rooms = rooms.concat(this.state.upcomingRooms).filter(r => r.id === this.state.expanded_video.id);
             if (rooms.length > 1)
                 rooms = [rooms[0]];
         }
@@ -267,13 +267,13 @@ class LiveStreaming extends Component {
                 {rooms.map((room) => {
 
                     let mySessions = this.state.currentSessions.filter(s => s.get("room").id === room.id);
-                    if (mySessions.length == 0)
+                    if (mySessions.length === 0)
                         mySessions = this.state.upcomingSessions.filter(s => s.get("room").id === room.id); //TODO why are future/current separate datastructures?
                     let qa = "";
                     let width = "100%";
                     if (!this.state.expanded) width = 320;
-                    // if (this.state.expanded && room.id == this.state.expanded_video.id) {
-                    //     if (this.props.match.params.when =="now") {
+                    // if (this.state.expanded && room.id === this.state.expanded_video.id) {
+                    //     if (this.props.match.params.when ==="now") {
                     //         const q_url = this.state.expanded_video.get("qa");
                     //         qa = q_url ? <table><tbody><tr><td style={{"textAlign":"center"}}><strong>Live questions to the speakers</strong></td></tr>
                     //             <tr><td><iframe title={this.state.expanded_video.get("name")} src={q_url} style={{"height":"720px"}} allowFullScreen/> </td></tr>
@@ -285,7 +285,7 @@ class LiveStreaming extends Component {
                         // return <div className={"space-align-block"} key={room.id} style={{width:width}}>
                         //     <NoMediaPanel auth={this.props.auth} video={room} vid={this.state.expanded_video} mysessions={mySessions} />
                         // </div>
-                        if(this.state.expanded && room.id == this.state.expanded_video.id){
+                        if(this.state.expanded && room.id === this.state.expanded_video.id){
                             return <div key={room.id}>
                                 <Alert type="error" message={"Error: The organizers of this conference have not yet configured a streaming source for this room. This is not a bug in Clowdr, but is a configuration error in the conference. Please contact your conference organizers and ask them to check the configuration for the '" + room.get("name") + "' room." }/>
                             </div>

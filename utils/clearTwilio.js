@@ -136,8 +136,8 @@ async function fixUsers() {
                     //     console.log(channel.sid +"\t"+channel.friendlyName + "\t"+channel.uniqueName); //+"\t"+id)
                         await config.twilioChat.channels(channel).remove();
                     // }else{
-                    //     let space = spaces.find(space => space.id == id);
-                    //     if(space.get("chatChannel") != channel.sid){
+                    //     let space = spaces.find(space => space.id === id);
+                    //     if(space.get("chatChannel") !== channel.sid){
                     //         console.log("Mismatch on " + space.get("chatChannel"))
                     //     }
                     //     else{

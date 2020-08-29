@@ -95,7 +95,7 @@ class MeetingSummary extends React.Component {
                 {/*<h4>Currently here:</h4>*/}
                 {/*<Divider orientation="left">Here now:</Divider>*/}
                 <List
-                    dataSource={item.get('members').filter((v) => (v != null))}
+                    dataSource={item.get('members').filter((v) => (v !== null))}
                     size={"small"}
                     renderItem={user => {
                         let avatar;
@@ -186,7 +186,7 @@ class Lobby extends React.Component {
             return true;
         if (!o1 || !o2)
             return false;
-        return o1.id == o2.id;
+        return o1.id === o2.id;
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -194,7 +194,7 @@ class Lobby extends React.Component {
             return;
         let stateUpdate = {};
 
-        if (prevState.activePublicVideoRooms != this.state.activePublicVideoRooms || (this.state.ProgramItems && this.state.ProgramTracks && !this.state.breakoutRoomsForTracksLoaded)) {
+        if (prevState.activePublicVideoRooms !== this.state.activePublicVideoRooms || (this.state.ProgramItems && this.state.ProgramTracks && !this.state.breakoutRoomsForTracksLoaded)) {
             //re-calculate the rooms-by-track
             let breakoutRoomsForTracks = {};
             if (this.state.ProgramItems && this.state.ProgramTracks) {
@@ -205,7 +205,7 @@ class Lobby extends React.Component {
                 }
                 for (let item of this.state.ProgramItems) {
                     if (item.get("breakoutRoom")) {
-                        let room = this.state.activePublicVideoRooms? this.state.activePublicVideoRooms.find(v => v.id == item.get("breakoutRoom").id) : undefined;
+                        let room = this.state.activePublicVideoRooms? this.state.activePublicVideoRooms.find(v => v.id === item.get("breakoutRoom").id) : undefined;
                         if (room && breakoutRoomsForTracks[item.get('track').id]) {
                             breakoutRoomsForTracks[item.get("track").id].push(room);
                         }
@@ -218,7 +218,7 @@ class Lobby extends React.Component {
         if (Object.keys(stateUpdate).length > 0) {
             this.setState(stateUpdate);
         }
-        // if (this.props.auth.videoRoomsLoaded != this.state.videoRoomsLoaded) {
+        // if (this.props.auth.videoRoomsLoaded !== this.state.videoRoomsLoaded) {
         //     this.setState({videoRoomsLoaded: this.props.auth.videoRoomsLoaded});
         // }
         // if (!this.areEqualID(this.props.auth.currentConference, prevProps.auth.currentConference) || !this.areEqualID(prevProps.auth.user, this.props.auth.user)) {
@@ -228,11 +228,11 @@ class Lobby extends React.Component {
         //         this.setState({loggedIn: true});
         //     }
         // }
-        // if(this.props.auth.activePrivateVideoRooms != this.state.activePrivateVideoRooms)
+        // if(this.props.auth.activePrivateVideoRooms !== this.state.activePrivateVideoRooms)
         // {
         //     this.setState({activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms})
         // }
-        // if(this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms){
+        // if(this.props.auth.activePublicVideoRooms !== this.state.activePublicVideoRooms){
         //     this.setState({activePublicVideoRooms: this.props.auth.activePublicVideoRooms})
         // }
         // if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
@@ -331,13 +331,13 @@ class Lobby extends React.Component {
                                 membersCount = item.get("members").length;
                             }
                             let tag, joinInfo;
-                            if (item.get("mode") == "group") {
+                            if (item.get("mode") === "group") {
                                 //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
                                 joinInfo = "Click to join this big group room (up to " + capacity + " callers). Up to 5 speakers are allowed at once."
-                            } else if (item.get("mode") == "peer-to-peer") {
+                            } else if (item.get("mode") === "peer-to-peer") {
                                 //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
                                 joinInfo = "Click to join this peer-to-peer room (up to " + capacity + " callers)."
-                            } else if (item.get("mode") == "group-small") {
+                            } else if (item.get("mode") === "group-small") {
                                 //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
                                 joinInfo = "Click to join this small group room (up to " + capacity + ")."
                             }
@@ -359,7 +359,7 @@ class Lobby extends React.Component {
                             let formattedRoom =
                                 <div className="activeBreakoutRoom">{tag}{privateSymbol}{item.get('title')}</div>
                             let joinLink = "";
-                            if (!this.state.currentRoom || this.state.currentRoom.id != item.id) {
+                            if (!this.state.currentRoom || this.state.currentRoom.id !== item.id) {
                                 if (item.get("members") && item.get("capacity") <= item.get("members").length)
                                     joinLink = <div><Tooltip mouseEnterDelay={0.5}
                                         title={"This room is currently full (capacity is " + item.get('capacity') + ")"}><Typography.Text
@@ -395,7 +395,7 @@ class Lobby extends React.Component {
                                 list = item.get("members").map(user => {
                                     if (user) {
                                         let className = "personHoverable";
-                                        if (this.state.filteredUser == user.id)
+                                        if (this.state.filteredUser === user.id)
                                             className += " personFiltered"
                                         return <UserStatusDisplay popover={true} profileID={user.id} key={user.id} />
                                     }
@@ -507,8 +507,8 @@ class Lobby extends React.Component {
 
                 {
                     this.state.breakoutRoomsForTracks ? Object.keys(this.state.breakoutRoomsForTracks).sort((i1, i2) => {
-                        let o1 = this.state.ProgramTracks.find(v => v.id == i1);
-                        let o2 = this.state.ProgramTracks.find(v => v.id == i2);
+                        let o1 = this.state.ProgramTracks.find(v => v.id === i1);
+                        let o2 = this.state.ProgramTracks.find(v => v.id === i2);
                         let n1 = o1.get("displayName");
                         if (!n1)
                             n1 = o1.get("name");
@@ -517,7 +517,7 @@ class Lobby extends React.Component {
                             n2 = o2.get("name");
                         return n1.localeCompare(n2);
                     }).map(trackID => {
-                        let track = this.state.ProgramTracks.find(v => v.id == trackID);
+                        let track = this.state.ProgramTracks.find(v => v.id === trackID);
 
                         let rooms = this.state.breakoutRoomsForTracks[trackID];
                         if (rooms.length) {

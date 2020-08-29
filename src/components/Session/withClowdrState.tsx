@@ -203,7 +203,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             assert (this.state.userProfile !== null);
             // @ Jon: Do we really want to prevent this case?  Crista likes DMing herself!
             // Jon: Yes, it is confusing, and no other chat platofrm allows it...
-            if (profileOfUserToDM.id == this.state.userProfile.id) return
+            if (profileOfUserToDM.id === this.state.userProfile.id) return
             // Look to see if we already have a chat set up with this person
             let channels = this.state.chatClient.joinedChannels;
             if (channels) {
@@ -212,11 +212,11 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     if(!chan || !chan.conversation)
                         return false;
                     let convo = chan.conversation;
-                    if(chan.channel.attributes && chan.channel.attributes.mode == "group")
+                    if(chan.channel.attributes && chan.channel.attributes.mode === "group")
                         return false;
-                    if(convo.get("isDM") == true &&
-                        (convo.get("member2").id == profileOfUserToDM.id ||
-                        convo.get("member1").id == profileOfUserToDM.id))
+                    if(convo.get("isDM") === true &&
+                        (convo.get("member2").id === profileOfUserToDM.id ||
+                        convo.get("member1").id === profileOfUserToDM.id))
                         return true;
                     return false;
                 })
@@ -233,7 +233,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 conversationName: profileOfUserToDM.get("displayName"),
                 messageWith: profileOfUserToDM.id
             });
-            if (res.status == "ok")
+            if (res.status === "ok")
                 await this.state.chatClient.openChat(res.sid);
         }
 
@@ -280,14 +280,14 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
         async getRoleByName(role: Parse.Object) {
             // @ts-ignore  TS: What is the result of find??
-            let existingRoles = this.state.roles.find(i => i.get("name") == role);
+            let existingRoles = this.state.roles.find(i => i.get("name") === role);
             if(existingRoles)
                 return existingRoles;
             //Make sure to refresh first...
             const roleQuery = new Parse.Query(Parse.Role);
             roleQuery.equalTo("users", this.state.user);
             const roles = await roleQuery.find();
-            existingRoles = roles.find(i => i.get("name") == role);
+            existingRoles = roles.find(i => i.get("name") === role);
             if(existingRoles){
                 this.setState({roles: roles});
                 return existingRoles;
@@ -327,10 +327,10 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
         unmountProfileDisplay(profileID:string, component:React.Component){
             if(this.userProfileSubscribers[profileID])
-                this.userProfileSubscribers[profileID] = this.userProfileSubscribers[profileID].filter(c=>c!=component);
+                this.userProfileSubscribers[profileID] = this.userProfileSubscribers[profileID].filter(c=>c!==component);
         }
         cancelPresenceSubscription(component: React.Component){
-            this.presenceWatchers = this.presenceWatchers.filter(v => v!= component);
+            this.presenceWatchers = this.presenceWatchers.filter(v => v!== component);
         }
         updateProfile(profile: UserProfile){
             if(this.userProfileSubscribers[profile.id]){
@@ -425,7 +425,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 return
             if (space)
                 spaceName = space.get("name");
-            if (!this.state.activeSpace || spaceName != this.state.activeSpace.get("name")) {
+            if (!this.state.activeSpace || spaceName !== this.state.activeSpace.get("name")) {
                 if(!user)
                     user = this.state.user;
                 if(!userProfile) {
@@ -440,7 +440,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 }
                 if (userProfile.get("presence") &&
                     (!userProfile.get("presence").get("socialSpace") ||
-                        userProfile.get('presence').get('socialSpace').id != space.id)) {
+                        userProfile.get('presence').get('socialSpace').id !== space.id)) {
                     let presence = userProfile.get("presence");
                     presence.set("socialSpace", space);
                     presence.save();
@@ -457,7 +457,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 }
                 this.setState(stateUpdate);
             }
-            else if(this.state.activeSpace && this.state.activeSpace.get("name") == spaceName){
+            else if(this.state.activeSpace && this.state.activeSpace.get("name") === spaceName){
                 if(!space && this.state.spaces){
                     space = this.state.spaces[spaceName];
                 }
@@ -523,26 +523,26 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                             profileQ.include("presence")
                             activeProfile = await profileQ.get(currentProfileID);
                             conf = activeProfile.get("conference");
-                            if(preferredConference && preferredConference.id != activeProfile.get("conference").id)
+                            if(preferredConference && preferredConference.id !== activeProfile.get("conference").id)
                             {
                                 activeProfile = null;
                             }
                         }
                         for (let role of roles) {
-                            if (role.get("name") == "ClowdrSysAdmin") {
+                            if (role.get("name") === "ClowdrSysAdmin") {
                                 isAdmin = true;
                                 isClowdrAdmin = true;
                             }
-                            if (activeProfile && role.get("name") == (activeProfile.get("conference").id + "-admin")) {
+                            if (activeProfile && role.get("name") === (activeProfile.get("conference").id + "-admin")) {
                                 isAdmin = true;
                                 isClowdrAdmin = true;
                                 isManager = true;
                                 isModerator = true;
                             }
-                            if (activeProfile && role.get("name") == (activeProfile.get("conference").id + "-moderator")) {
+                            if (activeProfile && role.get("name") === (activeProfile.get("conference").id + "-moderator")) {
                                 isModerator = true;
                             }
-                            if (activeProfile && role.get("name") == (activeProfile.get("conference").id + "-manager")) {
+                            if (activeProfile && role.get("name") === (activeProfile.get("conference").id + "-manager")) {
                                 isModerator = true;
                                 isManager = true;
                             }
@@ -556,7 +556,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                                 preferredConference = await confQ.first();
                             }
                             if (preferredConference) {
-                                conf = validConferences.find((c) => preferredConference && c.id == preferredConference.id);
+                                conf = validConferences.find((c) => preferredConference && c.id === preferredConference.id);
                                 if (!conf) {
                                     conf = validConferences[0];
                                 }
@@ -624,7 +624,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                             finishedStateFn()});
                             await stateSetPromise;
                             // @ts-ignore    TS: @Jon: ... This is why we think the initialization of conf is wrong!
-                            if(priorConference && conf && priorConference.id != conf.id){
+                            if(priorConference && conf && priorConference.id !== conf.id){
                                 window.location.reload(false);
                             }
                         _this.forceUpdate();
@@ -690,7 +690,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         cancelBreakoutRoomsSubscription(component: React.Component){
-            this.activeRoomSubscribers = this.activeRoomSubscribers.filter(v=>v != component);
+            this.activeRoomSubscribers = this.activeRoomSubscribers.filter(v=>v !== component);
         }
         subscribeToBreakoutRooms(component: React.Component){
             this.activeRoomSubscribers.push(component);
@@ -701,7 +701,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
        async getBreakoutRoom(id: string, component: React.Component){
-            let room = this.activePublicVideoRooms.find((v:{id:string;})=> v.id == id);
+            let room = this.activePublicVideoRooms.find((v:{id:string;})=> v.id === id);
             if(room){
                 if(!this.activePublicVideoRoomSubscribers[id])
                     this.activePublicVideoRoomSubscribers[id] = [];
@@ -711,7 +711,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
         cancelBreakoutRoomSubscription(id:string, component:React.Component){
             if(this.activePublicVideoRoomSubscribers[id])
-                this.activePublicVideoRoomSubscribers[id] = this.activePublicVideoRoomSubscribers[id].filter((v:React.Component)=>v!=component);
+                this.activePublicVideoRoomSubscribers[id] = this.activePublicVideoRoomSubscribers[id].filter((v:React.Component)=>v!==component);
         }
         async subscribeToPublicRooms() {
             if(!this.currentConference){
@@ -747,14 +747,14 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     }
                 })
                 this.parseLivePublicVideosSub.on("delete", (vid:BreakoutRoom) => {
-                    this.activePublicVideoRooms = this.activePublicVideoRooms.filter((v:BreakoutRoom)=> v.id != vid.id);
+                    this.activePublicVideoRooms = this.activePublicVideoRooms.filter((v:BreakoutRoom)=> v.id !== vid.id);
                     for(let obj of this.activeRoomSubscribers){
                         obj.setState({activePublicVideoRooms: this.activePublicVideoRooms.concat([])});
                     }
                 });
                 this.parseLivePublicVideosSub.on('update', async (vid:BreakoutRoom) => {
                     this.notifyUserOfChanges(vid);
-                    this.activePublicVideoRooms = this.activePublicVideoRooms.map((room:BreakoutRoom)=>room.id == vid.id ? vid : room);
+                    this.activePublicVideoRooms = this.activePublicVideoRooms.map((room:BreakoutRoom)=>room.id === vid.id ? vid : room);
                     for(let obj of this.activeRoomSubscribers){
                         obj.setState({activePublicVideoRooms: this.activePublicVideoRooms.concat([])});
                     }
@@ -776,11 +776,11 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         handleNewParseLiveActivity(activity:LiveActivity){  // TS: ???
-            if(activity.get("topic") == "privateBreakoutRooms"){
+            if(activity.get("topic") === "privateBreakoutRooms"){
                 // @ts-ignore  @Jon    subscribeToNewPrivateRooms doesn't want an argument
                 //Jon: OK, deleted it...
                 this.subscribeToNewPrivateRooms();
-            }else if(activity.get("topic") == "profile"){
+            }else if(activity.get("topic") === "profile"){
                 window.location.reload(true);
             }
         }
@@ -791,17 +791,17 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             if(!oldRoom){
                 this.watchedRoomMembers[updatedRoom.id] = [];
                 if(updatedRoom.get("members")){
-                    this.watchedRoomMembers[updatedRoom.id] = updatedRoom.get("members").filter((m:UserProfile)=>m.id!=this.state.user.id).map((m:UserProfile)=>m.get("displayName"));  
+                    this.watchedRoomMembers[updatedRoom.id] = updatedRoom.get("members").filter((m:UserProfile)=>m.id!==this.state.user.id).map((m:UserProfile)=>m.get("displayName"));  
                 }
             }
             if(updatedRoom && oldRoom && this.state.userProfile.get("watchedRooms")){
-                if(this.state.userProfile.get("watchedRooms").find((r:BreakoutRoom)=>r.id == updatedRoom.id)){
+                if(this.state.userProfile.get("watchedRooms").find((r:BreakoutRoom)=>r.id === updatedRoom.id)){
                     //We have a watch on it.
 
                     //Who is new?
                     let update : UserProfile[] = [];
                     if(updatedRoom.get("members")){
-                        update = updatedRoom.get("members").filter((m:UserProfile)=>m.id!=this.state.user.id).map((m:UserProfile)=>m.get("displayName"));
+                        update = updatedRoom.get("members").filter((m:UserProfile)=>m.id!==this.state.user.id).map((m:UserProfile)=>m.get("displayName"));
                     }
                     let newUsers = update.filter(u=>!oldRoom.includes(u));
                     let goneUsers = oldRoom.filter(u=>!update.includes(u));
@@ -850,7 +850,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             assert(this.user);
             this.parseLivePrivateVideosSub = this.state.parseLive.subscribe(newRoomsQuery, this.user.getSessionToken());
             this.parseLivePrivateVideosSub.on("update", async (vid:BreakoutRoom) => {
-                this.activePrivateVideoRooms = this.activePrivateVideoRooms.map((room:BreakoutRoom)=>room.id == vid.id ? vid : room);
+                this.activePrivateVideoRooms = this.activePrivateVideoRooms.map((room:BreakoutRoom)=>room.id === vid.id ? vid : room);
                 for(let obj of this.activeRoomSubscribers){
                     obj.setState({activePrivateVideoRooms: this.activePrivateVideoRooms});
                 }
@@ -862,13 +862,13 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 }
             });
             this.parseLivePrivateVideosSub.on("delete", (vid:BreakoutRoom) => {
-                this.activePrivateVideoRooms = this.activePrivateVideoRooms.filter((v:BreakoutRoom)=> v.id != vid.id);
+                this.activePrivateVideoRooms = this.activePrivateVideoRooms.filter((v:BreakoutRoom)=> v.id !== vid.id);
                 for(let obj of this.activeRoomSubscribers){
                     obj.setState({activePrivateVideoRooms: this.activePrivateVideoRooms});
                 }
             })
             this.parseLivePrivateVideosSub.on("leave", (vid:BreakoutRoom) => {
-                this.activePrivateVideoRooms = this.activePrivateVideoRooms.filter((v:BreakoutRoom)=> v.id != vid.id);
+                this.activePrivateVideoRooms = this.activePrivateVideoRooms.filter((v:BreakoutRoom)=> v.id !== vid.id);
                 for(let obj of this.activeRoomSubscribers){
                     obj.setState({activePrivateVideoRooms: this.activePrivateVideoRooms});
                 }
@@ -880,7 +880,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             assert(acl && this.user);
             if(acl.getWriteAccess(this.user))
                 return true;
-            if(this.state.roles.find((v:Role) => this.state.currentConference && (v.get('name') == this.state.currentConference.id+'-manager' || v.get('name') == this.state.currentConference.id+"-admin")))
+            if(this.state.roles.find((v:Role) => this.state.currentConference && (v.get('name') === this.state.currentConference.id+'-manager' || v.get('name') === this.state.currentConference.id+"-admin")))
                 return true;
             return false;
         }

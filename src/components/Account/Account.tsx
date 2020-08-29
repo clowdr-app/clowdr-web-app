@@ -192,13 +192,13 @@ class Account extends React.Component<Props, State> {
             }
         }
         this.programPersonOptions = this.ProgramPersons.filter((person: Parse.Object) => (
-            (person.get("userProfile") == null || person.get("userProfile").id == this.props.auth.userProfile.id) &&
+            (person.get("userProfile") === null || person.get("userProfile").id === this.props.auth.userProfile.id) &&
              peopleToItems[person.id])).map((person: Parse.Object) => (
                 {value: person.id,
                  label: person.get('name') + " (" + peopleToItems[person.id].map((item: Parse.Object) => item.get("title")).join(", ") + ")"})
             );
         matchingPersons = this.ProgramPersons.filter((person: Parse.Object) =>
-            person.get("userProfile") && person.get("userProfile").id == this.props.auth.userProfile.id
+            person.get("userProfile") && person.get("userProfile").id === this.props.auth.userProfile.id
             ).map((person: Parse.Object) => (person.id));
 
         this.setState({

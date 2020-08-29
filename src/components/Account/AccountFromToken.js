@@ -20,7 +20,7 @@ class SlackToVideo extends React.Component {
         let token = this.props.match.params.token;
         try {
             if(this.props.clowdrAppState.user){
-                if(userID != this.props.clowdrAppState.user.id){
+                if(userID !== this.props.clowdrAppState.user.id){
                     await Parse.User.logOut();
                     window.location.reload(false);
 
@@ -130,7 +130,7 @@ class SlackToVideo extends React.Component {
 
         if (this.props.clowdrAppState.user) {
             let action = <></>
-            if(this.state.step == 1){
+            if(this.state.step === 1){
                 let password1Rules = [
                     {
                         required: true,
@@ -200,12 +200,12 @@ class SlackToVideo extends React.Component {
                             </Form.Item>
                         </Form></Card>
                 </div>
-            }else if(this.state.step == 2){
+            }else if(this.state.step === 2){
                 action = <Card title="Complete Your Virtual Badge" style={{marginLeft:"auto",marginRight:"auto",maxWidth:"700px"}}>
                     <Typography.Paragraph>Make it easier for others to find you by uploading an avatar and completing your profile. We've pre-filled some of this information from your conference registration.</Typography.Paragraph>
                     <Account embedded={true} onFinish={()=>{this.setState({step: 3})}}/></Card>
             }
-            // else if(this.state.step == 3){
+            // else if(this.state.step === 3){
             //     action = <Card title={"Join "+this.props.clowdrAppState.currentConference.get("conferenceName")+" on Slack"} style={{marginLeft:"auto",marginRight:"auto",maxWidth:"700px"}}>
             //         <Typography.Paragraph>While CLOWDR provides chat integrated with the conference program, there is also a Slack
             //             workspace. Please be sure to use your real name as your Slack handle, and the same email address that you used to register for this conference ({this.props.clowdrAppState.user.get("email")}).</Typography.Paragraph>
@@ -213,7 +213,7 @@ class SlackToVideo extends React.Component {
             //         <Button href={this.state.slackLink} type="primary" target="_blank" onClick={()=>{this.setState({step: 4})}}>Join Slack</Button>
             //     </Card>
             // }
-            else if(this.state.step == 3){
+            else if(this.state.step === 3){
                 action = <Result
                     status="success"
                     title={"You're ready to explore Virtual " + this.props.clowdrAppState.currentConference.get("conferenceName")+"!"}

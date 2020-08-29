@@ -73,7 +73,7 @@ class SignIn extends Component {
             email: this.state.email,
             confID: this.props.clowdrAppState.helpers.getDefaultConferenceName()
         });
-        if(res.status == "error")
+        if(res.status === "error")
             message.error(res.message);
         else
             message.success(res.message, 0);

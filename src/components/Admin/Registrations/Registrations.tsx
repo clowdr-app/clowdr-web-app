@@ -70,7 +70,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
     onCreate(values: RegistrationSchema) {
         var _this = this;
 
-        let exists = this.state.regs.find(r => r.get("email") == values.email)
+        let exists = this.state.regs.find(r => r.get("email") === values.email)
         if (exists)
             console.log("[Admin/Registrations]: Email already exists");
             console.log("[Admin/Registrations]: Valid email? " + validateEmail(values.email));
@@ -106,7 +106,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
     }
 
     setVisible(visible: boolean) {
-        if (visible != null) {
+        if (visible !== null) {
             this.setState({'visible': visible});
         }
         else {

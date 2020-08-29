@@ -45,12 +45,12 @@ class ContextualActiveUsers extends React.Component {
             return true;
         if (!o1 || !o2)
             return false;
-        return o1.id == o2.id;
+        return o1.id === o2.id;
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         let stateUpdate = {};
-        if (this.props.auth.activeSpace != this.state.activeSpace) {
+        if (this.props.auth.activeSpace !== this.state.activeSpace) {
             stateUpdate.activeSpace = this.props.auth.activeSpace;
         }
         if (!this.areEqualID(this.props.auth.currentConference, prevProps.auth.currentConference) || !this.areEqualID(prevProps.auth.user, this.props.auth.user)) {
@@ -61,7 +61,7 @@ class ContextualActiveUsers extends React.Component {
         if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
             stateUpdate.currentRoom = this.props.auth.currentRoom;
         }
-        if (this.props.collapsed != this.state.collapsed) {
+        if (this.props.collapsed !== this.state.collapsed) {
             stateUpdate.collapsed = this.props.collapsed;
         }
         if (Object.keys(stateUpdate).length > 0) {
@@ -141,8 +141,8 @@ class ContextualActiveUsers extends React.Component {
             allActiveRooms = this.state.activePrivateVideoRooms.concat(this.state.activePublicVideoRooms);
         }
 
-        let programRooms = allActiveRooms.filter(r => r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.props.auth.activeSpace.id));
-        allActiveRooms = allActiveRooms.filter(r => !r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id == this.props.auth.activeSpace.id))
+        let programRooms = allActiveRooms.filter(r => r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id === this.props.auth.activeSpace.id));
+        allActiveRooms = allActiveRooms.filter(r => !r.get("programItem") && (!r.get("socialSpace") || r.get("socialSpace").id === this.props.auth.activeSpace.id))
         //Also make a fake rom for the lobby.
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 
@@ -191,15 +191,15 @@ class ContextualActiveUsers extends React.Component {
                                 membersCount = item.get("members").length;
                             }
                             let tag, joinInfo;
-                            if (item.get("mode") == "group") {
+                            if (item.get("mode") === "group") {
                                 //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
                                 joinInfo = "Click to join this big group room (up to " + capacity + " participants). Displays live video for the most recent speakers."
                             }
-                            else if (item.get("mode") == "peer-to-peer") {
+                            else if (item.get("mode") === "peer-to-peer") {
                                 //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
                                 joinInfo = "Click to join this peer-to-peer room (up to " + capacity + " participants)."
                             }
-                            else if (item.get("mode") == "group-small") {
+                            else if (item.get("mode") === "group-small") {
                                 //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
                                 joinInfo = "Click to join this small group room (up to " + capacity + " participants)."
                             }
@@ -220,7 +220,7 @@ class ContextualActiveUsers extends React.Component {
                             let formattedRoom =
                                 <div className="activeBreakoutRoom" style={{ paddingLeft: "3px" }}>{tag}{privateSymbol}{item.get('title')}</div>
                             let joinLink = "";
-                            if (!this.state.currentRoom || this.state.currentRoom.id != item.id) {
+                            if (!this.state.currentRoom || this.state.currentRoom.id !== item.id) {
                                 if (item.get("members") && item.get("capacity") <= item.get("members").length)
                                     joinLink = <div><Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is " + item.get('capacity') + ")"}><Typography.Text
                                         disabled>{formattedRoom}</Typography.Text></Tooltip></div>
@@ -255,7 +255,7 @@ class ContextualActiveUsers extends React.Component {
                                 list = item.get("members").map(user => {
                                     if (user) {
                                         let className = "personHoverable";
-                                        if (this.state.filteredUser == user.id)
+                                        if (this.state.filteredUser === user.id)
                                             className += " personFiltered"
                                         return <Menu.Item key={user.id} className={className}>
                                             <UserStatusDisplay popover={true} profileID={user.id} />

@@ -48,7 +48,7 @@ export default class ProgramCache {
                 }
             });
             sub.on("delete", obj => {
-                this._data[tableName] = this._data[tableName].filter(v=> v.id != obj.id);
+                this._data[tableName] = this._data[tableName].filter(v=> v.id !== obj.id);
                 delete this._dataById[tableName][obj.id];
 
                 if (this._listSubscribers[tableName]) {
@@ -63,7 +63,7 @@ export default class ProgramCache {
                 if(obj.get("attachments") && obj.get("attachments").length > 0){
                     await Parse.Object.fetchAllIfNeeded(obj.get("attachments"));
                 }
-                this._data[tableName] = this._data[tableName].map(v=> v.id == obj.id ? obj : v);
+                this._data[tableName] = this._data[tableName].map(v=> v.id === obj.id ? obj : v);
 
 
                 this._dataById[tableName][obj.id] = obj;
@@ -145,7 +145,7 @@ export default class ProgramCache {
 
     async getProgramItemByConfKey(confKey, component){
         let items = await this.getProgramItems();
-        let item = items.find(v => v.get("confKey")==confKey);
+        let item = items.find(v => v.get("confKey")===confKey);
         if(item){
             let id = item.id;
             if(component) {
@@ -169,7 +169,7 @@ export default class ProgramCache {
     }
     async getProgramRoom(roomID, component){
         let rooms = await this.getProgramRooms();
-        let room = rooms.find(v=>v.id == roomID);
+        let room = rooms.find(v=>v.id === roomID);
         if(room){
             this.subscribeComponentToIDOnTable("ProgramRoom", roomID, component);
         }
@@ -177,7 +177,7 @@ export default class ProgramCache {
     }
     async getProgramPersonByID(personID, component){
         let persons = await this.getProgramPersons();
-        let person = persons.find(v=>v.id==personID);
+        let person = persons.find(v=>v.id===personID);
         if(person) {
             let id = person.id;
             this.subscribeComponentToIDOnTable("ProgramPerson", personID, component);
@@ -238,7 +238,7 @@ export default class ProgramCache {
     }
     async getProgramTrackByName(trackName){
         let tracks = await this.getProgramTracks();
-        return tracks.find(v=>v.get("name") == trackName);
+        return tracks.find(v=>v.get("name") === trackName);
     }
 
     async getZoomJoinLink(programRoom){
@@ -254,7 +254,7 @@ export default class ProgramCache {
     async getProgramItemsByTrackName(trackName){
         let [items, track] = await Promise.all([this.getProgramItems(),
         this.getProgramTrackByName(trackName)])
-        return items.filter(item => item.get("track") && item.get("track").id == track.id);
+        return items.filter(item => item.get("track") && item.get("track").id === track.id);
     }
 
     getProgramRoomForEvent(programSessionEvent){
@@ -282,10 +282,10 @@ export default class ProgramCache {
     cancelSubscription(tableName, obj, idx) {
         if (idx) {
             if(this._updateSubscribers[tableName] && this._updateSubscribers[tableName][idx])
-                this._updateSubscribers[tableName][idx] = this._updateSubscribers[tableName][idx].filter(v => v != obj);
+                this._updateSubscribers[tableName][idx] = this._updateSubscribers[tableName][idx].filter(v => v !== obj);
         } else {
             if(this._updateSubscribers[tableName])
-                this._listSubscribers[tableName] = this._listSubscribers[tableName].filter(v => v != obj);
+                this._listSubscribers[tableName] = this._listSubscribers[tableName].filter(v => v !== obj);
         }
     }
 }

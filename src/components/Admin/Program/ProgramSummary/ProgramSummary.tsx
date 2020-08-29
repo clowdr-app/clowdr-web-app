@@ -219,7 +219,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
 
 const AuthConsumer = (props: ProgramSummaryProps) => (
     <AuthUserContext.Consumer>
-        {value => (value == null ? <></> :    // @ts-ignore    TS: Can it really be null??
+        {value => (value === null ? <></> :    // @ts-ignore    TS: Can it really be null??
             <ProgramSummary {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>

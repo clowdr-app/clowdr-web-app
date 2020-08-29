@@ -116,11 +116,11 @@ function ParticipantStrip() {
         700: 2,
         500: 1
     };
-    if (nImages == 1) {
+    if (nImages === 1) {
         breakpointColumnsObj = {
             default: 1
         }
-    } else if (nImages == 2) {
+    } else if (nImages === 2) {
         breakpointColumnsObj = {
             default: 2,
             1200: 1
@@ -151,11 +151,11 @@ function ParticipantStrip() {
             700: 4,
             500: 2
         };
-        if (nImages == 1) {
+        if (nImages === 1) {
             breakpointColumnsObj = {
                 default: 1
             }
-        } else if (nImages == 2) {
+        } else if (nImages === 2) {
             breakpointColumnsObj = {
                 default: 4,
                 500: 2
@@ -172,7 +172,7 @@ function ParticipantStrip() {
             }
         }
     }
-    if (selectedParticipant && !tmp.find(p => p.sid == selectedParticipant.sid)) {
+    if (selectedParticipant && !tmp.find(p => p.sid === selectedParticipant.sid)) {
         //selected is gone
         setSelectedParticipant(null);
     }
@@ -194,12 +194,12 @@ function ParticipantStrip() {
             /> : ""}
             <Masonry breakpointCols={breakpointColumnsObj}
                      className="video-masonry-grid" columnClassName="video-masonry-column">
-                {/*{selectedParticipant == localParticipant ? "" : <Participant*/}
+                {/*{selectedParticipant === localParticipant ? "" : <Participant*/}
                 {/*        participant={localParticipant}*/}
                 {/*        isSelected={selectedParticipant === localParticipant}*/}
                 {/*        onClick={() => setSelectedParticipant(localParticipant)}*/}
                 {/*    />}*/}
-                {tmp.filter((participant) => (participant != selectedParticipant))
+                {tmp.filter((participant) => (participant !== selectedParticipant))
                     .map((participant, idx) =>
                         (<Participant
                                 key={"" + idx + participant.sid}
@@ -242,11 +242,11 @@ function Participant({
     const videoPublication = publications.find(p => p.trackName.includes('camera'));
 
     /*
-       const justListening = (audioPublication == null && videoPublication == null);
+       const justListening = (audioPublication === null && videoPublication === null);
            <div>
                showWhenJustListening = {showWhenJustListening.toString()} <br/>
-               audioPublication = { audioPublication != null ? audioPublication.toString() : "null"} <br/>
-               videoPublication = { videoPublication != null ? videoPublication.toString() : "null"} <br/>
+               audioPublication = { audioPublication !== null ? audioPublication.toString() : "null"} <br/>
+               videoPublication = { videoPublication !== null ? videoPublication.toString() : "null"} <br/>
                {justListening ? "Just listening!" : ""}
              */
     return <ParticipantInfo participant={participant} onClick={onClick} isSelected={isSelected}>

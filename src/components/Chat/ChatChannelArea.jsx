@@ -32,11 +32,11 @@ class ChatChannelArea extends React.Component {
             })
             return;
         }
-        if (chat.attributes.mode == "directMessage") {
+        if (chat.attributes.mode === "directMessage") {
             let p1 = chat.conversation.get("member1");
             let p2 = chat.conversation.get("member2");
             let profileID = p1.id;
-            if (profileID == this.props.auth.userProfile.id)
+            if (profileID === this.props.auth.userProfile.id)
                 profileID = p2.id;
             this.setState({
                 title: <UserStatusDisplay profileID={profileID} hideLink={true} />
@@ -44,12 +44,12 @@ class ChatChannelArea extends React.Component {
             return;
         } else {
             let title = chat.channel.friendlyName;
-            if (chat.attributes.category == "announcements-global") {
+            if (chat.attributes.category === "announcements-global") {
                 title = "Announcements";
-            } else if(chat.attributes.category == "programItem" && chat.attributes.programItemID){
+            } else if(chat.attributes.category === "programItem" && chat.attributes.programItemID){
                 // console.log(chat.attributes.programItemID)
                 title = <ProgramItemDisplay auth={this.props.appState} id={chat.attributes.programItemID} />
-            }else if (chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group") {
+            }else if (chat.attributes.category === "breakoutRoom" || chat.attributes.mode === "group") {
                 title = chat.channel.friendlyName;
             } else {
                 title = chat.channel.friendlyName;
@@ -60,7 +60,7 @@ class ChatChannelArea extends React.Component {
                     inline={true}
                     key={id}
                 />)
-                if(profiles.length == 1){
+                if(profiles.length === 1){
                     profiles = profiles[0];
                 }
                 else if(profiles.length > 1){
@@ -111,7 +111,7 @@ class ChatChannelArea extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.visible != this.state.visible) {
+        if (this.props.visible !== this.state.visible) {
             this.collectFocus = true;
             this.setState({visible: this.props.visible});
         }
@@ -127,7 +127,7 @@ class ChatChannelArea extends React.Component {
             this.props.auth.history.push("/video/" + dat.attributes.breakoutRoom)
             return;
         }
-        if (dat.channel.attributes.category == 'programItem') {
+        if (dat.channel.attributes.category === 'programItem') {
             let itemQ = new Parse.Query("ProgramItem");
             let item = await itemQ.get(dat.channel.attributes.programItemID);
             if (item.get("breakoutRoom")) {
@@ -135,7 +135,7 @@ class ChatChannelArea extends React.Component {
                 return;
             }
         }
-        if (dat.channel.type == 'private') {
+        if (dat.channel.type === 'private') {
             this.setState({newVideoChatLoading: true});
             try {
                 let res = await Parse.Cloud.run("chat-getBreakoutRoom", {
@@ -143,12 +143,12 @@ class ChatChannelArea extends React.Component {
                     sid: this.props.sid,
                     socialSpaceID: this.props.auth.activeSpace.id
                 });
-                if (res.status == "error") {
+                if (res.status === "error") {
                     message.error(res.message);
                     this.setState({newVideoChatLoading: false})
                 } else {
                     this.setState({newVideoChatLoading: false, newVideoChatVisible: false})
-                    if (res.status == "ok") {
+                    if (res.status === "ok") {
                         this.props.auth.history.push("/video/" + res.room)
                     }
                 }

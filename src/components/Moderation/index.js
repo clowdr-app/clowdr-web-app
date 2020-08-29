@@ -25,7 +25,7 @@ class Moderation extends React.Component{
                     identity: idToken,
                     conference: this.props.auth.currentConference.get("slackWorkspace"),
                     profileID: item.key,
-                    isBan: (item.isBanned == "No")
+                    isBan: (item.isBanned === "No")
 
                 }),
                 headers: {
@@ -33,15 +33,15 @@ class Moderation extends React.Component{
                 }
             });
         let res = await data.json();
-        if (res.status == "OK") {
+        if (res.status === "OK") {
             let updatedItem = item;
-            if(item.isBanned == "Yes")
+            if(item.isBanned === "Yes")
                 updatedItem.isBanned = "No";
             else
                 updatedItem.isBanned = "Yes";
             console.log(updatedItem.key)
             this.setState((prevState)=> ({banUpdating: false,
-                allUsers: prevState.allUsers.map(u => (u.key == item.key ? updatedItem : u))
+                allUsers: prevState.allUsers.map(u => (u.key === item.key ? updatedItem : u))
             }));
         }
         else{
@@ -139,9 +139,9 @@ class Moderation extends React.Component{
             }
         },
         render: (text, item) =>{
-            if(dataIndex == "isBanned")
+            if(dataIndex === "isBanned")
             {
-                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text =="Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
+                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text ==="Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
             }
             return this.state.searchedColumn === dataIndex ? (
                 <Highlighter

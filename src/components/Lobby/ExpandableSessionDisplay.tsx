@@ -39,7 +39,7 @@ class ExpandableSessionDisplay extends React.Component<ExpandableSessionDisplayP
     dateSorter(a: ProgramSessionEvent, b: ProgramSessionEvent) {
         var timeA = a.get("startTime") ? a.get("startTime") : new Date();
         var timeB = b.get("startTime") ? b.get("startTime") : new Date();
-        return timeA > timeB ? 1 : timeA == timeB ? 0 : -1;
+        return timeA > timeB ? 1 : timeA === timeB ? 0 : -1;
     }
 
     render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {

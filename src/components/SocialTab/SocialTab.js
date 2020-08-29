@@ -40,7 +40,7 @@ class SocialTab extends Component {
         return <div className="activeRoomsTab">
 
 
-            {/*<Layout.Sider collapsible collapsed={this.state.siderWidth == 0}*/}
+            {/*<Layout.Sider collapsible collapsed={this.state.siderWidth === 0}*/}
             {/*                 trigger={null}*/}
             {/*              className="activeRoomsSider"*/}
             {/*              width={this.state.siderWidth}*/}
@@ -56,7 +56,7 @@ class SocialTab extends Component {
 
             <div id="sidepopoutcontainer" style={{
             }}>
-                {this.props.auth.watchParty ? <></> : <ContextualActiveUsers collapsed={this.state.siderWidth == 0}/>}
+                {this.props.auth.watchParty ? <></> : <ContextualActiveUsers collapsed={this.state.siderWidth === 0}/>}
 
 
                 </div>

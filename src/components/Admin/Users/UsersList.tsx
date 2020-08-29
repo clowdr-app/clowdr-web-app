@@ -67,7 +67,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         this.setState({banUpdating: true})
         console.log(item);
         let idToken: UserSessionToken = "";
-        if (this.props.auth.user != null) {
+        if (this.props.auth.user !== null) {
             idToken = this.props.auth.user.getSessionToken();
         }
 
@@ -79,22 +79,22 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                     identity: idToken,
                     conference: this.props.auth.currentConference.id,
                     profileID: item.key,
-                    isBan: (item.isBanned == "No")
+                    isBan: (item.isBanned === "No")
                 }),
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
         let res = await data.json();
-        if (res.status == "OK") {
+        if (res.status === "OK") {
             let updatedItem = item;
-            if (item.isBanned == "Yes")
+            if (item.isBanned === "Yes")
                 updatedItem.isBanned = "No";
             else
                 updatedItem.isBanned = "Yes";
             this.setState((prevState:UsersListState) => ({
                 banUpdating: false,
-                allUsers: prevState.allUsers.map(u => (u.key == item.key ? updatedItem : u))
+                allUsers: prevState.allUsers.map(u => (u.key === item.key ? updatedItem : u))
             }));
         }
         else {
@@ -234,13 +234,13 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
         onFilterDropdownVisibleChange: (visible:boolean) => {
             if (visible) {
-                setTimeout(() => {if (this.searchInput != null) this.searchInput.select();})
+                setTimeout(() => {if (this.searchInput !== null) this.searchInput.select();})
             }
         },
         render: (text:string, item: ManagedUser) =>{
-            if (dataIndex == "isBanned")
+            if (dataIndex === "isBanned")
             {
-                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text =="Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
+                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text ==="Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
             }
             return this.state.searchedColumn === dataIndex ? (
                 <Highlighter
@@ -268,7 +268,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     }
 
     render() {
-        if(!this.props.auth.roles.find(v => v && v.get("name") == this.props.auth.currentConference.id+"-admin"))
+        if(!this.props.auth.roles.find(v => v && v.get("name") === this.props.auth.currentConference.id+"-admin"))
             return <div>Error: you do not have permission to view this page - it is only for administrators.</div>
         if(this.state.loading)
             return <div>Loading...</div>
@@ -324,7 +324,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
 
 const AuthConsumer = (props:UsersListProps) => (
     <AuthUserContext.Consumer>
-        {value => (value == null ? <></> :   // @ts-ignore  TS: Can value really be null here?
+        {value => (value === null ? <></> :   // @ts-ignore  TS: Can value really be null here?
             <UsersList {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>

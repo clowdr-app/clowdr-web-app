@@ -76,7 +76,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
             if (session.get("events")) {
                 sessionEvents = sessionEvents.concat(session.get("events")
                     .map((e: ProgramSessionEvent) =>
-                        allEvents.find(ev => ev.id == e.id)));
+                        allEvents.find(ev => ev.id === e.id)));
             }
 
             if (session.get("startTime") > now && moment(session.get("startTime")) < nextUpdateTime) {
@@ -95,15 +95,15 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
     dateSorter(a: ProgramSession, b: ProgramSession) {
         var timeA = a.get("startTime") ? a.get("startTime") : new Date();
         var timeB = b.get("startTime") ? b.get("startTime") : new Date();
-        return timeA > timeB ? 1 : timeA == timeB ? 0 : -1;
+        return timeA > timeB ? 1 : timeA === timeB ? 0 : -1;
     }
     eventDateSorter(a: ProgramSessionEvent, b: ProgramSessionEvent) {
         var timeA = a.get("startTime") ? a.get("startTime") : new Date();
         var timeB = b.get("startTime") ? b.get("startTime") : new Date();
-        return timeA > timeB ? 1 : timeA == timeB ? 0 : -1;
+        return timeA > timeB ? 1 : timeA === timeB ? 0 : -1;
     }
     componentDidUpdate(prevProps: Readonly<RoomProgramSummaryProps>, prevState: Readonly<RoomProgramSummaryState>, snapshot?: any): void {
-        if (this.state.ProgramSessions != prevState.ProgramSessions) {
+        if (this.state.ProgramSessions !== prevState.ProgramSessions) {
             this.updateCurrentSessions();
         }
         if (!this.state.nextUpdateTime.isSame(prevState.nextUpdateTime)) {
@@ -124,7 +124,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
     }
 
     sessionView(sessions: ProgramSession[], title: string) {
-        // if(sessions.length == 0){
+        // if(sessions.length === 0){
         //     return <></>
         // }
         let now = new Date();
@@ -144,7 +144,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
             let curEvents: string[] = [];
             let sessionEvents: ProgramSessionEvent[] = [];
             if(session.get("events")){
-                sessionEvents = session.get("events").map((e: ProgramSessionEvent)=>this.state.ProgramSessionEvents.find(ev=>ev.id==e.id));
+                sessionEvents = session.get("events").map((e: ProgramSessionEvent)=>this.state.ProgramSessionEvents.find(ev=>ev.id===e.id));
                 curEvents = sessionEvents.filter(ev => ev.get("startTime") <= Date.now() && ev.get("endTime") >= Date.now()).map(e=>e.get("programItem").id);
             }
             let activeKeys = curEvents.concat([]);
@@ -170,7 +170,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                         if(!event){
                             return <div></div>
                         }
-                        let item = session.get("items").find((i: ProgramItem) => i.id == event.get("programItem").id);
+                        let item = session.get("items").find((i: ProgramItem) => i.id === event.get("programItem").id);
                         let title;
                         let now = new Date();
                         if(event.get("endTime") < now){
@@ -278,14 +278,14 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
         let curEvents: number[] = [];
         let curEvent: ProgramSessionEvent | null = null;
 
-        let filteredSessions = this.state.ProgramSessions.filter(s => s.get("room") && s.get("room").id == this.props.ProgramRoom.id);
+        let filteredSessions = this.state.ProgramSessions.filter(s => s.get("room") && s.get("room").id === this.props.ProgramRoom.id);
         for (let s of filteredSessions) {
             var timeS = s.get("startTime") ? s.get("startTime") : new Date();
             var timeE = s.get("endTime") ? s.get("endTime") : new Date();
             if (timeS <= now && timeE >= now) {
                 curSessions.push(s);
                 if(s.get("events")){
-                    let sessionEvents = s.get("events").map((e: ProgramSessionEvent)=>this.state.ProgramSessionEvents.find(ev=>ev.id==e.id));
+                    let sessionEvents = s.get("events").map((e: ProgramSessionEvent)=>this.state.ProgramSessionEvents.find(ev=>ev.id===e.id));
                     // @ts-ignore
                     curEvents = sessionEvents.filter(ev => ev.get("startTime") <= Date.now() && ev.get("endTime") >= Date.now()).map(e=>e.get("programItem").id);
                     //@ts-ignore
@@ -302,7 +302,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
             // @ts-ignore
             expanded[id] = true;
         }
-        if(curEvent != null && curEvent != this.state.currentEvent){
+        if(curEvent !== null && curEvent !== this.state.currentEvent){
             //set the chat
             this.props.appState?.programCache.getProgramItem(curEvent.get("programItem").id, undefined).then(
                 async (item)=>{

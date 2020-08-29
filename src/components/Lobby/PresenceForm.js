@@ -58,14 +58,14 @@ class PresenceForm extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(this.props.auth.userProfile.get("presence") && this.props.auth.userProfile.get("presence") != this.state.presence){
+        if(this.props.auth.userProfile.get("presence") && this.props.auth.userProfile.get("presence") !== this.state.presence){
             this.setState({presence: this.props.auth.userProfile.get("presence")});
         }
     }
 
     async updatePresence(values) {
         let theValue = values.target.value;
-        if(theValue != this.state.presence.get("status")) {
+        if(theValue !== this.state.presence.get("status")) {
             this.setState({saving: true})
 
             this.state.presence.set("status", theValue);
@@ -82,14 +82,14 @@ class PresenceForm extends React.Component {
     }
 
     async valuesChange(value) {
-        if (value!= this.state.presence.get("status") || this.isDifferentStatus(value, this.state.presence)){
+        if (value!== this.state.presence.get("status") || this.isDifferentStatus(value, this.state.presence)){
             this.setState({saving: true});
-            if (value== "isDNT" && !this.state.presence.get("isDNT")) {
+            if (value=== "isDNT" && !this.state.presence.get("isDNT")) {
                 //set the ACL
                 let acl = this.state.presence.getACL();
                 acl.setRoleReadAccess(this.props.auth.currentConference.id + "-conference", false);
                 acl.setReadAccess(this.props.auth.user, true);
-            } else if (this.state.presence.get("isDNT") && value!= "isDNT") {
+            } else if (this.state.presence.get("isDNT") && value!== "isDNT") {
                 //relase ACL
                 let acl = this.state.presence.getACL();
                 acl.setRoleReadAccess(this.props.auth.currentConference.id + "-conference", true);

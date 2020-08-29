@@ -59,11 +59,11 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     componentDidUpdate(prevProps: Readonly<UpcomingProgramProps>, prevState: Readonly<UpcomingProgramState>, snapshot?: any): void {
-        if (this.state.ProgramSessions != prevState.ProgramSessions || this.state.ProgramSessionEvents != prevState.ProgramSessionEvents) {
+        if (this.state.ProgramSessions !== prevState.ProgramSessions || this.state.ProgramSessionEvents !== prevState.ProgramSessionEvents) {
             this.updateCurrentSessions();
         }
 
-        if(this.lastRenderedNow != this.lastScrolledNow){
+        if(this.lastRenderedNow !== this.lastScrolledNow){
             this.lastScrolledNow = this.lastRenderedNow;
             this.scrollToNow();
         }
@@ -85,7 +85,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     sessionView(sessions: ProgramSession[], title: string) {
-        // if(sessions.length == 0){
+        // if(sessions.length === 0){
         //     return <></>
         // }
         let items = [];
@@ -94,15 +94,15 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
 
         for (let session of sessions.sort(this.dateSorter)) {
             let formattedTime = moment(session.get("startTime")).calendar();
-            if (title == "Live")
+            if (title === "Live")
                 formattedTime = "Until " + moment(session.get("endTime")).calendar();
             if (!session)
                 continue;
-            if (formattedTime != lastFormattedTime) {
+            if (formattedTime !== lastFormattedTime) {
                 items.push(<div key={"timeStamp" + session.id}>{formattedTime}</div>)
             }
             lastFormattedTime = formattedTime;
-            items.push(<ExpandableSessionDisplay session={session} key={session.id} isLive={title=="Live"} />)
+            items.push(<ExpandableSessionDisplay session={session} key={session.id} isLive={title==="Live"} />)
         }
         return <Collapse.Panel header={title} key={title}>
             {items}
@@ -113,11 +113,11 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         let now = new Date().getTime();
         var timeA = a.get("startTime") ? a.get("startTime").getTime() : now;
         var timeB = b.get("startTime") ? b.get("startTime").getTime() : now;
-        if(timeA == timeB && b.get("endTime") && a.get("endTime")){
+        if(timeA === timeB && b.get("endTime") && a.get("endTime")){
             timeA = a.get("endTime").getTime();
             timeB = b.get("endTime").getTime();
         }
-        return timeA > timeB ? 1 : timeA == timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
+        return timeA > timeB ? 1 : timeA === timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
     }
     scrollToNow() {
         if(this.currentProgramTimeRef.current)
@@ -144,12 +144,12 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
             currentItem = this.state.curItems.find(item => item.get("startTime") > now);
 
         for (let item of this.state.curItems) {
-            if (item == currentItem) {
+            if (item === currentItem) {
                 programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
                 this.lastRenderedNow = item.get("startTime");
             }
             let formattedTime = moment(item.get("startTime")).calendar();
-            if (formattedTime != lastFormattedTime)
+            if (formattedTime !== lastFormattedTime)
                 programDetails.push(<div className="programTime" key={"program-time"+item.id}>{formattedTime}</div>)
             lastFormattedTime = formattedTime;
             if (item instanceof ProgramSession){
@@ -202,7 +202,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         for (let s of this.state.ProgramSessions) {
             let displayAsEvents = false;
             if(s.get("programTrack")){
-                let t = this.state.ProgramTracks.find(v=>v.id==s.get("programTrack").id);
+                let t = this.state.ProgramTracks.find(v=>v.id===s.get("programTrack").id);
                 if(t)
                     displayAsEvents = t.get("showAsEvents");
             }
@@ -210,7 +210,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
                 items.push(s);
             }
             else if(s.get("events") && s.get("events").length){
-                let sessionEvents = s.get("events").map((ev: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(e=>e.id==ev.id)).filter((e:ProgramSessionEvent)=>e!=null);
+                let sessionEvents = s.get("events").map((ev: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(e=>e.id===ev.id)).filter((e:ProgramSessionEvent)=>e!==null);
                 items = items.concat(sessionEvents);
             }
         }

@@ -19,7 +19,7 @@ class GenericHeader extends Component {
     componentDidUpdate() {
         if (this.props.clowdrAppState.currentConference) {
             let name = this.props.clowdrAppState.currentConference.get("conferenceName");
-            if (this.state.conferenceName != name) {
+            if (this.state.conferenceName !== name) {
                 this.setState({conferenceName: name});
             }
         }

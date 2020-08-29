@@ -31,12 +31,12 @@ class Exhibits extends React.Component {
             let sessions = posters.map(p => p.get("programSession"));
             let rooms = sessions.map(s => s ? s.get("room") : undefined);
             rooms = rooms.reduce((acc, r) => {
-                if (r && !acc.find(rm => rm.id == r.id))
+                if (r && !acc.find(rm => rm.id === r.id))
                     return [...acc, r]
                 else
                     return acc
             }, []);
-            if ((rooms.length == 1) && rooms[0].get("socialSpace")) {
+            if ((rooms.length === 1) && rooms[0].get("socialSpace")) {
                     //set the social space...
                     let ss = rooms[0].get("socialSpace");
                     this.props.auth.setSocialSpace(ss.get("name"));
@@ -58,7 +58,7 @@ class Exhibits extends React.Component {
 
     getPosters(TRACK, items, tracks) {
         let posters = [];
-        let track = tracks.find(t => t.get('name') == TRACK);
+        let track = tracks.find(t => t.get('name') === TRACK);
         if (track) {
             posters = items.filter(i => {
                 return i.get("track") ? (i.get("track").id === track.id) : false
@@ -115,7 +115,7 @@ class Exhibits extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.match.params.track != this.props.match.params.track) {
+        if (prevProps.match.params.track !== this.props.match.params.track) {
             this.initializePosters(this.props.match.params.track);
         }
     }
@@ -135,7 +135,7 @@ class Exhibits extends React.Component {
         let track = this.state.track;
         let trackName = track ? track.get("displayName") : this.props.match.params.track;
 
-        if (this.props.match.params.style == "list") {
+        if (this.props.match.params.style === "list") {
 
             return <div id="papers-list">
                     <h2>{trackName}</h2>

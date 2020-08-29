@@ -228,7 +228,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 <td {...restProps}>
                     {editing ? (
                         <Form.Item
-                            valuePropName={dataIndex == 'requireRegistration' ? "checked" : "value"}
+                            valuePropName={dataIndex === 'requireRegistration' ? "checked" : "value"}
                             name={dataIndex}
                             style={{margin: 0,}}
                             rules={dataIndex !== "name" ? [] : [
@@ -306,7 +306,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                         if(row.src1 && row.src1.startsWith("managed-")){
                             if(!room.get("zoomRoom")){
                                 let id: string = row.src1.substr(8);
-                                let hostAccount: Parse.Object|undefined = this.state.ZoomHostAccounts.find(item=>item.id == id);
+                                let hostAccount: Parse.Object|undefined = this.state.ZoomHostAccounts.find(item=>item.id === id);
                                 //Create a new zoomRoom
                                 let zoomRoom: Parse.Object = new ZoomRoom();
                                 zoomRoom.set("hostAccount", hostAccount);
@@ -568,9 +568,9 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     obj.set(key, value);
                     return;
                 }
-                if (old == value)
+                if (old === value)
                     return;
-                if ((old.toString && old.toString() != value.toString()) || (!old.toString && old != value)) {
+                if ((old.toString && old.toString() !== value.toString()) || (!old.toString && old !== value)) {
                     obj.set(key, value);
                     return;
                 }
@@ -582,14 +582,14 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     let room: Parse.Object|undefined = newData.find((item: Parse.Object) => item.id === id);
 
                     if (room) {
-                        if(room.get("name") != row.name){
+                        if(room.get("name") !== row.name){
                             room.set("name", row.name);
                             await room.save();
                         }
                         let zoomRoom = room.get("zoomRoom");
                         if (zoomRoom) {
-                            let newHostAccount: Parse.Object|undefined = this.state.ZoomHostAccounts.find(v => v.id == row.hostAccount);
-                            if(!zoomRoom.get("hostAccount") || (typeof newHostAccount !== 'undefined' && zoomRoom.get("hostAccount").id != newHostAccount.id))
+                            let newHostAccount: Parse.Object|undefined = this.state.ZoomHostAccounts.find(v => v.id === row.hostAccount);
+                            if(!zoomRoom.get("hostAccount") || (typeof newHostAccount !== 'undefined' && zoomRoom.get("hostAccount").id !== newHostAccount.id))
                                 zoomRoom.set("hostAccount", newHostAccount);
                             setIfDifferent(zoomRoom, "startTime", row.startTime.toDate());
                             setIfDifferent(zoomRoom, "endTime", row.endTime.toDate());
@@ -821,7 +821,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                 allowClear
                                 placeholder="Search by name"
                                 onSearch={key => {
-                                    if (key == "") {
+                                    if (key === "") {
                                         this.setState({searched: false});
                                     } else {
                                         this.setState({searched: true});
@@ -859,7 +859,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
 
 const AuthConsumer = (props: ProgramRoomsProps) => (
             <AuthUserContext.Consumer>
-                {value => (value == null ? <></> :  // @ts-ignore  TS: Can value really be null here?
+                {value => (value === null ? <></> :  // @ts-ignore  TS: Can value really be null here?
                         <Rooms {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>

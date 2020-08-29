@@ -80,7 +80,7 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
     cancelUnreadConsumer(sid: string, consumer: any): void {
         if(this.unreadConsumers.get(sid)){
             //@ts-ignore
-            this.unreadConsumers.set(sid, this.unreadConsumers.get(sid).filter(v=>v!=consumer));
+            this.unreadConsumers.set(sid, this.unreadConsumers.get(sid).filter(v=>v!==consumer));
         }
     }
 
@@ -130,13 +130,13 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
         if (obj) {
             let oldCount = obj.count;
             let cat = obj.category;
-            if (cat == "dm")
+            if (cat === "dm")
                 this.notificationHeader?.setState({nDMs: Math.max(0, this.notificationHeader?.state.nDMs + count - oldCount)});
-            else if (cat =="subscriptions")
+            else if (cat ==="subscriptions")
                 this.notificationHeader?.setState({nSubscribedMessages: Math.max(0, this.notificationHeader?.state.nSubscribedMessages + count - oldCount)});
-            else if (cat =="others")
+            else if (cat ==="others")
                 this.notificationHeader?.setState({nOtherMessages: Math.max(0, this.notificationHeader?.state.nOtherMessages + count - oldCount)});
-            else if (cat =="papers")
+            else if (cat ==="papers")
                 this.notificationHeader?.setState({nPaperMessages: Math.max(0, this.notificationHeader?.state.nPaperMessages + count - oldCount)});
 
             this.unreadCounts.set(sid, {count: count, category: cat});
@@ -176,15 +176,15 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
                             // @ts-ignore
                             // let chan = this.props.appState?.chatClient.joinedChannels[sid];
                             // if(chan){
-                            //     if(chan.attributes && chan.attributes.category != 'socialSpace')
+                            //     if(chan.attributes && chan.attributes.category !== 'socialSpace')
                             //         return true;
                             // }
                             // return false;
                         // })
                             //Uncomment above to hide social-space chats
                     .map((sid)=>{
-                            return <div key={sid} className={sid == this.state.activeChatSID ? "visibleChat" : "hiddenChat"}>
-                                <ChatChannelArea sid={sid} visible={this.state.activeChatSID == sid}
+                            return <div key={sid} className={sid === this.state.activeChatSID ? "visibleChat" : "hiddenChat"}>
+                                <ChatChannelArea sid={sid} visible={this.state.activeChatSID === sid}
                                                  toVideo={this.props.toVideo.bind(null, sid)}
                                                  addUser={this.props.addUser.bind(null, sid)}
                                                  parentRef={this.props.parentRef}

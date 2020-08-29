@@ -210,7 +210,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
 
 const AuthConsumer = (props: {}) => (
   <AuthUserContext.Consumer>
-    {value => (value == null ? <></> :   // @ts-ignore  TS: Can value really be null here?
+    {value => (value === null ? <></> :   // @ts-ignore  TS: Can value really be null here?
       <GuardedLanding {...props} auth={value} />
     )}
   </AuthUserContext.Consumer>

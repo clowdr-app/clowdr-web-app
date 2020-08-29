@@ -137,7 +137,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             this.openChat(this.props.ProgramItem);
         }
 
-        if(this.props.ProgramItem != prevProps.ProgramItem){
+        if(this.props.ProgramItem !== prevProps.ProgramItem){
             this.maybeCloseChat();
             if(this.state.ProgramItem)
                 this.props.appState?.programCache.cancelSubscription("ProgramItem", this, this.state.ProgramItem.id);
@@ -173,13 +173,13 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                 if(this.props.hiddenKeys && this.props.hiddenKeys.includes(event.id))
                     continue;
                 hasValidEvents = true;
-               let session = this.state.sessions.find(s=>s.id==event.get("programSession").id);
+               let session = this.state.sessions.find(s=>s.id===event.get("programSession").id);
                if(session) {
                    var timeS = session.get("startTime") ? session.get("startTime") : new Date();
                    var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
                    let title = session.get("title");
-                   if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") == "YouTube") {
+                   if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") === "YouTube") {
                        let when = "now"
                        if(timeS <= now && timeE >= now)
                            title = <a href="#" className="sessionLink" onClick={()=>{
@@ -216,7 +216,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             var timeS = session.get("startTime") ? session.get("startTime") : new Date();
             var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
-            if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") == "YouTube") {
+            if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") === "YouTube") {
                 let when = "now"
                 if (timeE >= now)
                     roomInfo = <Button size="small" type="primary" onClick={() => {
@@ -237,14 +237,14 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                     return -1;
                 if (!b.get("attachmentType"))
                     return 1;
-                let t1 = this.state.AttachmentTypes.find(v => v.id == a.get("attachmentType").id);
-                let t2 = this.state.AttachmentTypes.find(v => v.id == b.get("attachmentType").id);
+                let t1 = this.state.AttachmentTypes.find(v => v.id === a.get("attachmentType").id);
+                let t2 = this.state.AttachmentTypes.find(v => v.id === b.get("attachmentType").id);
                 if (t1 && t2 && t1.get("ordinal") < t2.get("ordinal"))
                     return -1;
                 return 1;
             })
             for (let attachment of attachments) {
-                let type = this.state.AttachmentTypes.find(v => v && v.id == attachment.get("attachmentType").id);
+                let type = this.state.AttachmentTypes.find(v => v && v.id === attachment.get("attachmentType").id);
                 if(!type)
                     continue;
                 let deleteButton = <></>
@@ -306,7 +306,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
         if(this.state.isInRoom){
             videoRoom = <VideoRoom
                 hideInfo={true} room={this.state.ProgramItem.get("breakoutRoom")}
-                conference={this.props.appState != null ? this.props.appState.currentConference : null}
+                conference={this.props.appState !== null ? this.props.appState.currentConference : null}
                 onHangup={() => {
                     this.setState({ isInRoom: false })
                 }

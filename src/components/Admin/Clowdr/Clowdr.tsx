@@ -424,7 +424,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
             <Input.Search
                 allowClear
                 onSearch={key => {
-                        if (key == "") {
+                        if (key === "") {
                             this.setState({searched: false});
                         }
                         else {

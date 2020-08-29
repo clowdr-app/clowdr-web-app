@@ -367,7 +367,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
             <Input.Search
                 allowClear
                 onSearch={key => {
-                        if (key == "") {
+                        if (key === "") {
                             this.setState({searched: false});
                         }
                         else {

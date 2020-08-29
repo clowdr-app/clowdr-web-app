@@ -23,24 +23,24 @@ class CollapsedChatDisplay extends React.Component{
             this.setState({title: chat.channel.sid})
             return;
         }
-        if (chat.attributes.mode == "directMessage" && chat.conversation) {
+        if (chat.attributes.mode === "directMessage" && chat.conversation) {
             let p1 = chat.conversation.get("member1");
             let p2 = chat.conversation.get("member2");
             let profileID = p1.id;
-            if(profileID == this.props.auth.userProfile.id)
+            if(profileID === this.props.auth.userProfile.id)
                 profileID = p2.id;
             this.setState({title: "Loading..."});
             this.props.auth.programCache.getUserProfileByProfileID(profileID, null).then((profile) => {
                 this.setState({title: profile.get("displayName")})
             })
-        } else if (chat.attributes.category == "announcements-global") {
+        } else if (chat.attributes.category === "announcements-global") {
             this.setState({title: "Announcements"});
         }
-        else if(chat.attributes.category == "programItem"
-            || chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group"
-        || chat.attributes.category =="public-global"
+        else if(chat.attributes.category === "programItem"
+            || chat.attributes.category === "breakoutRoom" || chat.attributes.mode === "group"
+        || chat.attributes.category ==="public-global"
         ) {
-            if(this.state.title != chat.channel.friendlyName)
+            if(this.state.title !== chat.channel.friendlyName)
                 this.setState({title: chat.channel.friendlyName});
         }
         else{
@@ -93,7 +93,7 @@ class CollapsedChatDisplay extends React.Component{
 
     destroyChat(){
         let attr = this.props.auth.chatClient.joinedChannels[this.state.sid].attributes;
-        if(attr.category == "announcements-global"){
+        if(attr.category === "announcements-global"){
         }
         else{
             this.setState({removeInProgress: true});
@@ -140,13 +140,13 @@ class CollapsedChatDisplay extends React.Component{
         let color = "#fc858b";
         /*
         let color = "";
-        if (this.props.category == "dm")
+        if (this.props.category === "dm")
             color = 'red';
-        else if (this.props.category == "subscriptions")
+        else if (this.props.category === "subscriptions")
             color = '#CD2EC9';
-        else if (this.props.category == "others")
+        else if (this.props.category === "others")
             color = '#151388';
-        else if (this.props.category == "papers")
+        else if (this.props.category === "papers")
             color = '#087C1D';
         */
         return <Popover key={this.state.sid} mouseEnterDelay={0.5} placement="topRight"

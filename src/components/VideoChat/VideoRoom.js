@@ -84,7 +84,7 @@ class VideoRoom extends Component {
         if (!this.props.match) {
             return;
         }
-        if(!this.props.clowdrAppState.user || (this.props.match.params.conf && this.props.match.params.conf != this.props.clowdrAppState.currentConference.get("conferenceName"))){
+        if(!this.props.clowdrAppState.user || (this.props.match.params.conf && this.props.match.params.conf !== this.props.clowdrAppState.currentConference.get("conferenceName"))){
             this.props.clowdrAppState.refreshUser(this.props.match.params.conf).then((u)=>{
                 if (this.state.isMounted)
                     this.joinCallFromPropsWithCurrentUser()
@@ -119,7 +119,7 @@ class VideoRoom extends Component {
                     }
                 }).then(res => {
                     if (this.state.isMounted) {
-                        if (res.status == 500) {
+                        if (res.status === 500) {
                             console.log("Error")
                             this.setState({
                                 error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a
@@ -188,7 +188,7 @@ class VideoRoom extends Component {
         let confName = this.props.match.params.conf;
         let roomID = this.props.match.params.roomName;
         let parseRoomID = this.props.match.params.parseRoomID;
-        if(confName && (confName == this.confName && roomID == this.roomID))
+        if(confName && (confName === this.confName && roomID === this.roomID))
             return;
         if(this.loadingVideo)
             return;
@@ -267,7 +267,7 @@ class VideoRoom extends Component {
         // this.props.clowdrAppState.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         let watchedByMe = false;
         if(this.props.clowdrAppState.userProfile.get("watchedRooms")){
-            watchedByMe = this.props.clowdrAppState.userProfile.get("watchedRooms").find(v =>v.id ==room.id);
+            watchedByMe = this.props.clowdrAppState.userProfile.get("watchedRooms").find(v =>v.id ===room.id);
         }
 
         this.setState({loadingMeeting: 'true', room: room, watchedByMe: watchedByMe})
@@ -298,7 +298,7 @@ class VideoRoom extends Component {
                     }
                 }).then(res => {
                     if (this.state.isMounted) {
-                        if (res.status == 500) {
+                        if (res.status === 500) {
                             console.log("Error")
                             this.setState({error: <span>Received an unexpected error 500/internal error from token server. Please refresh your browser and try again, or contact <a href="mailto:help@clowdr.org">help@clowdr.org</a></span>});
 
@@ -352,10 +352,10 @@ class VideoRoom extends Component {
         if(!this.props.room){
             let conf = this.props.match.params.conf;
             let roomID = this.props.match.params.roomName;
-            if (this.props.clowdrAppState.user != prevProps.clowdrAppState.user || conf != this.state.conf || roomID !=this.state.meetingName){
+            if (this.props.clowdrAppState.user !== prevProps.clowdrAppState.user || conf !== this.state.conf || roomID !==this.state.meetingName){
                 let confName = this.props.match.params.conf;
                 let roomID = this.props.match.params.roomName;
-                if((confName != this.confName || roomID != this.roomID) &&(!this.state.error || this.roomID != roomID))
+                if((confName !== this.confName || roomID !== this.roomID) &&(!this.state.error || this.roomID !== roomID))
                 {
                     this.confName = null;
                     this.roomID = null;
@@ -368,10 +368,10 @@ class VideoRoom extends Component {
         if (this.state.room && this.state.room.get("members")){
             let hadChange = false;
             for(let member of this.state.room.get("members")){
-                if(!this.state.members.find(v=>v.id == member.id)){
+                if(!this.state.members.find(v=>v.id === member.id)){
                     //new member appeared
                     hadChange = true;
-                    // if (this.state.members.length > 0 && this.props.clowdrAppState.userProfile.id != member.id)
+                    // if (this.state.members.length > 0 && this.props.clowdrAppState.userProfile.id !== member.id)
                     //     notification.info({
                     //         message: member.get("displayName") + " has joined this room",
                     //         placement: 'topLeft',
@@ -379,7 +379,7 @@ class VideoRoom extends Component {
                 }
             }
             for(let member of this.state.members){
-                if(this.props.clowdrAppState.userProfile.id != member.id && !this.state.room.get("members").find(v=>v.id == member.id)){
+                if(this.props.clowdrAppState.userProfile.id !== member.id && !this.state.room.get("members").find(v=>v.id === member.id)){
                     hadChange = true;
                     // notification.info({
                     //     message: member.get("displayName") + " has left this room",
@@ -393,12 +393,12 @@ class VideoRoom extends Component {
         }
         // if (this.state.room && this.state.room.get("isPrivate")) {
             //Was there an update to the ACL?
-            // let room = this.props.clowdrAppState.activePrivateVideoRooms.find(r => r.id == this.state.room.id);
+            // let room = this.props.clowdrAppState.activePrivateVideoRooms.find(r => r.id === this.state.room.id);
             // console.log(room)
             // console.log(this.state.room.getACL().permissionsById)
             // if(room)
             // console.log(room.getACL().permissionsById);
-            // if(room && room.getACL().permissionsById != this.state.room.getACL().permissionsById){
+            // if(room && room.getACL().permissionsById !== this.state.room.getACL().permissionsById){
             //     console.log("Updated ACL")
             //     this.setState({room: room});
             // }
@@ -443,7 +443,7 @@ class VideoRoom extends Component {
                 }
             });
         let res = await data.json();
-        if (res.status == "error") {
+        if (res.status === "error") {
             message.error({content: res.message, style:{zIndex: 2020}});
             this.setState({watchLoading: false});
         }
@@ -466,7 +466,7 @@ class VideoRoom extends Component {
                 let watched = this.props.clowdrAppState.userProfile.get("watchedRooms");
                 if(!watched)
                     watched = [];
-                watched = watched.filter(r => r.id != this.state.room.id);
+                watched = watched.filter(r => r.id !== this.state.room.id);
                 this.props.clowdrAppState.userProfile.set("watchedRooms", watched);
                 await this.props.clowdrAppState.userProfile.save();
                 notification.info({
@@ -486,10 +486,10 @@ class VideoRoom extends Component {
             let conf = this.props.match.params.conf;
             let roomID = this.props.match.params.roomName;
 
-            if(this.state.error == "authentication"){
+            if(this.state.error === "authentication"){
                 description = <span>Sorry, an internal error ocurred - please refresh your browser and try again</span>
             }
-            else if(this.state.error == "invalidRoom"){
+            else if(this.state.error === "invalidRoom"){
                description = <span>Sorry, but we are unable to find a video room called '{roomID}'
                    in the CLOWDR instance for "{conf}".
                     Most rooms automatically garbage collect 5 minutes after the last member departs, so the room may have ceased to exist.
@@ -509,7 +509,7 @@ class VideoRoom extends Component {
             return <div><Spin/>Loading...</div>
         }
         // let greeting;
-        // if (this.state.room.get("visibility") == "unlisted") {
+        // if (this.state.room.get("visibility") === "unlisted") {
         //
         //     greeting = <div>
         //         This room is private. Only the following users can see it:
@@ -530,11 +530,11 @@ class VideoRoom extends Component {
         } else {
             visibilityDescription = (<Tooltip mouseEnterDelay={0.5} title={"This room can be accessed by any member of " + this.props.clowdrAppState.currentConference.get("conferenceName")}><Tag key="visibility" color="#87d068">Open</Tag></Tooltip>);
         }
-        if(this.state.room.get("members") && this.state.room.get("members").length == this.state.room.get("capacity"))
+        if(this.state.room.get("members") && this.state.room.get("members").length === this.state.room.get("capacity"))
         {
             fullLabel=<Tooltip mouseEnterDelay={0.5} title="This room is at capacity. Nobody else can join until someone leaves"><Tag color="#f50">Full Capacity</Tag></Tooltip>
         }
-        if (this.state.room.get("persistence") == "ephemeral") {
+        if (this.state.room.get("persistence") === "ephemeral") {
             privacyDescription = (
                 <Tooltip mouseEnterDelay={0.5} title="This room wil be garbage collected after 5 minutes
                     of being empty"><Tag key="persistence" color="#2db7f5">Ephemeral</Tag></Tooltip>)
@@ -555,13 +555,13 @@ class VideoRoom extends Component {
             nMembers = this.state.room.get("members").length;
         }
         let freeSpots = this.state.room.get("capacity") - nMembers;
-        if(freeSpots == 0){
+        if(freeSpots === 0){
             membersListColor = "#f50";
         }
         else if(freeSpots <= 2){
             membersListColor = "warning";
         }
-        let isP2P = this.state.room.get("mode") == "peer-to-peer";
+        let isP2P = this.state.room.get("mode") === "peer-to-peer";
 // See:
 // for available connection options.https://media.twiliocdn.com/sdk/js/video/releases/2.0.0/docs/global.html#ConnectOptions
         let connectionOptions= {
@@ -624,7 +624,7 @@ class VideoRoom extends Component {
                     <AppStateProvider meeting={this.state.meetingName} token={this.state.token}
                                       isEmbedded={true}
                         onConnect={(room,videoContext)=>{
-                            // if(this.state.room.get("mode") == "group") {
+                            // if(this.state.room.get("mode") === "group") {
                             //     let localTracks = videoContext.localTracks;
                             //     const audioTrack = localTracks.find(track => track.kind === 'audio');
                             //     audioTrack.disable();
@@ -646,7 +646,7 @@ class VideoRoom extends Component {
                                                 if(desc) {
                                                     desc = desc[0].toUpperCase() + desc.slice(1);
                                                     let color = "red";
-                                                    if(desc == "Connected"){
+                                                    if(desc === "Connected"){
                                                         color = "#87d068";
                                                     }
                                                     return <Tag color={color}>{desc}</Tag>
@@ -663,7 +663,7 @@ class VideoRoom extends Component {
                                                 if(desc) {
                                                     desc = desc[0].toUpperCase() + desc.slice(1);
                                                     let color = "red";
-                                                    if(desc == "Connected"){
+                                                    if(desc === "Connected"){
                                                         color = "#87d068";
                                                     }
                                                     return <Tag color={color}>{desc}</Tag>
@@ -676,7 +676,7 @@ class VideoRoom extends Component {
                                     </VideoContext.Consumer>
                                         <Tooltip mouseEnterDelay={0.5} title={"This room was created as a " +
                                         this.state.room.get("mode") + " room with a capacity of " +
-                                        this.state.room.get("capacity") +"; currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !=1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
+                                        this.state.room.get("capacity") +"; currently " + (this.state.room.get("capacity") - nMembers) + " spot"+((this.state.room.get("capacity") - nMembers) !==1 ? "s":"" )+" available."} ><Tag color={membersListColor}>{nMembers+"/"+this.state.room.get("capacity")}</Tag></Tooltip>
                                         {fullLabel}{visibilityDescription}
                                         {privacyDescription}</h3>)}
 
@@ -707,8 +707,8 @@ class VideoRoom extends Component {
                             onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)}
 
                             {!this.props.hideInfo ? <div>
-                                {(this.state.room.get("mode") == "group" ? <span>This is a big group room. It supports up to {this.state.room.get("capacity")} participants, but will only show the video of the most active participants. Click a participant to pin them to always show their video. </span> :
-                                    this.state.room.get("mode") == "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
+                                {(this.state.room.get("mode") === "group" ? <span>This is a big group room. It supports up to {this.state.room.get("capacity")} participants, but will only show the video of the most active participants. Click a participant to pin them to always show their video. </span> :
+                                    this.state.room.get("mode") === "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room": "This is a small group room. It supports up to 4 participants.")}
                             </div> :<></>}
                         <div className={"videoEmbed"}>
                             <EmbeddedVideoWrapper />
@@ -784,10 +784,10 @@ class RoomVisibilityController extends React.Component {
 
     handleChange(value) {
         let isError = false;
-        if (!value || !value.find(u => u == this.props.clowdrAppState.user.id))
+        if (!value || !value.find(u => u === this.props.clowdrAppState.user.id))
             isError = true;
         let hasChange = false;
-        if (this.state.selected.length != value.length)
+        if (this.state.selected.length !== value.length)
             hasChange = true;
         else {
             for (let u of this.state.selected)
@@ -821,7 +821,7 @@ class RoomVisibilityController extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(prevProps.acl.permissionsById != this.props.acl.permissionsById){
+        if(prevProps.acl.permissionsById !== this.props.acl.permissionsById){
             if (this.aclSelector)
             {
                 let newValue={
@@ -854,7 +854,7 @@ class RoomVisibilityController extends React.Component {
                 }
             });
         let res = await data.json();
-        if (res.status == "error") {
+        if (res.status === "error") {
             message.error({content: res.message, style:{zIndex: 2020}});
             this.setState({pendingSave: false})
         } else {

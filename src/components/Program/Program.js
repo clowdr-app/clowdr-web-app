@@ -79,7 +79,7 @@ class Program extends React.Component {
                     row.session = sessionHeader;
                     if (session.get("items")) {
                         for (let programItem of session.get("items")) {
-                            if(this.state.filterByStar && !this.state.starredItems.find(item=>item.id == programItem.id))
+                            if(this.state.filterByStar && !this.state.starredItems.find(item=>item.id === programItem.id))
                                 continue;
                             row.key = session.id+"-"+programItem.id;
                             row.programItem = programItem.id;
@@ -115,12 +115,12 @@ class Program extends React.Component {
             title: 'Saved',
             className: "program-table-starred",
             render: (value, row, index) => {
-                let starred = this.state.starredItems.find(item => item.id == row.item.id);
+                let starred = this.state.starredItems.find(item => item.id === row.item.id);
                 return (starred ? <Tooltip title="Remove this from your saved program" placement="top"><StarFilled className="programStarStarred" onClick={()=> {
                         this.state.starredProgram.relation("items").remove(row.item);
                         this.state.starredProgram.save().catch((err) => console.log(err));
                         this.setState((prevState) => ({
-                            starredItems: prevState.starredItems.filter(item => item.id != row.item.id)
+                            starredItems: prevState.starredItems.filter(item => item.id !== row.item.id)
                         }));
                 }} /></Tooltip> :  <Tooltip title="Add this iem to your saved program" placement="top"><StarOutlined className="programStarNotStarred" onClick={()=> {
                         this.state.starredProgram.relation("items").add(row.item);

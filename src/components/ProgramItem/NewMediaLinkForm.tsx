@@ -70,7 +70,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
             let existingAttachments: ProgramItemAttachment[] = [];
             if (results.length > 1) {
                 existingAttachments = results[1];
-                types = types.filter((v) => !existingAttachments.find(y => y.get("attachmentType").id == v.id));
+                types = types.filter((v) => !existingAttachments.find(y => y.get("attachmentType").id === v.id));
             }
 
             this.setState({AttachmentTypes: types, existingAttachments: existingAttachments, loading: false});
@@ -204,7 +204,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
                         >
                             <Input
                                 onChange={event => {
-                                    if (event.target && event.target.files && event.target.files.length == 1)
+                                    if (event.target && event.target.files && event.target.files.length === 1)
                                         this.setState({selectedFile: event.target.files[0]});
                                     else
                                         this.setState({selectedFile: undefined});

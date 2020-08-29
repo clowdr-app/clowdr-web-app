@@ -63,7 +63,7 @@ class LiveStreamingPanel extends Component {
         }
 
         var inChina = false;
-        if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
+        if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() === "cn")) {
             src = this.props.video.get("src2");
             id = this.props.video.get("id2");
             inChina = true;
@@ -96,9 +96,9 @@ class LiveStreamingPanel extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        if(this.state.expanded != this.props.expanded){
+        if(this.state.expanded !== this.props.expanded){
             if (this.props.expanded) {
-                if (this.props.auth.activeSpace != this.props.video.get("socialSpace"))
+                if (this.props.auth.activeSpace !== this.props.video.get("socialSpace"))
                     this.props.auth.setSocialSpace(null,this.props.video.get("socialSpace"), this.props.video.get("isEventFocusedRoom"));
                 this.props.auth.helpers.setGlobalState({forceChatOpen: true});
                 this.props.auth.helpers.setExpandedProgramRoom(this.props.video);

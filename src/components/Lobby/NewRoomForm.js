@@ -114,7 +114,7 @@ class NewRoomForm extends React.Component {
                                     }
                                 });
                             let res = await data.json();
-                            if (res.status == "error") {
+                            if (res.status === "error") {
                                 message.error(res.message);
                                 this.setState({confirmLoading: false})
                             } else {

@@ -22,7 +22,7 @@ class BottomChat extends React.Component {
     openChat(sid, dontActuallyOpen) {
         this.setState((prevState) => {
             let stateUpdate = {};
-            stateUpdate.chats = prevState.chats.filter(c =>c!=sid);
+            stateUpdate.chats = prevState.chats.filter(c =>c!==sid);
             stateUpdate.chats = [sid, ...stateUpdate.chats];
             if(!dontActuallyOpen)
                 stateUpdate[sid] = true;
@@ -54,7 +54,7 @@ class BottomChat extends React.Component {
     removeChannel(sid){
         this.setState((prevState) => {
             let stateUpdate = {};
-            stateUpdate.chats = prevState.chats.filter(c => c!= sid);
+            stateUpdate.chats = prevState.chats.filter(c => c!== sid);
             stateUpdate[sid] = undefined;
             return stateUpdate;
         });
@@ -63,7 +63,7 @@ class BottomChat extends React.Component {
 
     }
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.auth.user != this.state.user) {
+        if (this.props.auth.user !== this.state.user) {
             this.setState({
                     user: this.props.auth.user
                 }
@@ -98,7 +98,7 @@ class BottomChat extends React.Component {
             addUserVisible: true,
             addUserLoading: false,
             addUserToSID: sid,
-            addUserNeedsChatTitle: this.props.auth.chatClient.joinedChannels[sid].attributes.mode == "directMessage"
+            addUserNeedsChatTitle: this.props.auth.chatClient.joinedChannels[sid].attributes.mode === "directMessage"
         })
     }
 
@@ -237,13 +237,13 @@ class BottomChat extends React.Component {
                                         title: values.title,
                                         socialSpaceID: this.props.auth.activeSpace.id
                                     });
-                                    if (res.status == "error") {
+                                    if (res.status === "error") {
                                         message.error(res.message);
                                         this.setState({newVideoChatLoading: false})
                                     } else {
                                         this.form.current.resetFields();
                                         this.setState({newVideoChatLoading: false, newVideoChatVisible: false})
-                                        if (res.status == "ok") {
+                                        if (res.status === "ok") {
                                             this.props.auth.history.push("/video/" + this.props.auth.currentConference.get("conferenceName") + "/" + values.title)
                                         }
                                     }
@@ -303,11 +303,11 @@ class BottomChatWindow extends React.Component{
             })
             return;
         }
-        if (chat.attributes.mode == "directMessage") {
+        if (chat.attributes.mode === "directMessage") {
             let p1 = chat.conversation.get("member1");
             let p2 = chat.conversation.get("member2");
             let profileID = p1.id;
-            if(profileID == this.props.auth.userProfile.id)
+            if(profileID === this.props.auth.userProfile.id)
                 profileID = p2.id;
             this.props.auth.programCache.getUserProfileByProfileID(profileID, null).then((profile) => {
                 this.setState({title: profile.get("displayName")})
@@ -315,10 +315,10 @@ class BottomChatWindow extends React.Component{
             return;
         } else {
             let title = chat.channel.friendlyName;
-            if (chat.attributes.category == "announcements-global") {
+            if (chat.attributes.category === "announcements-global") {
                 title = "Announcements";
-            } else if (chat.attributes.category == "programItem" ||
-                chat.attributes.category == "breakoutRoom" || chat.attributes.mode == "group") {
+            } else if (chat.attributes.category === "programItem" ||
+                chat.attributes.category === "breakoutRoom" || chat.attributes.mode === "group") {
                 title = chat.channel.friendlyName;
             } else {
                 title = chat.channel.sid;
@@ -330,7 +330,7 @@ class BottomChatWindow extends React.Component{
                     inline={true}
                     key={id}
                 />)
-                if(profiles.length == 1){
+                if(profiles.length === 1){
                     profiles = profiles[0];
                 }
                 else if(profiles.length > 1){
@@ -379,7 +379,7 @@ class BottomChatWindow extends React.Component{
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(this.props.open != this.state.open){
+        if(this.props.open !== this.state.open){
             this.collectFocus = true;
             this.setState({open: this.props.open});
         }
@@ -395,7 +395,7 @@ class BottomChatWindow extends React.Component{
             this.props.auth.history.push("/video/" + dat.attributes.breakoutRoom)
             return;
         }
-        if (dat.channel.attributes.category == 'programItem') {
+        if (dat.channel.attributes.category === 'programItem') {
             let itemQ = new Parse.Query("ProgramItem");
             let item = await itemQ.get(dat.channel.attributes.programItemID);
             if(item.get("breakoutRoom")){
@@ -403,7 +403,7 @@ class BottomChatWindow extends React.Component{
                 return;
             }
         }
-        if (dat.channel.type == 'private' ) {
+        if (dat.channel.type === 'private' ) {
             this.setState({newVideoChatLoading: true});
             try{
                 let res = await Parse.Cloud.run("chat-getBreakoutRoom", {
@@ -411,12 +411,12 @@ class BottomChatWindow extends React.Component{
                     sid: this.props.sid,
                     socialSpaceID: this.props.auth.activeSpace.id
                 });
-                if (res.status == "error") {
+                if (res.status === "error") {
                     message.error(res.message);
                     this.setState({newVideoChatLoading: false})
                 } else {
                     this.setState({newVideoChatLoading: false, newVideoChatVisible: false})
-                    if (res.status == "ok") {
+                    if (res.status === "ok") {
                         this.props.auth.history.push("/video/" + res.room)
                     }
                 }
@@ -488,7 +488,7 @@ class BottomChatWindow extends React.Component{
             }
             }/>
         </div>
-        if(!this.state.open && this.state.chat && this.state.chat.attributes.category == "announcements-global"){
+        if(!this.state.open && this.state.chat && this.state.chat.attributes.category === "announcements-global"){
             return chatWindow
         }
         return <div className="bottomChatWindowContainer">

@@ -73,7 +73,7 @@ class ChatFrame extends React.Component {
         } else if (this.state.chatDisabled) {
             this.setState({chatDisabled: false});
         }
-        if (sid == this.currentSID)
+        if (sid === this.currentSID)
             return;
         this.currentSID = sid
         if (user && sid) {
@@ -88,7 +88,7 @@ class ChatFrame extends React.Component {
                 this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference, this.props.auth.userProfile, this.props.auth);
             }
             // console.log("Prepared client for " + uniqueNameOrSID + ", " + this.currentUniqueNameOrSID)
-            if (this.currentSID != sid) {
+            if (this.currentSID !== sid) {
                 return;//raced with another update
             }
             if (this.activeChannel && this.props.leaveOnChange) {
@@ -100,7 +100,7 @@ class ChatFrame extends React.Component {
                 if (this.activeChannel.type !== "private")
                     await this.activeChannel.leave();
             }
-            if (this.currentSID != sid) {
+            if (this.currentSID !== sid) {
                 return;//raced with another update
             }
             this.activeChannel = await this.props.auth.chatClient.getJoinedChannel(sid);
@@ -108,15 +108,15 @@ class ChatFrame extends React.Component {
                 console.log("Unable to join channel: " + sid)
                 return;
             }
-            if (this.currentSID != sid) {
+            if (this.currentSID !== sid) {
                 return;//raced with another update
             }
             if (this.chanInfo) {
-                this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v => v != this);
-                this.chanInfo.components = this.chanInfo.components.filter(v => v != this);
+                this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v => v !== this);
+                this.chanInfo.components = this.chanInfo.components.filter(v => v !== this);
             }
             this.props.auth.chatClient.callWithRetry(()=>this.activeChannel.getMessages(30)).then((messages) => {
-                if (this.currentSID != sid)
+                if (this.currentSID !== sid)
                     return;
                 this.messagesLoaded(this.activeChannel, messages)
             });
@@ -131,11 +131,11 @@ class ChatFrame extends React.Component {
             if(this.props.visible)
                 chanInfo.visibleComponents.push(this);
             this.dmOtherUser = null;
-            if(chanInfo.attributes.mode == "directMessage"){
+            if(chanInfo.attributes.mode === "directMessage"){
                 let p1 = chanInfo.conversation.get("member1").id;
                 let p2 = chanInfo.conversation.get("member2").id;
                 this.dmOtherUser = p1;
-                if(p1 == this.props.auth.userProfile.id)
+                if(p1 === this.props.auth.userProfile.id)
                    this.dmOtherUser = p2;
             }
             let stateUpdate = {
@@ -143,7 +143,7 @@ class ChatFrame extends React.Component {
                 activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName),
             }
             this.isAnnouncements = false;
-            if(chanInfo.attributes.category == "announcements-global"){
+            if(chanInfo.attributes.category === "announcements-global"){
                 this.isAnnouncements = true;
                 //find out if we are able to write to this.
                 if(!this.props.auth.isModerator && !this.props.auth.isAdmin && !this.props.auth.isManager){
@@ -154,13 +154,13 @@ class ChatFrame extends React.Component {
             }
 
 
-            if (this.currentSID != sid) {
+            if (this.currentSID !== sid) {
                 return;//raced with another update
             }
             this.setState(stateUpdate);
 
         } else {
-            if (this.currentSID != sid) {
+            if (this.currentSID !== sid) {
                 return;//raced with another update
             }
             // console.log("Unable to set channel because no user or something:")
@@ -176,22 +176,22 @@ class ChatFrame extends React.Component {
     }
     componentWillUnmount() {
         if(this.chanInfo){
-            this.chanInfo.components = this.chanInfo.components.filter(v=>v!=this);
-            this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v=>v!=this);
+            this.chanInfo.components = this.chanInfo.components.filter(v=>v!==this);
+            this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v=>v!==this);
         }
     }
 
     updateUnreadCount(lastConsumed, lastTotal) {
-        if (lastConsumed != this.lastConsumedMessageIndex || lastTotal > this.lastSeenMessageIndex) {
+        if (lastConsumed !== this.lastConsumedMessageIndex || lastTotal > this.lastSeenMessageIndex) {
             if(lastTotal < 0)
                 lastTotal = this.lastSeenMessageIndex;
             let unread = lastTotal - lastConsumed;
             if(unread < 0)
                 unread = 0;
-            if(lastConsumed == null){
+            if(lastConsumed === null){
                 unread++;
             }
-            if (unread != this.unread) {
+            if (unread !== this.unread) {
                 if (this.props.setUnreadCount)
                     this.props.setUnreadCount(unread);
             }
@@ -214,12 +214,12 @@ class ChatFrame extends React.Component {
 
         let authorIDs = {};
         for (let message of messages) {
-            if (lastSID && lastSID == message.sid) {
+            if (lastSID && lastSID === message.sid) {
                 continue;
             }
             lastSID = message.sid;
             lastIndex = message.index;
-            if (!lastMessage || (!message.attributes.associatedMessage && (message.author != lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5))) {
+            if (!lastMessage || (!message.attributes.associatedMessage && (message.author !== lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5))) {
                 if (lastMessage)
                     ret.push(lastMessage);
                 let authorID = message.author;
@@ -260,7 +260,7 @@ class ChatFrame extends React.Component {
             this.consumptionFrontier++;
             let idx = this.consumptionFrontier;
             this.props.auth.chatClient.callWithRetry(()=>{
-                if(this.consumptionFrontier != idx)
+                if(this.consumptionFrontier !== idx)
                     return;
                 return this.activeChannel.setAllMessagesConsumed()});
 
@@ -303,7 +303,7 @@ class ChatFrame extends React.Component {
 
 
     memberLeft = (member)=>{
-        this.members = this.members.filter(m=>m.sid != member.sid);
+        this.members = this.members.filter(m=>m.sid !== member.sid);
     }
 
     memberJoined = (member)=>{
@@ -355,7 +355,7 @@ class ChatFrame extends React.Component {
             console.log("[ChatFrame]: attempt to remove message from non-existing channel " + channel.sid);
             return;
         }
-        this.messages[channel.sid] = this.messages[channel.sid].filter((v) => v.sid != message.sid)
+        this.messages[channel.sid] = this.messages[channel.sid].filter((v) => v.sid !== message.sid)
         this.groupMessages(this.messages[channel.sid], channel.sid);
     };
     messageUpdated = (channel, message) => {
@@ -363,12 +363,12 @@ class ChatFrame extends React.Component {
             console.log("[ChatFrame]: attempt to update message in non-existing channel " + channel.sid);
             return;
         }
-        this.messages[channel.sid] = this.messages[channel.sid].map(m => m.sid == message.sid ? message : m)
+        this.messages[channel.sid] = this.messages[channel.sid].map(m => m.sid === message.sid ? message : m)
         this.groupMessages(this.messages[channel.sid], channel.sid);
     };
 
     onMessageChanged = event => {
-        // if (event.target.value != '\n')
+        // if (event.target.value !== '\n')
         //     this.setState({newMessage: event.target.value});
     };
     timeout = async (ms) => {
@@ -394,7 +394,7 @@ class ChatFrame extends React.Component {
                 return;
             }
             if(!this.clearedTempFlag){
-                this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c=>c!=this.activeChannel.sid);
+                this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c=>c!==this.activeChannel.sid);
                 this.clearedTempFlag = true;
             }
             // if (this.form && this.form.current)
@@ -405,7 +405,7 @@ class ChatFrame extends React.Component {
             // this.form.current.resetFields();
             // this.form.current.scrollToField("message");
             //TODO if no longer a DM (converted to group), don't do this...
-            if(this.dmOtherUser && !this.members.find(m => m.identity == this.dmOtherUser)){
+            if(this.dmOtherUser && !this.members.find(m => m.identity === this.dmOtherUser)){
                 this.activeChannel.add(this.dmOtherUser).catch((err)=>console.log(err));
             }
 
@@ -413,7 +413,7 @@ class ChatFrame extends React.Component {
     };
 
     async sendReaction(msg, event) {
-        if(msg == null){
+        if(msg === null){
             //add to the current input
             let message = this.form.current.getFieldValue("message");
             if(message === undefined)
@@ -439,7 +439,7 @@ class ChatFrame extends React.Component {
     }
 
     deleteMessage(message) {
-        if (message.author == this.props.auth.userProfile.id)
+        if (message.author === this.props.auth.userProfile.id)
             message.remove();
         else {
             let idToken = this.props.auth.user.getSessionToken();
@@ -466,7 +466,7 @@ class ChatFrame extends React.Component {
             return true;
         if (!o1 || !o2)
             return false;
-        return o1.id == o2.id;
+        return o1.id === o2.id;
     }
 
     areEqualSID(o1, o2) {
@@ -474,18 +474,18 @@ class ChatFrame extends React.Component {
             return true;
         if (!o1 || !o2)
             return false;
-        return o1.sid == o2.sid;
+        return o1.sid === o2.sid;
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        let isDifferentChannel = this.props.sid != this.sid;
+        let isDifferentChannel = this.props.sid !== this.sid;
 
-        if(prevProps.visible!= this.props.visible){
+        if(prevProps.visible!== this.props.visible){
             if(this.chanInfo) {
                 if (this.props.visible)
                     this.chanInfo.visibleComponents.push(this);
                 else {
-                    this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v => v != this);
+                    this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v => v !== this);
                 }
             }
 
@@ -502,7 +502,7 @@ class ChatFrame extends React.Component {
                 this.consumptionFrontier++;
                 let idx = this.consumptionFrontier;
                 this.props.auth.chatClient.callWithRetry(()=>{
-                    if(this.consumptionFrontier != idx)
+                    if(this.consumptionFrontier !== idx)
                         return;
                     return this.activeChannel.setAllMessagesConsumed()});
                 this.updateUnreadCount(this.lastSeenMessageIndex, this.lastSeenMessageIndex);
@@ -524,7 +524,7 @@ class ChatFrame extends React.Component {
             if(!this.currentPage[this.activeChannel.sid])
                 return;
             this.currentPage[this.activeChannel.sid].prevPage().then(messagePage => {
-                if (this.activeChannel.sid != intendedChanelSID) {
+                if (this.activeChannel.sid !== intendedChanelSID) {
                     this.loadingMessages = false;
                     return;
                 }
@@ -560,7 +560,7 @@ class ChatFrame extends React.Component {
         }
         let date_stamp_arr = [];
         // BCP: A good idea that doesn't quite work: chats are fine, but DMs show sender's name, not receiver's...
-        let toWhom = this.chanInfo?.attributes?.mode == "directMessage" 
+        let toWhom = this.chanInfo?.attributes?.mode === "directMessage" 
                      ? "Send a direct message" 
                      : this.activeChannel?.friendlyName ? "Send a message to " + this.activeChannel.friendlyName : "Send a message to this channel";
         return <div className="embeddedChatFrame"
@@ -590,7 +590,7 @@ class ChatFrame extends React.Component {
                                   renderItem={
                                       item => {
                                           let itemUID = item.author;
-                                          let isMyMessage = itemUID == this.props.auth.userProfile.id;
+                                          let isMyMessage = itemUID === this.props.auth.userProfile.id;
                                           // let options = "";
                                           // if (isMyMessage)
                                           //     options = <Popconfirm
@@ -756,7 +756,7 @@ class ChatFrame extends React.Component {
                                 inline={true}
                                 key={id}
                                 />)
-                                if(reactors.length == 1){
+                                if(reactors.length === 1){
                                     reactors = reactors[0];
                                 }
                                 else if(reactors.length > 1){

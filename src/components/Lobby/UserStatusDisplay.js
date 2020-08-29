@@ -36,7 +36,7 @@ class UserStatusDisplay extends React.Component{
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(!this.mounted)
             return;
-        if(this.props.auth.helpers.presences[this.state.id] != this.state.presence){
+        if(this.props.auth.helpers.presences[this.state.id] !== this.state.presence){
             this.setState({presence: this.props.auth.helpers.presences[this.state.id]});
         }
     }
@@ -73,11 +73,11 @@ class UserStatusDisplay extends React.Component{
             badgeColor = "grey";
         }
         let onClick = ()=>{};
-        if (this.props.auth.userProfile.id != this.state.profile.id && !this.props.hideLink){
+        if (this.props.auth.userProfile.id !== this.state.profile.id && !this.props.hideLink){
             onClick = this.openDM.bind(this);
         }
         let avatar, inlineAvatar;
-        if (this.state.profile && this.state.profile.get("profilePhoto") != null)
+        if (this.state.profile && this.state.profile.get("profilePhoto") !== null)
             avatar = <Avatar src={this.state.profile.get("profilePhoto").url()}/>
 
         let affiliation = "";
@@ -140,7 +140,7 @@ class UserStatusDisplay extends React.Component{
               <div> {tags} {presenceDesc}</div>
             </div>;
         let webpage = "";
-        if ("" + this.state.profile.get("webpage") != "undefined") {
+        if ("" + this.state.profile.get("webpage") !== "undefined") {
             webpage = <div>
                 <a href={this.state.profile.get("webpage")} target="_blank">
                     {this.state.profile.get("webpage")}</a>

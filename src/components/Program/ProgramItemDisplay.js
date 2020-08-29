@@ -77,11 +77,11 @@ export default class ProgramItemDisplay extends React.Component{
             for(let event of this.state.events.sort(this.sortEvents)){
                 let roomInfo;
 
-                let session = this.state.sessions.find(s=>s.id==event.get("programSession").id);
+                let session = this.state.sessions.find(s=>s.id===event.get("programSession").id);
                 var timeS = session.get("startTime") ? session.get("startTime") : new Date();
                 var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
-                if (session.get("room")){ // && session.get("room").get("src1") == "YouTube") {
+                if (session.get("room")){ // && session.get("room").get("src1") === "YouTube") {
                     let when = "now"
                         roomInfo = <Button size="small" type="primary" onClick={() => {
                             this.props.auth.history.push("/live/" + when + "/" + session.get("room").get("name"))
@@ -105,7 +105,7 @@ export default class ProgramItemDisplay extends React.Component{
             var timeS = session.get("startTime") ? session.get("startTime") : new Date();
             var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
-            if (session.get("room")){ // && session.get("room").get("src1") == "YouTube") {
+            if (session.get("room")){ // && session.get("room").get("src1") === "YouTube") {
                 let when = "now"
                 if(timeE >= now)
                     roomInfo = <div><b>Presentation room: </b><Button type="primary" onClick={() => {

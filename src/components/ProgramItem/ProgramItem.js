@@ -65,7 +65,7 @@ class ProgramItem extends React.Component {
 
     async componentDidUpdate(prevProps) {
         let itemKey = this.props.match.params.programConfKey1 + "/" + this.props.match.params.programConfKey2;
-        if (this.state.itemKey != itemKey) {
+        if (this.state.itemKey !== itemKey) {
             this.props.auth.programCache.cancelSubscription("ProgramItem", this, this.state.ProgramItem.id);
             this.componentDidMount();
         }

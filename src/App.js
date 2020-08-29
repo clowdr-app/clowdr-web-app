@@ -235,14 +235,14 @@ class App extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (!prevProps.clowdrAppState || prevProps.clowdrAppState.currentConference != this.props.clowdrAppState.currentConference) {
+        if (!prevProps.clowdrAppState || prevProps.clowdrAppState.currentConference !== this.props.clowdrAppState.currentConference) {
             this.refreshConferenceInformation();
         }
-        if(this.state.chatHeight != prevState.chatHeight && this.state.chatHeight != this.chatSize){
+        if(this.state.chatHeight !== prevState.chatHeight && this.state.chatHeight !== this.chatSize){
             this.chatSize = this.state.chatHeight;
             this.chatPaneRef.current.setState({sizes: ["1", this.state.chatHeight]});
         }
-        if (this.props.clowdrAppState.showingLanding != this.state.showingLanding) {
+        if (this.props.clowdrAppState.showingLanding !== this.state.showingLanding) {
             this.setState({showingLanding: this.props.clowdrAppState.showingLanding});
         }
         if (this.state.isMagicLogin && (!window.location.pathname.startsWith("/fromSlack") || this.props.clowdrAppState.user)) {

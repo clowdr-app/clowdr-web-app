@@ -85,7 +85,7 @@ q.first().then(version => {
         let v = version.get('version'); // Latest version number
         console.log('Applying migrations from version ' + v);
         fs.readdirSync('./db')
-                      .filter(file => ((file.match(/^\d/)) && (path.extname(file) == '.js')))
+                      .filter(file => ((file.match(/^\d/)) && (path.extname(file) === '.js')))
                       .sort()
                       .map(f => {
                           let name = f.slice(0, -4); // without the extension

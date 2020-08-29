@@ -107,7 +107,7 @@ let tracks = {};
 data.Items.forEach(item => {
     let parts = item.Key.split("/");
     let trackName = parts[0];
-    if (trackName.includes('catering') || trackName == 'icse-2020-test')
+    if (trackName.includes('catering') || trackName === 'icse-2020-test')
         return;
     if (trackName in tracks)
         tracks[trackName] = tracks[trackName] + 1;
@@ -154,7 +154,7 @@ async function loadProgram() {
     qt.limit(100);
     var existingTracks = await qt.find();
     for (let [name, count] of Object.entries(tracks)) {
-        if (existingTracks.find(t => t.get('name') == name)) {
+        if (existingTracks.find(t => t.get('name') === name)) {
             console.log('Track already exists: ' + name);
             continue;
         }
@@ -181,7 +181,7 @@ async function loadProgram() {
     qr.limit(100);
     var existingRooms = await qr.find();
     for (let [name, count] of Object.entries(rooms)) {
-        if (existingRooms.find(r => r.get('name') == name)) {
+        if (existingRooms.find(r => r.get('name') === name)) {
             console.log('Room already exists: ' + name);
             continue;
         }
@@ -252,7 +252,7 @@ async function loadProgram() {
         }
         let parts = item.Key.split("/");
         let trackName = parts[0];
-        let track = existingTracks.find(t => t.get('name') == trackName);    
+        let track = existingTracks.find(t => t.get('name') === trackName);    
         if (!track)
             console.log('Warning: Adding item without track: ' + item.Key);
 
@@ -314,7 +314,7 @@ async function loadProgram() {
         session.setACL(acl);
 
         // Find the pointer to the room
-        let room = existingRooms.find(r => r.get('name') == ses.Location);
+        let room = existingRooms.find(r => r.get('name') === ses.Location);
         if (room)
             session.set("room", room);
         else

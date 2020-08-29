@@ -150,7 +150,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     {editing ? (
                         <Form.Item
                             name={dataIndex}
-                            valuePropName={dataIndex == 'perProgramItemChat' || dataIndex == 'perProgramItemVideo' ? "checked" : "value"}
+                            valuePropName={dataIndex === 'perProgramItemChat' || dataIndex === 'perProgramItemVideo' ? "checked" : "value"}
                             style={{
                                 margin: 0,
                             }}
@@ -441,7 +441,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
             <Input.Search
                 allowClear
                 onSearch={key => {
-                        if (key == "") {
+                        if (key === "") {
                             this.setState({searched: false});
                         }
                         else {
@@ -463,7 +463,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
 
 const AuthConsumer = (props: ProgramTracksProps) => (
             <AuthUserContext.Consumer>
-                {value => (value == null ? <></> :  // @ts-ignore  TS: Can value really be null here?
+                {value => (value === null ? <></> :  // @ts-ignore  TS: Can value really be null here?
                         <Tracks {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>

@@ -41,9 +41,9 @@ class SidebarChat extends React.Component {
         this.messages = {};
         this.currentPage = {};
         let siderWidth = Number(localStorage.getItem("chatWidth"));
-        if(siderWidth == 0)
+        if(siderWidth === 0)
             siderWidth = 250;
-        else if(siderWidth == -1)
+        else if(siderWidth === -1)
             siderWidth = 0;
         this.state = {...INITIAL_STATE, siderWidth: siderWidth, hasMoreMessages: false, loadingMessages: true,
             priorWidth: siderWidth,
@@ -55,7 +55,7 @@ class SidebarChat extends React.Component {
 
     setDrawerWidth(width){
         this.setState({siderWidth: width})
-        localStorage.setItem("chatWidth", (width == 0 ? -1 : width));
+        localStorage.setItem("chatWidth", (width === 0 ? -1 : width));
     }
 
     async componentDidMount() {
@@ -82,9 +82,9 @@ class SidebarChat extends React.Component {
     }
     
     componentDidUpdate (prevProps, prevState, snapshot) {
-        let isDifferentUser = this.user != this.props.auth.user;
+        let isDifferentUser = this.user !== this.props.auth.user;
         this.user = this.props.auth.user;
-        let isDifferentChannel = this.props.auth.chatChannel != this.state.channel;
+        let isDifferentChannel = this.props.auth.chatChannel !== this.state.channel;
 
         if(!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")){
             this.setState({visible: true});
@@ -92,7 +92,7 @@ class SidebarChat extends React.Component {
         if(this.state.chatDisabled && this.props.auth.user && this.props.auth.user.get("passwordSet")){
             this.setState({chatDisabled: false})
         }
-        if(this.props.auth.forceChatOpen && this.state.siderWidth == 0){
+        if(this.props.auth.forceChatOpen && this.state.siderWidth === 0){
             this.setState({siderWidth: 250});
         }
     }

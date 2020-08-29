@@ -106,12 +106,12 @@ class LinkMenu extends React.Component {
 
                     <SubMenu key="/exhibits" title={<span><TeamOutlined/><span>Exhibit Hall</span></span>}>
                         {this.state.ProgramTracks
-                        .filter(track => track.get("exhibit") == "Grid" || track.get("exhibit") == "List")
+                        .filter(track => track.get("exhibit") === "Grid" || track.get("exhibit") === "List")
                         .map(track => {
                             let mode = track.get("exhibit").toLowerCase();
                             let path = track.get("name");
                             let displayName = track.get("displayName");
-                            let icon = mode == "list" ? <UnorderedListOutlined/> : <AppstoreOutlined/>;
+                            let icon = mode === "list" ? <UnorderedListOutlined/> : <AppstoreOutlined/>;
                         return <Menu.Item key={`/exhibits/${path}`} icon={icon}> <NavLink to={`/exhibits/${path}/${mode}`}>{displayName}</NavLink></Menu.Item>
 
                         })}
