@@ -1,7 +1,7 @@
 import React from "react";
-import {Button, Form, Input, message, Modal, Skeleton, Tooltip, Typography} from "antd";
-import {AuthUserContext} from "../Session";
-import {withRouter} from "react-router-dom";
+import { Button, Form, Input, message, Modal, Skeleton, Tooltip, Typography } from "antd";
+import { AuthUserContext } from "../Session";
+import { withRouter } from "react-router-dom";
 import IconButton from "@material-ui/core/IconButton";
 import SecurityIcon from "@material-ui/icons/Security";
 import Parse from "parse"
@@ -41,7 +41,7 @@ class ReportToModsButton extends React.Component {
         roomQ.include("members");
         let room = await roomQ.get(this.props.room.id);
         if (!this.canceled)
-            this.setState({room: room, loading: false});
+            this.setState({ room: room, loading: false });
     }
 
     handleCancel = () => {
@@ -58,7 +58,7 @@ class ReportToModsButton extends React.Component {
         let currentParticipants = "";
         let participantIDArray = [];
         if (this.state.loading)
-            currentParticipants = <Skeleton.Input/>
+            currentParticipants = <Skeleton.Input />
         else {
             if (this.state.room.get("members")) {
                 for (let user of this.state.room.get('members')) {
@@ -77,8 +77,8 @@ class ReportToModsButton extends React.Component {
                 <Tooltip mouseEnterDelay={0.5} title="Report inappropriate behavior to the moderators">
 
                     <IconButton onClick={this.showModal}>
-                        <div><SecurityIcon color="secondary" /> 
-                        <span className="icon-text">Report</span>
+                        <div><SecurityIcon color="secondary" />
+                            <span className="icon-text">Report</span>
                         </div>
                     </IconButton>
                 </Tooltip>
@@ -118,7 +118,7 @@ class ReportToModsButton extends React.Component {
                             persistence: 'ephemeral'
                         }}
                         onFinish={async (values) => {
-                            this.setState({confirmLoading: true});
+                            this.setState({ confirmLoading: true });
                             let user = this.props.auth.user;
                             let idToken = user.getSessionToken();
                             try {
@@ -140,14 +140,14 @@ class ReportToModsButton extends React.Component {
                                 let res = await data.json();
                                 if (res.status === "error") {
                                     message.error(res.message);
-                                    this.setState({confirmLoading: false})
+                                    this.setState({ confirmLoading: false })
                                 } else {
                                     this.form.current.resetFields();
-                                    this.setState({confirmLoading: false, visible: false, success: true})
+                                    this.setState({ confirmLoading: false, visible: false, success: true })
                                 }
-                            }catch(err){
+                            } catch (err) {
                                 message.error("An internal error has occurred");
-                                this.setState({confirmLoading: false})
+                                this.setState({ confirmLoading: false })
 
                             }
                         }} >
@@ -170,11 +170,11 @@ class ReportToModsButton extends React.Component {
 }
 
 const AuthConsumer = (props) => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <ReportToModsButton {...props} auth={value} />
-                )}
-            </AuthUserContext.Consumer>
+    <AuthUserContext.Consumer>
+        {value => (
+            <ReportToModsButton {...props} auth={value} />
+        )}
+    </AuthUserContext.Consumer>
 
 );
 

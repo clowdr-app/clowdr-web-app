@@ -66,7 +66,7 @@ async function findOrAddUser(key) {
                     if (cp.URLphoto) {
                         let person = cp;
                         let name = person.URLphoto.substring(person.URLphoto.lastIndexOf("/") + 1);
-                        var file = new Parse.File(name, {uri: person.URLphoto});
+                        var file = new Parse.File(name, { uri: person.URLphoto });
                         var res = await file.save();
                         console.log(res);
                         user.set("profilePhoto", file);
@@ -116,7 +116,7 @@ data.Items.forEach(item => {
 });
 
 let rooms = {}
-data.Sessions.forEach (session => {
+data.Sessions.forEach(session => {
     if (session.Location in rooms)
         rooms[session.Location] = rooms[session.Location] + 1;
     else
@@ -143,8 +143,8 @@ async function loadProgram() {
     let acl = new Parse.ACL();
     acl.setPublicWriteAccess(false);
     acl.setPublicReadAccess(true);
-    acl.setRoleWriteAccess(conf.id+"-manager", true);
-    acl.setRoleWriteAccess(conf.id+"-admin", true);
+    acl.setRoleWriteAccess(conf.id + "-manager", true);
+    acl.setRoleWriteAccess(conf.id + "-admin", true);
 
     // Create the tracks first
     let newTracks = [];
@@ -168,7 +168,7 @@ async function loadProgram() {
 
     try {
         await Parse.Object.saveAll(newTracks);
-    } catch(err){
+    } catch (err) {
         console.log(err);
     }
     console.log('Tracks saved: ' + newTracks.length);
@@ -196,7 +196,7 @@ async function loadProgram() {
 
     try {
         await Parse.Object.saveAll(newRooms);
-    } catch(err){
+    } catch (err) {
         console.log(err);
     }
     console.log('Rooms saved: ' + newRooms.length);
@@ -231,7 +231,7 @@ async function loadProgram() {
     }
     try {
         await Parse.Object.saveAll(newPeople);
-    } catch(err){
+    } catch (err) {
         console.log(err);
     }
     console.log("People saved: " + newPeople.length);
@@ -252,7 +252,7 @@ async function loadProgram() {
         }
         let parts = item.Key.split("/");
         let trackName = parts[0];
-        let track = existingTracks.find(t => t.get('name') === trackName);    
+        let track = existingTracks.find(t => t.get('name') === trackName);
         if (!track)
             console.log('Warning: Adding item without track: ' + item.Key);
 
@@ -262,7 +262,7 @@ async function loadProgram() {
         newItem.set("url", item.URL);
         newItem.set("abstract", item.Abstract);
         newItem.set("affiliations", item.Affiliations);
-        newItem.set("conference",conf);
+        newItem.set("conference", conf);
         newItem.set("confKey", item.Key);
         newItem.set('track', track);
         newItem.setACL(acl);
@@ -274,7 +274,7 @@ async function loadProgram() {
     }
     try {
         await Parse.Object.saveAll(newItems);
-    } catch(err){
+    } catch (err) {
         console.log(err);
     }
     console.log("Items saved: " + newItems.length);
@@ -299,7 +299,7 @@ async function loadProgram() {
             let endTime = ses.Day + ' ' + times[1];
             start = moment.utc(startTime, "YYYY-MM-DD HH:mm");
             end = moment.utc(endTime, "YYYY-MM-DD HH:mm");
-//            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
+            //            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
         }
 
         let session = new ProgramSession();
@@ -324,7 +324,7 @@ async function loadProgram() {
         let items = [];
         if (ses.Items) {
             ses.Items.forEach((k) => {
-                if(allItems[k]){
+                if (allItems[k]) {
                     items.push(allItems[k]);
                 }
                 else
@@ -342,7 +342,7 @@ async function loadProgram() {
         for (const ses of data.Sessions) {
             if (ses.Items) {
                 ses.Items.forEach((k) => {
-                    if (allItems[k]){
+                    if (allItems[k]) {
                         // console.log(allItems[k].get("programSession"))
                         if (!allItems[k].get("programSession")) {
                             allItems[k].set("programSession", session)
@@ -354,7 +354,7 @@ async function loadProgram() {
                 });
             }
         }
-        console.log('Resaving items: ' +toSave.length);
+        console.log('Resaving items: ' + toSave.length);
         await Parse.Object.saveAll(toSave);
     } catch (err) {
         console.log(err);

@@ -1,19 +1,19 @@
 import React from "react";
-import {AuthUserContext} from "../Session";
+import { AuthUserContext } from "../Session";
 import withLoginRequired from "../Session/withLoginRequired";
 import Parse from "parse"
-import {Button, Input, message, Space, Switch, Table} from "antd";
-import {SearchOutlined} from "@material-ui/icons";
+import { Button, Input, message, Space, Switch, Table } from "antd";
+import { SearchOutlined } from "@material-ui/icons";
 import Highlighter from 'react-highlight-words';
 
-class Moderation extends React.Component{
+class Moderation extends React.Component {
     constructor(props) {
         super(props);
-        this.state ={loading: true}
+        this.state = { loading: true }
 
     }
-    async updateBan(item){
-        this.setState({banUpdating: true})
+    async updateBan(item) {
+        this.setState({ banUpdating: true })
         console.log(item);
         let idToken = this.props.auth.user.getSessionToken();
 
@@ -35,18 +35,19 @@ class Moderation extends React.Component{
         let res = await data.json();
         if (res.status === "OK") {
             let updatedItem = item;
-            if(item.isBanned === "Yes")
+            if (item.isBanned === "Yes")
                 updatedItem.isBanned = "No";
             else
                 updatedItem.isBanned = "Yes";
             console.log(updatedItem.key)
-            this.setState((prevState)=> ({banUpdating: false,
+            this.setState((prevState) => ({
+                banUpdating: false,
                 allUsers: prevState.allUsers.map(u => (u.key === item.key ? updatedItem : u))
             }));
         }
-        else{
+        else {
             message.error(res.message);
-            this.setState({banUpdating: false})
+            this.setState({ banUpdating: false })
         }
     }
     async componentDidMount() {
@@ -57,7 +58,7 @@ class Moderation extends React.Component{
         parseUserQ.limit(1000);
         parseUserQ.withCount();
         let nRetrieved = 0;
-        let {count, results} = await parseUserQ.find();
+        let { count, results } = await parseUserQ.find();
         nRetrieved = results.length;
         let allUsers = [];
         allUsers = results.map(item => ({
@@ -65,7 +66,7 @@ class Moderation extends React.Component{
             displayName: item.get("displayName"),
             slackUID: item.get("slackID"),
             email: (item.get("user") ? item.get("user").get("email") : undefined),
-            isBanned: item.get('isBanned') ? "Yes":"No"
+            isBanned: item.get('isBanned') ? "Yes" : "No"
         }))
         while (nRetrieved < count) {
             parseUserQ = new Parse.Query("UserProfile")
@@ -87,7 +88,7 @@ class Moderation extends React.Component{
                 })));
             }
         }
-        this.setState({allUsers: allUsers, loading: false});
+        this.setState({ allUsers: allUsers, loading: false });
     }
     handleSearch = (selectedKeys, confirm, dataIndex) => {
         confirm();
@@ -138,10 +139,9 @@ class Moderation extends React.Component{
                 setTimeout(() => this.searchInput.select());
             }
         },
-        render: (text, item) =>{
-            if(dataIndex === "isBanned")
-            {
-                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text ==="Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
+        render: (text, item) => {
+            if (dataIndex === "isBanned") {
+                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text === "Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
             }
             return this.state.searchedColumn === dataIndex ? (
                 <Highlighter
@@ -151,15 +151,15 @@ class Moderation extends React.Component{
                     textToHighlight={text.toString()}
                 />
             ) : (
-                text
-            )
+                    text
+                )
         },
     });
 
     render() {
-        if(!this.props.auth.isModerator)
+        if (!this.props.auth.isModerator)
             return <div></div>
-        if(this.state.loading)
+        if (this.state.loading)
             return <div>Loading...</div>
 
         const columns = [

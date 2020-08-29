@@ -1,5 +1,5 @@
 import React from 'react';
-import {Spin} from "antd";
+import { Spin } from "antd";
 import AuthUserContext from "./context";
 import GenericLanding from "../GenericLanding";
 
@@ -19,22 +19,22 @@ const withLoginRequired = Component => {
 
         componentDidMount() {
             this.mounted = true;
-            this.context.refreshUser().then(u=>{
-                if(!this.mounted)
+            this.context.refreshUser().then(u => {
+                if (!this.mounted)
                     return;
-                if(u){
-                    this.setState({showingLogin: false});
+                if (u) {
+                    this.setState({ showingLogin: false });
                 }
-                else{
+                else {
                     this.props.history.push("/signin");
                 }
             })
         }
 
         render() {
-            if (this.state.showingLogin){
+            if (this.state.showingLogin) {
                 this.props.history.push("/signin");
-                return<div></div>;
+                return <div></div>;
             }
             return (
                 <AuthUserContext.Consumer>
@@ -42,9 +42,9 @@ const withLoginRequired = Component => {
                         if (authUserContext.user)
                             return (
                                 <Component {...this.props} />
-                        )
-                        if(!authUserContext.user){
-                            if(this.state.showingLogin){
+                            )
+                        if (!authUserContext.user) {
+                            if (this.state.showingLogin) {
                                 return <Spin>I should show a login  here instead</Spin>
                             }
                             return <Spin />

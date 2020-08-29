@@ -1,8 +1,8 @@
 import React from 'react';
-import {ClowdrState} from "../../ClowdrTypes";
-import {AuthUserContext} from '../Session';
+import { ClowdrState } from "../../ClowdrTypes";
+import { AuthUserContext } from '../Session';
 import BreakoutRoom from "../../classes/BreakoutRoom";
-import {Menu, Skeleton} from "antd";
+import { Menu, Skeleton } from "antd";
 import UserStatusDisplay from "./UserStatusDisplay";
 
 interface BreakoutRoomDisplayProps {
@@ -25,22 +25,22 @@ class BreakoutRoomDisplay extends React.Component<BreakoutRoomDisplayProps, Brea
 
     componentDidMount(): void {
         this.props.auth?.helpers.getBreakoutRoom(this.props.id, this).then((room: BreakoutRoom) => {
-            this.setState({BreakoutRoom: room});
+            this.setState({ BreakoutRoom: room });
         })
     }
     componentWillUnmount(): void {
-        if(this.state.BreakoutRoom){
+        if (this.state.BreakoutRoom) {
             this.props.auth?.helpers.cancelBreakoutRoomSubscription(this.props.id, this);
         }
     }
 
     render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {
         let list = <></>;
-        if(!this.state.BreakoutRoom)
+        if (!this.state.BreakoutRoom)
             return <Skeleton.Input />
         if (this.state.BreakoutRoom.get("members") && this.state.BreakoutRoom.get("members").length > 0)
-            list = this.state.BreakoutRoom.get("members").map((user: any)=>{
-                if(user) {
+            list = this.state.BreakoutRoom.get("members").map((user: any) => {
+                if (user) {
                     let className = "personHoverable";
                     return <UserStatusDisplay popover={true} profileID={user.id} key={user.id} />
                 }
@@ -48,10 +48,10 @@ class BreakoutRoomDisplay extends React.Component<BreakoutRoomDisplayProps, Brea
             }) //}>
         else
             list = <></>
-       return <div>{list}</div>
+        return <div>{list}</div>
     }
 }
-interface PublicBreakoutRoomDisplayProps{
+interface PublicBreakoutRoomDisplayProps {
     id: string;
 }
 const AuthConsumer = (props: PublicBreakoutRoomDisplayProps) => (
@@ -59,10 +59,10 @@ const AuthConsumer = (props: PublicBreakoutRoomDisplayProps) => (
     //     {router => (
     <AuthUserContext.Consumer>
         {value => (
-            <BreakoutRoomDisplay id={props.id} auth={value}/>
+            <BreakoutRoomDisplay id={props.id} auth={value} />
         )}
     </AuthUserContext.Consumer>
-// )}</Router.Consumer>
+    // )}</Router.Consumer>
 
 );
 

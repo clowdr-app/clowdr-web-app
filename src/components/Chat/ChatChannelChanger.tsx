@@ -1,10 +1,10 @@
-import React, {ReactNode} from "react";
-import {AuthUserContext} from "../Session";
-import {Button, Form, Input, Menu, message, Modal, Select, Spin, Switch} from "antd";
-import {ChatChannelConsumer, ClowdrState, MultiChatApp} from "../../ClowdrTypes";
+import React, { ReactNode } from "react";
+import { AuthUserContext } from "../Session";
+import { Button, Form, Input, Menu, message, Modal, Select, Spin, Switch } from "antd";
+import { ChatChannelConsumer, ClowdrState, MultiChatApp } from "../../ClowdrTypes";
 import CollapsedChatDisplay from "./CollapsedChatDisplay";
-import {Channel} from "twilio-chat/lib/channel";
-import {PlusOutlined} from "@ant-design/icons"
+import { Channel } from "twilio-chat/lib/channel";
+import { PlusOutlined } from "@ant-design/icons"
 import ProgramItem from "../../classes/ProgramItem";
 import UserProfile from "../../classes/UserProfile";
 import Parse from "parse";
@@ -34,14 +34,14 @@ interface ChatChannelChangerState {
     filter?: string,
     searchLoading: boolean,
     openingChat: boolean,
-    searchOptions: {label:string|ReactNode, value:string, object: ProgramItem|UserProfile|Channel, labeltext: string}[]
+    searchOptions: { label: string | ReactNode, value: string, object: ProgramItem | UserProfile | Channel, labeltext: string }[]
 }
 
 class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatChannelChangerState> implements ChatChannelConsumer {
     private fetchingSearchOptions: boolean;
     private haveProgram: boolean;
     private searchBox: React.RefObject<Select>;
-    private allSearchOptions: {label:string|ReactNode, value:string, object: ProgramItem|UserProfile|Channel, labeltext: string}[];
+    private allSearchOptions: { label: string | ReactNode, value: string, object: ProgramItem | UserProfile | Channel, labeltext: string }[];
     constructor(props: ChatChannelChangerProps) {
         super(props);
         this.searchBox = React.createRef();
@@ -63,18 +63,20 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         };
     }
 
-    setJoinedChannels(channels: string[]){
-        this.setState({joinedChannels: channels, loading: false});
+    setJoinedChannels(channels: string[]) {
+        this.setState({ joinedChannels: channels, loading: false });
     }
-    setAllChannels(channels: Channel[]){
-        this.setState({allChannels: channels});
+    setAllChannels(channels: Channel[]) {
+        this.setState({ allChannels: channels });
     }
 
     componentDidUpdate(prevProps: Readonly<ChatChannelChangerProps>, prevState: Readonly<ChatChannelChangerState>, snapshot?: any): void {
-        if(this.haveProgram && (this.state.ProgramItems !== prevState.ProgramItems || this.state.UserProfiles !== prevState.UserProfiles || this.state.allChannels !== prevState.allChannels)){
+        if (this.haveProgram && (this.state.ProgramItems !== prevState.ProgramItems || this.state.UserProfiles !== prevState.UserProfiles || this.state.allChannels !== prevState.allChannels)) {
             let options = [];
-            options = this.state.ProgramItems.filter(item=>item.get("chatSID") != null).map(item => ({labeltext: item.get("title"), value: item.id, object: item,
-            label: <ProgramItemDisplay id={item.id} auth={this.props.appState} hideLink={true} />}));
+            options = this.state.ProgramItems.filter(item => item.get("chatSID") != null).map(item => ({
+                labeltext: item.get("title"), value: item.id, object: item,
+                label: <ProgramItemDisplay id={item.id} auth={this.props.appState} hideLink={true} />
+            }));
             options = options.concat(this.state.UserProfiles.map(profile => ({
                 labeltext: profile.get("displayName"),
                 value: profile.id,
@@ -86,14 +88,14 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     // @ts-ignore
                     if (chan.attributes && (chan.attributes.mode !== "directMessage"
                         // && chan.attributes.category !== 'socialSpace'
-                            //@ts-ignore
+                        //@ts-ignore
                         && chan.attributes.category !== 'programItem' && chan.attributes.category !== "breakoutRoom"
-                        ))
+                    ))
                         return true;
                 }
                 return false;
-            }).map(chan=>{
-                return {label: chan.friendlyName, value: chan.sid, object: chan, labeltext: chan.friendlyName};
+            }).map(chan => {
+                return { label: chan.friendlyName, value: chan.sid, object: chan, labeltext: chan.friendlyName };
             });
             // @ts-ignore
             options = options.concat(moreOptions);
@@ -105,28 +107,28 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
 
     componentDidMount(): void {
         //@ts-ignore
-        this.props.appState?.refreshUser(null, false).then((user)=>{
+        this.props.appState?.refreshUser(null, false).then((user) => {
             this.props.multiChatWindow.registerChannelConsumer(this);
-            this.props.appState?.programCache.getProgramItems(this).then((items:ProgramItem[])=>{
+            this.props.appState?.programCache.getProgramItems(this).then((items: ProgramItem[]) => {
                 this.haveProgram = true;
-                this.setState({ProgramItems: items});
+                this.setState({ ProgramItems: items });
             })
         });
 
     }
 
-    async createChannel(title: string, description: string, autoJoin: boolean) : Promise<Channel>{
+    async createChannel(title: string, description: string, autoJoin: boolean): Promise<Channel> {
         let twilio = this.props.appState?.chatClient.twilio;
-        if(!twilio)
+        if (!twilio)
             throw "Not connected to twilio";
         let attributes = {
             description: description,
             category: 'public-global',
-            isAutoJoin: autoJoin ? "true":"false",
+            isAutoJoin: autoJoin ? "true" : "false",
             mode: 'group',
             type: 'public'
         };
-        return this.props.appState?.chatClient.callWithRetry(()=>twilio?.createChannel({
+        return this.props.appState?.chatClient.callWithRetry(() => twilio?.createChannel({
             friendlyName: title,
             isPrivate: false,
             attributes: attributes
@@ -140,8 +142,8 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             values.description,
             values.autoJoin
         );
-        let room = await this.props.appState?.chatClient.callWithRetry(()=>newChannel.join());
-        this.setState({newChannelVisible: false});
+        let room = await this.props.appState?.chatClient.callWithRetry(() => newChannel.join());
+        this.setState({ newChannelVisible: false });
         this.props.appState?.chatClient.openChat(newChannel.sid, false);
     }
 
@@ -180,11 +182,11 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         // if (this.state.loading)
         //     return <Spin/>
         let addChannelButton = <></>
-        if(this.props.appState?.isModerator)
+        if (this.props.appState?.isModerator)
             addChannelButton = <Button size="small"
-                                       onClick={()=>{this.setState({newChannelVisible: true})}}
-                                       type="primary"
-                                       >Create a new text channel</Button>
+                onClick={() => { this.setState({ newChannelVisible: true }) }}
+                type="primary"
+            >Create a new text channel</Button>
 
         let sorted = this.state.joinedChannels.filter(sid => {
             // @ts-ignore   TS: fixme  
@@ -196,15 +198,15 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             }
             return false;
         }).sort((sid1: string, sid2: string) => {
-                // @ts-ignore   TS: fixme  
-                let chan1 = this.props.appState?.chatClient.joinedChannels[sid1];
-                // @ts-ignore   TS: fixme  
-                let chan2 = this.props.appState?.chatClient.joinedChannels[sid2];
-                return this.sortChannels(chan1.channel, chan2.channel);
-            }
+            // @ts-ignore   TS: fixme  
+            let chan1 = this.props.appState?.chatClient.joinedChannels[sid1];
+            // @ts-ignore   TS: fixme  
+            let chan2 = this.props.appState?.chatClient.joinedChannels[sid2];
+            return this.sortChannels(chan1.channel, chan2.channel);
+        }
         );
         let dms = sorted.filter(sid => {
-                        // @ts-ignore   TS: fixme  
+            // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
             if (chan) {
                 if (chan.attributes && (chan.attributes.mode === "directMessage"))
@@ -213,19 +215,19 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             return false;
         });
         let programChats = sorted.filter(sid => {
-                        // @ts-ignore   TS: fixme  
+            // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
-            if(chan){
-                if(chan.attributes && (chan.attributes.category === 'programItem'))
+            if (chan) {
+                if (chan.attributes && (chan.attributes.category === 'programItem'))
                     return true;
             }
             return false;
         });
         let otherChannels = sorted.filter(sid => {
-                        // @ts-ignore   TS: fixme  
+            // @ts-ignore   TS: fixme  
             let chan = this.props.appState?.chatClient.joinedChannels[sid];
-            if(chan){
-                if(chan.attributes && (chan.attributes.mode !== "directMessage" //&& chan.attributes.category !== 'socialSpace'
+            if (chan) {
+                if (chan.attributes && (chan.attributes.mode !== "directMessage" //&& chan.attributes.category !== 'socialSpace'
                     && chan.attributes.category !== 'programItem'))
                     return true;
             }
@@ -234,71 +236,70 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
 
         return <div id="channelChanger">
             <Select showSearch={true}
-                    placeholder="Search for user/paper/chat"
-                    className="chat-search"
-                    value={this.state.filter}
-                    showArrow={false}
-                    dropdownMatchSelectWidth={false}
-                    options={this.state.searchOptions}
-                    filterOption={(input, option) =>
-                    {
+                placeholder="Search for user/paper/chat"
+                className="chat-search"
+                value={this.state.filter}
+                showArrow={false}
+                dropdownMatchSelectWidth={false}
+                options={this.state.searchOptions}
+                filterOption={(input, option) => {
 
-                        if (input.length >= 3 && option && option.labeltext){
-                            let label = option.labeltext;
-                            //@ts-ignore
-                            return label.toLowerCase().indexOf(input.toLowerCase()) >= 0;
+                    if (input.length >= 3 && option && option.labeltext) {
+                        let label = option.labeltext;
+                        //@ts-ignore
+                        return label.toLowerCase().indexOf(input.toLowerCase()) >= 0;
+                    }
+                    return false;
+                }
+                }
+                loading={this.state.openingChat}
+                onSelect={async (item, option) => {
+                    let obj = option.object;
+                    let sid;
+                    // @ts-ignore
+                    this.setState({ openingChat: true, filter: option.label })
+                    if (obj instanceof ProgramItem) {
+                        sid = obj.get("chatSID");
+                        if (!sid) {
+                            sid = await Parse.Cloud.run("chat-getSIDForProgramItem", {
+                                programItem: obj.id
+                            });
                         }
-                        return false;
-                    }
-                    }
-                    loading={this.state.openingChat}
-                    onSelect={async (item, option)=>{
-                        let obj = option.object;
-                        let sid;
-                        // @ts-ignore
-                        this.setState({openingChat: true, filter: option.label})
-                        if (obj instanceof ProgramItem) {
-                            sid = obj.get("chatSID");
-                            if (!sid){
-                                    sid = await Parse.Cloud.run("chat-getSIDForProgramItem", {
-                                        programItem: obj.id
-                                    });
-                            }
-                            if (sid) {
-                                await this.props.appState?.chatClient.openChatAndJoinIfNeeded(sid, false);
-                            }
-                            else {
-                                message.error("Unable to find chat ID for " + obj.get("title"))
-                            }
-                        } else if (obj instanceof UserProfile) {
-                            await this.props.appState?.helpers.createOrOpenDM(obj);
+                        if (sid) {
+                            await this.props.appState?.chatClient.openChatAndJoinIfNeeded(sid, false);
+                        }
+                        else {
+                            message.error("Unable to find chat ID for " + obj.get("title"))
+                        }
+                    } else if (obj instanceof UserProfile) {
+                        await this.props.appState?.helpers.createOrOpenDM(obj);
                         // } else if (obj instanceof Channel) {  This does not work!
-                        } else if (obj.sid) {
-                            await this.props.appState?.chatClient.openChatAndJoinIfNeeded(obj.sid, false);
-                        }
-                        // @ts-ignore
-                        this.setState({openingChat: false, filter: undefined, searchOptions: []})
+                    } else if (obj.sid) {
+                        await this.props.appState?.chatClient.openChatAndJoinIfNeeded(obj.sid, false);
                     }
+                    // @ts-ignore
+                    this.setState({ openingChat: false, filter: undefined, searchOptions: [] })
+                }
+                }
+                notFoundContent={this.state.searchLoading ? <Spin size="small" /> : null}
+                onSearch={async (val) => {
+                    if (!this.fetchingSearchOptions) {
+                        this.fetchingSearchOptions = true;
+                        this.setState({ searchLoading: true });
+                        let profiles = await this.props.appState?.programCache.getUserProfiles(this);
+                        this.setState({ UserProfiles: profiles, searchLoading: false })
                     }
-                    notFoundContent={this.state.searchLoading ? <Spin size="small" /> : null}
-                    onSearch={async (val) => {
-                        if (!this.fetchingSearchOptions) {
-                            this.fetchingSearchOptions = true;
-                            this.setState({searchLoading: true});
-                            let profiles = await this.props.appState?.programCache.getUserProfiles(this);
-                            this.setState({UserProfiles: profiles, searchLoading: false})
-                        }
-                        if (val.length >= 3 && this.state.searchOptions.length !== this.allSearchOptions.length) 
-                            this.setState({searchOptions: this.allSearchOptions});
-                        if (val.length <= 2 && this.state.searchOptions.length === this.allSearchOptions.length) 
-                            this.setState({searchOptions: []});
-                    }
-                    }
+                    if (val.length >= 3 && this.state.searchOptions.length !== this.allSearchOptions.length)
+                        this.setState({ searchOptions: this.allSearchOptions });
+                    if (val.length <= 2 && this.state.searchOptions.length === this.allSearchOptions.length)
+                        this.setState({ searchOptions: [] });
+                }
+                }
             />
             <ChannelCreateForm visible={this.state.newChannelVisible} onCancel={() => {
-                this.setState({'newChannelVisible': false})
-                }}
-                onCreate={this.createNewChannel.bind(this)}/>
+                this.setState({ 'newChannelVisible': false })
+            }}
+                onCreate={this.createNewChannel.bind(this)} />
 
             {addChannelButton}
             {/*<UpdateCreateForm visible={this.state.editChannelVisible}*/}
@@ -306,26 +307,26 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             {/*                  onCreate={this.updateChannel.bind(this)}*/}
             {/*                  values={this.state.editingChannel} />*/}
             <Menu mode="inline"
-                  className="activeRoomsList"
+                className="activeRoomsList"
                 // style={{height: "calc(100vh - "+ topHeight+ "px)", overflowY:"auto", overflowX:"visible"}}
-                  style={{
-                      // height: "100%",
-                      // overflow: 'auto',
-                      // display: 'flex',
-                      // flexDirection: 'column-reverse',
-                      border: '1px solid #FAFAFA'
+                style={{
+                    // height: "100%",
+                    // overflow: 'auto',
+                    // display: 'flex',
+                    // flexDirection: 'column-reverse',
+                    border: '1px solid #FAFAFA'
 
-                  }}
-                  inlineIndent={0}
+                }}
+                inlineIndent={0}
 
-                  onSelect={(selected)=>{
-                      if(selected.key) {
-                          this.props.appState?.chatClient.openChat(selected.key, false);
-                      }
-                  }}
-                  // selectedKeys={selectedKeys}
-                  defaultOpenKeys={['joinedChannels','dms','programChannels','otherPublicChannels']}
-                  forceSubMenuRender={true}
+                onSelect={(selected) => {
+                    if (selected.key) {
+                        this.props.appState?.chatClient.openChat(selected.key, false);
+                    }
+                }}
+                // selectedKeys={selectedKeys}
+                defaultOpenKeys={['joinedChannels', 'dms', 'programChannels', 'otherPublicChannels']}
+                forceSubMenuRender={true}
             >
                 <Menu.SubMenu key="dms" title="Direct Messages">
                     {dms.map((chan) => {
@@ -333,32 +334,32 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         // if (this.state.filteredUser === user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan} className={className}>
-                            <CollapsedChatDisplay sid={chan}  category="dm" noLink={true}/>
+                            <CollapsedChatDisplay sid={chan} category="dm" noLink={true} />
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })
                     }
                 </Menu.SubMenu>
-                    <Menu.SubMenu key="joinedChannels" title="Subscribed">
-                        {otherChannels.map((chan) => {
-                            let className = "personHoverable";
-                            // if (this.state.filteredUser === user.id)
-                            //     className += " personFiltered"
-                            return <Menu.Item key={chan} className={className}>
-                                <CollapsedChatDisplay sid={chan}  category="subscriptions" noLink={true}/>
-                                {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
-                            </Menu.Item>
-                        })
-                        }
-                    </Menu.SubMenu>
+                <Menu.SubMenu key="joinedChannels" title="Subscribed">
+                    {otherChannels.map((chan) => {
+                        let className = "personHoverable";
+                        // if (this.state.filteredUser === user.id)
+                        //     className += " personFiltered"
+                        return <Menu.Item key={chan} className={className}>
+                            <CollapsedChatDisplay sid={chan} category="subscriptions" noLink={true} />
+                            {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
+                        </Menu.Item>
+                    })
+                    }
+                </Menu.SubMenu>
 
                 <Menu.SubMenu key="otherPublicChannels" title={<span>Not subscribed</span>}>
                     {
                         this.state.allChannels
                             .filter(chan => chan && chan.sid &&
-                            //@ts-ignore
-                            // (chan.attributes && chan.attributes.category !== 'socialSpace') && 
-                                chan.attributes.category !== 'breakoutRoom' && chan.attributes.category !== "programItem" && 
+                                //@ts-ignore
+                                // (chan.attributes && chan.attributes.category !== 'socialSpace') && 
+                                chan.attributes.category !== 'breakoutRoom' && chan.attributes.category !== "programItem" &&
                                 !this.state.joinedChannels.includes(chan.sid))
                             .sort((chan1, chan2) => {
                                 return this.sortChannels(chan1, chan2);
@@ -368,7 +369,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                                 // if (this.state.filteredUser === user.id)
                                 //     className += " personFiltered"
                                 return <Menu.Item key={chan.sid} className={className}>
-                                    <CollapsedChatDisplay sid={chan.sid} channel={chan} category="others" noLink={true}/>
+                                    <CollapsedChatDisplay sid={chan.sid} channel={chan} category="others" noLink={true} />
                                     {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                                 </Menu.Item>
                             })
@@ -380,7 +381,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                         // if (this.state.filteredUser === user.id)
                         //     className += " personFiltered"
                         return <Menu.Item key={chan} className={className}>
-                            <CollapsedChatDisplay sid={chan} category="papers"  noLink={true}/>
+                            <CollapsedChatDisplay sid={chan} category="papers" noLink={true} />
                             {/*<UserStatusDisplay popover={true} profileID={user.id}/>*/}
                         </Menu.Item>
                     })
@@ -392,9 +393,9 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
     }
 }
 // @ts-ignore
-const UpdateCreateForm = ({visible, onCreate, onCancel, values}) => {
+const UpdateCreateForm = ({ visible, onCreate, onCancel, values }) => {
     const [form] = Form.useForm();
-    if(!values)
+    if (!values)
         return <div></div>
     return (
         <Modal
@@ -408,17 +409,17 @@ const UpdateCreateForm = ({visible, onCreate, onCancel, values}) => {
             ]}
             cancelText="Cancel"
             onCancel={onCancel}
-            // onOk={() => {
-            //     form
-            //         .validateFields()
-            //         .then(values => {
-            //             form.resetFields();
-            //             onCreate(values);
-            //         })
-            //         .catch(info => {
-            //             console.log('Validate Failed:', info);
-            //         });
-            // }}
+        // onOk={() => {
+        //     form
+        //         .validateFields()
+        //         .then(values => {
+        //             form.resetFields();
+        //             onCreate(values);
+        //         })
+        //         .catch(info => {
+        //             console.log('Validate Failed:', info);
+        //         });
+        // }}
         >
             <Form
                 form={form}
@@ -453,7 +454,7 @@ const UpdateCreateForm = ({visible, onCreate, onCancel, values}) => {
                     <Input defaultValue={values.uniqueName} />
                 </Form.Item>
                 <Form.Item name="description" label="Description (optional)">
-                    <Input type="textarea"/>
+                    <Input type="textarea" />
                 </Form.Item>
                 <Form.Item name="auto-join" className="collection-create-form_last-form-item" label="Automatically join all users to this room">
                     <Switch />
@@ -464,7 +465,7 @@ const UpdateCreateForm = ({visible, onCreate, onCancel, values}) => {
 };
 
 // @ts-ignore
-const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
+const ChannelCreateForm = ({ visible, onCreate, onCancel }) => {
     const [form] = Form.useForm();
     return (
         <Modal
@@ -478,17 +479,17 @@ const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
             ]}
             cancelText="Cancel"
             onCancel={onCancel}
-            // onOk={() => {
-            //     form
-            //         .validateFields()
-            //         .then(values => {
-            //             form.resetFields();
-            //             onCreate(values);
-            //         })
-            //         .catch(info => {
-            //             console.log('Validate Failed:', info);
-            //         });
-            // }}
+        // onOk={() => {
+        //     form
+        //         .validateFields()
+        //         .then(values => {
+        //             form.resetFields();
+        //             onCreate(values);
+        //         })
+        //         .catch(info => {
+        //             console.log('Validate Failed:', info);
+        //         });
+        // }}
         >
             <Form
                 form={form}
@@ -520,10 +521,10 @@ const ChannelCreateForm = ({visible, onCreate, onCancel}) => {
                         },
                     ]}
                 >
-                    <Input/>
+                    <Input />
                 </Form.Item>
                 <Form.Item name="description" label="Description (optional)">
-                    <Input type="textarea"/>
+                    <Input type="textarea" />
                 </Form.Item>
                 <Form.Item name="autoJoin" className="collection-create-form_last-form-item" label="Automatically join all users to this room" valuePropName="checked">
                     <Switch />
@@ -536,10 +537,10 @@ const
     AuthConsumer = (props: PublicChannelChangerProps) => (
         <AuthUserContext.Consumer>
             {value => (
-    <ChatChannelChanger {...props} appState={value}/>
-)}
-</AuthUserContext.Consumer>
+                <ChatChannelChanger {...props} appState={value} />
+            )}
+        </AuthUserContext.Consumer>
 
-);
+    );
 
 export default AuthConsumer;

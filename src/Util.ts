@@ -8,4 +8,4 @@ export function assert(input: any): asserts input { // <-- not a typo
 }
 
 // @Jon: Why does a module called Utils have an export default??
-export default {YOUTUBE_API_KEY: process.env.REACT_APP_YOUTUBE_API_KEY};
+export default { YOUTUBE_API_KEY: process.env.REACT_APP_YOUTUBE_API_KEY };

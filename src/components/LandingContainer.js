@@ -1,6 +1,6 @@
 import React from "react";
 
-export default class LandingContainer extends React.Component{
+export default class LandingContainer extends React.Component {
     constructor(props) {
         super(props);
         let backgroundImgID = Number(localStorage.getItem("backgroundImgID"));
@@ -9,7 +9,7 @@ export default class LandingContainer extends React.Component{
             backgroundImgID = 1;
         }
         localStorage.setItem("backgroundImgID", backgroundImgID);
-        this.state ={backgroundImgID: backgroundImgID};
+        this.state = { backgroundImgID: backgroundImgID };
 
     }
 

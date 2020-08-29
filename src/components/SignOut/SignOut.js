@@ -1,8 +1,8 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import * as ROUTES from '../../constants/routes';
-import {Parse} from "../parse/parse";
+import { Parse } from "../parse/parse";
 import withAuthentication from "../Session/withClowdrState"
-import {AuthUserContext} from "../Session";
+import { AuthUserContext } from "../Session";
 
 class SignOut extends Component {
     constructor(props) {
@@ -10,10 +10,10 @@ class SignOut extends Component {
     }
     componentDidMount() {
         Parse.User.logOut().then(() => {
-            this.props.refreshUser(null, true).then(()=>{
+            this.props.refreshUser(null, true).then(() => {
                 this.props.history.push(ROUTES.LANDING);
             });
-        }).catch((err)=>{
+        }).catch((err) => {
             console.log(err);
         });
     }
@@ -23,10 +23,10 @@ class SignOut extends Component {
     }
 }
 
-const AuthConsumer = (props)=>(
+const AuthConsumer = (props) => (
     <AuthUserContext.Consumer>
         {value => (
-            <SignOut {...props} user={value.user} refreshUser={value.refreshUser}/>
+            <SignOut {...props} user={value.user} refreshUser={value.refreshUser} />
         )}
     </AuthUserContext.Consumer>
 );

@@ -205,7 +205,7 @@ class Lobby extends React.Component {
                 }
                 for (let item of this.state.ProgramItems) {
                     if (item.get("breakoutRoom")) {
-                        let room = this.state.activePublicVideoRooms? this.state.activePublicVideoRooms.find(v => v.id === item.get("breakoutRoom").id) : undefined;
+                        let room = this.state.activePublicVideoRooms ? this.state.activePublicVideoRooms.find(v => v.id === item.get("breakoutRoom").id) : undefined;
                         if (room && breakoutRoomsForTracks[item.get('track').id]) {
                             breakoutRoomsForTracks[item.get("track").id].push(room);
                         }

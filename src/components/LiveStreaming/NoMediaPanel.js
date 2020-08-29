@@ -1,6 +1,6 @@
-import React, {Component} from "react";
-import {Card} from 'antd';
-import {StopOutlined} from "@ant-design/icons";
+import React, { Component } from "react";
+import { Card } from 'antd';
+import { StopOutlined } from "@ant-design/icons";
 
 import AuthUserContext from "../Session/context";
 import nomediaImg from "./nomedia.png";
@@ -14,7 +14,7 @@ class NoMediaPanel extends Component {
             count: 0
         };
     }
-    
+
     componentDidMount() {
     }
 
@@ -23,27 +23,27 @@ class NoMediaPanel extends Component {
 
     componentDidUpdate(prevProps) {
     }
-    
+
     render() {
 
         let qa = "";
         if (this.props.vid && this.props.vid.id !== this.props.video.id) { // It's not us! Unmount!
             return <div></div>
         }
-        
-        let roomName = this.props.video.get('name').length < 35 ? this.props.video.get('name'): 
-                        <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0, 35) + "..."}</span>;
 
-        return  <Card hoverable
-                      cover={<img alt="poster" style={{width:311, height:175 }} src={nomediaImg}  />}
+        let roomName = this.props.video.get('name').length < 35 ? this.props.video.get('name') :
+            <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0, 35) + "..."}</span>;
+
+        return <Card hoverable
+            cover={<img alt="poster" style={{ width: 311, height: 175 }} src={nomediaImg} />}
         >
             <Card.Meta title={roomName}
-            description={<div>
-                {this.props.mysessions.map(s => {
-                    return <div key={s.id}>{s.get("title")}</div>
-                })}
-            </div>}></Card.Meta>
-                </Card>
+                description={<div>
+                    {this.props.mysessions.map(s => {
+                        return <div key={s.id}>{s.get("title")}</div>
+                    })}
+                </div>}></Card.Meta>
+        </Card>
     }
 }
 

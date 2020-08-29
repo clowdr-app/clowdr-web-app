@@ -1,7 +1,7 @@
 const LiveVideoSourceMappings = {
-    "YouTube" : {
-        url : "https://www.youtube.com/embed/",
-        vars : {
+    "YouTube": {
+        url: "https://www.youtube.com/embed/",
+        vars: {
             // mute : 1,
             // autoplay : 1,
             // version: 3,
@@ -9,16 +9,16 @@ const LiveVideoSourceMappings = {
             // enablejsapi: 1
         }
     },
-    "Twitch" : {
-        url : "https://player.twitch.com/",
-        vars : {
-            mute : 1,
-            autoplay : 1
+    "Twitch": {
+        url: "https://player.twitch.com/",
+        vars: {
+            mute: 1,
+            autoplay: 1
         }
     },
-    "iQIYI" : {
-        url : "https://live.iqiyi.com/", //https://m-live.iqiyi.com/177383?source=
-        vars : {
+    "iQIYI": {
+        url: "https://live.iqiyi.com/", //https://m-live.iqiyi.com/177383?source=
+        vars: {
             // pv : "0.2",
             // source: "localhost"
             // atype : "qiyi",
@@ -33,13 +33,13 @@ const LiveVideoSourceMappings = {
             // qd_vip: "0"
         }
     },
-    "ZoomUS" : {
+    "ZoomUS": {
         url: "https://zoom.us/j/",
         vars: {
             pwd: "TBD"
         }
     },
-    "ZoomCN" : {
+    "ZoomCN": {
         url: "https://zoom.edu.cn/j/",
         vars: {
             pwd: "TBD"
@@ -55,7 +55,7 @@ export function videoURLFromData(src, id, pwd) {
     id = id ? id.trim() : id;
     pwd = pwd ? pwd.trim() : pwd;
     // console.log("videoURLFromData---" + src + "---" + id + " " + pwd);
- 
+
     var queryVars = {};
     if (LiveVideoSourceMappings[src]) {
         queryVars = Object.keys(LiveVideoSourceMappings[src].vars);

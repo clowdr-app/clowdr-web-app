@@ -1,23 +1,23 @@
-import React, {Component} from 'react';
-import {BrowserRouter, NavLink, Route} from 'react-router-dom';
+import React, { Component } from 'react';
+import { BrowserRouter, NavLink, Route } from 'react-router-dom';
 import BrowserDetection from 'react-browser-detection';
-import {Button, Divider, Layout, message, Select, Spin, Tooltip, Typography, Upload} from 'antd';
+import { Button, Divider, Layout, message, Select, Spin, Tooltip, Typography, Upload } from 'antd';
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
 import SignIn from "./components/SignIn"
 import AccountFromToken from "./components/Account/AccountFromToken"
-import {UploadOutlined} from '@ant-design/icons';
+import { UploadOutlined } from '@ant-design/icons';
 import './App.css';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
 import Moderation from "./components/Moderation";
 
-import {Program} from "./components/Program";
+import { Program } from "./components/Program";
 import VideoRoom from "./components/VideoChat/VideoRoom"
 import SlackToVideo from "./components/Slack/slackToVideo"
 
-import {withAuthentication} from "./components/Session";
+import { withAuthentication } from "./components/Session";
 
 import LiveVideosArea from "./components/LiveStreaming";
 import Exhibits from "./components/Exhibits";
@@ -47,7 +47,7 @@ import SocialTab from "./components/SocialTab";
 import About from "./components/About";
 import Help from "./components/Help";
 import SidebarChat from "./components/SocialTab/SidebarChat";
-import {withRouter} from "react-router";
+import { withRouter } from "react-router";
 import BottomChat from "./components/SocialTab/BottomChat";
 import ProgramItem from "./components/ProgramItem";
 import UsersList from "./components/Admin/Users";
@@ -62,7 +62,7 @@ import EmojiPickerPopover from "./components/Chat/EmojiPickerPopover";
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
-const {Header, Content, Footer, Sider} = Layout;
+const { Header, Content, Footer, Sider } = Layout;
 class App extends Component {
 
     constructor(props) {
@@ -82,17 +82,17 @@ class App extends Component {
             isShowOtherPanes: false,
         }
 
-        if(window.location.pathname.startsWith("/fromSlack") &&!this.props.clowdrAppState.user){
+        if (window.location.pathname.startsWith("/fromSlack") && !this.props.clowdrAppState.user) {
             this.state.isMagicLogin = true;
         }
     }
 
     dirty() {
-        this.setState({dirty: !this.state.dirty})
+        this.setState({ dirty: !this.state.dirty })
     }
 
     isSlackAuthOnly() {
-        if(!this.state.conference)
+        if (!this.state.conference)
             return true;
         return !this.state.conference.get("isIncludeAllFeatures");
     }
@@ -132,71 +132,71 @@ class App extends Component {
     }
 
     siteHeader() {
-        if (!this.state.conference){
-            return <GenericHeader/>
+        if (!this.state.conference) {
+            return <GenericHeader />
         } else {
             let headerImage = this.state.conference.get("headerImage");
             let headerText = this.state.conference.get("headerText");
             let confSwitcher;
             let clowdrActionButtons;
-            if(this.props.clowdrAppState.validConferences && this.props.clowdrAppState.validConferences.length > 1 && this.isSlackAuthOnly()){
+            if (this.props.clowdrAppState.validConferences && this.props.clowdrAppState.validConferences.length > 1 && this.isSlackAuthOnly()) {
                 confSwitcher = <Select
-                                       placeholder="Change conference"
-                                       onChange={(conf)=>{
-                                           console.log(conf);
-                    this.props.clowdrAppState.helpers.setActiveConference(this.props.clowdrAppState.validConferences[conf]);
-                }}>
+                    placeholder="Change conference"
+                    onChange={(conf) => {
+                        console.log(conf);
+                        this.props.clowdrAppState.helpers.setActiveConference(this.props.clowdrAppState.validConferences[conf]);
+                    }}>
                     {
-                        this.props.clowdrAppState.validConferences.map((conf,i)=>
+                        this.props.clowdrAppState.validConferences.map((conf, i) =>
                             <Select.Option key={i}>{conf.get("conferenceName")}</Select.Option>)
                     }
                 </Select>
                 clowdrActionButtons = <span>
-                {(this.props.clowdrAppState.user && this.props.clowdrAppState.isModerator ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
+                    {(this.props.clowdrAppState.user && this.props.clowdrAppState.isModerator ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
                     <Tooltip mouseEnterDelay={0.5} title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
-                <Tooltip mouseEnterDelay={0.5} title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
-                <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
+                    <Tooltip mouseEnterDelay={0.5} title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
+                    <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
                 </span>
 
-                if (confSwitcher){
-                    confSwitcher = <span style={{float: "right"}}>{confSwitcher} {clowdrActionButtons}</span>
+                if (confSwitcher) {
+                    confSwitcher = <span style={{ float: "right" }}>{confSwitcher} {clowdrActionButtons}</span>
                 }
                 else
-                    confSwitcher= <span style={{float: "right"}}>{clowdrActionButtons}</span>;
+                    confSwitcher = <span style={{ float: "right" }}>{clowdrActionButtons}</span>;
 
                 if (headerImage) {
                     let logo = ""
                     if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
                         logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
-                                <img src={headerImage.url()} className="App-logo" height="75" alt="logo" title="Click to replace logo"/> 
-                            </Upload>
+                            <img src={headerImage.url()} className="App-logo" height="75" alt="logo" title="Click to replace logo" />
+                        </Upload>
                     }
                     else
-                        logo = <img src={headerImage.url()} className="App-logo" height="75" alt="logo"/> 
-        
-                    return <table className="site-layout-background" style={{height: "75px", clear: "both"}}>
-                            <tbody><tr>
+                        logo = <img src={headerImage.url()} className="App-logo" height="75" alt="logo" />
+
+                    return <table className="site-layout-background" style={{ height: "75px", clear: "both" }}>
+                        <tbody><tr>
                             <td>{logo}</td>
-                            <td><Typography.Title style={{display: "inherit"}}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
-                            </tr></tbody></table>
+                            <td><Typography.Title style={{ display: "inherit" }}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
+                        </tr></tbody></table>
                 }
                 else if (headerText) {
                     let logo = "";
                     if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
                         logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
-                                        <Button type="primary" size="small" title="Upload conference logo">
-                                            <UploadOutlined />
-                                        </Button>
-                                </Upload>
+                            <Button type="primary" size="small" title="Upload conference logo">
+                                <UploadOutlined />
+                            </Button>
+                        </Upload>
                     }
-                    return <table className="site-layout-background" style={{height: "75px", clear: "both"}}>
-                            <tbody><tr>
-                                <td>{logo}</td><td><Typography.Title style={{display: 'inherit'}}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
-                            </tr></tbody></table>
+                    return <table className="site-layout-background" style={{ height: "75px", clear: "both" }}>
+                        <tbody><tr>
+                            <td>{logo}</td><td><Typography.Title style={{ display: 'inherit' }}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
+                        </tr></tbody></table>
                 } else
-                    return <div className="site-layout-background" style={{clear:'both' }}>
-                    <div style={{float:'left'}}><Typography.Title>
-                        {this.state.conference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</div>
+                    return <div className="site-layout-background" style={{ clear: 'both' }}>
+                        <div style={{ float: 'left' }}><Typography.Title>
+                            {this.state.conference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</div>
             }
         }
     }
@@ -207,30 +207,30 @@ class App extends Component {
         }
 
         let logo = undefined;
-        let className="logo"
+        let className = "logo"
         let headerImage = this.state.conference.get("headerImage");
         if (headerImage) {
             if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
-                logo = <Upload style={{verticalAlign:"top"}} accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
-                           <img src={headerImage.url()} height="50" alt="logo" title="Click to replace logo"/> 
-                       </Upload>
+                logo = <Upload style={{ verticalAlign: "top" }} accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
+                    <img src={headerImage.url()} height="50" alt="logo" title="Click to replace logo" />
+                </Upload>
             }
             else
-                logo = <img src={headerImage.url()}  height="50" alt="logo"/> 
+                logo = <img src={headerImage.url()} height="50" alt="logo" />
 
         }
         else {
             if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
                 logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
-                                <Button type="primary" size="small" title="Upload conference logo">
-                                    <UploadOutlined />
-                                </Button>
-                        </Upload>
+                    <Button type="primary" size="small" title="Upload conference logo">
+                        <UploadOutlined />
+                    </Button>
+                </Upload>
             }
             if (!logo)
                 className = "missing-logo";
         }
-        return <Header><div className={className}>{logo}</div><LinkMenu/></Header>
+        return <Header><div className={className}>{logo}</div><LinkMenu /></Header>
 
     }
 
@@ -238,26 +238,26 @@ class App extends Component {
         if (!prevProps.clowdrAppState || prevProps.clowdrAppState.currentConference !== this.props.clowdrAppState.currentConference) {
             this.refreshConferenceInformation();
         }
-        if(this.state.chatHeight !== prevState.chatHeight && this.state.chatHeight !== this.chatSize){
+        if (this.state.chatHeight !== prevState.chatHeight && this.state.chatHeight !== this.chatSize) {
             this.chatSize = this.state.chatHeight;
-            this.chatPaneRef.current.setState({sizes: ["1", this.state.chatHeight]});
+            this.chatPaneRef.current.setState({ sizes: ["1", this.state.chatHeight] });
         }
         if (this.props.clowdrAppState.showingLanding !== this.state.showingLanding) {
-            this.setState({showingLanding: this.props.clowdrAppState.showingLanding});
+            this.setState({ showingLanding: this.props.clowdrAppState.showingLanding });
         }
         if (this.state.isMagicLogin && (!window.location.pathname.startsWith("/fromSlack") || this.props.clowdrAppState.user)) {
-            this.setState({isMagicLogin: false});
+            this.setState({ isMagicLogin: false });
         }
-        if(!this.state.isShowOtherPanes && this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
-            this.setState({isShowOtherPanes: true});
+        if (!this.state.isShowOtherPanes && this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
+            this.setState({ isShowOtherPanes: true });
     }
 
     componentDidMount() {
         if (this.props.clowdrAppState.currentConference)
             this.refreshConferenceInformation();
         this.props.clowdrAppState.history = this.props.history;
-        if(this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
-            this.setState({isShowOtherPanes: true});
+        if (this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
+            this.setState({ isShowOtherPanes: true });
 
         localStorage.setItem('leftPaneSize', '250');
         localStorage.setItem('rightPaneSize', '250');
@@ -265,7 +265,7 @@ class App extends Component {
     }
 
     refreshConferenceInformation() {
-        this.setState({conference: this.props.clowdrAppState.currentConference});
+        this.setState({ conference: this.props.clowdrAppState.currentConference });
     }
 
     routes() {
@@ -277,85 +277,85 @@ class App extends Component {
         if (this.isSlackAuthOnly()) {
             return <div>
                 {baseRoutes}
-                <Route exact path="/" component={Lobby}/>
-                <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
-                <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
-                <Route exact path="/signout" component={SignOut}/>
-                <Route exact path="/lobby" component={Lobby}/>
-                <Route exact path="/signin" component={SignIn}/>
-                <Route exact path="/about" component={About}/>
+                <Route exact path="/" component={Lobby} />
+                <Route exact path="/fromSlack/:team/:token" component={SlackToVideo} />
+                <Route exact path="/video/:conf/:roomName" component={VideoRoom} />
+                <Route exact path="/signout" component={SignOut} />
+                <Route exact path="/lobby" component={Lobby} />
+                <Route exact path="/signin" component={SignIn} />
+                <Route exact path="/about" component={About} />
                 <Route exact path="/help" component={Help} />
                 <Route exact path="/moderation" component={Moderation} />
 
                 <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
 
-                <Route exact path="/admin" component={(props)=><SignIn {...props} dontBounce={true}/>} />
+                <Route exact path="/admin" component={(props) => <SignIn {...props} dontBounce={true} />} />
             </div>
 
         }
         return (<div>
             {baseRoutes}
-            <Route exact path="/" component={Home}/>
-            <Route exact path="/breakoutRoom/:programConfKey1/:programConfKey2" component={ProgramItem}/>
-            <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem}/>
-            <Route exact path="/live/:when/:roomName?" component={LiveVideosArea}/>
+            <Route exact path="/" component={Home} />
+            <Route exact path="/breakoutRoom/:programConfKey1/:programConfKey2" component={ProgramItem} />
+            <Route exact path="/program/:programConfKey1/:programConfKey2" component={ProgramItem} />
+            <Route exact path="/live/:when/:roomName?" component={LiveVideosArea} />
 
-            <Route exact path="/program" component={Program}/>
+            <Route exact path="/program" component={Program} />
 
-            <Route exact path="/exhibits/:track/:style" component={Exhibits}/>
+            <Route exact path="/exhibits/:track/:style" component={Exhibits} />
             {/* <Route exact path="/exhibits/srcposters" component={SRCPosters}/> */}
 
-            <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
-            <Route exact path="/video/:parseRoomID" component={VideoRoom}/>
+            <Route exact path="/fromSlack/:team/:token" component={SlackToVideo} />
+            <Route exact path="/video/:parseRoomID" component={VideoRoom} />
 
-            <Route exact path="/video/:conf/:roomName" component={VideoRoom}/>
+            <Route exact path="/video/:conf/:roomName" component={VideoRoom} />
             <Route exact path="/moderation" component={Moderation} />
 
-            <Route exact path="/about" component={About}/>
+            <Route exact path="/about" component={About} />
             <Route exact path="/help" component={Help} />
             {/*<Route exact path="/channelList" component={ChannelList}/>*/}
 
-            <Route exact path="/account" component={Account}/>
-            <Route exact path="/videoChat/:roomId" component={VideoChat}/>
-            <Route exact path="/lobby" component={Lobby}/>
+            <Route exact path="/account" component={Account} />
+            <Route exact path="/videoChat/:roomId" component={VideoChat} />
+            <Route exact path="/lobby" component={Lobby} />
             <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
             {/* <Route exact path="/signup" component={SignUp}/> */}
-            <Route exact path="/signin" component={SignIn}/>
-            <Route exact path="/signout" component={SignOut}/>
-            <Route exact path="/admin" component={(props)=><SignIn {...props} dontBounce={true}/>} />
+            <Route exact path="/signin" component={SignIn} />
+            <Route exact path="/signout" component={SignOut} />
+            <Route exact path="/admin" component={(props) => <SignIn {...props} dontBounce={true} />} />
 
             {/*<Route exact path='/admin/schedule' component={withAuthentication(ScheduleList)} />*/}
             <Route exact path='/admin/users' component={UsersList} />
             {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
-            <Route exact path='/admin/clowdr' component={Clowdr}/>
-            <Route exact path='/admin/configuration' component={Configuration}/>
-            <Route exact path='/admin/registrations' component={Registrations}/>
-            <Route exact path='/admin/program/rooms' component={Rooms}/>
-            <Route exact path='/admin/program/tracks' component={Tracks}/>
-            <Route exact path='/admin/program/items' component={ProgramItems}/>
-            <Route exact path='/admin/program/sessions' component={ProgramSessions}/>
-            <Route exact path='/admin/program/programSummary' component={ProgramSummary}/>
+            <Route exact path='/admin/clowdr' component={Clowdr} />
+            <Route exact path='/admin/configuration' component={Configuration} />
+            <Route exact path='/admin/registrations' component={Registrations} />
+            <Route exact path='/admin/program/rooms' component={Rooms} />
+            <Route exact path='/admin/program/tracks' component={Tracks} />
+            <Route exact path='/admin/program/items' component={ProgramItems} />
+            <Route exact path='/admin/program/sessions' component={ProgramSessions} />
+            <Route exact path='/admin/program/programSummary' component={ProgramSummary} />
         </div>)
     }
 
     toggleLobbySider() {
-        this.setState({socialCollapsed: !this.state.socialCollapsed});
+        this.setState({ socialCollapsed: !this.state.socialCollapsed });
     }
     toggleChatSider() {
-        this.setState({chatCollapsed: !this.state.chatCollapsed});
+        this.setState({ chatCollapsed: !this.state.chatCollapsed });
     }
 
-    setChatWidth(w){
-        this.setState({chatWidth: w});
+    setChatWidth(w) {
+        this.setState({ chatWidth: w });
     }
-    setLobbyWidth(w){
-        this.setState({lobbyWidth: w});
+    setLobbyWidth(w) {
+        this.setState({ lobbyWidth: w });
     }
     render() {
         if (this.state.isMagicLogin) {
-            return <Route exact path="/fromSlack/:team/:token" component={SlackToVideo}/>
+            return <Route exact path="/fromSlack/:team/:token" component={SlackToVideo} />
         }
-        if(this.state.showingLanding){
+        if (this.state.showingLanding) {
             return <GenericLanding />
         }
         if (!this.state.conference) {
@@ -367,22 +367,22 @@ class App extends Component {
                     alignItems: "center",
                     justifyContent: "center"
                 }}>
-                    <Spin/>
+                    <Spin />
                 </div>
             }
         }
         let topHeight = 0;
         let topElement = document.getElementById("top-content");
-        if(topElement)
+        if (topElement)
             topHeight = topElement.clientHeight;
 
         let leftPaneSize = localStorage.getItem("leftPaneSize") ? localStorage.getItem("leftPaneSize") + "px" : "250px";
         let rightPaneSize = localStorage.getItem("rightPaneSize") ? localStorage.getItem("rightPaneSize") + "px" : "250px";
 
         return (
-                <div className="App">
-                    <EmojiPickerPopover />
-                    <div>
+            <div className="App">
+                <EmojiPickerPopover />
+                <div>
                     <Layout className="site-layout">
                         <div id="top-content">
                             {this.siteHeader()}
@@ -391,56 +391,56 @@ class App extends Component {
 
                         <Content>
 
-                        <div className="main-area" style={{ height:"calc(100vh - "+(topHeight )+"px)", overflow: "auto"}}>
+                            <div className="main-area" style={{ height: "calc(100vh - " + (topHeight) + "px)", overflow: "auto" }}>
 
-                            <SplitPane 
-                                onChange={(sizes) => {
-                                    localStorage.setItem('leftPaneSize', sizes[0]);
-                                    localStorage.setItem('rightPaneSize', sizes[2]);
-                                }}
-                            >
-                                {/* Left side Pane */}
-                                <Pane initialSize={this.state.isShowOtherPanes ? leftPaneSize : 0}>
-                                    <SocialTab collapsed={this.state.socialCollapsed} />
-                                </Pane>
-                                {/* Middle Pane */}
-                                <Pane>
-                                    <div className="middlePane">
-                                        <SplitPane split="horizontal" ref={this.chatPaneRef} onChange={(sizes)=>{
-                                            this.chatSize=sizes[1];
-                                        }}>
-                                            <Pane>
-                                                <div className="page-content">
+                                <SplitPane
+                                    onChange={(sizes) => {
+                                        localStorage.setItem('leftPaneSize', sizes[0]);
+                                        localStorage.setItem('rightPaneSize', sizes[2]);
+                                    }}
+                                >
+                                    {/* Left side Pane */}
+                                    <Pane initialSize={this.state.isShowOtherPanes ? leftPaneSize : 0}>
+                                        <SocialTab collapsed={this.state.socialCollapsed} />
+                                    </Pane>
+                                    {/* Middle Pane */}
+                                    <Pane>
+                                        <div className="middlePane">
+                                            <SplitPane split="horizontal" ref={this.chatPaneRef} onChange={(sizes) => {
+                                                this.chatSize = sizes[1];
+                                            }}>
+                                                <Pane>
+                                                    <div className="page-content">
 
-                                                {/*<div className="site-layout-background" style={{padding: 24}}>*/}
-                                                {this.routes()}
-                                                {/*</div>*/}
-                                                </div>
+                                                        {/*<div className="site-layout-background" style={{padding: 24}}>*/}
+                                                        {this.routes()}
+                                                        {/*</div>*/}
+                                                    </div>
 
-                                            </Pane>
-                                            <Pane initialSize={this.state.isShowOtherPanes ? this.chatSize : 0}>
-                                                <BottomChat setChatWindowHeight={(height)=>this.setState({chatHeight: height})}/>
-                                            </Pane>
-                                        </SplitPane>
-                                    </div>
-                                </Pane>
-                                {/* Right side Pane */}
-                                <Pane initialSize={this.state.isShowOtherPanes ? rightPaneSize : 0}>
-                                    <div className="chatTab" id="rightPopout">
-                                        <div id="activeUsersList"><ActiveUsersList /></div>
-                                        <div id="sidebarChat"><SidebarChat collapsed={this.state.chatCollapsed} /></div>
-                                    </div>
-                                </Pane>
-                            </SplitPane>
-                        </div>
+                                                </Pane>
+                                                <Pane initialSize={this.state.isShowOtherPanes ? this.chatSize : 0}>
+                                                    <BottomChat setChatWindowHeight={(height) => this.setState({ chatHeight: height })} />
+                                                </Pane>
+                                            </SplitPane>
+                                        </div>
+                                    </Pane>
+                                    {/* Right side Pane */}
+                                    <Pane initialSize={this.state.isShowOtherPanes ? rightPaneSize : 0}>
+                                        <div className="chatTab" id="rightPopout">
+                                            <div id="activeUsersList"><ActiveUsersList /></div>
+                                            <div id="sidebarChat"><SidebarChat collapsed={this.state.chatCollapsed} /></div>
+                                        </div>
+                                    </Pane>
+                                </SplitPane>
+                            </div>
                         </Content>
                     </Layout>
-                    </div>
-                    {/* <div style={{position:
+                </div>
+                {/* <div style={{position:
                     "sticky", bottom: 0}}>
                         <Chat />
                     </div> */}
-                </div>
+            </div>
         );
     }
 }
@@ -450,8 +450,8 @@ function capitalizeFirstLetter(str) {
 }
 
 let RouteredApp = withRouter(App);
-class ClowdrApp extends React.Component{
-    okBrowser = ()=><></>;
+class ClowdrApp extends React.Component {
+    okBrowser = () => <></>;
     browserHandler = {
         chrome: this.okBrowser,
         edge: this.okBrowser,
@@ -459,14 +459,14 @@ class ClowdrApp extends React.Component{
         default: this.okBrowser
     };
 
-   render() {
-       return <BrowserRouter basename={process.env.PUBLIC_URL}>
-           <BrowserDetection>
-               {this.browserHandler}
-           </BrowserDetection>
-               <RouteredApp clowdrAppState={this.props.clowdrAppState} />
-       </BrowserRouter>
-   }
+    render() {
+        return <BrowserRouter basename={process.env.PUBLIC_URL}>
+            <BrowserDetection>
+                {this.browserHandler}
+            </BrowserDetection>
+            <RouteredApp clowdrAppState={this.props.clowdrAppState} />
+        </BrowserRouter>
+    }
 }
 
 export default withAuthentication(ClowdrApp);

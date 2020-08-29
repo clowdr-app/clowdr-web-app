@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
-import {Button, Form, Input, Popconfirm, Select, Space, Spin, Table, Alert} from "antd";
+import React, { useState } from 'react';
+import { Button, Form, Input, Popconfirm, Select, Space, Spin, Table, Alert } from "antd";
 import Parse from "parse";
-import {AuthUserContext} from "../../../Session";
-import {ProgramContext} from "../../../Program";
-import {DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone} from '@ant-design/icons';
+import { AuthUserContext } from "../../../Session";
+import { ProgramContext } from "../../../Program";
+import { DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -22,17 +22,17 @@ class ProgramItems extends React.Component {
     }
 
     async componentDidMount() {
-       let [items, tracks, people] = await Promise.all([
-           this.props.auth.programCache.getProgramItems(this),
-           this.props.auth.programCache.getProgramTracks(this),
-           this.props.auth.programCache.getProgramPersons(this),
-       ]);
-       this.setState({
-           ProgramItems: items,
-           ProgramPersons: people,
-           ProgramTracks: tracks,
-           downloaded: true
-       })
+        let [items, tracks, people] = await Promise.all([
+            this.props.auth.programCache.getProgramItems(this),
+            this.props.auth.programCache.getProgramTracks(this),
+            this.props.auth.programCache.getProgramPersons(this),
+        ]);
+        this.setState({
+            ProgramItems: items,
+            ProgramPersons: people,
+            ProgramTracks: tracks,
+            downloaded: true
+        })
     }
 
     componentWillUnmount() {
@@ -44,28 +44,28 @@ class ProgramItems extends React.Component {
 
     render() {
         const EditableCell = ({
-                                  editing,
-                                  dataIndex,
-                                  title,
-                                  inputType,
-                                  record,
-                                  index,
-                                  children,
-                                  ...restProps
-                              }) => {
+            editing,
+            dataIndex,
+            title,
+            inputType,
+            record,
+            index,
+            children,
+            ...restProps
+        }) => {
             const inputNode = (dataIndex) => {
                 if (dataIndex === "title" || dataIndex === "abstract") {
-                    return <Input.TextArea autoSize={{ minRows: 2, maxRows: 10 }}/>;
+                    return <Input.TextArea autoSize={{ minRows: 2, maxRows: 10 }} />;
                 }
                 else if (dataIndex === "authors") {
                     return <Select
                         placeholder="Choose authors"
                         optionFilterProp="label"
-                        options={this.state.ProgramPersons.sort((a,b)=>(
+                        options={this.state.ProgramPersons.sort((a, b) => (
                             a.get('name').localeCompare(b.get('name'))
-                        )).map(p=>({value: p.id, label:p.get('name')}))}
+                        )).map(p => ({ value: p.id, label: p.get('name') }))}
                         mode="tags"
-                        />
+                    />
                 }
                 else {
                     return <Select
@@ -90,7 +90,7 @@ class ProgramItems extends React.Component {
                             style={{
                                 margin: 0,
                             }}
-                            rules={dataIndex === "authors" || dataIndex ==="abstract" ? []: [
+                            rules={dataIndex === "authors" || dataIndex === "abstract" ? [] : [
                                 {
                                     required: true,
                                     message: `Please Input ${title}!`,
@@ -100,8 +100,8 @@ class ProgramItems extends React.Component {
                             {inputNode(dataIndex)}
                         </Form.Item>
                     ) : (
-                        children
-                    )}
+                            children
+                        )}
                 </td>
             );
         };
@@ -133,19 +133,19 @@ class ProgramItems extends React.Component {
                 // delete from database
                 let data = {
                     clazz: "ProgramItem",
-                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
+                    conference: { clazz: "ClowdrInstance", id: record.get("conference").id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
-                .then(c => this.setState({
-                    alert: "delete success",
-                    searchResult: this.state.searched ?  this.state.searchResult.filter(r => r.id !== record.id): ""
-                }))
-                .catch(err => {
-                    this.setState({alert: "delete error"})
-                    this.refreshList();
-                    console.log("[Admin/Items]: Unable to delete: " + err)
-                })
+                    .then(c => this.setState({
+                        alert: "delete success",
+                        searchResult: this.state.searched ? this.state.searchResult.filter(r => r.id !== record.id) : ""
+                    }))
+                    .catch(err => {
+                        this.setState({ alert: "delete error" })
+                        this.refreshList();
+                        console.log("[Admin/Items]: Unable to delete: " + err)
+                    })
 
             }
 
@@ -167,19 +167,19 @@ class ProgramItems extends React.Component {
                             item.set("track", newTrack)
                         }
                         let newAuthors = [];
-                        for(let a of row.authors) {
+                        for (let a of row.authors) {
                             let newAuthor = this.state.ProgramPersons.find(p => p.id === a);
-                            if(!newAuthor){
+                            if (!newAuthor) {
                                 //Create a new program person
                                 let data = {
                                     clazz: "ProgramPerson",
-                                    conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
-                                    confKey: "authors/author-"+new Date().getTime(),
+                                    conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
+                                    confKey: "authors/author-" + new Date().getTime(),
                                     name: a
                                 }
                                 let res = await Parse.Cloud.run("create-obj", data)
                                     .catch(err => {
-                                        this.setState({alert: "add error"})
+                                        this.setState({ alert: "add error" })
                                         console.log("[Admin/Persons]: Unable to create: " + err)
                                     })
                                 let programperson = Parse.Object.extend("ProgramPerson");
@@ -199,18 +199,18 @@ class ProgramItems extends React.Component {
                         let data = {
                             clazz: "ProgramItem",
                             id: item.id,
-                            conference: {clazz: "ClowdrInstance", id: item.get("conference").id},
+                            conference: { clazz: "ClowdrInstance", id: item.get("conference").id },
                             title: item.get("title"),
-                            authors: item.get("authors").map(a => {return {clazz: "ProgramPerson", id: a.id}}),
+                            authors: item.get("authors").map(a => { return { clazz: "ProgramPerson", id: a.id } }),
                             abstract: item.get("abstract"),
-                            track: {clazz: "ProgramTrack", id: item.get("track").id}
+                            track: { clazz: "ProgramTrack", id: item.get("track").id }
                         }
                         Parse.Cloud.run("update-obj", data)
-                        .then(c => this.setState({alert: "save success"}))
-                        .catch(err => {
-                            this.setState({alert: "save error"})
-                            console.log("[Admin/Items]: Unable to save track: " + err)
-                        })
+                            .then(c => this.setState({ alert: "save success" }))
+                            .catch(err => {
+                                this.setState({ alert: "save error" })
+                                console.log("[Admin/Items]: Unable to save track: " + err)
+                            })
 
                         setEditingKey('');
                     }
@@ -271,7 +271,7 @@ class ProgramItems extends React.Component {
                         const trackB = b.get("track") ? b.get("track").get("name") : "";
                         return trackA.localeCompare(trackB);
                     },
-                    render: (text,record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>
+                    render: (text, record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>
                 },
                 {
                     title: 'Action',
@@ -281,33 +281,33 @@ class ProgramItems extends React.Component {
                         if (this.state.ProgramItems.length > 0) {
                             return editable ? (
                                 <span>
-                                <a
-                                    onClick={() => onSave(record.id)}
-                                    style={{
-                                        marginRight: 8,
-                                    }}
-                                >
-                                    {<SaveTwoTone />}
-                                </a>
-                                <Popconfirm title="Sure to cancel?" onConfirm={onCancel}>
-                                    <a>{<CloseCircleTwoTone />}</a>
-                                </Popconfirm>
-                            </span>
-                            ) : (
-                                <Space size='small'>
-                                    <a title="Edit" disabled={editingKey !== ''} onClick={() => onEdit(record)}>
-                                        {<EditOutlined />}
-                                    </a>
-                                    <Popconfirm
-                                        title="Are you sure delete this item?"
-                                        onConfirm={() => onDelete(record)}
-                                        okText="Yes"
-                                        cancelText="No"
+                                    <a
+                                        onClick={() => onSave(record.id)}
+                                        style={{
+                                            marginRight: 8,
+                                        }}
                                     >
-                                        <a title="Delete">{<DeleteOutlined />}</a>
+                                        {<SaveTwoTone />}
+                                    </a>
+                                    <Popconfirm title="Sure to cancel?" onConfirm={onCancel}>
+                                        <a>{<CloseCircleTwoTone />}</a>
                                     </Popconfirm>
-                                </Space>
-                            );
+                                </span>
+                            ) : (
+                                    <Space size='small'>
+                                        <a title="Edit" disabled={editingKey !== ''} onClick={() => onEdit(record)}>
+                                            {<EditOutlined />}
+                                        </a>
+                                        <Popconfirm
+                                            title="Are you sure delete this item?"
+                                            onConfirm={() => onDelete(record)}
+                                            okText="Yes"
+                                            cancelText="No"
+                                        >
+                                            <a title="Delete">{<DeleteOutlined />}</a>
+                                        </Popconfirm>
+                                    </Space>
+                                );
                         } else {
                             return null;
                         }
@@ -361,18 +361,18 @@ class ProgramItems extends React.Component {
         const handleAdd = () => {
             let data = {
                 clazz: "ProgramItem",
-                conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+                conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
                 title: "Please input the title",
-                confKey: "items/item-"+new Date().getTime(),
+                confKey: "items/item-" + new Date().getTime(),
                 abstract: "Please input the abstract",
                 authors: []
             }
             Parse.Cloud.run("create-obj", data)
-            .then(t => console.log("[Admin/Items]: sent new object to cloud"))
-            .catch(err => {
-                this.setState({alert: "add error"})
-                console.log("[Admin/Items]: Unable to create: " + err)
-            })
+                .then(t => console.log("[Admin/Items]: sent new object to cloud"))
+                .catch(err => {
+                    this.setState({ alert: "add error" })
+                    console.log("[Admin/Items]: Unable to create: " + err)
+                })
 
         };
 
@@ -395,13 +395,13 @@ class ProgramItems extends React.Component {
                         Add an item
                     </Button>
                     {this.state.alert ? <Alert
-                        onClose={() => this.setState({alert: undefined})}
+                        onClose={() => this.setState({ alert: undefined })}
                         style={{
                             margin: 16,
                             display: "inline-block",
                         }}
                         message={this.state.alert}
-                        type={this.state.alert.includes("success") ? "success": "error"}
+                        type={this.state.alert.includes("success") ? "success" : "error"}
                         showIcon
                         closable
                     /> : <span> </span>}
@@ -412,10 +412,10 @@ class ProgramItems extends React.Component {
                     placeholder="search anything"
                     onSearch={key => {
                         if (key === "") {
-                            this.setState({searched: false});
+                            this.setState({ searched: false });
                         }
                         else {
-                            this.setState({searched: true});
+                            this.setState({ searched: true });
                             this.setState({
                                 searchResult: this.state.ProgramItems.filter(
                                     item =>
@@ -437,11 +437,11 @@ class ProgramItems extends React.Component {
 
 const
     AuthConsumer = (props) => (
-                <AuthUserContext.Consumer>
-                    {value => (
-                        <ProgramItems {...props} auth={value}  />
-                    )}
-                </AuthUserContext.Consumer>
+        <AuthUserContext.Consumer>
+            {value => (
+                <ProgramItems {...props} auth={value} />
+            )}
+        </AuthUserContext.Consumer>
 
     );
 

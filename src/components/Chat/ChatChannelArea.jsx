@@ -1,11 +1,11 @@
 import React from "react";
-import {AuthUserContext} from "../Session";
+import { AuthUserContext } from "../Session";
 import Parse from "parse"
-import {Button, message, Skeleton, Tooltip} from "antd";
+import { Button, message, Skeleton, Tooltip } from "antd";
 // @ts-ignore
 import ProgramItem from "../../classes/ProgramItem";
 import ChatFrame from "./ChatFrame"
-import {CloseOutlined, MinusOutlined, PlusOutlined, VideoCameraAddOutlined} from "@ant-design/icons"
+import { CloseOutlined, MinusOutlined, PlusOutlined, VideoCameraAddOutlined } from "@ant-design/icons"
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
 
@@ -28,7 +28,7 @@ class ChatChannelArea extends React.Component {
         if (!chat) {
             this.setState({
                 title:
-                    <Skeleton.Input active style={{width: '20px', height: '1em'}}/>
+                    <Skeleton.Input active style={{ width: '20px', height: '1em' }} />
             })
             return;
         }
@@ -46,28 +46,28 @@ class ChatChannelArea extends React.Component {
             let title = chat.channel.friendlyName;
             if (chat.attributes.category === "announcements-global") {
                 title = "Announcements";
-            } else if(chat.attributes.category === "programItem" && chat.attributes.programItemID){
+            } else if (chat.attributes.category === "programItem" && chat.attributes.programItemID) {
                 // console.log(chat.attributes.programItemID)
                 title = <ProgramItemDisplay auth={this.props.appState} id={chat.attributes.programItemID} />
-            }else if (chat.attributes.category === "breakoutRoom" || chat.attributes.mode === "group") {
+            } else if (chat.attributes.category === "breakoutRoom" || chat.attributes.mode === "group") {
                 title = chat.channel.friendlyName;
             } else {
                 title = chat.channel.friendlyName;
             }
             try {
-                let profiles = chat.members.map((id)=><UserStatusDisplay
+                let profiles = chat.members.map((id) => <UserStatusDisplay
                     profileID={id}
                     inline={true}
                     key={id}
                 />)
-                if(profiles.length === 1){
+                if (profiles.length === 1) {
                     profiles = profiles[0];
                 }
-                else if(profiles.length > 1){
-                    profiles = profiles.reduce((prev,cur)=>[prev, ", ", cur]);
+                else if (profiles.length > 1) {
+                    profiles = profiles.reduce((prev, cur) => [prev, ", ", cur]);
                 }
                 let membersStr = <div>In this chat: {profiles}</div>
-                this.setState({members: membersStr, title: title, membersCount: chat.members.length});
+                this.setState({ members: membersStr, title: title, membersCount: chat.members.length });
             } catch (err) {
                 console.log(chat.channel.sid)
                 console.log(err);
@@ -93,7 +93,7 @@ class ChatChannelArea extends React.Component {
         this.mounted = true;
         if (!this.state.chat) {
             let res = await this.props.chatClient.getJoinedChannel(this.props.sid);
-            this.setState({chat: this.props.chatClient.joinedChannels[this.props.sid]})
+            this.setState({ chat: this.props.chatClient.joinedChannels[this.props.sid] })
         }
         this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
         this.parentRef.memberListener[this.props.sid] = async (channelInfo) => {
@@ -113,7 +113,7 @@ class ChatChannelArea extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.props.visible !== this.state.visible) {
             this.collectFocus = true;
-            this.setState({visible: this.props.visible});
+            this.setState({ visible: this.props.visible });
         }
     }
 
@@ -136,7 +136,7 @@ class ChatChannelArea extends React.Component {
             }
         }
         if (dat.channel.type === 'private') {
-            this.setState({newVideoChatLoading: true});
+            this.setState({ newVideoChatLoading: true });
             try {
                 let res = await Parse.Cloud.run("chat-getBreakoutRoom", {
                     conference: this.props.auth.currentConference.id,
@@ -145,9 +145,9 @@ class ChatChannelArea extends React.Component {
                 });
                 if (res.status === "error") {
                     message.error(res.message);
-                    this.setState({newVideoChatLoading: false})
+                    this.setState({ newVideoChatLoading: false })
                 } else {
-                    this.setState({newVideoChatLoading: false, newVideoChatVisible: false})
+                    this.setState({ newVideoChatLoading: false, newVideoChatVisible: false })
                     if (res.status === "ok") {
                         this.props.auth.history.push("/video/" + res.room)
                     }
@@ -168,25 +168,25 @@ class ChatChannelArea extends React.Component {
         let title = this.state.title;
         if (this.state.members) {
             title = <Tooltip mouseEnterDelay={0.5}
-                             overlayStyle={{zIndex: 10}}
-                             title={this.state.members}>{this.state.title} ({this.state.membersCount} members)</Tooltip>
+                overlayStyle={{ zIndex: 10 }}
+                title={this.state.members}>{this.state.title} ({this.state.membersCount} members)</Tooltip>
         }
         let header = <div className="bottomChatHeader">
             <div className="bottomChatHeaderItems">
                 <div className="bottomChatIdentity">{title}</div>
                 <div className="bottomChatClose">
                     <Tooltip mouseEnterDelay={0.5} title="Launch a video chat room">
-                        <Button size="small" type="text" 
-                                style={{minWidth: "initial"}}
-                                loading={this.state.newVideoChatLoading}
-                                icon={<VideoCameraAddOutlined/>}
-                                onClick={this.toVideo.bind(this)}>Launch video</Button>
+                        <Button size="small" type="text"
+                            style={{ minWidth: "initial" }}
+                            loading={this.state.newVideoChatLoading}
+                            icon={<VideoCameraAddOutlined />}
+                            onClick={this.toVideo.bind(this)}>Launch video</Button>
                     </Tooltip>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <Tooltip mouseEnterDelay={0.5} title="Add someone to this channel">
-                        <Button size="small" type="text" style={{minWidth: "initial"}}
-                                icon={<PlusOutlined/>}
-                                onClick={this.props.addUser}
+                        <Button size="small" type="text" style={{ minWidth: "initial" }}
+                            icon={<PlusOutlined />}
+                            onClick={this.props.addUser}
                         >Add people</Button></Tooltip>
                 </div>
             </div>
@@ -195,7 +195,7 @@ class ChatChannelArea extends React.Component {
             <ChatFrame sid={this.props.sid} visible={this.state.visible} header={header} setUnreadCount={(c) => {
                 this.props.multiChatWindow.setUnreadCount(this.props.sid, c)
             }
-            }/>
+            } />
         </>
     }
 }

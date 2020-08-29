@@ -1,8 +1,8 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import * as ROUTES from '../../constants/routes';
-import {Button, message, Form, Input, Tooltip} from 'antd';
+import { Button, message, Form, Input, Tooltip } from 'antd';
 import Parse from "parse";
-import {AuthUserContext} from "../Session";
+import { AuthUserContext } from "../Session";
 import GenericLanding from "../GenericLanding";
 
 const INITIAL_STATE = {
@@ -38,20 +38,20 @@ class SignIn extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {...INITIAL_STATE};
+        this.state = { ...INITIAL_STATE };
     }
 
     onSubmit = async (event) => {
-        const {email, password} = this.state;
+        const { email, password } = this.state;
         // event.preventDefault();
-        try{
+        try {
             let user = await Parse.User.logIn(email, password);
             console.log("[SignIn]: User=" + JSON.stringify(user));
             await this.props.refreshUser();
             this.props.history.push("/");
             window.location.reload(false);
 
-        } catch (e){
+        } catch (e) {
             alert(e.message);
         }
 
@@ -59,31 +59,31 @@ class SignIn extends Component {
 
     componentDidMount() {
         if (process.env.REACT_APP_IS_MINIMAL_UI && !this.props.dontBounce) {
-            this.props.clowdrAppState.helpers.setGlobalState({showingLanding: true});
+            this.props.clowdrAppState.helpers.setGlobalState({ showingLanding: true });
         }
     }
 
     onChange = event => {
-        this.setState({[event.target.name]: event.target.value});
+        this.setState({ [event.target.name]: event.target.value });
     };
 
-    async forgotPassword(){
+    async forgotPassword() {
         console.log(process.env)
         let res = await Parse.Cloud.run("reset-password", {
             email: this.state.email,
             confID: this.props.clowdrAppState.helpers.getDefaultConferenceName()
         });
-        if(res.status === "error")
+        if (res.status === "error")
             message.error(res.message);
         else
             message.success(res.message, 0);
 
     }
     render() {
-        if(process.env.REACT_APP_IS_MINIMAL_UI && !this.props.dontBounce){
+        if (process.env.REACT_APP_IS_MINIMAL_UI && !this.props.dontBounce) {
             return <div></div>;
         }
-        const {email, password, error} = this.state;
+        const { email, password, error } = this.state;
 
         const isInvalid = password === '' || email === '';
 
@@ -108,7 +108,7 @@ class SignIn extends Component {
                     <Button type="primary" disabled={isInvalid} htmlType="submit">
                         Sign In
                     </Button> <Tooltip mouseEnterDelay={0.5} title="If you have forgotten your password, please enter your email address and click this button to receive a link to reset it."><Button disabled={email === ''} onClick={this.forgotPassword.bind(this)}>
-                    Forgot Password
+                        Forgot Password
                 </Button></Tooltip></Form.Item>
 
                 {error && <p>{error.message}</p>}
@@ -117,10 +117,10 @@ class SignIn extends Component {
     }
 }
 
-const AuthConsumer = (props)=>(
+const AuthConsumer = (props) => (
     <AuthUserContext.Consumer>
         {value => (
-            <SignIn {...props} user={value.user} clowdrAppState={value} refreshUser={value.refreshUser}/>
+            <SignIn {...props} user={value.user} clowdrAppState={value} refreshUser={value.refreshUser} />
         )}
     </AuthUserContext.Consumer>
 );

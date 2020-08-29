@@ -1,7 +1,7 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import * as ROUTES from '../../constants/routes';
 import * as ROLES from '../../constants/roles';
-import {Button, Checkbox, Form, Input} from 'antd';
+import { Button, Checkbox, Form, Input } from 'antd';
 
 import Parse from "parse";
 
@@ -27,43 +27,43 @@ class SignUp extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {...INITIAL_STATE};
+        this.state = { ...INITIAL_STATE };
 
     }
 
     async componentDidMount() {
         let user = await Parse.User.currentAsync();
-        if(user){
+        if (user) {
             Parse.User.logOut();
         }
     }
 
     onSubmit = event => {
-        const {username, email, passwordOne, isAdmin} = this.state;
+        const { username, email, passwordOne, isAdmin } = this.state;
         const roles = {};
 
         let user = new Parse.User();
         user.set("username", email);
-        user.set("displayName",username);
+        user.set("displayName", username);
         user.set("password", passwordOne);
         user.set("email", email);
 
-        user.signUp().then(()=>{
+        user.signUp().then(() => {
             this.props.history.push(ROUTES.ACCOUNT);
-        }).catch((error)=> {
+        }).catch((error) => {
             // Show the error message somewhere and let the user try again.
             alert("Error: " + error.code + " " + error.message);
-            this.setState({error});
+            this.setState({ error });
         });
         event.preventDefault();
     };
 
     onChange = event => {
-        this.setState({[event.target.name]: event.target.value});
+        this.setState({ [event.target.name]: event.target.value });
     };
 
     onChangeCheckbox = event => {
-        this.setState({[event.target.name]: event.target.checked});
+        this.setState({ [event.target.name]: event.target.checked });
     };
 
     render() {
@@ -81,21 +81,21 @@ class SignUp extends Component {
             passwordOne === '' ||
             email === '' ||
             username === '';
-        if(true){
+        if (true) {
             return <div>This page needs to be corrected to make a user profile, enroll user, etc. before it is used again.</div>
         }
         return (
             <Form onFinish={this.onSubmit} labelCol={{
                 span: 4,
             }}
-                  wrapperCol={{
-                      span: 14,
-                  }}
-                  layout="horizontal"
-                  initialValues={{
-                      size: 50,
-                  }}
-                  size={100}>
+                wrapperCol={{
+                    span: 14,
+                }}
+                layout="horizontal"
+                initialValues={{
+                    size: 50,
+                }}
+                size={100}>
                 <Form.Item
                     label="Full Name"
                     rules={[
@@ -104,7 +104,7 @@ class SignUp extends Component {
                             message: 'Please input your full name',
                         },
                     ]}
-                ><Input name="username" value={username} onChange={this.onChange}/></Form.Item>
+                ><Input name="username" value={username} onChange={this.onChange} /></Form.Item>
                 <Form.Item
                     label="Email Address"
                     rules={[
@@ -118,7 +118,7 @@ class SignUp extends Component {
                         name="email"
                         value={email}
                         type="text"
-                        onChange={this.onChange}/>
+                        onChange={this.onChange} />
                 </Form.Item>
                 <Form.Item
                     label="Password"
@@ -133,7 +133,7 @@ class SignUp extends Component {
 
                         name="passwordOne"
                         value={passwordOne}
-                        onChange={this.onChange}/>
+                        onChange={this.onChange} />
                 </Form.Item>
                 <Form.Item
                     label="Confirm Password"

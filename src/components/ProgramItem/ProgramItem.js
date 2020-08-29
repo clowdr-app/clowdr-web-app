@@ -1,9 +1,9 @@
 import React from "react";
 import ProgramItemDetails from "../ProgramItem/ProgramItemDetails";
 
-import {AuthUserContext} from "../Session";
-import {Alert, Spin} from "antd";
-import {pdfjs} from 'react-pdf';
+import { AuthUserContext } from "../Session";
+import { Alert, Spin } from "antd";
+import { pdfjs } from 'react-pdf';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -23,31 +23,31 @@ class ProgramItem extends React.Component {
     }
 
     async componentDidMount() {
-        let itemKey = this.props.match.params.programConfKey1 + "/"+this.props.match.params.programConfKey2;
-        this.setState({itemKey: itemKey});
-        if(this.props.match.path.startsWith("/breakoutRoom")){
-            this.setState({isInRoom: true});
+        let itemKey = this.props.match.params.programConfKey1 + "/" + this.props.match.params.programConfKey2;
+        this.setState({ itemKey: itemKey });
+        if (this.props.match.path.startsWith("/breakoutRoom")) {
+            this.setState({ isInRoom: true });
         }
 
         //For social features, we need to wait for the login to complete before doing anything
         let [user, item] = await Promise.all([this.props.auth.refreshUser(), this.props.auth.programCache.getProgramItemByConfKey(itemKey, this)]);
         let inLobby = true;
         if (!item) {
-            this.setState({loading: false, error: "Unable to find the program item '" + itemKey + "'"});
+            this.setState({ loading: false, error: "Unable to find the program item '" + itemKey + "'" });
         } else {
-            let stateUpdate = {loading: false, error: null, ProgramItem: item};
+            let stateUpdate = { loading: false, error: null, ProgramItem: item };
             if (user) {
-                if (item.get("chatSID")){
+                if (item.get("chatSID")) {
                     // This sets the right-hand sidebar display to this channel
                     // this.props.auth.helpers.setGlobalState({forceChatOpen: true, chatChannel: item.get("chatSID")});
                     this.props.auth.chatClient.setRightSideChat(item.get("chatSID"));
                     inLobby = false;
                 } else {
-                    if (item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")){
+                    if (item.get("programSession") && item.get("programSession").get("room") && item.get("programSession").get("room").get("socialSpace")) {
                         //set the social space...
                         let ss = item.get("programSession").get("room").get("socialSpace");
                         this.props.auth.setSocialSpace(ss.get("name"));
-                        this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+                        this.props.auth.helpers.setGlobalState({ forceChatOpen: true });
                         inLobby = false;
                     }
                 }
@@ -77,7 +77,7 @@ class ProgramItem extends React.Component {
 
     render() {
         if (this.state.loading)
-            return <Spin/>
+            return <Spin />
         if (this.state.error) {
             return <Alert
                 message="Unable to load program item"
@@ -91,11 +91,11 @@ class ProgramItem extends React.Component {
 
 const
     AuthConsumer = (props) => (
-                <AuthUserContext.Consumer>
-                    {value => (
-                        <ProgramItem {...props} auth={value} />
-                    )}
-                </AuthUserContext.Consumer>
+        <AuthUserContext.Consumer>
+            {value => (
+                <ProgramItem {...props} auth={value} />
+            )}
+        </AuthUserContext.Consumer>
 
     );
 

@@ -1,9 +1,9 @@
 import React from 'react';
-import {NavLink} from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import Parse from "parse";
-import {Button, Card, message, Spin, Tooltip, Upload} from 'antd';
-import {UploadOutlined} from '@ant-design/icons';
-import {AuthUserContext} from "../Session";
+import { Button, Card, message, Spin, Tooltip, Upload } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import { AuthUserContext } from "../Session";
 import placeholder from './placeholder.png';
 import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";
 
@@ -23,7 +23,7 @@ class Exhibits extends React.Component {
             waitForProgram: true,
             loggedIn: (this.props.auth.user ? true : false)
         }
-        
+
     }
 
     changeChatPanel(posters) {
@@ -37,14 +37,14 @@ class Exhibits extends React.Component {
                     return acc
             }, []);
             if ((rooms.length === 1) && rooms[0].get("socialSpace")) {
-                    //set the social space...
-                    let ss = rooms[0].get("socialSpace");
-                    this.props.auth.setSocialSpace(ss.get("name"));
-                    this.props.auth.helpers.setGlobalState({forceChatOpen: true});
+                //set the social space...
+                let ss = rooms[0].get("socialSpace");
+                this.props.auth.setSocialSpace(ss.get("name"));
+                this.props.auth.helpers.setGlobalState({ forceChatOpen: true });
             }
             else {
                 console.log("Warning: unexpected program layout")
-                for(let room of rooms){
+                for (let room of rooms) {
                     console.log(room.id + ", " + room.get("name"))
                 }
                 this.props.auth.setSocialSpace("Lobby");
@@ -80,7 +80,7 @@ class Exhibits extends React.Component {
             if (user) {
                 this.setState({
                     loggedIn: true
-                }); 
+                });
             }
         }
 
@@ -96,7 +96,7 @@ class Exhibits extends React.Component {
 
     async initializePosters(trackName) {
 
-        this.setState({loading: true});
+        this.setState({ loading: true });
         let [track, posters] = await Promise.all(
             [
                 this.props.auth.programCache.getProgramTrackByName(trackName),
@@ -138,23 +138,23 @@ class Exhibits extends React.Component {
         if (this.props.match.params.style === "list") {
 
             return <div id="papers-list">
-                    <h2>{trackName}</h2>
-                    {this.state.posters.map((poster) => {
-                        let authors = poster.get("authors");
-                        let authorstr= authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />).reduce((prev,curr) => [prev,", ",curr]);
+                <h2>{trackName}</h2>
+                {this.state.posters.map((poster) => {
+                    let authors = poster.get("authors");
+                    let authorstr = authors.map(a => <ProgramPersonDisplay key={a.id} auth={this.props.auth} id={a.id} />).reduce((prev, curr) => [prev, ", ", curr]);
 
 
-                        return <p key={poster.id}>
-                                <NavLink to={"/program/" + poster.get("confKey")}>
-                                    <strong>{poster.get("title")}</strong> <i>{authorstr}</i>
-                                </NavLink>
-                                </p>
-                    })}
-                </div> 
+                    return <p key={poster.id}>
+                        <NavLink to={"/program/" + poster.get("confKey")}>
+                            <strong>{poster.get("title")}</strong> <i>{authorstr}</i>
+                        </NavLink>
+                    </p>
+                })}
+            </div>
 
         }
 
-        return <div> 
+        return <div>
             <h2>{trackName}</h2>
             <div className={"space-align-container"}>
                 {this.state.ProgramItems.map((poster) => {
@@ -163,7 +163,7 @@ class Exhibits extends React.Component {
 
                     let authorstr = "";
                     if (authorsArr.length >= 1)
-                        authorstr = authorsArr.reduce((prev,curr) => [prev,", ",curr]);
+                        authorstr = authorsArr.reduce((prev, curr) => [prev, ", ", curr]);
 
 
 
@@ -172,28 +172,28 @@ class Exhibits extends React.Component {
                         img = poster.get("posterImage").url();
 
                     return <div className={"space-align-block"} key={poster.id} >
-                                <NavLink to={"/program/" + poster.get("confKey")}>
-                                    <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{width:300, height:200 }} 
-                                        src={img} 
-                                    />}>
-                                        <Tooltip mouseEnterDelay={0.5} placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
-                                            <Meta title={poster.get('title')} description={authorstr} />
-                                        </Tooltip>
-                                    </Card>
-                                </NavLink>
-                            </div>
+                        <NavLink to={"/program/" + poster.get("confKey")}>
+                            <Card hoverable style={{ width: 300 }} cover={<img alt="poster" style={{ width: 300, height: 200 }}
+                                src={img}
+                            />}>
+                                <Tooltip mouseEnterDelay={0.5} placement="topLeft" title={poster.get("title")} arrowPointAtCenter>
+                                    <Meta title={poster.get('title')} description={authorstr} />
+                                </Tooltip>
+                            </Card>
+                        </NavLink>
+                    </div>
                 })}
-            </div> 
             </div>
+        </div>
     }
 }
 
 const PostersWithAuth = (props) => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <Exhibits {...props} auth={value}  />
-                )}
-            </AuthUserContext.Consumer>
+    <AuthUserContext.Consumer>
+        {value => (
+            <Exhibits {...props} auth={value} />
+        )}
+    </AuthUserContext.Consumer>
 );
 
 export default PostersWithAuth;
