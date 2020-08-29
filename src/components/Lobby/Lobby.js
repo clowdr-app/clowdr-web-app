@@ -95,7 +95,7 @@ class MeetingSummary extends React.Component {
                 {/*<h4>Currently here:</h4>*/}
                 {/*<Divider orientation="left">Here now:</Divider>*/}
                 <List
-                    dataSource={item.get('members').filter((v) => (v !== null))}
+                    dataSource={item.get('members').filter((v) => (v != null))}
                     size={"small"}
                     renderItem={user => {
                         let avatar;

@@ -40,7 +40,7 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
         // }
     }
     joinRoom() {
-        if (this.props.clowdrAppState !== null) {
+        if (this.props.clowdrAppState != null) {
             let user = this.props.clowdrAppState.user;
             this.setState({ isInRoom: true });
         }
@@ -53,7 +53,7 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
         }
         return <VideoRoom
             hideInfo={true} room={this.state.room}
-            conference={this.props.clowdrAppState !== null ? this.props.clowdrAppState.currentConference : null}
+            conference={this.props.clowdrAppState != null ? this.props.clowdrAppState.currentConference : null}
             onHangup={() => {
                 this.setState({ isInRoom: false })
             }

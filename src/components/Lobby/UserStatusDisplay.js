@@ -77,7 +77,7 @@ class UserStatusDisplay extends React.Component{
             onClick = this.openDM.bind(this);
         }
         let avatar, inlineAvatar;
-        if (this.state.profile && this.state.profile.get("profilePhoto") !== null)
+        if (this.state.profile && this.state.profile.get("profilePhoto") != null)
             avatar = <Avatar src={this.state.profile.get("profilePhoto").url()}/>
 
         let affiliation = "";

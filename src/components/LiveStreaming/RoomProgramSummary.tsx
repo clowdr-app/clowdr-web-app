@@ -302,7 +302,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
             // @ts-ignore
             expanded[id] = true;
         }
-        if(curEvent !== null && curEvent !== this.state.currentEvent){
+        if(curEvent != null && curEvent !== this.state.currentEvent){
             //set the chat
             this.props.appState?.programCache.getProgramItem(curEvent.get("programItem").id, undefined).then(
                 async (item)=>{

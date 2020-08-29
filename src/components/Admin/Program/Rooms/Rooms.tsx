@@ -859,7 +859,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
 
 const AuthConsumer = (props: ProgramRoomsProps) => (
             <AuthUserContext.Consumer>
-                {value => (value === null ? <></> :  // @ts-ignore  TS: Can value really be null here?
+                {value => (value == null ? <></> :  // @ts-ignore  TS: Can value really be null here?
                         <Rooms {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>

@@ -106,7 +106,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
     }
 
     setVisible(visible: boolean) {
-        if (visible !== null) {
+        if (visible != null) {
             this.setState({'visible': visible});
         }
         else {

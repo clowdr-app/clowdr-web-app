@@ -242,11 +242,11 @@ function Participant({
     const videoPublication = publications.find(p => p.trackName.includes('camera'));
 
     /*
-       const justListening = (audioPublication === null && videoPublication === null);
+       const justListening = (audioPublication == null && videoPublication == null);
            <div>
                showWhenJustListening = {showWhenJustListening.toString()} <br/>
-               audioPublication = { audioPublication !== null ? audioPublication.toString() : "null"} <br/>
-               videoPublication = { videoPublication !== null ? videoPublication.toString() : "null"} <br/>
+               audioPublication = { audioPublication != null ? audioPublication.toString() : "null"} <br/>
+               videoPublication = { videoPublication != null ? videoPublication.toString() : "null"} <br/>
                {justListening ? "Just listening!" : ""}
              */
     return <ParticipantInfo participant={participant} onClick={onClick} isSelected={isSelected}>

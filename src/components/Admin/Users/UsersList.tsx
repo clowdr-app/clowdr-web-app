@@ -67,7 +67,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         this.setState({banUpdating: true})
         console.log(item);
         let idToken: UserSessionToken = "";
-        if (this.props.auth.user !== null) {
+        if (this.props.auth.user != null) {
             idToken = this.props.auth.user.getSessionToken();
         }
 
@@ -234,7 +234,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
         onFilterDropdownVisibleChange: (visible:boolean) => {
             if (visible) {
-                setTimeout(() => {if (this.searchInput !== null) this.searchInput.select();})
+                setTimeout(() => {if (this.searchInput != null) this.searchInput.select();})
             }
         },
         render: (text:string, item: ManagedUser) =>{
@@ -324,7 +324,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
 
 const AuthConsumer = (props:UsersListProps) => (
     <AuthUserContext.Consumer>
-        {value => (value === null ? <></> :   // @ts-ignore  TS: Can value really be null here?
+        {value => (value == null ? <></> :   // @ts-ignore  TS: Can value really be null here?
             <UsersList {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>

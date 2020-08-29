@@ -188,7 +188,7 @@ class ChatFrame extends React.Component {
             let unread = lastTotal - lastConsumed;
             if(unread < 0)
                 unread = 0;
-            if(lastConsumed === null){
+            if(lastConsumed == null){
                 unread++;
             }
             if (unread !== this.unread) {
@@ -413,7 +413,7 @@ class ChatFrame extends React.Component {
     };
 
     async sendReaction(msg, event) {
-        if(msg === null){
+        if(msg == null){
             //add to the current input
             let message = this.form.current.getFieldValue("message");
             if(message === undefined)

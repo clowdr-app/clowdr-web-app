@@ -67,7 +67,7 @@ export default class ScheduleList extends React.Component<ScheduleListProps, Sch
                 val.forEach((item) => {
                     // TS : TS is unhappy because item.key can be null according to its type...
                     // @ts-ignore
-                    if (items.key !== null) {
+                    if (items.key != null) {
                     // @ts-ignore
                     items[item.key] = item.val();
                     // @ts-ignore

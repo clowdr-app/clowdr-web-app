@@ -192,7 +192,7 @@ class Account extends React.Component<Props, State> {
             }
         }
         this.programPersonOptions = this.ProgramPersons.filter((person: Parse.Object) => (
-            (person.get("userProfile") === null || person.get("userProfile").id === this.props.auth.userProfile.id) &&
+            (person.get("userProfile") == null || person.get("userProfile").id === this.props.auth.userProfile.id) &&
              peopleToItems[person.id])).map((person: Parse.Object) => (
                 {value: person.id,
                  label: person.get('name') + " (" + peopleToItems[person.id].map((item: Parse.Object) => item.get("title")).join(", ") + ")"})
@@ -442,7 +442,7 @@ const AuthConsumerAccount = (props: Props) => (
     <ProgramContext.Consumer>
         {({items}) => (
             <AuthUserContext.Consumer>
-                {value => (value === null ? <></> : // @ts-ignore  TS: Can value really be null here?
+                {value => (value == null ? <></> : // @ts-ignore  TS: Can value really be null here?
                     <Account {...props} auth={value} programItems={items} />
                 )}
             </AuthUserContext.Consumer>

@@ -73,7 +73,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
     componentDidUpdate(prevProps: Readonly<ChatChannelChangerProps>, prevState: Readonly<ChatChannelChangerState>, snapshot?: any): void {
         if(this.haveProgram && (this.state.ProgramItems !== prevState.ProgramItems || this.state.UserProfiles !== prevState.UserProfiles || this.state.allChannels !== prevState.allChannels)){
             let options = [];
-            options = this.state.ProgramItems.filter(item=>item.get("chatSID") !== null).map(item => ({labeltext: item.get("title"), value: item.id, object: item,
+            options = this.state.ProgramItems.filter(item=>item.get("chatSID") != null).map(item => ({labeltext: item.get("title"), value: item.id, object: item,
             label: <ProgramItemDisplay id={item.id} auth={this.props.appState} hideLink={true} />}));
             options = options.concat(this.state.UserProfiles.map(profile => ({
                 labeltext: profile.get("displayName"),

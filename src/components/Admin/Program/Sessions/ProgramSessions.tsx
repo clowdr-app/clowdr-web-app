@@ -491,7 +491,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
 
 const AuthConsumer = (props: ProgramSessionsProps) => (
     <AuthUserContext.Consumer>
-        {value => (value === null ? <></> :  // @ts-ignore  TS: Can value really be null here?
+        {value => (value == null ? <></> :  // @ts-ignore  TS: Can value really be null here?
                 <ProgramSessions {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>

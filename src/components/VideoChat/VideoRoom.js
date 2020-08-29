@@ -735,7 +735,7 @@ function FlipCameraButton() {
         // However, if facingMode is ever undefined again (when the user unpublishes video), we
         // won't set 'supportsFacingMode' to false. This prevents the icon from briefly
         // disappearing when the user switches their front/rear camera.
-        if (facingMode && supportsFacingMode === null) {
+        if (facingMode && supportsFacingMode == null) {
             setSupportsFacingMode(facingMode);
         }
     }, [facingMode, supportsFacingMode]);

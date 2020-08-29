@@ -9,7 +9,7 @@ interface ConfigurationProps {
 
 const ConfigurationAdminArea = (props: ConfigurationProps) => (
     <AuthUserContext.Consumer>
-        {value => (value === null ? <></> : //@ts-ignore
+        {value => (value == null ? <></> : //@ts-ignore
             <Configuration {...props} auth={value}/>
         )}
     </AuthUserContext.Consumer>

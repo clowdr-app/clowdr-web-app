@@ -463,7 +463,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
 
 const AuthConsumer = (props: ProgramTracksProps) => (
             <AuthUserContext.Consumer>
-                {value => (value === null ? <></> :  // @ts-ignore  TS: Can value really be null here?
+                {value => (value == null ? <></> :  // @ts-ignore  TS: Can value really be null here?
                         <Tracks {...props} auth={value} />
                 )}
             </AuthUserContext.Consumer>

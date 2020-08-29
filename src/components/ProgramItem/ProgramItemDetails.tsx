@@ -306,7 +306,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
         if(this.state.isInRoom){
             videoRoom = <VideoRoom
                 hideInfo={true} room={this.state.ProgramItem.get("breakoutRoom")}
-                conference={this.props.appState !== null ? this.props.appState.currentConference : null}
+                conference={this.props.appState != null ? this.props.appState.currentConference : null}
                 onHangup={() => {
                     this.setState({ isInRoom: false })
                 }

@@ -200,7 +200,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         async createOrOpenDM(profileOfUserToDM: UserProfile) {
-            assert (this.state.userProfile !== null);
+            assert (this.state.userProfile != null);
             // @ Jon: Do we really want to prevent this case?  Crista likes DMing herself!
             // Jon: Yes, it is confusing, and no other chat platofrm allows it...
             if (profileOfUserToDM.id === this.state.userProfile.id) return
@@ -367,7 +367,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             if (!user)
                 user = this.state.user;
             if (!userProfile) {
-                assert(this.state.userProfile !== null);
+                assert(this.state.userProfile != null);
                 userProfile = this.state.userProfile;
             }
             this.subscribeToPublicRooms()
@@ -429,7 +429,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 if(!user)
                     user = this.state.user;
                 if(!userProfile) {
-                    assert(this.state.userProfile !== null);
+                    assert(this.state.userProfile != null);
                     userProfile = this.state.userProfile;
                 }
                 if(!space && this.state.spaces){
