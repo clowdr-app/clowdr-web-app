@@ -46,7 +46,6 @@ class SlackToVideo extends React.Component {
         await this.props.clowdrAppState.user.save();
         message.success("Your password has been updated");
         this.props.history.push("/");
-
     }
 
     render() {

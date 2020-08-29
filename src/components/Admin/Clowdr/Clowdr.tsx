@@ -45,10 +45,6 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
 
     }
 
-    setVisible() {
-        this.setState({ 'visible': !this.state.visible });
-    }
-
     componentDidMount() {
         this.refreshList();
     }

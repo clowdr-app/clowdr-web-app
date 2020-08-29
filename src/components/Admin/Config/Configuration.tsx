@@ -39,10 +39,6 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
 
     }
 
-    setVisible() {
-        this.setState({ 'visible': !this.state.visible });
-    }
-
     componentDidMount() {
         // Has this conference been initialized?
         console.log('[Admin/Config]: active space ' + this.props.auth.activeSpace);

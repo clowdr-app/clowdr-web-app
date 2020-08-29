@@ -90,6 +90,8 @@ class SlackToVideo extends React.Component {
         this.setState({ updating: false, step: 2 });
     }
     async resendInvitation() {
+        let invitationSent;
+
         this.setState({ resendingInvitation: true })
         try {
             let userID = this.props.match.params.userID;
@@ -97,14 +99,16 @@ class SlackToVideo extends React.Component {
                 userID: userID,
                 confID: this.props.clowdrAppState.helpers.getDefaultConferenceName()
             });
+            invitationSent = true;
         } catch (err) {
             console.log(err);
             this.setState({ error: err.toString(), unableToSend: true });
-            this.setState({ resendingInvitation: false, invitationSent: false })
-            return false;
+            invitationSent = false;
         }
-        this.setState({ resendingInvitation: false, invitationSent: true })
-        return true;
+
+        this.setState({ resendingInvitation: false, invitationSent: invitationSent })
+
+        return invitationSent;
     }
 
     render() {

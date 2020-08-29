@@ -7,6 +7,7 @@ import withLoginRequired from "../Session/withLoginRequired";
 import ProgramContext from "../Program/context";
 import { ClowdrState } from "../../ClowdrTypes";
 import { RuleObject } from "antd/lib/form";
+import { Store } from 'antd/lib/form/interface';
 
 interface Props { //TS: Props from both context (ClowdrState) and AccountFromToken.js. Is that OK?? Cauz we will export all of them.
     auth: ClowdrState;
@@ -64,7 +65,7 @@ class Account extends React.Component<Props, State> {
             topicColors: {},
             allTopics: undefined,
             topicObj: undefined,
-            updating: false, //TS: Is init val false or true?
+            updating: false,
             authorRecords: [],
             username: "",
             error: undefined
@@ -76,15 +77,16 @@ class Account extends React.Component<Props, State> {
 
     setStateFromUser() {
         let selectedFlairs: string[] = [];
-        if (this.props.auth.userProfile.get("tags"))
-            this.props.auth.userProfile.get("tags").forEach((tag: Parse.Object) => {
+        let auth = this.props.auth;
+        if (auth.userProfile.get("tags"))
+            auth.userProfile.get("tags").forEach((tag: Parse.Object) => {
                 selectedFlairs.push(tag.get("label"));
             });
         this.setState({
-            user: this.props.auth.user,
-            email: this.props.auth.user ? this.props.auth.user.getEmail() : undefined,
-            tags: this.props.auth.user ? this.props.auth.user.get("tags") : undefined,
-            flair: this.props.auth.user ? this.props.auth.user.get("primaryFlair") : undefined,
+            user: auth.user,
+            email: auth.user ? auth.user.getEmail() : undefined,
+            tags: auth.user ? auth.user.get("tags") : undefined,
+            flair: auth.user ? auth.user.get("primaryFlair") : undefined,
             selectedFlair: selectedFlairs
         });
         const Flair = Parse.Object.extend("Flair");
