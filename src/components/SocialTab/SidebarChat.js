@@ -1,24 +1,15 @@
 import { AuthUserContext } from "../Session";
 
-import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import { Badge, Layout, Popconfirm, Popover, Tooltip } from 'antd';
 import "./chat.css"
 import React from "react";
-import ReactMarkdown from "react-markdown";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
-import { CloseOutlined } from "@material-ui/icons";
 import ChatFrame from "../Chat/ChatFrame";
 
-const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
+// const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
-const linkRenderer = props => <a href={props.href} target="_blank">{props.children}</a>;
+// const linkRenderer = props => <a href={props.href} target="_blank">{props.children}</a>;
 
-const { Header, Content, Footer, Sider } = Layout;
-
-var moment = require('moment');
 const INITIAL_STATE = {
     expanded: true,
     chatLoading: true,
@@ -84,10 +75,8 @@ class SidebarChat extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        let isDifferentUser = this.user !== this.props.auth.user;
         this.user = this.props.auth.user;
-        let isDifferentChannel = this.props.auth.chatChannel !== this.state.channel;
-
+        
         if (!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")) {
             this.setState({ visible: true });
         }

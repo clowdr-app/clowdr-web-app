@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import React from "react";
 import { Tag, Button, Skeleton, Tooltip } from "antd";
-import BreakoutRoomDisplay from "../Lobby/BreakoutRoomDisplay"
 import ProgramPersonDisplay from "./ProgramPersonDisplay";
 import moment from "moment";
 import { startTImeOffsetForProgramDisplay } from "../../globals";

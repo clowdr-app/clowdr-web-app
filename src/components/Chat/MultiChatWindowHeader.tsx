@@ -1,12 +1,5 @@
 import React from "react";
-import { AuthUserContext } from "../Session";
-import Parse from "parse"
-import { Badge, Button, Tag, Tooltip } from "antd";
-import { ShrinkOutlined, ExpandAltOutlined } from "@ant-design/icons";
-
-
-var moment = require('moment');
-var timezone = require('moment-timezone');
+import { Badge, Tag, Tooltip } from "antd";
 
 interface MultiChatWindowHeaderProps {
     onMount: (header: MultiChatWindowHeader) => void;
@@ -45,12 +38,12 @@ export default class MultiChatWindowHeader extends React.Component<MultiChatWind
     render() {
         // if (this.state.loading)
         //     return <Spin/>
-        let nMessages = {
-            nDMs: 0,
-            nMyChannelMessages: 0,
-            otherChannelMessages: 0,
-            paperChannelMessages: 0
-        }
+        // let nMessages = {
+        //     nDMs: 0,
+        //     nMyChannelMessages: 0,
+        //     otherChannelMessages: 0,
+        //     paperChannelMessages: 0
+        // }
 
         let notifications = <span className="notifications">
             {this.notificationSummary(this.state.nDMs, "New Direct Messages", "dms", "DMs")}

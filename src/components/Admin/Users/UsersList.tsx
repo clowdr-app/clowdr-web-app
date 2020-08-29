@@ -256,7 +256,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
 
     async updateRole(roleName: string, item: { key: any; }, shouldHaveRole: boolean) {
         this.setState({ roleUpdating: true })
-        let res = await Parse.Cloud.run('admin-role', {
+        await Parse.Cloud.run('admin-role', {
             id: this.props.auth.currentConference.id,
             roleName: roleName,
             userProfileId: item.key,

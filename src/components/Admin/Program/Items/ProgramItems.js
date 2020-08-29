@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button, Form, Input, Popconfirm, Select, Space, Spin, Table, Alert } from "antd";
 import Parse from "parse";
 import { AuthUserContext } from "../../../Session";
-import { ProgramContext } from "../../../Program";
 import { DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -116,7 +115,7 @@ class ProgramItems extends React.Component {
             const onEdit = record => {
                 let currentAuthors = [];
                 if (record.get("authors")) {
-                    record.get("authors").map(a => {
+                    record.get("authors").forEach(a => {
                         currentAuthors.push(a.id);
                     })
                 }
@@ -345,7 +344,6 @@ class ProgramItems extends React.Component {
                         dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramItems}
                         columns={mergedColumns}
                         rowClassName="editable-row"
-                        rowKey='id'
                         pagination={{
                             onChange: onCancel,
                             defaultPageSize: 500,

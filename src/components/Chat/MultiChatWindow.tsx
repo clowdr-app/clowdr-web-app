@@ -1,24 +1,12 @@
 import React from "react";
 import { AuthUserContext } from "../Session";
-import Parse from "parse"
-import { Badge, Button, Tag, Tooltip } from "antd";
+import { Button, } from "antd";
 import { ShrinkOutlined, ExpandAltOutlined } from "@ant-design/icons";
-// @ts-ignore
-import { Document, Page, pdfjs } from 'react-pdf';
-import VideoRoom from "../VideoChat/VideoRoom";
-import { ChatChannelConsumer, ClowdrState, JoinedChatChannel, MultiChatApp } from "../../ClowdrTypes";
-import ProgramItem from "../../classes/ProgramItem";
-import ProgramPerson from "../../classes/ProgramPerson";
-import AttachmentType from "../../classes/AttachmentType";
-import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
+import { ChatChannelConsumer, ClowdrState, MultiChatApp } from "../../ClowdrTypes";
 import ChatChannelChanger from "./ChatChannelChanger"
-import ChatFrame from "./ChatFrame"
 import ChatChannelArea from "./ChatChannelArea"
 import { Channel } from "twilio-chat/lib/channel";
 import MultiChatWindowHeader from "./MultiChatWindowHeader";
-
-var moment = require('moment');
-var timezone = require('moment-timezone');
 
 interface MultiChatWindowProps {
     appState: ClowdrState | null;

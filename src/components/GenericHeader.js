@@ -1,9 +1,8 @@
 import React, { Component } from "react";
 import { AuthUserContext } from "./Session";
-import { NavLink } from "react-router-dom";
 import { Layout } from "antd";
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header } = Layout;
 
 class GenericHeader extends Component {
     constructor(props) {

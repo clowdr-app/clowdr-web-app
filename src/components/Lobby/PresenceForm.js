@@ -2,11 +2,6 @@ import React from "react";
 import { AuthUserContext } from "../Session";
 import { withRouter } from "react-router-dom";
 import Parse from "parse";
-import { Badge, Button, Divider, Form, Input, Select, Skeleton, Spin, Tooltip } from "antd";
-
-import { isDNDColor, isAvailableColor, isLookingForConversationColor } from "./LobbyColors";
-
-let UserProfile = Parse.Object.extend("UserProfile");
 
 let UserPresence = Parse.Object.extend("UserPresence");
 
@@ -135,13 +130,13 @@ class PresenceForm extends React.Component {
     };
 
     render() {
-        const layout = {
-            labelCol: { span: 8 },
-            wrapperCol: { span: 16 },
-        };
-        const tailLayout = {
-            wrapperCol: { offset: 8, span: 16 },
-        };
+        // const layout = {
+        //     labelCol: { span: 8 },
+        //     wrapperCol: { span: 16 },
+        // };
+        // const tailLayout = {
+        //     wrapperCol: { offset: 8, span: 16 },
+        // };
 
         return <></>
         //         if(!this.state.presence)

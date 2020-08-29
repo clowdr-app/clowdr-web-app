@@ -6,8 +6,6 @@ import AttachmentType from "../../classes/AttachmentType";
 import ProgramItem from "../../classes/ProgramItem";
 import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
 import Parse from "parse";
-import { RcCustomRequestOptions } from "antd/lib/upload/interface";
-
 
 interface NewMediaLinkFormProps {
     appState: ClowdrState | null;
@@ -85,8 +83,6 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
             label: a.get("name"),
             value: a.id, object: a
         }))
-        let defaultSpace;
-        // return this.props.appState?.helpers.ifPermission("createVideoRoom",
         return <div>
             <Button type="default" onClick={this.showModal}>
                 {buttonText}
@@ -195,9 +191,9 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
                                 if (this.state.attachmentType && this.state.attachmentType.get("supportsFile")) {
                                     let otherValue = this.form.current.getFieldValue("url");
                                     if (otherValue && value)
-                                        throw "Please input either an external link OR upload a file";
+                                        throw new Error("Please input either an external link OR upload a file");
                                     if (!otherValue && !value)
-                                        throw "Please input either an external link OR upload a file";
+                                        throw new Error("Please input either an external link OR upload a file");
                                 }
                                 return;
                             }

@@ -24,7 +24,7 @@ class SlackToVideo extends React.Component {
                     await Parse.User.logOut();
                     window.location.reload(false);
 
-                    let u = await this.props.clowdrAppState.refreshUser();
+                    await this.props.clowdrAppState.refreshUser();
                     return;
                 }
                 let currentStep = 1;
@@ -39,7 +39,7 @@ class SlackToVideo extends React.Component {
                 });
                 try {
                     if (res && res.token) {
-                        let u = await Parse.User.become(res.token);
+                        await Parse.User.become(res.token);
                         let confQ = new Parse.Query("ClowdrInstance");
                         let conf = await confQ.get(confID);
                         await this.props.clowdrAppState.refreshUser(conf, true);
@@ -93,7 +93,7 @@ class SlackToVideo extends React.Component {
         this.setState({ resendingInvitation: true })
         try {
             let userID = this.props.match.params.userID;
-            let res = await Parse.Cloud.run("login-resendInvite", {
+            await Parse.Cloud.run("login-resendInvite", {
                 userID: userID,
                 confID: this.props.clowdrAppState.helpers.getDefaultConferenceName()
             });

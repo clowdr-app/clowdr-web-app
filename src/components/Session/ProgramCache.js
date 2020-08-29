@@ -103,7 +103,7 @@ export default class ProgramCache {
     }
 
     async getProgramItem(id, component) {
-        let items = await this.getProgramItems();
+        await this.getProgramItems();
         if (component) {
             if (!this._updateSubscribers['ProgramItem'])
                 this._updateSubscribers['ProgramItem'] = {};
@@ -115,7 +115,7 @@ export default class ProgramCache {
     }
 
     async getProgramSessionEvent(id, component) {
-        let items = await this.getProgramSessionEvents();
+        await this.getProgramSessionEvents();
         if (component) {
             if (!this._updateSubscribers['ProgramSessionEvent'])
                 this._updateSubscribers['ProgramSessionEvent'] = {};
@@ -126,11 +126,11 @@ export default class ProgramCache {
         return this._dataById['ProgramSessionEvent'][id];
     }
     async getProgramSession(id) {
-        let items = await this.getProgramSessions();
+        await this.getProgramSessions();
         return this._dataById['ProgramSession'][id];
     }
     async getProgramTrack(id, component) {
-        let tracks = await this.getProgramTracks();
+        await this.getProgramTracks();
         if (component) {
             if (!this._updateSubscribers['ProgramTrack'])
                 this._updateSubscribers['ProgramTrack'] = {};
@@ -179,14 +179,13 @@ export default class ProgramCache {
         let persons = await this.getProgramPersons();
         let person = persons.find(v => v.id === personID);
         if (person) {
-            let id = person.id;
             this.subscribeComponentToIDOnTable("ProgramPerson", personID, component);
         }
         return person;
     }
 
     async getUserProfileByProfileID(id, component) {
-        let items = await this.getUserProfiles();
+        await this.getUserProfiles();
         if (component) {
             if (!this._updateSubscribers['UserProfile'])
                 this._updateSubscribers['UserProfile'] = {};

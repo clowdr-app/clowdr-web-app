@@ -1,7 +1,7 @@
 import React from "react";
 import { AuthUserContext } from "../Session";
 import Parse from "parse"
-import { Button, Descriptions, message, Popconfirm, Space, Spin, List } from "antd";
+import { Button, Descriptions, message, Popconfirm, Space, Spin } from "antd";
 import NewMediaLinkForm from "./NewMediaLinkForm";
 import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";
 // @ts-ignore
@@ -62,7 +62,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
     }
 
     async componentDidMount() {
-        let item, attachmentTypes, itemKey;
+        let item, attachmentTypes;
 
         [item, attachmentTypes] = await Promise.all([
             this.props.appState?.programCache.getProgramItem(this.props.ProgramItem.id, this),
@@ -160,7 +160,6 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             authorstr = authorsArr.reduce((prev: any, curr: any) => [prev, ", ", curr]);
 
         let sessionInfo;
-        let now = Date.now();
 
         let roomInfo = <></>;
         let showSessionInfo = !this.props.hiddenKeys || !this.props.hiddenKeys.includes("session");
@@ -212,8 +211,6 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
         else if (this.state.ProgramItem.get("programSession")) {
             let session = this.state.ProgramItem.get("programSession");
             let now = Date.now();
-            var timeS = session.get("startTime") ? session.get("startTime") : new Date();
-            var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
             if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") === "YouTube") {
                 let when = "now"

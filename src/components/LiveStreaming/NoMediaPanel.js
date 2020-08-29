@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 import { Card } from 'antd';
-import { StopOutlined } from "@ant-design/icons";
 
-import AuthUserContext from "../Session/context";
 import nomediaImg from "./nomedia.png";
 
 class NoMediaPanel extends Component {
@@ -26,7 +24,6 @@ class NoMediaPanel extends Component {
 
     render() {
 
-        let qa = "";
         if (this.props.vid && this.props.vid.id !== this.props.video.id) { // It's not us! Unmount!
             return <div></div>
         }

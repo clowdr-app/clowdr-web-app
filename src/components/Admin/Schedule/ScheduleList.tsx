@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Space, Table } from "antd";
+import { Table } from "antd";
 import { ColumnsType } from 'antd/lib/table';
 import Firebase from '../../Firebase/firebase';
 

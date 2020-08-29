@@ -1,5 +1,5 @@
 import React from "react";
-import { Emoji, Picker } from 'emoji-mart'
+import { Picker } from 'emoji-mart'
 import { AuthUserContext } from "../Session";
 import { ClowdrState } from "../../ClowdrTypes";
 

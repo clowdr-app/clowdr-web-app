@@ -15,7 +15,7 @@ class CollapsedChatDisplay extends React.Component {
 
     getChatTitle(chat) {
         if (!chat) {
-            console.log("No chat!" + " " + this.state.sid)
+            console.log("No chat! " + this.state.sid)
             return <Skeleton.Input active style={{ width: '20px', height: '1em' }} />;
         }
         this.titleSet = true;
@@ -123,7 +123,7 @@ class CollapsedChatDisplay extends React.Component {
             buttons.push(<Popconfirm
                 key="deleteChat"
                 onConfirm={async () => {
-                    let res = await Parse.Cloud.run("chat-destroy", {
+                    await Parse.Cloud.run("chat-destroy", {
                         conference: this.props.auth.currentConference.id,
                         sid: this.state.sid
                     });

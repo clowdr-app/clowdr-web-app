@@ -9,7 +9,6 @@ import { Store } from 'antd/lib/form/interface';
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
-const { Option } = Select;
 // const {TabPane} = Tabs;
 // const IconText = ({icon, text}) => (
 //     <Space>
@@ -199,7 +198,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
             const edit = (record: Parse.Object): void => {
                 let currentItems: string[] = [];
                 if (record.get("items")) {
-                    record.get("items").map((a: Parse.Object) => {
+                    record.get("items").forEach((a: Parse.Object) => {
                         currentItems.push(a.id);
                     })
                 }

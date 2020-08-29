@@ -3,14 +3,10 @@ import { AuthUserContext } from "../Session";
 import Parse from "parse"
 import { Button, message, Skeleton, Tooltip } from "antd";
 // @ts-ignore
-import ProgramItem from "../../classes/ProgramItem";
 import ChatFrame from "./ChatFrame"
-import { CloseOutlined, MinusOutlined, PlusOutlined, VideoCameraAddOutlined } from "@ant-design/icons"
+import { PlusOutlined, VideoCameraAddOutlined } from "@ant-design/icons"
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
-
-var moment = require('moment');
-var timezone = require('moment-timezone');
 
 class ChatChannelArea extends React.Component {
     constructor(props) {
@@ -92,7 +88,7 @@ class ChatChannelArea extends React.Component {
     async componentDidMount() {
         this.mounted = true;
         if (!this.state.chat) {
-            let res = await this.props.chatClient.getJoinedChannel(this.props.sid);
+            await this.props.chatClient.getJoinedChannel(this.props.sid);
             this.setState({ chat: this.props.chatClient.joinedChannels[this.props.sid] })
         }
         this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);

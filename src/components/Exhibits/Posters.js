@@ -1,8 +1,6 @@
 import React from 'react';
 import { NavLink } from "react-router-dom";
-import Parse from "parse";
-import { Button, Card, message, Spin, Tooltip, Upload } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { Card, Spin, Tooltip } from 'antd';
 import { AuthUserContext } from "../Session";
 import placeholder from './placeholder.png';
 import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";

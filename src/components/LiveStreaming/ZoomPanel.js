@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Space, Typography, Popconfirm } from 'antd';
+import { Button, Space, Typography } from 'antd';
 import Parse from "parse";
 
 class ZoomPanel extends Component {
@@ -20,7 +20,6 @@ class ZoomPanel extends Component {
     async componentDidMount() {
         if (this.props.auth.user) {
             this.props.auth.programCache.getMeetingRegistrations(this).then(async (registrations) => {
-                let start_url = undefined;
                 if (this.props.room && this.props.room.get("zoomRoom")) {
                     let reg = registrations.find(v => v.get("meetingID") === this.props.room.get("id1"))
                     let link;

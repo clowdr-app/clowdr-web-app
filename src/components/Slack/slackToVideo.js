@@ -40,7 +40,7 @@ class SlackToVideo extends React.Component {
         console.log(res);
         let roomName = res.roomName;
         try {
-            let u = await Parse.User.become(res.token);
+            await Parse.User.become(res.token);
             let conf = await this.props.clowdrAppState.getConferenceBySlackName(team);
             await this.props.clowdrAppState.refreshUser(conf, true);
             if (!roomName) {

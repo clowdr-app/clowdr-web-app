@@ -3,9 +3,7 @@ import { Avatar, Badge, Button, Popover, Skeleton, Tag, Tooltip } from "antd";
 import { AuthUserContext } from "../Session";
 import { withRouter } from "react-router-dom";
 
-import { isAvailableColor, isDNDColor, isDNDNameColor, isLookingForConversationColor } from "./LobbyColors";
 import ReactMarkdown from "react-markdown";
-import ProgramItemDisplay from "../Program/ProgramItemDisplay";
 import ProgramPersonAuthorship from "../Program/ProgramPersonAuthorship";
 
 class UserStatusDisplay extends React.Component {
@@ -76,7 +74,7 @@ class UserStatusDisplay extends React.Component {
         if (this.props.auth.userProfile.id !== this.state.profile.id && !this.props.hideLink) {
             onClick = this.openDM.bind(this);
         }
-        let avatar, inlineAvatar;
+        let avatar;
         if (this.state.profile && this.state.profile.get("profilePhoto") != null)
             avatar = <Avatar src={this.state.profile.get("profilePhoto").url()} />
 

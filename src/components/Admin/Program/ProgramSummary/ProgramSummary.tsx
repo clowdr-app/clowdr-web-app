@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, message, Popconfirm, Select, Spin, Table, Upload, Space, AutoComplete } from "antd";
+import { Button, message, Popconfirm, Select, Spin, Table, Upload, Space } from "antd";
 import Parse from "parse";
 import { AuthUserContext } from "../../../Session";
 
@@ -25,8 +25,6 @@ interface ProgramSummaryState {
     uploadTimezone: string,
     uploadFormat: string
 }
-
-const { Option } = Select;
 
 class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummaryState> {
     currentConference: any;

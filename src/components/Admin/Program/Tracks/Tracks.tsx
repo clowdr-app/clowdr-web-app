@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Form, Input, Select, Popconfirm, Radio, Space, Spin, Table, Checkbox, Alert } from "antd";
+import { Button, Form, Input, Popconfirm, Radio, Space, Spin, Table, Checkbox, Alert } from "antd";
 import Parse from "parse";
 import { AuthUserContext } from "../../../Session";
 import {
@@ -11,8 +11,6 @@ import {
 import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { RadioChangeEvent } from "antd/lib/radio";
 import { Store } from 'antd/lib/form/interface';
-
-const { Option } = Select;
 
 interface ProgramTracksProps {
     auth: ClowdrState;
@@ -73,6 +71,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
     onChangeVideo(record: Parse.Object) {
         record.set("perProgramItemVideo", !record.get("perProgramItemVideo"));
     }
+
     onToggle(record: Parse.Object, key: string) { //why did nobody write this like this?? :(
         record.set(key, !record.get(key));
     }
@@ -173,6 +172,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
         //Set up editable table
         const EditableTable = () => {
             const [form] = Form.useForm();
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [data, setData] = useState(this.state.ProgramTracks);
             const [editingKey, setEditingKey] = useState('');
             const isEditing = (record: Parse.Object): boolean => record.id === editingKey;
@@ -196,7 +196,6 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
             };
 
             const onDelete = (record: Parse.Object): void => {
-                const newTrackList: Parse.Object[] = [...this.state.ProgramTracks];
                 // delete from database
                 let data = {
                     clazz: "ProgramTrack",
@@ -210,7 +209,6 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                         // this.refreshList();
                         console.log("[Admin/Tracks]: Unable to delete: " + err)
                     })
-
             };
 
             const save = async (id: string) => {

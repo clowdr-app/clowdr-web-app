@@ -8,9 +8,7 @@ import ConnectTriggeringLocalVideoPreview
 import ReconnectingNotification
     from "clowdr-video-frontend/lib/components/ReconnectingNotification/ReconnectingNotification";
 import { styled } from "@material-ui/core";
-import React, { useContext } from "react";
-import Grid from '@material-ui/core/Grid';
-import { Skeleton } from "antd"
+import React from "react";
 import { PushpinFilled, PushpinOutlined } from "@ant-design/icons"
 
 import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
@@ -35,31 +33,28 @@ import ToggleVideoButton from "clowdr-video-frontend/lib/components/Controls/Tog
 import ToggleScreenShareButton
     from "clowdr-video-frontend/lib/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
 import EndCallButton from "clowdr-video-frontend/lib/components/Controls/EndCallButton/EndCallButton";
-import AuthUserContext from "../Session/context";
-import useLocalTracks from "clowdr-video-frontend/lib/components/VideoProvider/useLocalTracks/useLocalTracks";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
-let backgroundImg = require('../../clowdr-background.jpg');
 const Main = styled('main')({
     // overflow: 'hidden',
 });
 
-const ParticipantContainer = styled('Grid')(({ theme }) => ({
-    // position: 'relative',
-    height: '80vh',
-    // display: 'grid',
-    flexGrow: 1,
-    // gridTemplateColumns: `${theme.sidebarWidth}px 1fr`,
-    gridTemplateAreas: '". participantList"',
-    // gridTemplateRows: '100%',
-    spacing: 0,
-    // [theme.breakpoints.down('xs')]: {
-    //     gridTemplateAreas: '"participantList" "."',
-    //     gridTemplateColumns: `auto`,
-    //     gridTemplateRows: `calc(100% - ${theme.sidebarMobileHeight + 12}px) ${theme.sidebarMobileHeight + 6}px`,
-    //     gridGap: '6px',
-    // },
-}));
+// const ParticipantContainer = styled('Grid')(({ theme }) => ({
+//     // position: 'relative',
+//     height: '80vh',
+//     // display: 'grid',
+//     flexGrow: 1,
+//     // gridTemplateColumns: `${theme.sidebarWidth}px 1fr`,
+//     gridTemplateAreas: '". participantList"',
+//     // gridTemplateRows: '100%',
+//     spacing: 0,
+//     // [theme.breakpoints.down('xs')]: {
+//     //     gridTemplateAreas: '"participantList" "."',
+//     //     gridTemplateColumns: `auto`,
+//     //     gridTemplateRows: `calc(100% - ${theme.sidebarMobileHeight + 12}px) ${theme.sidebarMobileHeight + 6}px`,
+//     //     gridGap: '6px',
+//     // },
+// }));
 
 export default function App() {
     const roomState = useRoomState();
@@ -237,10 +232,6 @@ function Participant({
     priority,
     showWhenJustListening,
 }) {
-    const publications = usePublications(participant);
-    const audioPublication = publications.find(p => p.kind === 'audio');
-    const videoPublication = publications.find(p => p.trackName.includes('camera'));
-
     /*
        const justListening = (audioPublication == null && videoPublication == null);
            <div>
@@ -342,9 +333,6 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
     const audioTrack = useTrack(audioPublication);
 
     const classes = useStyles();
-
-    const clowdrAppState = useContext(AuthUserContext);
-    let name = participant.identity;
 
     return (
         <div

@@ -4,16 +4,11 @@ import { Button, Form, Input, Menu, message, Modal, Select, Spin, Switch } from 
 import { ChatChannelConsumer, ClowdrState, MultiChatApp } from "../../ClowdrTypes";
 import CollapsedChatDisplay from "./CollapsedChatDisplay";
 import { Channel } from "twilio-chat/lib/channel";
-import { PlusOutlined } from "@ant-design/icons"
 import ProgramItem from "../../classes/ProgramItem";
 import UserProfile from "../../classes/UserProfile";
 import Parse from "parse";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
-import { Create } from "@material-ui/icons";
-
-var moment = require('moment');
-var timezone = require('moment-timezone');
 
 interface ChatChannelChangerProps {
     appState: ClowdrState | null;
@@ -120,7 +115,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
     async createChannel(title: string, description: string, autoJoin: boolean): Promise<Channel> {
         let twilio = this.props.appState?.chatClient.twilio;
         if (!twilio)
-            throw "Not connected to twilio";
+            throw new Error("Not connected to twilio");
         let attributes = {
             description: description,
             category: 'public-global',
@@ -136,13 +131,12 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
     }
 
     async createNewChannel(values: any) {
-        var _this = this;
         let newChannel = await this.createChannel(
             values.title,
             values.description,
             values.autoJoin
         );
-        let room = await this.props.appState?.chatClient.callWithRetry(() => newChannel.join());
+        await this.props.appState?.chatClient.callWithRetry(() => newChannel.join());
         this.setState({ newChannelVisible: false });
         this.props.appState?.chatClient.openChat(newChannel.sid, false);
     }
@@ -392,147 +386,147 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
         </div>
     }
 }
-// @ts-ignore
-const UpdateCreateForm = ({ visible, onCreate, onCancel, values }) => {
-    const [form] = Form.useForm();
-    if (!values)
-        return <div></div>
-    return (
-        <Modal
-            visible={visible}
-            title="Update a channel"
-            // okText="Create"
-            footer={[
-                <Button form="myForm" key="submit" type="primary" htmlType="submit">
-                    Create
-                </Button>
-            ]}
-            cancelText="Cancel"
-            onCancel={onCancel}
-        // onOk={() => {
-        //     form
-        //         .validateFields()
-        //         .then(values => {
-        //             form.resetFields();
-        //             onCreate(values);
-        //         })
-        //         .catch(info => {
-        //             console.log('Validate Failed:', info);
-        //         });
-        // }}
-        >
-            <Form
-                form={form}
-                layout="vertical"
-                name="form_in_modal"
-                id="myForm"
-                initialValues={{
-                    modifier: 'public',
-                }}
-                onFinish={() => {
-                    form
-                        .validateFields()
-                        .then(values => {
-                            form.resetFields();
-                            onCreate(values);
-                        })
-                        .catch(info => {
-                            console.log('Validate Failed:', info);
-                        });
-                }}
-            >
-                <Form.Item
-                    name="title"
-                    label="Title"
-                    rules={[
-                        {
-                            required: true,
-                            message: 'Please input the title of the channel!',
-                        },
-                    ]}
-                >
-                    <Input defaultValue={values.uniqueName} />
-                </Form.Item>
-                <Form.Item name="description" label="Description (optional)">
-                    <Input type="textarea" />
-                </Form.Item>
-                <Form.Item name="auto-join" className="collection-create-form_last-form-item" label="Automatically join all users to this room">
-                    <Switch />
-                </Form.Item>
-            </Form>
-        </Modal>
-    );
-};
 
-// @ts-ignore
-const ChannelCreateForm = ({ visible, onCreate, onCancel }) => {
-    const [form] = Form.useForm();
-    return (
-        <Modal
-            visible={visible}
-            title="Create a text channel"
-            // okText="Create"
-            footer={[
-                <Button form="myForm" key="submit" type="primary" htmlType="submit">
-                    Create
+// const UpdateCreateForm = ({ visible, onCreate, onCancel, values }) => {
+//     const [form] = Form.useForm();
+//     if (!values)
+//         return <div></div>
+//     return (
+//         <Modal
+//             visible={visible}
+//             title="Update a channel"
+//             // okText="Create"
+//             footer={[
+//                 <Button form="myForm" key="submit" type="primary" htmlType="submit">
+//                     Create
+//                 </Button>
+//             ]}
+//             cancelText="Cancel"
+//             onCancel={onCancel}
+//         // onOk={() => {
+//         //     form
+//         //         .validateFields()
+//         //         .then(values => {
+//         //             form.resetFields();
+//         //             onCreate(values);
+//         //         })
+//         //         .catch(info => {
+//         //             console.log('Validate Failed:', info);
+//         //         });
+//         // }}
+//         >
+//             <Form
+//                 form={form}
+//                 layout="vertical"
+//                 name="form_in_modal"
+//                 id="myForm"
+//                 initialValues={{
+//                     modifier: 'public',
+//                 }}
+//                 onFinish={() => {
+//                     form
+//                         .validateFields()
+//                         .then(values => {
+//                             form.resetFields();
+//                             onCreate(values);
+//                         })
+//                         .catch(info => {
+//                             console.log('Validate Failed:', info);
+//                         });
+//                 }}
+//             >
+//                 <Form.Item
+//                     name="title"
+//                     label="Title"
+//                     rules={[
+//                         {
+//                             required: true,
+//                             message: 'Please input the title of the channel!',
+//                         },
+//                     ]}
+//                 >
+//                     <Input defaultValue={values.uniqueName} />
+//                 </Form.Item>
+//                 <Form.Item name="description" label="Description (optional)">
+//                     <Input type="textarea" />
+//                 </Form.Item>
+//                 <Form.Item name="auto-join" className="collection-create-form_last-form-item" label="Automatically join all users to this room">
+//                     <Switch />
+//                 </Form.Item>
+//             </Form>
+//         </Modal>
+//     );
+// };
+
+const ChannelCreateForm: (t: any) => JSX.Element
+    = ({ visible, onCreate, onCancel }) => {
+        const [form] = Form.useForm();
+        return (
+            <Modal
+                visible={visible}
+                title="Create a text channel"
+                // okText="Create"
+                footer={[
+                    <Button form="myForm" key="submit" type="primary" htmlType="submit">
+                        Create
                 </Button>
-            ]}
-            cancelText="Cancel"
-            onCancel={onCancel}
-        // onOk={() => {
-        //     form
-        //         .validateFields()
-        //         .then(values => {
-        //             form.resetFields();
-        //             onCreate(values);
-        //         })
-        //         .catch(info => {
-        //             console.log('Validate Failed:', info);
-        //         });
-        // }}
-        >
-            <Form
-                form={form}
-                layout="vertical"
-                name="form_in_modal"
-                id="myForm"
-                initialValues={{
-                    modifier: 'public',
-                }}
-                onFinish={() => {
-                    form
-                        .validateFields()
-                        .then(values => {
-                            form.resetFields();
-                            onCreate(values);
-                        })
-                        .catch(info => {
-                            console.log('Validate Failed:', info);
-                        });
-                }}
+                ]}
+                cancelText="Cancel"
+                onCancel={onCancel}
+            // onOk={() => {
+            //     form
+            //         .validateFields()
+            //         .then(values => {
+            //             form.resetFields();
+            //             onCreate(values);
+            //         })
+            //         .catch(info => {
+            //             console.log('Validate Failed:', info);
+            //         });
+            // }}
             >
-                <Form.Item
-                    name="title"
-                    label="Title"
-                    rules={[
-                        {
-                            required: true,
-                            message: 'Please input the title of the channel!',
-                        },
-                    ]}
+                <Form
+                    form={form}
+                    layout="vertical"
+                    name="form_in_modal"
+                    id="myForm"
+                    initialValues={{
+                        modifier: 'public',
+                    }}
+                    onFinish={() => {
+                        form
+                            .validateFields()
+                            .then(values => {
+                                form.resetFields();
+                                onCreate(values);
+                            })
+                            .catch(info => {
+                                console.log('Validate Failed:', info);
+                            });
+                    }}
                 >
-                    <Input />
-                </Form.Item>
-                <Form.Item name="description" label="Description (optional)">
-                    <Input type="textarea" />
-                </Form.Item>
-                <Form.Item name="autoJoin" className="collection-create-form_last-form-item" label="Automatically join all users to this room" valuePropName="checked">
-                    <Switch />
-                </Form.Item>
-            </Form>
-        </Modal>
-    );
-};
+                    <Form.Item
+                        name="title"
+                        label="Title"
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Please input the title of the channel!',
+                            },
+                        ]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item name="description" label="Description (optional)">
+                        <Input type="textarea" />
+                    </Form.Item>
+                    <Form.Item name="autoJoin" className="collection-create-form_last-form-item" label="Automatically join all users to this room" valuePropName="checked">
+                        <Switch />
+                    </Form.Item>
+                </Form>
+            </Modal>
+        );
+    };
 const
     AuthConsumer = (props: PublicChannelChangerProps) => (
         <AuthUserContext.Consumer>

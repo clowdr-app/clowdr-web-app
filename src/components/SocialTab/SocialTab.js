@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import { Layout } from "antd";
 import ContextualActiveUsers from "../Lobby/ContextualActiveusers";
 import { AuthUserContext } from "../Session";
 
@@ -27,11 +26,6 @@ class SocialTab extends Component {
 
 
     render() {
-        let topHeight = 0;
-        let topElement = document.getElementById("top-content");
-        if (topElement)
-            topHeight = topElement.clientHeight;
-
         if (!this.state.visible) {
             return <div></div>
         }

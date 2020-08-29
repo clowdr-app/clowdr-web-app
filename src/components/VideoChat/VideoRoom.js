@@ -45,9 +45,6 @@ import { SyncOutlined } from '@ant-design/icons'
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import AboutModal from "../SignIn/AboutModal";
 
-const { Paragraph } = Typography;
-
-
 class VideoRoom extends Component {
     constructor(props) {
         super(props);
@@ -104,7 +101,7 @@ class VideoRoom extends Component {
         let _this = this;
         if (user) {
             let idToken = user.getSessionToken();
-            const data = fetch(
+            fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
                 , {
                     method: 'POST',
@@ -161,7 +158,7 @@ class VideoRoom extends Component {
         let idToken = this.props.clowdrAppState.user.getSessionToken();
         this.setState({ roomDeleteInProgress: true })
 
-        const data = fetch(
+        fetch(
             `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/deleteRoom`
             , {
                 method: 'POST',
@@ -283,7 +280,7 @@ class VideoRoom extends Component {
                         this.props.clowdrAppState.chatClient.setRightSideChat(room.get("twilioChatID"));
                 });
             let idToken = user.getSessionToken();
-            const data = fetch(
+            fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/video/token`
                 , {
                     method: 'POST',
@@ -602,10 +599,6 @@ class VideoRoom extends Component {
             }
         }
 
-        let nWatchers = 0;
-        if (this.state.room.get("watchers")) {
-            nWatchers = this.state.room.get("watchers").length;
-        }
         // For mobile browsers, limit the maximum incoming video bitrate to 2.5 Mbps.
         if (isMobile && connectionOptions.bandwidthProfile.video) {
             connectionOptions.bandwidthProfile.video.maxSubscriptionBitrate = 2500000;
@@ -887,8 +880,6 @@ class RoomVisibilityController extends React.Component {
                     this.state.users[d].get("user").id
             };
         });
-        let _this = this;
-        //<Select.Option value={d.id} key={d.id}>{d.get("displayname")}</Select.Option>);
 
         let error;
         if (this.state.isError)

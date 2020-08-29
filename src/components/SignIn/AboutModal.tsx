@@ -1,8 +1,7 @@
 import { AuthUserContext } from "../Session";
-import { withRouter, RouteComponentProps } from "react-router-dom";
+import { withRouter } from "react-router-dom";
 import * as React from "react";
-import { Alert, Button, Modal, Result, Typography } from "antd";
-import { SmileOutlined } from '@ant-design/icons';
+import { Alert, Button, Modal, Typography } from "antd";
 
 /*
 interface WelcomePortalProps {

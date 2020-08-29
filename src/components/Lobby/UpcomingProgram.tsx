@@ -7,8 +7,6 @@ import { AuthUserContext } from '../Session';
 import ExpandableSessionDisplay from "./ExpandableSessionDisplay"
 import moment from "moment";
 import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
-import ProgramItem from "../../classes/ProgramItem";
-import ProgramItemDisplay from "../Program/ProgramItemDisplay";
 import ProgramSessionEventDisplay from "../Program/ProgramSessionEventDisplay";
 import ProgramTrack from "../../classes/ProgramTrack";
 import { startTImeOffsetForProgramDisplay } from "../../globals";
@@ -90,7 +88,6 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         // }
         let items = [];
         let lastFormattedTime = null;
-        let expanded = [];
 
         for (let session of sessions.sort(this.dateSorter)) {
             let formattedTime = moment(session.get("startTime")).calendar();
@@ -195,8 +192,6 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     private updateCurrentSessions() {
-        let now = Date.now();
-
         let items: (ProgramSession | ProgramSessionEvent)[] = [];
 
         for (let s of this.state.ProgramSessions) {

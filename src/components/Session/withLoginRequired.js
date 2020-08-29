@@ -1,7 +1,6 @@
 import React from 'react';
 import { Spin } from "antd";
 import AuthUserContext from "./context";
-import GenericLanding from "../GenericLanding";
 
 const withLoginRequired = Component => {
     class WithLoginRequired extends React.Component {

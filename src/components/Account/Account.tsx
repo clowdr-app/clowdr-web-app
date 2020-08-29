@@ -242,7 +242,6 @@ class Account extends React.Component<Props, State> {
             return <Skeleton />
         }
 
-        let _this = this;
         let passwordRequired: boolean = true;  //TS: is the init val True?
         if (this.props.auth.user) {
             passwordRequired = !this.props.auth.user.get("passwordSet");

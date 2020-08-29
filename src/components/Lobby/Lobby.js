@@ -1,10 +1,6 @@
 import * as React from 'react';
 import {
-    Avatar,
-    Card,
     Collapse,
-    Layout,
-    List,
     message,
     Popconfirm,
     Skeleton,
@@ -20,116 +16,114 @@ import UserStatusDisplay from "./UserStatusDisplay";
 import NewRoomForm from "./NewRoomForm";
 import { LockTwoTone } from "@ant-design/icons"
 
-const { Content, Footer, Sider } = Layout;
+// class MeetingSummary extends React.Component {
+//     constructor(props) {
+//         super(props);
+//         this.state = {
+//             loadingMeeting: false, loading: false, members: this.props.item.members, profiles: {},
+//             activePublicRooms: [],
+//             activePrivateRooms: [],
+//             breakoutRoomsForTracks: {}
+//         };
+//     }
 
-class MeetingSummary extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            loadingMeeting: false, loading: false, members: this.props.item.members, profiles: {},
-            activePublicRooms: [],
-            activePrivateRooms: [],
-            breakoutRoomsForTracks: {}
-        };
-    }
+//     componentDidMount() {
+//         // let ref = this.props.firebase.db.ref("users");
+//         // if (this.props.item && this.props.item.members)
+//         //     Object.keys(this.props.item.members).forEach((key) => {
+//         //         ref.child(key).once("value").then((v) => {
+//         //             this.setState((prevState) => {
+//         //                 let members = Object.assign({}, prevState.members);
+//         //                 members[key] = v.val();
+//         //                 return {members};
+//         //             })
+//         //         })
+//         //     })
+//     }
 
-    componentDidMount() {
-        // let ref = this.props.firebase.db.ref("users");
-        // if (this.props.item && this.props.item.members)
-        //     Object.keys(this.props.item.members).forEach((key) => {
-        //         ref.child(key).once("value").then((v) => {
-        //             this.setState((prevState) => {
-        //                 let members = Object.assign({}, prevState.members);
-        //                 members[key] = v.val();
-        //                 return {members};
-        //             })
-        //         })
-        //     })
-    }
+//     differentMembers(a, b) {
+//         if (a && b)
+//             for (let i = 0; i < a.length && i < b.length; i++) {
+//                 if (a[i] !== b[i])
+//                     return true;
+//                 if (a[i] && b[i] && a[i].id !== b[i].id)
+//                     return true;
+//                 if (a[i].get("displayName") !== b[i].get("displayName") || a[i].get("profilePhoto") !== b[i].get("profilePhoto"))
+//                     return true;
+//             }
+//         return false;
+//     }
 
-    differentMembers(a, b) {
-        if (a && b)
-            for (let i = 0; i < a.length && i < b.length; i++) {
-                if (a[i] !== b[i])
-                    return true;
-                if (a[i] && b[i] && a[i].id !== b[i].id)
-                    return true;
-                if (a[i].get("displayName") !== b[i].get("displayName") || a[i].get("profilePhoto") !== b[i].get("profilePhoto"))
-                    return true;
-            }
-        return false;
-    }
+//     componentDidUpdate(prevProps, prevState, snapshot) {
+//         if (!this.mounted)
+//             return;
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (!this.mounted)
-            return;
+//         if (this.props.item.get('members') !== prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
+//             this.setState({ members: this.props.item.members });
+//         }
+//     }
 
-        if (this.props.item.get('members') !== prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
-            this.setState({ members: this.props.item.members });
-        }
-    }
+//     joinMeeting(meeting) {
+//         if (meeting.get("twilioID") && meeting.get('twilioID').startsWith("demo")) {
+//             message.error('Sorry, you can not join the demo meetings. Try to create a new one!');
 
-    joinMeeting(meeting) {
-        if (meeting.get("twilioID") && meeting.get('twilioID').startsWith("demo")) {
-            message.error('Sorry, you can not join the demo meetings. Try to create a new one!');
+//         } else {
+//             console.log(meeting.get("conference"))
+//             this.props.history.push("/video/" + encodeURI(meeting.get("conference").get("conferenceName")) + '/' + encodeURI(meeting.get("title")));
+//         }
+//     }
 
-        } else {
-            console.log(meeting.get("conference"))
-            this.props.history.push("/video/" + encodeURI(meeting.get("conference").get("conferenceName")) + '/' + encodeURI(meeting.get("title")));
-        }
-    }
+//     render() {
+//         let item = this.props.item;
+//         let _this = this;
+//         return <Card title={item.get('title')} style={{ width: "350px", "height": "350px", overflow: "scroll" }}
+//             size={"small"}
+//             extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is " + item.get('capacity') + ")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
+//                 title="You are about to join a video call. Are you ready?"
+//                 onConfirm={_this.joinMeeting.bind(_this, item)}
+//                 okText="Yes"
+//                 cancelText="No"
+//             ><a href="#">Join</a></Popconfirm>)}
+//         >
+//             {(item.get('members') ? <span>
+//                 {/*<h4>Currently here:</h4>*/}
+//                 {/*<Divider orientation="left">Here now:</Divider>*/}
+//                 <List
+//                     dataSource={item.get('members').filter((v) => (v != null))}
+//                     size={"small"}
+//                     renderItem={user => {
+//                         let avatar;
+//                         if (user.get("profilePhoto"))
+//                             avatar = <Avatar src={user.get("profilePhoto").url()} />
+//                         else {
+//                             let initials = "";
+//                             if (user.get("displayName"))
+//                                 user.get("displayName").split(" ").forEach((v => initials += v.substring(0, 1)))
 
-    render() {
-        let item = this.props.item;
-        let _this = this;
-        return <Card title={item.get('title')} style={{ width: "350px", "height": "350px", overflow: "scroll" }}
-            size={"small"}
-            extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is " + item.get('capacity') + ")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
-                title="You are about to join a video call. Are you ready?"
-                onConfirm={_this.joinMeeting.bind(_this, item)}
-                okText="Yes"
-                cancelText="No"
-            ><a href="#">Join</a></Popconfirm>)}
-        >
-            {(item.get('members') ? <span>
-                {/*<h4>Currently here:</h4>*/}
-                {/*<Divider orientation="left">Here now:</Divider>*/}
-                <List
-                    dataSource={item.get('members').filter((v) => (v != null))}
-                    size={"small"}
-                    renderItem={user => {
-                        let avatar;
-                        if (user.get("profilePhoto"))
-                            avatar = <Avatar src={user.get("profilePhoto").url()} />
-                        else {
-                            let initials = "";
-                            if (user.get("displayName"))
-                                user.get("displayName").split(" ").forEach((v => initials += v.substring(0, 1)))
+//                             avatar = <Avatar>{initials}</Avatar>
+//                         }
+//                         return <List.Item key={user.id}>
+//                             <List.Item.Meta
+//                                 avatar={
+//                                     avatar
+//                                 }
+//                                 title={user.get("displayName")}
+//                             />
+//                         </List.Item>
+//                     }}
+//                 >
+//                     {this.state.loading && this.state.hasMore && (
+//                         <div className="demo-loading-container">
+//                             <Spin />
+//                         </div>
+//                     )}
+//                 </List>
+//             </span> : <span>Nobody's here yet</span>)}
 
-                            avatar = <Avatar>{initials}</Avatar>
-                        }
-                        return <List.Item key={user.id}>
-                            <List.Item.Meta
-                                avatar={
-                                    avatar
-                                }
-                                title={user.get("displayName")}
-                            />
-                        </List.Item>
-                    }}
-                >
-                    {this.state.loading && this.state.hasMore && (
-                        <div className="demo-loading-container">
-                            <Spin />
-                        </div>
-                    )}
-                </List>
-            </span> : <span>Nobody's here yet</span>)}
+//         </Card>
 
-        </Card>
-
-    }
-}
+//     }
+// }
 
 class Lobby extends React.Component {
     constructor(props) {
@@ -325,11 +319,7 @@ class Lobby extends React.Component {
                                 return <Skeleton />
                             }
 
-                            let membersCount = 0;
                             let capacity = item.get("capacity");
-                            if (item.get("members")) {
-                                membersCount = item.get("members").length;
-                            }
                             let tag, joinInfo;
                             if (item.get("mode") === "group") {
                                 //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
@@ -392,11 +382,8 @@ class Lobby extends React.Component {
                             let list;
                             let header = joinLink;
                             if (item.get("members") && item.get("members").length > 0)
-                                list = item.get("members").map(user => {
+                                list = item.get("members").forEach(user => {
                                     if (user) {
-                                        let className = "personHoverable";
-                                        if (this.state.filteredUser === user.id)
-                                            className += " personFiltered"
                                         return <UserStatusDisplay popover={true} profileID={user.id} key={user.id} />
                                     }
                                 }) //}>
@@ -439,37 +426,37 @@ class Lobby extends React.Component {
 
         // console.log("allActiveRooms.length = " + allActiveRooms.length);
 
-        const compareDates = (i, j) => {
-            let a = this.state.presences[i];
-            let b = this.state.presences[j];
-            if (!a)
-                return -1;
-            if (!b) return 1;
-            a = a.get("updatedAt");
-            b = b.get("updatedAt");
-            return (a < b ? 1 : a > b ? -1 : 0)
-        };
+        // const compareDates = (i, j) => {
+        //     let a = this.state.presences[i];
+        //     let b = this.state.presences[j];
+        //     if (!a)
+        //         return -1;
+        //     if (!b) return 1;
+        //     a = a.get("updatedAt");
+        //     b = b.get("updatedAt");
+        //     return (a < b ? 1 : a > b ? -1 : 0)
+        // };
 
-        const compareNames = (i, j) => {
-            let a = this.props.auth.programCache.unsafeGetProfileByID(i);
-            let b = this.props.auth.programCache.unsafeGetProfileByID(j);
-            if (!a)
-                return -1;
-            if (!b) return 1;
-            a = a.get("displayName");
-            b = b.get("displayName");
-            return (a.localeCompare(b))
-        };
+        // const compareNames = (i, j) => {
+        //     let a = this.props.auth.programCache.unsafeGetProfileByID(i);
+        //     let b = this.props.auth.programCache.unsafeGetProfileByID(j);
+        //     if (!a)
+        //         return -1;
+        //     if (!b) return 1;
+        //     a = a.get("displayName");
+        //     b = b.get("displayName");
+        //     return (a.localeCompare(b))
+        // };
 
-        let nonProgramRooms = allActiveRooms
-            .sort((i1, i2) => { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
-            // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
-            .filter(r => !r.get("programItem"));
+        // let nonProgramRooms = allActiveRooms
+        //     .sort((i1, i2) => { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
+        //     // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
+        //     .filter(r => !r.get("programItem"));
 
-        let programRooms = allActiveRooms
-            .sort((i1, i2) => { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
-            // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
-            .filter(r => !r.get("programItem"))
+        // let programRooms = allActiveRooms
+        //     .sort((i1, i2) => { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
+        //     // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
+        //     .filter(r => !r.get("programItem"))
 
         return (
             // <Tabs defaultActiveKey="1">

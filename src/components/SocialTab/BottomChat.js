@@ -1,11 +1,8 @@
 import React from "react";
 import { AuthUserContext } from "../Session";
-import { Badge, Button, Form, Input, message, Modal, Select, Skeleton, Tooltip } from "antd"
-import ChatFrame from "../Chat/ChatFrame";
+import { Button, Form, Input, message, Modal, Select } from "antd"
 import MultiChatWindow from "../Chat/MultiChatWindow"
-import { CloseOutlined, MinusOutlined, PlusOutlined, VideoCameraAddOutlined } from "@ant-design/icons"
 import Parse from "parse";
-import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
 class BottomChat extends React.Component {
     constructor(props) {
@@ -179,7 +176,7 @@ class BottomChat extends React.Component {
                                 onFinish={async (values) => {
                                     this.setState({ addUserLoading: true });
                                     try {
-                                        let res = await Parse.Cloud.run("chat-addToSID", {
+                                        await Parse.Cloud.run("chat-addToSID", {
                                             conference: this.props.auth.currentConference.id,
                                             sid: this.state.addUserToSID,
                                             title: values.title,
@@ -285,217 +282,218 @@ class BottomChat extends React.Component {
     }
 }
 
-class BottomChatWindow extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            open: this.props.open, sid: this.props.sid, unreadCount: 0,
-            chat: this.props.chatClient.joinedChannels[this.props.sid],
-            // channel: this.props.chatClient.getJoinedChannel(this.props.sid)
-        }
-        this.parentRef = this.props.parentRef;
-    }
+// class BottomChatWindow extends React.Component {
+//     constructor(props) {
+//         super(props);
+//         this.state = {
+//             open: this.props.open, sid: this.props.sid, unreadCount: 0,
+//             chat: this.props.chatClient.joinedChannels[this.props.sid],
+//             // channel: this.props.chatClient.getJoinedChannel(this.props.sid)
+//         }
+//         this.parentRef = this.props.parentRef;
+//     }
 
-    async getChatTitle(chat) {
-        if (!chat) {
-            this.setState({
-                title:
-                    <Skeleton.Input active style={{ width: '20px', height: '1em' }} />
-            })
-            return;
-        }
-        if (chat.attributes.mode === "directMessage") {
-            let p1 = chat.conversation.get("member1");
-            let p2 = chat.conversation.get("member2");
-            let profileID = p1.id;
-            if (profileID === this.props.auth.userProfile.id)
-                profileID = p2.id;
-            this.props.auth.programCache.getUserProfileByProfileID(profileID, null).then((profile) => {
-                this.setState({ title: profile.get("displayName") })
-            })
-            return;
-        } else {
-            let title = chat.channel.friendlyName;
-            if (chat.attributes.category === "announcements-global") {
-                title = "Announcements";
-            } else if (chat.attributes.category === "programItem" ||
-                chat.attributes.category === "breakoutRoom" || chat.attributes.mode === "group") {
-                title = chat.channel.friendlyName;
-            } else {
-                title = chat.channel.sid;
-            }
-            try {
-                let membersStr = "In this chat: " + profiles.map(p => p.get("displayName")).join(', ');
-                let profiles = chat.members.map((id) => <UserStatusDisplay
-                    profileID={id}
-                    inline={true}
-                    key={id}
-                />)
-                if (profiles.length === 1) {
-                    profiles = profiles[0];
-                }
-                else if (profiles.length > 1) {
-                    profiles = profiles.reduce((prev, cur) => [prev, ", ", cur]);
-                }
-                this.setState({ members: membersStr, title: title, membersCount: chat.members.length });
-            }
-            catch (err) {
-                console.log(chat.channel.sid)
-                console.log(err);
-                return;
-            }
-            return;
-        }
+//     async getChatTitle(chat) {
+//         if (!chat) {
+//             this.setState({
+//                 title:
+//                     <Skeleton.Input active style={{ width: '20px', height: '1em' }} />
+//             })
+//             return;
+//         }
+//         if (chat.attributes.mode === "directMessage") {
+//             let p1 = chat.conversation.get("member1");
+//             let p2 = chat.conversation.get("member2");
+//             let profileID = p1.id;
+//             if (profileID === this.props.auth.userProfile.id)
+//                 profileID = p2.id;
+//             this.props.auth.programCache.getUserProfileByProfileID(profileID, null).then((profile) => {
+//                 this.setState({ title: profile.get("displayName") })
+//             })
+//             return;
+//         } else {
+//             let title = chat.channel.friendlyName;
+//             if (chat.attributes.category === "announcements-global") {
+//                 title = "Announcements";
+//             } else if (chat.attributes.category === "programItem" ||
+//                 chat.attributes.category === "breakoutRoom" || chat.attributes.mode === "group") {
+//                 title = chat.channel.friendlyName;
+//             } else {
+//                 title = chat.channel.sid;
+//             }
+//             try {
+//                 let membersStr = "In this chat: " + profiles.map(p => p.get("displayName")).join(', ');
+//                 let profiles = chat.members.map((id) => <UserStatusDisplay
+//                     profileID={id}
+//                     inline={true}
+//                     key={id}
+//                 />)
+//                 if (profiles.length === 1) {
+//                     profiles = profiles[0];
+//                 }
+//                 else if (profiles.length > 1) {
+//                     profiles = profiles.reduce((prev, cur) => [prev, ", ", cur]);
+//                 }
+//                 this.setState({ members: membersStr, title: title, membersCount: chat.members.length });
+//             }
+//             catch (err) {
+//                 console.log(chat.channel.sid)
+//                 console.log(err);
+//                 return;
+//             }
+//             return;
+//         }
 
-    }
+//     }
 
-    updateTitle(update) {
+//     updateTitle(update) {
 
-        if (this.mounted) {
-            if (update.channel && update.channel.attributes && update.updateReasons && update.updateReasons.length > 1) {
-                this.props.chatClient.joinedChannels[this.props.sid].channel = update.channel;
-                this.props.chatClient.joinedChannels[this.props.sid].attributes = update.channel.attributes;
-            }
-            this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
-        }
-    }
-    async componentDidMount() {
-        this.mounted = true;
-        if (!this.state.chat) {
-            let res = await this.props.chatClient.getJoinedChannel(this.props.sid);
-            this.setState({ chat: this.props.chatClient.joinedChannels[this.props.sid] })
-        }
-        this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
-        this.parentRef.memberListener[this.props.sid] = async (channelInfo) => {
-            await this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
-        };
-        this.props.chatClient.joinedChannels[this.props.sid].channel.on("updated", this.updateTitle.bind(this));
-    }
-    componentWillUnmount() {
-        this.mounted = false;
-        this.parentRef.memberListener[this.props.sid] = null;
-        if (this.props.chatClient.joinedChannels[this.props.sid])
-            this.props.chatClient.joinedChannels[this.props.sid].channel.off("updated", this.updateTitle.bind(this));
+//         if (this.mounted) {
+//             if (update.channel && update.channel.attributes && update.updateReasons && update.updateReasons.length > 1) {
+//                 this.props.chatClient.joinedChannels[this.props.sid].channel = update.channel;
+//                 this.props.chatClient.joinedChannels[this.props.sid].attributes = update.channel.attributes;
+//             }
+//             this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
+//         }
+//     }
+//     async componentDidMount() {
+//         this.mounted = true;
+//         if (!this.state.chat) {
+//             let res = await this.props.chatClient.getJoinedChannel(this.props.sid);
+//             this.setState({ chat: this.props.chatClient.joinedChannels[this.props.sid] })
+//         }
+//         this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
+//         this.parentRef.memberListener[this.props.sid] = async (channelInfo) => {
+//             await this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
+//         };
+//         this.props.chatClient.joinedChannels[this.props.sid].channel.on("updated", this.updateTitle.bind(this));
+//     }
+//     componentWillUnmount() {
+//         this.mounted = false;
+//         this.parentRef.memberListener[this.props.sid] = null;
+//         if (this.props.chatClient.joinedChannels[this.props.sid])
+//             this.props.chatClient.joinedChannels[this.props.sid].channel.off("updated", this.updateTitle.bind(this));
 
-    }
+//     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.open !== this.state.open) {
-            this.collectFocus = true;
-            this.setState({ open: this.props.open });
-        }
-    }
+//     componentDidUpdate(prevProps, prevState, snapshot) {
+//         if (this.props.open !== this.state.open) {
+//             this.collectFocus = true;
+//             this.setState({ open: this.props.open });
+//         }
+//     }
 
-    closeChat() {
-        this.props.closeWindow();
-    }
+//     closeChat() {
+//         this.props.closeWindow();
+//     }
 
-    async toVideo() {
-        let dat = this.props.chatClient.joinedChannels[this.props.sid];
-        if (dat.attributes.breakoutRoom) {
-            this.props.auth.history.push("/video/" + dat.attributes.breakoutRoom)
-            return;
-        }
-        if (dat.channel.attributes.category === 'programItem') {
-            let itemQ = new Parse.Query("ProgramItem");
-            let item = await itemQ.get(dat.channel.attributes.programItemID);
-            if (item.get("breakoutRoom")) {
-                this.props.auth.history.push("/video/" + item.get('breakoutRoom').id)
-                return;
-            }
-        }
-        if (dat.channel.type === 'private') {
-            this.setState({ newVideoChatLoading: true });
-            try {
-                let res = await Parse.Cloud.run("chat-getBreakoutRoom", {
-                    conference: this.props.auth.currentConference.id,
-                    sid: this.props.sid,
-                    socialSpaceID: this.props.auth.activeSpace.id
-                });
-                if (res.status === "error") {
-                    message.error(res.message);
-                    this.setState({ newVideoChatLoading: false })
-                } else {
-                    this.setState({ newVideoChatLoading: false, newVideoChatVisible: false })
-                    if (res.status === "ok") {
-                        this.props.auth.history.push("/video/" + res.room)
-                    }
-                }
+//     async toVideo() {
+//         let dat = this.props.chatClient.joinedChannels[this.props.sid];
+//         if (dat.attributes.breakoutRoom) {
+//             this.props.auth.history.push("/video/" + dat.attributes.breakoutRoom)
+//             return;
+//         }
+//         if (dat.channel.attributes.category === 'programItem') {
+//             let itemQ = new Parse.Query("ProgramItem");
+//             let item = await itemQ.get(dat.channel.attributes.programItemID);
+//             if (item.get("breakoutRoom")) {
+//                 this.props.auth.history.push("/video/" + item.get('breakoutRoom').id)
+//                 return;
+//             }
+//         }
+//         if (dat.channel.type === 'private') {
+//             this.setState({ newVideoChatLoading: true });
+//             try {
+//                 let res = await Parse.Cloud.run("chat-getBreakoutRoom", {
+//                     conference: this.props.auth.currentConference.id,
+//                     sid: this.props.sid,
+//                     socialSpaceID: this.props.auth.activeSpace.id
+//                 });
+//                 if (res.status === "error") {
+//                     message.error(res.message);
+//                     this.setState({ newVideoChatLoading: false })
+//                 } else {
+//                     this.setState({ newVideoChatLoading: false, newVideoChatVisible: false })
+//                     if (res.status === "ok") {
+//                         this.props.auth.history.push("/video/" + res.room)
+//                     }
+//                 }
 
-            } catch (err) {
-                console.log(err);
-            }
-        }
-        else {
-            this.props.toVideo();
-        }
-    }
+//             } catch (err) {
+//                 console.log(err);
+//             }
+//         }
+//         else {
+//             this.props.toVideo();
+//         }
+//     }
 
-    render() {
-        let chatWindow = "";
-        let buttonClass = "chatButtonCollapsed";
-        if (this.state.loading) {
-            return <div className="bottomChatWindowContainer"></div>
-        }
+//     render() {
+//         let chatWindow = "";
+//         let buttonClass = "chatButtonCollapsed";
+//         if (this.state.loading) {
+//             return <div className="bottomChatWindowContainer"></div>
+//         }
 
-        let windowClass = "bottomChatWindowCollapsed"
-        if (this.state.open) {
-            buttonClass = "chatButtonExpanded"
-            windowClass = "bottomChatWindow"
-        }
+//         let windowClass = "bottomChatWindowCollapsed"
+//         if (this.state.open) {
+//             buttonClass = "chatButtonExpanded"
+//             windowClass = "bottomChatWindow"
+//         }
 
-        let title = this.state.title;
-        if (this.state.members) {
-            title = <Tooltip mouseEnterDelay={0.5} title={this.state.members}>{this.state.title} ({this.state.membersCount} members)</Tooltip>
-        }
-        let header = <div className="bottomChatHeader">
-            <div className="bottomChatHeaderItems">
-                <div className="bottomChatIdentity">{title}</div>
-                <div className="bottomChatClose">
-                    <Tooltip mouseEnterDelay={0.5} title="Launch a video chat room">
-                        <Button size="small" type="primary" shape="circle" style={{ minWidth: "initial" }}
-                            loading={this.state.newVideoChatLoading}
-                            icon={<VideoCameraAddOutlined />}
-                            onClick={this.toVideo.bind(this)}>
-                            Launch video
-                    </Button>
-                    </Tooltip>
-                &nbsp;&nbsp;
-                <Tooltip mouseEnterDelay={0.5} title="Add someone to this chat">
-                        <Button size="small" type="primary"
-                            style={{ minWidth: "initial" }} icon={<PlusOutlined />}
-                            onClick={this.props.addUser}
-                        >Add people</Button>
-                    </Tooltip>
-                    <Tooltip mouseEnterDelay={0.5} title="Close this chat"><Button size="small" type="primary"
-                        style={{ minWidth: "initial" }} icon={<CloseOutlined />}
-                        onClick={
-                            this.closeChat.bind(this)
-                        }
-                    /></Tooltip>
-                    <Tooltip mouseEnterDelay={0.5} title="Minimize this window"><Button size="small" type="primary"
-                        style={{ minWidth: "initial" }} icon={<MinusOutlined />}
-                        onClick={
-                            this.props.toggleOpen
-                        }
-                    /></Tooltip>
-                </div>
-            </div>
-        </div>
-        chatWindow = <div className={windowClass} >
-            <ChatFrame sid={this.state.sid} width="240px" header={header} visible={this.state.open} setUnreadCount={(c) => {
-                this.setState({ unreadCount: c })
-                this.props.auth.chatClient.setUnreadCount(this.state.sid, c)
-            }
-            } />
-        </div>
-        if (!this.state.open && this.state.chat && this.state.chat.attributes.category === "announcements-global") {
-            return chatWindow
-        }
-        return <div className="bottomChatWindowContainer">
-            <Tooltip mouseEnterDelay={0.5} title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} overflowCount={9} offset={[-5, -10]} />{this.state.title}</Button></Tooltip>{chatWindow}</div>
-    }
-}
+//         let title = this.state.title;
+//         if (this.state.members) {
+//             title = <Tooltip mouseEnterDelay={0.5} title={this.state.members}>{this.state.title} ({this.state.membersCount} members)</Tooltip>
+//         }
+//         let header = <div className="bottomChatHeader">
+//             <div className="bottomChatHeaderItems">
+//                 <div className="bottomChatIdentity">{title}</div>
+//                 <div className="bottomChatClose">
+//                     <Tooltip mouseEnterDelay={0.5} title="Launch a video chat room">
+//                         <Button size="small" type="primary" shape="circle" style={{ minWidth: "initial" }}
+//                             loading={this.state.newVideoChatLoading}
+//                             icon={<VideoCameraAddOutlined />}
+//                             onClick={this.toVideo.bind(this)}>
+//                             Launch video
+//                     </Button>
+//                     </Tooltip>
+//                 &nbsp;&nbsp;
+//                 <Tooltip mouseEnterDelay={0.5} title="Add someone to this chat">
+//                         <Button size="small" type="primary"
+//                             style={{ minWidth: "initial" }} icon={<PlusOutlined />}
+//                             onClick={this.props.addUser}
+//                         >Add people</Button>
+//                     </Tooltip>
+//                     <Tooltip mouseEnterDelay={0.5} title="Close this chat"><Button size="small" type="primary"
+//                         style={{ minWidth: "initial" }} icon={<CloseOutlined />}
+//                         onClick={
+//                             this.closeChat.bind(this)
+//                         }
+//                     /></Tooltip>
+//                     <Tooltip mouseEnterDelay={0.5} title="Minimize this window"><Button size="small" type="primary"
+//                         style={{ minWidth: "initial" }} icon={<MinusOutlined />}
+//                         onClick={
+//                             this.props.toggleOpen
+//                         }
+//                     /></Tooltip>
+//                 </div>
+//             </div>
+//         </div>
+//         chatWindow = <div className={windowClass} >
+//             <ChatFrame sid={this.state.sid} width="240px" header={header} visible={this.state.open} setUnreadCount={(c) => {
+//                 this.setState({ unreadCount: c })
+//                 this.props.auth.chatClient.setUnreadCount(this.state.sid, c)
+//             }
+//             } />
+//         </div>
+//         if (!this.state.open && this.state.chat && this.state.chat.attributes.category === "announcements-global") {
+//             return chatWindow
+//         }
+//         return <div className="bottomChatWindowContainer">
+//             <Tooltip mouseEnterDelay={0.5} title={"Chat window for " + this.state.title}><Button type="primary" className={buttonClass} onClick={this.props.toggleOpen}><Badge count={this.state.unreadCount} overflowCount={9} offset={[-5, -10]} />{this.state.title}</Button></Tooltip>{chatWindow}</div>
+//     }
+// }
+
 const AuthConsumer = (props) => (
     <AuthUserContext.Consumer>
         {value => (

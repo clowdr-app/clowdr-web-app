@@ -5,7 +5,6 @@ import Parse, { User, Role } from "parse";
 import { notification, Spin } from "antd";
 import ChatClient from "../../classes/ChatClient"
 import ProgramCache from "./ProgramCache";
-import { RoomInvalidParametersError } from 'twilio-video';
 import BreakoutRoom from '../../classes/BreakoutRoom';
 import UserProfile from '../../classes/UserProfile';
 import UserPresence from '../../classes/UserPresence';
@@ -436,7 +435,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     space = this.state.spaces[spaceName];
                 }
                 if (!space) {
-                    throw "You called setSocialSpace but provided no space! Got: " + spaceName + " or " + space
+                    throw new Error("You called setSocialSpace but provided no space! Got: " + spaceName + " or " + space);
                 }
                 if (userProfile.get("presence") &&
                     (!userProfile.get("presence").get("socialSpace") ||
@@ -493,7 +492,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                             _this.isLoggedIn = true;
                             // _this.authCallbacks.forEach((cb) => (cb(user)));
                         }
-                        let session = await Parse.Session.current();
 
                         // Valid conferences for this user
                         let profiles = await user.relation("profiles").query().include(["conference", "conference.loggedInText"]).find();
@@ -716,7 +714,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
         async subscribeToPublicRooms() {
             if (!this.currentConference) {
-                throw "Not logged in"
+                throw new Error("Not logged in");
             }
             let query = new Parse.Query("BreakoutRoom");
             query.equalTo("conference", this.currentConference);
@@ -826,7 +824,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
         async subscribeToNewPrivateRooms() {
             if (!this.mounted) return;
-            let currentlySubscribedTo = [];
             let newRoomsQuery = new Parse.Query("BreakoutRoom");
             newRoomsQuery.equalTo("conference", this.currentConference);
             newRoomsQuery.include("members");
@@ -839,7 +836,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             if (!this.mounted) return;
             res.forEach(this.notifyUserOfChanges.bind(this));
 
-            let newRooms = [];
             let fetchedIDs = [];
             this.activePrivateVideoRooms = res;
             for (let room of res) {

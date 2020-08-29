@@ -4,7 +4,7 @@ import { emojify } from 'react-emojione';
 // import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
 
-import { Button, Divider, Form, Input, Layout, List, notification, Popconfirm, Tag, Tooltip } from 'antd';
+import { Button, Divider, Form, Input, List, notification, Popconfirm, Tag, Tooltip } from 'antd';
 import "./chat.css"
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -14,8 +14,6 @@ import InfiniteScroll from 'react-infinite-scroller';
 // import EmojiPickerPopover from "./EmojiPickerPopover";
 
 const emojiSupport = text => emojify(text.value, { output: 'unicode' });
-
-const { Header, Content, Footer, Sider } = Layout;
 
 var moment = require('moment');
 const INITIAL_STATE = {
@@ -204,11 +202,9 @@ class ChatFrame extends React.Component {
     groupMessages(messages, channelId) {
         let ret = [];
         let reactions = {};
-        let myReactions = {};
         let lastMessage = undefined;
         if (!messages)
             return undefined;
-        let _this = this;
         let lastSID;
         let lastIndex = -1;
 
@@ -445,7 +441,7 @@ class ChatFrame extends React.Component {
         else {
             let idToken = this.props.auth.user.getSessionToken();
 
-            const data = fetch(
+            fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/chat/deleteMessage`
                 , {
                     method: 'POST',
@@ -602,8 +598,6 @@ class ChatFrame extends React.Component {
                                 //         cancelText="No"
                                 //     ><Tooltip mouseEnterDelay={0.5} title={"Delete this message"}><a
                                 //         href="#"><CloseOutlined/></a></Tooltip></Popconfirm>
-                                let initials = "";
-                                let authorID = item.author;
                                 let addDate = false;
                                 if (item.messages.length > 0) {
                                     let date = moment(item.timestamp).date()
@@ -688,7 +682,6 @@ class ChatFrame extends React.Component {
 
     wrapWithOptions(m, isMyMessage, data) {
         let options = [];
-        let _this = this;
         // options.push(<a href="#" key="react" onClick={()=>{
         //     _this.setState({
         //         reactingTo: m
@@ -718,6 +711,7 @@ class ChatFrame extends React.Component {
                         okText="Yes"
                         cancelText="No"
                     >
+                        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                         <a href="#">X</a>
                     </Popconfirm>
                 </div>

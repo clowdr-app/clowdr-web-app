@@ -1,19 +1,9 @@
 import React, { Component } from 'react';
 import * as ROUTES from '../../constants/routes';
-import * as ROLES from '../../constants/roles';
-import { Button, Checkbox, Form, Input } from 'antd';
+import { Button, Form, Input } from 'antd';
 
 import Parse from "parse";
 
-const ERROR_CODE_ACCOUNT_EXISTS = 'auth/email-already-in-use';
-
-const ERROR_MSG_ACCOUNT_EXISTS = `
-  An account with this E-Mail address already exists.
-  Try to login with this account instead. If you think the
-  account is already used from one of the social logins, try
-  to sign in with one of them. Afterward, associate your accounts
-  on your personal account page.
-`;
 const INITIAL_STATE = {
     username: '',
     email: '',
@@ -28,7 +18,6 @@ class SignUp extends Component {
         super(props);
 
         this.state = { ...INITIAL_STATE };
-
     }
 
     async componentDidMount() {
@@ -39,8 +28,7 @@ class SignUp extends Component {
     }
 
     onSubmit = event => {
-        const { username, email, passwordOne, isAdmin } = this.state;
-        const roles = {};
+        const { username, email, passwordOne } = this.state;
 
         let user = new Parse.User();
         user.set("username", email);
@@ -72,7 +60,6 @@ class SignUp extends Component {
             email,
             passwordOne,
             passwordTwo,
-            isAdmin,
             error,
         } = this.state;
 

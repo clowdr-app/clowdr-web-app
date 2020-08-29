@@ -1,8 +1,7 @@
 import React from "react";
-import { Button, Form, Input, message, Modal, Radio, Select, Tooltip, Typography } from "antd";
+import { Button, Form, Input, message, Modal, Radio, Tooltip, Typography } from "antd";
 import { AuthUserContext } from "../Session";
 import { withRouter } from "react-router-dom";
-import Parse from "parse";
 
 class NewRoomForm extends React.Component {
 
@@ -35,19 +34,13 @@ class NewRoomForm extends React.Component {
     }
 
     render() {
-        const { visible, confirmLoading, ModalText } = this.state;
+        const { visible, confirmLoading } = this.state;
         let buttonText = (this.props.text ? this.props.text : "New Room");
         let buttonType = (this.props.type ? this.props.type : "primary");
 
-        let selectOptions = [];
         let defaultSpace;
         if (this.props.auth.activeSpace) {
             defaultSpace = this.props.auth.activeSpace.id;
-        }
-        if (this.props.auth.spaces) {
-            selectOptions = Object.values(this.props.auth.spaces).map(c => {
-                return { label: c.get("name"), value: c.id }
-            });
         }
         // BCP: Anybody can create video rooms
         //     this.props.auth.helpers.ifPermission("createVideoRoom",

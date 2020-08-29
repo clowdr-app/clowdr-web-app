@@ -52,9 +52,7 @@ class ReportToModsButton extends React.Component {
     };
 
     render() {
-        const { visible, confirmLoading, ModalText } = this.state;
-        let buttonText = (this.props.text ? this.props.text : "Send Report");
-        let buttonType = (this.props.type ? this.props.type : "primary");
+        const { visible, confirmLoading } = this.state;
         let currentParticipants = "";
         let participantIDArray = [];
         if (this.state.loading)

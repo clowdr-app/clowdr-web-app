@@ -2,7 +2,7 @@ import React from 'react';
 import { ClowdrState } from "../../ClowdrTypes";
 import { AuthUserContext } from '../Session';
 import BreakoutRoom from "../../classes/BreakoutRoom";
-import { Menu, Skeleton } from "antd";
+import { Skeleton } from "antd";
 import UserStatusDisplay from "./UserStatusDisplay";
 
 interface BreakoutRoomDisplayProps {
@@ -41,7 +41,6 @@ class BreakoutRoomDisplay extends React.Component<BreakoutRoomDisplayProps, Brea
         if (this.state.BreakoutRoom.get("members") && this.state.BreakoutRoom.get("members").length > 0)
             list = this.state.BreakoutRoom.get("members").map((user: any) => {
                 if (user) {
-                    let className = "personHoverable";
                     return <UserStatusDisplay popover={true} profileID={user.id} key={user.id} />
                 }
                 return <></>

@@ -4,7 +4,6 @@ import moment from 'moment';
 import ReactPlayer from "react-player";
 import { videoURLFromData } from './utils';
 import zoomImg from "./zoom.png";
-import Parse from "parse";
 import ZoomPanel from "./ZoomPanel";
 import RoomProgramSummary from "./RoomProgramSummary";
 var timezone = require('moment-timezone');
@@ -23,19 +22,19 @@ class LiveStreamingPanel extends Component {
 
     joinChatChannels() {
         var items = [];
-        this.props.mysessions.map(session => {
+        this.props.mysessions.forEach(session => {
             if (session.get("items"))
-                items = items.concat(session.get("items"))
+                items = items.concat(session.get("items"));
         });
 
         // items.map(i => console.log("item: " + i.id+ " " + i.get("title") ));
         let chatChannels = items.map(i => i.get("chatSID"));
-        chatChannels.map(cc => {
+        chatChannels.forEach(cc => {
             if (cc) {
                 console.log('[Live]: joining chat channel ' + cc);
                 this.props.auth.chatClient.openChatAndJoinIfNeeded(cc);
             }
-        })
+        });
     }
 
     joinChatChannel(sid) {
@@ -118,16 +117,12 @@ class LiveStreamingPanel extends Component {
 
         let navigation = "";
         let sessionData = "";
-        let roomName = this.props.video.get('name');
         if (this.state.expanded) {
-
             sessionData = <RoomProgramSummary ProgramRoom={this.props.video} />
             navigation = <Button onClick={this.props.onExpand.bind(this)}>Go Back</Button>
         }
         else {
             navigation = <Button type="primary" onClick={this.props.onExpand.bind(this)}>Enter</Button>
-            roomName = this.props.video.get('name').length < 10 ? this.props.video.get('name') :
-                <span title={this.props.video.get('name')}>{this.props.video.get('name').substring(0, 10) + "..."}</span>;
 
             sessionData = this.props.mysessions.slice(0, 5).map(s => {
                 return <div key={s.id}><b>{moment(s.get("startTime")).tz(timezone.tz.guess()).calendar() + ": " + s.get("title")}</b></div>
@@ -135,7 +130,6 @@ class LiveStreamingPanel extends Component {
             if (this.props.mysessions.length > 5) {
                 sessionData.push(<div key="more">... Plus {this.props.mysessions.length - 5} more sessions</div>)
             }
-
         }
         let viewers = 0;
         if (this.state.presences) {

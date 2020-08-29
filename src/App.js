@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter, NavLink, Route } from 'react-router-dom';
 import BrowserDetection from 'react-browser-detection';
-import { Button, Divider, Layout, message, Select, Spin, Tooltip, Typography, Upload } from 'antd';
+import { Button, Layout, message, Select, Spin, Tooltip, Typography, Upload } from 'antd';
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
@@ -62,7 +62,7 @@ import EmojiPickerPopover from "./components/Chat/EmojiPickerPopover";
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content } = Layout;
 class App extends Component {
 
     constructor(props) {
@@ -443,10 +443,6 @@ class App extends Component {
             </div>
         );
     }
-}
-
-function capitalizeFirstLetter(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 let RouteredApp = withRouter(App);

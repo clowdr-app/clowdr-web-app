@@ -1,8 +1,6 @@
 import React, { Component } from "react";
-import { Layout } from "antd";
 
 import "./GenericLanding.css";
-const { Header, Content, Footer, Sider } = Layout;
 
 export default class GenericLanding extends Component {
     constructor(props) {

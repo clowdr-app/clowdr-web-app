@@ -203,8 +203,6 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                 <Spin />
             </div>
 
-        let curSessionName = "Now (nothing scheduled)";
-        let liveSessionPanel = [];
         let expandedKeys = [];
         if (this.state.curSessions.length > 0) {
             for (let session of this.state.curSessions) {

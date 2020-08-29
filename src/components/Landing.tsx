@@ -133,7 +133,6 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
         let privateControlButton = <></>;
 
         if (this.props.auth.isAdmin) {
-            let adminView = [];
             privateControlButton = <Tooltip title="Edit this page"><Button type="primary" shape="round" icon={<EditOutlined />}
                 onClick={this.onEditPrivateDesc.bind(this)} /></Tooltip>
             let controlButton2 = <Tooltip title="Edit this page"><Button type="primary" shape="round" icon={<EditOutlined />}
@@ -159,6 +158,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
                                 'insertdatetime media table paste code help wordcount'
                             ],
                             toolbar:
+                                // eslint-disable-next-line no-multi-str
                                 'formatselect | link | image table | bold italic forecolor backcolor | \
                         alignleft aligncenter alignright alignjustify | \
                         bullist numlist outdent indent | removeformat code| help'
@@ -182,6 +182,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
                                 'insertdatetime media table paste code help wordcount'
                             ],
                             toolbar:
+                                // eslint-disable-next-line no-multi-str
                                 'formatselect | link | image table | bold italic forecolor backcolor | \
                        alignleft aligncenter alignright alignjustify | \
                        bullist numlist outdent indent | removeformat code| help'

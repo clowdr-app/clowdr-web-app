@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { Alert, Spin } from 'antd';
 import moment from 'moment';
 import LiveStreamingPanel from "./LiveStreamingPanel";
-import ZoomPanel from "./ZoomPanel";
 import AuthUserContext from "../Session/context";
 
 class LiveStreaming extends Component {
@@ -53,7 +52,7 @@ class LiveStreaming extends Component {
         if (!sessions)
             sessions = this.state.ProgramSessions;
         if (!sessions)
-            throw "No session data!"
+            throw new Error("No session data!");
         let now = Date.now();
 
         // Live now

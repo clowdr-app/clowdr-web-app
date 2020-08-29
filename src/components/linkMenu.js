@@ -8,27 +8,20 @@ import {
     AppstoreOutlined,
     BankOutlined,
     BarsOutlined,
-    BorderOutlined,
     CalendarOutlined,
     CloseSquareOutlined,
     ContainerOutlined,
     DesktopOutlined,
     IdcardOutlined,
     HomeOutlined,
-    PlusSquareTwoTone,
-    ReadOutlined,
-    SmileOutlined,
     ScheduleOutlined,
     SlidersOutlined,
     SolutionOutlined,
-    SwitcherTwoTone,
-    SyncOutlined,
     TeamOutlined,
     ToolOutlined,
     ToolTwoTone,
     UnorderedListOutlined,
     UserOutlined,
-    VideoCameraAddOutlined,
     VideoCameraOutlined,
     VideoCameraTwoTone,
     WechatOutlined,
@@ -36,7 +29,6 @@ import {
 } from '@ant-design/icons';
 import SubMenu from "antd/es/menu/SubMenu";
 import { withRouter } from "react-router";
-import { ProgramContext } from "./Program";
 
 
 class LinkMenu extends React.Component {

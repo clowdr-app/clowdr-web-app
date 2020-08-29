@@ -2,7 +2,6 @@ import React from 'react';
 import { Descriptions, Radio, Skeleton, Spin, Table, Tag, Tooltip } from 'antd';
 import Parse from "parse";
 import { AuthUserContext } from "../Session";
-import { NavLink } from "react-router-dom";
 import { StarFilled, StarOutlined } from "@ant-design/icons";
 import ProgramItemDisplay from "./ProgramItemDisplay";
 
@@ -105,11 +104,6 @@ class Program extends React.Component {
         if (this.state.loading) {
             return <Spin></Spin>
         }
-        let days = [];
-        // for(const [date, program] of this.state.sessions){
-        //     days.push(<ProgramDay date={date} program={program} key={date} formatTime={this.state.formatTime} />)
-        // }
-
 
         let cols = [{
             title: 'Saved',
@@ -185,7 +179,6 @@ class Program extends React.Component {
             }
         }
         ];
-        const props = { width: 700, zoomWidth: 700, zoomPosition: "original", img: 'https://2020.icse-conferences.org/getImage/orig/ICSE-Schedule.PNG' };
         return <div>
             <h4>Program Overview:</h4>
             {/* <ReactImageZoom {...props}/> */}
@@ -233,54 +226,55 @@ class Program extends React.Component {
 
     programLoaded(sessions) {
         // if(this.state.loading){
-        let days = [... new Set(sessions.map((item) => timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D")))];
+        let days = [...new Set(sessions.map((item) => timezone(item.get("startTime")).tz(this.state.timeZone).format("ddd MMM D")))];
         this.setState({ sessionDays: days })
         // }
     }
 }
-class ProgramDay extends React.Component {
-    constructor(props) {
-        super(props);
-        //organize into time bands
-        let timeBands = groupBy(this.state.program, (session) => (this.props.formatTime(session.get("startTime")) + " - ") + this.props.formatTime(session.get('endTime')))
-        this.state = {
-            timeBands: timeBands
-        }
-    }
-    render() {
-        let timeBands = [];
-        for (const [timeBand, sessions] of this.state.timeBands) {
-            timeBands.push(<div key={timeBand} className="sessionTimeBandContainer"><div className="timeBand">{timeBand}</div>
-                <div className="sessionContainer">{sessions.map(s => <ProgramSession key={s.id} session={s} />)}</div></div>)
-        }
-        return <div className="program-programDay" key={this.props.date}>
-            <div className="day">{this.props.date}</div>
-            <div className="timebands">{timeBands}</div>
-        </div>
-    }
-}
 
-class ProgramSession extends React.Component {
-    render() {
-        let items = this.props.session.get("items");
-        return <div className="programSession" >
-            <div className="sessionTitle">{this.props.session.get("title")}</div>
-            <div className="sessionContents">
-                {items.map(i => <ProgramItem key={i.id} item={i} />)}
-            </div>
-        </div>
-    }
-}
+// class ProgramDay extends React.Component {
+//     constructor(props) {
+//         super(props);
+//         //organize into time bands
+//         let timeBands = groupBy(this.state.program, (session) => (this.props.formatTime(session.get("startTime")) + " - ") + this.props.formatTime(session.get('endTime')))
+//         this.state = {
+//             timeBands: timeBands
+//         }
+//     }
+//     render() {
+//         let timeBands = [];
+//         for (const [timeBand, sessions] of this.state.timeBands) {
+//             timeBands.push(<div key={timeBand} className="sessionTimeBandContainer"><div className="timeBand">{timeBand}</div>
+//                 <div className="sessionContainer">{sessions.map(s => <ProgramSession key={s.id} session={s} />)}</div></div>)
+//         }
+//         return <div className="program-programDay" key={this.props.date}>
+//             <div className="day">{this.props.date}</div>
+//             <div className="timebands">{timeBands}</div>
+//         </div>
+//     }
+// }
 
-class ProgramItem extends React.Component {
-    render() {
-        return (
-            <div className="programItem" key={this.props.item.id}>
-                {this.props.item.get("title")}
-            </div>
-        );
-    }
-}
+// class ProgramSession extends React.Component {
+//     render() {
+//         let items = this.props.session.get("items");
+//         return <div className="programSession" >
+//             <div className="sessionTitle">{this.props.session.get("title")}</div>
+//             <div className="sessionContents">
+//                 {items.map(i => <ProgramItem key={i.id} item={i} />)}
+//             </div>
+//         </div>
+//     }
+// }
+
+// class ProgramItem extends React.Component {
+//     render() {
+//         return (
+//             <div className="programItem" key={this.props.item.id}>
+//                 {this.props.item.get("title")}
+//             </div>
+//         );
+//     }
+// }
 
 const
     AuthConsumer = (props) => (

@@ -12,7 +12,6 @@ import {
     Space,
     Spin,
     Table,
-    Tabs,
     Upload
 } from "antd";
 import { CloseCircleTwoTone, DeleteOutlined, EditOutlined, SaveTwoTone, UploadOutlined } from '@ant-design/icons';
@@ -23,15 +22,6 @@ import { RcFile, UploadChangeParam } from "antd/lib/upload/interface";
 import { Store } from 'antd/lib/form/interface';
 var moment = require('moment');
 var timezone = require('moment-timezone');
-const { Option } = Select;
-
-const { TabPane } = Tabs;
-// const IconText = ({icon, text}) => (
-//     <Space>
-//         {React.createElement(icon)}
-//         {text}
-//     </Space>
-// );
 
 interface ProgramRoomsProps {
     auth: ClowdrState;

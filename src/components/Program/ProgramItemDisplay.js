@@ -4,7 +4,6 @@ import { Button, List, Skeleton, Tooltip } from "antd";
 import BreakoutRoomDisplay from "../Lobby/BreakoutRoomDisplay"
 import ProgramPersonDisplay from "./ProgramPersonDisplay";
 import moment from "moment";
-import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
 
 var timezone = require('moment-timezone');
 
@@ -58,8 +57,6 @@ export default class ProgramItemDisplay extends React.Component {
 
         let className = "summaryProgramItem";
         if (this.props.event) {
-            let session = this.props.event.get("programSession");
-            let roomInfo;
             let startTime = this.props.event.get("startTime");
             let endTime = this.props.event.get("endTime");
             if (endTime < now) {
@@ -71,22 +68,11 @@ export default class ProgramItemDisplay extends React.Component {
             }
         }
         if (this.state.sessions) {
-            let now = Date.now();
-
             sessionInfo = [];
             for (let event of this.state.events.sort(this.sortEvents)) {
-                let roomInfo;
-
                 let session = this.state.sessions.find(s => s.id === event.get("programSession").id);
-                var timeS = session.get("startTime") ? session.get("startTime") : new Date();
                 var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
-                if (session.get("room")) { // && session.get("room").get("src1") === "YouTube") {
-                    let when = "now"
-                    roomInfo = <Button size="small" type="primary" onClick={() => {
-                        this.props.auth.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                    }}>Go to session</Button>
-                }
                 sessionInfo.push(<List.Item key={event.id} style={{ color: "white" }}>
                     <a href="#" onClick={() => {
                         this.props.auth.history.push("/live/now/" + session.get("room").get("name"))
@@ -102,8 +88,6 @@ export default class ProgramItemDisplay extends React.Component {
             let session = this.state.ProgramItem.get("programSession");
             let roomInfo;
             let now = Date.now();
-            var timeS = session.get("startTime") ? session.get("startTime") : new Date();
-            var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
             if (session.get("room")) { // && session.get("room").get("src1") === "YouTube") {
                 let when = "now"
