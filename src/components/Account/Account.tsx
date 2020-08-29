@@ -142,7 +142,9 @@ class Account extends React.Component<Props, State> {
     async updateUser(values: any) {//TS: Parse.User, but we need to define fields such as password
         this.setState({ updating: true });
         if (values.password && this.props.auth.user) {
-            this.props.auth.user.setPassword(values.password); //TS:@Jon@Crista diff btw serPassword and set("passwordSet",true)?
+            // Set the user's password to the provided value
+            this.props.auth.user.setPassword(values.password);
+            // Set the boolean field indicating that the user has configured their password
             this.props.auth.user.set("passwordSet", true);
             await this.props.auth.user.save();
         }
@@ -209,7 +211,7 @@ class Account extends React.Component<Props, State> {
     }
 
     tagRender(props: any) { //TS: how to import CustomTagProps type in antd?
-        const { value, label, id, closable, onClose } = props;
+        const { value, id, closable, onClose } = props;
 
         if (!this.state.flairColors)
             return <Tag>{value}</Tag>
@@ -225,7 +227,7 @@ class Account extends React.Component<Props, State> {
     }
 
     topicRender(props: any) {   //TS:@Jon@Crista no usage
-        const { value, label, id, closable, onClose } = props;
+        const { value, id, closable, onClose } = props;
 
         if (!this.state.topicColors)
             return <Tag>{value}</Tag>
