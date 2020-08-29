@@ -15,17 +15,19 @@ type Role = any
 
 export type UserSessionToken = string
 
-export type MaybeParseUser = Parse.User<Parse.Attributes> | null;
+export type MaybeParseUser = Parse.User | null;
+export type MaybeUserProfile = UserProfile | null;
+export type MaybeClowdrInstance = ClowdrInstance | null;
 
 export interface ClowdrState {
     spaces: Map<string, SocialSpace>;   // TS: Or maybe better a Record??
-    user: Parse.User | null;
-    userProfile: UserProfile | null;
+    user: MaybeParseUser;
+    userProfile: MaybeUserProfile;
     isAdmin: boolean;
     isClowdrAdmin: boolean;
     permissions: Array<string>;
     validConferences: Array<ClowdrInstance>;
-    currentConference: ClowdrInstance | null;
+    currentConference: MaybeClowdrInstance;
     loading: boolean;
     roles: Array<Role>;
     programCache: ProgramCache;
@@ -36,7 +38,7 @@ export interface ClowdrState {
     history: string[];
     activeSpace: SocialSpace;
     getUserProfile(authorID: string, arg1: (u: any) => void): any;   // ???
-    refreshUser(instance?: ClowdrInstance, forceRefresh?: boolean): Promise<MaybeParseUser>;
+    refreshUser(instance?: MaybeClowdrInstance, forceRefresh?: boolean): Promise<MaybeParseUser>;
     isModerator: boolean;
     isManager: boolean;
     isAdmininstrator: boolean;

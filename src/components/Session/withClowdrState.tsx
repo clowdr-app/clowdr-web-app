@@ -12,7 +12,7 @@ import SocialSpace from '../../classes/SocialSpace';
 import ClowdrInstance from '../../classes/ClowdrInstance';
 import LiveActivity from '../../classes/LiveActivity';
 import { assert } from '../../Util';
-import { MaybeParseUser } from "../../ClowdrTypes";
+import { MaybeParseUser, MaybeClowdrInstance } from "../../ClowdrTypes";
 
 // TS: Push through the change to Props/State globally!
 interface Props {
@@ -31,7 +31,7 @@ interface State {
     roles: any,
     currentRoom: any,
     history: string[] | undefined,
-    refreshUser: any,
+    refreshUser: (instance?: MaybeClowdrInstance, forceRefresh?: boolean) => Promise<MaybeParseUser>,
     getChatClient: any,
     setSocialSpace: any,
     getConferenceBySlackName: any,
@@ -473,7 +473,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 this.chatWaiters.push(callback);
         }
 
-        refreshUser(preferredConference?: ClowdrInstance, forceRefresh: boolean = false): Promise<MaybeParseUser> {
+        refreshUser(preferredConference?: MaybeClowdrInstance, forceRefresh: boolean = false): Promise<MaybeParseUser> {
             if (!this.refreshUserPromise || forceRefresh) {
                 let result = this._refreshUser(preferredConference);
                 this.refreshUserPromise = result;
@@ -482,7 +482,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 return this.refreshUserPromise;
             }
         }
-        async _refreshUser(preferredConference: ClowdrInstance | undefined): Promise<MaybeParseUser> {
+        async _refreshUser(preferredConference?: MaybeClowdrInstance): Promise<MaybeParseUser> {
 
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
