@@ -139,7 +139,7 @@ class Account extends React.Component<Props, State> {
         this.collectProgramItems();
     }
 
-    async updateUser(values: any) {//TS: Parse.User, but we need to define fields such as password
+    async updateUser(values: Store) {
         this.setState({ updating: true });
         if (values.password && this.props.auth.user) {
             // Set the user's password to the provided value
