@@ -2,12 +2,6 @@ const Parse = require('parse/node');
 const fs = require('fs');
 const path = require('path'); 
 const { exec } = require('child_process');
-const { SSL_OP_ALL } = require('constants');
-var readline = require('readline');
-var rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
