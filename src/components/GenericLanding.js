@@ -3,11 +3,6 @@ import React, { Component } from "react";
 import "./GenericLanding.css";
 
 export default class GenericLanding extends Component {
-    constructor(props) {
-        super(props);
-        ;
-    }
-
     render() {
         return <div id="landing-page">
             <header style={{

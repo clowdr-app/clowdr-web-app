@@ -4,9 +4,6 @@ import { Parse } from "../parse/parse";
 import { AuthUserContext } from "../Session";
 
 class SignOut extends Component {
-    constructor(props) {
-        super(props);
-    }
     componentDidMount() {
         Parse.User.logOut().then(() => {
             this.props.refreshUser(null, true).then(() => {
