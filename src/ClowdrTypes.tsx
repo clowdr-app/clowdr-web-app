@@ -3,7 +3,6 @@
 import * as Parse from 'parse';
 import ProgramCache from "./components/Session/ProgramCache";
 import ChatClient from "./classes/ChatClient";
-import { History } from "history";
 import Conversation from "./classes/Conversation";
 import { Channel } from "twilio-chat/lib/channel";
 // Is this one needed?
@@ -34,7 +33,7 @@ export interface ClowdrState {
     getChatClient: any;  // should be a function (higher-order?)
     getLiveChannel: any;
     chatClient: ChatClient;
-    history: History;
+    history: string[];
     activeSpace: SocialSpace;
     getUserProfile(authorID: string, arg1: (u: any) => void): any;   // ???
     refreshUser(instance?: ClowdrInstance, forceRefresh?: boolean): Promise<MaybeParseUser>;

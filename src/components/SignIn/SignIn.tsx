@@ -122,7 +122,7 @@ class SignIn extends Component<SignInProps, SignInState> {
 
 const AuthConsumer = (props: SignInProps) => (
     <AuthUserContext.Consumer>
-        {value => (value == null ? <span>TODO</span> :
+        {value => (value == null ? <span>TODO: SignIn page when clowdrState is null.</span> :
             <SignIn {...props} clowdrAppState={value} />
         )}
     </AuthUserContext.Consumer>
