@@ -3,7 +3,7 @@ import { Typography } from "antd";
 
 class About extends Component {
     render() {
-        return <div>
+        return <>
             <Typography.Title level={2}>About CLOWDR</Typography.Title>
             <p>
                 <a href="https://www.clowdr.org/" rel="noopener noreferrer" target="_blank">CLOWDR</a> is
@@ -78,8 +78,7 @@ class About extends Component {
             <p>CLOWDR is made possible
                         thanks to support by the <a href="https://www.nsf.gov/">National Science Foundation</a> under awards CCF-2035003, CCF-2035101 and CCF-203500
                         and support from <a href="https://www.twilio.org">Twilio.org</a>.</p>
-
-        </div>
+        </>;
     }
 }
 

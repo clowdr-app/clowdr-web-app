@@ -73,12 +73,10 @@ class Avatar extends React.Component<Props, State> {
     }
 
     render() {
-        const uploadButton: JSX.Element = (
-            <div>
-                {this.state.loading ? <LoadingOutlined /> : <PlusOutlined />}
-                <div className="ant-upload-text">Upload</div>
-            </div>
-        );
+        const uploadButton: JSX.Element = <>
+            {this.state.loading ? <LoadingOutlined /> : <PlusOutlined />}
+            <div className="ant-upload-text">Upload</div>
+        </>;
 
         /*TS: The two imageUrl have different types. Could we just use this.state.imageUrl in <Upload>?*/
         // let imageUrl: Parse.File|string|undefined = this.props.userProfile.get("profilePhoto");

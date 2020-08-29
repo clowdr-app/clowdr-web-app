@@ -203,7 +203,7 @@ class App extends Component {
 
     navBar() {
         if (this.isSlackAuthOnly()) {
-            return <div></div>
+            return <></>;
         }
 
         let logo = undefined;
@@ -275,7 +275,7 @@ class App extends Component {
 
         ];
         if (this.isSlackAuthOnly()) {
-            return <div>
+            return <>
                 {baseRoutes}
                 <Route exact path="/" component={Lobby} />
                 <Route exact path="/fromSlack/:team/:token" component={SlackToVideo} />
@@ -290,10 +290,9 @@ class App extends Component {
                 <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
 
                 <Route exact path="/admin" component={(props) => <SignIn {...props} dontBounce={true} />} />
-            </div>
-
+            </>;
         }
-        return (<div>
+        return <>
             {baseRoutes}
             <Route exact path="/" component={Home} />
             <Route exact path="/breakoutRoom/:programConfKey1/:programConfKey2" component={ProgramItem} />
@@ -335,7 +334,7 @@ class App extends Component {
             <Route exact path='/admin/program/items' component={ProgramItems} />
             <Route exact path='/admin/program/sessions' component={ProgramSessions} />
             <Route exact path='/admin/program/programSummary' component={ProgramSummary} />
-        </div>)
+        </>;
     }
 
     toggleLobbySider() {

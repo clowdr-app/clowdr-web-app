@@ -164,7 +164,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
                         bullist numlist outdent indent | removeformat code| help'
                         }}
                         onEditorChange={this.handleEditorChange.bind(this)}
-                    /></div>
+                    /></div>;
             }
             if (this.state.isEditingPrivateDesc) {
                 privateControlButton = <Tooltip title="Save this page"><Button type="primary" shape="round" icon={<SaveOutlined />} onClick={this.onSavePrivateDesc.bind(this)} /></Tooltip>
@@ -188,7 +188,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
                        bullist numlist outdent indent | removeformat code| help'
                         }}
                         onEditorChange={this.handleEditorChangePrivateDesc.bind(this)}
-                    /></div>
+                    /></div>;
             }
 
             return <div>
@@ -203,9 +203,7 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
 
         }
 
-        return <div>
-            <div dangerouslySetInnerHTML={{ __html: this.state.privateText ? this.state.privateText : this.state.text }} />
-        </div>
+        return <div dangerouslySetInnerHTML={{ __html: this.state.privateText ? this.state.privateText : this.state.text }}></div>;
     }
 }
 

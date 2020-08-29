@@ -254,191 +254,190 @@ class Account extends React.Component<Props, State> {
             return <Spin />
         }
 
-        return (
-            <div>
-                <Typography.Title level={2}>My Account</Typography.Title>
-                <Form onFinish={this.updateUser.bind(this)} labelCol={{
-                    span: 4,
+        return <>
+            <Typography.Title level={2}>My Account</Typography.Title>
+            <Form onFinish={this.updateUser.bind(this)} labelCol={{
+                span: 4,
+            }}
+                wrapperCol={{
+                    span: 14,
                 }}
-                    wrapperCol={{
-                        span: 14,
-                    }}
-                    layout="horizontal"
-                    initialValues={{
-                        size: 50,
-                        displayName: this.props.auth.userProfile.get("displayName"),
-                        website: this.props.auth.userProfile.get("webpage"),
-                        affiliation: this.props.auth.userProfile.get("affiliation"),
-                        country: this.props.auth.userProfile.get("country"),
-                        bio: this.props.auth.userProfile.get("bio"),
-                        pronouns: this.props.auth.userProfile.get("pronouns"),
-                        position: this.props.auth.userProfile.get("position"),
-                        flair: this.state.selectedFlair,
-                        programPersons: this.state.authorRecords
-                    }}
-                    size={'small'}>
+                layout="horizontal"
+                initialValues={{
+                    size: 50,
+                    displayName: this.props.auth.userProfile.get("displayName"),
+                    website: this.props.auth.userProfile.get("webpage"),
+                    affiliation: this.props.auth.userProfile.get("affiliation"),
+                    country: this.props.auth.userProfile.get("country"),
+                    bio: this.props.auth.userProfile.get("bio"),
+                    pronouns: this.props.auth.userProfile.get("pronouns"),
+                    position: this.props.auth.userProfile.get("position"),
+                    flair: this.state.selectedFlair,
+                    programPersons: this.state.authorRecords
+                }}
+                size={'small'}>
+                <Form.Item
+                    label="Display Name"
+                    name="displayName"
+                    extra="Feel free to customize how your name is displayed, but please use your professional name."
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Please input your full name',
+                        },
+                    ]}
+                ><Input /></Form.Item>
+                <Form.Item label="Pronouns"
+                    name="pronouns"
+                    extra="Select from the list or enter your own.">
+                    <AutoComplete
+                        options={[{ value: "She/her" },
+                        { value: "He/him" },
+                        { value: "They/them" }]}
+                        placeholder="Select or type your preferred pronouns"
+                        filterOption={(inputValue: string, option: any) =>
+                            option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                        }
+                    />
+                </Form.Item>
+                <Form.Item label="Author records:"
+                    name="programPersons"
+                    extra="Start typing your name to identify and select your conference records (if any)." >
+                    {(this.ProgramPersons ?
+                        <Select mode="multiple"
+                            optionFilterProp="label"
+                            filterOption={true}
+                            placeholder="Connect your profile to your activities at this conference"
+                            style={{ width: '100%' }}
+                            options={this.programPersonOptions}
+                        />
+                        : <Skeleton.Input />)}
+                </Form.Item>
+                {this.props.embedded ? <></> : <>
                     <Form.Item
-                        label="Display Name"
-                        name="displayName"
-                        extra="Feel free to customize how your name is displayed, but please use your professional name."
+                        label="Email Address"
+                        extra="Your email address cannot be changed"
                         rules={[
                             {
                                 required: true,
-                                message: 'Please input your full name',
+                                message: 'Please input your email',
                             },
                         ]}
-                    ><Input /></Form.Item>
-                    <Form.Item label="Pronouns"
-                        name="pronouns"
-                        extra="Select from the list or enter your own.">
-                        <AutoComplete
-                            options={[{ value: "She/her" },
-                            { value: "He/him" },
-                            { value: "They/them" }]}
-                            placeholder="Select or type your preferred pronouns"
-                            filterOption={(inputValue: string, option: any) =>
-                                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                            }
+                    >
+                        <Input
+                            name="email"
+                            value={this.state.email}
+                            disabled={true}
+                            type="text"
                         />
                     </Form.Item>
-                    <Form.Item label="Author records:"
-                        name="programPersons"
-                        extra="Start typing your name to identify and select your conference records (if any)." >
-                        {(this.ProgramPersons ?
-                            <Select mode="multiple"
-                                optionFilterProp="label"
-                                filterOption={true}
-                                placeholder="Connect your profile to your activities at this conference"
-                                style={{ width: '100%' }}
-                                options={this.programPersonOptions}
-                            />
-                            : <Skeleton.Input />)}
+
+                    <Form.Item label="Password"
+                        name="password"
+                        // rules={password1Rules}
+                        rules={
+                            [{
+                                required: passwordRequired,
+                                message: 'Please input your password!',
+                            }]
+                        }
+                        hasFeedback
+                    >
+                        <Input.Password placeholder="input password"
+                        />
                     </Form.Item>
-                    {this.props.embedded ? <></> : <>
-                        <Form.Item
-                            label="Email Address"
-                            extra="Your email address cannot be changed"
-                            rules={[
+                    < Form.Item label="Confirm Pwd"
+                        name="confirm"
+                        // rules={password2Rules}
+                        rules={
+                            [
                                 {
-                                    required: true,
-                                    message: 'Please input your email',
-                                },
-                            ]}
-                        >
-                            <Input
-                                name="email"
-                                value={this.state.email}
-                                disabled={true}
-                                type="text"
-                            />
-                        </Form.Item>
-
-                        <Form.Item label="Password"
-                            name="password"
-                            // rules={password1Rules}
-                            rules={
-                                [{
                                     required: passwordRequired,
-                                    message: 'Please input your password!',
-                                }]
-                            }
-                            hasFeedback
-                        >
-                            <Input.Password placeholder="input password"
-                            />
-                        </Form.Item>
-                        < Form.Item label="Confirm Pwd"
-                            name="confirm"
-                            // rules={password2Rules}
-                            rules={
-                                [
-                                    {
-                                        required: passwordRequired,
-                                        message: 'Please confirm your password!',
+                                    message: 'Please confirm your password!',
+                                },
+                                ({ getFieldValue }) => ({ //TS: getFieldValue is a method of Form. Should not be put outside <Form>
+                                    validator(rule: RuleObject, value: string) {
+                                        if (!value || getFieldValue('password') === value) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject('The two passwords that you entered do not match!');
                                     },
-                                    ({ getFieldValue }) => ({ //TS: getFieldValue is a method of Form. Should not be put outside <Form>
-                                        validator(rule: RuleObject, value: string) {
-                                            if (!value || getFieldValue('password') === value) {
-                                                return Promise.resolve();
-                                            }
-                                            return Promise.reject('The two passwords that you entered do not match!');
-                                        },
-                                    }),
-                                ]
-                            }
-                        >
-                            <Input.Password
-                                placeholder="input password"
-                            />
-                        </Form.Item></>
-                    }
-                    <Form.Item
-                        name="affiliation"
-                        label="Affiliation">
-                        <Input
-                            disabled={this.state.updating}
-                            type="text"
+                                }),
+                            ]
+                        }
+                    >
+                        <Input.Password
+                            placeholder="input password"
                         />
-                    </Form.Item>
-                    <Form.Item label="Role"
-                        name="position">
-                        <AutoComplete
-                            options={[{ value: "Student" },
-                            { value: "Academic Researcher" },
-                            { value: "Industry Researcher" },
-                            { value: "Professional Developer" },
-                            { value: "Other Computer Industry" }
-                            ]}
-                            placeholder="Select or type your current role"
-                            filterOption={(inputValue: string, option: any) =>
-                                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                            }
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        name="country"
-                        label="Country">
-                        <Input
-                            disabled={this.state.updating}
-                            type="text"
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        name="website"
-                        label="Website">
-                        <Input
-                            disabled={this.state.updating}
-                            type="text"
-                        />
-                    </Form.Item>
-                    <Form.Item label="Avatar">
-                        {/*// TS2339: Property 'refreshUser' does not exist on type 'ClowdrAppState'.*/}
-                        <Avatar userProfile={this.props.auth.userProfile} />
-                        {/*<Avatar userProfile={this.props.auth.userProfile} refreshUser={this.props.auth.refreshUser} />*/}
-                    </Form.Item>
+                    </Form.Item></>
+                }
+                <Form.Item
+                    name="affiliation"
+                    label="Affiliation">
+                    <Input
+                        disabled={this.state.updating}
+                        type="text"
+                    />
+                </Form.Item>
+                <Form.Item label="Role"
+                    name="position">
+                    <AutoComplete
+                        options={[{ value: "Student" },
+                        { value: "Academic Researcher" },
+                        { value: "Industry Researcher" },
+                        { value: "Professional Developer" },
+                        { value: "Other Computer Industry" }
+                        ]}
+                        placeholder="Select or type your current role"
+                        filterOption={(inputValue: string, option: any) =>
+                            option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                        }
+                    />
+                </Form.Item>
+                <Form.Item
+                    name="country"
+                    label="Country">
+                    <Input
+                        disabled={this.state.updating}
+                        type="text"
+                    />
+                </Form.Item>
+                <Form.Item
+                    name="website"
+                    label="Website">
+                    <Input
+                        disabled={this.state.updating}
+                        type="text"
+                    />
+                </Form.Item>
+                <Form.Item label="Avatar">
+                    {/*// TS2339: Property 'refreshUser' does not exist on type 'ClowdrAppState'.*/}
+                    <Avatar userProfile={this.props.auth.userProfile} />
+                    {/*<Avatar userProfile={this.props.auth.userProfile} refreshUser={this.props.auth.refreshUser} />*/}
+                </Form.Item>
 
-                    <Form.Item label="Profile" name="bio" extra="Include anything else you want people to know about you -- e.g., a brief CV, current projects, links to some papers, hobbies, ...">
-                        <Input.TextArea placeholder="Write a brief bio that other users will see when they encounter you on CLOWDR" allowClear
-                        />
-                    </Form.Item>
-                    <Form.Item label="Flair" name="flair" extra="Add tags as appropriate that will be visible to other attendees when they see your virtual badge. A limited number will be visible wherever your name appears on CLOWDR, and the rest will appear when attendees hover over your name.  OC = Organizing Committee, PC = Program Committee, SV = Student Volunteer.">
-                        <Select
-                            mode="multiple"
+                <Form.Item label="Profile" name="bio" extra="Include anything else you want people to know about you -- e.g., a brief CV, current projects, links to some papers, hobbies, ...">
+                    <Input.TextArea placeholder="Write a brief bio that other users will see when they encounter you on CLOWDR" allowClear
+                    />
+                </Form.Item>
+                <Form.Item label="Flair" name="flair" extra="Add tags as appropriate that will be visible to other attendees when they see your virtual badge. A limited number will be visible wherever your name appears on CLOWDR, and the rest will appear when attendees hover over your name.  OC = Organizing Committee, PC = Program Committee, SV = Student Volunteer.">
+                    <Select
+                        mode="multiple"
 
-                            tagRender={this.tagRender.bind(this)}
-                            style={{ width: '100%' }}
-                            options={(this.state.allFlair ? this.state.allFlair : [])}
-                        />
-                    </Form.Item>
-                    {/*remove disabled={isInvalid} onClick={this.onSubmit}*/}
-                    <Button type="primary" htmlType="submit"
-                        loading={this.state.updating}>
-                        Save
+                        tagRender={this.tagRender.bind(this)}
+                        style={{ width: '100%' }}
+                        options={(this.state.allFlair ? this.state.allFlair : [])}
+                    />
+                </Form.Item>
+                {/*remove disabled={isInvalid} onClick={this.onSubmit}*/}
+                <Button type="primary" htmlType="submit"
+                    loading={this.state.updating}>
+                    Save
                 </Button>
 
-                    {this.state.error && <p>{this.state.error.message}</p>}
-                </Form>
-            </div>);
+                {this.state.error && <p>{this.state.error.message}</p>}
+            </Form>
+        </>;
     }
 }
 
