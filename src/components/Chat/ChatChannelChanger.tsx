@@ -102,7 +102,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
 
     componentDidMount(): void {
         //@ts-ignore
-        this.props.appState?.refreshUser(null, false).then((user) => {
+        this.props.appState?.refreshUser().then((user) => {
             this.props.multiChatWindow.registerChannelConsumer(this);
             this.props.appState?.programCache.getProgramItems(this).then((items: ProgramItem[]) => {
                 this.haveProgram = true;

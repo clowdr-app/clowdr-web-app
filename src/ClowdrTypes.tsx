@@ -16,6 +16,8 @@ type Role = any
 
 export type UserSessionToken = string
 
+export type MaybeParseUser = Parse.User<Parse.Attributes> | null;
+
 export interface ClowdrState {
     spaces: Map<string, SocialSpace>;   // TS: Or maybe better a Record??
     user: Parse.User | null;
@@ -35,7 +37,7 @@ export interface ClowdrState {
     history: History;
     activeSpace: SocialSpace;
     getUserProfile(authorID: string, arg1: (u: any) => void): any;   // ???
-    refreshUser(a: Parse.Object | null, b: boolean): any;
+    refreshUser(instance?: ClowdrInstance, forceRefresh?: boolean): Promise<MaybeParseUser>;
     isModerator: boolean;
     isManager: boolean;
     isAdmininstrator: boolean;

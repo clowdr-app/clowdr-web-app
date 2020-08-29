@@ -49,7 +49,7 @@ class WelcomePortal extends React.Component<WelcomePortalProps, WelcomePortalSta
     render() {
 
         let codeOfConductWarning = <span>This is a social platform to engage with your colleagues, and while we have a very light hand for moderating
-            content, violators of the <a href="https://www.acm.org/special-interest-groups/volunteer-resources/officers-manual/policy-against-discrimination-and-harassment" target="_blank">
+            content, violators of the <a href="https://www.acm.org/special-interest-groups/volunteer-resources/officers-manual/policy-against-discrimination-and-harassment" rel="noopener noreferrer" target="_blank">
                 ACM Policy Against Discrimination and Harassment</a> risk being permanently banned from this platform.</span>
         return <Modal zIndex={300}
             // title="Welcome to CLOWDR"

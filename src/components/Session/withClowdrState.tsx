@@ -12,6 +12,7 @@ import SocialSpace from '../../classes/SocialSpace';
 import ClowdrInstance from '../../classes/ClowdrInstance';
 import LiveActivity from '../../classes/LiveActivity';
 import { assert } from '../../Util';
+import { MaybeParseUser } from "../../ClowdrTypes";
 
 // TS: Push through the change to Props/State globally!
 interface Props {
@@ -94,7 +95,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         socialSpaceSubscription: any;
         profilesSubscription: any;
         chatClient: any;
-        refreshUserPromise: any;
+        refreshUserPromise: Promise<MaybeParseUser> | null = null;
         user: Parse.User<Parse.Attributes> | null;
         userProfile: Parse.Object<Parse.Attributes> | undefined;
         activePublicVideoRooms: any;
@@ -472,16 +473,16 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 this.chatWaiters.push(callback);
         }
 
-        refreshUser(preferredConference: ClowdrInstance | undefined, forceRefresh: boolean) {
+        refreshUser(preferredConference?: ClowdrInstance, forceRefresh: boolean = false): Promise<MaybeParseUser> {
             if (!this.refreshUserPromise || forceRefresh) {
-                this.refreshUserPromise = new Promise(async (resolve) => {
-                    let user = await this._refreshUser(preferredConference);
-                    resolve(user);
-                });
+                let result = this._refreshUser(preferredConference);
+                this.refreshUserPromise = result;
+                return result;
+            } else {
+                return this.refreshUserPromise;
             }
-            return this.refreshUserPromise;
         }
-        async _refreshUser(preferredConference: ClowdrInstance | undefined) {
+        async _refreshUser(preferredConference: ClowdrInstance | undefined): Promise<MaybeParseUser> {
 
             let _this = this;
             return Parse.User.currentAsync().then(async function (user) {
@@ -903,8 +904,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
             });
 
-            // @ts-ignore   @Jon: Wants two arguments???
-            //Jon: If you want to ensure that there are always two arguments passed, the best way would be to pull the code out of refreshUser that handles the cases where they are undefined.
             this.refreshUser();
             this.mounted = true;
         }

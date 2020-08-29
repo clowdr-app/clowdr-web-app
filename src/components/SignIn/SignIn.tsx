@@ -1,7 +1,20 @@
-import React, { Component } from 'react';
+import React, { Component, ChangeEvent } from 'react';
 import { Button, message, Form, Input, Tooltip } from 'antd';
 import Parse from "parse";
 import { AuthUserContext } from "../Session";
+import { ClowdrState } from "../../ClowdrTypes";
+
+interface SignInState {
+    email: string;
+    password: string;
+    error: Error | null;
+}
+
+interface SignInProps {
+    history: Array<string>;
+    dontBounce: boolean;
+    clowdrAppState: ClowdrState;
+}
 
 const INITIAL_STATE = {
     email: '',
@@ -23,23 +36,20 @@ const tailLayout = {
         span: 16,
     },
 };
-class SignIn extends Component {
-    constructor(props) {
+class SignIn extends Component<SignInProps, SignInState> {
+    constructor(props: SignInProps) {
         super(props);
-
         this.state = { ...INITIAL_STATE };
     }
 
-    onSubmit = async (event) => {
+    onSubmit = async () => {
         const { email, password } = this.state;
-        // event.preventDefault();
         try {
             let user = await Parse.User.logIn(email, password);
             console.log("[SignIn]: User=" + JSON.stringify(user));
-            await this.props.refreshUser();
+            await this.props.clowdrAppState.refreshUser();
             this.props.history.push("/");
-            window.location.reload(false);
-
+            window.location.assign("/");
         } catch (e) {
             alert(e.message);
         }
@@ -52,9 +62,13 @@ class SignIn extends Component {
         }
     }
 
-    onChange = event => {
-        this.setState({ [event.target.name]: event.target.value });
-    };
+    onEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
+        this.setState({ "email": event.target.value });
+    }
+
+    onPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
+        this.setState({ "email": event.target.value });
+    }
 
     async forgotPassword() {
         console.log(process.env)
@@ -82,7 +96,7 @@ class SignIn extends Component {
                     <Input
                         name="email"
                         value={email}
-                        onChange={this.onChange}
+                        onChange={this.onEmailChange}
                         type="text"
                     />
                 </Form.Item>
@@ -90,7 +104,7 @@ class SignIn extends Component {
                     <Input.Password
                         name="password"
                         value={password}
-                        onChange={this.onChange}
+                        onChange={this.onPasswordChange}
                         type="password"
                     /></Form.Item>
                 <Form.Item {...tailLayout}>
@@ -106,10 +120,10 @@ class SignIn extends Component {
     }
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = (props: SignInProps) => (
     <AuthUserContext.Consumer>
-        {value => (
-            <SignIn {...props} user={value.user} clowdrAppState={value} refreshUser={value.refreshUser} />
+        {value => (value == null ? <span>TODO</span> :
+            <SignIn {...props} clowdrAppState={value} />
         )}
     </AuthUserContext.Consumer>
 );
