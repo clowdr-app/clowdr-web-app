@@ -277,7 +277,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                         </Document>{deleteButton}</Space>
                     } else {
                         viewer = <Space>
-                            <a href={url} target="_blank"><img src={url} alt={type.get("name")}
+                            <a href={url} rel="noopener noreferrer" target="_blank"><img src={url} alt={type.get("name")}
                                 width={300} /></a> {deleteButton}</Space>
                     }
                     additionalDescription.push(<Descriptions.Item key={attachment.id} label={type.get('name')}>{viewer}</Descriptions.Item>)
@@ -330,7 +330,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
         let currentDomain = window.location.origin;
         if (props.href && props.href.startsWith(currentDomain))
             return <a href="#" onClick={() => { this.props.appState?.history.push(props.href.replace(currentDomain, "")) }}>{props.children}</a>;
-        return <a href={props.href} target="_blank">{props.children}</a>;
+        return <a href={props.href} rel="noopener noreferrer" target="_blank">{props.children}</a>;
     };
 
 }

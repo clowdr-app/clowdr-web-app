@@ -8,7 +8,7 @@ import ChatFrame from "../Chat/ChatFrame";
 
 // const emojiSupport = text => text.value.replace(/:\w+:/gi, name => emoji.getUnicode(name));
 
-// const linkRenderer = props => <a href={props.href} target="_blank">{props.children}</a>;
+// const linkRenderer = props => <a href={props.href} rel="noopener noreferrer" target="_blank">{props.children}</a>;
 
 const INITIAL_STATE = {
     expanded: true,
@@ -76,7 +76,7 @@ class SidebarChat extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         this.user = this.props.auth.user;
-        
+
         if (!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")) {
             this.setState({ visible: true });
         }

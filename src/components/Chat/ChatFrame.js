@@ -295,7 +295,7 @@ class ChatFrame extends React.Component {
         let currentDomain = window.location.origin;
         if (props.href && props.href.startsWith(currentDomain))
             return <a href="#" onClick={() => { this.props.auth.history.push(props.href.replace(currentDomain, "")) }}>{props.children}</a>;
-        return <a href={props.href} target="_blank">{props.children}</a>;
+        return <a href={props.href} rel="noopener noreferrer" target="_blank">{props.children}</a>;
     };
 
 

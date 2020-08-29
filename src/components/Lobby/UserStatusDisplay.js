@@ -52,7 +52,7 @@ class UserStatusDisplay extends React.Component {
         let currentDomain = window.location.origin;
         if (props.href && props.href.startsWith(currentDomain))
             return <a href="#" onClick={() => { this.props.auth.history.push(props.href.replace(currentDomain, "")) }}>{props.children}</a>;
-        return <a href={props.href} target="_blank">{props.children}</a>;
+        return <a href={props.href} rel="noopener noreferrer" target="_blank">{props.children}</a>;
     };
 
     render() {
@@ -140,7 +140,7 @@ class UserStatusDisplay extends React.Component {
         let webpage = "";
         if ("" + this.state.profile.get("webpage") !== "undefined") {
             webpage = <div>
-                <a href={this.state.profile.get("webpage")} target="_blank">
+                <a href={this.state.profile.get("webpage")} rel="noopener noreferrer" target="_blank">
                     {this.state.profile.get("webpage")}</a>
             </div>;
         }

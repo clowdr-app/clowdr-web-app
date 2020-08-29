@@ -214,7 +214,7 @@ class SlackToVideo extends React.Component {
             //         <Typography.Paragraph>While CLOWDR provides chat integrated with the conference program, there is also a Slack
             //             workspace. Please be sure to use your real name as your Slack handle, and the same email address that you used to register for this conference ({this.props.clowdrAppState.user.get("email")}).</Typography.Paragraph>
             //         <Typography.Paragraph>After you create your slack account, come back to this window to browse the program, see what events are going on, and who is online.</Typography.Paragraph>
-            //         <Button href={this.state.slackLink} type="primary" target="_blank" onClick={()=>{this.setState({step: 4})}}>Join Slack</Button>
+            //         <Button href={this.state.slackLink} type="primary" rel="noopener noreferrer" target="_blank" onClick={()=>{this.setState({step: 4})}}>Join Slack</Button>
             //     </Card>
             // }
             else if (this.state.step === 3) {

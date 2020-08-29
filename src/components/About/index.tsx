@@ -6,7 +6,7 @@ class About extends Component {
         return <div>
             <Typography.Title level={2}>About CLOWDR</Typography.Title>
             <p>
-                <a href="https://www.clowdr.org/" target="_blank">CLOWDR</a> is
+                <a href="https://www.clowdr.org/" rel="noopener noreferrer" target="_blank">CLOWDR</a> is
                     an open source tool suite to make it easier to run interactive and engaging virtual
                     conferences.
                     Imagine that your conference attendees could interact by video and text and easily drift

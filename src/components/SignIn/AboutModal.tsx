@@ -37,7 +37,7 @@ class WelcomePortal extends React.Component<WelcomePortalProps, WelcomePortalSta
                 CLOWDR lets you see which rooms your colleagues are in
                    (assuming that they are in public rooms, or private rooms to which you have access). <br /><br />
                    The platform is fairly new, so if you find bugs, please be gentle and remember
-                   that <a href="https://github.com/clowdr-web-app" target="_blank">this is an open source platform built by volunteers</a>!
+                   that <a href="https://github.com/clowdr-web-app" rel="noopener noreferrer" target="_blank">this is an open source platform built by volunteers</a>!
                </Typography.Paragraph>
             }
             this.props.auth.userProfile.set("welcomeModalShown", true);

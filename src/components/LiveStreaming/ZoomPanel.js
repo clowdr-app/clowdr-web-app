@@ -105,7 +105,9 @@ class ZoomPanel extends Component {
                     </p>
                 <Space>
                     <Button type="primary" disabled={this.state.zoomLoading}
-                        href={this.state.personalJoinLink} target="_blank"
+                        href={this.state.personalJoinLink}
+                        rel="noopener noreferrer"
+                        target="_blank"
                         loading={!this.state.personalJoinLink}>
                         Join By Zoom App
                     </Button>
