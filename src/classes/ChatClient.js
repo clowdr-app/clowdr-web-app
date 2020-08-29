@@ -1,9 +1,8 @@
 import Chat from "twilio-chat";
 import Parse from "parse";
-import React from "react";
-import {backOff} from "exponential-backoff";
-import {message} from "antd"
-export default class ChatClient{
+import { backOff } from "exponential-backoff";
+import { message } from "antd"
+export default class ChatClient {
     constructor(setGlobalState) {
         this.channelListeners = [];
         this.channels = [];
@@ -15,31 +14,31 @@ export default class ChatClient{
         this.chats = [];
         this.ephemerallyOpenedChats = [];
         this.channelListeners = {};
-        this.channelPromises ={};
+        this.channelPromises = {};
         this.channelWaiters = {};
     }
 
-    async openChatAndJoinIfNeeded(sid, openOnRight=false) {
+    async openChatAndJoinIfNeeded(sid, openOnRight = false) {
         let channels = this.joinedChannels;
         let found = channels[sid];
         if (!found) {
             found = await this.joinAndGetChannel(sid);
-            if(!found){
+            if (!found) {
                 return;
             }
             // this.ephemerallyOpenedChats.push(found.sid);
         }
-        else{
+        else {
             found = found.channel;
             // if(!this.chatBar.state[found.sid]){
             //     this.channelsThatWeHaventMessagedIn.push(found.sid);
             // }
         }
-        if(!found){
+        if (!found) {
             console.log("Unable to find chat: " + sid)
         }
-        else{
-            if(openOnRight){
+        else {
+            if (openOnRight) {
                 this.setRightSideChat(sid);
             }
             else {
@@ -49,33 +48,31 @@ export default class ChatClient{
         }
     }
 
-    closeChatAndLeaveIfUnused(sid){
-       if(this.channelsThatWeHaventMessagedIn.includes(sid)){
-           if(this.ephemerallyOpenedChats.includes(sid))
-           {
-               this.closeChatAndLeave(sid); //we were not previously in the chat
-               this.ephemerallyOpenedChats = this.ephemerallyOpenedChats.filter(v=>v!==sid);
-           }else{
-               //just minimize the window
-               this.chatBar.setState((prevState)=>({
-                   chats: prevState.chats.filter(v=>v!==sid)
-               }))
-           }
-       }
+    closeChatAndLeaveIfUnused(sid) {
+        if (this.channelsThatWeHaventMessagedIn.includes(sid)) {
+            if (this.ephemerallyOpenedChats.includes(sid)) {
+                this.closeChatAndLeave(sid); //we were not previously in the chat
+                this.ephemerallyOpenedChats = this.ephemerallyOpenedChats.filter(v => v !== sid);
+            } else {
+                //just minimize the window
+                this.chatBar.setState((prevState) => ({
+                    chats: prevState.chats.filter(v => v !== sid)
+                }))
+            }
+        }
     }
 
     async closeChatAndLeave(sid) {
-        if (this.joinedChannels[sid]){
+        if (this.joinedChannels[sid]) {
             this.joinedChannels[sid].channel.leave();
         }
     }
 
-    async getJoinedChannel(sid){
+    async getJoinedChannel(sid) {
         let chan = this.joinedChannels[sid];
-        if(!chan)
-        {
-            if(!this.channelPromises[sid] || !this.channelWaiters[sid]){
-                this.channelPromises[sid] = new Promise((resolve)=>{
+        if (!chan) {
+            if (!this.channelPromises[sid] || !this.channelWaiters[sid]) {
+                this.channelPromises[sid] = new Promise((resolve) => {
                     this.channelWaiters[sid] = resolve;
                 });
             }
@@ -99,21 +96,21 @@ export default class ChatClient{
 
     }
     async joinAndGetChannel(uniqueName) {
-        if(!this.twilio){
+        if (!this.twilio) {
             await this.chatClientPromise;
         }
-        let channel = await this.callWithRetry(()=>this.twilio.getChannelByUniqueName(uniqueName));
+        let channel = await this.callWithRetry(() => this.twilio.getChannelByUniqueName(uniqueName));
         let chan = this.joinedChannels[channel.sid];
         this.channelsThatWeHaventMessagedIn.push(channel.sid);
-        if(chan){
+        if (chan) {
             return chan.channel;
         }
-        try{
+        try {
             let membership = await this.callWithRetry(() => channel.join());
             await this.getChannelInfo(membership);
             return membership;
-        }catch(err){
-            if(err.code ===50403) {
+        } catch (err) {
+            if (err.code === 50403) {
                 message.error("Sorry, the text channel that you selected is currently at full capacity (currently, channels support a max of 1,000 users).")
                 return null;
                 // this.channelsThatWeHaventMessagedIn = this.channelsThatWeHaventMessagedIn.filter(s=>s!==channel.sid);
@@ -134,56 +131,62 @@ export default class ChatClient{
                 //     return channel;
                 // }
             }
-            else{
+            else {
                 console.log(err);
             }
         }
     }
 
-    setUnreadCount(sid, count){
-        if(this.chatList){
+    setUnreadCount(sid, count) {
+        if (this.chatList) {
             this.chatList.setUnreadCount(sid, count);
         }
     }
 
-    initMultiChatWindow(chatWindow){
+    initMultiChatWindow(chatWindow) {
         this.multiChatWindow = chatWindow;
         chatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
         chatWindow.setAllChannels(this.channels);
     }
 
-    initChatSidebar(rightChat){
+    initChatSidebar(rightChat) {
         this.rightSideChat = rightChat;
-        if(!this.rhsChatPromise){
-            this.rhsChatPromise = new Promise(resolve=>{resolve()});
-        }else{
+        if (!this.rhsChatPromise) {
+            this.rhsChatPromise = new Promise(resolve => { resolve() });
+        } else {
             this.rhsChatResolve();
         }
     }
 
-    initBottomChatBar(chatBar){
+    initBottomChatBar(chatBar) {
         this.chatBar = chatBar;
-        chatBar.setState({chats: Object.values(this.joinedChannels)
+        chatBar.setState({
+            chats: Object.values(this.joinedChannels)
                 // .filter(c=>c.attributes && c.attributes.category !== "socialSpace")
-                .map(c=>c.channel.sid)});
-        chatBar.setState({Initialchats: Object.values(this.joinedChannels)
+                .map(c => c.channel.sid)
+        });
+        chatBar.setState({
+            Initialchats: Object.values(this.joinedChannels)
                 // .filter(c=>c.attributes && c.attributes.category !== "socialSpace")
-                .map(c=>c.channel.sid)});
+                .map(c => c.channel.sid)
+        });
     }
 
-    initJoinedChatList(chatList){
+    initJoinedChatList(chatList) {
         this.chatList = chatList;
-        chatList.setState({chats: Object.values(this.joinedChannels)
+        chatList.setState({
+            chats: Object.values(this.joinedChannels)
                 // .filter(c=>c.attributes && c.attributes.category !== "socialSpace")
-                .map(c=>c.channel.sid)});
+                .map(c => c.channel.sid)
+        });
     }
 
-    async disableRightSideChat(){
-        if(this.rightSideChat)
+    async disableRightSideChat() {
+        if (this.rightSideChat)
             this.rightSideChat.setChatDisabled(true);
     }
-    async setRightSideChat(newChannelSID){
-        if(this.desiredRHSChat === newChannelSID)
+    async setRightSideChat(newChannelSID) {
+        if (this.desiredRHSChat === newChannelSID)
             return;
         this.desiredRHSChat = newChannelSID;
         if (!this.rhsChatPromise) {
@@ -198,31 +201,31 @@ export default class ChatClient{
         let channel = null;
         let found = this.joinedChannels[newChannelSID];
         let shouldLeaveWhenChanges = false;
-        if(found){
+        if (found) {
             channel = found.channel;
         }
-        else{
+        else {
             channel = await this.joinAndGetChannel(newChannelSID)
-            if(!this.desiredRHSChat === newChannelSID)
+            if (!this.desiredRHSChat === newChannelSID)
                 return;
-            if(channel.friendlyName && channel.friendlyName.startsWith("socialSpace-"))
+            if (channel.friendlyName && channel.friendlyName.startsWith("socialSpace-"))
                 shouldLeaveWhenChanges = true;
         }
-        if(channel)
+        if (channel)
             await this.rightSideChat.setChannel(channel, shouldLeaveWhenChanges);
     }
 
     initChatClient(user, conference, userProfile, appController) {
         this.userProfile = userProfile;
         this.conference = conference;
-        if(appController && appController.setState)
+        if (appController && appController.setState)
             this.appController = appController;
         if (!this.chatClientPromise) {
             this.chatClientPromise = new Promise(async (resolve) => {
                 try {
                     let ret = await this._initChatClient(user, conference);
                     resolve(ret);
-                }catch(err){
+                } catch (err) {
                     console.log(err);
                 }
             });
@@ -231,23 +234,23 @@ export default class ChatClient{
     }
 
     async openChat(chatSID, isInitialLoad) {
-        if(!chatSID){
+        if (!chatSID) {
             console.log("No chat sid!")
             console.trace();
         }
-        if(!Object.keys(this.joinedChannels).includes(chatSID)){
+        if (!Object.keys(this.joinedChannels).includes(chatSID)) {
             await this.joinAndGetChannel(chatSID);
         }
-        if(!this.chats.includes(chatSID))
+        if (!this.chats.includes(chatSID))
             this.chats.push(chatSID);
         if (this.multiChatWindow)
             this.multiChatWindow.openChat(chatSID, isInitialLoad);
-        if(this.chatList)
+        if (this.chatList)
             this.chatList.addChannel(chatSID);
     }
 
     openEmojiPicker(message, event, chatFrame) {
-        if(this.emojiPickerRef.current){
+        if (this.emojiPickerRef.current) {
             let boundingTargetRect = event.target.getBoundingClientRect();
             let newFromTop = boundingTargetRect.y
             let newFromLeft = boundingTargetRect.x;
@@ -259,26 +262,24 @@ export default class ChatClient{
             if (boxWidth === 0)
                 boxWidth = 353;
             let screenWidth = window.innerWidth;
-            let screenHeight = window.innerHeight;
-            if (boxWidth + newFromLeft > screenWidth)
-            {
+            if (boxWidth + newFromLeft > screenWidth) {
                 //place the picker to the right of the cursor
                 newFromLeft = newFromLeft - boxWidth;
             }
-            if (newFromTop - boxHeight > 0){
+            if (newFromTop - boxHeight > 0) {
                 newFromTop = newFromTop - boxHeight;
             }
             if (newFromLeft < 0)
                 newFromLeft = 0;
             this.emojiPickerRef.current.style.display = "block";
-            this.emojiPickerRef.current.style.left = newFromLeft+"px";
-            this.emojiPickerRef.current.style.top = newFromTop+"px";
+            this.emojiPickerRef.current.style.left = newFromLeft + "px";
+            this.emojiPickerRef.current.style.top = newFromTop + "px";
             this.reactingTo = message;
             this.reactingToFrame = chatFrame;
-            if(!this.emojiPickerCancelEvent){
+            if (!this.emojiPickerCancelEvent) {
                 this.emojiPickerCancelEvent = true;
-                document.addEventListener("click", (evt)=>{
-                    if(this.reactingToFrame){
+                document.addEventListener("click", (evt) => {
+                    if (this.reactingToFrame) {
                         let targetElement = evt.target;
                         do {
                             if (targetElement === this.emojiPickerRef.current || targetElement === this.emojiClickTarget) {
@@ -287,7 +288,7 @@ export default class ChatClient{
                             // Go up the DOM
                             targetElement = targetElement.parentNode;
                         } while (targetElement);
-                        this.reactingTo  = null;
+                        this.reactingTo = null;
                         this.reactingToFrame = null;
                         this.emojiPickerRef.current.style.display = "none";
                     }
@@ -296,83 +297,83 @@ export default class ChatClient{
 
         }
     }
-    initEmojiPicker(ref){
+    initEmojiPicker(ref) {
         this.emojiPickerRef = ref;
     }
-    emojiSelected(event){
-        if(this.reactingToFrame){
+    emojiSelected(event) {
+        if (this.reactingToFrame) {
             this.reactingToFrame.sendReaction(this.reactingTo, event);
             this.reactingTo = null;
             this.reactingToFrame = null;
             this.emojiPickerRef.current.style.display = "none";
         }
     }
-    
-    leaveChat(chatSID){
-        this.chats = this.chats.filter(c=>c !== chatSID);
-        if(this.chatBar)
+
+    leaveChat(chatSID) {
+        this.chats = this.chats.filter(c => c !== chatSID);
+        if (this.chatBar)
             this.chatBar.removeChannel(chatSID);
-        if(this.chatList)
+        if (this.chatList)
             this.chatList.removeChannel(chatSID);
     }
 
-    async getChannelInfo(channel){
+    async getChannelInfo(channel) {
 
         let ret = {};
-        ret.attributes = await this.callWithRetry(()=>channel.getAttributes());
+        ret.attributes = await this.callWithRetry(() => channel.getAttributes());
         let convoQ = new Parse.Query("Conversation");
-        let shouldHaveParseConvo  = ret.attributes.category === "userCreated";
-        if(shouldHaveParseConvo) {
-            if(!ret.attributes.parseID)
+        let shouldHaveParseConvo = ret.attributes.category === "userCreated";
+        if (shouldHaveParseConvo) {
+            if (!ret.attributes.parseID)
                 return;
             try {
                 ret.conversation = await convoQ.get(ret.attributes.parseID);
-            }catch(err){
+            } catch (err) {
                 //phantom chats leftover from testing, should be deleted...
                 return;
             }
         }
-        let members = await this.callWithRetry(()=>channel.getMembers());
-        ret.members = members.map(m=>m.identity); //.filter(m=>m!== this.userProfile.id);
-        ret.channel  =channel;
+        let members = await this.callWithRetry(() => channel.getMembers());
+        ret.members = members.map(m => m.identity); //.filter(m=>m!== this.userProfile.id);
+        ret.channel = channel;
         ret.components = [];
         ret.visibleComponents = [];
         ret.messages = [];
-        ret.channel.on("messageAdded", (message)=>{
-            for(let component of ret.components){
+        ret.channel.on("messageAdded", (message) => {
+            for (let component of ret.components) {
                 component.messageAdded(ret.channel, message);
             }
         });
-        ret.channel.on("messageRemoved", (message) =>{
-            for(let component of ret.components){
+        ret.channel.on("messageRemoved", (message) => {
+            for (let component of ret.components) {
                 component.messageRemoved(ret.channel, message);
             }
         });
-        ret.channel.on("messageUpdated", (message) =>{
-            for(let component of ret.components){
+        ret.channel.on("messageUpdated", (message) => {
+            for (let component of ret.components) {
                 component.messageUpdated(ret.channel, message);
             }
         })
-        ret.channel.on("memberJoined", (member)=>{
+        ret.channel.on("memberJoined", (member) => {
             ret.members.push(member);
-            for(let component of ret.components){
+            for (let component of ret.components) {
                 component.memberJoined(ret.channel, member);
             }
-            if(this.chatBar){
+            if (this.chatBar) {
                 this.chatBar.membersUpdated(ret.channel.sid);
             }
         })
-        ret.channel.on("memberLeft", (member)=>{
-            ret.members = ret.members.filter(m=>m.sid !== member.sid);
-            for(let component of ret.components){
+        ret.channel.on("memberLeft", (member) => {
+            ret.members = ret.members.filter(m => m.sid !== member.sid);
+            for (let component of ret.components) {
                 component.memberLeft(ret.channel, member);
             }
-            if(this.chatBar){
+            if (this.chatBar) {
                 this.chatBar.membersUpdated(ret.channel.sid);
             }
         })
         this.joinedChannels[channel.sid] = ret;
-        if(this.channelWaiters[channel.sid]){
+        if (this.channelWaiters[channel.sid]) {
             this.channelWaiters[channel.sid](ret.channel);
             this.channelWaiters[channel.sid] = undefined;
         }
@@ -385,7 +386,7 @@ export default class ChatClient{
         this.channelListeners[channel.sid] = undefined;
     }
 
-    async _initChatClient(user, conference){
+    async _initChatClient(user, conference) {
         if (this.twilio && this.chatUser && this.chatUser.id === user.id && this.conference && this.conference.id === conference.id) {
             return this.twilio;
         } else if (this.twilio) {
@@ -393,8 +394,8 @@ export default class ChatClient{
         }
         let token = await this.getToken(user, conference);
         let twilio = await Chat.create(token);
-        let [subscribedChannelsPaginator, allChannelDescriptors] = await Promise.all([this.callWithRetry(()=>twilio.getSubscribedChannels()),
-        this.callWithRetry(()=>twilio.getPublicChannelDescriptors())]);
+        let [subscribedChannelsPaginator, allChannelDescriptors] = await Promise.all([this.callWithRetry(() => twilio.getSubscribedChannels()),
+        this.callWithRetry(() => twilio.getPublicChannelDescriptors())]);
         let promises = [];
         while (true) {
             for (let channel of subscribedChannelsPaginator.items) {
@@ -407,25 +408,26 @@ export default class ChatClient{
             }
         }
         let channelsToFetch = [];
-        while(true) {
+        while (true) {
             for (let cd of allChannelDescriptors.items) {
-                channelsToFetch.push(this.callWithRetry(()=>cd.getChannel()));
+                channelsToFetch.push(this.callWithRetry(() => cd.getChannel()));
             }
-            if(allChannelDescriptors.hasNextPage){
+            if (allChannelDescriptors.hasNextPage) {
                 allChannelDescriptors = await allChannelDescriptors.nextPage();
-            }else{
+            } else {
                 break;
             }
         }
+        // eslint-disable-next-line no-unused-vars
         let [joinedChannels, allChannels] = await Promise.all([Promise.all(promises), Promise.all(channelsToFetch)]);
         this.channels = allChannels;
 
         //Make sure that the bottom chat bar and chat list have everything we have so far
         if (this.chatList)
             this.chatList.setState({
-                    chats: Object.values(this.joinedChannels)
-                        // .filter(c => c.attributes && c.attributes.category !== "socialSpace")
-                        .map(c => c.channel.sid)
+                chats: Object.values(this.joinedChannels)
+                    // .filter(c => c.attributes && c.attributes.category !== "socialSpace")
+                    .map(c => c.channel.sid)
             });
         if (this.chatBar)
             this.chatBar.setState({
@@ -433,17 +435,17 @@ export default class ChatClient{
                     // .filter(c => c.attributes && c.attributes.category !== "socialSpace")
                     .map(c => c.channel.sid)
             });
-        if(this.multiChatWindow) {
+        if (this.multiChatWindow) {
             this.multiChatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
             this.multiChatWindow.setAllChannels(this.channels);
         }
 
-        twilio.on("channelAdded", (channel)=>{
+        twilio.on("channelAdded", (channel) => {
             console.log("Channel added: " + channel)
             this.channels.push(channel);
             this.multiChatWindow.setAllChannels(this.channels);
-            if(channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin !== "false"){
-                if(!Object.keys(this.joinedChannels).includes(channel.sid)){
+            if (channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin !== "false") {
+                if (!Object.keys(this.joinedChannels).includes(channel.sid)) {
                     this.joinAndGetChannel(channel.sid)
                 }
             }
@@ -472,7 +474,7 @@ export default class ChatClient{
             delete this.joinedChannels[channel.sid];
             this.leaveChat(channel.sid);
             console.log("Left " + channel.sid)
-            if (this.multiChatWindow){
+            if (this.multiChatWindow) {
                 this.multiChatWindow.setJoinedChannels(Object.keys(this.joinedChannels));
             }
             this.unSubscribeToChannel(channel);
@@ -482,7 +484,7 @@ export default class ChatClient{
         let announcements = Object.values(this.joinedChannels).find(chan => chan.attributes.category === 'announcements-global');
         if (!announcements) {
             console.log("Trying to join announcements")
-           Parse.Cloud.run("join-announcements-channel", {
+            Parse.Cloud.run("join-announcements-channel", {
                 conference: this.conference.id
             }).then(res => {
                 console.log(res);
@@ -491,9 +493,9 @@ export default class ChatClient{
             })
         }
         this.twilio = twilio;
-        for(let channel of this.channels){
-            if(channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin !== "false"){
-                if(!Object.keys(this.joinedChannels).includes(channel.sid)){
+        for (let channel of this.channels) {
+            if (channel.attributes && channel.attributes.isAutoJoin && channel.attributes.isAutoJoin !== "false") {
+                if (!Object.keys(this.joinedChannels).includes(channel.sid)) {
                     this.joinAndGetChannel(channel.sid)
                 }
             }
@@ -520,7 +522,6 @@ export default class ChatClient{
         }
     }
     getToken = async (user, conference) => {
-        let _this = this;
         let idToken = user.getSessionToken();
         if (idToken) {
             console.log("Fetching chat token for " + idToken + ", " + conference.id);

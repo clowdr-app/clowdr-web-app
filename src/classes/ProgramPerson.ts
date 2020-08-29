@@ -1,6 +1,6 @@
 import Parse from "parse";
 
-export default class ProgramPerson extends Parse.Object{
+export default class ProgramPerson extends Parse.Object {
     constructor() {
         super("ProgramPerson");
     }

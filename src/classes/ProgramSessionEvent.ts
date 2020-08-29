@@ -6,7 +6,7 @@ export default class ProgramSessionEvent extends Parse.Object {
         super("ProgramSessionEvent");
     }
     // TS: Is there a better way than writing this out manually???
-    getItems(){
+    getItems() {
         return this.get("items") as ProgramItem[];
     }
 }

@@ -1,6 +1,6 @@
 import Parse from "parse";
 
-export default class ClowdrInstance extends Parse.Object{
+export default class ClowdrInstance extends Parse.Object {
     constructor() {
         super("ClowdrInstance");
     }

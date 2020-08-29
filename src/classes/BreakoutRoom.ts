@@ -1,6 +1,6 @@
 import Parse from "parse";
 
-export default class BreakoutRoom extends Parse.Object{
+export default class BreakoutRoom extends Parse.Object {
     constructor() {
         super("BreakoutRoom");
     }
