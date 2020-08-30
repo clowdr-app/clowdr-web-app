@@ -42,7 +42,7 @@ export default class ChatClient {
     chatUser: Parse.User<Parse.Attributes> | null = null;
     chats: Array<string> = [];
     ephemerallyOpenedChannelSIDs: Array<string> = [];
-    chatClientPromise: Promise<Client> | null = null;
+    chatClientPromise: Promise<Client | null> | null = null;
     chatBar: BottomChat | null = null;
     chatList: ContextualActiveUsers | null = null;
     rightSideChat: SidebarChat | null = null;
@@ -124,6 +124,10 @@ export default class ChatClient {
     async joinAndGetChannel(uniqueName: string): Promise<Channel | null> {
         if (!this.twilio) {
             await this.chatClientPromise;
+        }
+        if (!this.twilio) {
+            console.log("[ChatClient]: null twilio client");
+            return null;
         }
         let channel = await this.callWithRetry(() => this.twilio!.getChannelByUniqueName(uniqueName));
         let chan = this.joinedChannels[channel.sid];
@@ -246,7 +250,7 @@ export default class ChatClient {
         user: Parse.User<Parse.Attributes>,
         conference: ClowdrInstance | null | undefined,
         userProfile: UserProfile,
-    ): Promise<Client> {
+    ): Promise<Client | null> {
         this.userProfile = userProfile;
         this.conference = conference;
         if (!this.chatClientPromise) {
@@ -419,13 +423,18 @@ export default class ChatClient {
     async _initChatClient(
         user: Parse.User<Parse.Attributes>,
         conference: ClowdrInstance | null | undefined,
-    ): Promise<Client> {
+    ): Promise<Client | null> {
         if (this.twilio && this.chatUser && this.chatUser.id === user.id && this.conference && conference && this.conference.id === conference.id) {
             return this.twilio;
         } else if (this.twilio) {
             await this.cleanup();
         }
         let token = await this.getToken(user, conference);
+        if (!token) {
+            console.log("[ChatClient]: twilio token not found");
+            return null;
+        }
+
         let twilio = await Chat.create(token);
         let [subscribedChannelsPaginator, allChannelDescriptors] = await Promise.all([this.callWithRetry(() => twilio.getSubscribedChannels()),
         this.callWithRetry(() => twilio.getPublicChannelDescriptors())]);
