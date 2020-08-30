@@ -392,7 +392,7 @@ export class ChatFrame extends React.Component {
                 return;
             }
             if (!this.clearedTempFlag) {
-                this.props.auth.chatClient.channelsThatWeHaventMessagedIn = this.props.auth.chatClient.channelsThatWeHaventMessagedIn.filter(c => c !== this.activeChannel.sid);
+                this.props.auth.chatClient.channelSIDsThatWeHaventMessagedIn = this.props.auth.chatClient.channelSIDsThatWeHaventMessagedIn.filter(c => c !== this.activeChannel.sid);
                 this.clearedTempFlag = true;
             }
             // if (this.form && this.form.current)
