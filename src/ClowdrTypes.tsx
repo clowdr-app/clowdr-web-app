@@ -52,7 +52,6 @@ export interface ClowdrState {
     helpers: ClowdrStateHelpers;
     chatClient: ChatClient;
     activeSpace: SocialSpace;
-    getUserProfile(authorID: string, arg1: (u: any) => void): any;   // ???
     refreshUser(instance?: MaybeClowdrInstance, forceRefresh?: boolean): Promise<MaybeParseUser>;
     isModerator: boolean;
     isManager: boolean;
