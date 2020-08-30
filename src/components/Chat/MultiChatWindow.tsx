@@ -29,7 +29,7 @@ interface MultiChatWindowState {
 }
 
 
-class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWindowState> implements MultiChatApp {
+export class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWindowState> implements MultiChatApp {
     private joinedChannels: string[];
     private allChannels: Channel[];
     private channelConsumers: ChatChannelConsumer[];

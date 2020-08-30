@@ -32,7 +32,7 @@ const INITIAL_STATE = {
     lastConsumedMessageIndex: -1,
 };
 
-class ChatFrame extends React.Component {
+export class ChatFrame extends React.Component {
     constructor(props) {
         super(props);
 

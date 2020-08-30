@@ -5,7 +5,7 @@ import MultiChatWindow from "../Chat/MultiChatWindow"
 import Parse from "parse";
 import { withRouter } from 'react-router';
 
-class BottomChat extends React.Component {
+export class BottomChat extends React.Component {
     constructor(props) {
         super(props);
         this.state = {

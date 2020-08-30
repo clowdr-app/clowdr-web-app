@@ -25,7 +25,7 @@ const INITIAL_STATE = {
     unreadCount: 0
 };
 
-class SidebarChat extends React.Component {
+export class SidebarChat extends React.Component {
     constructor(props) {
         super(props);
 

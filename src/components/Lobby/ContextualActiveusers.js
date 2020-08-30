@@ -5,7 +5,7 @@ import { withRouter } from "react-router-dom";
 import UpcomingProgram from "./UpcomingProgram";
 
 
-class ContextualActiveUsers extends React.Component {
+export class ContextualActiveUsers extends React.Component {
 
     constructor(props) {
         super(props);
