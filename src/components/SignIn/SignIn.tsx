@@ -43,7 +43,7 @@ class SignIn extends Component<SignInProps, SignInState> {
         this.state = { ...INITIAL_STATE };
     }
 
-    async onSubmit() {
+    async onFinish() {
         const { email, password } = this.state;
         try {
             let user = await Parse.User.logIn(email, password);
@@ -92,12 +92,12 @@ class SignIn extends Component<SignInProps, SignInState> {
         const isInvalid = password === '' || email === '';
 
         return (
-            <Form {...layout} onFinish={this.onSubmit}>
+            <Form {...layout} onFinish={() => this.onFinish()}>
                 <Form.Item label={"Email Address"}>
                     <Input
                         name="email"
                         value={email}
-                        onChange={this.onChange.bind(this, "email")}
+                        onChange={(e) => this.onChange("email", e)}
                         type="text"
                     />
                 </Form.Item>
@@ -105,7 +105,7 @@ class SignIn extends Component<SignInProps, SignInState> {
                     <Input.Password
                         name="password"
                         value={password}
-                        onChange={this.onChange.bind(this, "password")}
+                        onChange={(e) => this.onChange("password", e)}
                         type="password"
                     /></Form.Item>
                 <Form.Item {...tailLayout}>
