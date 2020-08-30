@@ -1,12 +1,12 @@
-import React, {Component} from "react";
-import {Typography} from "antd";
+import React, { Component } from "react";
+import { Typography } from "antd";
 
 class About extends Component {
     render() {
-        return <div>
+        return <>
             <Typography.Title level={2}>About CLOWDR</Typography.Title>
             <p>
-                <a href="https://www.clowdr.org/" target="_blank">CLOWDR</a> is
+                <a href="https://www.clowdr.org/" rel="noopener noreferrer" target="_blank">CLOWDR</a> is
                     an open source tool suite to make it easier to run interactive and engaging virtual
                     conferences.
                     Imagine that your conference attendees could interact by video and text and easily drift
@@ -18,22 +18,22 @@ class About extends Component {
                     for these interactions, so
                     we built CLOWDR.
                 </p>
-                <p>
-                    CLOWDR is a community-driven effort to create a new platform to support
-                    Conferences Located Online by using Digital Resources.
-                    CLOWDR lets your virtual conference attendees still be "present" in the virtual conference by
-                    engaging
+            <p>
+                CLOWDR is a community-driven effort to create a new platform to support
+                Conferences Located Online by using Digital Resources.
+                CLOWDR lets your virtual conference attendees still be "present" in the virtual conference by
+                engaging
                     with each other through text and video chat <i>directly</i> integrated with your conference program.
                     However: we don't sell CLOWDR as a service - it is an open source project that is
                     designed to be easy to deploy and scale: it runs entirely in the cloud.
                 </p>
-                <p>
-                    As conference organizers ourselves, we recognize that no conference organizer wants to pay an
-                    arm-and-a-leg for services
-                    like this, but also that no conference organizer wants to take on running their own (cheaper)
-                    streaming video platforms.
-                    Real-time text and video chat are the most infrastructure-intensive services to run; we outsource
-                    this to Zoom
+            <p>
+                As conference organizers ourselves, we recognize that no conference organizer wants to pay an
+                arm-and-a-leg for services
+                like this, but also that no conference organizer wants to take on running their own (cheaper)
+                streaming video platforms.
+                Real-time text and video chat are the most infrastructure-intensive services to run; we outsource
+                this to Zoom
                     (for large presentations) and <a href="https://www.twilio.com/">Twilio</a> (for all ad-hoc calls).
                     We have found this approach to be extremely cost effective: conferences pay only for the number of
                     Zoom licenses
@@ -52,11 +52,11 @@ class About extends Component {
                 Twilio treats this data as protected personal information, and guarantees destruction within 120 days.
                 Only the conference organizers have access to call logs.
             </p>
-                <p>
-                    If you are interested in using Clowdr for your event, there is no need for you to download any code
-                    or run your own server (unless you want to!). We can host your backend server for free, the only
-                    costs to your conference are for streaming video (you'll need accounts with Zoom and Twilio).
-                    CLOWDR has been battle-tested by thousands of users already this year
+            <p>
+                If you are interested in using Clowdr for your event, there is no need for you to download any code
+                or run your own server (unless you want to!). We can host your backend server for free, the only
+                costs to your conference are for streaming video (you'll need accounts with Zoom and Twilio).
+                CLOWDR has been battle-tested by thousands of users already this year
                     at <a href="https://pldi20.sigplan.org">PLDI</a>, &nbsp;
                     <a href="https://2020.icse-conferences.org">ICSE</a> and &nbsp;
                     <a href="https://conf.researchr.org/home/issta-2020">ISSTA</a>. In August, &nbsp;
@@ -69,17 +69,16 @@ class About extends Component {
                     href="mailto:hello@clowdr.org">hello@clowdr.org</a> and
                     we can provide a demo and deployment for your conference.
                 </p>
-                <p>Let's make the best of this situation, and put our heads together to make the best virtual conference
+            <p>Let's make the best of this situation, and put our heads together to make the best virtual conference
                     experience that we can: together.</p>
-                <p>CLOWDR is created by <a href="https://jonbell.net">Jonathan Bell</a>, <a
-                    href="https://www.ics.uci.edu/~lopes/">Crista Lopes</a> and <a
+            <p>CLOWDR is created by <a href="https://jonbell.net">Jonathan Bell</a>, <a
+                href="https://www.ics.uci.edu/~lopes/">Crista Lopes</a> and <a
                     href="https://www.cis.upenn.edu/~bcpierce/">Benjamin Pierce</a>.
                 </p>
-                    <p>CLOWDR is made possible
+            <p>CLOWDR is made possible
                         thanks to support by the <a href="https://www.nsf.gov/">National Science Foundation</a> under awards CCF-2035003, CCF-2035101 and CCF-203500
                         and support from <a href="https://www.twilio.org">Twilio.org</a>.</p>
-
-        </div>
+        </>;
     }
 }
 

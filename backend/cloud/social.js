@@ -1,9 +1,8 @@
+/* global Parse */
+// ^ for eslint
 
-let UserProfile = Parse.Object.extend("UserProfile");
 let SocialSpace = Parse.Object.extend("SocialSpace");
 
-let Converation = Parse.Object.extend("Conversation");
-let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
 const Twilio = require("twilio");
 const backOff = require('exponential-backoff').backOff;
@@ -37,17 +36,15 @@ async function getConfig(conference){
     }
     return config;
 }
-function timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+
 async function callWithRetry(twilioFunctionToCall) {
     const response = await backOff(twilioFunctionToCall,
         {
             startingDelay: 500,
             retry: (err, attemptNum) => {
-                if (err && err.code == 20429)
+                if (err && err.code === 20429)
                     return true;
-                console.log(err);
+                console.error(err);
                 return false;
             }
         });
@@ -65,7 +62,7 @@ async function createWithRetry(config, roomName, socialSpace, attributes){
         return chatRoom;
     }catch(err){
         console.log("Unable to create social space room")
-        console.log(err);
+        console.error(err);
             throw err;
     }
 }
@@ -99,13 +96,13 @@ Parse.Cloud.beforeSave("ProgramRoom", async (request) => {
             room.set("socialSpace", socialSpace);
             return room;
         } catch (err) {
-            console.log(err);
+            console.error(err);
 
             return err;
         }
     }else{
         socialSpace = await socialSpace.fetch({useMasterKey: true});
-        if(socialSpace.get("name") != roomName){
+        if(socialSpace.get("name") !== roomName){
             let config = await getConfig(room.get("conference"));
 
             //update name

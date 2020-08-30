@@ -1,15 +1,15 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+**/node_modules
+**/.pnp
 .pnp.js
 
 # testing
-/coverage
+**/coverage
 
 # production
-/build
+**/build
 
 # misc
 .DS_Store
@@ -18,6 +18,7 @@
 .env.test.local
 .env.production.local
 .env
+.env-*
 .env-db
 
 npm-debug.log*
@@ -32,4 +33,5 @@ db/.env-db
 #.*#
 TAGS
 *.tmp
-/.env.localdev
+**/.env.localdev
+**/logs

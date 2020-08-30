@@ -8,5 +8,5 @@ Parse.Schema.all().then(schema => {
     fs.writeFileSync('./db-schema.json', JSON.stringify(schema, null, 2) , 'utf-8'); 
     console.log("Schema stored in ./db-schema.json");
 }).catch(err => {
-    console.log(err);
+    console.error(err);
 });

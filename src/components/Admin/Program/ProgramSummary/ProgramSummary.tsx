@@ -1,11 +1,11 @@
 import React from 'react';
-import {Button, message, Popconfirm, Select, Spin, Table, Upload, Space, AutoComplete} from "antd";
+import { Button, message, Popconfirm, Select, Spin, Table, Upload, Space } from "antd";
 import Parse from "parse";
-import {AuthUserContext} from "../../../Session";
+import { AuthUserContext } from "../../../Session";
 
-import {UploadOutlined} from '@ant-design/icons';
-import {ClowdrState} from "../../../../ClowdrTypes";
-import {RcFile, UploadChangeParam} from 'antd/lib/upload/interface';
+import { UploadOutlined } from '@ant-design/icons';
+import { ClowdrState } from "../../../../ClowdrTypes";
+import { RcFile, UploadChangeParam } from 'antd/lib/upload/interface';
 import momentTZ from 'moment-timezone';
 
 interface ProgramSummaryProps {
@@ -25,8 +25,6 @@ interface ProgramSummaryState {
     uploadTimezone: string,
     uploadFormat: string
 }
-
-const { Option } = Select;
 
 class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummaryState> {
     currentConference: any;
@@ -49,7 +47,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
         this.currentConference = this.props.auth.currentConference;
     }
 
-    onChange(info: UploadChangeParam) { 
+    onChange(info: UploadChangeParam) {
         console.log("onChange " + info.file.status);
         if (info.file.status !== 'uploading') {
             console.log(info.file, info.fileList);
@@ -62,14 +60,14 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
     }
 
     setVisible() {
-        this.setState({'visible': !this.state.visible});
+        this.setState({ 'visible': !this.state.visible });
     }
 
     async componentDidMount() {
         let program = await this.props.auth.programCache.getEntireProgram(this);
-        this.setState({...program, loading: false});
+        this.setState({ ...program, loading: false });
     }
-    
+
     componentWillUnmount() {
         this.props.auth.programCache.cancelSubscription("ProgramItem", this, undefined);
         this.props.auth.programCache.cancelSubscription("ProgramRoom", this, undefined);
@@ -80,30 +78,32 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
 
     beforeUpload(file: RcFile) {
         const reader = new FileReader();
-        this.setState({uploadLoading: true})
+        this.setState({ uploadLoading: true })
         reader.onload = () => {
-            const data = {content: reader.result, timezone:this.state.uploadTimezone,
+            const data = {
+                content: reader.result, timezone: this.state.uploadTimezone,
                 format: this.state.uploadFormat,
-                conference: this.currentConference.id};
+                conference: this.currentConference.id
+            };
             Parse.Cloud.run("program-upload", data)
                 .then((res) => {
                     message.info("Success! Program has been uploaded. Please refresh the page to see the update")
-                    this.setState({uploadLoading: false})
+                    this.setState({ uploadLoading: false })
 
                 })
                 .catch(err => {
                     console.log('Upload failed: ' + err)
-                    console.log(err);
+                    console.error(err);
                     message.error("Error uploading program, please see console for debugging")
-                    this.setState({uploadLoading: false});
+                    this.setState({ uploadLoading: false });
                 });
         }
         reader.readAsText(file);
         return false;
     }
-    
-    async deleteProgram(){
-        this.setState({deleteLoading: true});
+
+    async deleteProgram() {
+        this.setState({ deleteLoading: true });
         try {
             let itemsQ = new Parse.Query("ProgramItem");
             itemsQ.equalTo("conference", this.currentConference);
@@ -125,17 +125,17 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
             eventQ.limit(10000);
 
             let [items, persons, tracks, rooms, sessions, events] = await Promise.all([itemsQ.find(),
-                personsQ.find(), trackQ.find(), roomQ.find(), sessionQ.find(), eventQ.find()]);
+            personsQ.find(), trackQ.find(), roomQ.find(), sessionQ.find(), eventQ.find()]);
             await Parse.Object.destroyAll(items.concat(persons).concat(tracks).concat(rooms).concat(sessions).concat(events));
             message.info("Deleted entire program");
-        } catch(err) {
+        } catch (err) {
             message.error("Unable to delete program");
-            console.log(err);
+            console.error(err);
             console.log(err.errors);
             // message.error(err);
         }
 
-        this.setState({deleteLoading: false});
+        this.setState({ deleteLoading: false });
     }
 
     render() {
@@ -182,36 +182,37 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                 people_c: this.state.ProgramPersons.length
             }
         ]
-        
+
         return (
             <div>
-               <Space>
-                   <Select showSearch style={{width: 200}} placeholder="Select timezone used in uploaded program"
-                                 options={momentTZ.tz.names().map(tzName=>({value: tzName}))}
-                   onChange={(val)=>{
-                       this.setState({uploadTimezone: val.toString()})
-                   }}></Select>
-                   <Select style={{width: 200}} placeholder="Select upload format"
-                           options={[{label: "XML ('ACM DL') export from conf.researchr.org", value: "conf-xml"},
-                               {label: "JSON ('confero') export from conf.researchr.org", value: "conf-json"}]}
-                           onChange={(val)=>{
-                               this.setState({uploadFormat: val.toString()})
-                           }}></Select>
-                <Upload accept=".json, .xml" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
-                    <Button loading={this.state.uploadLoading}>
-                        <UploadOutlined /> Click to upload program data
+                <Space>
+                    <Select showSearch style={{ width: 200 }} placeholder="Select timezone used in uploaded program"
+                        options={momentTZ.tz.names().map(tzName => ({ value: tzName }))}
+                        onChange={(val) => {
+                            this.setState({ uploadTimezone: val.toString() })
+                        }}></Select>
+                    <Select style={{ width: 200 }} placeholder="Select upload format"
+                        options={[{ label: "XML ('ACM DL') export from conf.researchr.org", value: "conf-xml" },
+                        { label: "JSON ('confero') export from conf.researchr.org", value: "conf-json" }]}
+                        onChange={(val) => {
+                            this.setState({ uploadFormat: val.toString() })
+                        }}></Select>
+                    <Upload accept=".json, .xml" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
+                        <Button loading={this.state.uploadLoading}>
+                            <UploadOutlined /> Click to upload program data
                     </Button>
-                </Upload>
-                <Popconfirm title={"Are you sure you want to delete the entire program? This can't be undone. Conference: "+this.currentConference.get("conferenceName")} onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
-               </Space>
+                    </Upload>
+                    <Popconfirm title={"Are you sure you want to delete the entire program? This can't be undone. Conference: " + this.currentConference.get("conferenceName")} onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
+                </Space>
                 <Table
-                    columns={columns} 
+                    columns={columns}
                     dataSource={counts}
-                    rowKey={(r)=>(r.key)}
-                    pagination={{ defaultPageSize: 500,
-                        pageSizeOptions: ['10', '20', '50', '100', '500'], 
+                    rowKey={(r) => (r.key)}
+                    pagination={{
+                        defaultPageSize: 500,
+                        pageSizeOptions: ['10', '20', '50', '100', '500'],
                         position: ['topRight', 'bottomRight']
-                    }}/>
+                    }} />
             </div>
         )
     }

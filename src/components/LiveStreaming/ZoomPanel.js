@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Space, Typography, Popconfirm } from 'antd';
+import { Button, Space, Typography } from 'antd';
 import Parse from "parse";
 
 class ZoomPanel extends Component {
@@ -20,9 +20,8 @@ class ZoomPanel extends Component {
     async componentDidMount() {
         if (this.props.auth.user) {
             this.props.auth.programCache.getMeetingRegistrations(this).then(async (registrations) => {
-                let start_url = undefined;
                 if (this.props.room && this.props.room.get("zoomRoom")) {
-                    let reg = registrations.find(v => v.get("meetingID") == this.props.room.get("id1"))
+                    let reg = registrations.find(v => v.get("meetingID") === this.props.room.get("id1"))
                     let link;
                     if (!reg) {
                         let res = await Parse.Cloud.run("zoom-meeting-register", {
@@ -42,7 +41,7 @@ class ZoomPanel extends Component {
         //     let zoomRoom = this.props.room.get("zoomRoom");
         //     if (zoomRoom) {
         //         let rooms = await this.props.auth.programCache.getZoomRooms();
-        //         zoomRoom = rooms.find(v => v.id == zoomRoom.id);
+        //         zoomRoom = rooms.find(v => v.id === zoomRoom.id);
         //         let start_url = zoomRoom.get("start_url");
         //         if (zoomRoom.get("start_url_expiration") < Date.now()) {
         //             let res = await Parse.Cloud.run("zoom-refresh-start-url", {
@@ -106,7 +105,9 @@ class ZoomPanel extends Component {
                     </p>
                 <Space>
                     <Button type="primary" disabled={this.state.zoomLoading}
-                        href={this.state.personalJoinLink} target="_blank"
+                        href={this.state.personalJoinLink}
+                        rel="noopener noreferrer"
+                        target="_blank"
                         loading={!this.state.personalJoinLink}>
                         Join By Zoom App
                     </Button>

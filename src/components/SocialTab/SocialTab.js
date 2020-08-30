@@ -1,38 +1,32 @@
-import React, {Component} from "react";
-import {Layout} from "antd";
+import React, { Component } from "react";
 import ContextualActiveUsers from "../Lobby/ContextualActiveusers";
-import {AuthUserContext} from "../Session";
+import { AuthUserContext } from "../Session";
 
 class SocialTab extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {visible: false}
+        this.state = { visible: false }
     }
     componentWillUnmount() {
     }
     componentDidMount() {
-        this.props.auth.refreshUser().then((u)=>{
-            if(u && u.get("passwordSet")){
-                this.setState({visible: true});
+        this.props.auth.refreshUser().then((u) => {
+            if (u && u.get("passwordSet")) {
+                this.setState({ visible: true });
             }
         })
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!this.state.visible && this.props.auth.user && this.props.auth.user.get("passwordSet")) {
-            this.setState({visible: true});
+            this.setState({ visible: true });
         }
     }
 
 
     render() {
-        let topHeight = 0;
-        let topElement = document.getElementById("top-content");
-        if(topElement)
-            topHeight = topElement.clientHeight;
-
-        if(!this.state.visible){
+        if (!this.state.visible) {
             return <div></div>
         }
 
@@ -40,7 +34,7 @@ class SocialTab extends Component {
         return <div className="activeRoomsTab">
 
 
-            {/*<Layout.Sider collapsible collapsed={this.state.siderWidth == 0}*/}
+            {/*<Layout.Sider collapsible collapsed={this.state.siderWidth === 0}*/}
             {/*                 trigger={null}*/}
             {/*              className="activeRoomsSider"*/}
             {/*              width={this.state.siderWidth}*/}
@@ -56,23 +50,23 @@ class SocialTab extends Component {
 
             <div id="sidepopoutcontainer" style={{
             }}>
-                {this.props.auth.watchParty ? <></> : <ContextualActiveUsers collapsed={this.state.siderWidth == 0}/>}
+                {this.props.auth.watchParty ? <></> : <ContextualActiveUsers collapsed={this.state.siderWidth === 0} />}
 
-
-                </div>
-        {/*</Layout.Sider>*/}
 
             </div>
+            {/*</Layout.Sider>*/}
+
+        </div>
     }
 }
 const AuthConsumer = (props) => (
     // <Router.Consumer>
     //     {router => (
-            <AuthUserContext.Consumer>
-                {value => (
-                    <SocialTab {...props} auth={value}/>
-                )}
-            </AuthUserContext.Consumer>
+    <AuthUserContext.Consumer>
+        {value => (
+            <SocialTab {...props} auth={value} />
+        )}
+    </AuthUserContext.Consumer>
     // )}</Router.Consumer>
 
 );

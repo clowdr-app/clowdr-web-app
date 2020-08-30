@@ -14,11 +14,11 @@ async function callWithRetry(twilioFunctionToCall) {
         {
             startingDelay: 500,
             retry: (err, attemptNum) => {
-                console.log(err);
+                console.error(err);
                 if (err && err.code == 20429)
                     return true;
                 console.log("Unexpected error:")
-                console.log(err);
+                console.error(err);
                 return false;
             }
         });
@@ -104,7 +104,7 @@ Parse.Cloud.job("reapInactiveUsers", async (request) => {
                         user.save({}, {useMasterKey: true});
                     }
                 }).catch(err => {
-                    console.log(err);
+                    console.error(err);
                 })
             }
         }
@@ -137,7 +137,7 @@ async function getBondedChannel(conf, config, originalChatSID){
                 }
             }));
         }catch(err){
-            console.log(err);
+            console.error(err);
             chan = await bondedChanQ.first({useMasterKey: true});
         }
     }
@@ -306,7 +306,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                                     room: attributes.breakoutRoom
                                 }
                             }
-                            console.log(err);
+                            console.error(err);
                             return {
                                 status: "error",
                                 message: "There is already a video room with this name (although it may be private, and you can't see it). Please either join the existing room or pick a new name."
@@ -378,7 +378,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                     room: parseRoom.id,
                 };
             }catch(err){
-                console.log(err);
+                console.error(err);
                 return {
                     status: "error",
                     message: "There is already a video room with this name (although it may be private, and you can't see it). Please either join the existing room or pick a new name."
@@ -560,7 +560,7 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
             console.log(profile.id + " join directly " + config.TWILIO_ANNOUNCEMENTS_CHANNEL);
         } catch (err) {
             console.log("Caught error:")
-            console.log(err);
+            console.error(err);
             if (err.code == 50403) {
                 console.log("Getting bonded channel")
                 try {
@@ -576,7 +576,7 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
                     throw e2;
                 }
             } else {
-                console.log(err);
+                console.error(err);
             }
         }
 
@@ -603,7 +603,7 @@ Parse.Cloud.define("chat-destroy", async (request) => {
         await callWithRetry(()=>config.twilioChat.channels(sid).remove());
         return {status: "OK"}
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
 
 });

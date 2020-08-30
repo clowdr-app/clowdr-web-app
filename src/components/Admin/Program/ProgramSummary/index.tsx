@@ -10,7 +10,7 @@ interface ProgramSummaryProps {
 const ProgramAdminArea = (props: ProgramSummaryProps) => (
     <AuthUserContext.Consumer>
         {value => (value == null ? <></> : //@ts-ignore
-            <ProgramSummary {...props} auth={value}/>
+            <ProgramSummary {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
 );

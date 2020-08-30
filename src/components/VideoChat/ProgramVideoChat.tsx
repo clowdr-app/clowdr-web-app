@@ -1,19 +1,8 @@
 import { AuthUserContext } from "../Session";
-import withLoginRequired from "../Session/withLoginRequired";
 import * as React from "react";
-import { Button, Popconfirm, Tag, Tooltip } from "antd";
-import { isMobile } from "clowdr-video-frontend/lib/utils";
-import AboutModal from "../SignIn/AboutModal";
-import { MuiThemeProvider } from "@material-ui/core/styles";
-import theme from "./theme";
-import AppStateProvider from "clowdr-video-frontend/lib/state";
-import { VideoContext, VideoProvider } from "clowdr-video-frontend/lib/components/VideoProvider";
-import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
-import VideoRoom, { DeviceSelector } from "./VideoRoom";
-import FlipCameraIosIcon from '@material-ui/icons/FlipCameraIos';
+import { Button } from "antd";
+import VideoRoom from "./VideoRoom";
 import { ClowdrState } from '../../ClowdrTypes';
-
-import { SyncOutlined } from "@material-ui/icons";
 
 interface ProgramVideoChatState {
     loading: boolean;
@@ -35,13 +24,12 @@ class ProgramVideoChat extends React.Component<ProgramVideoChatProps, ProgramVid
 
     componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
         // TS: Should there be a function body here??
-        // if(this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms){
+        // if(this.props.auth.activePublicVideoRooms !== this.state.activePublicVideoRooms){
         //     this.setState({activePublicVideoRooms: this.props.auth.activePublicVideoRooms})
         // }
     }
     joinRoom() {
         if (this.props.clowdrAppState != null) {
-            let user = this.props.clowdrAppState.user;
             this.setState({ isInRoom: true });
         }
     }

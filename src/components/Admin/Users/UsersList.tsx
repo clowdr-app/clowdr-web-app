@@ -1,11 +1,12 @@
 import * as React from "react";
-import {AuthUserContext} from "../../Session";
+import { AuthUserContext } from "../../Session";
 import withLoginRequired from "../../Session/withLoginRequired";
 import Parse from "parse"
-import {Button, Input, message, Space, Switch, Table, Tooltip} from "antd";
-import {SearchOutlined} from "@material-ui/icons";
+import { Button, Input, message, Space, Switch, Table, Tooltip } from "antd";
+import { SearchOutlined } from "@material-ui/icons";
 import Highlighter from 'react-highlight-words';
 import { ClowdrState, UserSessionToken } from "../../../ClowdrTypes";
+import assert from 'assert';
 
 interface UsersListProps {
     auth: ClowdrState,
@@ -14,7 +15,6 @@ interface UsersListProps {
 interface ManagedUser {
     key: string,
     displayName: string,
-    slackUID: string,
     user_id: string,
     email: string | undefined,  // TS: Maybe not string??
     isBanned: "Yes" | "No"
@@ -35,7 +35,7 @@ interface UserProfileSchema {
 }
 
 // TS: Not very sure about this!  
-interface QueryResult {id: string, get: (x:string)=>unknown}
+interface QueryResult { id: string, get: (x: string) => unknown }
 
 const roles = [
     {
@@ -53,9 +53,9 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     constructor(props: UsersListProps) {
         super(props);
         this.state = {
-            loading: true, 
-            banUpdating: false,  
-            allUsers: [], 
+            loading: true,
+            banUpdating: false,
+            allUsers: [],
             roles: {},      // TS: ???
             searchedColumn: "",     // TS: ???
             searchText: "",     // TS: ???
@@ -63,8 +63,10 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         }
     }
 
-    async updateBan(item: ManagedUser){
-        this.setState({banUpdating: true})
+    async updateBan(item: ManagedUser) {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
+        this.setState({ banUpdating: true })
         console.log(item);
         let idToken: UserSessionToken = "";
         if (this.props.auth.user != null) {
@@ -79,22 +81,22 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                     identity: idToken,
                     conference: this.props.auth.currentConference.id,
                     profileID: item.key,
-                    isBan: (item.isBanned == "No")
+                    isBan: (item.isBanned === "No")
                 }),
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
         let res = await data.json();
-        if (res.status == "OK") {
+        if (res.status === "OK") {
             let updatedItem = item;
-            if (item.isBanned == "Yes")
+            if (item.isBanned === "Yes")
                 updatedItem.isBanned = "No";
             else
                 updatedItem.isBanned = "Yes";
-            this.setState((prevState:UsersListState) => ({
+            this.setState((prevState: UsersListState) => ({
                 banUpdating: false,
-                allUsers: prevState.allUsers.map(u => (u.key == item.key ? updatedItem : u))
+                allUsers: prevState.allUsers.map(u => (u.key === item.key ? updatedItem : u))
             }));
         }
         else {
@@ -103,6 +105,8 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         }
     }
     async componentDidMount() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         let parseUserQ = new Parse.Query("UserProfile")
         parseUserQ.equalTo("conference", this.props.auth.currentConference);
         parseUserQ.include("user");
@@ -118,13 +122,13 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 id: this.props.auth.currentConference.id,
                 roleName: role.name
             }).then((ids) => {
-                return {'role': role, 'users': ids}
+                return { 'role': role, 'users': ids }
             }))
         }
-        let roleUsers : {'role': {'name': string}, 'users': number[]}[] = await Promise.all(roleData);
+        let roleUsers: { 'role': { 'name': string }, 'users': number[] }[] = await Promise.all(roleData);
         //Jon: Promise.all takes an array of promises and returns an array with the result of resolving each of those promises (in the same order). So, in this case, it is an array, where each element looks like this {'role': {'name': someName}, 'users': int[]}
 
-        let {count, results} = (await parseUserQ.find()) as unknown as {count: number, results: any[]};
+        let { count, results } = (await parseUserQ.find()) as unknown as { count: number, results: any[] };
         nRetrieved = results.length;
         // @ts-ignore     Jon/Crista: Don't we need a user_id field also??
         //Jon: user_id is item.id is key in this situation.
@@ -134,10 +138,9 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         let allUsers: ManagedUser[] = results.map((item: QueryResult) => ({
             key: item.id,
             displayName: item.get("displayName"),
-            slackUID: item.get("slackID"),
             // TS: The unsafe "as" coercion is ugly -- is there a better way??
             email: (item.get("user") ? (item.get("user") as QueryResult).get("email") : undefined),
-            isBanned: item.get('isBanned') ? "Yes":"No"
+            isBanned: item.get('isBanned') ? "Yes" : "No"
         }))
         while (nRetrieved < count) {
             parseUserQ = new Parse.Query("UserProfile")
@@ -153,7 +156,6 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 allUsers = allUsers.concat(results.map(item => ({
                     key: item.id,
                     displayName: item.get("displayName"),
-                    slackUID: item.get("slackID"),
                     user_id: item.get("user").id,
                     email: (item.get("user") ? item.get("user").get("email") : undefined),
                     isBanned: item.get('isBanned') ? "Yes" : "No"
@@ -161,30 +163,32 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             }
         }
         let roleObj = {};
-        for(let role of roleUsers) {
+        for (let role of roleUsers) {
             // @ts-ignore     TS: should roleObj be declared as an empty _array_ above?
             roleObj[role.role.name] = role.users;
         }
-        this.setState({allUsers: allUsers, loading: false, roles: roleObj});
+        this.setState({ allUsers: allUsers, loading: false, roles: roleObj });
     }
-    async refreshRoles(){
+    async refreshRoles() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         let roleData = [];
         for (let role of roles) {
             roleData.push(Parse.Cloud.run('admin-userProfiles-by-role', {
                 id: this.props.auth.currentConference.id,
                 roleName: role.name
             }).then((ids) => {
-                return {'role': role, 'users': ids}
+                return { 'role': role, 'users': ids }
             }))
         }
         let roleUsers = await Promise.all(roleData);
         let roleObj = {};
-        for(let role of roleUsers){
+        for (let role of roleUsers) {
             // @ts-ignore     TS: Need help with this!
             roleObj[role.role.name] = role.users;
         }
 
-        this.setState({roles: roleObj});
+        this.setState({ roles: roleObj });
     }
     handleSearch = (selectedKeys: string[], confirm: () => void, dataIndex: string) => {
         confirm();
@@ -198,7 +202,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         clearFilters();
         this.setState({ searchText: '' });
     };
-    getColumnSearchProps = (dataIndex:string) => ({
+    getColumnSearchProps = (dataIndex: string) => ({
         // @ts-ignore     TS: Need help with this!
         filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
             <div style={{ padding: 8 }}>
@@ -229,18 +233,17 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             </div>
         ),
         filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
-        onFilter: (value:string, record:ManagedUser) =>
-        // @ts-ignore     TS: What is the right type for record??
+        onFilter: (value: string, record: ManagedUser) =>
+            // @ts-ignore     TS: What is the right type for record??
             record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
-        onFilterDropdownVisibleChange: (visible:boolean) => {
+        onFilterDropdownVisibleChange: (visible: boolean) => {
             if (visible) {
-                setTimeout(() => {if (this.searchInput != null) this.searchInput.select();})
+                setTimeout(() => { if (this.searchInput != null) this.searchInput.select(); })
             }
         },
-        render: (text:string, item: ManagedUser) =>{
-            if (dataIndex == "isBanned")
-            {
-                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text =="Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
+        render: (text: string, item: ManagedUser) => {
+            if (dataIndex === "isBanned") {
+                return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text === "Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
             }
             return this.state.searchedColumn === dataIndex ? (
                 <Highlighter
@@ -250,27 +253,33 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                     textToHighlight={text.toString()}  // TS: Why do we need toString here?  Is it not already a string?
                 />
             ) : (
-                text
-            )
+                    text
+                )
         },
     });
 
-    async updateRole(roleName:string, item: { key: any; }, shouldHaveRole:boolean){
-        this.setState({roleUpdating: true})
-        let res = await Parse.Cloud.run('admin-role', {
+    async updateRole(roleName: string, item: { key: any; }, shouldHaveRole: boolean) {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
+        this.setState({ roleUpdating: true })
+        await Parse.Cloud.run('admin-role', {
             id: this.props.auth.currentConference.id,
             roleName: roleName,
             userProfileId: item.key,
             shouldHaveRole: shouldHaveRole
         })
         this.refreshRoles();
-        this.setState({roleUpdating: false})
+        this.setState({ roleUpdating: false })
     }
 
     render() {
-        if(!this.props.auth.roles.find(v => v && v.get("name") == this.props.auth.currentConference.id+"-admin"))
+        assert(this.props.auth.currentConference, "Current conference is null");
+        let currConfId = this.props.auth.currentConference.id;
+
+        if (!this.props.auth.roles.find(v => v
+            && v.get("name") === currConfId + "-admin"))
             return <div>Error: you do not have permission to view this page - it is only for administrators.</div>
-        if(this.state.loading)
+        if (this.state.loading)
             return <div>Loading...</div>
 
         const columns = [
@@ -286,30 +295,30 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 key: 'isBanned',
                 ...this.getColumnSearchProps('isBanned'),
             }, {
-                 title: <Tooltip title="Administrators have full access to all that managers do, plus the ability to manage internal clowdr settings"><>Admin</></Tooltip>,
+                title: <Tooltip title="Administrators have full access to all that managers do, plus the ability to manage internal clowdr settings"><>Admin</></Tooltip>,
                 key: 'admin',
-                render: (text:string, item: { key: any; })=>{   // TS: Is this the best annotation?
+                render: (text: string, item: { key: any; }) => {   // TS: Is this the best annotation?
                     let hasRole = this.state.roles['admin'] && this.state.roles['admin'].includes(item.key);
                     return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
-                                   onChange={this.updateRole.bind(this, 'admin', item, !hasRole)}></Switch>
+                        onChange={this.updateRole.bind(this, 'admin', item, !hasRole)}></Switch>
                 }
             },
             {
                 title: <Tooltip title="Content managers can edit the program"><>Manager</></Tooltip>,
                 key: 'manager',
-                render: (text:string, item: { key: any; })=>{
+                render: (text: string, item: { key: any; }) => {
                     let hasRole = this.state.roles['manager'] && this.state.roles['manager'].includes(item.key);
                     return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
-                                   onChange={this.updateRole.bind(this, 'manager', item, !hasRole)}></Switch>
+                        onChange={this.updateRole.bind(this, 'manager', item, !hasRole)}></Switch>
                 }
             },
             {
                 title: <Tooltip title="Moderators can enter all private channels and send global announcements"><>Moderator</></Tooltip>,
                 key: 'moderator',
-                render: (text:string, item: { key: any; })=>{
+                render: (text: string, item: { key: any; }) => {
                     let hasRole = this.state.roles['moderator'] && this.state.roles['moderator'].includes(item.key);
                     return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
-                                   onChange={this.updateRole.bind(this, 'moderator', item, !hasRole)}></Switch>
+                        onChange={this.updateRole.bind(this, 'moderator', item, !hasRole)}></Switch>
                 }
             },
         ];
@@ -322,11 +331,12 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     }
 }
 
-const AuthConsumer = (props:UsersListProps) => (
+const AuthConsumer = withLoginRequired((props: UsersListProps) => (
     <AuthUserContext.Consumer>
         {value => (value == null ? <></> :   // @ts-ignore  TS: Can value really be null here?
             <UsersList {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
-);
-export default withLoginRequired(AuthConsumer);
+));
+
+export default AuthConsumer;

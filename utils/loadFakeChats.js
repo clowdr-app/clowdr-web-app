@@ -53,15 +53,15 @@ function randomMembership(users, keysToPop) {
 
 async function fn() {
     let confQ = new Parse.Query("ClowdrInstance");
-    confQ.equalTo("conferenceName","ClowdrTest");
+    confQ.equalTo("conferenceName", "ClowdrTest");
     let conf = await confQ.first();
 
     let query = new Parse.Query("UserProfile");
-    query.equalTo("conference",conf);
+    query.equalTo("conference", conf);
     query.limit(1000);
 
     let i = 0;
-    let users = await query.find({useMasterKey: true});
+    let users = await query.find({ useMasterKey: true });
     let keysToPop = [];
     for (let i = 0; i < users.length; i++) {
         keysToPop.push(i);
@@ -80,11 +80,11 @@ async function fn() {
             room.set("description", "");
             room.set("members", randomMembership(users, keysToPop));
             room.set("conference", conf);
-            room.set("persistence","persistent");
+            room.set("persistence", "persistent");
             room.set("visibility", "listed")
             room.save().then((val) => {
             }).catch(err => {
-                console.log(err);
+                console.error(err);
 
             })
         }

@@ -37,7 +37,6 @@
     "noFallthroughCasesInSwitch": true,
 */
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"],
+  "typeRoots": ["./src/types", "./node_modules/@types"]
 }

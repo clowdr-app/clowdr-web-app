@@ -1,8 +1,8 @@
 import React from 'react';
 import 'antd/dist/antd.css';
-import {message, Upload} from 'antd';
-import {LoadingOutlined, PlusOutlined} from '@ant-design/icons';
-import {RcFile, UploadChangeParam} from 'antd/lib/upload/interface';
+import { message, Upload } from 'antd';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { RcFile, UploadChangeParam } from 'antd/lib/upload/interface';
 import Parse from "parse";
 
 interface Props {  //TS:  from Acccount.tsx, not from ClowdrTypes
@@ -43,7 +43,7 @@ class Avatar extends React.Component<Props, State> {
 
     handleChange = (info: UploadChangeParam) => {
         if (info.file.status === 'uploading') {
-            this.setState({loading: true});
+            this.setState({ loading: true });
             return;
         }
         if (info.file.status === 'done') {
@@ -60,26 +60,24 @@ class Avatar extends React.Component<Props, State> {
         else
             name = "profilePicture.png";
         let file: Parse.File = new Parse.File(name, req.file);
-        file.save().then(()=>{
+        file.save().then(() => {
             this.props.userProfile.set("profilePhoto", file);
             this.props.userProfile.save();
             this.setState({
                 imageUrl: file.url(),
                 loading: false,
             });
-        }).catch((err: Error)=>{
-            console.log(err);
+        }).catch((err: Error) => {
+            console.error(err);
         });
     }
 
     render() {
-        const uploadButton: JSX.Element = (
-            <div>
-                {this.state.loading ? <LoadingOutlined/> : <PlusOutlined/>}
-                <div className="ant-upload-text">Upload</div>
-            </div>
-        );
-        
+        const uploadButton: JSX.Element = <>
+            {this.state.loading ? <LoadingOutlined /> : <PlusOutlined />}
+            <div className="ant-upload-text">Upload</div>
+        </>;
+
         /*TS: The two imageUrl have different types. Could we just use this.state.imageUrl in <Upload>?*/
         // let imageUrl: Parse.File|string|undefined = this.props.userProfile.get("profilePhoto");
         // if(imageUrl && typeof imageUrl !== 'string'){
@@ -96,7 +94,7 @@ class Avatar extends React.Component<Props, State> {
                 beforeUpload={beforeUpload}
                 onChange={this.handleChange}
             >
-                {this.state.imageUrl ? <img src={this.state.imageUrl} alt="avatar" style={{width: '100%'}}/> : uploadButton}
+                {this.state.imageUrl ? <img src={this.state.imageUrl} alt="avatar" style={{ width: '100%' }} /> : uploadButton}
                 {/*{imageUrl ? <img src={imageUrl} alt="avatar" style={{width: '100%'}}/> : uploadButton}*/}
             </Upload>
         );

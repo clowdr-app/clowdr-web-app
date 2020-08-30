@@ -1,11 +1,9 @@
+/* global Parse */
+// ^ for eslint
+
 let UserProfile = Parse.Object.extend("UserProfile");
-let Converation = Parse.Object.extend("Conversation");
 let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
-let BondedChannel = Parse.Object.extend("BondedChannel");
-let TwilioChannelMirror = Parse.Object.extend("TwilioChannelMirror");
-let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
-let SocialSpace = Parse.Object.extend("SocialSpace");
 let MeetingRegistration = Parse.Object.extend("MeetingRegistration");
 const axios = require('axios');
 var moment = require('moment');
@@ -134,7 +132,7 @@ Parse.Cloud.define("zoom-refresh-start-url", async (request) => {
 });
 async function userInRoles(user, allowedRoles) {
     const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
-    return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
+    return roles.find(r => allowedRoles.find(allowed =>  r.get("name") === allowed)) ;
 }
 Parse.Cloud.define("zoom-meeting-register", async (request) => {
     let roomID = request.params.room;
@@ -142,7 +140,7 @@ Parse.Cloud.define("zoom-meeting-register", async (request) => {
     let room = await roomQ.get(roomID, {useMasterKey: true});
     if (room) {
         if (!await userInRoles(request.user, [room.get("conference").id + "-conference"])) {
-            throw "You are not registered to attend this conference";
+            throw new Error("You are not registered to attend this conference");
         }
         let joinURL = undefined;
         let registrantID = undefined;
@@ -172,7 +170,7 @@ Parse.Cloud.define("zoom-meeting-register", async (request) => {
                 joinURL = res.data.join_url;
                 registrantID = res.data.registrant_id;
             } catch (err) {
-                console.log(err);
+                console.error(err);
                 throw err;
             }
         }

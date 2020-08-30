@@ -1,6 +1,6 @@
 import Parse from "parse";
 
-export default class UserProfile extends Parse.Object{
+export default class UserProfile extends Parse.Object {
     constructor() {
         super("UserProfile");
     }

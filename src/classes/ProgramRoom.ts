@@ -1,7 +1,6 @@
 import Parse from "parse";
-import ProgramItem from "./ProgramItem";
 
-export default class ProgramRoom extends Parse.Object{
+export default class ProgramRoom extends Parse.Object {
 
     constructor() {
         super("ProgramRoom");

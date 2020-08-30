@@ -1,6 +1,6 @@
 var admin = require("firebase-admin");
 const fs = require("fs");
-var {google} = require('googleapis');
+var { google } = require('googleapis');
 
 var serviceAccount = require("../server/virtualconf-35e45-firebase-adminsdk-omcmk-679e332055.json");
 var SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
@@ -26,17 +26,17 @@ youtube.playlists.list({
     v.data.items.forEach(async (item) => {
         let id = item.id;
         let title = item.snippet.title;
-        await videosRef.child(id).set({'title': title});
-        youtube.playlistItems.list({playlistId: id, part: "snippet"}).then((p) => {
-            p.data.items.forEach(async(item) => {
+        await videosRef.child(id).set({ 'title': title });
+        youtube.playlistItems.list({ playlistId: id, part: "snippet" }).then((p) => {
+            p.data.items.forEach(async (item) => {
                 console.log(id);
-              await  videosRef.child(id).child('videos').child(item.snippet.resourceId.videoId).set(
+                await videosRef.child(id).child('videos').child(item.snippet.resourceId.videoId).set(
                     {
                         title: item.snippet.title,
                         published_at: new Date(item.snippet.publishedAt).valueOf()
                     },
-                   (err) => {
-                        console.log(err);
+                    (err) => {
+                        console.error(err);
                     });
                 // console.log(JSON.stringify(item.snippet,null,'\t')) ;
             })

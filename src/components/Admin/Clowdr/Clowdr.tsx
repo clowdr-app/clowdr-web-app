@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {Button, Form, Input, Popconfirm, Space, Spin, Table, Checkbox, Alert} from "antd";
+import React, { useState } from 'react';
+import { Button, Form, Input, Popconfirm, Space, Spin, Table, Alert } from "antd";
 import Parse from "parse";
 import {
     CheckCircleTwoTone,
@@ -9,7 +9,7 @@ import {
     SaveTwoTone,
     CloseCircleTwoTone
 } from '@ant-design/icons';
-import {ClowdrState, EditableCellProps} from "../../../ClowdrTypes";
+import { ClowdrState, EditableCellProps } from "../../../ClowdrTypes";
 import { Store } from 'antd/lib/form/interface';
 
 // TS: Since the "Props" and "State" interfaces are not exported, I
@@ -26,7 +26,7 @@ interface AdminClowdrState {
     instances: Parse.Object[];
     searched: boolean;
     searchResult: Parse.Object[];
-    alert: string|undefined;
+    alert: string | undefined;
     visible: boolean
 }
 
@@ -34,7 +34,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
     constructor(props: AdminClowdrProps) {
         super(props);
         this.state = {
-            loading: true, 
+            loading: true,
             initialized: false,
             instances: [],
             searched: false,
@@ -43,10 +43,6 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
             alert: ""
         };
 
-    }
-
-    setVisible() {
-        this.setState({'visible': !this.state.visible});
     }
 
     componentDidMount() {
@@ -67,10 +63,6 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
     componentWillUnmount() {
     }
 
-    onChangeFeatures(record: Parse.Object) {
-        record.set("isIncludeAllFeatures", !record.get("isIncludeAllFeatures"));
-    }
-
     render() {
         // Set up editable table cell
         const EditableCell: React.FC<EditableCellProps> = ({
@@ -83,25 +75,16 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
             children,
             ...restProps
         }): JSX.Element => {
-            let inputNode: JSX.Element|null;
+            let inputNode: JSX.Element | null;
             switch (dataIndex) {
                 case ('conferenceName'):
-                    inputNode = <Input/>;
+                    inputNode = <Input />;
                     break;
                 case ('adminName'):
-                    inputNode = <Input/>;
+                    inputNode = <Input />;
                     break;
                 case ('adminEmail'):
-                    inputNode = <Input/>;
-                    break;
-                case ('isIncludeAllFeatures'):
-                    inputNode = (
-                        <span title="All goodies?"><Checkbox
-                            defaultChecked={record.get("isIncludeAllFeatures")}
-                            onChange= {this.onChangeFeatures.bind(this, record)}
-                        >
-                        </Checkbox></span>
-                    );
+                    inputNode = <Input />;
                     break;
                 default:
                     inputNode = null;
@@ -113,11 +96,11 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     {editing ? (
                         <Form.Item
                             name={dataIndex}
-                            valuePropName={dataIndex === 'isIncludeAllFeatures' ? "checked" : "value"}
+                            valuePropName={"value"}
                             style={{
                                 margin: 0,
                             }}
-                            rules={dataIndex === "isIncludeAllFeatures" ? []: [
+                            rules={[
                                 {
                                     required: true,
                                     message: `Please Input ${title}!`,
@@ -127,8 +110,8 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                             {inputNode}
                         </Form.Item>
                     ) : (
-                        children
-                    )}
+                            children
+                        )}
                 </td>
             );
         };
@@ -158,15 +141,15 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     id: record.id
                 }
                 Parse.Cloud.run("activate-clowdr-instance", data)
-                .then(async (t: object) => {
-                    console.log("[Admin/Clowdr]: activated " + JSON.stringify(t));
-                    this.setState({alert: "activate success"});
-                    await this.refreshList()
-                })
-                .catch((err: Error) => {
-                    this.setState({alert: "activate error"})
-                    console.log("[Admin/Clowdr]: Unable to activate: " + err)
-                });
+                    .then(async (t: object) => {
+                        console.log("[Admin/Clowdr]: activated " + JSON.stringify(t));
+                        this.setState({ alert: "activate success" });
+                        await this.refreshList()
+                    })
+                    .catch((err: Error) => {
+                        this.setState({ alert: "activate error" })
+                        console.log("[Admin/Clowdr]: Unable to activate: " + err)
+                    });
             };
 
             const onDelete = (record: Parse.Object): void => {
@@ -176,16 +159,17 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     id: record.id
                 }
                 Parse.Cloud.run("delete-clowdr-instance", data)
-                .then(() => {
-                    this.setState({
-                        alert: "delete success", 
-                        instances: newInstanceList.filter(instance => instance.id !== record.id)});
-                    console.log("[Admin/Clowdr]: sent delete request to cloud");
-                })
-                .catch((err: Error) => {
-                    this.setState({alert: "delete error"})
-                    console.log("[Admin/Clowdr]: Unable to delete: " + err)
-                });
+                    .then(() => {
+                        this.setState({
+                            alert: "delete success",
+                            instances: newInstanceList.filter(instance => instance.id !== record.id)
+                        });
+                        console.log("[Admin/Clowdr]: sent delete request to cloud");
+                    })
+                    .catch((err: Error) => {
+                        this.setState({ alert: "delete error" })
+                        console.log("[Admin/Clowdr]: Unable to delete: " + err)
+                    });
             };
 
             const save = async (id: string) => {
@@ -193,30 +177,28 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 try {
                     const row: Store = await form.validateFields();
                     const newData: Parse.Object[] = [...data];
-                    let instance: Parse.Object|undefined = newData.find(i => i.id === id);
+                    let instance: Parse.Object | undefined = newData.find(i => i.id === id);
                     if (instance) {
                         instance.set("conferenceName", row.conferenceName);
-                        instance.set("isIncludeAllFeatures", row.isIncludeAllFeatures);
                         instance.set("adminName", row.adminName);
                         instance.set("adminEmail", row.adminEmail);
                         let data = {
                             id: instance.id,
                             conferenceName: instance.get('conferenceName'),
                             shortName: instance.get('conferenceName').replace(" ", ""),
-                            isIncludeAllFeatures: instance.get('isIncludeAllFeatures'),
                             adminName: instance.get('adminName'),
                             adminEmail: instance.get('adminEmail')
                         }
                         Parse.Cloud.run("update-clowdr-instance", data)
-                        .then(() => {
-                            this.setState({alert: "save success"});
-                            console.log("[Admin/Clowdr]: sent updated object to cloud");
-                            this.refreshList();
-                        })
-                        .catch((err: Error) => {
-                            this.setState({alert: "add error"})
-                            console.log("[Admin/Clowdr]: Unable to update: " + err)
-                        })
+                            .then(() => {
+                                this.setState({ alert: "save success" });
+                                console.log("[Admin/Clowdr]: sent updated object to cloud");
+                                this.refreshList();
+                            })
+                            .catch((err: Error) => {
+                                this.setState({ alert: "add error" })
+                                console.log("[Admin/Clowdr]: Unable to update: " + err)
+                            })
 
                         setEditingKey('');
                     }
@@ -245,22 +227,13 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     key: 'conferenceName',
                 },
                 {
-                    title: 'All features',
-                    dataIndex: 'isIncludeAllFeatures',
-                    editable: true,
-                    width: '5%',
-                    //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
-                    render: (_: string, record: Parse.Object): JSX.Element =><Checkbox checked={!!record.get("isIncludeAllFeatures")} disabled/>,
-                    key: 'isIncludeAllFeatures',
-                },
-                {
                     title: 'Admin Name',
                     dataIndex: 'adminName',
                     key: 'adminName',
                     editable: true,
                     width: '30%',
                     sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let nameA: string = a.get("adminName") ? a.get("adminName"): "";
+                        let nameA: string = a.get("adminName") ? a.get("adminName") : "";
                         let nameB: string = b.get("adminName") ? b.get("adminName") : "";
                         return nameA.localeCompare(nameB);
                     },
@@ -273,7 +246,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     editable: true,
                     width: '20%',
                     sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let nameA: string = a.get("adminEmail") ? a.get("adminEmail"): "";
+                        let nameA: string = a.get("adminEmail") ? a.get("adminEmail") : "";
                         let nameB: string = b.get("adminEmail") ? b.get("adminEmail") : "";
                         return nameA.localeCompare(nameB);
                     },
@@ -282,54 +255,54 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: Parse.Object): JSX.Element|null => {
-                        let active = record.get("isInitialized") ? 
-                                        <CheckCircleTwoTone twoToneColor='#52c41a' title="This instance is activated"/> :
-                                        <Popconfirm
-                                            title="Activate this CLOWDR instance?"
-                                            onConfirm={() => onActivate(record)}
-                                            okText="Yes"
-                                            cancelText="No"
-                                        >
-                                            <a title="This instance is not yet activated. Click to activate.">{<WarningTwoTone twoToneColor="#ff3333"/>}</a>
-                                        </Popconfirm>
-                            let del = record.get("isInitialized") ? <></> :
-                                        <Popconfirm
-                                            title="Delete this CLOWDR instance?"
-                                            onConfirm={() => onDelete(record)}
-                                            okText="Yes"
-                                            cancelText="No"
-                                        >
-                                            <a title="Delete">{<DeleteOutlined />}</a>
-                                        </Popconfirm>
+                    render: (_: string, record: Parse.Object): JSX.Element | null => {
+                        let active = record.get("isInitialized") ?
+                            <CheckCircleTwoTone twoToneColor='#52c41a' title="This instance is activated" /> :
+                            <Popconfirm
+                                title="Activate this CLOWDR instance?"
+                                onConfirm={() => onActivate(record)}
+                                okText="Yes"
+                                cancelText="No"
+                            >
+                                <a title="This instance is not yet activated. Click to activate.">{<WarningTwoTone twoToneColor="#ff3333" />}</a>
+                            </Popconfirm>
+                        let del = record.get("isInitialized") ? <></> :
+                            <Popconfirm
+                                title="Delete this CLOWDR instance?"
+                                onConfirm={() => onDelete(record)}
+                                okText="Yes"
+                                cancelText="No"
+                            >
+                                <a title="Delete">{<DeleteOutlined />}</a>
+                            </Popconfirm>
 
                         const editable = isEditing(record);
                         if (this.state.instances.length > 0) {
                             return editable ? (
                                 <span>
-                                <a
-                                    onClick={() => save(record.id)}
-                                    style={{
-                                        marginRight: 8,
-                                    }}
-                                >
-                                {<SaveTwoTone />}
-                                </a>
-                                <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                    <a>{<CloseCircleTwoTone />}</a>
-                                </Popconfirm>
-                            </span>
-                            ) : (
-                                <Space size='small'>
-                                    <a title="Edit" onClick={() => {if (editingKey === '') edit(record)}}>
-                                    {/*<a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>*/}
-                                        {<EditOutlined />}
+                                    <a
+                                        onClick={() => save(record.id)}
+                                        style={{
+                                            marginRight: 8,
+                                        }}
+                                    >
+                                        {<SaveTwoTone />}
                                     </a>
-                                    {del}
-                                    {active}
-                                </Space>
+                                    <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+                                        <a>{<CloseCircleTwoTone />}</a>
+                                    </Popconfirm>
+                                </span>
+                            ) : (
+                                    <Space size='small'>
+                                        <a title="Edit" onClick={() => { if (editingKey === '') edit(record) }}>
+                                            {/*<a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>*/}
+                                            {<EditOutlined />}
+                                        </a>
+                                        {del}
+                                        {active}
+                                    </Space>
 
-                            );
+                                );
                         } else {
                             return null;
                         }
@@ -373,33 +346,32 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
         };
 
         const newInstance = () => {
-            console.log("[Admin/Clowdr]: Creating new instance " );
+            console.log("[Admin/Clowdr]: Creating new instance ");
             let data = {
                 conferenceName: "NEW CONFERENCE " + Math.floor(Math.random() * 10000).toString(),
                 shortName: "NEWCONFERENCE",
-                isIncludeAllFeatures: true,
                 adminName: "ADMIN PERSON",
                 adminEmail: "someone@somewhere",
                 isInitialized: false
             }
             Parse.Cloud.run("create-clowdr-instance", data)
-            .then((t: object) => {
-                console.log("[Admin/Clowdr]: new instance " + JSON.stringify(t));
-                this.refreshList();
-            })
-            .catch(err => {
-                this.setState({alert: "add error"})
-                console.log("[Admin/Clowdr]: Unable to create: " + err)
-            })
+                .then((t: object) => {
+                    console.log("[Admin/Clowdr]: new instance " + JSON.stringify(t));
+                    this.refreshList();
+                })
+                .catch(err => {
+                    this.setState({ alert: "add error" })
+                    console.log("[Admin/Clowdr]: Unable to create: " + err)
+                })
         }
 
         if (this.state.loading)
-        // if (this.props.loading)
+            // if (this.props.loading)
             return (
                 <Spin tip="Loading...">
                 </Spin>)
 
-        return <div><table style={{width:"100%"}}><tbody><tr>
+        return <div><table style={{ width: "100%" }}><tbody><tr>
             <td><Button
                 type="primary"
                 onClick={newInstance}
@@ -407,39 +379,39 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 New Instance
             </Button>
 
-            {this.state.alert ? <Alert
-                    onClose={() => this.setState({alert: undefined})}
+                {this.state.alert ? <Alert
+                    onClose={() => this.setState({ alert: undefined })}
                     style={{
                         margin: 16,
                         display: "inline-block",
                     }}
                     message={this.state.alert}
-                    type={this.state.alert.includes("success") ? "success": "error"}
+                    type={this.state.alert.includes("success") ? "success" : "error"}
                     showIcon
                     closable
-            /> : <span> </span>}</td>
+                /> : <span> </span>}</td>
 
-            </tr></tbody></table>
+        </tr></tbody></table>
 
             <Input.Search
                 allowClear
                 onSearch={key => {
-                        if (key == "") {
-                            this.setState({searched: false});
-                        }
-                        else {
-                            this.setState({searched: true});
-                            this.setState({
-                                searchResult: this.state.instances.filter(
-                                    config => 
-                                        (config.get('key') && config.get('key').toLowerCase().includes(key.toLowerCase())) 
-                                        || (config.get('value') && config.get('value').toLowerCase().includes(key.toLowerCase())))
-                            })
-                        }
+                    if (key === "") {
+                        this.setState({ searched: false });
+                    }
+                    else {
+                        this.setState({ searched: true });
+                        this.setState({
+                            searchResult: this.state.instances.filter(
+                                config =>
+                                    (config.get('key') && config.get('key').toLowerCase().includes(key.toLowerCase()))
+                                    || (config.get('value') && config.get('value').toLowerCase().includes(key.toLowerCase())))
+                        })
                     }
                 }
-            />      
-            <EditableTable/>
+                }
+            />
+            <EditableTable />
         </div>
     }
 }

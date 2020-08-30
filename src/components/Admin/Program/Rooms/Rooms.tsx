@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     Alert,
     Button,
@@ -12,26 +12,17 @@ import {
     Space,
     Spin,
     Table,
-    Tabs,
     Upload
 } from "antd";
-import {CloseCircleTwoTone, DeleteOutlined, EditOutlined, SaveTwoTone, UploadOutlined} from '@ant-design/icons';
+import { CloseCircleTwoTone, DeleteOutlined, EditOutlined, SaveTwoTone, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
-import {AuthUserContext} from "../../../Session";
-import {ClowdrState, EditableCellProps} from "../../../../ClowdrTypes";
-import {RcFile, UploadChangeParam} from "antd/lib/upload/interface";
+import { AuthUserContext } from "../../../Session";
+import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
+import { RcFile, UploadChangeParam } from "antd/lib/upload/interface";
 import { Store } from 'antd/lib/form/interface';
+import assert from 'assert';
 var moment = require('moment');
 var timezone = require('moment-timezone');
-const {Option} = Select;
-
-const {TabPane} = Tabs;
-// const IconText = ({icon, text}) => (
-//     <Space>
-//         {React.createElement(icon)}
-//         {text}
-//     </Space>
-// );
 
 interface ProgramRoomsProps {
     auth: ClowdrState;
@@ -40,7 +31,7 @@ interface ProgramRoomsProps {
 interface ProgramRoomsState {
     loading: boolean;
     editing: boolean;
-    edt_room: Object|undefined;
+    edt_room: Object | undefined;
     searched: boolean;
     ProgramRooms: Parse.Object[];
     searchResult: Parse.Object[];
@@ -77,15 +68,15 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     setVisible() {  // no usage
-        this.setState({'visible': !this.state.visible});
+        this.setState({ 'visible': !this.state.visible });
     }
 
     async componentDidMount() {
         let [rooms, zoomHostAccounts, zoomRooms] = await Promise.all([this.props.auth.programCache.getProgramRooms(this),
-            this.props.auth.programCache.getZoomHostAccounts(this),
-            this.props.auth.programCache.getZoomRooms(this)
+        this.props.auth.programCache.getZoomHostAccounts(this),
+        this.props.auth.programCache.getZoomRooms(this)
         ]);
-        this.setState({ProgramRooms: rooms, ZoomRooms: zoomRooms, ZoomHostAccounts: zoomHostAccounts, loading: false});
+        this.setState({ ProgramRooms: rooms, ZoomRooms: zoomRooms, ZoomHostAccounts: zoomHostAccounts, loading: false });
     }
 
     onChange(info: UploadChangeParam) {
@@ -102,9 +93,12 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     beforeUpload(file: RcFile, _: any) {
+
         const reader: FileReader = new FileReader();
         reader.onload = () => {
-            const data = {content: reader.result, conference: this.props.auth.currentConference.id};
+            assert(this.props.auth.currentConference, "Current conference is null.");
+
+            const data = { content: reader.result, conference: this.props.auth.currentConference.id };
             Parse.Cloud.run("rooms-upload", data).then(
                 // () => this.refreshList()
             );
@@ -118,134 +112,134 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     render() {
-        const {Option} = Select;
+        const { Option } = Select;
 
         // set up editable cell
         const EditableCell: React.FC<EditableCellProps>
-            = ({editing, dataIndex, title,
-                   inputType, record, index, children,
-                   ...restProps}): JSX.Element => {
-            let inputNode: JSX.Element|null;
-            switch (dataIndex) {
-                case ('name'):
-                    inputNode = <Input placeholder="Name"/>;
-                    break;
-                case ('src1'):
-                    inputNode = (
-                        <Select
-                            showSearch
-                            placeholder="Select a Main Channel"
-                            optionFilterProp="children"
-                            dropdownMatchSelectWidth={false}
-                            filterOption={(input: string, option: any) =>
-                                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                            }
-                        >
-                            <Option key="managed" value="">--CLOWDR Managed Zoom Accounts--</Option>
-                            {this.state.ZoomHostAccounts.sort((a: Parse.Object,b: Parse.Object) => a.get("name")
-                                .localeCompare(b.get('name'))).map((account: Parse.Object): JSX.Element => (<Option key={account.id} value={"managed-"+account.id}>Zoom {account.get('name')}</Option>))
+            = ({ editing, dataIndex, title,
+                inputType, record, index, children,
+                ...restProps }): JSX.Element => {
+                let inputNode: JSX.Element | null;
+                switch (dataIndex) {
+                    case ('name'):
+                        inputNode = <Input placeholder="Name" />;
+                        break;
+                    case ('src1'):
+                        inputNode = (
+                            <Select
+                                showSearch
+                                placeholder="Select a Main Channel"
+                                optionFilterProp="children"
+                                dropdownMatchSelectWidth={false}
+                                filterOption={(input: string, option: any) =>
+                                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                }
+                            >
+                                <Option key="managed" value="">--CLOWDR Managed Zoom Accounts--</Option>
+                                {this.state.ZoomHostAccounts.sort((a: Parse.Object, b: Parse.Object) => a.get("name")
+                                    .localeCompare(b.get('name'))).map((account: Parse.Object): JSX.Element => (<Option key={account.id} value={"managed-" + account.id}>Zoom {account.get('name')}</Option>))
 
-                            }
-                            <Option key="other" value="">--Other sources--</Option>
-                            {liveRoomSources.map((src: string) => {
-                                return (
-                                    <Option value={src} key={src}>{src}</Option>
-                                );
-                            })}
+                                }
+                                <Option key="other" value="">--Other sources--</Option>
+                                {liveRoomSources.map((src: string) => {
+                                    return (
+                                        <Option value={src} key={src}>{src}</Option>
+                                    );
+                                })}
 
-                        </Select>
-                    );
-                    break;
-                case ('id1'):
-                    inputNode = <Input style={{width: '100%'}} type="textarea" placeholder="ID"/>
-                    break;
-                case ('pwd1'):
-                    inputNode =
-                        <Input style={{width: '100%'}} type="text" placeholder="Password (Optional)"/>
-                    break;
-                case ('src2'):
-                    inputNode = (
-                        <Select
-                            showSearch
-                            placeholder="Select an Alt Channel"
-                            optionFilterProp="children"
-                            filterOption={(input: string, option: any):boolean =>
-                                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                            }
-                        >
-                            {liveRoomSources.map((src: string) => {
-                                return (
-                                    <Option value={src} key={src}>{src}</Option>
-                                );
-                            })}
+                            </Select>
+                        );
+                        break;
+                    case ('id1'):
+                        inputNode = <Input style={{ width: '100%' }} type="textarea" placeholder="ID" />
+                        break;
+                    case ('pwd1'):
+                        inputNode =
+                            <Input style={{ width: '100%' }} type="text" placeholder="Password (Optional)" />
+                        break;
+                    case ('src2'):
+                        inputNode = (
+                            <Select
+                                showSearch
+                                placeholder="Select an Alt Channel"
+                                optionFilterProp="children"
+                                filterOption={(input: string, option: any): boolean =>
+                                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                }
+                            >
+                                {liveRoomSources.map((src: string) => {
+                                    return (
+                                        <Option value={src} key={src}>{src}</Option>
+                                    );
+                                })}
 
-                        </Select>
-                    );
-                    break;
-                case ('id2'):
-                    inputNode = <Input style={{width: '100%'}} type="textarea" placeholder="ID"/>
-                    break;
-                case ('pwd2'):
-                    inputNode =
-                        <Input style={{width: '100%'}} type="text" placeholder="Password (Optional)"/>
-                    break;
-                case ('qa'):
-                    inputNode = <Input placeholder="Q&A tool link"/>
-                    break;
-                case ('hostAccount'):
-                    inputNode = (
-                        <Select
-                            showSearch
-                            placeholder="Select a Main Channel"
-                            optionFilterProp="children"
-                            dropdownMatchSelectWidth={false}
-                            filterOption={(input: string, option: any): boolean =>
-                                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                            }
-                        >
-                            {this.state.ZoomHostAccounts.sort((a: Parse.Object, b: Parse.Object)=>a.get("name")
-                                .localeCompare(b.get('name'))).map((account: Parse.Object): JSX.Element=>(<Option key={account.id} value={account.id}>{account.get('name')}</Option>))
+                            </Select>
+                        );
+                        break;
+                    case ('id2'):
+                        inputNode = <Input style={{ width: '100%' }} type="textarea" placeholder="ID" />
+                        break;
+                    case ('pwd2'):
+                        inputNode =
+                            <Input style={{ width: '100%' }} type="text" placeholder="Password (Optional)" />
+                        break;
+                    case ('qa'):
+                        inputNode = <Input placeholder="Q&A tool link" />
+                        break;
+                    case ('hostAccount'):
+                        inputNode = (
+                            <Select
+                                showSearch
+                                placeholder="Select a Main Channel"
+                                optionFilterProp="children"
+                                dropdownMatchSelectWidth={false}
+                                filterOption={(input: string, option: any): boolean =>
+                                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                }
+                            >
+                                {this.state.ZoomHostAccounts.sort((a: Parse.Object, b: Parse.Object) => a.get("name")
+                                    .localeCompare(b.get('name'))).map((account: Parse.Object): JSX.Element => (<Option key={account.id} value={account.id}>{account.get('name')}</Option>))
 
-                            }
+                                }
 
-                        </Select>
-                    );
-                    break;
-                case ("requireRegistration"):
-                    inputNode=<Checkbox defaultChecked={record.get("zoomRoom").get("requireRegistration")}/>
-                    break;
-                case ('startTime'):
-                    inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
-                    break;
-                case ('endTime'):
-                    inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
-                    break;
-                default:
-                    inputNode = <span>{dataIndex}</span>;
-                    break;
-            }
-            return (
-                <td {...restProps}>
-                    {editing ? (
-                        <Form.Item
-                            valuePropName={dataIndex == 'requireRegistration' ? "checked" : "value"}
-                            name={dataIndex}
-                            style={{margin: 0,}}
-                            rules={dataIndex !== "name" ? [] : [
-                                {
-                                    required: true,
-                                    message: `Please Input ${title}!`,
-                                },
-                            ]}
-                        >
-                            {inputNode}
-                        </Form.Item>
-                    ) : (
-                        children
-                    )}
-                </td>
-            );
-        };
+                            </Select>
+                        );
+                        break;
+                    case ("requireRegistration"):
+                        inputNode = <Checkbox defaultChecked={record.get("zoomRoom").get("requireRegistration")} />
+                        break;
+                    case ('startTime'):
+                        inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
+                        break;
+                    case ('endTime'):
+                        inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
+                        break;
+                    default:
+                        inputNode = <span>{dataIndex}</span>;
+                        break;
+                }
+                return (
+                    <td {...restProps}>
+                        {editing ? (
+                            <Form.Item
+                                valuePropName={dataIndex === 'requireRegistration' ? "checked" : "value"}
+                                name={dataIndex}
+                                style={{ margin: 0, }}
+                                rules={dataIndex !== "name" ? [] : [
+                                    {
+                                        required: true,
+                                        message: `Please Input ${title}!`,
+                                    },
+                                ]}
+                            >
+                                {inputNode}
+                            </Form.Item>
+                        ) : (
+                                children
+                            )}
+                    </td>
+                );
+            };
 
         // set up editable table
         const EditableTableForUncontrolledRooms = () => {
@@ -284,29 +278,29 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 // delete from database
                 let data = {
                     clazz: "ProgramRoom",
-                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
+                    conference: { clazz: "ClowdrInstance", id: record.get("conference").id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
-                .then(() => this.setState({alert: "delete success"}))
-                .catch((err: Error) => {
-                    this.setState({alert: "delete error"})
-                    // this.refreshList();
-                    console.log("[Admin/Rooms]: Unable to delete: " + err)
-                })
+                    .then(() => this.setState({ alert: "delete success" }))
+                    .catch((err: Error) => {
+                        this.setState({ alert: "delete error" })
+                        // this.refreshList();
+                        console.log("[Admin/Rooms]: Unable to delete: " + err)
+                    })
             };
 
             const save = async (id: string) => {
                 try {
                     const row: Store = await form.validateFields();
                     const newData: Parse.Object[] = [...data];
-                    let room: Parse.Object|undefined = newData.find(item => item.id === id);
+                    let room: Parse.Object | undefined = newData.find(item => item.id === id);
 
                     if (room) {
-                        if(row.src1 && row.src1.startsWith("managed-")){
-                            if(!room.get("zoomRoom")){
+                        if (row.src1 && row.src1.startsWith("managed-")) {
+                            if (!room.get("zoomRoom")) {
                                 let id: string = row.src1.substr(8);
-                                let hostAccount: Parse.Object|undefined = this.state.ZoomHostAccounts.find(item=>item.id == id);
+                                let hostAccount: Parse.Object | undefined = this.state.ZoomHostAccounts.find(item => item.id === id);
                                 //Create a new zoomRoom
                                 let zoomRoom: Parse.Object = new ZoomRoom();
                                 zoomRoom.set("hostAccount", hostAccount);
@@ -321,11 +315,11 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                 room.set("pwd1", null);
                                 room.set("pwd2", null);
                             }
-                            else{
+                            else {
                                 message.error("This path should not be reachable")
                                 return;
                             }
-                        }else{
+                        } else {
                             room.set("src1", row.src1);
                             room.set("id1", row.id1);
                             room.set("pwd1", row.pwd1);
@@ -437,14 +431,14 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: Parse.Object): JSX.Element|null => {
+                    render: (_: string, record: Parse.Object): JSX.Element | null => {
                         const editable: boolean = isEditing(record);
                         if (this.state.ProgramRooms.length > 0) {
                             return editable ?
                                 (
                                     <span>
                                         <a onClick={() => save(record.id)}
-                                           style={{marginRight: 8}}>
+                                            style={{ marginRight: 8 }}>
                                             {<SaveTwoTone />}
                                         </a>
                                         <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
@@ -454,9 +448,9 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                 )
                                 : (
                                     <Space size='small'>
-                                        <a title="Edit" onClick={() => {if (editingKey === '') edit(record)}}>
-                                        {/*<a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>*/}
-                                            {<EditOutlined/>}
+                                        <a title="Edit" onClick={() => { if (editingKey === '') edit(record) }}>
+                                            {/*<a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>*/}
+                                            {<EditOutlined />}
                                         </a>
                                         <Popconfirm
                                             title="Are you sure delete this session?"
@@ -464,7 +458,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                             okText="Yes"
                                             cancelText="No"
                                         >
-                                            <a title="Delete">{<DeleteOutlined/>}</a>
+                                            <a title="Delete">{<DeleteOutlined />}</a>
                                         </Popconfirm>
                                     </Space>
                                 )
@@ -501,7 +495,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult.filter(r=>!r.get("zoomRoom") || r.get("id1")) : this.state.ProgramRooms.filter(r=>!r.get("zoomRoom") || r.get("id1"))}
+                        dataSource={this.state.searched ? this.state.searchResult.filter(r => !r.get("zoomRoom") || r.get("id1")) : this.state.ProgramRooms.filter(r => !r.get("zoomRoom") || r.get("id1"))}
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
@@ -547,13 +541,13 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 // delete from database
                 let data: object = {
                     clazz: "ProgramRoom",
-                    conference: {clazz: "ClowdrInstance", id: record.get("conference").id},
+                    conference: { clazz: "ClowdrInstance", id: record.get("conference").id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
-                    .then(() => this.setState({alert: "delete success"}))
+                    .then(() => this.setState({ alert: "delete success" }))
                     .catch((err: Error) => {
-                        this.setState({alert: "delete error"})
+                        this.setState({ alert: "delete error" })
                         // this.refreshList();
                         console.log("[Admin/Rooms]: Unable to delete: " + err)
                     })
@@ -562,15 +556,15 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
 
             const setIfDifferent = (obj: Parse.Object, key: string, value: string) => {  // type of value???
                 let old: string = obj.get(key);
-                if(!old && !value)
+                if (!old && !value)
                     return;
                 if (!old || !value) {
                     obj.set(key, value);
                     return;
                 }
-                if (old == value)
+                if (old === value)
                     return;
-                if ((old.toString && old.toString() != value.toString()) || (!old.toString && old != value)) {
+                if ((old.toString && old.toString() !== value.toString()) || (!old.toString && old !== value)) {
                     obj.set(key, value);
                     return;
                 }
@@ -579,17 +573,17 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 try {
                     const row = await form.validateFields();
                     const newData: Parse.Object[] = [...data];
-                    let room: Parse.Object|undefined = newData.find((item: Parse.Object) => item.id === id);
+                    let room: Parse.Object | undefined = newData.find((item: Parse.Object) => item.id === id);
 
                     if (room) {
-                        if(room.get("name") != row.name){
+                        if (room.get("name") !== row.name) {
                             room.set("name", row.name);
                             await room.save();
                         }
                         let zoomRoom = room.get("zoomRoom");
                         if (zoomRoom) {
-                            let newHostAccount: Parse.Object|undefined = this.state.ZoomHostAccounts.find(v => v.id == row.hostAccount);
-                            if(!zoomRoom.get("hostAccount") || (typeof newHostAccount !== 'undefined' && zoomRoom.get("hostAccount").id != newHostAccount.id))
+                            let newHostAccount: Parse.Object | undefined = this.state.ZoomHostAccounts.find(v => v.id === row.hostAccount);
+                            if (!zoomRoom.get("hostAccount") || (typeof newHostAccount !== 'undefined' && zoomRoom.get("hostAccount").id !== newHostAccount.id))
                                 zoomRoom.set("hostAccount", newHostAccount);
                             setIfDifferent(zoomRoom, "startTime", row.startTime.toDate());
                             setIfDifferent(zoomRoom, "endTime", row.endTime.toDate());
@@ -597,8 +591,8 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                             try {
                                 await zoomRoom.save();
                                 message.success("Saved room");
-                            }catch(err){
-                                console.log(err);
+                            } catch (err) {
+                                console.error(err);
                                 message.error("Unable to save room");
                             }
                         }
@@ -674,7 +668,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     width: '10%',
                     editable: true,
                     render: (_: string, record: Parse.Object): JSX.Element => <span>
-                        {record.get("zoomRoom").get("requireRegistration")?"Enabled":"Disabled"}</span>,
+                        {record.get("zoomRoom").get("requireRegistration") ? "Enabled" : "Disabled"}</span>,
                     key: 'requireRegistration',
                 },
                 {
@@ -696,14 +690,14 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: Parse.Object): JSX.Element|null => {
+                    render: (_: string, record: Parse.Object): JSX.Element | null => {
                         const editable = isEditing(record);
                         if (this.state.ProgramRooms.length > 0) {
                             return editable ?
                                 (
                                     <span>
                                         <a onClick={() => save(record.id)}
-                                           style={{marginRight: 8}}>
+                                            style={{ marginRight: 8 }}>
                                             {<SaveTwoTone />}
                                         </a>
                                         <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
@@ -716,8 +710,8 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                         Join: <a title="Join as Host" target={'top'} href={record.get("zoomRoom").get("start_url")}>as host</a>,
                                         <a title="Join as participant" target={'top'} href={record.get("zoomRoom").get("join_url")}>as participant</a>
                                         {/*<a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>*/}
-                                        <a title="Edit" onClick={() => {if (editingKey === '') edit(record)}}>
-                                        {<EditOutlined/>}
+                                        <a title="Edit" onClick={() => { if (editingKey === '') edit(record) }}>
+                                            {<EditOutlined />}
                                         </a>
                                         <Popconfirm
                                             title="Are you sure delete this session?"
@@ -725,7 +719,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                             okText="Yes"
                                             cancelText="No"
                                         >
-                                            <a title="Delete">{<DeleteOutlined/>}</a>
+                                            <a title="Delete">{<DeleteOutlined />}</a>
                                         </Popconfirm>
                                     </Space>
                                 )
@@ -762,7 +756,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult.filter(r=>!r.get("id1") && r.get("zoomRoom")) : this.state.ProgramRooms.filter(r=>!r.get("id1") && r.get("zoomRoom"))}
+                        dataSource={this.state.searched ? this.state.searchResult.filter(r => !r.get("id1") && r.get("zoomRoom")) : this.state.ProgramRooms.filter(r => !r.get("id1") && r.get("zoomRoom"))}
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
@@ -773,18 +767,20 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
         }
         // handle when a new item is added
         const handleAdd = () => {
+            assert(this.props.auth.currentConference, "Current conference is null.");
+
             let data = {
                 clazz: "ProgramRoom",
-                conference: {clazz: "ClowdrInstance", id: this.props.auth.currentConference.id},
+                conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
                 name: "Please enter the name of the room",
             }
 
             Parse.Cloud.run("create-obj", data)
-            .then(() => console.log("[Admin/Rooms]: sent new object to cloud"))
-            .catch((err: Error) => {
-                this.setState({alert: "add error"})
-                console.log("[Admin/Rooms]: Unable to create: " + err)
-            })
+                .then(() => console.log("[Admin/Rooms]: sent new object to cloud"))
+                .catch((err: Error) => {
+                    this.setState({ alert: "add error" })
+                    console.log("[Admin/Rooms]: Unable to create: " + err)
+                })
         };
 
         if (this.state.loading)
@@ -797,60 +793,60 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
             <div>
                 {this.state.alert.length > 0 ? (
                     <Alert
-                        onClose={() => this.setState({alert: ""})}
+                        onClose={() => this.setState({ alert: "" })}
                         message={this.state.alert}
                         type={this.state.alert.includes("success") ? "success" : "error"}
                         showIcon
                         closable
                     />
                 ) : null}
-                <table style={{width: "100%"}}>
+                <table style={{ width: "100%" }}>
                     <tbody>
-                    <tr>
-                        <td>
-                            <Upload accept=".txt, .csv" onChange={this.onChange.bind(this)}
+                        <tr>
+                            <td>
+                                <Upload accept=".txt, .csv" onChange={this.onChange.bind(this)}
                                     beforeUpload={this.beforeUpload.bind(this)}>
-                                <Button>
-                                    <UploadOutlined/> Upload file
+                                    <Button>
+                                        <UploadOutlined /> Upload file
                                 </Button>
-                            </Upload>
-                        </td>
+                                </Upload>
+                            </td>
 
-                        <td width='100%'>
-                            <Input.Search
-                                allowClear
-                                placeholder="Search by name"
-                                onSearch={key => {
-                                    if (key == "") {
-                                        this.setState({searched: false});
-                                    } else {
-                                        this.setState({searched: true});
-                                        this.setState({
-                                            searchResult: this.state.ProgramRooms.filter(
-                                                room => (room.get('name') && room.get('name').toLowerCase().includes(key.toLowerCase()))
-                                            )
-                                        });
-                                    }
-                                }}
-                            />
-                        </td>
+                            <td width='100%'>
+                                <Input.Search
+                                    allowClear
+                                    placeholder="Search by name"
+                                    onSearch={key => {
+                                        if (key === "") {
+                                            this.setState({ searched: false });
+                                        } else {
+                                            this.setState({ searched: true });
+                                            this.setState({
+                                                searchResult: this.state.ProgramRooms.filter(
+                                                    room => (room.get('name') && room.get('name').toLowerCase().includes(key.toLowerCase()))
+                                                )
+                                            });
+                                        }
+                                    }}
+                                />
+                            </td>
 
-                        <td>
-                            <Button
-                                type="primary"
-                                onClick={handleAdd}
-                            >
-                                New Room
+                            <td>
+                                <Button
+                                    type="primary"
+                                    onClick={handleAdd}
+                                >
+                                    New Room
                             </Button>
 
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
 
                     </tbody>
                 </table>
 
-                <EditableTableForUncontrolledRooms/>
-                <EditableTableForControlledRooms/>
+                <EditableTableForUncontrolledRooms />
+                <EditableTableForControlledRooms />
             </div>
         );
     }
@@ -858,11 +854,11 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
 }
 
 const AuthConsumer = (props: ProgramRoomsProps) => (
-            <AuthUserContext.Consumer>
-                {value => (value == null ? <></> :  // @ts-ignore  TS: Can value really be null here?
-                        <Rooms {...props} auth={value} />
-                )}
-            </AuthUserContext.Consumer>
+    <AuthUserContext.Consumer>
+        {value => (value == null ? <></> :  // @ts-ignore  TS: Can value really be null here?
+            <Rooms {...props} auth={value} />
+        )}
+    </AuthUserContext.Consumer>
 
 );
 

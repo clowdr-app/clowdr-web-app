@@ -1,26 +1,25 @@
-import React, {Component} from "react";
-import {AuthUserContext} from "./Session";
-import {NavLink} from "react-router-dom";
-import {Layout} from "antd";
+import React, { Component } from "react";
+import { AuthUserContext } from "./Session";
+import { Layout } from "antd";
 
-const {Header, Content, Footer, Sider} = Layout;
+const { Header } = Layout;
 
 class GenericHeader extends Component {
     constructor(props) {
         super(props);
-        let confName ='';
-        if(this.props.clowdrAppState.currentConference){
+        let confName = '';
+        if (this.props.clowdrAppState.currentConference) {
             confName = this.props.clowdrAppState.currentConference.get("conferenceName");
         }
-        this.state = {conferenceName: confName};
+        this.state = { conferenceName: confName };
     }
 
 
     componentDidUpdate() {
         if (this.props.clowdrAppState.currentConference) {
             let name = this.props.clowdrAppState.currentConference.get("conferenceName");
-            if (this.state.conferenceName != name) {
-                this.setState({conferenceName: name});
+            if (this.state.conferenceName !== name) {
+                this.setState({ conferenceName: name });
             }
         }
     }

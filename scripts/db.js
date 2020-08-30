@@ -2,12 +2,6 @@ const Parse = require('parse/node');
 const fs = require('fs');
 const path = require('path'); 
 const { exec } = require('child_process');
-const { SSL_OP_ALL } = require('constants');
-var readline = require('readline');
-var rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
@@ -39,7 +33,7 @@ const defaultText = `
                     <li>Send a direct message to the organizers</li>
                 </ul>
             </div>
-            <p><b><a href="https://www.clowdr.org/" target="_blank">CLOWDR</a></b> is a community-driven effort to create a new platform to
+            <p><b><a href="https://www.clowdr.org/" rel="noopener noreferrer" target="_blank">CLOWDR</a></b> is a community-driven effort to create a new platform to
                 support <b>C</b>onferences <b>L</b>ocated <b>O</b>nline <b>W</b>ith <b>D</b>igital <b>R</b>esources. (Also, a clowder
                 is <a href="https://www.merriam-webster.com/dictionary/clowder" rel="noopener noreferrer" target="_blank">a group of cats</a> &#128049;).
                 CLOWDR is created by <a href="https://jonbell.net" rel="noopener noreferrer" target="_blank">Jonathan Bell</a>, <a href="https://www.ics.uci.edu/~lopes/" rel="noopener noreferrer" target="_blank">Crista Lopes</a> and <a href="https://www.cis.upenn.edu/~bcpierce/" rel="noopener noreferrer" target="_blank">Benjamin Pierce</a>.
@@ -57,7 +51,14 @@ const Version = Parse.Object.extend('Version');
 let q = new Parse.Query(Version);
 q.first().then(version => {
     if (!version) { // Does not exist. This is the initial setup
-        const cmd = `mongorestore --host ${process.env.MONGODB_HOST} --username admin --password ${process.env.MONGODB_PASSWORD} --db ${process.env.MONGODB_DB} ./db/schema-base`;
+        let cmd = "";
+        if (process.env.MONGODB_PASSWORD) {
+            cmd = `mongorestore --host ${process.env.MONGODB_HOST} --username admin --password ${process.env.MONGODB_PASSWORD} --db ${process.env.MONGODB_DB} ./db/schema-base`;
+        }
+        else {
+            cmd = `mongorestore --host ${process.env.MONGODB_HOST} --db ${process.env.MONGODB_DB} ./db/schema-base`;
+        }
+
         console.log('> ' + cmd);
         exec(cmd, (err, stdout, stderr) => {
             if (err) {
@@ -78,9 +79,9 @@ q.first().then(version => {
         let v = version.get('version'); // Latest version number
         console.log('Applying migrations from version ' + v);
         fs.readdirSync('./db')
-                      .filter(file => ((file.match(/^\d/)) && (path.extname(file) == '.js')))
+                      .filter(file => ((file.match(/^\d/)) && (path.extname(file) === '.js')))
                       .sort()
-                      .map(f => {
+                      .forEach(f => {
                           let name = f.slice(0, -4); // without the extension
                           let n = parseInt(name);
                           if (n > v) {
@@ -91,7 +92,7 @@ q.first().then(version => {
                       });
     }
     
-}).catch(err => console.log(err));
+}).catch(err => console.error(err));
 
 async function addRequiredData() {
     console.log('Adding required data');
@@ -110,7 +111,6 @@ async function addRequiredData() {
     await file.save();
     instance.set('headerImage', file);
 
-    instance.set('isIncludeAllFeatures', true);
     instance.set("landingPage", defaultText)
 
     let acl = new Parse.ACL();
@@ -187,13 +187,13 @@ async function activate(instance) {
             let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference', 'ClowdrSysAdmin']
             let roles = [];
 
-            roleNames.map(r => {
+            roleNames.forEach(r => {
                 let role = new Parse.Role(r, roleACL);
                 let users = role.relation('users');
                 users.add(u2);
-                roles.push(role)    
-            })
-                    
+                roles.push(role);
+            });
+
             try {
                 await Parse.Object.saveAll(roles, {useMasterKey: true});
                 console.log('[activate]: Roles created successfully');

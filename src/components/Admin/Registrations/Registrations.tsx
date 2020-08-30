@@ -1,10 +1,11 @@
 import React from 'react';
-import {Button, DatePicker, Form, Input, message, Modal, Spin, Table, Tooltip, Upload} from "antd";
-import {MailOutlined, UploadOutlined } from '@ant-design/icons';
+import { Button, DatePicker, Form, Input, message, Modal, Spin, Table, Tooltip, Upload } from "antd";
+import { MailOutlined, UploadOutlined } from '@ant-design/icons';
 import Parse from "parse";
-import {AuthUserContext} from "../../Session";
+import { AuthUserContext } from "../../Session";
 import { ClowdrState } from '../../../ClowdrTypes';
 import { UploadChangeParam, RcFile } from 'antd/lib/upload';
+import assert from 'assert';
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -32,7 +33,7 @@ interface RegistrationSchema {
     country: string
 }
 
-function validateEmail(email: string) { 
+function validateEmail(email: string) {
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
 }
@@ -41,11 +42,11 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
     currentConference: any;
     constructor(props: RegistrationProps) {
         super(props); // has props.auth
-        console.log("Registrations starting " );
+        console.log("Registrations starting ");
         this.state = {
-            loading: true, 
+            loading: true,
             regs: [],
-            filteredRegs : [],
+            filteredRegs: [],
             searched: false,
             searchResult: [],
             visible: false,
@@ -58,22 +59,24 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
     onChange(info: UploadChangeParam) {
         console.log("onChange " + info.file.status);
         if (info.file.status !== 'uploading') {
-          console.log(info.file, info.fileList);
+            console.log(info.file, info.fileList);
         }
         if (info.file.status === 'done') {
-          message.success(`${info.file.name} file uploaded successfully`);
+            message.success(`${info.file.name} file uploaded successfully`);
         } else if (info.file.status === 'error') {
-          message.error(`${info.file.name} file upload failed.`);
+            message.error(`${info.file.name} file upload failed.`);
         }
     }
 
     onCreate(values: RegistrationSchema) {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         var _this = this;
 
-        let exists = this.state.regs.find(r => r.get("email") == values.email)
+        let exists = this.state.regs.find(r => r.get("email") === values.email)
         if (exists)
             console.log("[Admin/Registrations]: Email already exists");
-            console.log("[Admin/Registrations]: Valid email? " + validateEmail(values.email));
+        console.log("[Admin/Registrations]: Valid email? " + validateEmail(values.email));
 
         if (!exists && validateEmail(values.email)) {
             console.log("OnCreate! " + values.name)
@@ -88,8 +91,8 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             let acl = new Parse.ACL();
             acl.setPublicWriteAccess(false);
             acl.setPublicReadAccess(false);
-            acl.setRoleReadAccess(this.props.auth.currentConference.id+"-admin", true);
-            acl.setRoleWriteAccess(this.props.auth.currentConference.id+"-admin", true);
+            acl.setRoleReadAccess(this.props.auth.currentConference.id + "-admin", true);
+            acl.setRoleWriteAccess(this.props.auth.currentConference.id + "-admin", true);
             reg.setACL(acl);
             reg.save().then((_: any) => { //TS: We don't need '_' here
                 // Make local changes
@@ -99,18 +102,18 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                     regs: newRegs,
                     filteredRegs: newRegs
                 });
-            }).catch((err: Error)=> {
-                console.log("[Admin/Registrations]: " + err );
+            }).catch((err: Error) => {
+                console.log("[Admin/Registrations]: " + err);
             });
         }
     }
 
     setVisible(visible: boolean) {
         if (visible != null) {
-            this.setState({'visible': visible});
+            this.setState({ 'visible': visible });
         }
         else {
-            this.setState({'visible': !this.state.visible});
+            this.setState({ 'visible': !this.state.visible });
         }
     }
 
@@ -118,19 +121,21 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         this.download();
     }
 
-    beforeUpload(file: RcFile, _ : RcFile[]) {
+    beforeUpload(file: RcFile, _: RcFile[]) {
         const reader = new FileReader();
         reader.onload = () => {
-            const data = {content: reader.result, conference: this.currentConference.id};
+            const data = { content: reader.result, conference: this.currentConference.id };
             Parse.Cloud.run("registrations-upload", data).then(response => {
                 this.refreshList(response);
             });
         }
         reader.readAsText(file);
         return false;
-    } 
+    }
 
     download() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         let query = new Parse.Query("Registration");
         query.equalTo("conference", this.props.auth.currentConference.id);
         query.addDescending("updatedAt")
@@ -160,30 +165,30 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         // this.sub.unsubscribe();
     }
 
-    async sendInvitation(record: any){ // TS: Should not be any
+    async sendInvitation(record: any) { // TS: Should not be any
         try {
-            this.setState({sending: true})
+            this.setState({ sending: true })
             await Parse.Cloud.run("registrations-inviteUser", {
                 conference: this.currentConference.id,
                 registrations: [record.id]
             });
-            this.setState({sending: false})
-        }catch(err){
-            console.log(err);
+            this.setState({ sending: false })
+        } catch (err) {
+            console.error(err);
         }
     }
 
-    async sendInvitations(){
+    async sendInvitations() {
         try {
-            this.setState({sending: true})
+            this.setState({ sending: true })
             await Parse.Cloud.run("registrations-inviteUser", {
                 conference: this.currentConference.id,
                 registrations: this.state.filteredRegs.map(r => r.id)
             });
             console.log('REAL SEND TO ' + this.state.filteredRegs.length)
-            this.setState({sending: false})
-        }catch(err){
-            console.log(err);
+            this.setState({ sending: false })
+        } catch (err) {
+            console.error(err);
         }
     }
 
@@ -246,11 +251,11 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                 title: 'Invitation',
                 dataIndex: 'invitationSent',
                 render: (_: string, record: Parse.Object) => {
-                    if(record.get("invitationSentDate"))
-                    {
+                    if (record.get("invitationSentDate")) {
                         return <span>{moment(record.get("invitationSentDate")).calendar()} <Button onClick={this.sendInvitation.bind(this, record)}>Re-send</Button></span>
                     }
-                    return <span><Button loading={this.state.sending} onClick={this.sendInvitation.bind(this, record)}>Send</Button></span>},
+                    return <span><Button loading={this.state.sending} onClick={this.sendInvitation.bind(this, record)}>Send</Button></span>
+                },
                 key: 'invitationSent',
             }
         ];
@@ -261,54 +266,54 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                 </Spin>)
 
         return <div>
-                <table style={{width:"100%"}}>
-                    <tbody>
-                        <tr>
-                            <td><Upload accept=".txt, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
-                                <Tooltip title="Upload a CSV file with a header line and mandatory fields name,email and optional fields affiliation,country (no extra 
+            <table style={{ width: "100%" }}>
+                <tbody>
+                    <tr>
+                        <td><Upload accept=".txt, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
+                            <Tooltip title="Upload a CSV file with a header line and mandatory fields name,email and optional fields affiliation,country (no extra 
                                     spaces or quotes). Name can be either a single field 'name' or separate 'first' and 'last' fields.  See the Clowdr Conference Organizer's Manual for an example."><Button>
                                     <UploadOutlined /> Upload Multiple Registrations
                                 </Button></Tooltip>
-                            </Upload></td>
+                        </Upload></td>
 
-                            <td>
-                                <Button type="primary" onClick={() => { this.setVisible(true); }}>New registration </Button>
-                                    <RegistrationForm
-                                        title="New Registration"
-                                        visible={this.state.visible}
-                                        onAction={this.onCreate.bind(this)}
-                                        onCancel={() => {
-                                            this.setVisible(false);
-                                        }}
-                                    />
-                            </td>
-                            <td><Form layout="inline" name="form_in_reg" id="RetrieveByDate" onFinish={this.refreshList.bind(this)}>
-                                <Form.Item name="startTime" >
-                                            <DatePicker placeholder="Latest since..." showTime/>
-                                </Form.Item>
-                                <Form.Item >
-                                    <Button type="primary" htmlType="submit">
+                        <td>
+                            <Button type="primary" onClick={() => { this.setVisible(true); }}>New registration </Button>
+                            <RegistrationForm
+                                title="New Registration"
+                                visible={this.state.visible}
+                                onAction={this.onCreate.bind(this)}
+                                onCancel={() => {
+                                    this.setVisible(false);
+                                }}
+                            />
+                        </td>
+                        <td><Form layout="inline" name="form_in_reg" id="RetrieveByDate" onFinish={this.refreshList.bind(this)}>
+                            <Form.Item name="startTime" >
+                                <DatePicker placeholder="Latest since..." showTime />
+                            </Form.Item>
+                            <Form.Item >
+                                <Button type="primary" htmlType="submit">
                                     Submit
                                     </Button>
-                                </Form.Item>
+                            </Form.Item>
 
-                                </Form>
-                            </td>
-                            <td style={{"textAlign":"right"}}> <Tooltip mouseEnterDelay={0.5} title="Send Invitation to ALL selected">
-                                    <Button danger icon={<MailOutlined />} loading={this.state.sending} onClick={this.sendInvitations.bind(this)}>Send All</Button>
-                                </Tooltip></td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-                                    <td style={{"textAlign":"right"}}>Current filter: {this.state.filteredRegs.length} / {this.state.regs.length}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                        </Form>
+                        </td>
+                        <td style={{ "textAlign": "right" }}> <Tooltip mouseEnterDelay={0.5} title="Send Invitation to ALL selected">
+                            <Button danger icon={<MailOutlined />} loading={this.state.sending} onClick={this.sendInvitations.bind(this)}>Send All</Button>
+                        </Tooltip></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                        <td style={{ "textAlign": "right" }}>Current filter: {this.state.filteredRegs.length} / {this.state.regs.length}</td>
+                    </tr>
+                </tbody>
+            </table>
             <Input.Search
                 allowClear
-                onSearch = {key => {
+                onSearch={key => {
                     if (key === "") {
-                        this.setState({searched: false});
+                        this.setState({ searched: false });
                     } else {
                         this.setState({
                             searched: true,
@@ -323,9 +328,11 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                 columns={columns}
                 dataSource={this.state.searched ? this.state.searchResult : this.state.filteredRegs}
                 rowKey={(r) => (r.id)}
-                pagination={{ defaultPageSize: 500,
-                    pageSizeOptions: ['10', '20', '50', '100', '500'], 
-                    position: ['topRight', 'bottomRight']}}>
+                pagination={{
+                    defaultPageSize: 500,
+                    pageSizeOptions: ['10', '20', '50', '100', '500'],
+                    position: ['topRight', 'bottomRight']
+                }}>
             </Table>
         </div>
     }
@@ -341,19 +348,19 @@ const AuthConsumer = (props: RegistrationProps) => (
 export default AuthConsumer;
 
 interface RegistrationFormState {
-    title: string, 
-    visible: boolean, 
+    title: string,
+    visible: boolean,
     //data: string, 
     onAction: Function, // TS: Function?
     onCancel: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void
 }
 
 const RegistrationForm: React.FC<RegistrationFormState> = ({
-    title, 
-    visible, 
+    title,
+    visible,
     //data, 
-    onAction, 
-    onCancel}) => {
+    onAction,
+    onCancel }) => {
     const [form] = Form.useForm();
     return (
         <Modal
@@ -399,7 +406,7 @@ const RegistrationForm: React.FC<RegistrationFormState> = ({
                         },
                     ]}
                 >
-                    <Input placeholder="Name"/>
+                    <Input placeholder="Name" />
                 </Form.Item>
                 <Form.Item
                     name="email"
@@ -411,7 +418,7 @@ const RegistrationForm: React.FC<RegistrationFormState> = ({
                         },
                     ]}
                 >
-                    <Input placeholder="someone@somewhere.edu"/>
+                    <Input placeholder="someone@somewhere.edu" />
                 </Form.Item>
                 <Form.Item
                     name="affiliation"
@@ -423,7 +430,7 @@ const RegistrationForm: React.FC<RegistrationFormState> = ({
                         },
                     ]}
                 >
-                    <Input placeholder="Affiliation"/>
+                    <Input placeholder="Affiliation" />
                 </Form.Item>
                 <Form.Item
                     name="country"
@@ -435,7 +442,7 @@ const RegistrationForm: React.FC<RegistrationFormState> = ({
                         },
                     ]}
                 >
-                    <Input placeholder="Country"/>
+                    <Input placeholder="Country" />
                 </Form.Item>
             </Form>
         </Modal>

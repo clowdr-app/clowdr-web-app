@@ -1,10 +1,6 @@
 import * as React from 'react';
 import {
-    Avatar,
-    Card,
     Collapse,
-    Layout,
-    List,
     message,
     Popconfirm,
     Skeleton,
@@ -20,116 +16,114 @@ import UserStatusDisplay from "./UserStatusDisplay";
 import NewRoomForm from "./NewRoomForm";
 import { LockTwoTone } from "@ant-design/icons"
 
-const { Content, Footer, Sider } = Layout;
+// class MeetingSummary extends React.Component {
+//     constructor(props) {
+//         super(props);
+//         this.state = {
+//             loadingMeeting: false, loading: false, members: this.props.item.members, profiles: {},
+//             activePublicRooms: [],
+//             activePrivateRooms: [],
+//             breakoutRoomsForTracks: {}
+//         };
+//     }
 
-class MeetingSummary extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            loadingMeeting: false, loading: false, members: this.props.item.members, profiles: {},
-            activePublicRooms: [],
-            activePrivateRooms: [],
-            breakoutRoomsForTracks: {}
-        };
-    }
+//     componentDidMount() {
+//         // let ref = this.props.firebase.db.ref("users");
+//         // if (this.props.item && this.props.item.members)
+//         //     Object.keys(this.props.item.members).forEach((key) => {
+//         //         ref.child(key).once("value").then((v) => {
+//         //             this.setState((prevState) => {
+//         //                 let members = Object.assign({}, prevState.members);
+//         //                 members[key] = v.val();
+//         //                 return {members};
+//         //             })
+//         //         })
+//         //     })
+//     }
 
-    componentDidMount() {
-        // let ref = this.props.firebase.db.ref("users");
-        // if (this.props.item && this.props.item.members)
-        //     Object.keys(this.props.item.members).forEach((key) => {
-        //         ref.child(key).once("value").then((v) => {
-        //             this.setState((prevState) => {
-        //                 let members = Object.assign({}, prevState.members);
-        //                 members[key] = v.val();
-        //                 return {members};
-        //             })
-        //         })
-        //     })
-    }
+//     differentMembers(a, b) {
+//         if (a && b)
+//             for (let i = 0; i < a.length && i < b.length; i++) {
+//                 if (a[i] !== b[i])
+//                     return true;
+//                 if (a[i] && b[i] && a[i].id !== b[i].id)
+//                     return true;
+//                 if (a[i].get("displayName") !== b[i].get("displayName") || a[i].get("profilePhoto") !== b[i].get("profilePhoto"))
+//                     return true;
+//             }
+//         return false;
+//     }
 
-    differentMembers(a, b) {
-        if (a && b)
-            for (let i = 0; i < a.length && i < b.length; i++) {
-                if (a[i] !== b[i])
-                    return true;
-                if (a[i] && b[i] && a[i].id !== b[i].id)
-                    return true;
-                if (a[i].get("displayName") !== b[i].get("displayName") || a[i].get("profilePhoto") !== b[i].get("profilePhoto"))
-                    return true;
-            }
-        return false;
-    }
+//     componentDidUpdate(prevProps, prevState, snapshot) {
+//         if (!this.mounted)
+//             return;
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (!this.mounted)
-            return;
+//         if (this.props.item.get('members') !== prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
+//             this.setState({ members: this.props.item.members });
+//         }
+//     }
 
-        if (this.props.item.get('members') !== prevProps.item.get('members') || this.differentMembers(this.props.item.get("members"), prevProps.item.get("members"))) {
-            this.setState({ members: this.props.item.members });
-        }
-    }
+//     joinMeeting(meeting) {
+//         if (meeting.get("twilioID") && meeting.get('twilioID').startsWith("demo")) {
+//             message.error('Sorry, you can not join the demo meetings. Try to create a new one!');
 
-    joinMeeting(meeting) {
-        if (meeting.get("twilioID") && meeting.get('twilioID').startsWith("demo")) {
-            message.error('Sorry, you can not join the demo meetings. Try to create a new one!');
+//         } else {
+//             console.log(meeting.get("conference"))
+//             this.props.history.push("/video/" + encodeURI(meeting.get("conference").get("conferenceName")) + '/' + encodeURI(meeting.get("title")));
+//         }
+//     }
 
-        } else {
-            console.log(meeting.get("conference"))
-            this.props.history.push("/video/" + encodeURI(meeting.get("conference").get("conferenceName")) + '/' + encodeURI(meeting.get("title")));
-        }
-    }
+//     render() {
+//         let item = this.props.item;
+//         let _this = this;
+//         return <Card title={item.get('title')} style={{ width: "350px", "height": "350px", overflow: "scroll" }}
+//             size={"small"}
+//             extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is " + item.get('capacity') + ")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
+//                 title="You are about to join a video call. Are you ready?"
+//                 onConfirm={_this.joinMeeting.bind(_this, item)}
+//                 okText="Yes"
+//                 cancelText="No"
+//             ><a href="#">Join</a></Popconfirm>)}
+//         >
+//             {(item.get('members') ? <span>
+//                 {/*<h4>Currently here:</h4>*/}
+//                 {/*<Divider orientation="left">Here now:</Divider>*/}
+//                 <List
+//                     dataSource={item.get('members').filter((v) => (v != null))}
+//                     size={"small"}
+//                     renderItem={user => {
+//                         let avatar;
+//                         if (user.get("profilePhoto"))
+//                             avatar = <Avatar src={user.get("profilePhoto").url()} />
+//                         else {
+//                             let initials = "";
+//                             if (user.get("displayName"))
+//                                 user.get("displayName").split(" ").forEach((v => initials += v.substring(0, 1)))
 
-    render() {
-        let item = this.props.item;
-        let _this = this;
-        return <Card title={item.get('title')} style={{ width: "350px", "height": "350px", overflow: "scroll" }}
-            size={"small"}
-            extra={(item.get("members") && item.get("capacity") <= item.get("members").length ? <Tooltip mouseEnterDelay={0.5} title={"This room is currently full (capacity is " + item.get('capacity') + ")"}><Typography.Text disabled>Join</Typography.Text></Tooltip> : <Popconfirm
-                title="You are about to join a video call. Are you ready?"
-                onConfirm={_this.joinMeeting.bind(_this, item)}
-                okText="Yes"
-                cancelText="No"
-            ><a href="#">Join</a></Popconfirm>)}
-        >
-            {(item.get('members') ? <span>
-                {/*<h4>Currently here:</h4>*/}
-                {/*<Divider orientation="left">Here now:</Divider>*/}
-                <List
-                    dataSource={item.get('members').filter((v) => (v != null))}
-                    size={"small"}
-                    renderItem={user => {
-                        let avatar;
-                        if (user.get("profilePhoto"))
-                            avatar = <Avatar src={user.get("profilePhoto").url()} />
-                        else {
-                            let initials = "";
-                            if (user.get("displayName"))
-                                user.get("displayName").split(" ").forEach((v => initials += v.substring(0, 1)))
+//                             avatar = <Avatar>{initials}</Avatar>
+//                         }
+//                         return <List.Item key={user.id}>
+//                             <List.Item.Meta
+//                                 avatar={
+//                                     avatar
+//                                 }
+//                                 title={user.get("displayName")}
+//                             />
+//                         </List.Item>
+//                     }}
+//                 >
+//                     {this.state.loading && this.state.hasMore && (
+//                         <div className="demo-loading-container">
+//                             <Spin />
+//                         </div>
+//                     )}
+//                 </List>
+//             </span> : <span>Nobody's here yet</span>)}
 
-                            avatar = <Avatar>{initials}</Avatar>
-                        }
-                        return <List.Item key={user.id}>
-                            <List.Item.Meta
-                                avatar={
-                                    avatar
-                                }
-                                title={user.get("displayName")}
-                            />
-                        </List.Item>
-                    }}
-                >
-                    {this.state.loading && this.state.hasMore && (
-                        <div className="demo-loading-container">
-                            <Spin />
-                        </div>
-                    )}
-                </List>
-            </span> : <span>Nobody's here yet</span>)}
+//         </Card>
 
-        </Card>
-
-    }
-}
+//     }
+// }
 
 class Lobby extends React.Component {
     constructor(props) {
@@ -186,7 +180,7 @@ class Lobby extends React.Component {
             return true;
         if (!o1 || !o2)
             return false;
-        return o1.id == o2.id;
+        return o1.id === o2.id;
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -194,7 +188,7 @@ class Lobby extends React.Component {
             return;
         let stateUpdate = {};
 
-        if (prevState.activePublicVideoRooms != this.state.activePublicVideoRooms || (this.state.ProgramItems && this.state.ProgramTracks && !this.state.breakoutRoomsForTracksLoaded)) {
+        if (prevState.activePublicVideoRooms !== this.state.activePublicVideoRooms || (this.state.ProgramItems && this.state.ProgramTracks && !this.state.breakoutRoomsForTracksLoaded)) {
             //re-calculate the rooms-by-track
             let breakoutRoomsForTracks = {};
             if (this.state.ProgramItems && this.state.ProgramTracks) {
@@ -205,7 +199,7 @@ class Lobby extends React.Component {
                 }
                 for (let item of this.state.ProgramItems) {
                     if (item.get("breakoutRoom")) {
-                        let room = this.state.activePublicVideoRooms? this.state.activePublicVideoRooms.find(v => v.id == item.get("breakoutRoom").id) : undefined;
+                        let room = this.state.activePublicVideoRooms ? this.state.activePublicVideoRooms.find(v => v.id === item.get("breakoutRoom").id) : undefined;
                         if (room && breakoutRoomsForTracks[item.get('track').id]) {
                             breakoutRoomsForTracks[item.get("track").id].push(room);
                         }
@@ -218,7 +212,7 @@ class Lobby extends React.Component {
         if (Object.keys(stateUpdate).length > 0) {
             this.setState(stateUpdate);
         }
-        // if (this.props.auth.videoRoomsLoaded != this.state.videoRoomsLoaded) {
+        // if (this.props.auth.videoRoomsLoaded !== this.state.videoRoomsLoaded) {
         //     this.setState({videoRoomsLoaded: this.props.auth.videoRoomsLoaded});
         // }
         // if (!this.areEqualID(this.props.auth.currentConference, prevProps.auth.currentConference) || !this.areEqualID(prevProps.auth.user, this.props.auth.user)) {
@@ -228,11 +222,11 @@ class Lobby extends React.Component {
         //         this.setState({loggedIn: true});
         //     }
         // }
-        // if(this.props.auth.activePrivateVideoRooms != this.state.activePrivateVideoRooms)
+        // if(this.props.auth.activePrivateVideoRooms !== this.state.activePrivateVideoRooms)
         // {
         //     this.setState({activePrivateVideoRooms: this.props.auth.activePrivateVideoRooms})
         // }
-        // if(this.props.auth.activePublicVideoRooms != this.state.activePublicVideoRooms){
+        // if(this.props.auth.activePublicVideoRooms !== this.state.activePublicVideoRooms){
         //     this.setState({activePublicVideoRooms: this.props.auth.activePublicVideoRooms})
         // }
         // if (!this.areEqualID(this.state.currentRoom, this.props.auth.currentRoom)) {
@@ -253,7 +247,6 @@ class Lobby extends React.Component {
                 body: JSON.stringify({
                     room: values.title,
                     identity: idToken,
-                    slackTeam: this.props.auth.currentConference.get("slackWorkspace"),
                     conference: this.props.auth.currentConference.id
                 }),
                 headers: {
@@ -278,7 +271,7 @@ class Lobby extends React.Component {
         // room.save().then((val) => {
         //     _this.props.history.push("/video/" + room.id);
         // }).catch(err => {
-        //     console.log(err);
+        //     console.error(err);
         // });
     }
 
@@ -293,7 +286,7 @@ class Lobby extends React.Component {
         return this.state.maxDisplayedRooms < this.state.rooms.length;
     }
 
-    // BCP: Copied frok ContextualActiveUsers.js -- should not be duplicated, really!!
+    // BCP: Copied from ContextualActiveUsers.js -- should not be duplicated, really!!
     joinCall(room) {
         if (room.get("programItem")) {
             this.props.history.push("/program/" + room.get("programItem").get("confKey"))
@@ -325,19 +318,15 @@ class Lobby extends React.Component {
                                 return <Skeleton />
                             }
 
-                            let membersCount = 0;
                             let capacity = item.get("capacity");
-                            if (item.get("members")) {
-                                membersCount = item.get("members").length;
-                            }
                             let tag, joinInfo;
-                            if (item.get("mode") == "group") {
+                            if (item.get("mode") === "group") {
                                 //     tag = <Tag  style={{width:"43px", textAlign: "center"}}>Big</Tag>
                                 joinInfo = "Click to join this big group room (up to " + capacity + " callers). Up to 5 speakers are allowed at once."
-                            } else if (item.get("mode") == "peer-to-peer") {
+                            } else if (item.get("mode") === "peer-to-peer") {
                                 //     tag = <Tag style={{width:"43px", textAlign: "center"}}>P2P</Tag>
                                 joinInfo = "Click to join this peer-to-peer room (up to " + capacity + " callers)."
-                            } else if (item.get("mode") == "group-small") {
+                            } else if (item.get("mode") === "group-small") {
                                 //     tag = <Tag style={{width:"43px", textAlign: "center"}}>Small</Tag>
                                 joinInfo = "Click to join this small group room (up to " + capacity + ")."
                             }
@@ -359,7 +348,7 @@ class Lobby extends React.Component {
                             let formattedRoom =
                                 <div className="activeBreakoutRoom">{tag}{privateSymbol}{item.get('title')}</div>
                             let joinLink = "";
-                            if (!this.state.currentRoom || this.state.currentRoom.id != item.id) {
+                            if (!this.state.currentRoom || this.state.currentRoom.id !== item.id) {
                                 if (item.get("members") && item.get("capacity") <= item.get("members").length)
                                     joinLink = <div><Tooltip mouseEnterDelay={0.5}
                                         title={"This room is currently full (capacity is " + item.get('capacity') + ")"}><Typography.Text
@@ -372,8 +361,7 @@ class Lobby extends React.Component {
                                         to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
                                             onConfirm={this.joinCall.bind(this, item)}
                                         >
-                                            <a href="#"
-                                            >{formattedRoom}</a>
+                                            <a href="#">{formattedRoom}</a>
                                         </Popconfirm>
                                     </Tooltip>
                                     </div>;
@@ -392,11 +380,8 @@ class Lobby extends React.Component {
                             let list;
                             let header = joinLink;
                             if (item.get("members") && item.get("members").length > 0)
-                                list = item.get("members").map(user => {
+                                list = item.get("members").forEach(user => {
                                     if (user) {
-                                        let className = "personHoverable";
-                                        if (this.state.filteredUser == user.id)
-                                            className += " personFiltered"
                                         return <UserStatusDisplay popover={true} profileID={user.id} key={user.id} />
                                     }
                                 }) //}>
@@ -439,37 +424,37 @@ class Lobby extends React.Component {
 
         // console.log("allActiveRooms.length = " + allActiveRooms.length);
 
-        const compareDates = (i, j) => {
-            let a = this.state.presences[i];
-            let b = this.state.presences[j];
-            if (!a)
-                return -1;
-            if (!b) return 1;
-            a = a.get("updatedAt");
-            b = b.get("updatedAt");
-            return (a < b ? 1 : a > b ? -1 : 0)
-        };
+        // const compareDates = (i, j) => {
+        //     let a = this.state.presences[i];
+        //     let b = this.state.presences[j];
+        //     if (!a)
+        //         return -1;
+        //     if (!b) return 1;
+        //     a = a.get("updatedAt");
+        //     b = b.get("updatedAt");
+        //     return (a < b ? 1 : a > b ? -1 : 0)
+        // };
 
-        const compareNames = (i, j) => {
-            let a = this.props.auth.programCache.unsafeGetProfileByID(i);
-            let b = this.props.auth.programCache.unsafeGetProfileByID(j);
-            if (!a)
-                return -1;
-            if (!b) return 1;
-            a = a.get("displayName");
-            b = b.get("displayName");
-            return (a.localeCompare(b))
-        };
+        // const compareNames = (i, j) => {
+        //     let a = this.props.auth.programCache.unsafeGetProfileByID(i);
+        //     let b = this.props.auth.programCache.unsafeGetProfileByID(j);
+        //     if (!a)
+        //         return -1;
+        //     if (!b) return 1;
+        //     a = a.get("displayName");
+        //     b = b.get("displayName");
+        //     return (a.localeCompare(b))
+        // };
 
-        let nonProgramRooms = allActiveRooms
-            .sort((i1, i2) => { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
-            // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
-            .filter(r => !r.get("programItem"));
+        // let nonProgramRooms = allActiveRooms
+        //     .sort((i1, i2) => { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
+        //     // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
+        //     .filter(r => !r.get("programItem"));
 
-        let programRooms = allActiveRooms
-            .sort((i1, i2) => { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
-            // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
-            .filter(r => !r.get("programItem"))
+        // let programRooms = allActiveRooms
+        //     .sort((i1, i2) => { return (i1 && i2 && i1.get("title") > i2.get("title") ? 1 : -1) })
+        //     // { return (i1 && i2 && i1.get("updatedAt") < i2.get("updatedAt") ? 1 : -1) })
+        //     .filter(r => !r.get("programItem"))
 
         return (
             // <Tabs defaultActiveKey="1">
@@ -507,8 +492,8 @@ class Lobby extends React.Component {
 
                 {
                     this.state.breakoutRoomsForTracks ? Object.keys(this.state.breakoutRoomsForTracks).sort((i1, i2) => {
-                        let o1 = this.state.ProgramTracks.find(v => v.id == i1);
-                        let o2 = this.state.ProgramTracks.find(v => v.id == i2);
+                        let o1 = this.state.ProgramTracks.find(v => v.id === i1);
+                        let o2 = this.state.ProgramTracks.find(v => v.id === i2);
                         let n1 = o1.get("displayName");
                         if (!n1)
                             n1 = o1.get("name");
@@ -517,7 +502,7 @@ class Lobby extends React.Component {
                             n2 = o2.get("name");
                         return n1.localeCompare(n2);
                     }).map(trackID => {
-                        let track = this.state.ProgramTracks.find(v => v.id == trackID);
+                        let track = this.state.ProgramTracks.find(v => v.id === trackID);
 
                         let rooms = this.state.breakoutRoomsForTracks[trackID];
                         if (rooms.length) {
@@ -578,7 +563,7 @@ class Lobby extends React.Component {
                 {/*            {*/}
                 {/*                Object.values(allActiveRooms)//.slice(0, this.state.maxDisplayedRooms)*/}
                 {/*                    .map((item) => (*/}
-                {/*                    <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} auth={this.props.auth} />*/}
+                {/*                    <MeetingSummary key={item.id} item={item} parseLive={this.props.parseLive} auth={this.props.auth} />*/}
                 {/*                ))}*/}
                 {/*        </Space>*/}
                 {/*    /!*</InfiniteScroll>*!/*/}
@@ -589,11 +574,12 @@ class Lobby extends React.Component {
 
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = withLoginRequired((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <Lobby {...props} auth={value} parseLive={value.parseLive} />
         )}
     </AuthUserContext.Consumer>
-);
-export default withLoginRequired(AuthConsumer);
+));
+
+export default AuthConsumer;

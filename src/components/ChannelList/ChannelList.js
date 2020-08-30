@@ -1,10 +1,10 @@
 import React from 'react';
-import {Card, List, Space, Spin} from "antd";
+import { Card, List, Space, Spin } from "antd";
 
 class ChannelList extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {'loading': true};
+        this.state = { 'loading': true };
         this.videosRef = this.props.firebase.db.ref("videos");
     }
 
@@ -14,7 +14,7 @@ class ChannelList extends React.Component {
             const videos = [];
             if (data) {
                 val.forEach((vid) => {
-                    videos.push({id: vid.key, data: vid.val()});
+                    videos.push({ id: vid.key, data: vid.val() });
                 });
             }
             this.setState({
@@ -33,30 +33,30 @@ class ChannelList extends React.Component {
                 </Spin>)
         }
         return <div><h2>Previously Aired Videos</h2><List dataSource={this.state.videos}
-                                                          itemLayout="vertical"
-                                                          renderItem={item => (
-                                                              <List.Item>
-                                                                  <Card title={item.data.title}>
-                                                                      <Space align={"center"} style={{
-                                                                          width: '80vw',
-                                                                          overflow: 'scroll'
-                                                                      }}>
-                                                                          {
-                                                                              Object.keys(item.data.videos).map((video) => {
-                                                                                  return <Card type="inner"
-                                                                                               title={item.data.videos[video].title}
-                                                                                               style={{width: "350px"}}>
-                                                                                      <iframe width="300" height="200"
-                                                                                              src={"https://www.youtube.com/embed/" + video}
-                                                                                              frameBorder="0"
-                                                                                              allow="autoplay; encrypted-media"
-                                                                                              allowFullScreen></iframe>
-                                                                                  </Card>
-                                                                              })}
-                                                                      </Space>
-                                                                  </Card>
-                                                              </List.Item>
-                                                          )}
+            itemLayout="vertical"
+            renderItem={item => (
+                <List.Item>
+                    <Card title={item.data.title}>
+                        <Space align={"center"} style={{
+                            width: '80vw',
+                            overflow: 'scroll'
+                        }}>
+                            {
+                                Object.keys(item.data.videos).map((video) => {
+                                    return <Card type="inner"
+                                        title={item.data.videos[video].title}
+                                        style={{ width: "350px" }}>
+                                        <iframe width="300" height="200"
+                                            src={"https://www.youtube.com/embed/" + video}
+                                            frameBorder="0"
+                                            allow="autoplay; encrypted-media"
+                                            allowFullScreen></iframe>
+                                    </Card>
+                                })}
+                        </Space>
+                    </Card>
+                </List.Item>
+            )}
         /></div>
     }
 }

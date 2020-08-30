@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Space, Table } from "antd";
+import { Table } from "antd";
 import { ColumnsType } from 'antd/lib/table';
 import Firebase from '../../Firebase/firebase';
 
@@ -62,16 +62,12 @@ export default class ScheduleList extends React.Component<ScheduleListProps, Sch
         });
         this.itemsRef.on('value', (val) => {
             const res = val.val();
-            const items = {};
+            const items: any = {};
             if (res) {
                 val.forEach((item) => {
-                    // TS : TS is unhappy because item.key can be null according to its type...
-                    // @ts-ignore
-                    if (items.key != null) {
-                    // @ts-ignore
-                    items[item.key] = item.val();
-                    // @ts-ignore
-                    items[item.key].id = item.key;
+                    if (item.key != null) {
+                        items[item.key] = item.val();
+                        items[item.key].id = item.key;
                     }
                 });
             }
@@ -118,7 +114,7 @@ export default class ScheduleList extends React.Component<ScheduleListProps, Sch
                 // TS: Not sure what the correct annotations are here: onFilter seems to want a function that 
                 // can accept any of string,number,boolean, but indexOf only wants a string...
                 // @ts-ignore
-                onFilter: (value:string|number|boolean, record) => record.name.indexOf(value) === 0,
+                onFilter: (value: string | number | boolean, record) => record.name.indexOf(value) === 0,
                 sorter: (a: ScheduleListSchema, b: ScheduleListSchema) => a.name.length - b.name.length,
                 sortDirections: ['descend'],
             },
@@ -142,15 +138,15 @@ export default class ScheduleList extends React.Component<ScheduleListProps, Sch
                     },
                 ],
                 filterMultiple: false,
-                onFilter: (value, record:any) => record.address.indexOf(value) === 0,  // TS: refine!
-                sorter: (a: {address:string}, b: {address:string}) => a.address.length - b.address.length,
+                onFilter: (value, record: any) => record.address.indexOf(value) === 0,  // TS: refine!
+                sorter: (a: { address: string }, b: { address: string }) => a.address.length - b.address.length,
                 sortDirections: ['descend', 'ascend'],
             },
         ];
-        return (<Table 
-            columns= { columns } 
-            dataSource = { this.state.sessions } 
-            onChange = { this.onChange } />)
+        return (<Table
+            columns={columns}
+            dataSource={this.state.sessions}
+            onChange={this.onChange} />)
     }
 
     onChange() {
