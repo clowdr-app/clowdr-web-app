@@ -15,6 +15,7 @@ import { ChatFrame } from "../components/Chat/ChatFrame";
 interface ChannelInfoAttrs {
     parseID?: string;
     category?: string;
+    mode?: string;
 }
 
 interface ChannelInfo {
@@ -439,7 +440,7 @@ export default class ChatClient {
                 break;
             }
         }
-        let channelsToFetch = [];
+        let channelsToFetch: Promise<Channel>[] = [];
         while (true) {
             for (let cd of allChannelDescriptors.items) {
                 channelsToFetch.push(this.callWithRetry(() => cd.getChannel()));
@@ -487,7 +488,7 @@ export default class ChatClient {
             this.channels = this.channels.filter((v) => v.sid !== channel.sid);
             this.leaveChat(channel.sid);
             this.unSubscribeToChannel(channel);
-            this.multiChatWindow?.setAllChannels(Object.keys(this.channels));
+            this.multiChatWindow?.setAllChannels(this.channels);
             // this.channelListeners.forEach(v => v.channelRemoved(channel));
         });
         twilio.on("channelJoined", async (channel) => {
