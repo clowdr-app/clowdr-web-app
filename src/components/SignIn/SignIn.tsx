@@ -67,7 +67,7 @@ class SignIn extends Component<SignInProps, SignInState> {
     }
 
     onPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
-        this.setState({ "email": event.target.value });
+        this.setState({ "password": event.target.value });
     }
 
     async forgotPassword() {
