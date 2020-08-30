@@ -50,9 +50,7 @@ import SidebarChat from "./components/SocialTab/SidebarChat";
 import BottomChat from "./components/SocialTab/BottomChat";
 import ProgramItem from "./components/ProgramItem";
 import UsersList from "./components/Admin/Users";
-// @ts-ignore
 import SplitPane from 'react-split-pane/lib/SplitPane';
-// @ts-ignore
 import Pane from 'react-split-pane/lib/Pane'
 import ActiveUsersList from "./components/SocialTab/ActiveUsersList";
 import EmojiPickerPopover from "./components/Chat/EmojiPickerPopover";
