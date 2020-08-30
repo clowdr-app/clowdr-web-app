@@ -388,6 +388,10 @@ export default class ChatClient{
             await this.cleanup();
         }
         let token = await this.getToken(user, conference);
+        if (!token) {
+            console.log("[ChatClient]: twilio token not found");
+            return;
+        }
         let twilio = await Chat.create(token);
         let [subscribedChannelsPaginator, allChannelDescriptors] = await Promise.all([this.callWithRetry(()=>twilio.getSubscribedChannels()),
         this.callWithRetry(()=>twilio.getPublicChannelDescriptors())]);
@@ -534,11 +538,11 @@ export default class ChatClient{
                     }
                 });
             let data = await res.json();
+            console.log('Token: ' + data.token);
             return data.token;
         } else {
             console.log("Unable to get our token?");
         }
-
 
     };
 
