@@ -4,15 +4,17 @@ import Avatar from "./Avatar";
 import { AuthUserContext } from "../Session";
 import Parse from "parse";
 import withLoginRequired from "../Session/withLoginRequired";
-import ProgramContext from "../Program/context";
 import { ClowdrState } from "../../ClowdrTypes";
 import { RuleObject } from "antd/lib/form";
 import { Store } from 'antd/lib/form/interface';
+import UserProfile from '../../classes/UserProfile';
 
 interface Props { //TS: Props from both context (ClowdrState) and AccountFromToken.js. Is that OK?? Cauz we will export all of them.
     auth: ClowdrState;
     onFinish: () => void;
     embedded: boolean;
+    user: Parse.User;
+    userProfile: UserProfile;
 }
 
 interface State {
@@ -77,16 +79,15 @@ class Account extends React.Component<Props, State> {
 
     setStateFromUser() {
         let selectedFlairs: string[] = [];
-        let auth = this.props.auth;
-        if (auth.userProfile.get("tags"))
-            auth.userProfile.get("tags").forEach((tag: Parse.Object) => {
+        if (this.props.userProfile.get("tags"))
+            this.props.userProfile.get("tags").forEach((tag: Parse.Object) => {
                 selectedFlairs.push(tag.get("label"));
             });
         this.setState({
-            user: auth.user,
-            email: auth.user ? auth.user.getEmail() : undefined,
-            tags: auth.user ? auth.user.get("tags") : undefined,
-            flair: auth.user ? auth.user.get("primaryFlair") : undefined,
+            user: this.props.user,
+            email: this.props.user.getEmail(),
+            tags: this.props.user.get("tags"),
+            flair: this.props.user.get("primaryFlair"),
             selectedFlair: selectedFlairs
         });
         const Flair = Parse.Object.extend("Flair");
@@ -143,27 +144,27 @@ class Account extends React.Component<Props, State> {
 
     async updateUser(values: Store) {
         this.setState({ updating: true });
-        if (values.password && this.props.auth.user) {
+        if (values.password) {
             // Set the user's password to the provided value
-            this.props.auth.user.setPassword(values.password);
+            this.props.user.setPassword(values.password);
             // Set the boolean field indicating that the user has configured their password
-            this.props.auth.user.set("passwordSet", true);
-            await this.props.auth.user.save();
+            this.props.user.set("passwordSet", true);
+            await this.props.user.save();
         }
         if (this.state.flairObj) {
-            this.props.auth.userProfile.set("tags", this.state.flairObj.filter((item) => (values.flair.includes(item.get("label")))));
+            this.props.userProfile.set("tags", this.state.flairObj.filter((item) => (values.flair.includes(item.get("label")))));
         }
-        this.props.auth.userProfile.set("displayName", values.displayName);
-        this.props.auth.userProfile.set("affiliation", values.affiliation);
-        this.props.auth.userProfile.set("country", values.country);
-        this.props.auth.userProfile.set("webpage", values.website);
-        this.props.auth.userProfile.set("bio", values.bio);
-        this.props.auth.userProfile.set("pronouns", values.pronouns);
-        this.props.auth.userProfile.set("position", values.position);
+        this.props.userProfile.set("displayName", values.displayName);
+        this.props.userProfile.set("affiliation", values.affiliation);
+        this.props.userProfile.set("country", values.country);
+        this.props.userProfile.set("webpage", values.website);
+        this.props.userProfile.set("bio", values.bio);
+        this.props.userProfile.set("pronouns", values.pronouns);
+        this.props.userProfile.set("position", values.position);
 
-        Promise.all([this.props.auth.userProfile.save(),
+        Promise.all([this.props.userProfile.save(),
         Parse.Cloud.run("program-updatePersons", {
-            userProfileID: this.props.auth.userProfile.id,
+            userProfileID: this.props.userProfile.id,
             programPersonIDs: values.programPersons
         })
 
@@ -195,7 +196,7 @@ class Account extends React.Component<Props, State> {
             }
         }
         this.programPersonOptions = this.ProgramPersons.filter((person: Parse.Object) => (
-            (person.get("userProfile") == null || person.get("userProfile").id === this.props.auth.userProfile.id) &&
+            (person.get("userProfile") == null || person.get("userProfile").id === this.props.userProfile.id) &&
             peopleToItems[person.id])).map((person: Parse.Object) => (
                 {
                     value: person.id,
@@ -203,7 +204,7 @@ class Account extends React.Component<Props, State> {
                 })
             );
         matchingPersons = this.ProgramPersons.filter((person: Parse.Object) =>
-            person.get("userProfile") && person.get("userProfile").id === this.props.auth.userProfile.id
+            person.get("userProfile") && person.get("userProfile").id === this.props.userProfile.id
         ).map((person: Parse.Object) => (person.id));
 
         this.setState({
@@ -246,10 +247,7 @@ class Account extends React.Component<Props, State> {
             return <Skeleton />
         }
 
-        let passwordRequired: boolean = true;  //TS: is the init val True?
-        if (this.props.auth.user) {
-            passwordRequired = !this.props.auth.user.get("passwordSet");
-        }
+        let passwordRequired: boolean = !this.props.user.get("passwordSet");
         if (this.state.loading) {
             return <Spin />
         }
@@ -265,13 +263,13 @@ class Account extends React.Component<Props, State> {
                 layout="horizontal"
                 initialValues={{
                     size: 50,
-                    displayName: this.props.auth.userProfile.get("displayName"),
-                    website: this.props.auth.userProfile.get("webpage"),
-                    affiliation: this.props.auth.userProfile.get("affiliation"),
-                    country: this.props.auth.userProfile.get("country"),
-                    bio: this.props.auth.userProfile.get("bio"),
-                    pronouns: this.props.auth.userProfile.get("pronouns"),
-                    position: this.props.auth.userProfile.get("position"),
+                    displayName: this.props.userProfile.get("displayName"),
+                    website: this.props.userProfile.get("webpage"),
+                    affiliation: this.props.userProfile.get("affiliation"),
+                    country: this.props.userProfile.get("country"),
+                    bio: this.props.userProfile.get("bio"),
+                    pronouns: this.props.userProfile.get("pronouns"),
+                    position: this.props.userProfile.get("position"),
                     flair: this.state.selectedFlair,
                     programPersons: this.state.authorRecords
                 }}
@@ -411,9 +409,7 @@ class Account extends React.Component<Props, State> {
                     />
                 </Form.Item>
                 <Form.Item label="Avatar">
-                    {/*// TS2339: Property 'refreshUser' does not exist on type 'ClowdrAppState'.*/}
-                    <Avatar userProfile={this.props.auth.userProfile} />
-                    {/*<Avatar userProfile={this.props.auth.userProfile} refreshUser={this.props.auth.refreshUser} />*/}
+                    <Avatar userProfile={this.props.userProfile} />
                 </Form.Item>
 
                 <Form.Item label="Profile" name="bio" extra="Include anything else you want people to know about you -- e.g., a brief CV, current projects, links to some papers, hobbies, ...">
@@ -442,14 +438,12 @@ class Account extends React.Component<Props, State> {
 }
 
 const AuthConsumer = withLoginRequired((props: Props) => (
-    <ProgramContext.Consumer>
-        {({ items }) => (
-            <AuthUserContext.Consumer>
-                {value => (value == null ? <></> : // @ts-ignore  TS: Can value really be null here?
-                    <Account {...props} auth={value} programItems={items} />
-                )}
-            </AuthUserContext.Consumer>
-        )}</ProgramContext.Consumer>
+    <AuthUserContext.Consumer>
+        {value => (value == null ? <span>TODO: Account page when clowdrState is null.</span> :
+            (!value.userProfile || !value.user ? <span>Error: Account page: Either user or userProfile does not exist?!</span> :
+                <Account {...props} auth={value} user={value.user} userProfile={value.userProfile} />)
+        )}
+    </AuthUserContext.Consumer>
 ));
 
 export default AuthConsumer;

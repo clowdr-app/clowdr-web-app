@@ -20,6 +20,7 @@ import { AuthUserContext } from "../../../Session";
 import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { RcFile, UploadChangeParam } from "antd/lib/upload/interface";
 import { Store } from 'antd/lib/form/interface';
+import assert from 'assert';
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
@@ -92,8 +93,11 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     beforeUpload(file: RcFile, _: any) {
+
         const reader: FileReader = new FileReader();
         reader.onload = () => {
+            assert(this.props.auth.currentConference, "Current conference is null.");
+
             const data = { content: reader.result, conference: this.props.auth.currentConference.id };
             Parse.Cloud.run("rooms-upload", data).then(
                 // () => this.refreshList()
@@ -763,6 +767,8 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
         }
         // handle when a new item is added
         const handleAdd = () => {
+            assert(this.props.auth.currentConference, "Current conference is null.");
+
             let data = {
                 clazz: "ProgramRoom",
                 conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },

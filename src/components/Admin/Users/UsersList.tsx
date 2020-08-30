@@ -6,6 +6,7 @@ import { Button, Input, message, Space, Switch, Table, Tooltip } from "antd";
 import { SearchOutlined } from "@material-ui/icons";
 import Highlighter from 'react-highlight-words';
 import { ClowdrState, UserSessionToken } from "../../../ClowdrTypes";
+import assert from 'assert';
 
 interface UsersListProps {
     auth: ClowdrState,
@@ -64,6 +65,8 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     }
 
     async updateBan(item: ManagedUser) {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         this.setState({ banUpdating: true })
         console.log(item);
         let idToken: UserSessionToken = "";
@@ -103,6 +106,8 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         }
     }
     async componentDidMount() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         let parseUserQ = new Parse.Query("UserProfile")
         parseUserQ.equalTo("conference", this.props.auth.currentConference);
         parseUserQ.include("user");
@@ -168,6 +173,8 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         this.setState({ allUsers: allUsers, loading: false, roles: roleObj });
     }
     async refreshRoles() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         let roleData = [];
         for (let role of roles) {
             roleData.push(Parse.Cloud.run('admin-userProfiles-by-role', {
@@ -255,6 +262,8 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     });
 
     async updateRole(roleName: string, item: { key: any; }, shouldHaveRole: boolean) {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         this.setState({ roleUpdating: true })
         await Parse.Cloud.run('admin-role', {
             id: this.props.auth.currentConference.id,
@@ -267,7 +276,11 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     }
 
     render() {
-        if (!this.props.auth.roles.find(v => v && v.get("name") === this.props.auth.currentConference.id + "-admin"))
+        assert(this.props.auth.currentConference, "Current conference is null");
+        let currConfId = this.props.auth.currentConference.id;
+
+        if (!this.props.auth.roles.find(v => v
+            && v.get("name") === currConfId + "-admin"))
             return <div>Error: you do not have permission to view this page - it is only for administrators.</div>
         if (this.state.loading)
             return <div>Loading...</div>

@@ -6,6 +6,7 @@ import { DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone } from '@
 import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { SelectValue } from "antd/es/select";
 import { Store } from 'antd/lib/form/interface';
+import assert from 'assert';
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
@@ -75,6 +76,8 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
     }
 
     onCreate = () => {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         let data: object = {
             clazz: "ProgramSession",
             conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },

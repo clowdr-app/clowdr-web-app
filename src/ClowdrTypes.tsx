@@ -7,13 +7,10 @@ import Conversation from "./classes/Conversation";
 import { Channel } from "twilio-chat/lib/channel";
 import BreakoutRoom from './classes/BreakoutRoom';
 import UserPresence from './classes/UserPresence';
-// Is this one needed?
-// import ProgramItem from "./classes/ProgramItem";
-
-type UserProfile = any
-type ClowdrInstance = any
-type SocialSpace = any
-type Role = any
+import UserProfile from './classes/UserProfile';
+import ClowdrInstance from './classes/ClowdrInstance';
+import SocialSpace from './classes/SocialSpace';
+import Role from './classes/Role';
 
 export type UserSessionToken = string
 
@@ -53,7 +50,6 @@ export interface ClowdrState {
     roles: Array<Role>;
     programCache: ProgramCache;
     helpers: ClowdrStateHelpers;
-    getLiveChannel: any;
     chatClient: ChatClient;
     activeSpace: SocialSpace;
     getUserProfile(authorID: string, arg1: (u: any) => void): any;   // ???

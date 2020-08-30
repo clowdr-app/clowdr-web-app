@@ -5,6 +5,7 @@ import { Button, Card, message, Tooltip } from "antd";
 import { EditOutlined, SaveOutlined } from '@ant-design/icons';
 import Parse from "parse";
 import { ClowdrState } from "../ClowdrTypes";
+import assert from "assert";
 
 // Import TinyMCE
 require('tinymce/tinymce');
@@ -61,6 +62,8 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
     constructor(props: GuardedLandingProps) {
         super(props);
 
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         let text = this.props.auth.currentConference && this.props.auth.currentConference.get("landingPage") ?
             this.props.auth.currentConference.get("landingPage") : defaultText;
         let privateText = undefined;
@@ -76,6 +79,8 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
     }
 
     async componentDidMount() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         if (this.props.auth.isAdmin) {
             let loggedInConfig = this.props.auth.currentConference.get("loggedInText");
             if (!loggedInConfig) {
@@ -94,6 +99,8 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
     }
 
     onSavePublicDesc() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         this.setState({ isEditingPublicDesc: false });
         console.log('Will save...');
         this.props.auth.currentConference.set("landingPage", this.state.text);
@@ -114,6 +121,8 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
     }
 
     async onSavePrivateDesc() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         this.setState({ isEditingPrivateDesc: false });
         console.log('Will save...');
         this.props.auth.currentConference.get("loggedInText").set("value", this.state.privateText);

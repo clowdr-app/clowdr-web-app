@@ -5,6 +5,7 @@ import Parse from "parse";
 import { AuthUserContext } from "../../Session";
 import { ClowdrState } from '../../../ClowdrTypes';
 import { UploadChangeParam, RcFile } from 'antd/lib/upload';
+import assert from 'assert';
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
@@ -68,6 +69,8 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
     }
 
     onCreate(values: RegistrationSchema) {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         var _this = this;
 
         let exists = this.state.regs.find(r => r.get("email") === values.email)
@@ -131,6 +134,8 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
     }
 
     download() {
+        assert(this.props.auth.currentConference, "Current conference is null");
+
         let query = new Parse.Query("Registration");
         query.equalTo("conference", this.props.auth.currentConference.id);
         query.addDescending("updatedAt")

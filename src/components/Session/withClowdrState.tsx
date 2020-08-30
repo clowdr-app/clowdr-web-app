@@ -12,7 +12,7 @@ import UserPresence from '../../classes/UserPresence';
 import SocialSpace from '../../classes/SocialSpace';
 import ClowdrInstance from '../../classes/ClowdrInstance';
 import LiveActivity from '../../classes/LiveActivity';
-import { assert } from '../../Util';
+import assert from 'assert';
 import { MaybeParseUser, MaybeClowdrInstance, ClowdrStateHelpers } from "../../ClowdrTypes";
 
 interface Props {
@@ -192,7 +192,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         async updateMyPresence(presence: UserPresence) {
-            assert(this.state.userProfile);
+            assert(this.state.userProfile, "User profile is null");
             this.presences[this.state.userProfile.id] = presence;
             for (let presenceWatcher of this.presenceWatchers) {
                 presenceWatcher.setState({ presences: this.presences });
@@ -200,7 +200,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         async createOrOpenDM(profileOfUserToDM: UserProfile) {
-            assert(this.state.userProfile != null);
+            assert(this.state.userProfile, "User profile is null");
             if (profileOfUserToDM.id === this.state.userProfile.id) {
                 // Prevent DM'ing oneself
                 return;
@@ -228,7 +228,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 }
             }
 
-            assert(this.state.currentConference);
+            assert(this.state.currentConference, "Current conference is null");
             console.log("calling create DM")
             let res = await Parse.Cloud.run("chat-createDM", {
                 confID: this.state.currentConference.id,
@@ -334,7 +334,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             if (!user)
                 user = this.state.user;
             if (!userProfile) {
-                assert(this.state.userProfile != null);
+                assert(this.state.userProfile, "User profile is null");
                 userProfile = this.state.userProfile;
             }
             this.subscribeToPublicRooms()
@@ -405,7 +405,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
             if (!this.state.activeSpace || spaceName !== this.state.activeSpace.get("name")) {
                 if (!userProfile) {
-                    assert(this.state.userProfile != null);
+                    assert(this.state.userProfile, "User profile is null");
                     userProfile = this.state.userProfile;
                 }
 
@@ -509,13 +509,15 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                                 let defaultConferenceName = _this.getDefaultConferenceName();
                                 let confQ = new Parse.Query("ClowdrInstance")
                                 confQ.equalTo("conferenceName", defaultConferenceName);
-                                preferredConference = await confQ.first();
+                                conf = await confQ.first() as (ClowdrInstance | null);
+                                if (!conf) {
+                                    console.error("Default conference doesn't exist in the database!");
+                                    throw new Error("Defalt conference doesn't exist in the database.");
+                                }
                             }
                             else {
-                                conf = validConferences.find((c) => preferredConference && c.id === preferredConference.id) || null;
-                                if (!conf) {
-                                    conf = validConferences[0];
-                                }
+                                conf = validConferences.find((c) => c.id === preferredConference.id)
+                                    || validConferences[0];
                             }
 
                             let profileQ = new Parse.Query(UserProfile);
@@ -523,7 +525,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                             profileQ.equalTo("user", user);
                             profileQ.include("tags");
                             activeProfile = await profileQ.first() || null; // TODO
-                            assert(activeProfile != null);
+                            assert(activeProfile, "Active profile is null");
                             sessionStorage.setItem("activeProfileID", activeProfile.id);
 
                             window.location.reload(false);
@@ -551,7 +553,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                             await _this.setSocialSpace(spacesByName['Lobby'], user, activeProfile);
                             await _this.createSocialSpaceSubscription(user, activeProfile);
                         } catch (err) {
-                            console.log("[withAuth]: warn: " + err);
+                            console.warn("[withAuth]: warn", err);
                         }
 
                         let finishedStateFn: ((value?: unknown) => void) | null = null;
@@ -586,13 +588,13 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         _this.forceUpdate();
                         return user;
                     } catch (err) {
-                        console.log("[withAuth]: err: " + err);
+                        console.error("[withAuth]: err", err);
                         //TODO uncomment
                         try {
                             _this.setState({ loading: false, user: null });
                             await Parse.User.logOut();
                         } catch (err2) {
-                            console.log(err2);
+                            console.error(err2);
                         }
 
                         // TODO: This is less than ideal - but because App.js is unrouted,
@@ -639,6 +641,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         getDefaultConferenceName() {
             let defaultConferenceName = process.env.REACT_APP_DEFAULT_CONFERENCE;
             let hostname = window.location.hostname;
+            // TODO: Ed: This seems like a pretty flaky way to detect the conference name
             if (hostname && (hostname.endsWith("clowdr.org") || hostname.endsWith("clowdr.internal"))) {
                 let confHostname = hostname.substring(0, hostname.indexOf('.'));
                 defaultConferenceName = confHostname.substring(0, confHostname.indexOf('2'));

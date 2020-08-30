@@ -71,12 +71,18 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
     }
 
     initConference() {
-        const data = { conference: this.props.auth.currentConference.id };
+        if (!this.props.auth.currentConference) {
+            throw new Error("Cannot init conference: current conference is null!");
+        }
+
+        let currentConferenceId = this.props.auth.currentConference.id;
+        const data = { conference: currentConferenceId };
         Parse.Cloud.run("init-conference-2", data).then(response => {
-            console.log('[Admin/Config]: successfully initialized conference ' + this.props.auth.currentConference.id);
+            // Note: By this point, props may have change and so we cannot rely
+            // on `this.props.auth.currentConference.id` to provide the ID.
+            console.log('[Admin/Config]: successfully initialized conference ' + currentConferenceId);
             this.setState({ initialized: true });
         }).catch(err => console.log('[Admin/Config]: error in initializing conference: ' + err));
-
     }
 
     render() {
@@ -304,6 +310,10 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
         };
 
         const newConfig = () => {
+            if (!this.props.auth.currentConference) {
+                throw new Error("Cannot generate new conference config: current conference is null!");
+            }
+
             const Config = Parse.Object.extend("InstanceConfiguration");
             const config = new Config();
             config.set("key", "Please enter a name");

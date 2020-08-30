@@ -2,11 +2,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// TS: IS this already defined somewhere else??
-export function assert(input: any): asserts input { // <-- not a typo
-    if (!input) throw new Error('Assertion failed!');
-}
-
 export type PropertyNames<S, T> = {
     [K in keyof S]: S[K] extends T ? K : never;
 }[keyof S];

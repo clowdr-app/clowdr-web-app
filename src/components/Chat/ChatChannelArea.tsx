@@ -10,6 +10,7 @@ import { ChannelInfo } from "../../classes/ChatClient"
 import { intersperse } from "../../Util";
 import { RouteComponentProps, withRouter } from "react-router";
 import { ClowdrState } from "../../ClowdrTypes";
+import assert from "assert";
 
 interface ChatChannelAreaProps extends RouteComponentProps {
     sid: string;
@@ -69,6 +70,7 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
             let p1 = chat.conversation.get("member1");
             let p2 = chat.conversation.get("member2");
             let profileID = p1.id;
+            assert(this.props.appState.userProfile, "userProfile is null");
             if (profileID === this.props.appState.userProfile.id)
                 profileID = p2.id;
             this.setState({
@@ -159,6 +161,7 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
         if (dat.channel.type === 'private') {
             this.setState({ newVideoChatLoading: true });
             try {
+                assert(this.props.appState.currentConference, "Current conference is null");
                 let res = await Parse.Cloud.run("chat-getBreakoutRoom", {
                     conference: this.props.appState.currentConference.id,
                     sid: this.props.sid,

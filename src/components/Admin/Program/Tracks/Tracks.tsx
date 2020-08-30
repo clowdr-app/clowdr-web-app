@@ -11,6 +11,7 @@ import {
 import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { RadioChangeEvent } from "antd/lib/radio";
 import { Store } from 'antd/lib/form/interface';
+import assert from 'assert';
 
 interface ProgramTracksProps {
     auth: ClowdrState;
@@ -396,6 +397,8 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
         };
 
         const newTrack = (): void => {
+            assert(this.props.auth.currentConference, "Current conference is null");
+
             let data = {
                 clazz: "ProgramTrack",
                 conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
