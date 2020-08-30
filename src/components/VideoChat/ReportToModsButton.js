@@ -129,7 +129,7 @@ class ReportToModsButton extends React.Component {
                                             message: values.message,
                                             participants: participantIDArray,
                                             identity: idToken,
-                                            slackTeam: this.props.auth.currentConference.get("slackWorkspace"),
+                                            conference: this.props.auth.currentConference.id,
                                         }),
                                         headers: {
                                             'Content-Type': 'application/json'

@@ -99,7 +99,6 @@ class NewRoomForm extends React.Component {
                                     mode: 'group',
                                     identity: idToken,
                                     socialSpace: values.socialSpace,
-                                    slackTeam: this.props.auth.currentConference.get("slackWorkspace"),
                                     conference: this.props.auth.currentConference.id
                                 }),
                                 headers: {

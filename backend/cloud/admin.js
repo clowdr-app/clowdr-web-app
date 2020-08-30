@@ -94,30 +94,9 @@ async function createSocialSpaces(conf){
 
 }
 
-async function getOrCreateRole(confID, roleSuffix){
-    let conferencePrivQ = new Parse.Query(Parse.Role);
-    conferencePrivQ.equalTo("name",confID+"-"+roleSuffix);
-    let confPriv = await conferencePrivQ.first({useMasterKey: true});
-    if(!confPriv){
-        let roleACL = new Parse.ACL();
-        roleACL.setPublicReadAccess(true);
-        confPriv = new Parse.Role(confID+"-"+roleSuffix, roleACL);
-        await confPriv.save({},{useMasterKey: true});
-    }
-    return confPriv;
-
-}
-async function createDefaultRoles(conf) {
-    let confRole = await getOrCreateRole(conf.id, "conference")
-    let modRole = await getOrCreateRole(conf.id, "moderator")
-    let managerRole = await getOrCreateRole(conf.id, "manager")
-    let adminRole = await getOrCreateRole(conf.id, "admin")
-}
-
 var privilegeRoles = {
     "createVideoRoom": null,
     "chat": null,
-    "access-from-slack": null,
     "createVideoRoom-persistent": null,
     "createVideoRoom-group": null,
     "createVideoRoom-smallgroup": null,
@@ -255,9 +234,9 @@ async function activate(instance) {
                     let role = new Parse.Role(r, roleACL);
                     let users = role.relation('users');
                     users.add(u2);
-                    roles.push(role)    
+                    roles.push(role)
                 });
-                        
+
                 try {
                     await Parse.Object.saveAll(roles, {useMasterKey: true});
                     console.log('[activate]: Roles created successfully');

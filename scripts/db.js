@@ -111,7 +111,6 @@ async function addRequiredData() {
     await file.save();
     instance.set('headerImage', file);
 
-    instance.set('isIncludeAllFeatures', true);
     instance.set("landingPage", defaultText)
 
     let acl = new Parse.ACL();

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Form, Input, Popconfirm, Space, Spin, Table, Checkbox, Alert } from "antd";
+import { Button, Form, Input, Popconfirm, Space, Spin, Table, Alert } from "antd";
 import Parse from "parse";
 import {
     CheckCircleTwoTone,
@@ -63,10 +63,6 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
     componentWillUnmount() {
     }
 
-    onChangeFeatures(record: Parse.Object) {
-        record.set("isIncludeAllFeatures", !record.get("isIncludeAllFeatures"));
-    }
-
     render() {
         // Set up editable table cell
         const EditableCell: React.FC<EditableCellProps> = ({
@@ -90,15 +86,6 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 case ('adminEmail'):
                     inputNode = <Input />;
                     break;
-                case ('isIncludeAllFeatures'):
-                    inputNode = (
-                        <span title="All goodies?"><Checkbox
-                            defaultChecked={record.get("isIncludeAllFeatures")}
-                            onChange={this.onChangeFeatures.bind(this, record)}
-                        >
-                        </Checkbox></span>
-                    );
-                    break;
                 default:
                     inputNode = null;
                     break;
@@ -109,11 +96,11 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     {editing ? (
                         <Form.Item
                             name={dataIndex}
-                            valuePropName={dataIndex === 'isIncludeAllFeatures' ? "checked" : "value"}
+                            valuePropName={"value"}
                             style={{
                                 margin: 0,
                             }}
-                            rules={dataIndex === "isIncludeAllFeatures" ? [] : [
+                            rules={[
                                 {
                                     required: true,
                                     message: `Please Input ${title}!`,
@@ -193,14 +180,12 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     let instance: Parse.Object | undefined = newData.find(i => i.id === id);
                     if (instance) {
                         instance.set("conferenceName", row.conferenceName);
-                        instance.set("isIncludeAllFeatures", row.isIncludeAllFeatures);
                         instance.set("adminName", row.adminName);
                         instance.set("adminEmail", row.adminEmail);
                         let data = {
                             id: instance.id,
                             conferenceName: instance.get('conferenceName'),
                             shortName: instance.get('conferenceName').replace(" ", ""),
-                            isIncludeAllFeatures: instance.get('isIncludeAllFeatures'),
                             adminName: instance.get('adminName'),
                             adminEmail: instance.get('adminEmail')
                         }
@@ -240,15 +225,6 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     },
                     render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("conferenceName")}</span>,
                     key: 'conferenceName',
-                },
-                {
-                    title: 'All features',
-                    dataIndex: 'isIncludeAllFeatures',
-                    editable: true,
-                    width: '5%',
-                    //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
-                    render: (_: string, record: Parse.Object): JSX.Element => <Checkbox checked={!!record.get("isIncludeAllFeatures")} disabled />,
-                    key: 'isIncludeAllFeatures',
                 },
                 {
                     title: 'Admin Name',
@@ -374,7 +350,6 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
             let data = {
                 conferenceName: "NEW CONFERENCE " + Math.floor(Math.random() * 10000).toString(),
                 shortName: "NEWCONFERENCE",
-                isIncludeAllFeatures: true,
                 adminName: "ADMIN PERSON",
                 adminEmail: "someone@somewhere",
                 isInitialized: false

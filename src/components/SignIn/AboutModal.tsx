@@ -31,7 +31,7 @@ class WelcomePortal extends React.Component<WelcomePortalProps, WelcomePortalSta
                 welcomeText = <Typography.Paragraph>CLOWDR is an open-source tool to support virtual conferences,
                 and is currently in beta testing.
                 CLOWDR allows conference participants to easily create and join video calls with each other
-                using only a browser and your existing slack account.
+                using only a browser.
                 CLOWDR lets you create public rooms (visible to any conference attendee) or private rooms
                 (visible only to attendees that you allow).
                 CLOWDR lets you see which rooms your colleagues are in

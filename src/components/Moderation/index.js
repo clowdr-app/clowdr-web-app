@@ -23,7 +23,7 @@ class Moderation extends React.Component {
                 method: 'POST',
                 body: JSON.stringify({
                     identity: idToken,
-                    conference: this.props.auth.currentConference.get("slackWorkspace"),
+                    conference: this.props.auth.currentConference.id,
                     profileID: item.key,
                     isBan: (item.isBanned === "No")
                 }),
@@ -63,7 +63,6 @@ class Moderation extends React.Component {
         allUsers = results.map(item => ({
             key: item.id,
             displayName: item.get("displayName"),
-            slackUID: item.get("slackID"),
             email: (item.get("user") ? item.get("user").get("email") : undefined),
             isBanned: item.get('isBanned') ? "Yes" : "No"
         }))
@@ -81,7 +80,6 @@ class Moderation extends React.Component {
                 allUsers = allUsers.concat(results.map(item => ({
                     key: item.id,
                     displayName: item.get("displayName"),
-                    slackUID: item.get("slackID"),
                     email: (item.get("user") ? item.get("user").get("email") : undefined),
                     isBanned: item.get('isBanned') ? "Yes" : "No"
                 })));

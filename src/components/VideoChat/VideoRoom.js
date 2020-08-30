@@ -107,7 +107,6 @@ class VideoRoom extends Component {
                     body: JSON.stringify({
                         room: room.id,
                         identity: idToken,
-                        conf: conf.get("slackWorkspace"),
                         conference: conf.id
                     }),
                     headers: {
@@ -162,7 +161,7 @@ class VideoRoom extends Component {
             , {
                 method: 'POST',
                 body: JSON.stringify({
-                    conference: this.props.clowdrAppState.currentConference.get("slackWorkspace"),
+                    conference: this.props.clowdrAppState.currentConference.id,
                     identity: idToken,
                     room: this.state.room.id,
                 }),
@@ -202,10 +201,10 @@ class VideoRoom extends Component {
             let roomQuery = new Parse.Query(BreakoutRoom);
             room = await roomQuery.get(parseRoomID);
         } else {
-            let slackQuery = new Parse.Query(ClowdrInstance);
-            slackQuery.equalTo("conferenceName", confName)
+            let confQuery = new Parse.Query(ClowdrInstance);
+            confQuery.equalTo("conferenceName", confName)
             let roomQuery = new Parse.Query(BreakoutRoom);
-            roomQuery.matchesQuery("conference", slackQuery)
+            roomQuery.matchesQuery("conference", confQuery)
             roomQuery.equalTo("title", roomID);
             roomQuery.include("members");
             roomQuery.include("conference");
@@ -284,7 +283,6 @@ class VideoRoom extends Component {
                     body: JSON.stringify({
                         room: room.id,
                         identity: idToken,
-                        conf: room.get("conference").get("slackWorkspace"),
                         conference: room.get("conference").id
                     }),
                     headers: {
@@ -429,7 +427,7 @@ class VideoRoom extends Component {
                     roomID: this.state.room.id,
                     identity: idToken,
                     add: !this.state.watchedByMe,
-                    slackTeam: this.props.clowdrAppState.currentConference.get("slackWorkspace"),
+                    conference: this.props.clowdrAppState.currentConference.id,
                 }),
                 headers: {
                     'Content-Type': 'application/json'
@@ -493,10 +491,6 @@ class VideoRoom extends Component {
                 description = <span>Error message: {this.state.error}</span>
             }
             return <Alert message="Invalid room." description={description} type="error" />
-        }
-        if (this.state.nameOfWorkspace) {
-            return <div>One last step! Please log in with slack in the {this.state.nameOfWorkspace} workspace and typing
-                `/video {this.state.meetingName}`, then clicking the "Join" link to get back to the right room.</div>
         }
         if (!this.state.meetingName || !this.state.token) {
             return <div><Spin />Loading...</div>
@@ -833,7 +827,7 @@ class RoomVisibilityController extends React.Component {
                     roomID: this.props.roomID,
                     users: users,
                     identity: idToken,
-                    slackTeam: this.props.clowdrAppState.currentConference.get("slackWorkspace"),
+                    conference: this.props.clowdrAppState.currentConference.id,
                 }),
                 headers: {
                     'Content-Type': 'application/json'

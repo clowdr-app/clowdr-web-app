@@ -35,7 +35,6 @@ interface State {
         user?: User,
         userProfile?: UserProfile,
         ignoreChatChannel?: boolean) => void;
-    getConferenceBySlackName: any;
     subscribeToBreakoutRooms: any;
     cancelBreakoutRoomsSubscription: any;
     setActiveRoom: any;
@@ -167,7 +166,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 currentRoom: null,
                 refreshUser: this.refreshUser.bind(this),
                 setSocialSpace: this.setSocialSpace.bind(this),
-                getConferenceBySlackName: this.getConferenceBySlackName.bind(this),
                 setActiveRoom: this.setActiveRoom.bind(this),
                 currentConference: null,
                 activeRoom: null,
@@ -281,13 +279,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             confQ.equalTo("conferenceName", confName);
             let res = await confQ.first();
             this.refreshUser(res, true);
-            return res;
-        }
-
-        async getConferenceBySlackName(teamId: string) {
-            let confQ = new Parse.Query("ClowdrInstance");
-            confQ.equalTo("slackWorkspace", teamId);
-            let res = await confQ.first();
             return res;
         }
 

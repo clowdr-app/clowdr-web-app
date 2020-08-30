@@ -247,7 +247,6 @@ class Lobby extends React.Component {
                 body: JSON.stringify({
                     room: values.title,
                     identity: idToken,
-                    slackTeam: this.props.auth.currentConference.get("slackWorkspace"),
                     conference: this.props.auth.currentConference.id
                 }),
                 headers: {

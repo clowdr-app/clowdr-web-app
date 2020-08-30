@@ -15,7 +15,6 @@ interface UsersListProps {
 interface ManagedUser {
     key: string,
     displayName: string,
-    slackUID: string,
     user_id: string,
     email: string | undefined,  // TS: Maybe not string??
     isBanned: "Yes" | "No"
@@ -139,7 +138,6 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         let allUsers: ManagedUser[] = results.map((item: QueryResult) => ({
             key: item.id,
             displayName: item.get("displayName"),
-            slackUID: item.get("slackID"),
             // TS: The unsafe "as" coercion is ugly -- is there a better way??
             email: (item.get("user") ? (item.get("user") as QueryResult).get("email") : undefined),
             isBanned: item.get('isBanned') ? "Yes" : "No"
@@ -158,7 +156,6 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 allUsers = allUsers.concat(results.map(item => ({
                     key: item.id,
                     displayName: item.get("displayName"),
-                    slackUID: item.get("slackID"),
                     user_id: item.get("user").id,
                     email: (item.get("user") ? item.get("user").get("email") : undefined),
                     isBanned: item.get('isBanned') ? "Yes" : "No"

@@ -15,7 +15,6 @@ import Moderation from "./components/Moderation";
 
 import { Program } from "./components/Program";
 import VideoRoom from "./components/VideoChat/VideoRoom"
-import SlackToVideo from "./components/Slack/slackToVideo"
 
 import { withAuthentication } from "./components/Session";
 
@@ -70,7 +69,6 @@ class App extends Component {
         this.chatPaneRef = React.createRef();
         // if(this.props.match.)
         this.state = {
-            conference: null,
             showingLanding: this.props.clowdrAppState.showingLanding,
             socialCollapsed: false,
             chatCollapsed: false,
@@ -78,20 +76,10 @@ class App extends Component {
             dirty: false,
             isShowOtherPanes: false,
         }
-
-        if (window.location.pathname.startsWith("/fromSlack") && !this.props.clowdrAppState.user) {
-            this.state.isMagicLogin = true;
-        }
     }
 
     dirty() {
         this.setState({ dirty: !this.state.dirty })
-    }
-
-    isSlackAuthOnly() {
-        if (!this.state.conference)
-            return true;
-        return !this.state.conference.get("isIncludeAllFeatures");
     }
 
     onLogoUpload(file) {
@@ -129,14 +117,14 @@ class App extends Component {
     }
 
     siteHeader() {
-        if (!this.state.conference) {
+        if (!this.props.clowdrAppState.currentConference) {
             return <GenericHeader />
         } else {
-            let headerImage = this.state.conference.get("headerImage");
-            let headerText = this.state.conference.get("headerText");
+            let headerImage = this.props.clowdrAppState.currentConference.get("headerImage");
+            let headerText = this.props.clowdrAppState.currentConference.get("headerText");
             let confSwitcher;
             let clowdrActionButtons;
-            if (this.props.clowdrAppState.validConferences && this.props.clowdrAppState.validConferences.length > 1 && this.isSlackAuthOnly()) {
+            if (this.props.clowdrAppState.validConferences && this.props.clowdrAppState.validConferences.length > 1) {
                 confSwitcher = <Select
                     placeholder="Change conference"
                     onChange={(conf) => {
@@ -193,19 +181,15 @@ class App extends Component {
                 } else
                     return <div className="site-layout-background" style={{ clear: 'both' }}>
                         <div style={{ float: 'left' }}><Typography.Title>
-                            {this.state.conference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</div>
+                            {this.props.clowdrAppState.currentConference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</div>
             }
         }
     }
 
     navBar() {
-        if (this.isSlackAuthOnly()) {
-            return <></>;
-        }
-
         let logo = undefined;
         let className = "logo"
-        let headerImage = this.state.conference.get("headerImage");
+        let headerImage = this.props.clowdrAppState.currentConference.get("headerImage");
         if (headerImage) {
             if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
                 logo = <Upload style={{ verticalAlign: "top" }} accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
@@ -232,9 +216,6 @@ class App extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (!prevProps.clowdrAppState || prevProps.clowdrAppState.currentConference !== this.props.clowdrAppState.currentConference) {
-            this.refreshConferenceInformation();
-        }
         if (this.state.chatHeight !== prevState.chatHeight && this.state.chatHeight !== this.chatSize) {
             this.chatSize = this.state.chatHeight;
             this.chatPaneRef.current.setState({ sizes: ["1", this.state.chatHeight] });
@@ -242,16 +223,11 @@ class App extends Component {
         if (this.props.clowdrAppState.showingLanding !== this.state.showingLanding) {
             this.setState({ showingLanding: this.props.clowdrAppState.showingLanding });
         }
-        if (this.state.isMagicLogin && (!window.location.pathname.startsWith("/fromSlack") || this.props.clowdrAppState.user)) {
-            this.setState({ isMagicLogin: false });
-        }
         if (!this.state.isShowOtherPanes && this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
             this.setState({ isShowOtherPanes: true });
     }
 
     componentDidMount() {
-        if (this.props.clowdrAppState.currentConference)
-            this.refreshConferenceInformation();
         if (this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
             this.setState({ isShowOtherPanes: true });
 
@@ -260,33 +236,11 @@ class App extends Component {
 
     }
 
-    refreshConferenceInformation() {
-        this.setState({ conference: this.props.clowdrAppState.currentConference });
-    }
-
     routes() {
         let baseRoutes = [
             <Route key="finishAccount" exact path="/finishAccount/:userID/:conferenceID/:token" component={AccountFromToken} />,
             <Route key="forgotPassword" exact path="/resetPassword/:userID/:token" component={ForgotPassword} />
         ];
-        if (this.isSlackAuthOnly()) {
-            return <>
-                {baseRoutes}
-                <Route exact path="/" component={Lobby} />
-                <Route exact path="/fromSlack/:team/:token" component={SlackToVideo} />
-                <Route exact path="/video/:conf/:roomName" component={VideoRoom} />
-                <Route exact path="/signout" component={SignOut} />
-                <Route exact path="/lobby" component={Lobby} />
-                <Route exact path="/signin" component={SignIn} />
-                <Route exact path="/about" component={About} />
-                <Route exact path="/help" component={Help} />
-                <Route exact path="/moderation" component={Moderation} />
-
-                <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
-
-                <Route exact path="/admin" component={(props) => <SignIn {...props} dontBounce={true} />} />
-            </>;
-        }
         return <>
             {baseRoutes}
             <Route exact path="/" component={Home} />
@@ -299,7 +253,6 @@ class App extends Component {
             <Route exact path="/exhibits/:track/:style" component={Exhibits} />
             {/* <Route exact path="/exhibits/srcposters" component={SRCPosters}/> */}
 
-            <Route exact path="/fromSlack/:team/:token" component={SlackToVideo} />
             <Route exact path="/video/:parseRoomID" component={VideoRoom} />
 
             <Route exact path="/video/:conf/:roomName" component={VideoRoom} />
@@ -312,7 +265,6 @@ class App extends Component {
             <Route exact path="/account" component={Account} />
             <Route exact path="/videoChat/:roomId" component={VideoChat} />
             <Route exact path="/lobby" component={Lobby} />
-            <Route exact path="/lobby/new/:roomName" component={Lobby} /> {/* Gross hack just for slack */}
             {/* <Route exact path="/signup" component={SignUp}/> */}
             <Route exact path="/signin" component={SignIn} />
             <Route exact path="/signout" component={SignOut} />
@@ -346,13 +298,10 @@ class App extends Component {
         this.setState({ lobbyWidth: w });
     }
     render() {
-        if (this.state.isMagicLogin) {
-            return <Route exact path="/fromSlack/:team/:token" component={SlackToVideo} />
-        }
         if (this.state.showingLanding) {
             return <GenericLanding />
         }
-        if (!this.state.conference) {
+        if (!this.props.clowdrAppState.currentConference) {
             if (this.state.loadingUser) {
                 return <div style={{
                     height: "100vh",

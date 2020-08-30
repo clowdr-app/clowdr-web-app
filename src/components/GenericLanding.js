@@ -14,8 +14,8 @@ export default class GenericLanding extends Component {
 
                         <h1>CLOWDR</h1>
                         <p style={{ marginLeft: 'auto', marginRight: 'auto' }}>
-                            You are not logged in. Please try to log in again from slack by typing /video in any channel.
-                    </p>
+                            You are not logged in. Please try to log in again.
+                        </p>
                     </div>
                 </div>
             </header>

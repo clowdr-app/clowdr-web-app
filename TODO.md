@@ -82,8 +82,6 @@ be a visual indication of which rooms are which size?
 # --------------------------------------------------------------------
 # Unfiled
 
-If we are interested in continuing to use Slack, we should check Zulip as an alternative
-
 comments from the ICSE discussion
 https://docs.google.com/document/d/1m0OoLhmlJNYsCfpd0m993UbABu39UWyOUOa538Yt4iw/edit
 
