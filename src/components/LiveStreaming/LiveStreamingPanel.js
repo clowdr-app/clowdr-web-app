@@ -53,7 +53,7 @@ class LiveStreamingPanel extends Component {
 
         if (this.props.expanded) {
             // console.log("LiveStreamingPanel.componentDidMount: " + this.props.video.get("socialSpace"));
-            this.props.auth.setSocialSpace(null, this.props.video.get("socialSpace"), undefined, undefined, this.props.video.get("isEventFocusedRoom"));
+            this.props.auth.setSocialSpace(this.props.video.get("socialSpace"), undefined, undefined, this.props.video.get("isEventFocusedRoom"));
             this.props.auth.helpers.setGlobalState({ forceChatOpen: true });
             this.props.auth.helpers.setExpandedProgramRoom(this.props.video);
         }
@@ -97,8 +97,7 @@ class LiveStreamingPanel extends Component {
     componentDidUpdate(prevProps) {
         if (this.state.expanded !== this.props.expanded) {
             if (this.props.expanded) {
-                if (this.props.auth.activeSpace !== this.props.video.get("socialSpace"))
-                    this.props.auth.setSocialSpace(null, this.props.video.get("socialSpace"), this.props.video.get("isEventFocusedRoom"));
+                this.props.auth.setSocialSpace(this.props.video.get("socialSpace"), undefined, undefined, this.props.video.get("isEventFocusedRoom"));
                 this.props.auth.helpers.setGlobalState({ forceChatOpen: true });
                 this.props.auth.helpers.setExpandedProgramRoom(this.props.video);
             }

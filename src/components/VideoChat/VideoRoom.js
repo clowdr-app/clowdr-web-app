@@ -74,7 +74,6 @@ class VideoRoom extends Component {
         this.setState({ isMounted: false });
         this.props.clowdrAppState.helpers.setGlobalState({ currentRoom: null });
         this.props.clowdrAppState.setSocialSpace("Lobby");
-
     }
 
     async joinCallFromProps() {
@@ -256,8 +255,6 @@ class VideoRoom extends Component {
                 // window.location.reload(false);
             }
         }, timeout);
-        // if(room.get("socialSpace"))
-        //     this.props.clowdrAppState.setSocialSpace(null,room.get("socialSpace"));
         if (!this.mounted)
             return;
         console.log("Joining room " + room.id + ", setting chat channel: " + room.get("twilioChatID"))

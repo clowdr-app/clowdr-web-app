@@ -24,38 +24,42 @@ interface FlairUIData { color: string, tooltip: string }
 interface AllFlairData { value: string, color: string, tooltip: string, id: string, priority: number }
 
 interface State {
-    // TS: Fill in the types!
-    user: any,
-    users: any,
-    loading: boolean,
-    roles: any,
-    currentRoom: any,
-    refreshUser: (instance?: MaybeClowdrInstance, forceRefresh?: boolean) => Promise<MaybeParseUser>,
-    getChatClient: any,
-    setSocialSpace: any,
-    getConferenceBySlackName: any,
+    // TODO: Fill in the types
+    user: any;
+    users: any;
+    loading: boolean;
+    roles: Array<Parse.Role<Parse.Attributes>>;
+    currentRoom: any;
+    refreshUser: (instance?: MaybeClowdrInstance, forceRefresh?: boolean) => Promise<MaybeParseUser>;
+    getChatClient: any;
+    setSocialSpace: (spaceOrName: string | SocialSpace,
+        user?: User,
+        userProfile?: UserProfile,
+        ignoreChatChannel?: boolean) => void;
+    getConferenceBySlackName: any;
     subscribeToBreakoutRooms: any;
     cancelBreakoutRoomsSubscription: any;
-    setActiveRoom: any,
-    currentConference: ClowdrInstance | undefined | null,  // TS: Really??
-    activeRoom: any,
-    helpers: any,
-    chatClient: any,
-    parseLive: any,
-    presences: any,
-    userProfile: UserProfile | null,  // TS: Or should it be undefined??
-    permissions: any,
-    leftSidebar: any,
-    activeSpace: any,
-    spaces: any,
-    chatChannel: any,
-    programCache: any,
+    setActiveRoom: any;
+    currentConference: ClowdrInstance | null;
+    activeRoom: any;
+    helpers: any;
+    chatClient: ChatClient;
+    parseLive: any;
+    presences: any;
+    userProfile: UserProfile | null;
+    permissions: any;
+    leftSidebar: any;
+    activeSpace: any;
+    spaces: any;
+    chatChannel: any;
+    programCache: any;
     isAdmin: boolean;
     isModerator: boolean;
     isManager: boolean;
     isClowdrAdmin: boolean;
     flairColors: Record<string, FlairUIData>;
     allFlair: AllFlairData[];  // TS: Call it allFlairs??
+    validConferences: Array<ClowdrInstance>;
 }
 
 type RoomID = string    // TS: Doesn't belong here?
@@ -106,6 +110,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         isClowdrAdmin: boolean;
         activeRoomSubscribers: React.Component[];
         activePrivateVideoRooms: BreakoutRoom[];
+        currentConference: ClowdrInstance | null = null;
 
         constructor(props: Props) {
             super(props);
@@ -142,7 +147,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 setExpandedProgramRoom: this.setExpandedProgramRoom.bind(this),
                 presences: this.presences,
                 createOrOpenDM: this.createOrOpenDM.bind(this),
-                getRoleByName: this.getRoleByName.bind(this),
                 setActiveConference: this.setActiveConference.bind(this),
                 setGlobalState: this.setState.bind(this),//well that seems dangerous...
                 // ifPermission: this.ifPermission.bind(this),
@@ -154,7 +158,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 getDefaultConferenceName: this.getDefaultConferenceName.bind(this)
             }
 
-            this.state = {   // (JS usage question: Should we be initializing things with null, or undefined???)
+            this.state = {
                 user: null,
                 users: {},
                 loading: true,
@@ -165,7 +169,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 setSocialSpace: this.setSocialSpace.bind(this),
                 getConferenceBySlackName: this.getConferenceBySlackName.bind(this),
                 setActiveRoom: this.setActiveRoom.bind(this),
-                currentConference: undefined,
+                currentConference: null,
                 activeRoom: null,
                 helpers: exports,
                 subscribeToBreakoutRooms: this.subscribeToBreakoutRooms.bind(this),
@@ -186,6 +190,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 isClowdrAdmin: false,
                 flairColors: {},
                 allFlair: [],
+                validConferences: [],
             };
         }
 
@@ -219,7 +224,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     return false;
                 })
                 if (found) {
-                    // @ts-ignore    What is its type?
                     this.state.chatClient.openChat(found.channel.sid);
                     return;
                 }
@@ -274,30 +278,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         async setActiveConference(conf: Parse.Object) {
             console.log('[wA]: changing conference to ' + conf.get("conferenceName"));
             this.refreshUser(conf, true);
-        }
-
-        async getRoleByName(role: Parse.Object) {
-            // @ts-ignore  TS: What is the result of find??
-            let existingRoles = this.state.roles.find(i => i.get("name") === role);
-            if (existingRoles)
-                return existingRoles;
-            //Make sure to refresh first...
-            const roleQuery = new Parse.Query(Parse.Role);
-            roleQuery.equalTo("users", this.state.user);
-            const roles = await roleQuery.find();
-            existingRoles = roles.find(i => i.get("name") === role);
-            if (existingRoles) {
-                this.setState({ roles: roles });
-                return existingRoles;
-            }
-            if (!existingRoles) {
-                //maybe we are a mod.
-                let roleQ = new Parse.Query(Parse.Role);
-                roleQ.equalTo("name", role);
-                existingRoles = await roleQ.first();
-                return existingRoles;
-            }
-            return null;
         }
 
         setActiveRoom(room: Parse.Object) {
@@ -405,37 +385,41 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             this.updatePresences();
         }
 
-        // @Jon: What is this???
-        //Jon: This should no longer be needed...
-        currentConference(arg0: string, currentConference: ClowdrInstance) {
-            throw new Error("Method not implemented.");
-        }
-
-        /*
-        Call this to set the user's current social space.
-        Provide either the spaceName or the space object.
+        /**
+         * Sets the user's current social space.
          */
-        async setSocialSpace(spaceName: string, space: SocialSpace, user: User, userProfile: UserProfile, ignoreChatChannel?: boolean) {
-            // let name = space ? space.get("name") : "-"
-            // console.log(`setSocialSpace: spaceName=${spaceName} space=${space} (${name}) ignoreChannel=${ignoreChatChannel}`);
-            // console.trace();
-            if (!this.state.user && !user) // user is not logged in
-                return
-            if (space)
-                spaceName = space.get("name");
+        async setSocialSpace(
+            spaceOrName: string | SocialSpace,
+            user?: User,
+            userProfile?: UserProfile,
+            ignoreChatChannel: boolean = false) {
+
+            let spaceName: string;
+            let space: SocialSpace;
+            if (typeof spaceOrName === "string") {
+                spaceName = spaceOrName;
+                space = this.state.spaces[spaceName];
+            }
+            else {
+                space = spaceOrName;
+                spaceName = spaceOrName.get("name");
+            }
+
+            if (!user) {
+                if (!this.state.user) {
+                    // user is not logged in
+                    return;
+                }
+
+                user = this.state.user;
+            }
+
             if (!this.state.activeSpace || spaceName !== this.state.activeSpace.get("name")) {
-                if (!user)
-                    user = this.state.user;
                 if (!userProfile) {
                     assert(this.state.userProfile != null);
                     userProfile = this.state.userProfile;
                 }
-                if (!space && this.state.spaces) {
-                    space = this.state.spaces[spaceName];
-                }
-                if (!space) {
-                    throw new Error("You called setSocialSpace but provided no space! Got: " + spaceName + " or " + space);
-                }
+
                 if (userProfile.get("presence") &&
                     (!userProfile.get("presence").get("socialSpace") ||
                         userProfile.get('presence').get('socialSpace').id !== space.id)) {
@@ -443,27 +427,26 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     presence.set("socialSpace", space);
                     presence.save();
                 }
-                let stateUpdate = {
-                    activeSpace: space,
-                }
+
                 if (ignoreChatChannel) {
                     this.state.chatClient.disableRightSideChat();
                 }
                 else {
                     this.state.chatClient.setRightSideChat(space.get("chatChannel"));
                 }
-                this.setState(stateUpdate);
+
+                this.setState({
+                    activeSpace: space,
+                });
             }
-            else if (this.state.activeSpace && this.state.activeSpace.get("name") === spaceName) {
-                if (!space && this.state.spaces) {
-                    space = this.state.spaces[spaceName];
-                }
+            else {
                 this.state.chatClient.setRightSideChat(space.get("chatChannel"));
             }
         }
 
         // @ Jon: What would be a better name for this???
         //Jon: I need to refactor all of the chat client stuff, it's full of bad patterns and races left and right. Open to name suggestions, but eventually I want this to return a promise anyway
+        //Ed: Lol
         getChatClient(callback: (_: ChatClient) => void) {
             if (this.chatClient)
                 callback(this.chatClient);
@@ -494,7 +477,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
                         // Valid conferences for this user
                         let profiles = await user.relation("profiles").query().include(["conference", "conference.loggedInText"]).find();
-                        let validConferences = profiles.map(p => p.get("conference"));
+                        let validConferences: ClowdrInstance[] = profiles.map(p => p.get("conference"));
                         // console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
 
                         // Roles for this user
@@ -511,7 +494,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         //Jon: Nope. setState is async, and we need to make sure we read the correct value here that we set above, so don't read from state.
                         let conf = _this.currentConference;
                         let currentProfileID = sessionStorage.getItem("activeProfileID");
-                        let activeProfile: UserProfile | null | undefined = null;  // TS: null | undefined feels like overkill, no?
+                        let activeProfile: UserProfile | null = null;
                         if (currentProfileID) {
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.include("conference");
@@ -551,7 +534,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                                 preferredConference = await confQ.first();
                             }
                             if (preferredConference) {
-                                conf = validConferences.find((c) => preferredConference && c.id === preferredConference.id);
+                                conf = validConferences.find((c) => preferredConference && c.id === preferredConference.id) || null;
                                 if (!conf) {
                                     conf = validConferences[0];
                                 }
@@ -562,8 +545,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                             profileQ.equalTo("conference", conf);
                             profileQ.equalTo("user", user);
                             profileQ.include("tags");
-                            activeProfile = await profileQ.first();
-                            assert(activeProfile !== undefined);
+                            activeProfile = await profileQ.first() || null; // TODO
+                            assert(activeProfile != null);
                             sessionStorage.setItem("activeProfileID", activeProfile.id);
 
                             window.location.reload(false);
@@ -588,8 +571,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         _this.state.chatClient.initChatClient(user, conf, activeProfile, _this);
 
                         try {
-                            // @ts-ignore   TS: I guess change null to ""?
-                            await _this.setSocialSpace(null, spacesByName['Lobby'], user, activeProfile);
+                            await _this.setSocialSpace(spacesByName['Lobby'], user, activeProfile);
                             await _this.createSocialSpaceSubscription(user, activeProfile);
                         } catch (err) {
                             console.log("[withAuth]: warn: " + err);
@@ -599,8 +581,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         let stateSetPromise = new Promise((resolve) => {
                             finishedStateFn = resolve;
                         });
-                        // @ts-ignore   TS: ???
-                        _this.setState((prevState) => {
+                        _this.setState(() => {
                             return ({
                                 spaces: spacesByName,
                                 user: user,
@@ -615,7 +596,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                                 loading: false,
                                 roles: roles,
                                 programCache: new ProgramCache(conf, _this.parseLive),
-                            })
+                            });
                         }, () => {
                             assert(finishedStateFn);
                             finishedStateFn()
@@ -659,12 +640,12 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         await _this.chatClient.shutdown();
                         _this.chatClient = null;
                     }
-                    let conference: ClowdrInstance | null | undefined = null;
+                    let conference: ClowdrInstance | null = null;
                     let defaultConferenceName = _this.getDefaultConferenceName();
                     if (defaultConferenceName) {
                         let confQ = new Parse.Query("ClowdrInstance")
                         confQ.equalTo("conferenceName", defaultConferenceName);
-                        conference = await confQ.first();
+                        conference = await confQ.first() || null;
                     }
                     _this.setState({
                         user: null,
