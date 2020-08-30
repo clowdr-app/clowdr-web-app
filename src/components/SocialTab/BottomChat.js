@@ -76,7 +76,7 @@ export class BottomChat extends React.Component {
         if (!this.triggeredUserLoad) {
             this.setState({ loading: true })
             this.triggeredUserLoad = true;
-            let users = await this.props.auth.programCache.getUserProfiles(null);
+            let users = await this.props.auth.programCache.getUserProfiles();
             const options = Object.keys(users).map(d => {
                 if (!users[d].get('displayName'))
                     return {
@@ -308,7 +308,7 @@ export class BottomChat extends React.Component {
 //             let profileID = p1.id;
 //             if (profileID === this.props.auth.userProfile.id)
 //                 profileID = p2.id;
-//             this.props.auth.programCache.getUserProfileByProfileID(profileID, null).then((profile) => {
+//             this.props.auth.programCache.getUserProfileByProfileID(profileID).then((profile) => {
 //                 this.setState({ title: profile.get("displayName") })
 //             })
 //             return;

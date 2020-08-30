@@ -30,7 +30,7 @@ class CollapsedChatDisplay extends React.Component {
             if (profileID === this.props.auth.userProfile.id)
                 profileID = p2.id;
             this.setState({ title: "Loading..." });
-            this.props.auth.programCache.getUserProfileByProfileID(profileID, null).then((profile) => {
+            this.props.auth.programCache.getUserProfileByProfileID(profileID).then((profile) => {
                 this.setState({ title: profile.get("displayName") })
             })
         } else if (chat.attributes.category === "announcements-global") {

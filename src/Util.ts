@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+export type ParseObject = Parse.Object<Parse.Attributes>;
+
 export type PropertyNames<S, T> = {
     [K in keyof S]: S[K] extends T ? K : never;
 }[keyof S];

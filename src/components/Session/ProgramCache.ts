@@ -1,8 +1,25 @@
-import Parse from "parse";
+import Parse, { LiveQueryClient, LiveQuerySubscription } from "parse";
+import ClowdrInstance from "../../classes/ClowdrInstance";
+import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
+import ProgramRoom from "../../classes/ProgramRoom";
+import { ParseObject } from "../../Util";
 
-
+// TODO: This should be made into a generic cache class parameterised by the
+//       type of the thing it stores. Then have multiple caches for the various
+//       listed uses in the numerous wrapper functions of this existing class.
 export default class ProgramCache {
-    constructor(conference, parseLive) {
+    conference: ClowdrInstance | null;
+    parseLive: Parse.LiveQueryClient;
+    _dataPromises: { [tableName: string]: Promise<any> };
+    _dataResolves: { [tableName: string]: (p: any) => void };
+    _data: { [tableName: string]: ParseObject[] };
+    _dataById: { [tableName: string]: { [k: string]: ParseObject } };
+    _subscriptions: { [tableName: string]: LiveQuerySubscription };
+    _listSubscribers: { [tableName: string]: React.Component[] };
+    _updateSubscribers: { [tableName: string]: { [id: string]: React.Component[] } };
+    _zoomLinks: { [roomId: string]: any };
+
+    constructor(conference: ClowdrInstance | null, parseLive: LiveQueryClient) {
         this.conference = conference;
         this.parseLive = parseLive;
         this._dataPromises = {};
@@ -13,10 +30,11 @@ export default class ProgramCache {
         this._listSubscribers = {};
         this._updateSubscribers = {};
         this._zoomLinks = {};
-        this.getEntireProgram()
+
+        this.getEntireProgram();
     }
 
-    async _fetchTableAndSubscribe(tableName, objToSetStateOnUpdate) {
+    async _fetchTableAndSubscribe(tableName: string, objToSetStateOnUpdate?: React.Component) {
         if (objToSetStateOnUpdate) {
             if (!this._listSubscribers[tableName])
                 this._listSubscribers[tableName] = [];
@@ -41,9 +59,7 @@ export default class ProgramCache {
                 this._data[tableName] = [obj, ...this._data[tableName]];
                 if (this._listSubscribers[tableName]) {
                     for (let subscriber of this._listSubscribers[tableName]) {
-                        let stateUpdate = {};
-                        stateUpdate[tableName + "s"] = this._data[tableName];
-                        subscriber.setState(stateUpdate);
+                        subscriber.setState({ [tableName + "s"]: this._data[tableName] });
                     }
                 }
             });
@@ -53,9 +69,7 @@ export default class ProgramCache {
 
                 if (this._listSubscribers[tableName]) {
                     for (let subscriber of this._listSubscribers[tableName]) {
-                        let stateUpdate = {};
-                        stateUpdate[tableName + "s"] = this._data[tableName];
-                        subscriber.setState(stateUpdate);
+                        subscriber.setState({ [tableName + "s"]: this._data[tableName] });
                     }
                 }
             });
@@ -74,16 +88,12 @@ export default class ProgramCache {
                 */
                 if (this._listSubscribers[tableName]) {
                     for (let subscriber of this._listSubscribers[tableName]) {
-                        let stateUpdate = {};
-                        stateUpdate[tableName + "s"] = this._data[tableName];
-                        subscriber.setState(stateUpdate);
+                        subscriber.setState({ [tableName + "s"]: this._data[tableName] });
                     }
                 }
                 if (this._updateSubscribers[tableName] && this._updateSubscribers[tableName][obj.id]) {
                     for (let subscriber of this._updateSubscribers[tableName][obj.id]) {
-                        let stateUpdate = {};
-                        stateUpdate[tableName] = obj;
-                        subscriber.setState(stateUpdate);
+                        subscriber.setState({ [tableName]: obj });
                     }
                 }
             });
@@ -96,13 +106,13 @@ export default class ProgramCache {
             console.log("Loaded: " + tableName + ", " + data.length)
             if (this._dataResolves[tableName]) {
                 this._dataResolves[tableName](data);
-                this._dataResolves[tableName] = null;
+                delete this._dataResolves[tableName];
             }
         }
         return await this._dataPromises[tableName];
     }
 
-    async getProgramItem(id, component) {
+    async getProgramItem(id: string, component?: React.Component): Promise<ParseObject> {
         await this.getProgramItems();
         if (component) {
             if (!this._updateSubscribers['ProgramItem'])
@@ -114,7 +124,7 @@ export default class ProgramCache {
         return this._dataById['ProgramItem'][id];
     }
 
-    async getProgramSessionEvent(id, component) {
+    async getProgramSessionEvent(id: string, component?: React.Component) {
         await this.getProgramSessionEvents();
         if (component) {
             if (!this._updateSubscribers['ProgramSessionEvent'])
@@ -125,11 +135,11 @@ export default class ProgramCache {
         }
         return this._dataById['ProgramSessionEvent'][id];
     }
-    async getProgramSession(id) {
+    async getProgramSession(id: string) {
         await this.getProgramSessions();
         return this._dataById['ProgramSession'][id];
     }
-    async getProgramTrack(id, component) {
+    async getProgramTrack(id: string, component?: React.Component) {
         await this.getProgramTracks();
         if (component) {
             if (!this._updateSubscribers['ProgramTrack'])
@@ -141,11 +151,9 @@ export default class ProgramCache {
         return this._dataById['ProgramTrack'][id];
     }
 
-
-
-    async getProgramItemByConfKey(confKey, component) {
+    async getProgramItemByConfKey(confKey: string, component?: React.Component) {
         let items = await this.getProgramItems();
-        let item = items.find(v => v.get("confKey") === confKey);
+        let item = items.find((v: any) => v.get("confKey") === confKey);
         if (item) {
             let id = item.id;
             if (component) {
@@ -158,7 +166,7 @@ export default class ProgramCache {
         }
         return item;
     }
-    subscribeComponentToIDOnTable(table, id, component) {
+    subscribeComponentToIDOnTable(table: string, id: string, component?: React.Component) {
         if (component) {
             if (!this._updateSubscribers[table])
                 this._updateSubscribers[table] = {};
@@ -167,24 +175,24 @@ export default class ProgramCache {
             this._updateSubscribers[table][id].push(component);
         }
     }
-    async getProgramRoom(roomID, component) {
+    async getProgramRoom(roomID: string, component?: React.Component) {
         let rooms = await this.getProgramRooms();
-        let room = rooms.find(v => v.id === roomID);
+        let room = rooms.find((v: any) => v.id === roomID);
         if (room) {
             this.subscribeComponentToIDOnTable("ProgramRoom", roomID, component);
         }
         return room;
     }
-    async getProgramPersonByID(personID, component) {
+    async getProgramPersonByID(personID: string, component?: React.Component) {
         let persons = await this.getProgramPersons();
-        let person = persons.find(v => v.id === personID);
+        let person = persons.find((v: any) => v.id === personID);
         if (person) {
             this.subscribeComponentToIDOnTable("ProgramPerson", personID, component);
         }
         return person;
     }
 
-    async getUserProfileByProfileID(id, component) {
+    async getUserProfileByProfileID(id: string, component?: React.Component) {
         await this.getUserProfiles();
         if (component) {
             if (!this._updateSubscribers['UserProfile'])
@@ -196,74 +204,72 @@ export default class ProgramCache {
         return this._dataById['UserProfile'][id];
     }
 
-    unsafeGetProfileByID(id) {
-        return this._dataById['UserProfile'][id];
-    }
-    async getUserProfiles(objToSetStateOnUpdate) {
+    async getUserProfiles(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("UserProfile", objToSetStateOnUpdate);
     }
-    async getAttachmentTypes(objToSetStateOnUpdate) {
+    async getAttachmentTypes(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("AttachmentType", objToSetStateOnUpdate);
     }
-    async getProgramRooms(objToSetStateOnUpdate) {
+    async getProgramRooms(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("ProgramRoom", objToSetStateOnUpdate);
     }
-    async getProgramTracks(objToSetStateOnUpdate) {
+    async getProgramTracks(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("ProgramTrack", objToSetStateOnUpdate);
     }
-    async getProgramPersons(objToSetStateOnUpdate) {
+    async getProgramPersons(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("ProgramPerson", objToSetStateOnUpdate);
     }
-    async getProgramItems(objToSetStateOnUpdate) {
+    async getProgramItems(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("ProgramItem",
             // ['track','breakoutRoom','programSession'],
             objToSetStateOnUpdate);
     }
-    async getProgramSessionEvents(objToSetStateOnUpdate) {
+    async getProgramSessionEvents(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("ProgramSessionEvent",
             objToSetStateOnUpdate);
     }
-    async getProgramSessions(objToSetStateOnUpdate) {
+    async getProgramSessions(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("ProgramSession", objToSetStateOnUpdate);
     }
-    async getZoomHostAccounts(objToSetStateOnUpdate) {
+    async getZoomHostAccounts(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("ZoomHostAccount", objToSetStateOnUpdate);
     }
-    async getZoomRooms(objToSetStateOnUpdate) {
+    async getZoomRooms(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("ZoomRoom", objToSetStateOnUpdate);
     }
-    async getMeetingRegistrations(objToSetStateOnUpdate) {
+    async getMeetingRegistrations(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("MeetingRegistration", objToSetStateOnUpdate);
     }
-    async getProgramTrackByName(trackName) {
+    async getProgramTrackByName(trackName: string) {
         let tracks = await this.getProgramTracks();
-        return tracks.find(v => v.get("name") === trackName);
+        return tracks.find((v: any) => v.get("name") === trackName);
     }
 
-    async getZoomJoinLink(programRoom) {
+    async getZoomJoinLink(programRoom: ProgramRoom) {
         if (this._zoomLinks[programRoom.id]) {
             return this._zoomLinks[programRoom.id];
         }
-
+        // TODO: What is supposed to happen here?
+        throw new Error("Zoom Join Link not in Program Cache. What is supposed to happen here?");
     }
     /*
     This command can't support live query right now, since it would update all
     programItems, not just the ones in the requested track
      */
-    async getProgramItemsByTrackName(trackName) {
+    async getProgramItemsByTrackName(trackName: string) {
         let [items, track] = await Promise.all([this.getProgramItems(),
         this.getProgramTrackByName(trackName)])
-        return items.filter(item => item.get("track") && item.get("track").id === track.id);
+        return items.filter((item: any) => item.get("track") && item.get("track").id === track.id);
     }
 
-    getProgramRoomForEvent(programSessionEvent) {
+    getProgramRoomForEvent(programSessionEvent: ProgramSessionEvent) {
         let s = programSessionEvent.get("programSession");
         let session = this._dataById["ProgramSession"][s.id];
         let room = session.get("room");
         return room;
     }
 
-    async getEntireProgram(objToSetStateOnUpdate) {
+    async getEntireProgram(objToSetStateOnUpdate?: React.Component) {
         let results = await Promise.all([this.getProgramItems(objToSetStateOnUpdate),
         this.getProgramRooms(objToSetStateOnUpdate),
         this.getProgramTracks(objToSetStateOnUpdate),
@@ -278,7 +284,7 @@ export default class ProgramCache {
         }
     }
 
-    cancelSubscription(tableName, obj, idx) {
+    cancelSubscription(tableName: string, obj: any, idx?: string) {
         if (idx) {
             if (this._updateSubscribers[tableName] && this._updateSubscribers[tableName][idx])
                 this._updateSubscribers[tableName][idx] = this._updateSubscribers[tableName][idx].filter(v => v !== obj);

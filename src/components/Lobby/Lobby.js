@@ -362,8 +362,7 @@ class Lobby extends React.Component {
                                         to do so.<br /> Otherwise, you are interrupting a private conversation.</span>}
                                             onConfirm={this.joinCall.bind(this, item)}
                                         >
-                                            <a href="#"
-                                            >{formattedRoom}</a>
+                                            <a href="#">{formattedRoom}</a>
                                         </Popconfirm>
                                     </Tooltip>
                                     </div>;

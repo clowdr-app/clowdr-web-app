@@ -3,20 +3,42 @@ import { Button, Form, Input, Popconfirm, Select, Space, Spin, Table, Alert } fr
 import Parse from "parse";
 import { AuthUserContext } from "../../../Session";
 import { DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
+import { ClowdrState } from '../../../../ClowdrTypes';
+import ProgramTrack from '../../../../classes/ProgramTrack';
+import ProgramPerson from '../../../../classes/ProgramPerson';
+import { ColumnsType } from 'antd/lib/table';
+import assert from 'assert';
+import { Store } from 'antd/lib/form/interface';
 
 const { Option } = Select;
 
-class ProgramItems extends React.Component {
-    constructor(props) {
+interface Props {
+    auth: ClowdrState;
+}
+
+interface State {
+    loading: boolean;
+    alert: string | null;
+    ProgramItems: Store[];
+    ProgramTracks: ProgramTrack[];
+    ProgramPersons: ProgramPerson[];
+    searched: boolean;
+    searchResult: Store[];
+    downloaded: boolean;
+}
+
+class ProgramItems extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.state = {
             loading: true,
-            alert: undefined,
+            alert: null,
             ProgramItems: [],
             ProgramTracks: [],
             ProgramPersons: [],
             searched: false,
-            searchResult: ""
+            searchResult: [],
+            downloaded: false
         };
     }
 
@@ -46,13 +68,15 @@ class ProgramItems extends React.Component {
             editing,
             dataIndex,
             title,
-            inputType,
-            record,
-            index,
             children,
             ...restProps
+        }: {
+            editing: boolean,
+            dataIndex: string,
+            title: string,
+            children: JSX.Element
         }) => {
-            const inputNode = (dataIndex) => {
+            const inputNode = (dataIndex: string) => {
                 if (dataIndex === "title" || dataIndex === "abstract") {
                     return <Input.TextArea autoSize={{ minRows: 2, maxRows: 10 }} />;
                 }
@@ -110,12 +134,12 @@ class ProgramItems extends React.Component {
             const [data, setData] = useState(this.state.ProgramItems);
             const [editingKey, setEditingKey] = useState('');
 
-            const isEditing = record => record.id === editingKey;
+            const isEditing = (record: Store) => record.id === editingKey;
 
-            const onEdit = record => {
-                let currentAuthors = [];
+            const onEdit = (record: Store) => {
+                let currentAuthors: string[] = [];
                 if (record.get("authors")) {
-                    record.get("authors").forEach(a => {
+                    record.get("authors").forEach((a: ProgramPerson) => {
                         currentAuthors.push(a.id);
                     })
                 }
@@ -128,7 +152,7 @@ class ProgramItems extends React.Component {
                 setEditingKey(record.id);
             };
 
-            const onDelete = record => {
+            const onDelete = (record: Store) => {
                 // delete from database
                 let data = {
                     clazz: "ProgramItem",
@@ -138,12 +162,11 @@ class ProgramItems extends React.Component {
                 Parse.Cloud.run("delete-obj", data)
                     .then(c => this.setState({
                         alert: "delete success",
-                        searchResult: this.state.searched ? this.state.searchResult.filter(r => r.id !== record.id) : ""
+                        searchResult: this.state.searched ? this.state.searchResult.filter(r => r.id !== record.id) : []
                     }))
                     .catch(err => {
-                        this.setState({ alert: "delete error" })
-                        this.refreshList();
-                        console.log("[Admin/Items]: Unable to delete: " + err)
+                        this.setState({ alert: "delete error" });
+                        console.log("[Admin/Items]: Unable to delete: " + err);
                     })
 
             }
@@ -154,7 +177,7 @@ class ProgramItems extends React.Component {
             };
 
             // save current editing item
-            const onSave = async id => {
+            const onSave = async (id: string) => {
                 try {
                     const row = await form.validateFields();
                     const newData = [...data];
@@ -167,8 +190,11 @@ class ProgramItems extends React.Component {
                         }
                         let newAuthors = [];
                         for (let a of row.authors) {
-                            let newAuthor = this.state.ProgramPersons.find(p => p.id === a);
+                            let newAuthor: ProgramPerson | undefined
+                                = this.state.ProgramPersons.find(p => p.id === a);
                             if (!newAuthor) {
+                                assert(this.props.auth.currentConference, "Current conference is null");
+
                                 //Create a new program person
                                 let data = {
                                     clazz: "ProgramPerson",
@@ -180,8 +206,9 @@ class ProgramItems extends React.Component {
                                     .catch(err => {
                                         this.setState({ alert: "add error" })
                                         console.log("[Admin/Persons]: Unable to create: " + err)
-                                    })
-                                let programperson = Parse.Object.extend("ProgramPerson");
+                                    });
+
+                                let programperson: new () => ProgramPerson = Parse.Object.extend("ProgramPerson");
                                 newAuthor = new programperson();
                                 newAuthor.id = res.id;
                                 newAuthor.set("name", a);
@@ -200,7 +227,7 @@ class ProgramItems extends React.Component {
                             id: item.id,
                             conference: { clazz: "ClowdrInstance", id: item.get("conference").id },
                             title: item.get("title"),
-                            authors: item.get("authors").map(a => { return { clazz: "ProgramPerson", id: a.id } }),
+                            authors: item.get("authors").map((a: ProgramPerson) => { return { clazz: "ProgramPerson", id: a.id } }),
                             abstract: item.get("abstract"),
                             track: { clazz: "ProgramTrack", id: item.get("track").id }
                         }
@@ -223,11 +250,12 @@ class ProgramItems extends React.Component {
                 }
             };
 
-            const columns = [
+            const columns: ColumnsType<Store> = [
                 {
                     title: 'Title',
                     dataIndex: 'title',
                     width: '30%',
+                    // @ts-ignore | See https://ant.design/components/table/
                     editable: true,
                     sorter: (a, b) => {
                         const titleA = a.get("title") ? a.get("title") : "";
@@ -240,6 +268,7 @@ class ProgramItems extends React.Component {
                     title: 'Abstract',
                     dataIndex: 'abstract',
                     width: '30%',
+                    // @ts-ignore | See https://ant.design/components/table/
                     editable: true,
                     sorter: (a, b) => {
                         const abstractA = a.get("abstract") ? a.get("abstract") : "";
@@ -255,8 +284,9 @@ class ProgramItems extends React.Component {
                     title: 'Authors',
                     dataIndex: 'authors',
                     width: '20%',
+                    // @ts-ignore | See https://ant.design/components/table/
                     editable: true,
-                    render: (text, record) => record.get("authors") ? <ul>{record.get("authors").map(author => (
+                    render: (text, record) => record.get("authors") ? <ul>{record.get("authors").map((author: ProgramPerson) => (
                         <li key={author.id} value={author.get("name")}>{author.get("name")}</li>
                     ))}</ul> : <span> </span>
                 },
@@ -264,6 +294,7 @@ class ProgramItems extends React.Component {
                     title: 'Track',
                     dataIndex: 'track',
                     width: '20%',
+                    // @ts-ignore | See https://ant.design/components/table/
                     editable: true,
                     sorter: (a, b) => {
                         const trackA = a.get("track") ? a.get("track").get("name") : "";
@@ -294,7 +325,7 @@ class ProgramItems extends React.Component {
                                 </span>
                             ) : (
                                     <Space size='small'>
-                                        <a title="Edit" disabled={editingKey !== ''} onClick={() => onEdit(record)}>
+                                        <a title="Edit" onClick={() => onEdit(record)}>
                                             {<EditOutlined />}
                                         </a>
                                         <Popconfirm
@@ -315,15 +346,18 @@ class ProgramItems extends React.Component {
             ];
 
             const mergedColumns = columns.map(col => {
+                // Ed: The definitions file for antd is way out of date.
+                // @ts-ignore | See https://ant.design/components/table/
                 if (!col.editable) {
                     return col;
                 }
 
                 return {
                     ...col,
-                    onCell: record => ({
+                    onCell: (record: Store) => ({
                         record,
                         inputType: 'text',
+                        // @ts-ignore | See https://ant.design/components/table/
                         dataIndex: col.dataIndex,
                         title: col.title,
                         editing: isEditing(record),
@@ -342,12 +376,13 @@ class ProgramItems extends React.Component {
                         }}
                         bordered
                         dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramItems}
+                        // @ts-ignore | See https://ant.design/components/table/
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         pagination={{
                             onChange: onCancel,
                             defaultPageSize: 500,
-                            pageSizeOptions: [10, 20, 50, 100, 500],
+                            pageSizeOptions: [10, 20, 50, 100, 500].map(toString),
                             position: ['topRight', 'bottomRight']
                         }}
                     />
@@ -357,6 +392,8 @@ class ProgramItems extends React.Component {
 
         // handle when a new item is added
         const handleAdd = () => {
+            assert(this.props.auth.currentConference, "Current conference is null");
+
             let data = {
                 clazz: "ProgramItem",
                 conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
@@ -393,7 +430,7 @@ class ProgramItems extends React.Component {
                         Add an item
                     </Button>
                     {this.state.alert ? <Alert
-                        onClose={() => this.setState({ alert: undefined })}
+                        onClose={() => this.setState({ alert: null })}
                         style={{
                             margin: 16,
                             display: "inline-block",
@@ -420,7 +457,7 @@ class ProgramItems extends React.Component {
                                         (item.get('title') && item.get('title').toLowerCase().includes(key.toLowerCase()))
                                         || (item.get('track') && item.get('track').get('name') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
                                         || (item.get('abstract') && item.get('abstract').toLowerCase().includes(key.toLowerCase()))
-                                        || (item.get('authors') && item.get('authors').some(a => a.get("name") && a.get("name").toLowerCase().includes(key.toLowerCase())))
+                                        || (item.get('authors') && item.get('authors').some((a: ProgramPerson) => a.get("name") && a.get("name").toLowerCase().includes(key.toLowerCase())))
                                 )
                             })
                         }
@@ -434,9 +471,9 @@ class ProgramItems extends React.Component {
 }
 
 const
-    AuthConsumer = (props) => (
+    AuthConsumer = (props: Props) => (
         <AuthUserContext.Consumer>
-            {value => (
+            {value => (value == null ? <span>TODO: ProgramItems Admin page when clowdrState is null.</span> :
                 <ProgramItems {...props} auth={value} />
             )}
         </AuthUserContext.Consumer>

@@ -17,6 +17,7 @@ import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
 import ReactMarkdown from "react-markdown";
 import { RouteComponentProps } from "react-router-dom";
 import { withRouter } from 'react-router';
+import assert from "assert";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -64,11 +65,11 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
     }
 
     async componentDidMount() {
-        let item, attachmentTypes;
+        assert(this.props.appState, "ClowdrState is null");
 
-        [item, attachmentTypes] = await Promise.all([
-            this.props.appState?.programCache.getProgramItem(this.props.ProgramItem.id, this),
-            this.props.appState?.programCache.getAttachmentTypes(this)]);
+        let [item, attachmentTypes] = await Promise.all([
+            this.props.appState.programCache.getProgramItem(this.props.ProgramItem.id, this),
+            this.props.appState.programCache.getAttachmentTypes(this)]);
 
         let stateUpdate = {
             loading: false,
@@ -83,7 +84,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             //load all of the sessions and times first
             let events = item.get("events")
                 .map((e: ProgramSessionEvent) =>
-                    this.props.appState?.programCache.getProgramSessionEvent(e.id, null));
+                    this.props.appState?.programCache.getProgramSessionEvent(e.id));
             //@ts-ignore
             let evs = await Promise.all(events);
             // @ts-ignore

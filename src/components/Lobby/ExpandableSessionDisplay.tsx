@@ -31,7 +31,7 @@ class ExpandableSessionDisplay extends React.Component<ExpandableSessionDisplayP
     }
     componentDidMount(): void {
         if (this.props.session.get("events")) {
-            let events = this.props.session.get("events").map((e: ProgramSessionEvent) => this.props.auth?.programCache.getProgramSessionEvent(e.id, null));
+            let events = this.props.session.get("events").map((e: ProgramSessionEvent) => this.props.auth?.programCache.getProgramSessionEvent(e.id));
             //@ts-ignore
             Promise.all(events).then((ev) => this.setState({ events: ev }));
         }

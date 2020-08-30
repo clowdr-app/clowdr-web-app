@@ -77,9 +77,9 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     componentWillUnmount(): void {
-        this.props.auth?.programCache.cancelSubscription("ProgramSession", this, null);
-        this.props.auth?.programCache.cancelSubscription("ProgramSessionEvent", this, null);
-        this.props.auth?.programCache.cancelSubscription("ProgramTrack", this, null);
+        this.props.auth?.programCache.cancelSubscription("ProgramSession", this);
+        this.props.auth?.programCache.cancelSubscription("ProgramSessionEvent", this);
+        this.props.auth?.programCache.cancelSubscription("ProgramTrack", this);
     }
 
     sessionView(sessions: ProgramSession[], title: string) {

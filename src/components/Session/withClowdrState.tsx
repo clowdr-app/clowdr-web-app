@@ -2,7 +2,7 @@ import React from 'react';
 import * as H from 'history';
 
 import AuthUserContext from './context';
-import Parse, { User, Role } from "parse";
+import Parse, { User, Role, LiveQueryClient } from "parse";
 import { notification, Spin } from "antd";
 import ChatClient from "../../classes/ChatClient"
 import ProgramCache from "./ProgramCache";
@@ -132,8 +132,11 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             this.activeRoomSubscribers = [];
             this.activePrivateVideoRooms = [];
 
-            // @ts-ignore     TS: Again, this seems to exist in the Parse library but not its type declarations!
-            this.parseLive = new Parse.LiveQueryClient({
+            assert(process.env.REACT_APP_PARSE_APP_ID, "REACT_APP_PARSE_APP_ID not provided.");
+            assert(process.env.REACT_APP_PARSE_DOMAIN, "REACT_APP_PARSE_DOMAIN not provided.");
+            assert(process.env.REACT_APP_PARSE_JS_KEY, "REACT_APP_PARSE_JS_KEY not provided.");
+
+            this.parseLive = new LiveQueryClient({
                 applicationId: process.env.REACT_APP_PARSE_APP_ID,
                 serverURL: process.env.REACT_APP_PARSE_DOMAIN,
                 javascriptKey: process.env.REACT_APP_PARSE_JS_KEY,
