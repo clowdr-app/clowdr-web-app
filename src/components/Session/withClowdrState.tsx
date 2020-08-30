@@ -585,7 +585,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         _this.currentConference = conf;
                         _this.user = user;
                         _this.userProfile = activeProfile;
-                        _this.state.chatClient.initChatClient(user, priorConference, activeProfile, _this);
+                        _this.state.chatClient.initChatClient(user, conf, activeProfile, _this);
 
                         try {
                             // @ts-ignore   TS: I guess change null to ""?
