@@ -25,7 +25,7 @@ data.People.forEach(async (person) => {
             var res = await file.save();
             console.log(res);
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
         let user = new Parse.User();
         let fakeEmail = "demo" + i + "@no-reply.com" + Math.random();
@@ -44,7 +44,7 @@ data.People.forEach(async (person) => {
             user.set("status", status);
             await user.save();
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
         await sleep(100);
     }

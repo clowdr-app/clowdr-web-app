@@ -29,13 +29,13 @@ class ForgotPassword extends React.Component {
                     await this.props.clowdrAppState.refreshUser(null, true);
                     this.setState({ loading: false });
                 } catch (err) {
-                    console.log(err);
+                    console.error(err);
                     this.setState({ error: "The password reset link that you clicked is not valid. Each successive request for a signin link invalidates the prior links, so please be sure to use the most recent signin link (if you have requested/received multiple)" });
                     //TODO make this prettier
                 }
             }
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
 
     }

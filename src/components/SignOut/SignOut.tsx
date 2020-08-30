@@ -18,7 +18,7 @@ class SignOut extends Component<SignOutProps, SignOutState> {
                 this.props.history.push("/" /*TODO: Lookup using router match*/);
             });
         }).catch((err) => {
-            console.log(err);
+            console.error(err);
         });
     }
 

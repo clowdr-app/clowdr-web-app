@@ -107,7 +107,7 @@ class Account extends React.Component<Props, State> {
                 flairObj: u
             });
         }).catch((err: Error) => {
-            console.log(err)
+            console.error(err)
         });
 
         const BioTopic = Parse.Object.extend("BioTopic");
@@ -126,7 +126,7 @@ class Account extends React.Component<Props, State> {
                 topicObj: u
             });
         }).catch((err: Error) => {
-            console.log(err)
+            console.error(err)
         });
 
     }

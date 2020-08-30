@@ -112,7 +112,7 @@ async function fixUsers() {
             //     let chan = await config.twilioChat.channels(space.get("chatChannel")).fetch();
             //     console.log(chan.sid + "\t" + chan.uniqueName);
             // }catch(err){
-            //     console.log(err);
+            //     console.error(err);
             //     space.set("chatChannel",null);
             //     await space.save({},{useMasterKey: true});
             // }
@@ -169,7 +169,7 @@ async function fixUsers() {
             //             await space.save({}, {useMasterKey: true});
             //         }catch(err){
             //             console.log("Unble to create chat channel for channel: socialSpace-"+space.id)
-            //             console.log(err);
+            //             console.error(err);
             //             console.trace();
             //         }
             //

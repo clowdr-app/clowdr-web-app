@@ -184,7 +184,7 @@ export class BottomChat extends React.Component {
                                             users: values.users
                                         });
                                     } catch (err) {
-                                        console.log(err);
+                                        console.error(err);
                                     }
 
                                     this.form.current.resetFields();
@@ -247,7 +247,7 @@ export class BottomChat extends React.Component {
                                         }
 
                                     } catch (err) {
-                                        console.log(err);
+                                        console.error(err);
                                     }
 
                                 }}
@@ -339,7 +339,7 @@ export class BottomChat extends React.Component {
 //             }
 //             catch (err) {
 //                 console.log(chat.channel.sid)
-//                 console.log(err);
+//                 console.error(err);
 //                 return;
 //             }
 //             return;
@@ -421,7 +421,7 @@ export class BottomChat extends React.Component {
 //                 }
 
 //             } catch (err) {
-//                 console.log(err);
+//                 console.error(err);
 //             }
 //         }
 //         else {

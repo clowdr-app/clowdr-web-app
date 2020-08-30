@@ -64,7 +64,7 @@ class VideoRoom extends Component {
             }
             this.setState({ isMounted: true })
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }
 

@@ -26,7 +26,6 @@ class Moderation extends React.Component {
                     conference: this.props.auth.currentConference.get("slackWorkspace"),
                     profileID: item.key,
                     isBan: (item.isBanned === "No")
-
                 }),
                 headers: {
                     'Content-Type': 'application/json'

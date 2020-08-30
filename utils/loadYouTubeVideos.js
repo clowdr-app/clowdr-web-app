@@ -36,7 +36,7 @@ youtube.playlists.list({
                         published_at: new Date(item.snippet.publishedAt).valueOf()
                     },
                     (err) => {
-                        console.log(err);
+                        console.error(err);
                     });
                 // console.log(JSON.stringify(item.snippet,null,'\t')) ;
             })

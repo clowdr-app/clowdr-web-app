@@ -112,13 +112,13 @@ class Program extends React.Component {
                 let starred = this.state.starredItems.find(item => item.id === row.item.id);
                 return (starred ? <Tooltip title="Remove this from your saved program" placement="top"><StarFilled className="programStarStarred" onClick={() => {
                     this.state.starredProgram.relation("items").remove(row.item);
-                    this.state.starredProgram.save().catch((err) => console.log(err));
+                    this.state.starredProgram.save().catch((err) => console.error(err));
                     this.setState((prevState) => ({
                         starredItems: prevState.starredItems.filter(item => item.id !== row.item.id)
                     }));
                 }} /></Tooltip> : <Tooltip title="Add this iem to your saved program" placement="top"><StarOutlined className="programStarNotStarred" onClick={() => {
                     this.state.starredProgram.relation("items").add(row.item);
-                    this.state.starredProgram.save().catch((err) => console.log(err));
+                    this.state.starredProgram.save().catch((err) => console.error(err));
                     this.setState((prevState) => ({
                         starredItems: [row.item, ...prevState.starredItems]
                     }));

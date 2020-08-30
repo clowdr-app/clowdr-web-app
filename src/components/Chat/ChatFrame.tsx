@@ -505,7 +505,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
             // this.form.current.scrollToField("message");
             //TODO if no longer a DM (converted to group), don't do this...
             if (this.dmOtherUser && !this.members.find(m => m.identity === this.dmOtherUser)) {
-                this.activeChannel?.add(this.dmOtherUser).catch((err) => console.log(err));
+                this.activeChannel?.add(this.dmOtherUser).catch((err) => console.error(err));
             }
 
         }

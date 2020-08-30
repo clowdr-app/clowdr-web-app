@@ -68,7 +68,7 @@ class Avatar extends React.Component<Props, State> {
                 loading: false,
             });
         }).catch((err: Error) => {
-            console.log(err);
+            console.error(err);
         });
     }
 

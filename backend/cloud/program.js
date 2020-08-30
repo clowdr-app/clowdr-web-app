@@ -1,3 +1,5 @@
+/* global Parse */
+// ^ for eslint
 
 var jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -12,7 +14,6 @@ const { response } = require('express');
 let UserProfile = Parse.Object.extend("UserProfile");
 let ProgramPerson = Parse.Object.extend("ProgramPerson");
 let ZoomRoom = Parse.Object.extend("ZoomRoom");
-var jwt = require('jsonwebtoken');
 var xml2json = require('xml2json');
 
 const backOff = require('exponential-backoff').backOff;
@@ -20,10 +21,10 @@ async function callWithRetry(twilioFunctionToCall) {
     const response = await backOff(twilioFunctionToCall,
         {
             startingDelay: 500,
-            retry: (err, attemptNum) => {
-                if (err && err.code == 20429)
+            retry: (err) => {
+                if (err && err.code === 20429)
                     return true;
-                console.log(err);
+                console.error(err);
                 return false;
             }
         });
@@ -34,7 +35,7 @@ async function callWithRetry(twilioFunctionToCall) {
 // Is the given user in any of the given roles?
 async function userInRoles(user, allowedRoles) {
     const roles = await new Parse.Query(Parse.Role).equalTo('users', user).find();
-    return roles.find(r => allowedRoles.find(allowed =>  r.get("name") == allowed)) ;
+    return roles.find(r => allowedRoles.find(allowed => r.get("name") === allowed));
 }
 
 function pointify(data) {
@@ -73,21 +74,21 @@ Parse.Cloud.define("create-obj", async (request) => {
         let acl = new Parse.ACL();
         acl.setPublicReadAccess(true);
         acl.setPublicWriteAccess(false);
-        acl.setRoleWriteAccess(confID.id +"-manager", true);
-        acl.setRoleWriteAccess(confID.id +"-admin", true);
+        acl.setRoleWriteAccess(confID.id + "-manager", true);
+        acl.setRoleWriteAccess(confID.id + "-admin", true);
         obj.setACL(acl);
 
-        let res = await obj.save(data, {useMasterKey: true});
+        let res = await obj.save(data, { useMasterKey: true });
 
         if (!res) {
-            throw ("Unable to create obj");
+            throw new Error("Unable to create obj");
         }
 
         console.log('[create obj]: successfully created ' + obj.id);
-        return {status: "OK", "id": obj.id};
+        return { status: "OK", "id": obj.id };
     }
     else
-        throw "Unable to create obj: user not allowed to create new objects";
+        throw new Error("Unable to create obj: user not allowed to create new objects");
 });
 
 Parse.Cloud.define("update-obj", async (request) => {
@@ -105,22 +106,22 @@ Parse.Cloud.define("update-obj", async (request) => {
         let Clazz = Parse.Object.extend(clazz);
         let obj = await new Parse.Query(Clazz).get(id);
         if (!obj) {
-            throw (`Unable to update obj: ${id} not found`);
+            throw new Error(`Unable to update obj: ${id} not found`);
         }
 
         pointify(data);
-        let res = await obj.save(data, {useMasterKey: true});
+        let res = await obj.save(data, { useMasterKey: true });
 
         if (!res) {
-            throw ("Unable to update obj");
+            throw new Error("Unable to update obj");
         }
 
         console.log('[update obj]: successfully updated ' + obj.id);
-        return {status: "OK", "id": obj.id};
+        return { status: "OK", "id": obj.id };
 
     }
     else
-        throw "Unable to update obj: user not allowed to update objects";
+        throw new Error("Unable to update obj: user not allowed to update objects");
 });
 
 Parse.Cloud.define("delete-obj", async (request) => {
@@ -134,17 +135,17 @@ Parse.Cloud.define("delete-obj", async (request) => {
         let Clazz = Parse.Object.extend(clazz);
         let obj = await new Parse.Query(Clazz).get(id);
         if (obj) {
-            await obj.destroy({useMasterKey: true});
+            await obj.destroy({ useMasterKey: true });
         }
         else {
-            throw (`Unable to delete obj: ${id} not found`);
+            throw new Error(`Unable to delete obj: ${id} not found`);
         }
 
         console.log('[delete obj]: successfully deleted ' + id);
-        return {status: "OK", "id": obj.id};
+        return { status: "OK", "id": obj.id };
     }
     else
-        throw "Unable to delete obj: user not allowed to delete objects";
+        throw new Error("Unable to delete obj: user not allowed to delete objects");
 });
 
 
@@ -161,7 +162,7 @@ Parse.Cloud.define("rooms-upload", async (request) => {
         response.error("Bad conference ID");
         return;
     }
-    
+
     var Room = Parse.Object.extend("ProgramRoom");
     var rquery = new Parse.Query(Room);
     rquery.equalTo("conference", conference);
@@ -173,20 +174,20 @@ Parse.Cloud.define("rooms-upload", async (request) => {
         let acl = new Parse.ACL();
         acl.setPublicWriteAccess(false);
         acl.setPublicReadAccess(true);
-        acl.setRoleWriteAccess(conferenceID+"-manager", true);
-        acl.setRoleWriteAccess(conferenceID+"-admin", true);
-    
-        let rows = Papa.parse(data, {header: true});
+        acl.setRoleWriteAccess(conferenceID + "-manager", true);
+        acl.setRoleWriteAccess(conferenceID + "-admin", true);
+
+        let rows = Papa.parse(data, { header: true });
         // rows.data.forEach(element => {
         //     addRow(element, conference, existing, toSave, acl);
         // });
-        for(let row of rows.data){
+        for (let row of rows.data) {
             let name = row.Name.trim();
-            if(!name)
+            if (!name)
                 continue;
-            let room = existing.find(r => r.get("name").trim() == name);
-            if(!room){
-                throw "Unable to find room: "+ row.name;
+            let room = existing.find(r => r.get("name").trim() === name);
+            if (!room) {
+                throw new Error("Unable to find room: " + row.name);
             }
             if (row.YouTube) {
                 // let data = getIDAndPwd(row.YouTube);
@@ -218,10 +219,10 @@ Parse.Cloud.define("rooms-upload", async (request) => {
             toSave.push(room);
         }
         console.log(`--> Saving ${toSave.length} rooms`)
-        for(let room of toSave){
-            if(room.get("src1") == "ZoomUS"){
+        for (let room of toSave) {
+            if (room.get("src1") === "ZoomUS") {
                 let zoomRoom = room.get("zoomRoom");
-                if(!zoomRoom){
+                if (!zoomRoom) {
                     zoomRoom = new ZoomRoom();
                     zoomRoom.set("programRoom", room);
                     zoomRoom.set('conference', conference);
@@ -252,23 +253,23 @@ Parse.Cloud.define("rooms-upload", async (request) => {
                     zoomRoom.set("start_url_expiration", moment().add(2, "hours").toDate());
                     zoomRoom.set("requireRegistration", false);
                     zoomRoom.set("join_url", res.data.join_url);
-                    await zoomRoom.save({}, {useMasterKey: true});
+                    await zoomRoom.save({}, { useMasterKey: true });
                     room.set("zoomRoom", zoomRoom);
-                    await room.save({},{useMasterKey: true})
+                    await room.save({}, { useMasterKey: true })
                     // payload = {
                     //     iss: config.ZOOM_API_KEY,
                     //     exp: ((new Date()).getTime() + 5000)
                     // };
                     // token = jwt.sign(payload, config.ZOOM_API_SECRET);
-                }catch(err){
+                } catch (err) {
                     console.log("Unable to fetch meeting " + id)
-                    console.log(err);
+                    console.error(err);
                 }
             }
         }
 
-        Parse.Object.saveAll(toSave, {useMasterKey: true})
-            .then(res => console.log("[Rooms]: Done saving all rooms "))
+        Parse.Object.saveAll(toSave, { useMasterKey: true })
+            .then(() => console.log("[Rooms]: Done saving all rooms "))
             .catch(err => console.log('[Rooms]: error: ' + err));
     }).catch(err => {
         console.log('[Rooms]: Problem fetching rooms ' + err);
@@ -280,10 +281,10 @@ Parse.Cloud.define("rooms-upload", async (request) => {
 function getIDAndPwd(str) {
     let url = new URL(str)
     let id = "";
-    let pwd ="";
+    let pwd = "";
     if (url.pathname) {
         let parts = url.pathname.split('/');
-        id = parts[parts.length-1];
+        id = parts[parts.length - 1];
     }
     if (url.searchParams) {
         pwd = url.searchParams.get('pwd');
@@ -337,8 +338,8 @@ let allSessions = {};
 
 function getAuthors(authorKeys) {
     let authors = [];
-    authorKeys.map(key => {
-        author = allPeople[key];
+    authorKeys.forEach(key => {
+        let author = allPeople[key];
         if (author)
             authors.push(author);
         else
@@ -347,50 +348,45 @@ function getAuthors(authorKeys) {
     return authors;
 }
 
-function timeFromConfTime(date, time, timezone){
+function timeFromConfTime(date, time, timezone) {
     let startTime = date + ' ' + time;
     return moment.tz(startTime, "YYYY/MM/DD HH:mm", timezone)
         // .subtract(10,'days')
         .toDate();
 }
-function removeHTMLEntities(str){
-    return str.replace(/&amp;/g,"&").replace(/&amp;/g,"&");
+function removeHTMLEntities(str) {
+    return str.replace(/&amp;/g, "&").replace(/&amp;/g, "&");
 }
 
-let i = 0;
 Parse.Cloud.define("program-upload", async (request) => {
     let data = request.params.content;
     const conferenceID = request.params.conference;
     const timezone = request.params.timezone;
     const format = request.params.format;
     console.log('Request to upload program data ' + format);
-    if(format == "conf-json"){
-        return uploadProgramFromConfJSON(data ,conferenceID, timezone);
-    }else if(format == "conf-xml"){
+    if (format === "conf-json") {
+        return uploadProgramFromConfJSON(data, conferenceID, timezone);
+    } else if (format === "conf-xml") {
         return uploadProgramFromConfXML(data, conferenceID, timezone);
     }
-    else{
-        throw "Unknown upload format: " + format;
+    else {
+        throw new Error("Unknown upload format: " + format);
     }
 });
 
-async function uploadProgramFromConfXML(data, conferenceID, timezone){
+async function uploadProgramFromConfXML(data, conferenceID, timezone) {
     data = JSON.parse(xml2json.toJson(data));
 
-    let cache = {};
     let allPeople = {};
-    let allItems ={};
+    let allItems = {};
     let allSessions = {};
     let toSave = [];
-    let conferoPeople = {};
-    let tracks = {};
 
     let newTracks = {};
     let newRooms = {}
     let newItems = {};
     let newEvents = {};
-    let newItemSchedules = {}
-    let newPersons ={};
+    let newPersons = {};
     let newSessions = {};
 
     for (let session of data.event.subevent) {
@@ -410,7 +406,7 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
             newSessions[session.subevent_id] = ses;
             for (let item of session.timeslot) {
                 let authors = [];
-                if(item.title.startsWith("Session: ")){
+                if (item.title.startsWith("Session: ")) {
                     ses.startTime = timeFromConfTime(item.date, item['start_time'], timezone);
                     ses.endTime = timeFromConfTime(item.date, item['end_time'], timezone);
                     continue;
@@ -439,13 +435,16 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
 
                 };
                 ses.items.push(item.title);
-                if(newItems[item.title] && (newItems[item.title].abstract != "undefined" || (newItems[item.title].authors
-                    && newItems[item.title].authors.length))){
-
-                }else{
+                if (newItems[item.title] &&
+                    newItems[item.title].abstract &&
+                    (newItems[item.title].abstract !== "undefined"
+                        || (newItems[item.title].authors
+                            && newItems[item.title].authors.length))) {
+                    // Ed: Err, nothing?
+                } else {
                     newItems[item.title] = i
                 }
-                if(!newEvents[item.title]){
+                if (!newEvents[item.title]) {
                     newEvents[item.title] = [];
                 }
                 newEvents[item.title].push(i);
@@ -463,20 +462,20 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
     let acl = new Parse.ACL();
     acl.setPublicWriteAccess(false);
     acl.setPublicReadAccess(true);
-    acl.setRoleWriteAccess(conf.id+"-manager", true);
-    acl.setRoleWriteAccess(conf.id+"-admin", true);
+    acl.setRoleWriteAccess(conf.id + "-manager", true);
+    acl.setRoleWriteAccess(conf.id + "-admin", true);
 
     let ProgramTrack = Parse.Object.extend('ProgramTrack');
     var qt = new Parse.Query(ProgramTrack);
     qt.equalTo("conference", conf);
     qt.limit(1000);
-    var existingTracks = await qt.find({useMasterKey: true});
-    for(let name of Object.keys(newTracks)){
-        let existing = existingTracks.find(r=>r.get("name") == name);
-        if(existing){
+    var existingTracks = await qt.find({ useMasterKey: true });
+    for (let name of Object.keys(newTracks)) {
+        let existing = existingTracks.find(r => r.get("name") === name);
+        if (existing) {
             newTracks[name] = existing;
         }
-        else{
+        else {
             let nt = new ProgramTrack();
             nt.setACL(acl);
             nt.set("conference", conf);
@@ -486,9 +485,9 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         }
     }
     try {
-        await Parse.Object.saveAll(toSave, {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(toSave, { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     console.log('TRacks saved: ' + toSave.length);
     toSave = [];
@@ -497,11 +496,11 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
     var qr = new Parse.Query(ProgramRoom);
     qr.equalTo("conference", conf);
     qr.limit(1000);
-    var existingRooms = await qr.find({useMasterKey: true});
-    for (let name of Object.keys(newRooms)){
-        let simplifiedName = name.replace("Online |","").trim();
-        if (existingRooms.find(r => r.get('name') == simplifiedName)) {
-            newRooms[name] = existingRooms.find(r=>r.get("name") == simplifiedName);
+    var existingRooms = await qr.find({ useMasterKey: true });
+    for (let name of Object.keys(newRooms)) {
+        let simplifiedName = name.replace("Online |", "").trim();
+        if (existingRooms.find(r => r.get('name') === simplifiedName)) {
+            newRooms[name] = existingRooms.find(r => r.get("name") === simplifiedName);
             console.log('Room already exists: ' + name);
             continue;
         }
@@ -515,9 +514,9 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         newRooms[name] = newRoom;
     }
     try {
-        await Parse.Object.saveAll(toSave, {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(toSave, { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     console.log('Rooms saved: ' + toSave.length);
     toSave = [];
@@ -527,13 +526,13 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
     let qp = new Parse.Query(ProgramPerson);
     qp.equalTo("conference", conf);
     qp.limit(10000);
-    let people = await qp.find({useMasterKey: true});
+    let people = await qp.find({ useMasterKey: true });
     people.forEach((person) => {
         allPeople[person.get("name")] = person;
     })
-    let newPeople = [];
+
     for (const name of Object.keys(newPersons)) {
-        let person  =newPersons[name];
+        let person = newPersons[name];
         if (allPeople[person.name.trim()]) {
             newPersons[person.name.trim()] = allPeople[person.name.trim()];
             continue
@@ -549,9 +548,9 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
     }
     try {
         console.log("People saved: " + toSave.length);
-        await Parse.Object.saveAll(toSave, {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(toSave, { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     toSave = [];
 
@@ -560,7 +559,7 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
     let q = new Parse.Query(ProgramItem);
     q.equalTo("conference", conf);
     q.limit(1000);
-    let items = await q.find({useMasterKey: true});
+    let items = await q.find({ useMasterKey: true });
     items.forEach((item) => {
         allItems[item.get("confKey")] = item;
     })
@@ -579,11 +578,11 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         let newItem = new ProgramItem();
         item.title ? newItem.set("title", item.title.trim()) : newItem.set("title", item.title);
         // item.Type ? newItem.set("type", item.Type.trim()) : newItem.set("type", '');
-        if(item.abstract == "undefined")
-            item.abstract ="";
+        if (item.abstract === "undefined")
+            item.abstract = "";
         item.abstract ? newItem.set("abstract", item.abstract.trim()) : newItem.set("abstract", item.abstract);
         let authors = [];
-        if(item.authors){
+        if (item.authors) {
             authors = item.authors.map(name => newPersons[name]);
         }
         newItem.set("authors", authors);
@@ -591,10 +590,10 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         newItem.set('track', track);
         newItem.setACL(acl);
         // get authors pointers
-        for(let author of authors){
+        for (let author of authors) {
             console.log(author)
-            if(!author.get("programItems"))
-                author.set("programItems",[]);
+            if (!author.get("programItems"))
+                author.set("programItems", []);
             let items = author.get("programItems");
             items.push(newItem);
             authorsToSave[author.get("name")] = author;
@@ -603,10 +602,10 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         newItems[newItem.get("title")] = newItem;
     }
     try {
-        await Parse.Object.saveAll(toSave, {useMasterKey: true});
-        await Parse.Object.saveAll(Object.values(authorsToSave), {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(toSave, { useMasterKey: true });
+        await Parse.Object.saveAll(Object.values(authorsToSave), { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     console.log("Items saved: " + toSave.length);
 
@@ -614,7 +613,7 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
     let ProgramSession = Parse.Object.extend("ProgramSession");
     let qs = new Parse.Query(ProgramSession);
     qs.limit(10000);
-    let sessions = await qs.find({useMasterKey: true});
+    let sessions = await qs.find({ useMasterKey: true });
     sessions.forEach((session) => {
         allSessions[session.get("confKey")] = session;
     })
@@ -624,7 +623,7 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         let ses = newSessions[id];
         let session = new ProgramSession();
 
-        ses.Title ? session.set("title", ses.Title.trim().replace("Session: ","")) : session.set("title", ses.Title);
+        ses.Title ? session.set("title", ses.Title.trim().replace("Session: ", "")) : session.set("title", ses.Title);
         ses.Abstract ? session.set("abstract", ses.Abstract.trim()) : session.set("abstract", ses.Abstract);
         // ses.Type ? session.set("type", ses.Type.trim()) : session.set("type", '');
         session.set("startTime", ses.startTime);
@@ -642,7 +641,7 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         let items = [];
         if (ses.items) {
             ses.items.forEach((k) => {
-                if(newItems[k])
+                if (newItems[k])
                     items.push(newItems[k]);
                 else
                     console.log("Could not find item: " + k);
@@ -652,20 +651,20 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
         newSessions[id] = session;
         toSave.push(session);
     }
-    try{
-        await Parse.Object.saveAll(toSave, {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+    try {
+        await Parse.Object.saveAll(toSave, { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     let ProgramSessionEvent = Parse.Object.extend("ProgramSessionEvent");
 
     let updateItems = [];
     toSave = [];
     //last, make all of the event entries
-    for(let itemTitle of Object.keys(newEvents)){
+    for (let itemTitle of Object.keys(newEvents)) {
         let events = newEvents[itemTitle];
         let item = newItems[itemTitle];
-        for(let event of events){
+        for (let event of events) {
             let e = new ProgramSessionEvent();
             let trackName = event.track;
             let track = newTracks[trackName];
@@ -680,7 +679,7 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
             e.set("startTime", event.startTime);
             e.set("endTime", event.endTime);
             toSave.push(e);
-            if(!item.get("events")){
+            if (!item.get("events")) {
                 item.set("events", []);
             }
             item.get("events").push(e);
@@ -689,34 +688,33 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone){
     }
     console.log('Adding sessions items: ' + toSave.length);
 
-    await Parse.Object.saveAll(toSave, {useMasterKey: true});
-    await Parse.Object.saveAll(updateItems, {useMasterKey: true});
+    await Parse.Object.saveAll(toSave, { useMasterKey: true });
+    await Parse.Object.saveAll(updateItems, { useMasterKey: true });
     let itemQ = new Parse.Query("ProgramItem");
     itemQ.equalTo("conference", conf);
     itemQ.doesNotExist("confKey");
     itemQ.limit(100000);
-    let itemsToFix = await itemQ.find({useMasterKey: true});
+    let itemsToFix = await itemQ.find({ useMasterKey: true });
     for (let item of itemsToFix) {
         item.set("confKey", item.get("track").id + "/" + item.id);
     }
-    await Parse.Object.saveAll(itemsToFix, {useMasterKey: true});
+    await Parse.Object.saveAll(itemsToFix, { useMasterKey: true });
     let sessionQ = new Parse.Query("ProgramSession");
     sessionQ.equalTo("conference", conf)
     sessionQ.limit(1000);
-    let storedSessions = await sessionQ.find({useMasterKey: true});
+    let storedSessions = await sessionQ.find({ useMasterKey: true });
     for (let session of storedSessions) {
-        let itemsByTitle = {};
         let eventsQ = new Parse.Query("ProgramSessionEvent");
         eventsQ.equalTo("programSession", session)
         eventsQ.limit(1000);
-        let events = await eventsQ.find({useMasterKey: true});
+        let events = await eventsQ.find({ useMasterKey: true });
         session.set("events", events);
     }
-    await Parse.Object.saveAll(storedSessions, {useMasterKey: true});
-    return {status: "ok"}
+    await Parse.Object.saveAll(storedSessions, { useMasterKey: true });
+    return { status: "ok" }
 }
 
-async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
+async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
     data = JSON.parse(data);
 
     let conferoPeople = {};
@@ -728,7 +726,7 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
     data.Items.forEach(item => {
         let parts = item.Key.split("/");
         let trackName = parts[0].trim();
-        if (trackName.includes('catering') || trackName == 'icse-2020-test')
+        if (trackName.includes('catering') || trackName === 'icse-2020-test')
             return;
         if (trackName in tracks)
             tracks[trackName] = tracks[trackName] + 1;
@@ -752,8 +750,8 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
     let acl = new Parse.ACL();
     acl.setPublicWriteAccess(false);
     acl.setPublicReadAccess(true);
-    acl.setRoleWriteAccess(conf.id+"-manager", true);
-    acl.setRoleWriteAccess(conf.id+"-admin", true);
+    acl.setRoleWriteAccess(conf.id + "-manager", true);
+    acl.setRoleWriteAccess(conf.id + "-admin", true);
 
     // Create the tracks first
     let newTracks = [];
@@ -761,9 +759,9 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
     var qt = new Parse.Query(ProgramTrack);
     qt.equalTo("conference", conf);
     qt.limit(100);
-    var existingTracks = await qt.find({useMasterKey: true});
-    for (let [name, count] of Object.entries(tracks)) {
-        if (existingTracks.find(t => t.get('name') == name)) {
+    var existingTracks = await qt.find({ useMasterKey: true });
+    for (let [name] of Object.entries(tracks)) {
+        if (existingTracks.find(t => t.get('name') === name)) {
             console.log('Track already exists: ' + name);
             continue;
         }
@@ -775,9 +773,9 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
         existingTracks.push(newTrack);
     }
     try {
-        await Parse.Object.saveAll(newTracks, {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(newTracks, { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     console.log('Tracks saved: ' + newTracks.length);
 
@@ -787,9 +785,9 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
     var qr = new Parse.Query(ProgramRoom);
     qr.equalTo("conference", conf);
     qr.limit(100);
-    var existingRooms = await qr.find({useMasterKey: true});
-    for (let [name, count] of Object.entries(rooms)) {
-        if (existingRooms.find(r => r.get('name') == name)) {
+    var existingRooms = await qr.find({ useMasterKey: true });
+    for (let [name] of Object.entries(rooms)) {
+        if (existingRooms.find(r => r.get('name') === name)) {
             console.log('Room already exists: ' + name);
             continue;
         }
@@ -802,9 +800,9 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
         existingRooms.push(newRoom);
     }
     try {
-        await Parse.Object.saveAll(newRooms, {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(newRooms, { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     console.log('Rooms saved: ' + newRooms.length);
 
@@ -813,7 +811,7 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
     let qp = new Parse.Query(ProgramPerson);
     qp.equalTo("conference", conf);
     qp.limit(10000);
-    let people = await qp.find({useMasterKey: true});
+    let people = await qp.find({ useMasterKey: true });
     people.forEach((person) => {
         allPeople[person.get("confKey")] = person;
     })
@@ -836,9 +834,9 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
         allPeople[newPerson.get("confKey")] = newPerson;
     }
     try {
-        await Parse.Object.saveAll(newPeople, {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(newPeople, { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     console.log("People saved: " + newPeople.length);
 
@@ -847,7 +845,7 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
     let q = new Parse.Query(ProgramItem);
     q.equalTo("conference", conf);
     q.limit(1000);
-    let items = await q.find({useMasterKey: true});
+    let items = await q.find({ useMasterKey: true });
     items.forEach((item) => {
         allItems[item.get("confKey")] = item;
     })
@@ -860,7 +858,7 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
         }
         let parts = item.Key.split("/");
         let trackName = parts[0].trim();
-        let track = existingTracks.find(t => t.get('name') == trackName);
+        let track = existingTracks.find(t => t.get('name') === trackName);
         if (!track)
             console.log('Warning: Adding item without track: ' + item.Key);
 
@@ -878,9 +876,9 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
         // get authors pointers
         let authors = getAuthors(item.Authors);
         newItem.set("authors", authors);
-        for(let author of authors){
-            if(!author.get("programItems"))
-                author.set("programItems",[]);
+        for (let author of authors) {
+            if (!author.get("programItems"))
+                author.set("programItems", []);
             let items = author.get("programItems");
             items.push(newItem);
             authorsToSave[author.get("confKey")] = author;
@@ -889,10 +887,10 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
         allItems[newItem.get("confKey")] = newItem;
     }
     try {
-        await Parse.Object.saveAll(newItems, {useMasterKey: true});
-        await Parse.Object.saveAll(Object.values(authorsToSave), {useMasterKey: true});
-    } catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(newItems, { useMasterKey: true });
+        await Parse.Object.saveAll(Object.values(authorsToSave), { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
     }
     console.log("Items saved: " + newItems.length);
 
@@ -900,7 +898,7 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
     let ProgramSession = Parse.Object.extend("ProgramSession");
     let qs = new Parse.Query(ProgramSession);
     qs.limit(10000);
-    let sessions = await qs.find({useMasterKey: true});
+    let sessions = await qs.find({ useMasterKey: true });
     sessions.forEach((session) => {
         allSessions[session.get("confKey")] = session;
     })
@@ -918,7 +916,7 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
             let endTime = ses.Day + ' ' + times[1];
             start = moment.tz(startTime, "YYYY-MM-DD HH:mm", timezone);
             end = moment.tz(endTime, "YYYY-MM-DD HH:mm", timezone);
-//            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
+            //            console.log('Time> ' + start.toDate() + ' ' + end.toDate());
         }
 
         if (!session) {
@@ -937,7 +935,7 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
             session.setACL(acl);
 
             // Find the pointer to the room
-            let room = existingRooms.find(r => r.get('name') == ses.Location);
+            let room = existingRooms.find(r => r.get('name') === ses.Location);
             if (room)
                 session.set("room", room);
             else
@@ -948,7 +946,7 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
         let items = [];
         if (ses.Items) {
             ses.Items.forEach((k) => {
-                if(allItems[k])
+                if (allItems[k])
                     items.push(allItems[k]);
                 else
                     console.log("Could not find item: " + k);
@@ -956,17 +954,16 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
         }
         session.set("items", items);
         newSessions.push(session);
-        i++;
     }
-    try{
-        await Parse.Object.saveAll(newSessions, {useMasterKey: true});
-        toSave = [];
+    try {
+        await Parse.Object.saveAll(newSessions, { useMasterKey: true });
+        let toSave = [];
         for (const ses of data.Sessions) {
             if (ses.Items) {
                 ses.Items.forEach((k) => {
-                    if(allItems[k]){
+                    if (allItems[k]) {
                         // console.log(allItems[k].get("program"))
-                        if(!allItems[k].get("programSession")){
+                        if (!allItems[k].get("programSession")) {
                             allItems[k].set("programSession", allSessions[ses.Key])
                             toSave.push(allItems[k]);
                         }
@@ -977,22 +974,22 @@ async function uploadProgramFromConfJSON(data ,conferenceID, timezone){
             }
         }
         console.log('Resaving items: ' + toSave.length);
-        await Parse.Object.saveAll(toSave, {useMasterKey: true});
+        await Parse.Object.saveAll(toSave, { useMasterKey: true });
         console.log("Finished save-all");
-    } catch(err){
-        console.log(err);
+    } catch (err) {
+        console.error(err);
     }
-    return {status: 'ok'};
+    return { status: 'ok' };
 }
 
 //=======
 let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
 
 let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
-async function getConfig(conference){
+async function getConfig(conference) {
     let configQ = new Parse.Query(InstanceConfig);
     configQ.equalTo("instance", conference);
-    let res = await configQ.find({useMasterKey: true});
+    let res = await configQ.find({ useMasterKey: true });
     let config = {};
     for (let obj of res) {
         config[obj.get("key")] = obj.get("value");
@@ -1003,8 +1000,7 @@ async function getConfig(conference){
     return config;
 }
 
-async function createBreakoutRoomForProgramItem(programItem){
-    let config = await getConfig(programItem.get("conference"));
+async function createBreakoutRoomForProgramItem(programItem) {
 
     let mode = "group";
     let maxParticipants = 50;
@@ -1020,7 +1016,7 @@ async function createBreakoutRoomForProgramItem(programItem){
     let acl = new Parse.ACL();
     acl.setPublicReadAccess(false);
     acl.setPublicWriteAccess(false);
-    acl.setRoleReadAccess(programItem.get("conference").id+"-conference", true);
+    acl.setRoleReadAccess(programItem.get("conference").id + "-conference", true);
     parseRoom.setACL(acl);
 
     let space;
@@ -1030,44 +1026,44 @@ async function createBreakoutRoomForProgramItem(programItem){
         //default to the first non-lobby social space
         let socialSpaceQ = new Parse.Query("SocialSpace");
         socialSpaceQ.equalTo("conference", programItem.get('conference'));
-        let spaces = await socialSpaceQ.find({useMasterKey: true});
-        if(spaces.length == 1){
+        let spaces = await socialSpaceQ.find({ useMasterKey: true });
+        if (spaces.length === 1) {
             space = spaces[0];
         }
-        else if(spaces.length == 2){
+        else if (spaces.length === 2) {
             space = spaces[0];
-            if(space.get('name') == "Lobby")
+            if (space.get('name') === "Lobby")
                 space = spaces[1];
         }
-        else{
-            throw "Error: Program item '" + programItem.get('title') + "' is not mapped to a session, so we can't tell where to put the chat room. Please map this program item to a session.";
+        else {
+            throw new Error("Error: Program item '" + programItem.get('title') + "' is not mapped to a session, so we can't tell where to put the chat room. Please map this program item to a session.");
         }
     }
     parseRoom.set("socialSpace", space);
-    parseRoom = await parseRoom.save({}, {useMasterKey: true});
+    parseRoom = await parseRoom.save({}, { useMasterKey: true });
     programItem.set("breakoutRoom", parseRoom);
-    await programItem.save({},{useMasterKey: true})
+    await programItem.save({}, { useMasterKey: true })
 }
 Parse.Cloud.afterSave("ProgramSession", async (request) => {
     //Make sure that all of our items are pointing back to us
     let programSession = request.object;
-    if(programSession.get("items") && programSession.get("items").length > 0) {
-        let items = await Parse.Object.fetchAll(programSession.get("items"), {useMasterKey: true});
+    if (programSession.get("items") && programSession.get("items").length > 0) {
+        let items = await Parse.Object.fetchAll(programSession.get("items"), { useMasterKey: true });
         let toSave = [];
         for (let item of items) {
-            if (!item.get("programSession") || item.get("programSession").id != programSession.id) {
+            if (!item.get("programSession") || item.get("programSession").id !== programSession.id) {
                 item.set("programSession", programSession);
                 toSave.push(item);
             }
         }
-        if(toSave.length > 0)
-            await Parse.Object.saveAll(toSave, {useMasterKey: true});
+        if (toSave.length > 0)
+            await Parse.Object.saveAll(toSave, { useMasterKey: true });
     }
 })
 
 Parse.Cloud.beforeDelete("ProgramItem", async (request) => {
-    if(request.object.get("breakoutRoom")){
-        request.object.get("breakoutRoom").destroy({useMasterKey: true});
+    if (request.object.get("breakoutRoom")) {
+        request.object.get("breakoutRoom").destroy({ useMasterKey: true });
     }
 });
 Parse.Cloud.beforeSave("ProgramItem", async (request) => {
@@ -1084,7 +1080,7 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
             itemQ.include(["authors", "authors.userProfile"]);
             let oldItem = null;
             if (!programItem.isNew())
-                oldItem = await itemQ.get(programItem.id, {useMasterKey: true});
+                oldItem = await itemQ.get(programItem.id, { useMasterKey: true });
             let newAuthors = [];
             for (let author of programItem.get("authors")) {
                 newAuthors.push(author);
@@ -1092,11 +1088,11 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
             let toSave = [];
             if (oldItem && oldItem.get("authors")) {
                 for (let author of oldItem.get("authors")) {
-                    if (!newAuthors.find(v => v.id == author.id)) {
+                    if (!newAuthors.find(v => v.id === author.id)) {
                         //no longer an author
                         let oldItems = author.get("programItems");
                         if (oldItems) {
-                            oldItems = oldItems.filter(item => item.id != programItem.id);
+                            oldItems = oldItems.filter(item => item.id !== programItem.id);
                             author.set("programItems", oldItems);
                             toSave.push(author);
                         }
@@ -1108,32 +1104,32 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
                 }
             }
             if (oldItem && oldItem.get("authors"))
-                newAuthors = newAuthors.filter(v => (!oldItem.get('authors').find(y => y.id == v.id)));
+                newAuthors = newAuthors.filter(v => (!oldItem.get('authors').find(y => y.id === v.id)));
             if (newAuthors.length > 0) {
                 try {
-                    newAuthors = await Parse.Object.fetchAllWithInclude(newAuthors, ["userProfile"], {useMasterKey: true});
+                    newAuthors = await Parse.Object.fetchAllWithInclude(newAuthors, ["userProfile"], { useMasterKey: true });
                 } catch (err) {
-                    console.log(err);
+                    console.error(err);
                     return;
                 }
                 let config = null;
-                let promises = [];
                 for (let author of newAuthors) {
                     let oldItems = author.get("programItems");
                     if (!oldItems)
                         oldItems = [];
-                    if (!oldItems.find(v => v.id == programItem.id)) {
+                    if (!oldItems.find(v => v.id === programItem.id)) {
                         oldItems.push(programItem);
                         author.set("programItems", oldItems);
                         toSave.push(author);
-                        if(author.get("userProfile")) {
+                        if (author.get("userProfile")) {
                             programItem.getACL().setWriteAccess(author.get("userProfile").get("user"), true);
                         }
                         if (programItem.get("chatSID") && author.get("userProfile")) {
                             //add the author to the chat channel
                             if (!config)
                                 config = await getConfig(programItem.get("conference"));
-                            let member = callWithRetry(()=>config.twilioChat.channels(programItem.get("chatSID")).members.create({
+                            const _config = config;
+                            callWithRetry(() => _config.twilioChat.channels(programItem.get("chatSID")).members.create({
                                 identity: author.get("userProfile").id
                             }).catch(err => {
                                 console.log(err);
@@ -1149,10 +1145,10 @@ Parse.Cloud.beforeSave("ProgramItem", async (request) => {
                 }
             }
             if (toSave.length > 0)
-                await Parse.Object.saveAll(toSave, {useMasterKey: true});
+                await Parse.Object.saveAll(toSave, { useMasterKey: true });
         }
-    }catch(err){
-        console.log(err);
+    } catch (err) {
+        console.error(err);
         throw err;
     }
 
@@ -1162,7 +1158,7 @@ Parse.Cloud.afterSave("ProgramItem", async (request) => {
     //Check to make sure that we don't need to make a video room for this
     if (programItem.isNew() && !programItem.get("breakoutRoom")) {
         let track = programItem.get("track");
-        track = await track.fetch({useMasterKey: true});
+        track = await track.fetch({ useMasterKey: true });
         if (track && track.get("perProgramItemVideo")) {
             //Create a breakoutroom for this program item
             await createBreakoutRoomForProgramItem(programItem, track);
@@ -1171,8 +1167,8 @@ Parse.Cloud.afterSave("ProgramItem", async (request) => {
 });
 Parse.Cloud.beforeSave("StarredProgram", async (request) => {
     let savedProgram = request.object;
-    if(savedProgram.isNew()){
-        let acl  =new Parse.ACL();
+    if (savedProgram.isNew()) {
+        let acl = new Parse.ACL();
         acl.setPublicReadAccess(false);
         acl.setPublicWriteAccess(false);
         acl.setWriteAccess(request.user, true);
@@ -1182,26 +1178,26 @@ Parse.Cloud.beforeSave("StarredProgram", async (request) => {
 });
 Parse.Cloud.beforeSave("ProgramItemAttachment", async (request) => {
     let attachment = request.object;
-    if(attachment.isNew()){
+    if (attachment.isNew()) {
         let programItem = attachment.get("programItem");
         await programItem.fetch();
-        request.context={isNew: true};
-        if(!request.master && !programItem.getACL().getWriteAccess(request.user)){
+        request.context = { isNew: true };
+        if (!request.master && !programItem.getACL().getWriteAccess(request.user)) {
             try {
-                await programItem.save({}, {sessionToken: request.user.getSessionToken()});
+                await programItem.save({}, { sessionToken: request.user.getSessionToken() });
             } catch (err) {
-                throw "You do not have write permissions for this Program Item.";
+                throw new Error("You do not have write permissions for this Program Item.");
             }
         }
         attachment.setACL(programItem.getACL());
     }
-    if(attachment.dirty("file")){
+    if (attachment.dirty("file")) {
         let attachmentType = attachment.get("attachmentType");
         await attachmentType.fetch();
-        if(attachmentType.get("isCoverImage")){
+        if (attachmentType.get("isCoverImage")) {
             let programItem = attachment.get("programItem");
             programItem.set("posterImage", attachment.get("file"));
-            await programItem.save({}, {sessionToken: request.user.getSessionToken()});
+            await programItem.save({}, { sessionToken: request.user.getSessionToken() });
 
         }
     }
@@ -1211,15 +1207,15 @@ Parse.Cloud.beforeDelete("ProgramItemAttachment", async (request) => {
     let attachment = request.object;
     let programItem = attachment.get("programItem");
     await programItem.fetch();
-    if(attachment.get("file")) {
+    if (attachment.get("file")) {
         let file = attachment.get("file");
         let attachmentType = attachment.get("attachmentType");
         await attachmentType.fetch();
-        if(attachmentType.get("isCoverImage")) {
+        if (attachmentType.get("isCoverImage")) {
             programItem.set("posterImage", null);
-            await programItem.save({}, {sessionToken: request.user.getSessionToken()});
+            await programItem.save({}, { sessionToken: request.user.getSessionToken() });
         }
-            // const split_url = file.url().split('/');
+        // const split_url = file.url().split('/');
         // const filename = split_url[split_url.length - 1];
         const filename = file.name();
         await Parse.Cloud.httpRequest({
@@ -1231,12 +1227,11 @@ Parse.Cloud.beforeDelete("ProgramItemAttachment", async (request) => {
             }
         });
     }
-    if (programItem.get("attachments"))
-    {
+    if (programItem.get("attachments")) {
         let attachments = programItem.get("attachments");
-        attachments = attachments.filter(v=>v.id != attachment.id);
+        attachments = attachments.filter(v => v.id !== attachment.id);
         programItem.set("attachments", attachments);
-        await programItem.save({},{useMasterKey: true});
+        await programItem.save({}, { useMasterKey: true });
     }
 });
 
@@ -1250,10 +1245,10 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
             itemQ.include("programSession.room");
             itemQ.include("programSession.room.socialSpace");
             itemQ.limit(1000);
-            let items = await itemQ.find({useMasterKey: true});
+            let items = await itemQ.find({ useMasterKey: true });
             let promises = [];
-            for(let item of items){
-                if(!item.get("programSession")){
+            for (let item of items) {
+                if (!item.get("programSession")) {
                     // let sessionQ = new Parse.Query("ProgramSession");
                     // sessionQ.include("room");
                     // let session = await sessionQ.get("S9BI5jmi4O");
@@ -1266,8 +1261,8 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
                     console.log("No session for item in track: " + item.id)
                     // continue;
                 }
-                if(!item.get("breakoutRoom")){
-                    promises.push(createBreakoutRoomForProgramItem(item, track).catch(err=>console.log(err)));
+                if (!item.get("breakoutRoom")) {
+                    promises.push(createBreakoutRoomForProgramItem(item, track).catch(err => console.error(err)));
                 }
                 // if(item.get("breakoutRoom") && (!item.get("breakoutRoom").get("socialSpace") || item.get("breakoutRoom").get("socialSpace").id !=
                 // item.get("programSession").get("room").get("socialSpace").id)){
@@ -1278,16 +1273,16 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
             }
             await Promise.all(promises);
         } else {
-        //     TODO Make sure no tracks have breakout rooms still...
+            //     TODO Make sure no tracks have breakout rooms still...
         }
     }
-    if(track.dirty("perProgramItemChat")){
-        if(track.get("perProgramItemChat")){
+    if (track.dirty("perProgramItemChat")) {
+        if (track.get("perProgramItemChat")) {
             let itemQ = new Parse.Query("ProgramItem");
             itemQ.equalTo("track", track);
             itemQ.limit(1000);
             let config = await getConfig(track.get("conference"));
-            let items = await itemQ.find({useMasterKey: true});
+            let items = await itemQ.find({ useMasterKey: true });
             for (let item of items) {
                 await getOrCreateChatForProgramItem(item, config);
             }
@@ -1297,27 +1292,26 @@ Parse.Cloud.beforeSave("ProgramTrack", async (request) => {
     }
 
 });
-function timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
-async function getOrCreateChatForProgramItem(item, config){
+async function getOrCreateChatForProgramItem(item, config) {
     let attributes = {
         category: "programItem",
         programItemID: item.id
     }
-    try{
-        let chatRoom = await callWithRetry(()=>config.twilioChat.channels.create(
-            {friendlyName: item.get('title'),
-                uniqueName: 'programItem-'+item.id,
+    try {
+        let chatRoom = await callWithRetry(() => config.twilioChat.channels.create(
+            {
+                friendlyName: item.get('title'),
+                uniqueName: 'programItem-' + item.id,
                 type: 'public',
-                attributes: JSON.stringify(attributes)}));
+                attributes: JSON.stringify(attributes)
+            }));
         item.set("chatSID", chatRoom.sid);
-        await item.save({}, {useMasterKey: true});
+        await item.save({}, { useMasterKey: true });
     }
-    catch(err){
+    catch (err) {
         //Raced with another client creating the chat room
-        let chatRoom = await callWithRetry(()=>config.twilioChat.channels('programItem-'+item.id).fetch());
+        let chatRoom = await callWithRetry(() => config.twilioChat.channels('programItem-' + item.id).fetch());
         // item.set("chatSID", chatRoom.sid);
         // await item.save({}, {useMasterKey: true});
 
@@ -1325,13 +1319,6 @@ async function getOrCreateChatForProgramItem(item, config){
     }
 }
 
-function eqInclNull(a,b){
-    if(!a && !b)
-        return true;
-    if(!a || !b)
-        return false;
-    return a==b.id;
-}
 
 // Parse.Cloud.afterSave("ProgramPerson", async (request) => {
 //     let person = request.object;
@@ -1353,7 +1340,7 @@ function eqInclNull(a,b){
 //                         let member = config.twilioChat.channels(item.get("chatSID")).members.create({
 //                             identity: profile.id
 //                         }).catch(err=>{
-//                             console.log(err);
+//                             console.error(err);
 //                         });
 //                     }
 //                 }
@@ -1363,7 +1350,7 @@ function eqInclNull(a,b){
 //             await profile.save({}, {useMasterKey: true});
 //         } catch (err) {
 //             console.log("On " + person.id)
-//             console.log(err);
+//             console.error(err);
 //         }
 //     }
 // });
@@ -1413,23 +1400,21 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
         let [profile, alreadyClaimedPersons
             , newPersonsToClaim
         ] = await
-            Promise.all([profileQ.get(profileID, {useMasterKey: true}),
-                existingPersonsQ.find({useMasterKey: true}),
-                Parse.Object.fetchAll(newPersonsToFetch, {useMasterKey: true})
-            ]);
+                Promise.all([profileQ.get(profileID, { useMasterKey: true }),
+                existingPersonsQ.find({ useMasterKey: true }),
+                Parse.Object.fetchAll(newPersonsToFetch, { useMasterKey: true })
+                ]);
 
-        if (profile.get("user").id != user.id)
-            throw "Invalid profile ID";
+        if (profile.get("user").id !== user.id)
+            throw new Error("Invalid profile ID");
         console.log(newPersonsToClaim)
         console.log(alreadyClaimedPersons)
         //Check to see what the changes if any are
-        let dirty = false;
         let toSave = [];
         for (let p of newPersonsToClaim) {
-            if (!alreadyClaimedPersons.find(v => v.id == p.id)) {
+            if (!alreadyClaimedPersons.find(v => v.id === p.id)) {
                 p.set("userProfile", profile);
                 toSave.push(p);
-                let config = null;
                 if (p.get("programItems")) {
                     Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
                         let config = null;
@@ -1445,20 +1430,21 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
                                 //add the author to the chat channel
                                 if (!config)
                                     config = await getConfig(item.get("conference"));
-                                let member = callWithRetry(()=>config.twilioChat.channels(item.get("chatSID")).members.create({
+                                const _config = config;
+                                callWithRetry(() => _config.twilioChat.channels(item.get("chatSID")).members.create({
                                     identity: profile.id
                                 })).catch(err => {
                                     console.log(err);
                                 });
                             }
                         }
-                        Parse.Object.saveAll(items, {useMasterKey: true});
+                        Parse.Object.saveAll(items, { useMasterKey: true });
                     }));
                 }
             }
         }
         for (let p of alreadyClaimedPersons) {
-            if (!requestedPersonIDs.find(v => v.id == p.id)) {
+            if (!requestedPersonIDs.find(v => v.id === p.id)) {
                 p.set("userProfile", null);
                 if (p.get("programItems")) {
                     Parse.Object.fetchAll(p.get("programItems")).then((async (items) => {
@@ -1469,7 +1455,7 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
                             }
                             Parse.Object.saveAll(item.get("attachments"));
                         }
-                        Parse.Object.saveAll(items, {useMasterKey: true});
+                        Parse.Object.saveAll(items, { useMasterKey: true });
 
                     }));
                 }
@@ -1479,9 +1465,9 @@ Parse.Cloud.define("program-updatePersons", async (request) => {
         console.log(toSave)
         profile.set("programPersons", newPersonsToClaim);
         toSave.push(profile);
-        await Parse.Object.saveAll(toSave, {useMasterKey: true});
-    }catch(err){
-        console.log(err);
+        await Parse.Object.saveAll(toSave, { useMasterKey: true });
+    } catch (err) {
+        console.error(err);
         throw err;
     }
 });
@@ -1499,8 +1485,8 @@ function generateRandomString(length) {
 }
 Parse.Cloud.beforeDelete("ProgramRoom", async (request) => {
     let room = request.object;
-    if(room.get("zoomRoom")){
-        await room.get("zoomRoom").destroy({useMasterKey: true});
+    if (room.get("zoomRoom")) {
+        await room.get("zoomRoom").destroy({ useMasterKey: true });
     }
 
 });
@@ -1525,27 +1511,27 @@ Parse.Cloud.beforeDelete("ProgramRoom", async (request) => {
 //                 }
 //             });
 //         }catch(err){
-//             console.log(err);
+//             console.error(err);
 //         }
 //
 //     }
 // });
 Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
     let room = request.object;
-    if(room.isNew()) {
+    if (room.isNew()) {
         let confID = room.get("conference");
         if (!confID || !(request.master || await userInRoles(request.user, [confID.id + "-admin", confID.id + "-manager"]))) {
-            throw "You do not have permission to create a ZoomRoom for this conference";
+            throw new Error("You do not have permission to create a ZoomRoom for this conference");
         }
         let acl = new Parse.ACL();
         acl.setPublicReadAccess(false);
         acl.setPublicWriteAccess(false);
-        acl.setRoleWriteAccess(confID.id +"-manager", true);
-        acl.setRoleWriteAccess(confID.id +"-admin", true);
+        acl.setRoleWriteAccess(confID.id + "-manager", true);
+        acl.setRoleWriteAccess(confID.id + "-admin", true);
 
         acl.setRoleReadAccess(confID.id + "-moderator", true);
-        acl.setRoleReadAccess(confID.id +"-manager", true);
-        acl.setRoleReadAccess(confID.id +"-admin", true);
+        acl.setRoleReadAccess(confID.id + "-manager", true);
+        acl.setRoleReadAccess(confID.id + "-admin", true);
 
         room.setACL(acl);
     }
@@ -1565,7 +1551,7 @@ Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
 
             if (room.get("meetingID") && room.dirty("hostAccount")) {
                 //If we are changing the account, delete the meeting from zoom.
-                let res = await axios({
+                await axios({
                     method: 'delete',
                     url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID"),
                     headers: {
@@ -1580,10 +1566,10 @@ Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
 
             let host = room.get("hostAccount");
             if (!host.isDataAvailable())
-                await host.fetch({useMasterKey: true});
+                await host.fetch({ useMasterKey: true });
             let programRoom = room.get("programRoom");
             if (!programRoom.isDataAvailable())
-                await programRoom.fetch({useMasterKey: true});
+                await programRoom.fetch({ useMasterKey: true });
 
             let diffInHours = moment(room.get("endTime")).diff(moment(room.get("startTime")), 'hours');
             let recurrence = undefined;
@@ -1630,7 +1616,7 @@ Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
             }
             if (room.get("meetingID")) {
                 data.password = room.get("meetingPassword");
-                let res = await axios({
+                await axios({
                     method: 'patch',
                     url: 'https://api.zoom.us/v2/meetings/' + room.get("meetingID"),
                     data: data,
@@ -1660,15 +1646,15 @@ Parse.Cloud.beforeSave("ZoomRoom", async (request) => {
                     room.set("start_url_expiration", moment().add(2, "hours").toDate());
                     room.set("join_url", res.data.join_url);
                     room.set("registration_url", res.data.registration_url);
-                    programRoom.set("src1","ZoomUS");
-                    programRoom.set("id1", ""+res.data.id);
+                    programRoom.set("src1", "ZoomUS");
+                    programRoom.set("id1", "" + res.data.id);
                     programRoom.set("pwd1", pwd);
-                    await programRoom.save({},{useMasterKey: true});
+                    await programRoom.save({}, { useMasterKey: true });
                 } catch (err) {
-                    console.log(err);
+                    console.error(err);
                     if (err.response.data.errors)
                         console.log(err.response.data.errors)
-                    throw "Error creating zoom room";
+                    throw new Error("Error creating zoom room");
                 }
             }
         }

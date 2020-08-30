@@ -72,12 +72,12 @@ async function findOrAddUser(key) {
                         user.set("profilePhoto", file);
                     }
                 } catch (err) {
-                    console.log(err);
+                    console.error(err);
                 }
                 user = await user.signUp();
                 allUsers[key] = user;
             } catch (err) {
-                console.log(err);
+                console.error(err);
                 throw err;
             }
         } else {
@@ -169,7 +169,7 @@ async function loadProgram() {
     try {
         await Parse.Object.saveAll(newTracks);
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
     console.log('Tracks saved: ' + newTracks.length);
 
@@ -197,7 +197,7 @@ async function loadProgram() {
     try {
         await Parse.Object.saveAll(newRooms);
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
     console.log('Rooms saved: ' + newRooms.length);
 
@@ -232,7 +232,7 @@ async function loadProgram() {
     try {
         await Parse.Object.saveAll(newPeople);
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
     console.log("People saved: " + newPeople.length);
 
@@ -275,7 +275,7 @@ async function loadProgram() {
     try {
         await Parse.Object.saveAll(newItems);
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
     console.log("Items saved: " + newItems.length);
 
@@ -357,7 +357,7 @@ async function loadProgram() {
         console.log('Resaving items: ' + toSave.length);
         await Parse.Object.saveAll(toSave);
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
 }
 

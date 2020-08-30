@@ -92,7 +92,7 @@ q.first().then(version => {
                       });
     }
     
-}).catch(err => console.log(err));
+}).catch(err => console.error(err));
 
 async function addRequiredData() {
     console.log('Adding required data');

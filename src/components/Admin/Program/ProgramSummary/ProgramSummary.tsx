@@ -93,7 +93,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                 })
                 .catch(err => {
                     console.log('Upload failed: ' + err)
-                    console.log(err);
+                    console.error(err);
                     message.error("Error uploading program, please see console for debugging")
                     this.setState({ uploadLoading: false });
                 });
@@ -130,7 +130,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
             message.info("Deleted entire program");
         } catch (err) {
             message.error("Unable to delete program");
-            console.log(err);
+            console.error(err);
             console.log(err.errors);
             // message.error(err);
         }

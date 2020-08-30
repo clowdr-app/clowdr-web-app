@@ -46,7 +46,7 @@ class PresenceForm extends React.Component {
                 this.props.auth.userProfile.set("presence", presence);
                 await this.props.auth.userProfile.save();
             } catch (err) {
-                console.log(err);
+                console.error(err);
             }
         }
         this.setState({ presence: myStatus, isShowWelcome: isShowNewStatus });

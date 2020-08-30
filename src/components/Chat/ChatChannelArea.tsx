@@ -98,7 +98,7 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
                 this.setState({ members: membersStr, title: title, membersCount: chat.members.length });
             } catch (err) {
                 console.log(chat.channel.sid)
-                console.log(err);
+                console.error(err);
                 return;
             }
             return;
@@ -178,7 +178,7 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
                 }
 
             } catch (err) {
-                console.log(err);
+                console.error(err);
             }
         } else {
             this.props.toVideo(this.props.sid);

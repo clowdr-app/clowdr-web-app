@@ -592,7 +592,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                 await zoomRoom.save();
                                 message.success("Saved room");
                             } catch (err) {
-                                console.log(err);
+                                console.error(err);
                                 message.error("Unable to save room");
                             }
                         }

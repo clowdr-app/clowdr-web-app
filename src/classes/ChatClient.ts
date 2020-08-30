@@ -12,6 +12,7 @@ import { SidebarChat } from "../components/SocialTab/SidebarChat";
 import { ContextualActiveUsers } from "../components/Lobby/ContextualActiveusers";
 import { ChatFrame } from "../components/Chat/ChatFrame";
 import { Message } from "twilio-chat/lib/message";
+import assert from "assert";
 
 interface ChannelInfoAttrs {
     parseID?: string;
@@ -113,7 +114,7 @@ export default class ChatClient {
                 retry: (err, attemptNum) => {
                     if (err && err.code === 20429)
                         return true;
-                    console.log(err);
+                    console.error(err);
                     return false;
                 }
             });
@@ -157,7 +158,7 @@ export default class ChatClient {
                 // }
             }
             else {
-                console.log(err);
+                console.error(err);
             }
         }
         return null;
@@ -516,8 +517,9 @@ export default class ChatClient {
         let announcements = Object.values(this.joinedChannels).find(chan => chan.attributes.category === 'announcements-global');
         if (!announcements) {
             console.log("Trying to join announcements")
+            assert(this.conference, "Conference is null!");
             Parse.Cloud.run("join-announcements-channel", {
-                conference: this.conference?.id
+                conference: this.conference.id
             }).then(res => {
                 console.log(res);
             }).catch(err => {

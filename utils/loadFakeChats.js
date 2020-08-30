@@ -84,7 +84,7 @@ async function fn() {
             room.set("visibility", "listed")
             room.save().then((val) => {
             }).catch(err => {
-                console.log(err);
+                console.error(err);
 
             })
         }

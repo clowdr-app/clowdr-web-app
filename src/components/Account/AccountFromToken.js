@@ -61,7 +61,7 @@ class AccountFromToken extends React.Component {
                         }
                     }
                 } catch (err) {
-                    console.log(err);
+                    console.error(err);
                     this.setState({ error: "Invalid signup link. " });
                 }
             }
@@ -77,7 +77,7 @@ class AccountFromToken extends React.Component {
                     this.setState({ slackLink: res.get("value") });
             })
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
 
     }
@@ -103,7 +103,7 @@ class AccountFromToken extends React.Component {
             });
             invitationSent = true;
         } catch (err) {
-            console.log(err);
+            console.error(err);
             this.setState({ error: err.toString(), unableToSend: true });
             invitationSent = false;
         }

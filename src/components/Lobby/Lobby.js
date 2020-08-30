@@ -272,7 +272,7 @@ class Lobby extends React.Component {
         // room.save().then((val) => {
         //     _this.props.history.push("/video/" + room.id);
         // }).catch(err => {
-        //     console.log(err);
+        //     console.error(err);
         // });
     }
 

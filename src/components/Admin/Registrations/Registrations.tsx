@@ -174,7 +174,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             });
             this.setState({ sending: false })
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }
 
@@ -188,7 +188,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             console.log('REAL SEND TO ' + this.state.filteredRegs.length)
             this.setState({ sending: false })
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }
 
