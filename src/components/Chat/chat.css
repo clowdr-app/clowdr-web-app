@@ -5,7 +5,7 @@
 .timestamp {
     color: #606060;
     font-weight: normal;
-    font-size: small;
+    font-size: smaller;
     padding-left: 10px;
     padding-right: 10px;
 }

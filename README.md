@@ -1,4 +1,5 @@
 # Clowdr
+else is watching the same content. We were unable to find a technology platform
 
 Clowdr is an open source tool suite to make it easier to run interactive and
 engaging virtual conferences. Imagine that your conference attendees could
@@ -57,6 +58,7 @@ Clowdr platform -- i.e., the user-interface code that runs in each client
 browser. These instructions assume you have this repository cloned on your
 system.
 
+top-level `clowdr-web-app` directory.
 These instructions will walk you through the process of getting CLOWDR up and
 running locally. The process is broken into three main steps:
 
