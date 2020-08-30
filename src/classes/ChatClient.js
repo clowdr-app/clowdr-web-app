@@ -219,8 +219,12 @@ export default class ChatClient{
             this.appController = appController;
         if (!this.chatClientPromise) {
             this.chatClientPromise = new Promise(async (resolve) => {
-                let ret = await this._initChatClient(user, conference);
-                resolve(ret);
+                try {
+                    let ret = await this._initChatClient(user, conference);
+                    resolve(ret);
+                }catch(err){
+                    console.log(err);
+                }
             });
         }
         return this.chatClientPromise;
