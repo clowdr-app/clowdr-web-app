@@ -178,7 +178,8 @@ export class MultiChatWindow extends React.Component<MultiChatWindowProps, Multi
                                         toVideo={this.props.toVideo.bind(null, sid)}
                                         addUser={this.props.addUser.bind(null, sid)}
                                         parentRef={this.props.parentRef}
-                                        multiChatWindow={this}
+                                        setUnreadCount={(sid: string, count: number) =>
+                                            this.setUnreadCount(sid, count)}
                                     />
                                 </div>
                             })

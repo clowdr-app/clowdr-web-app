@@ -20,3 +20,7 @@ export function PromiseNull<T>(): Promise<T | null> {
 export function PromiseInjectNull<T>(p: Promise<T> | undefined | null): Promise<T | null> {
     return p || PromiseNull();
 }
+
+export function intersperse<T>(array: Array<T>, inter: T): Array<T> {
+    return array.flatMap(e => [inter, e]).slice(1);
+}

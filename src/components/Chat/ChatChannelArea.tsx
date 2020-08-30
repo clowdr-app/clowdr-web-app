@@ -2,25 +2,62 @@ import React from "react";
 import { AuthUserContext } from "../Session";
 import Parse from "parse"
 import { Button, message, Skeleton, Tooltip } from "antd";
-// @ts-ignore
 import ChatFrame from "./ChatFrame"
 import { PlusOutlined, VideoCameraAddOutlined } from "@ant-design/icons"
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
+import { ChannelInfo } from "../../classes/ChatClient"
+import { intersperse } from "../../Util";
+import { RouteComponentProps, withRouter } from "react-router";
+import { ClowdrState } from "../../ClowdrTypes";
 
-class ChatChannelArea extends React.Component {
-    constructor(props) {
+interface ChatChannelAreaProps extends RouteComponentProps {
+    sid: string;
+    parentRef: any;
+    visible: boolean;
+    toVideo: (sid: string) => void;
+    setUnreadCount: (sid: string, count: number) => void;
+    addUser: () => void;
+}
+
+interface _ChatChannelAreaProps extends ChatChannelAreaProps {
+    appState: ClowdrState;
+}
+
+interface ChatChannelAreaState {
+    sid: string;
+    chat: ChannelInfo | null;
+    unreadCount: number;
+    visible: boolean;
+    title: JSX.Element;
+    members: JSX.Element;
+    membersCount: number;
+    newVideoChatLoading: boolean;
+    newVideoChatVisible: boolean;
+}
+
+class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannelAreaState> {
+    parentRef: any;
+    mounted: boolean = false;
+    collectFocus: boolean = false;
+
+    constructor(props: _ChatChannelAreaProps) {
         super(props);
         this.state = {
             sid: this.props.sid,
             unreadCount: 0,
-            chat: this.props.chatClient.joinedChannels[this.props.sid],
-            visible: this.props.visible
+            chat: this.props.appState.chatClient.joinedChannels[this.props.sid],
+            visible: this.props.visible,
+            title: <></>,
+            members: <></>,
+            membersCount: 0,
+            newVideoChatLoading: false,
+            newVideoChatVisible: false,
         };
         this.parentRef = this.props.parentRef;
     }
 
-    async getChatTitle(chat) {
+    async getChatTitle(chat: ChannelInfo) {
         if (!chat) {
             this.setState({
                 title:
@@ -28,41 +65,34 @@ class ChatChannelArea extends React.Component {
             })
             return;
         }
-        if (chat.attributes.mode === "directMessage") {
+        if (chat.attributes.mode === "directMessage" && chat.conversation) {
             let p1 = chat.conversation.get("member1");
             let p2 = chat.conversation.get("member2");
             let profileID = p1.id;
-            if (profileID === this.props.auth.userProfile.id)
+            if (profileID === this.props.appState.userProfile.id)
                 profileID = p2.id;
             this.setState({
                 title: <UserStatusDisplay profileID={profileID} hideLink={true} />
             })
             return;
         } else {
-            let title = chat.channel.friendlyName;
+            let title = <>{chat.channel.friendlyName}</>;
             if (chat.attributes.category === "announcements-global") {
-                title = "Announcements";
+                title = <>Announcements</>;
             } else if (chat.attributes.category === "programItem" && chat.attributes.programItemID) {
                 // console.log(chat.attributes.programItemID)
                 title = <ProgramItemDisplay auth={this.props.appState} id={chat.attributes.programItemID} />
             } else if (chat.attributes.category === "breakoutRoom" || chat.attributes.mode === "group") {
-                title = chat.channel.friendlyName;
+                title = <>{chat.channel.friendlyName}</>;
             } else {
-                title = chat.channel.friendlyName;
+                title = <>{chat.channel.friendlyName}</>;
             }
             try {
                 let profiles = chat.members.map((id) => <UserStatusDisplay
                     profileID={id}
-                    inline={true}
                     key={id}
-                />)
-                if (profiles.length === 1) {
-                    profiles = profiles[0];
-                }
-                else if (profiles.length > 1) {
-                    profiles = profiles.reduce((prev, cur) => [prev, ", ", cur]);
-                }
-                let membersStr = <div>In this chat: {profiles}</div>
+                />);
+                let membersStr = <div>In this chat: {intersperse(profiles, <>, </>)}</div>
                 this.setState({ members: membersStr, title: title, membersCount: chat.members.length });
             } catch (err) {
                 console.log(chat.channel.sid)
@@ -74,58 +104,53 @@ class ChatChannelArea extends React.Component {
 
     }
 
-    updateTitle(update) {
-
+    updateTitle(update: any) { // TODO: fix any
         if (this.mounted) {
             if (update.channel && update.channel.attributes && update.updateReasons && update.updateReasons.length > 1) {
-                this.props.chatClient.joinedChannels[this.props.sid].channel = update.channel;
-                this.props.chatClient.joinedChannels[this.props.sid].attributes = update.channel.attributes;
+                this.props.appState.chatClient.joinedChannels[this.props.sid].channel = update.channel;
+                this.props.appState.chatClient.joinedChannels[this.props.sid].attributes = update.channel.attributes;
             }
-            this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
+            this.getChatTitle(this.props.appState.chatClient.joinedChannels[this.props.sid]);
         }
     }
 
     async componentDidMount() {
         this.mounted = true;
         if (!this.state.chat) {
-            await this.props.chatClient.getJoinedChannel(this.props.sid);
-            this.setState({ chat: this.props.chatClient.joinedChannels[this.props.sid] })
+            await this.props.appState.chatClient.getJoinedChannel(this.props.sid);
+            this.setState({ chat: this.props.appState.chatClient.joinedChannels[this.props.sid] })
         }
-        this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
-        this.parentRef.memberListener[this.props.sid] = async (channelInfo) => {
-            await this.getChatTitle(this.props.chatClient.joinedChannels[this.props.sid]);
+        this.getChatTitle(this.props.appState.chatClient.joinedChannels[this.props.sid]);
+        this.parentRef.memberListener[this.props.sid] = async (channelInfo: ChannelInfo) => {
+            await this.getChatTitle(this.props.appState.chatClient.joinedChannels[this.props.sid]);
         };
-        this.props.chatClient.joinedChannels[this.props.sid].channel.on("updated", this.updateTitle.bind(this));
+        this.props.appState.chatClient.joinedChannels[this.props.sid].channel.on("updated", this.updateTitle.bind(this));
     }
 
     componentWillUnmount() {
         this.mounted = false;
         this.parentRef.memberListener[this.props.sid] = null;
-        if (this.props.chatClient.joinedChannels[this.props.sid])
-            this.props.chatClient.joinedChannels[this.props.sid].channel.off("updated", this.updateTitle.bind(this));
+        if (this.props.appState.chatClient.joinedChannels[this.props.sid])
+            this.props.appState.chatClient.joinedChannels[this.props.sid].channel.off("updated", this.updateTitle.bind(this));
 
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate() {
         if (this.props.visible !== this.state.visible) {
             this.collectFocus = true;
             this.setState({ visible: this.props.visible });
         }
     }
 
-    closeChat() {
-        this.props.closeWindow();
-    }
-
     async toVideo() {
-        let dat = this.props.chatClient.joinedChannels[this.props.sid];
+        let dat = this.props.appState.chatClient.joinedChannels[this.props.sid];
         if (dat.attributes.breakoutRoom) {
             this.props.history.push("/video/" + dat.attributes.breakoutRoom)
             return;
         }
-        if (dat.channel.attributes.category === 'programItem') {
+        if (dat.attributes.category === 'programItem') {
             let itemQ = new Parse.Query("ProgramItem");
-            let item = await itemQ.get(dat.channel.attributes.programItemID);
+            let item = await itemQ.get(dat.attributes.programItemID || "");
             if (item.get("breakoutRoom")) {
                 this.props.history.push("/video/" + item.get('breakoutRoom').id)
                 return;
@@ -135,9 +160,9 @@ class ChatChannelArea extends React.Component {
             this.setState({ newVideoChatLoading: true });
             try {
                 let res = await Parse.Cloud.run("chat-getBreakoutRoom", {
-                    conference: this.props.auth.currentConference.id,
+                    conference: this.props.appState.currentConference.id,
                     sid: this.props.sid,
-                    socialSpaceID: this.props.auth.activeSpace.id
+                    socialSpaceID: this.props.appState.activeSpace.id
                 });
                 if (res.status === "error") {
                     message.error(res.message);
@@ -163,9 +188,12 @@ class ChatChannelArea extends React.Component {
         //     return <Spin/>
         let title = this.state.title;
         if (this.state.members) {
-            title = <Tooltip mouseEnterDelay={0.5}
+            title = <Tooltip
+                mouseEnterDelay={0.5}
                 overlayStyle={{ zIndex: 10 }}
-                title={this.state.members}>{this.state.title} ({this.state.membersCount} members)</Tooltip>
+                title={this.state.members}>
+                <>{this.state.title} ({this.state.membersCount} members)</>
+            </Tooltip>
         }
         let header = <div className="bottomChatHeader">
             <div className="bottomChatHeaderItems">
@@ -187,23 +215,22 @@ class ChatChannelArea extends React.Component {
                 </div>
             </div>
         </div>
-        return <>
-            <ChatFrame sid={this.props.sid} visible={this.state.visible} header={header} setUnreadCount={(c) => {
-                this.props.multiChatWindow.setUnreadCount(this.props.sid, c)
-            }
-            } />
-        </>
+        // @ts-ignore
+        return <ChatFrame sid={this.props.sid}
+            visible={this.state.visible}
+            header={header}
+            setUnreadCount={(c: number) => this.props.setUnreadCount(this.props.sid, c)}
+        />;
     }
 }
 
 const
-    AuthConsumer = (props) => (
+    AuthConsumer = withRouter((props: ChatChannelAreaProps) => (
         <AuthUserContext.Consumer>
-            {value => (
-                <ChatChannelArea {...props} appState={value} chatClient={value.chatClient} auth={value} />
+            {value => (value == null ? <span>TODO: ChatChannelAreaProps when clowdrState is null.</span> :
+                <ChatChannelArea {...props} appState={value} />
             )}
         </AuthUserContext.Consumer>
-
-    );
+    ));
 
 export default AuthConsumer;

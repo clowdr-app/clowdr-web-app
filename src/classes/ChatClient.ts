@@ -16,9 +16,11 @@ interface ChannelInfoAttrs {
     parseID?: string;
     category?: string;
     mode?: string;
+    programItemID?: string;
+    breakoutRoom?: string;
 }
 
-interface ChannelInfo {
+export interface ChannelInfo {
     channel: Channel;
     members: Array<string>;
     attributes: ChannelInfoAttrs;
