@@ -15,6 +15,8 @@ import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
 import ProgramSession from "../../classes/ProgramSession";
 import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
 import ReactMarkdown from "react-markdown";
+import { RouteComponentProps } from "react-router-dom";
+import { withRouter } from 'react-router';
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -22,7 +24,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
-interface ProgramItemDetailProps {
+interface ProgramItemDetailProps extends RouteComponentProps {
     appState: ClowdrState | null;
     ProgramItem: ProgramItem;
     openChat?: boolean;
@@ -30,7 +32,7 @@ interface ProgramItemDetailProps {
     hiddenKeys?: string[] | null;
 }
 
-interface PublicProgramItemDetailProps {
+interface PublicProgramItemDetailProps extends RouteComponentProps {
     ProgramItem: ProgramItem;
     openChat?: boolean;
     isInRoom?: boolean;
@@ -182,17 +184,17 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                         if (timeS <= now && timeE >= now)
                             title = <a href="#" className="sessionLink" onClick={() => {
                                 // @ts-ignore
-                                this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                                this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
                             }}>{title}</a>
 
                         // if (timeE >= now)
                         //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
-                        // this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                        // this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
                         // }}>Join Session</Button></Space>
                         /* BCP: Crista and i decided it doesn't make sense any more to have these links be live (because it's not clear where they should go)...
                        title = <a href="#" className="sessionLink" onClick={()=>{
                            // @ts-ignore
-                           this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                           this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
                        }}>{title}</a>
                        */
                     }
@@ -216,7 +218,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                 let when = "now"
                 if (timeE >= now)
                     roomInfo = <Button size="small" type="primary" onClick={() => {
-                        this.props.appState?.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                        this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
                     }}>Join Session</Button>
             }
             sessionInfo = <div>
@@ -329,20 +331,19 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
     linkRenderer = (props: any) => {
         let currentDomain = window.location.origin;
         if (props.href && props.href.startsWith(currentDomain))
-            return <a href="#" onClick={() => { this.props.appState?.history.push(props.href.replace(currentDomain, "")) }}>{props.children}</a>;
+            return <a href="#" onClick={() => { this.props.history.push(props.href.replace(currentDomain, "")) }}>{props.children}</a>;
         return <a href={props.href} rel="noopener noreferrer" target="_blank">{props.children}</a>;
     };
 
 }
 
 const
-    AuthConsumer = (props: PublicProgramItemDetailProps) => (
+    AuthConsumer = withRouter((props: PublicProgramItemDetailProps) => (
         <AuthUserContext.Consumer>
             {value => (
                 <ProgramItemDetails {...props} appState={value} />
             )}
         </AuthUserContext.Consumer>
-
-    );
+    ));
 
 export default AuthConsumer;

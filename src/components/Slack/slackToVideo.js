@@ -4,6 +4,7 @@ import { Alert, Spin, Typography } from "antd";
 import Parse from "parse";
 import { LoadingOutlined } from '@ant-design/icons';
 import LandingContainer from "../LandingContainer";
+import { withRouter } from 'react-router';
 
 // BCP: are we ready to jettison slack yet?
 // Jon: Yeah, let's dump it.
@@ -92,13 +93,12 @@ class SlackToVideo extends React.Component {
     }
 }
 
-const
-    AuthConsumer = (props) => (
-        <AuthUserContext.Consumer>
-            {value => (
-                <SlackToVideo {...props} user={value.user} clowdrAppState={value} />
-            )}
-        </AuthUserContext.Consumer>
-    );
+const AuthConsumer = withRouter((props) => (
+    <AuthUserContext.Consumer>
+        {value => (
+            <SlackToVideo {...props} user={value.user} clowdrAppState={value} />
+        )}
+    </AuthUserContext.Consumer>
+));
 
 export default AuthConsumer;

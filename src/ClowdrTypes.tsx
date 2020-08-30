@@ -1,6 +1,6 @@
 // BCP: (the basic structure is there, but there are a lot more details to be filled in...)
-
 import * as Parse from 'parse';
+
 import ProgramCache from "./components/Session/ProgramCache";
 import ChatClient from "./classes/ChatClient";
 import Conversation from "./classes/Conversation";
@@ -35,7 +35,6 @@ export interface ClowdrState {
     getChatClient: any;  // should be a function (higher-order?)
     getLiveChannel: any;
     chatClient: ChatClient;
-    history: string[];
     activeSpace: SocialSpace;
     getUserProfile(authorID: string, arg1: (u: any) => void): any;   // ???
     refreshUser(instance?: MaybeClowdrInstance, forceRefresh?: boolean): Promise<MaybeParseUser>;
@@ -76,7 +75,6 @@ export interface MultiChatApp {
 Some more fields that might be needed (copied from withAuthentication.js -- are they relevant?)
 {
                 currentRoom: null,
-                history: this.props.history,
                 refreshUser: this.refreshUser.bind(this),
                 getChatClient: this.getChatClient.bind(this),
                 setSocialSpace: this.setSocialSpace.bind(this),

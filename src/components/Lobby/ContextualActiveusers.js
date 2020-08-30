@@ -268,16 +268,12 @@ class ContextualActiveUsers extends React.Component {
     }
 }
 
-const AuthConsumer = (props) => (
-    // <Router.Consumer>
-    //     {router => (
+const AuthConsumer = withRouter((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <ContextualActiveUsers {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
-    // )}</Router.Consumer>
+));
 
-);
-
-export default withRouter(AuthConsumer)
+export default AuthConsumer

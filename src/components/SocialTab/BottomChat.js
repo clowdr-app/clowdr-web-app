@@ -3,6 +3,7 @@ import { AuthUserContext } from "../Session";
 import { Button, Form, Input, message, Modal, Select } from "antd"
 import MultiChatWindow from "../Chat/MultiChatWindow"
 import Parse from "parse";
+import { withRouter } from 'react-router';
 
 class BottomChat extends React.Component {
     constructor(props) {
@@ -241,7 +242,7 @@ class BottomChat extends React.Component {
                                             this.form.current.resetFields();
                                             this.setState({ newVideoChatLoading: false, newVideoChatVisible: false })
                                             if (res.status === "ok") {
-                                                this.props.auth.history.push("/video/" + this.props.auth.currentConference.get("conferenceName") + "/" + values.title)
+                                                this.props.history.push("/video/" + this.props.auth.currentConference.get("conferenceName") + "/" + values.title)
                                             }
                                         }
 
@@ -390,14 +391,14 @@ class BottomChat extends React.Component {
 //     async toVideo() {
 //         let dat = this.props.chatClient.joinedChannels[this.props.sid];
 //         if (dat.attributes.breakoutRoom) {
-//             this.props.auth.history.push("/video/" + dat.attributes.breakoutRoom)
+//             this.props.history.push("/video/" + dat.attributes.breakoutRoom)
 //             return;
 //         }
 //         if (dat.channel.attributes.category === 'programItem') {
 //             let itemQ = new Parse.Query("ProgramItem");
 //             let item = await itemQ.get(dat.channel.attributes.programItemID);
 //             if (item.get("breakoutRoom")) {
-//                 this.props.auth.history.push("/video/" + item.get('breakoutRoom').id)
+//                 this.props.history.push("/video/" + item.get('breakoutRoom').id)
 //                 return;
 //             }
 //         }
@@ -415,7 +416,7 @@ class BottomChat extends React.Component {
 //                 } else {
 //                     this.setState({ newVideoChatLoading: false, newVideoChatVisible: false })
 //                     if (res.status === "ok") {
-//                         this.props.auth.history.push("/video/" + res.room)
+//                         this.props.history.push("/video/" + res.room)
 //                     }
 //                 }
 
@@ -494,12 +495,12 @@ class BottomChat extends React.Component {
 //     }
 // }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = withRouter((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <BottomChat {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
+));
 
-);
 export default AuthConsumer;

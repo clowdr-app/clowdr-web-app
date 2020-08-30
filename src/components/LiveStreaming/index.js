@@ -3,6 +3,7 @@ import { Alert, Spin } from 'antd';
 import moment from 'moment';
 import LiveStreamingPanel from "./LiveStreamingPanel";
 import AuthUserContext from "../Session/context";
+import { withRouter } from "react-router-dom";
 
 class LiveStreaming extends Component {
     constructor(props) {
@@ -322,12 +323,12 @@ class LiveStreaming extends Component {
     }
 }
 
-const LiveVideosArea = (props) => (
+const LiveVideosArea = withRouter((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <LiveStreaming {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
-);
+));
 
 export default LiveVideosArea;

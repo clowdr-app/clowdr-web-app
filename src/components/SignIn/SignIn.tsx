@@ -3,6 +3,7 @@ import { Button, message, Form, Input, Tooltip } from 'antd';
 import Parse from "parse";
 import { AuthUserContext } from "../Session";
 import { ClowdrState } from "../../ClowdrTypes";
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 interface SignInState {
     email: string;
@@ -10,8 +11,7 @@ interface SignInState {
     error: Error | null;
 }
 
-interface SignInProps {
-    history: Array<string>;
+interface SignInProps extends RouteComponentProps {
     dontBounce: boolean;
     clowdrAppState: ClowdrState;
 }
@@ -49,7 +49,7 @@ class SignIn extends Component<SignInProps, SignInState> {
             console.log("[SignIn]: User=" + JSON.stringify(user));
             await this.props.clowdrAppState.refreshUser();
             this.props.history.push("/");
-            window.location.assign("/");
+            this.props.history.go(0);
         } catch (e) {
             alert(e.message);
         }
@@ -120,12 +120,12 @@ class SignIn extends Component<SignInProps, SignInState> {
     }
 }
 
-const AuthConsumer = (props: SignInProps) => (
+const AuthConsumer = withRouter((props: SignInProps) => (
     <AuthUserContext.Consumer>
         {value => (value == null ? <span>TODO: SignIn page when clowdrState is null.</span> :
             <SignIn {...props} clowdrAppState={value} />
         )}
     </AuthUserContext.Consumer>
-);
+));
 
 export default AuthConsumer;

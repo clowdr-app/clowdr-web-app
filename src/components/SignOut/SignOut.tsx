@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import * as ROUTES from '../../constants/routes';
 import { Parse } from "../parse/parse";
 import { AuthUserContext } from "../Session";
 import { MaybeParseUser, MaybeClowdrInstance } from "../../ClowdrTypes";
+import { RouteComponentProps, withRouter } from 'react-router'
 
-interface SignOutProps {
-    history: string[];
+interface SignOutProps extends RouteComponentProps {
     refreshUser: (instance?: MaybeClowdrInstance, forceRefresh?: boolean) => Promise<MaybeParseUser>;
 }
 
@@ -16,7 +15,7 @@ class SignOut extends Component<SignOutProps, SignOutState> {
     componentDidMount() {
         Parse.User.logOut().then(() => {
             this.props.refreshUser(null, true).then(() => {
-                this.props.history.push(ROUTES.LANDING);
+                this.props.history.push("/" /*TODO: Lookup using router match*/);
             });
         }).catch((err) => {
             console.log(err);
@@ -24,16 +23,16 @@ class SignOut extends Component<SignOutProps, SignOutState> {
     }
 
     render() {
-        return <div></div>
+        return <></>
     }
 }
 
-const AuthConsumer = (props: SignOutProps) => (
+const AuthConsumer = withRouter((props: SignOutProps) => (
     <AuthUserContext.Consumer>
         {value => (value == null ? <span>TODO: SignOut page when clowdrState is null.</span> :
             <SignOut {...props} refreshUser={value.refreshUser} />
         )}
     </AuthUserContext.Consumer>
-);
+));
 
 export default AuthConsumer;

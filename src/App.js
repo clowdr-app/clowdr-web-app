@@ -47,7 +47,6 @@ import SocialTab from "./components/SocialTab";
 import About from "./components/About";
 import Help from "./components/Help";
 import SidebarChat from "./components/SocialTab/SidebarChat";
-import { withRouter } from "react-router";
 import BottomChat from "./components/SocialTab/BottomChat";
 import ProgramItem from "./components/ProgramItem";
 import UsersList from "./components/Admin/Users";
@@ -255,7 +254,6 @@ class App extends Component {
     componentDidMount() {
         if (this.props.clowdrAppState.currentConference)
             this.refreshConferenceInformation();
-        this.props.clowdrAppState.history = this.props.history;
         if (this.props.clowdrAppState.user && this.props.clowdrAppState.user.get("passwordSet"))
             this.setState({ isShowOtherPanes: true });
 
@@ -272,7 +270,6 @@ class App extends Component {
         let baseRoutes = [
             <Route key="finishAccount" exact path="/finishAccount/:userID/:conferenceID/:token" component={AccountFromToken} />,
             <Route key="forgotPassword" exact path="/resetPassword/:userID/:token" component={ForgotPassword} />
-
         ];
         if (this.isSlackAuthOnly()) {
             return <>
@@ -323,9 +320,9 @@ class App extends Component {
             <Route exact path="/signout" component={SignOut} />
             <Route exact path="/admin" component={(props) => <SignIn {...props} dontBounce={true} />} />
 
-            {/*<Route exact path='/admin/schedule' component={withAuthentication(ScheduleList)} />*/}
+            {/*<Route exact path='/admin/schedule' component={withRouter(withAuthentication(ScheduleList))} />*/}
             <Route exact path='/admin/users' component={UsersList} />
-            {/*<Route exact path='/admin/users/edit/:userID' component={withAuthentication(EditUser)} />*/}
+            {/*<Route exact path='/admin/users/edit/:userID' component={withRouter(withAuthentication(EditUser))} />*/}
             <Route exact path='/admin/clowdr' component={Clowdr} />
             <Route exact path='/admin/configuration' component={Configuration} />
             <Route exact path='/admin/registrations' component={Registrations} />
@@ -435,16 +432,11 @@ class App extends Component {
                         </Content>
                     </Layout>
                 </div>
-                {/* <div style={{position:
-                    "sticky", bottom: 0}}>
-                        <Chat />
-                    </div> */}
             </div>
         );
     }
 }
 
-let RouteredApp = withRouter(App);
 class ClowdrApp extends React.Component {
     okBrowser = () => <></>;
     browserHandler = {
@@ -459,7 +451,7 @@ class ClowdrApp extends React.Component {
             <BrowserDetection>
                 {this.browserHandler}
             </BrowserDetection>
-            <RouteredApp clowdrAppState={this.props.clowdrAppState} />
+            <App {...this.props} />
         </BrowserRouter>
     }
 }

@@ -120,14 +120,14 @@ class ChatChannelArea extends React.Component {
     async toVideo() {
         let dat = this.props.chatClient.joinedChannels[this.props.sid];
         if (dat.attributes.breakoutRoom) {
-            this.props.auth.history.push("/video/" + dat.attributes.breakoutRoom)
+            this.props.history.push("/video/" + dat.attributes.breakoutRoom)
             return;
         }
         if (dat.channel.attributes.category === 'programItem') {
             let itemQ = new Parse.Query("ProgramItem");
             let item = await itemQ.get(dat.channel.attributes.programItemID);
             if (item.get("breakoutRoom")) {
-                this.props.auth.history.push("/video/" + item.get('breakoutRoom').id)
+                this.props.history.push("/video/" + item.get('breakoutRoom').id)
                 return;
             }
         }
@@ -145,7 +145,7 @@ class ChatChannelArea extends React.Component {
                 } else {
                     this.setState({ newVideoChatLoading: false, newVideoChatVisible: false })
                     if (res.status === "ok") {
-                        this.props.auth.history.push("/video/" + res.room)
+                        this.props.history.push("/video/" + res.room)
                     }
                 }
 

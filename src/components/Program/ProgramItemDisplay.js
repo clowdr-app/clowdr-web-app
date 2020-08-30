@@ -4,10 +4,11 @@ import { Button, List, Skeleton, Tooltip } from "antd";
 import BreakoutRoomDisplay from "../Lobby/BreakoutRoomDisplay"
 import ProgramPersonDisplay from "./ProgramPersonDisplay";
 import moment from "moment";
+import { withRouter } from 'react-router';
 
 var timezone = require('moment-timezone');
 
-export default class ProgramItemDisplay extends React.Component {
+class ProgramItemDisplay extends React.Component {
     constructor(props) {
         super(props);
         this.state = { loading: true };
@@ -75,7 +76,7 @@ export default class ProgramItemDisplay extends React.Component {
 
                 sessionInfo.push(<List.Item key={event.id} style={{ color: "white" }}>
                     <a href="#" onClick={() => {
-                        this.props.auth.history.push("/live/now/" + session.get("room").get("name"))
+                        this.props.history.push("/live/now/" + session.get("room").get("name"))
                     }
                     }>{session.get("title")} </a>({moment(event.get("startTime")).tz(timezone.tz.guess()).calendar()})
                 </List.Item>);
@@ -93,7 +94,7 @@ export default class ProgramItemDisplay extends React.Component {
                 let when = "now"
                 if (timeE >= now)
                     roomInfo = <div><b>Presentation room: </b><Button type="primary" onClick={() => {
-                        this.props.auth.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                        this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
                     }}>{session.get("room").get("name")}</Button></div>
                 else
                     roomInfo = <div><b>Presentation room:</b> This session has ended.</div>
@@ -111,7 +112,7 @@ export default class ProgramItemDisplay extends React.Component {
             {(this.props.auth.user && this.state.ProgramItem.get("breakoutRoom")) ?
                 <p><b>Video Chat Room: </b>
                     <Button onClick={() => {
-                        this.props.auth.history.push("/breakoutRoom/" + this.state.ProgramItem.get("confKey"))
+                        this.props.history.push("/breakoutRoom/" + this.state.ProgramItem.get("confKey"))
                     }
                     }>Join Video Chat Room</Button></p> : <></>}
 
@@ -128,3 +129,5 @@ export default class ProgramItemDisplay extends React.Component {
         </div>
     }
 }
+
+export default withRouter(ProgramItemDisplay);

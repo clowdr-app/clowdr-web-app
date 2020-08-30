@@ -1,4 +1,5 @@
 import React from 'react';
+import * as H from 'history';
 
 import AuthUserContext from './context';
 import Parse, { User, Role } from "parse";
@@ -14,9 +15,8 @@ import LiveActivity from '../../classes/LiveActivity';
 import { assert } from '../../Util';
 import { MaybeParseUser, MaybeClowdrInstance } from "../../ClowdrTypes";
 
-// TS: Push through the change to Props/State globally!
 interface Props {
-    history: string[];
+    history?: H.History | null;
 }
 
 // TS: Use the ones that Jing defined in Util.ts, not these
@@ -30,7 +30,6 @@ interface State {
     loading: boolean,
     roles: any,
     currentRoom: any,
-    history: string[] | undefined,
     refreshUser: (instance?: MaybeClowdrInstance, forceRefresh?: boolean) => Promise<MaybeParseUser>,
     getChatClient: any,
     setSocialSpace: any,
@@ -161,7 +160,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 loading: true,
                 roles: [],
                 currentRoom: null,
-                history: this.props.history,
                 refreshUser: this.refreshUser.bind(this),
                 getChatClient: this.getChatClient.bind(this),
                 setSocialSpace: this.setSocialSpace.bind(this),
@@ -638,8 +636,13 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         } catch (err2) {
                             console.log(err2);
                         }
-                        if (_this.props.history)
+
+                        // TODO: This is less than ideal - but because App.js is unrouted,
+                        //       it's possible to reach this code without a router available
+                        if (_this.props.history) {
                             _this.props.history.push("/signin")
+                        }
+
                         return null;
                     }
                 } else {
@@ -929,12 +932,13 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
         render() {
             if (this.state.loading)
-                return <div><Spin size="large" />
-                </div>
+                return <Spin size="large" />
             return (
-                // @ts-ignore    Two problems here...??  @Jon
+                // @ts-ignore
                 //Jon: I think that the Context needs to have the clowdrappstate as a type parameter? I'm not sure how to use contexts with react+typescript.
-                <AuthUserContext.Provider value={this.state}> <Component {...this.props} clowdrAppState={this.state} parseLive={this.state.parseLive} />
+                <AuthUserContext.Provider value={this.state}>
+                    {/* @ts-ignore */}
+                    <Component {...this.props} clowdrAppState={this.state} parseLive={this.state.parseLive} />
                 </AuthUserContext.Provider>
             );
         }

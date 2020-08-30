@@ -194,12 +194,12 @@ class NewRoomForm extends React.Component {
         </div>
     }
 }
-const AuthConsumer = (props) => (
+const AuthConsumer = withRouter((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <NewRoomForm {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
+));
 
-);
-export default withRouter(AuthConsumer);
+export default AuthConsumer;

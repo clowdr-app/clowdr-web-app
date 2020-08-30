@@ -287,7 +287,7 @@ class Lobby extends React.Component {
         return this.state.maxDisplayedRooms < this.state.rooms.length;
     }
 
-    // BCP: Copied frok ContextualActiveUsers.js -- should not be duplicated, really!!
+    // BCP: Copied from ContextualActiveUsers.js -- should not be duplicated, really!!
     joinCall(room) {
         if (room.get("programItem")) {
             this.props.history.push("/program/" + room.get("programItem").get("confKey"))
@@ -565,7 +565,7 @@ class Lobby extends React.Component {
                 {/*            {*/}
                 {/*                Object.values(allActiveRooms)//.slice(0, this.state.maxDisplayedRooms)*/}
                 {/*                    .map((item) => (*/}
-                {/*                    <MeetingSummary history={this.props.history} key={item.id} item={item} parseLive={this.props.parseLive} auth={this.props.auth} />*/}
+                {/*                    <MeetingSummary key={item.id} item={item} parseLive={this.props.parseLive} auth={this.props.auth} />*/}
                 {/*                ))}*/}
                 {/*        </Space>*/}
                 {/*    /!*</InfiniteScroll>*!/*/}
@@ -576,11 +576,12 @@ class Lobby extends React.Component {
 
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = withLoginRequired((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <Lobby {...props} auth={value} parseLive={value.parseLive} />
         )}
     </AuthUserContext.Consumer>
-);
-export default withLoginRequired(AuthConsumer);
+));
+
+export default AuthConsumer;

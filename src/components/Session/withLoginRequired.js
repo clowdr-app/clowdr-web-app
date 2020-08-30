@@ -1,6 +1,7 @@
 import React from 'react';
 import { Spin } from "antd";
 import AuthUserContext from "./context";
+import { withRouter } from 'react-router';
 
 const withLoginRequired = Component => {
     class WithLoginRequired extends React.Component {
@@ -33,7 +34,7 @@ const withLoginRequired = Component => {
         render() {
             if (this.state.showingLogin) {
                 this.props.history.push("/signin");
-                return <div></div>;
+                return <></>;
             }
             return (
                 <AuthUserContext.Consumer>
@@ -55,7 +56,7 @@ const withLoginRequired = Component => {
     }
 
     WithLoginRequired.contextType = AuthUserContext;
-    return WithLoginRequired;
+    return withRouter(WithLoginRequired);
 };
 
 export default withLoginRequired;

@@ -5,8 +5,9 @@ import Parse from "parse";
 import { LoadingOutlined } from '@ant-design/icons';
 import LandingContainer from "../LandingContainer";
 import Account from "./Account";
+import { withRouter } from "react-router";
 
-class SlackToVideo extends React.Component {
+class AccountFromToken extends React.Component {
 
     constructor(props) {
         super(props);
@@ -264,12 +265,12 @@ class SlackToVideo extends React.Component {
 }
 
 const
-    AuthConsumer = (props) => (
+    AuthConsumer = withRouter((props) => (
         <AuthUserContext.Consumer>
             {value => (
-                <SlackToVideo {...props} user={value.user} clowdrAppState={value} />
+                <AccountFromToken {...props} user={value.user} clowdrAppState={value} />
             )}
         </AuthUserContext.Consumer>
-    );
+    ));
 
 export default AuthConsumer;

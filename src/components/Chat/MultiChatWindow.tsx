@@ -172,7 +172,9 @@ class MultiChatWindow extends React.Component<MultiChatWindowProps, MultiChatWin
                             //Uncomment above to hide social-space chats
                             .map((sid) => {
                                 return <div key={sid} className={sid === this.state.activeChatSID ? "visibleChat" : "hiddenChat"}>
-                                    <ChatChannelArea sid={sid} visible={this.state.activeChatSID === sid}
+                                    <ChatChannelArea
+                                        sid={sid}
+                                        visible={this.state.activeChatSID === sid}
                                         toVideo={this.props.toVideo.bind(null, sid)}
                                         addUser={this.props.addUser.bind(null, sid)}
                                         parentRef={this.props.parentRef}

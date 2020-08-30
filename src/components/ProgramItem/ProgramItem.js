@@ -4,6 +4,7 @@ import ProgramItemDetails from "../ProgramItem/ProgramItemDetails";
 import { AuthUserContext } from "../Session";
 import { Alert, Spin } from "antd";
 import { pdfjs } from 'react-pdf';
+import { withRouter } from "react-router";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -85,18 +86,22 @@ class ProgramItem extends React.Component {
                 type="error"
             />
         }
-        return <ProgramItemDetails ProgramItem={this.state.ProgramItem} isInRoom={this.state.isInRoom} openChat={false} />
+        return <ProgramItemDetails
+            ProgramItem={this.state.ProgramItem}
+            isInRoom={this.state.isInRoom}
+            openChat={false}
+        />;
     }
 }
 
 const
-    AuthConsumer = (props) => (
+    AuthConsumer = withRouter((props) => (
         <AuthUserContext.Consumer>
             {value => (
                 <ProgramItem {...props} auth={value} />
             )}
         </AuthUserContext.Consumer>
 
-    );
+    ));
 
 export default AuthConsumer;

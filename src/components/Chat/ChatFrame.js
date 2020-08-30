@@ -12,6 +12,7 @@ import { SmileOutlined } from "@ant-design/icons"
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import InfiniteScroll from 'react-infinite-scroller';
 // import EmojiPickerPopover from "./EmojiPickerPopover";
+import { withRouter } from 'react-router';
 
 const emojiSupport = text => emojify(text.value, { output: 'unicode' });
 
@@ -294,7 +295,7 @@ class ChatFrame extends React.Component {
     linkRenderer = (props) => {
         let currentDomain = window.location.origin;
         if (props.href && props.href.startsWith(currentDomain))
-            return <a href="#" onClick={() => { this.props.auth.history.push(props.href.replace(currentDomain, "")) }}>{props.children}</a>;
+            return <a href="#" onClick={() => { this.props.history.push(props.href.replace(currentDomain, "")) }}>{props.children}</a>;
         return <a href={props.href} rel="noopener noreferrer" target="_blank">{props.children}</a>;
     };
 
@@ -690,7 +691,7 @@ class ChatFrame extends React.Component {
         //
         let actionButton;
         if (m.attributes && m.attributes.linkTo) {
-            actionButton = <Button onClick={() => { this.props.auth.history.push(m.attributes.path) }}>Join Video</Button>
+            actionButton = <Button onClick={() => { this.props.history.push(m.attributes.path) }}>Join Video</Button>
         }
         // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
         options.push(
@@ -779,12 +780,12 @@ class ChatFrame extends React.Component {
     }
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = withRouter((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <ChatFrame {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
+));
 
-);
 export default AuthConsumer;

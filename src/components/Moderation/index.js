@@ -184,11 +184,12 @@ class Moderation extends React.Component {
     }
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = withLoginRequired((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <Moderation {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
-);
-export default withLoginRequired(AuthConsumer);
+));
+
+export default AuthConsumer;

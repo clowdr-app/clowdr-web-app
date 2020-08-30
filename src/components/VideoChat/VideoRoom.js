@@ -972,12 +972,13 @@ export function DeviceSelector() {
     );
 }
 
-const AuthConsumer = (props) => (
+const AuthConsumer = withLoginRequired((props) => (
     <AuthUserContext.Consumer>
         {value => (
             <VideoRoom {...props} clowdrAppState={value}
             />
         )}
     </AuthUserContext.Consumer>
-);
-export default withLoginRequired(AuthConsumer);
+));
+
+export default AuthConsumer;

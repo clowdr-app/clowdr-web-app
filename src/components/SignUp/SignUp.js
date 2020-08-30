@@ -37,7 +37,7 @@ class SignUp extends Component {
         user.set("email", email);
 
         user.signUp().then(() => {
-            this.props.history.push(ROUTES.ACCOUNT);
+            this.props.history.push("/account" /* TODO: Lookup from route match */);
         }).catch((error) => {
             // Show the error message somewhere and let the user try again.
             alert("Error: " + error.code + " " + error.message);

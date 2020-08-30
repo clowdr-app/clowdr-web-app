@@ -321,11 +321,12 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     }
 }
 
-const AuthConsumer = (props: UsersListProps) => (
+const AuthConsumer = withLoginRequired((props: UsersListProps) => (
     <AuthUserContext.Consumer>
         {value => (value == null ? <></> :   // @ts-ignore  TS: Can value really be null here?
             <UsersList {...props} auth={value} />
         )}
     </AuthUserContext.Consumer>
-);
-export default withLoginRequired(AuthConsumer);
+));
+
+export default AuthConsumer;

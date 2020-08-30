@@ -441,7 +441,7 @@ class Account extends React.Component<Props, State> {
     }
 }
 
-const AuthConsumerAccount = (props: Props) => (
+const AuthConsumer = withLoginRequired((props: Props) => (
     <ProgramContext.Consumer>
         {({ items }) => (
             <AuthUserContext.Consumer>
@@ -450,5 +450,6 @@ const AuthConsumerAccount = (props: Props) => (
                 )}
             </AuthUserContext.Consumer>
         )}</ProgramContext.Consumer>
-);
-export default withLoginRequired(AuthConsumerAccount);
+));
+
+export default AuthConsumer;

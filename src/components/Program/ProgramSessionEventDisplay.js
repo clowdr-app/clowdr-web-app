@@ -4,10 +4,11 @@ import { Tag, Button, Skeleton, Tooltip } from "antd";
 import ProgramPersonDisplay from "./ProgramPersonDisplay";
 import moment from "moment";
 import { startTImeOffsetForProgramDisplay } from "../../globals";
+import { withRouter } from 'react-router';
 
 var timezone = require('moment-timezone');
 
-export default class ProgramSessionEventDisplay extends React.Component {
+class ProgramSessionEventDisplay extends React.Component {
     constructor(props) {
         super(props);
         this.state = { loading: true };
@@ -88,7 +89,7 @@ export default class ProgramSessionEventDisplay extends React.Component {
             {(this.props.auth.user && this.state.ProgramItem.get("breakoutRoom")) ?
                 <p><b>Breakout Room: </b>
                     <Button onClick={() => {
-                        this.props.auth.history.push("/breakoutRoom/" + this.state.ProgramItem.get("confKey"))
+                        this.props.history.push("/breakoutRoom/" + this.state.ProgramItem.get("confKey"))
                     }
                     }>Join Breakout Room</Button></p> : <></>}
 
@@ -100,3 +101,5 @@ export default class ProgramSessionEventDisplay extends React.Component {
 
     }
 }
+
+export default withRouter(ProgramSessionEventDisplay);
