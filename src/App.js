@@ -116,76 +116,6 @@ class App extends Component {
         return false;
     }
 
-    siteHeader() {
-        if (!this.props.clowdrAppState.currentConference) {
-            return <GenericHeader />
-        } else {
-            let headerImage = this.props.clowdrAppState.currentConference.get("headerImage");
-            let headerText = this.props.clowdrAppState.currentConference.get("headerText");
-            let confSwitcher;
-            let clowdrActionButtons;
-            if (this.props.clowdrAppState.validConferences && this.props.clowdrAppState.validConferences.length > 1) {
-                confSwitcher = <Select
-                    placeholder="Change conference"
-                    onChange={(conf) => {
-                        console.log(conf);
-                        this.props.clowdrAppState.helpers.setActiveConference(this.props.clowdrAppState.validConferences[conf]);
-                    }}>
-                    {
-                        this.props.clowdrAppState.validConferences.map((conf, i) =>
-                            <Select.Option key={i}>{conf.get("conferenceName")}</Select.Option>)
-                    }
-                </Select>
-                clowdrActionButtons = <span>
-                    {(this.props.clowdrAppState.user && this.props.clowdrAppState.isModerator ? <NavLink to="/moderation"><Button size="small">Moderation</Button></NavLink> : <></>)}
-                    <Tooltip mouseEnterDelay={0.5} title="CLOWDR Support"><NavLink to="/help"><Button size="small">Help</Button></NavLink></Tooltip>
-                    <Tooltip mouseEnterDelay={0.5} title="About CLOWDR"><NavLink to="/about"><Button size="small">About</Button></NavLink></Tooltip>
-                    <NavLink to="/signout"><Button size="small">Sign Out</Button></NavLink>
-                </span>
-
-                if (confSwitcher) {
-                    confSwitcher = <span style={{ float: "right" }}>{confSwitcher} {clowdrActionButtons}</span>
-                }
-                else
-                    confSwitcher = <span style={{ float: "right" }}>{clowdrActionButtons}</span>;
-
-                if (headerImage) {
-                    let logo = ""
-                    if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
-                        logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
-                            <img src={headerImage.url()} className="App-logo" height="75" alt="logo" title="Click to replace logo" />
-                        </Upload>
-                    }
-                    else
-                        logo = <img src={headerImage.url()} className="App-logo" height="75" alt="logo" />
-
-                    return <table className="site-layout-background" style={{ height: "75px", clear: "both" }}>
-                        <tbody><tr>
-                            <td>{logo}</td>
-                            <td><Typography.Title style={{ display: "inherit" }}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
-                        </tr></tbody></table>
-                }
-                else if (headerText) {
-                    let logo = "";
-                    if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
-                        logo = <Upload accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>
-                            <Button type="primary" size="small" title="Upload conference logo">
-                                <UploadOutlined />
-                            </Button>
-                        </Upload>
-                    }
-                    return <table className="site-layout-background" style={{ height: "75px", clear: "both" }}>
-                        <tbody><tr>
-                            <td>{logo}</td><td><Typography.Title style={{ display: 'inherit' }}>{headerText}</Typography.Title></td><td>{confSwitcher}</td>
-                        </tr></tbody></table>
-                } else
-                    return <div className="site-layout-background" style={{ clear: 'both' }}>
-                        <div style={{ float: 'left' }}><Typography.Title>
-                            {this.props.clowdrAppState.currentConference.get('conferenceName')} Group Video Chat</Typography.Title></div>{confSwitcher}</div>
-            }
-        }
-    }
-
     navBar() {
         let logo = undefined;
         let className = "logo"
@@ -328,7 +258,6 @@ class App extends Component {
                 <div>
                     <Layout className="site-layout">
                         <div id="top-content">
-                            {this.siteHeader()}
                             {this.navBar()}
                         </div>
 
