@@ -69,8 +69,8 @@ q.first().then(version => {
                 version.set("version", 0);
                 version.save().then(res => {
                     console.log("Schema version set to 0");
+                    addRequiredData();
                 });
-                await addRequiredData();
             }
         });
     }
@@ -98,8 +98,8 @@ async function addRequiredData() {
 
     let Instance = Parse.Object.extend('ClowdrInstance');
     let instance = new Instance();
-    instance.set('conferenceName', 'Test');
-    instance.set('shortName', 'test');
+    instance.set('conferenceName', 'XYZ');
+    instance.set('shortName', 'xyz');
     instance.set('isInitialized', true);
     instance.set('adminName', "Clowdr Admin");
     instance.set('adminEmail', "clowdr@localhost");
@@ -184,7 +184,7 @@ async function activate(instance) {
             roleACL.setPublicReadAccess(true);
             roleACL.setPublicWriteAccess(false);
             roleACL.setWriteAccess(instance.id+"-admin", true);
-            let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference', 'ClowdrAdmin']
+            let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference', 'ClowdrSysAdmin']
             let roles = [];
 
             roleNames.map(r => {

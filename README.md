@@ -124,11 +124,8 @@ Run the following script to add and initialize a minimal database:
 $ npm run init-app
 ```
 
-After this command runs, you should be able to see all tables with some
-essential data stored in the database in Back4App.
-
-@Jon/@Crista: Pressing tab in my browser (safari) selected the URL bar at the
-top! right arrow might have worked.
+After this command runs, you should be able to see all tables with some essential data stored in the database in Back4App. 
+For verification, please check the ClowdrInstance table -- there should be one row there for a conference instance named XYZ. Check also the UserProfile table, and verify that there is one row there for user Clowdr Admin. You can check the few other tables that have data on them.
 
 Select the `InstanceConfiguration` table, and click on the security icon on the
 top-right (a shield-like icon). Double check that Public read and write are
@@ -149,11 +146,7 @@ you give it, `YOUR_APP_NAME` matches the environment variable
 
 #### Cloud Functions
 
-Go to Cloud Code (also called "Cloud Code Functions") in your Back4App
-workspace, upload all files with .js and .json extensions under backend/cloud.
-You may need to click and drag the `package.json` file from the folder `public`
-into `cloud` before deploying. Now click "deploy".
-
+Deploying the cloud functions requires the installation of the [Back2App console client](https://www.back4app.com/docs/platform/parse-cli). Follow the instructions there. Clowdr's cloud code can be found under the folder `backend`; both of the subfolders in there must be deployed to Back4App. If, during the setup of the b4a CLI, you get an error saying that it can't use the existing `backend` folder, create a parallel `back4app` folder under the clowdr-web-app, and copy the two subfolders of `backend`, and their entire contents, there. Then, before deploying, change to `back4app/cloud` and do `$ npm init`. After this, you can do `$ b4a deploy`.
 
 #### Developing and Debugging Cloud Functions
 It's *much* easier to debug and develop cloud functions by running a local parse

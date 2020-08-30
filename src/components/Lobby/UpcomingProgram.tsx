@@ -113,9 +113,9 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         let now = new Date().getTime();
         var timeA = a.get("startTime") ? a.get("startTime").getTime() : now;
         var timeB = b.get("startTime") ? b.get("startTime").getTime() : now;
-        if(timeA == timeB){
-            timeA = b.get("endTime").getTime();
-            timeB = a.get("endTime").getTime();
+        if(timeA == timeB && b.get("endTime") && a.get("endTime")){
+            timeA = a.get("endTime").getTime();
+            timeB = b.get("endTime").getTime();
         }
         return timeA > timeB ? 1 : timeA == timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
     }
