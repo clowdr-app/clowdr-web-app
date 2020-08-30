@@ -30,7 +30,7 @@ class UserStatusDisplay extends React.Component<any, any> {
         this.props.auth.programCache.getUserProfileByProfileID(this.state.id, this).then((profile: any) => {
             if (!this.mounted)
                 return;
-            let userStatus = this.props.auth.helpers.presences[this.state.id];
+            let userStatus = this.props.auth.presences[this.state.id];
             this.setState({ profile: profile, presence: userStatus })
             //Fetch any related program item info
         });
@@ -44,8 +44,8 @@ class UserStatusDisplay extends React.Component<any, any> {
     componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
         if (!this.mounted)
             return;
-        if (this.props.auth.helpers.presences[this.state.id] !== this.state.presence) {
-            this.setState({ presence: this.props.auth.helpers.presences[this.state.id] });
+        if (this.props.auth.presences[this.state.id] !== this.state.presence) {
+            this.setState({ presence: this.props.auth.presences[this.state.id] });
         }
     }
 

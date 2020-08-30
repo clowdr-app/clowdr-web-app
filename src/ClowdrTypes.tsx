@@ -5,6 +5,8 @@ import ProgramCache from "./components/Session/ProgramCache";
 import ChatClient from "./classes/ChatClient";
 import Conversation from "./classes/Conversation";
 import { Channel } from "twilio-chat/lib/channel";
+import BreakoutRoom from './classes/BreakoutRoom';
+import UserPresence from './classes/UserPresence';
 // Is this one needed?
 // import ProgramItem from "./classes/ProgramItem";
 
@@ -19,6 +21,25 @@ export type MaybeParseUser = Parse.User | null;
 export type MaybeUserProfile = UserProfile | null;
 export type MaybeClowdrInstance = ClowdrInstance | null;
 
+export interface ClowdrStateHelpers {
+    getBreakoutRoom: (id: string, component: React.Component) => Promise<BreakoutRoom | null>;
+    cancelBreakoutRoomSubscription: (id: string, component: React.Component) => void;
+    setExpandedProgramRoom: (room: Parse.Object | null) => void;
+    createOrOpenDM: (profileOfUserToDM: UserProfile) => Promise<void>;
+    setActiveConference: (conf: ClowdrInstance) => Promise<void>;
+    // `setGlobalState` is so dangerous that it's untypeable!
+    //    To give it a type, we would need to know the type of ClowdrState,
+    //    which itself includes ClowdrStateHelpers. TypeScript doesn't allow
+    //    such loops.
+    setGlobalState: (state: any) => void; // TODO: Eradicate this!
+    getPresences: (component: React.Component) => void;
+    cancelPresenceSubscription: (component: React.Component) => void;
+    unmountProfileDisplay: (profileID: string, component: React.Component) => void;
+    updateMyPresence: (presence: UserPresence) => Promise<void>;
+    userHasWritePermission: (object: Parse.Object) => boolean;
+    getDefaultConferenceName: () => string;
+}
+
 export interface ClowdrState {
     spaces: Map<string, SocialSpace>;   // TS: Or maybe better a Record??
     user: MaybeParseUser;
@@ -31,7 +52,7 @@ export interface ClowdrState {
     loading: boolean;
     roles: Array<Role>;
     programCache: ProgramCache;
-    helpers: any;
+    helpers: ClowdrStateHelpers;
     getChatClient: any;  // should be a function (higher-order?)
     getLiveChannel: any;
     chatClient: ChatClient;

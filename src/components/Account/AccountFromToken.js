@@ -98,6 +98,7 @@ class AccountFromToken extends React.Component {
             let userID = this.props.match.params.userID;
             await Parse.Cloud.run("login-resendInvite", {
                 userID: userID,
+                // TODO: Really? The default ID? What about the ID of the current conference?
                 confID: this.props.clowdrAppState.helpers.getDefaultConferenceName()
             });
             invitationSent = true;

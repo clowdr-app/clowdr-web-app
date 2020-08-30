@@ -13,7 +13,7 @@ import SocialSpace from '../../classes/SocialSpace';
 import ClowdrInstance from '../../classes/ClowdrInstance';
 import LiveActivity from '../../classes/LiveActivity';
 import { assert } from '../../Util';
-import { MaybeParseUser, MaybeClowdrInstance } from "../../ClowdrTypes";
+import { MaybeParseUser, MaybeClowdrInstance, ClowdrStateHelpers } from "../../ClowdrTypes";
 
 interface Props {
     history?: H.History | null;
@@ -42,7 +42,7 @@ interface State {
     setActiveRoom: any;
     currentConference: ClowdrInstance | null;
     activeRoom: any;
-    helpers: any;
+    helpers: ClowdrStateHelpers;
     chatClient: ChatClient;
     parseLive: any;
     presences: any;
@@ -88,7 +88,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         userProfileSubscribers: Record<UserProfileID, Subscriber[]>;
         parseLive: any; // TS: should be Parse.LiveQueryClient, I think, but the type declaration file doesn't seem to include it!
         fetchingUsers: boolean;
-        expandedProgramRoom: any;
+        expandedProgramRoom: Parse.Object | null = null;
         parseLivePublicVideosSub: any;
         parseLivePrivateVideosSub: any;
         parseLiveActivitySub: any;
@@ -101,8 +101,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         refreshUserPromise: Promise<MaybeParseUser> | null = null;
         user: Parse.User<Parse.Attributes> | null;
         userProfile: Parse.Object<Parse.Attributes> | undefined;
-        activePublicVideoRooms: any;
-        activePublicVideoRoomSubscribers: any;
+        activePublicVideoRooms: BreakoutRoom[] = [];
+        activePublicVideoRoomSubscribers: { [key: string]: React.Component[] } = {};
         mounted: any;
         isAdmin: boolean;
         isModerator: boolean;
@@ -145,7 +145,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 getBreakoutRoom: this.getBreakoutRoom.bind(this),
                 cancelBreakoutRoomSubscription: this.cancelBreakoutRoomSubscription.bind(this),
                 setExpandedProgramRoom: this.setExpandedProgramRoom.bind(this),
-                presences: this.presences,
                 createOrOpenDM: this.createOrOpenDM.bind(this),
                 setActiveConference: this.setActiveConference.bind(this),
                 setGlobalState: this.setState.bind(this),//well that seems dangerous...
@@ -204,9 +203,11 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
         async createOrOpenDM(profileOfUserToDM: UserProfile) {
             assert(this.state.userProfile != null);
-            // @ Jon: Do we really want to prevent this case?  Crista likes DMing herself!
-            // Jon: Yes, it is confusing, and no other chat platofrm allows it...
-            if (profileOfUserToDM.id === this.state.userProfile.id) return
+            if (profileOfUserToDM.id === this.state.userProfile.id) {
+                // Prevent DM'ing oneself
+                return;
+            }
+
             // Look to see if we already have a chat set up with this person
             let channels = this.state.chatClient.joinedChannels;
             if (channels) {
@@ -228,6 +229,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     return;
                 }
             }
+
             assert(this.state.currentConference);
             console.log("calling create DM")
             let res = await Parse.Cloud.run("chat-createDM", {
@@ -239,18 +241,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 await this.state.chatClient.openChat(res.sid);
         }
 
-        // TS: @ Jon: Should this be polymorphic??
-        // Jon: I think that this was a half-baked idea and should probably be factored away
-        // BCP it is also wrong, apparently -- removing
-        /*         ifPermission(permission: Permission, jsxElement: JSX.Element, elseJsx: JSX.Element) : JSX.Element { // TS; ???
-                    if (this.state.permissions && this.state.permissions.includes(permission))
-                        return jsxElement;
-                    if (elseJsx)
-                        return elseJsx;
-                    return  <></>        
-                }
-         */
-        setExpandedProgramRoom(programRoom: Parse.Object) {
+        setExpandedProgramRoom(programRoom: Parse.Object | null) {
             this.expandedProgramRoom = programRoom;
             if (this.state.leftSidebar) {
                 this.state.leftSidebar.setExpandedProgramRoom(programRoom);
@@ -275,7 +266,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         subscribeToVideoRoomState() {
             throw new Error("Method not implemented.");
         }
-        async setActiveConference(conf: Parse.Object) {
+        async setActiveConference(conf: ClowdrInstance) {
             console.log('[wA]: changing conference to ' + conf.get("conferenceName"));
             this.refreshUser(conf, true);
         }
@@ -526,21 +517,19 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                             }
                         }
                         if (!activeProfile) {
-                            let defaultConferenceName = _this.getDefaultConferenceName();
-
-                            if (!preferredConference && defaultConferenceName) {
+                            if (!preferredConference) {
+                                let defaultConferenceName = _this.getDefaultConferenceName();
                                 let confQ = new Parse.Query("ClowdrInstance")
                                 confQ.equalTo("conferenceName", defaultConferenceName);
                                 preferredConference = await confQ.first();
                             }
-                            if (preferredConference) {
+                            else {
                                 conf = validConferences.find((c) => preferredConference && c.id === preferredConference.id) || null;
                                 if (!conf) {
                                     conf = validConferences[0];
                                 }
-                            } else if (!conf) {
-                                conf = validConferences[0];
                             }
+
                             let profileQ = new Parse.Query(UserProfile);
                             profileQ.equalTo("conference", conf);
                             profileQ.equalTo("user", user);
@@ -642,11 +631,9 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     }
                     let conference: ClowdrInstance | null = null;
                     let defaultConferenceName = _this.getDefaultConferenceName();
-                    if (defaultConferenceName) {
-                        let confQ = new Parse.Query("ClowdrInstance")
-                        confQ.equalTo("conferenceName", defaultConferenceName);
-                        conference = await confQ.first() || null;
-                    }
+                    let confQ = new Parse.Query("ClowdrInstance")
+                    confQ.equalTo("conferenceName", defaultConferenceName);
+                    conference = await confQ.first() || null;
                     _this.setState({
                         user: null,
                         currentConference: conference,
@@ -670,6 +657,9 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 defaultConferenceName = defaultConferenceName + " " + confHostname.substring(confHostname.indexOf('2'));
                 defaultConferenceName = defaultConferenceName.toUpperCase();
             }
+            if (!defaultConferenceName) {
+                throw new Error("REACT_APP_DEFAULT_CONFERENCE environment variable not provided!");
+            }
             return defaultConferenceName;
         }
 
@@ -685,17 +675,19 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         async getBreakoutRoom(id: string, component: React.Component) {
-            let room = this.activePublicVideoRooms.find((v: { id: string; }) => v.id === id);
+            let room = this.activePublicVideoRooms.find((v: { id: string; }) => v.id === id) || null;
             if (room) {
-                if (!this.activePublicVideoRoomSubscribers[id])
+                if (!this.activePublicVideoRoomSubscribers[id]) {
                     this.activePublicVideoRoomSubscribers[id] = [];
+                }
                 this.activePublicVideoRoomSubscribers[id].push(component);
             }
             return room;
         }
         cancelBreakoutRoomSubscription(id: string, component: React.Component) {
-            if (this.activePublicVideoRoomSubscribers[id])
-                this.activePublicVideoRoomSubscribers[id] = this.activePublicVideoRoomSubscribers[id].filter((v: React.Component) => v !== component);
+            if (this.activePublicVideoRoomSubscribers[id]) {
+                this.activePublicVideoRoomSubscribers[id] = this.activePublicVideoRoomSubscribers[id].filter(v => v !== component);
+            }
         }
         async subscribeToPublicRooms() {
             if (!this.currentConference) {

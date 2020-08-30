@@ -102,10 +102,6 @@ class CollapsedChatDisplay extends React.Component {
         }
     }
 
-    openDM() {
-        this.props.auth.helpers.createOrOpenDM(this.state.profile);
-    }
-
     render() {
         if (!this.state.title)
             return <Skeleton.Input active style={{ width: '100px', height: '1em' }} />
