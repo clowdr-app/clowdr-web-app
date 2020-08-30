@@ -31,7 +31,6 @@ interface State {
     roles: Array<Parse.Role<Parse.Attributes>>;
     currentRoom: any;
     refreshUser: (instance?: MaybeClowdrInstance, forceRefresh?: boolean) => Promise<MaybeParseUser>;
-    getChatClient: any;
     setSocialSpace: (spaceOrName: string | SocialSpace,
         user?: User,
         userProfile?: UserProfile,
@@ -164,7 +163,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 roles: [],
                 currentRoom: null,
                 refreshUser: this.refreshUser.bind(this),
-                getChatClient: this.getChatClient.bind(this),
                 setSocialSpace: this.setSocialSpace.bind(this),
                 getConferenceBySlackName: this.getConferenceBySlackName.bind(this),
                 setActiveRoom: this.setActiveRoom.bind(this),
@@ -433,16 +431,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             else {
                 this.state.chatClient.setRightSideChat(space.get("chatChannel"));
             }
-        }
-
-        // @ Jon: What would be a better name for this???
-        //Jon: I need to refactor all of the chat client stuff, it's full of bad patterns and races left and right. Open to name suggestions, but eventually I want this to return a promise anyway
-        //Ed: Lol
-        getChatClient(callback: (_: ChatClient) => void) {
-            if (this.chatClient)
-                callback(this.chatClient);
-            else
-                this.chatWaiters.push(callback);
         }
 
         refreshUser(preferredConference?: MaybeClowdrInstance, forceRefresh: boolean = false): Promise<MaybeParseUser> {

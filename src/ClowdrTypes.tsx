@@ -53,7 +53,6 @@ export interface ClowdrState {
     roles: Array<Role>;
     programCache: ProgramCache;
     helpers: ClowdrStateHelpers;
-    getChatClient: any;  // should be a function (higher-order?)
     getLiveChannel: any;
     chatClient: ChatClient;
     activeSpace: SocialSpace;
