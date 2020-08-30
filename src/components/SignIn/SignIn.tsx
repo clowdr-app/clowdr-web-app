@@ -4,6 +4,7 @@ import Parse from "parse";
 import { AuthUserContext } from "../Session";
 import { ClowdrState } from "../../ClowdrTypes";
 import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { PropertyNames } from '../../Util';
 
 interface SignInState {
     email: string;
@@ -42,7 +43,7 @@ class SignIn extends Component<SignInProps, SignInState> {
         this.state = { ...INITIAL_STATE };
     }
 
-    onSubmit = async () => {
+    async onSubmit() {
         const { email, password } = this.state;
         try {
             let user = await Parse.User.logIn(email, password);
@@ -62,12 +63,12 @@ class SignIn extends Component<SignInProps, SignInState> {
         }
     }
 
-    onEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
-        this.setState({ "email": event.target.value });
-    }
-
-    onPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
-        this.setState({ "password": event.target.value });
+    onChange(
+        k: PropertyNames<SignInState, string>,
+        event: ChangeEvent<HTMLInputElement>
+    ) {
+        let st: Pick<SignInState, any> = { [k]: event.target.value };
+        this.setState(st);
     }
 
     async forgotPassword() {
@@ -96,7 +97,7 @@ class SignIn extends Component<SignInProps, SignInState> {
                     <Input
                         name="email"
                         value={email}
-                        onChange={this.onEmailChange}
+                        onChange={this.onChange.bind(this, "email")}
                         type="text"
                     />
                 </Form.Item>
@@ -104,7 +105,7 @@ class SignIn extends Component<SignInProps, SignInState> {
                     <Input.Password
                         name="password"
                         value={password}
-                        onChange={this.onPasswordChange}
+                        onChange={this.onChange.bind(this, "password")}
                         type="password"
                     /></Form.Item>
                 <Form.Item {...tailLayout}>
