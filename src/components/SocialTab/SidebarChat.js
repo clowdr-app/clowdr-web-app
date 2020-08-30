@@ -55,7 +55,7 @@ export class SidebarChat extends React.Component {
         if (this.props.auth.user && this.props.auth.user.get('passwordSet')) {
             this.user = this.props.auth.user;
             // this.changeChannel("#general");
-            this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile, this.props.auth);
+            this.twilioChatClient = await this.props.auth.chatClient.initChatClient(this.props.auth.user, this.props.auth.currentConference, this.props.auth.userProfile);
             this.props.auth.chatClient.initChatSidebar(this);
         }
         else {

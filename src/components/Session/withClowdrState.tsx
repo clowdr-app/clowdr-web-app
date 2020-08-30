@@ -550,7 +550,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         _this.currentConference = conf;
                         _this.user = user;
                         _this.userProfile = activeProfile;
-                        _this.state.chatClient.initChatClient(user, conf, activeProfile, _this);
+                        _this.state.chatClient.initChatClient(user, conf, activeProfile);
 
                         try {
                             await _this.setSocialSpace(spacesByName['Lobby'], user, activeProfile);

@@ -11,6 +11,7 @@ import { MultiChatWindow } from "../components/Chat/MultiChatWindow";
 import { SidebarChat } from "../components/SocialTab/SidebarChat";
 import { ContextualActiveUsers } from "../components/Lobby/ContextualActiveusers";
 import { ChatFrame } from "../components/Chat/ChatFrame";
+import { Message } from "twilio-chat/lib/message";
 
 interface ChannelInfoAttrs {
     parseID?: string;
@@ -50,9 +51,8 @@ export default class ChatClient {
     desiredRHSChat: string | null = null;
     userProfile: UserProfile | null = null;
     conference: ClowdrInstance | null | undefined = null;
-    appController: React.Component | null = null;
     emojiPickerRef: React.RefObject<any> | null = null;
-    reactingTo: string | null = null;
+    reactingTo: Message | null = null;
     reactingToFrame: ChatFrame | null = null;
     emojiPickerCancelEvent: boolean = false;
     emojiClickTarget: any | null = null;
@@ -245,12 +245,9 @@ export default class ChatClient {
         user: Parse.User<Parse.Attributes>,
         conference: ClowdrInstance | null | undefined,
         userProfile: UserProfile,
-        appController: React.Component
     ): Promise<Client> {
         this.userProfile = userProfile;
         this.conference = conference;
-        if (appController && appController.setState)
-            this.appController = appController;
         if (!this.chatClientPromise) {
             // TODO: I removed a catch here... I don't see what was throwing, but there would be a
             // type issue if anything threw anyway...
@@ -275,7 +272,7 @@ export default class ChatClient {
             this.chatList.addChannel(chatSID);
     }
 
-    openEmojiPicker(message: string, event: any, chatFrame: ChatFrame) { // TODO: no any
+    openEmojiPicker(message: Message | null, event: any, chatFrame: ChatFrame) { // TODO: no any
         if (this.emojiPickerRef && this.emojiPickerRef.current) {
             let boundingTargetRect = event.target.getBoundingClientRect();
             let newFromTop = boundingTargetRect.y

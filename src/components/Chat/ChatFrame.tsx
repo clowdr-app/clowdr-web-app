@@ -1,9 +1,7 @@
 import { AuthUserContext } from "../Session";
 import { Emoji } from 'emoji-mart'
 import { emojify } from 'react-emojione';
-// import emoji from 'emoji-dictionary';
 import 'emoji-mart/css/emoji-mart.css'
-
 import { Button, Divider, Form, Input, List, notification, Popconfirm, Tag, Tooltip } from 'antd';
 import "./chat.css"
 import React from "react";
@@ -11,62 +9,150 @@ import ReactMarkdown from "react-markdown";
 import { SmileOutlined } from "@ant-design/icons"
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import InfiniteScroll from 'react-infinite-scroller';
-// import EmojiPickerPopover from "./EmojiPickerPopover";
 import { withRouter } from 'react-router';
+import { RouteComponentProps } from "react-router";
+import moment from "moment";
+import { ClowdrState } from "../../ClowdrTypes";
+import { Client } from "twilio-chat/lib/client";
+import { Channel } from "twilio-chat/lib/channel";
+import { Paginator } from "twilio-chat/lib/interfaces/paginator";
+import { Member } from "twilio-chat/lib/member";
+import { Message } from "twilio-chat/lib/message";
+import { ChannelInfo } from "../../classes/ChatClient";
+import assert from "assert";
+import { intersperse } from "../../Util";
 
-const emojiSupport = text => emojify(text.value, { output: 'unicode' });
+interface GroupedMessages {
+    author: string;
+    timestamp: Date;
+    messages: Message[];
+    sid: string;
+}
 
-var moment = require('moment');
-const INITIAL_STATE = {
-    chatLoading: true,
-    token: '',
-    chatReady: false,
-    messages: [],
-    reactions: {},
-    profiles: [],
-    authors: {},
-    loadingChannels: true,
-    chatHeight: "400px",
-    groupedMessages: [],
-    newMessage: '',
-    lastConsumedMessageIndex: -1,
-};
+interface EmojiObject {
+    count: number;
+    emojiMessage: Message | null;
+    authors: Array<string>;
+}
 
-export class ChatFrame extends React.Component {
-    constructor(props) {
+const emojiSupport = (text: any) => <>{emojify(text.value, { output: 'unicode' })}</>;
+
+interface ChatFrameProps extends RouteComponentProps {
+    sid: string;
+    visible: boolean;
+    leaveOnChange: boolean;
+    setUnreadCount: ((unread: number) => void) | null;
+    header: JSX.Element;
+}
+
+interface _ChatFrameProps extends ChatFrameProps {
+    appState: ClowdrState;
+}
+
+interface ChatFrameState {
+    sid: string;
+    chatLoading: boolean;
+    token: string;
+    chatReady: boolean;
+    messages: Array<string>
+    profiles: Array<string>;
+    authors: { [x: string]: string };
+    loadingChannels: boolean;
+    chatHeight: string;
+    groupedMessages: Array<GroupedMessages>;
+    newMessage: string;
+    lastConsumedMessageIndex: number;
+    hasMoreMessages: boolean;
+    loadingMessages: boolean;
+    numMessagesDisplayed: number;
+    visible: boolean;
+    chatDisabled: boolean;
+    chatAvailable: boolean;
+    readOnly: boolean;
+    activeChannelName: string | null;
+    reactions: {
+        [x: string]: { [y: string]: EmojiObject; };
+    }
+}
+
+export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> {
+    messages: { [x: string]: Array<Message> };
+    currentPage: { [x: string]: Paginator<Message> };
+    form: React.RefObject<any>;
+    lastConsumedMessageIndex: number;
+    lastSeenMessageIndex: number;
+    pendingReactions: { [x: string]: boolean };
+    consumptionFrontier: number;
+    sid: string;
+    user: Parse.User<Parse.Attributes> | null = null;
+    currentSID: string | null = null;
+    client: Client | null = null;
+    chanInfo: ChannelInfo | null = null;
+    members: Array<Member> = [];
+    activeChannel: Channel | null = null;
+    dmOtherUser: string | null = null;
+    isAnnouncements: boolean = false;
+    unread: number = 0;
+    deferredGroupedMessages: { author: string; timestamp: Date; messages: Message[]; sid: string; }[] = [];
+    deferredReactions: { [x: string]: { [y: string]: EmojiObject; }; } = {};
+    count: number = 0;
+    settingConsumedIdx: number = 0;
+    clearedTempFlag: boolean = false;
+    loadingMessages: boolean = false;
+    messagesEnd: HTMLDivElement | null = null;
+
+    constructor(props: _ChatFrameProps) {
         super(props);
-
         this.messages = {};
         this.currentPage = {};
         this.state = {
-            ...INITIAL_STATE,
+            sid: this.props.sid,
+            chatLoading: true,
+            token: '',
+            chatReady: false,
+            messages: [],
+            reactions: {},
+            profiles: [],
+            authors: {},
+            loadingChannels: true,
+            chatHeight: "400px",
+            groupedMessages: [],
+            newMessage: '',
+            lastConsumedMessageIndex: -1,
             hasMoreMessages: false,
             loadingMessages: true,
             numMessagesDisplayed: 0,
-            visible: this.props.visible
+            visible: this.props.visible,
+            readOnly: false,
+            activeChannelName: null,
+            chatDisabled: false,
+            chatAvailable: false,
         }
         this.form = React.createRef();
         this.lastConsumedMessageIndex = -1;
         this.lastSeenMessageIndex = -1;
         this.pendingReactions = {};
         this.consumptionFrontier = 0;
+        this.sid = this.props.sid;
     }
 
-    formatTime(timestamp) {
-        return <Tooltip mouseEnterDelay={0.5} title={moment(timestamp).calendar()}>{moment(timestamp).format('LT')}</Tooltip>
+    formatTime(timestamp: moment.MomentInput) {
+        return <Tooltip mouseEnterDelay={0.5} title={moment(timestamp).calendar()}>
+            <span>{moment(timestamp).format("LT")}</span>
+        </Tooltip>;
     }
 
     async componentDidMount() {
-        if (this.props.auth.user) {
-            this.user = this.props.auth.user;
+        if (this.props.appState.user) {
+            this.user = this.props.appState.user;
             this.sid = this.props.sid;
             this.changeChannel(this.props.sid);
         }
     }
 
-    async changeChannel(sid) {
+    async changeChannel(sid: string) {
         // console.log("currentSID: " + this.currentSID + " sid: " + sid + " activeChannel: " + this.activeChannel);
-        let user = this.props.auth.user;
+        let user = this.props.appState.user;
         if (!sid) {
             this.setState({ chatDisabled: true });
         } else if (this.state.chatDisabled) {
@@ -84,7 +170,12 @@ export class ChatFrame extends React.Component {
                 loadingMessages: true
             });
             if (!this.client) {
-                this.client = await this.props.auth.chatClient.initChatClient(user, this.props.auth.currentConference, this.props.auth.userProfile, this.props.auth);
+                assert(this.props.appState.userProfile);
+                this.client = await this.props.appState.chatClient.initChatClient(
+                    user,
+                    this.props.appState.currentConference,
+                    this.props.appState.userProfile
+                );
             }
             // console.log("Prepared client for " + uniqueNameOrSID + ", " + this.currentUniqueNameOrSID)
             if (this.currentSID !== sid) {
@@ -102,7 +193,7 @@ export class ChatFrame extends React.Component {
             if (this.currentSID !== sid) {
                 return;//raced with another update
             }
-            this.activeChannel = await this.props.auth.chatClient.getJoinedChannel(sid);
+            this.activeChannel = await this.props.appState.chatClient.getJoinedChannel(sid);
             if (!this.activeChannel) {
                 console.log("Unable to join channel: " + sid)
                 return;
@@ -114,38 +205,47 @@ export class ChatFrame extends React.Component {
                 this.chanInfo.visibleComponents = this.chanInfo.visibleComponents.filter(v => v !== this);
                 this.chanInfo.components = this.chanInfo.components.filter(v => v !== this);
             }
-            this.props.auth.chatClient.callWithRetry(() => this.activeChannel.getMessages(30)).then((messages) => {
+            this.props.appState.chatClient.callWithRetry(() => {
+                assert(this.activeChannel);
+                return this.activeChannel.getMessages(30);
+            }).then((messages) => {
                 if (this.currentSID !== sid)
                     return;
+                assert(this.activeChannel);
                 this.messagesLoaded(this.activeChannel, messages)
             });
 
 
             this.members = [];
-            this.props.auth.chatClient.callWithRetry(() => this.activeChannel.getMembers()).then(members => this.members = members);
+            // TODO: await this?
+            this.props.appState.chatClient.callWithRetry(() => {
+                assert(this.activeChannel);
+                return this.activeChannel.getMembers();
+            }).then(members => this.members = members);
 
-            let chanInfo = this.props.auth.chatClient.joinedChannels[sid];
+            let chanInfo = this.props.appState.chatClient.joinedChannels[sid];
             this.chanInfo = chanInfo;
             chanInfo.components.push(this);
             if (this.props.visible)
                 chanInfo.visibleComponents.push(this);
             this.dmOtherUser = null;
             if (chanInfo.attributes.mode === "directMessage") {
-                let p1 = chanInfo.conversation.get("member1").id;
-                let p2 = chanInfo.conversation.get("member2").id;
+                let p1 = chanInfo.conversation?.get("member1").id;
+                let p2 = chanInfo.conversation?.get("member2").id;
                 this.dmOtherUser = p1;
-                if (p1 === this.props.auth.userProfile.id)
+                if (this.props.appState.userProfile && p1 === this.props.appState.userProfile.id)
                     this.dmOtherUser = p2;
             }
             let stateUpdate = {
                 chatLoading: false,
                 activeChannelName: (this.activeChannel.friendlyName ? this.activeChannel.friendlyName : this.activeChannel.uniqueName),
-            }
+                readOnly: false,
+            };
             this.isAnnouncements = false;
             if (chanInfo.attributes.category === "announcements-global") {
                 this.isAnnouncements = true;
                 //find out if we are able to write to this.
-                if (!this.props.auth.isModerator && !this.props.auth.isAdmin && !this.props.auth.isManager) {
+                if (!this.props.appState.isModerator && !this.props.appState.isAdmin && !this.props.appState.isManager) {
                     console.log("read only")
                     stateUpdate.readOnly = true;
                 }
@@ -162,13 +262,9 @@ export class ChatFrame extends React.Component {
             if (this.currentSID !== sid) {
                 return;//raced with another update
             }
-            // console.log("Unable to set channel because no user or something:")
-            // console.log(user);
-            // console.log(uniqueNameOrSID)
             this.setState({
                 chatAvailable: false,
-                // siderWidth: 0,
-                meesages: []
+                messages: []
             })
         }
 
@@ -180,7 +276,7 @@ export class ChatFrame extends React.Component {
         }
     }
 
-    updateUnreadCount(lastConsumed, lastTotal) {
+    updateUnreadCount(lastConsumed: number, lastTotal: number) {
         if (lastConsumed !== this.lastConsumedMessageIndex || lastTotal > this.lastSeenMessageIndex) {
             if (lastTotal < 0)
                 lastTotal = this.lastSeenMessageIndex;
@@ -200,23 +296,24 @@ export class ChatFrame extends React.Component {
         }
     }
 
-    groupMessages(messages, channelId) {
+    groupMessages(messages: Array<Message>) {
         let ret = [];
-        let reactions = {};
+        let reactions: { [x: string]: { [y: string]: EmojiObject } } = {};
         let lastMessage = undefined;
         if (!messages)
-            return undefined;
+            return;
         let lastSID;
         let lastIndex = -1;
 
-        let authorIDs = {};
+        let authorIDs: { [x: string]: string } = {};
         for (let message of messages) {
             if (lastSID && lastSID === message.sid) {
                 continue;
             }
             lastSID = message.sid;
             lastIndex = message.index;
-            if (!lastMessage || (!message.attributes.associatedMessage && (message.author !== lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5))) {
+            let messageAttributes: any = message.attributes;
+            if (!lastMessage || (!messageAttributes.associatedMessage && (message.author !== lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5))) {
                 if (lastMessage)
                     ret.push(lastMessage);
                 let authorID = message.author;
@@ -224,16 +321,17 @@ export class ChatFrame extends React.Component {
                 lastMessage = {
                     author: message.author,
                     timestamp: message.timestamp,
-                    messages: message.attributes.associatedMessage ? [] : [message],
+                    messages: messageAttributes.associatedMessage ? [] : [message],
                     sid: message.sid
                 };
             } else {
-                if (message.attributes.associatedMessage) {
-                    let messageWithObj = reactions[message.attributes.associatedMessage] === undefined ? {} : reactions[message.attributes.associatedMessage];
-                    let emojiObj = messageWithObj[message.body] === undefined ? { count: 0, emojiMessage: null, authors: [] } : messageWithObj[message.body];
+
+                if (messageAttributes.associatedMessage) {
+                    let messageWithObj: { [x: string]: EmojiObject } = reactions[messageAttributes.associatedMessage] === undefined ? {} : reactions[messageAttributes.associatedMessage];
+                    let emojiObj: EmojiObject = messageWithObj[message.body] === undefined ? { count: 0, emojiMessage: null, authors: [] } : messageWithObj[message.body];
 
                     if (!emojiObj.authors.includes(message.author)) {
-                        if (message.author === this.props.auth.userProfile.id) {
+                        if (this.props.appState.userProfile && message.author === this.props.appState.userProfile.id) {
                             let newCount = emojiObj.emojiMessage ? emojiObj.count : emojiObj.count + 1;
                             emojiObj = { ...emojiObj, emojiMessage: message, count: newCount };
                         } else {
@@ -242,7 +340,7 @@ export class ChatFrame extends React.Component {
                         emojiObj.authors.push(message.author);
                     }
                     messageWithObj = { ...messageWithObj, [message.body]: emojiObj };
-                    reactions = { ...reactions, [message.attributes.associatedMessage]: messageWithObj };
+                    reactions = { ...reactions, [messageAttributes.associatedMessage]: messageWithObj };
 
                 } else {
                     lastMessage.messages.push(message);
@@ -252,14 +350,14 @@ export class ChatFrame extends React.Component {
 
         if (lastMessage)
             ret.push(lastMessage);
-        let atLeastOneIsVisible = this.chanInfo.visibleComponents.length > 0;
+        let atLeastOneIsVisible = this.chanInfo && this.chanInfo.visibleComponents.length > 0;
         if ((this.props.visible || atLeastOneIsVisible) && lastIndex >= 0) {
             this.consumptionFrontier++;
             let idx = this.consumptionFrontier;
-            this.props.auth.chatClient.callWithRetry(() => {
+            this.props.appState.chatClient.callWithRetry(async () => {
                 if (this.consumptionFrontier !== idx)
                     return;
-                return this.activeChannel.setAllMessagesConsumed()
+                return this.activeChannel?.setAllMessagesConsumed();
             });
 
             this.updateUnreadCount(lastIndex, lastIndex);
@@ -267,7 +365,7 @@ export class ChatFrame extends React.Component {
             //TODO lastConsumedMessageIndex is wrong, not actually last seen
             let lastConsumed = this.lastConsumedMessageIndex;
             if (lastConsumed < 0 && lastIndex >= 0) {
-                lastConsumed = this.activeChannel.lastConsumedMessageIndex;
+                lastConsumed = this.activeChannel?.lastConsumedMessageIndex || 0;
             }
             if (lastConsumed !== undefined && lastIndex >= 0)
                 this.updateUnreadCount(lastConsumed, lastIndex);
@@ -284,56 +382,62 @@ export class ChatFrame extends React.Component {
         }
     }
 
-    messagesLoaded = (channel, messagePage) => {
+    messagesLoaded = (channel: Channel, messagePage: Paginator<Message>) => {
         this.count = 0;
         if (messagePage.items && messagePage.items.length > 0)
             this.currentPage[channel.sid] = messagePage;
-        this.messages[channel.sid] = messagePage.items
-        this.groupMessages(this.messages[channel.sid], channel.sid);
+        this.messages[channel.sid] = messagePage.items;
+        this.groupMessages(this.messages[channel.sid]);
         this.setState({ hasMoreMessages: messagePage.hasPrevPage, loadingMessages: false })
     };
-    linkRenderer = (props) => {
+    linkRenderer = (props: any) => {
         let currentDomain = window.location.origin;
         if (props.href && props.href.startsWith(currentDomain))
-            return <a href="#" onClick={() => { this.props.history.push(props.href.replace(currentDomain, "")) }}>{props.children}</a>;
+            return <a href="#" onClick={() => { this.props.history.push(props.href.replace(currentDomain, "")) }}>
+                {props.children}
+            </a>;
         return <a href={props.href} rel="noopener noreferrer" target="_blank">{props.children}</a>;
     };
 
 
-    memberLeft = (member) => {
+    memberLeft = (member: Member) => {
         this.members = this.members.filter(m => m.sid !== member.sid);
     }
 
-    memberJoined = (member) => {
+    memberJoined = (member: Member) => {
         this.members.push(member);
     }
 
-    messageAdded = (channel, message) => {
+    messageAdded = (channel: Channel, message: Message) => {
         if (!this.messages[channel.sid]) {
             console.log("[ChatFrame]: attempt to add message to non-existing channel " + channel.sid);
             return;
         }
         // do not display a reaction message
         this.messages[channel.sid].push(message);
-        this.groupMessages(this.messages[channel.sid], channel.sid);
+        this.groupMessages(this.messages[channel.sid]);
         if (this.isAnnouncements) {
             //get the sender
-            this.props.auth.programCache.getUserProfileByProfileID(message.author, null).then((profile) => {
+            this.props.appState.programCache.getUserProfileByProfileID(message.author).then((profile) => {
                 const args = {
-                    message: <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>{moment(message.timestamp).format('LT')}</Tooltip></span>,
+                    message:
+                        <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>
+                            <span>{moment(message.timestamp).format('LT')}</span>
+                        </Tooltip>
+                        </span>,
                     description:
                         <ReactMarkdown source={message.body} renderers={{
                             text: emojiSupport,
                             link: this.linkRenderer
                         }} />,
-                    placement: 'topLeft',
+                    placement: "topLeft" as "topLeft",
                     onClose: () => {
                         if (message.index > this.lastConsumedMessageIndex) {
                             this.updateUnreadCount(message.index, -1);
                             let idx = message.index;
                             this.settingConsumedIdx = idx;
-                            this.props.auth.chatClient.callWithRetry(
-                                () => {
+                            this.props.appState.chatClient.callWithRetry(
+                                async () => {
                                     if (idx < this.settingConsumedIdx)
                                         return;
                                     return channel.advanceLastConsumedMessageIndex(idx);
@@ -348,41 +452,38 @@ export class ChatFrame extends React.Component {
 
     };
 
-    messageRemoved = (channel, message) => {
+    messageRemoved = (channel: Channel, message: Message) => {
         if (this.messages[channel.sid]) {
             console.log("[ChatFrame]: attempt to remove message from non-existing channel " + channel.sid);
             return;
         }
         this.messages[channel.sid] = this.messages[channel.sid].filter((v) => v.sid !== message.sid)
-        this.groupMessages(this.messages[channel.sid], channel.sid);
+        this.groupMessages(this.messages[channel.sid]);
     };
-    messageUpdated = (channel, message) => {
+
+    messageUpdated = (channel: Channel, message: Message) => {
         if (this.messages[channel.sid]) {
             console.log("[ChatFrame]: attempt to update message in non-existing channel " + channel.sid);
             return;
         }
         this.messages[channel.sid] = this.messages[channel.sid].map(m => m.sid === message.sid ? message : m)
-        this.groupMessages(this.messages[channel.sid], channel.sid);
+        this.groupMessages(this.messages[channel.sid]);
     };
 
-    onMessageChanged = event => {
-        // if (event.target.value !== '\n')
-        //     this.setState({newMessage: event.target.value});
-    };
-    timeout = async (ms) => {
+    timeout = async (ms: number) => {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    sendMessageWithRetry = async (message, data) => {
-        return this.props.auth.chatClient.callWithRetry(() => {
-            return this.activeChannel.sendMessage(message, data)
-        }
-        );
+
+    sendMessageWithRetry = async (message: string, data?: any) => {
+        return this.props.appState.chatClient.callWithRetry(async () => {
+            return this.activeChannel?.sendMessage(message, data);
+        });
     };
 
-    sendMessage = async (event) => {
+    sendMessage = async (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
         event.preventDefault();
         if (!event.getModifierState("Shift")) {
-            let msg = this.form.current.getFieldValue("message");
+            let msg = this.form?.current.getFieldValue("message");
             if (msg)
                 msg = msg.replace(/\n/g, "  \n");
             try {
@@ -392,7 +493,7 @@ export class ChatFrame extends React.Component {
                 return;
             }
             if (!this.clearedTempFlag) {
-                this.props.auth.chatClient.channelSIDsThatWeHaventMessagedIn = this.props.auth.chatClient.channelSIDsThatWeHaventMessagedIn.filter(c => c !== this.activeChannel.sid);
+                this.props.appState.chatClient.channelSIDsThatWeHaventMessagedIn = this.props.appState.chatClient.channelSIDsThatWeHaventMessagedIn.filter(c => c !== this.activeChannel?.sid);
                 this.clearedTempFlag = true;
             }
             // if (this.form && this.form.current)
@@ -404,13 +505,13 @@ export class ChatFrame extends React.Component {
             // this.form.current.scrollToField("message");
             //TODO if no longer a DM (converted to group), don't do this...
             if (this.dmOtherUser && !this.members.find(m => m.identity === this.dmOtherUser)) {
-                this.activeChannel.add(this.dmOtherUser).catch((err) => console.log(err));
+                this.activeChannel?.add(this.dmOtherUser).catch((err) => console.log(err));
             }
 
         }
     };
 
-    async sendReaction(msg, event) {
+    async sendReaction(msg: Message | null, event: any) {
         if (msg == null) {
             //add to the current input
             let message = this.form.current.getFieldValue("message");
@@ -427,7 +528,7 @@ export class ChatFrame extends React.Component {
         this.pendingReactions[msg.sid] = true;
         let emoji = event.colons ? event.colons : event.id;
         if (this.state.reactions?.[msg.sid]?.[emoji]?.emojiMessage) {
-            this.state.reactions[msg.sid][emoji].emojiMessage.remove().then(() => {
+            this.state.reactions[msg.sid][emoji].emojiMessage?.remove().then(() => {
                 this.pendingReactions[msg.sid] = false;
             });
             return;
@@ -436,18 +537,18 @@ export class ChatFrame extends React.Component {
         this.pendingReactions[msg.sid] = false;
     }
 
-    deleteMessage(message) {
-        if (message.author === this.props.auth.userProfile.id)
+    deleteMessage(message: Message) {
+        if (this.props.appState.userProfile && message.author === this.props.appState.userProfile.id)
             message.remove();
         else {
-            let idToken = this.props.auth.user.getSessionToken();
+            let idToken = this.props.appState.user!.getSessionToken();
 
             fetch(
                 `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/chat/deleteMessage`
                 , {
                     method: 'POST',
                     body: JSON.stringify({
-                        conference: this.props.auth.currentConference.id,
+                        conference: this.props.appState.currentConference?.id,
                         identity: idToken,
                         room: message.channel.sid,
                         message: message.sid,
@@ -459,23 +560,7 @@ export class ChatFrame extends React.Component {
         }
     }
 
-    areEqualID(o1, o2) {
-        if (!o1 && !o2)
-            return true;
-        if (!o1 || !o2)
-            return false;
-        return o1.id === o2.id;
-    }
-
-    areEqualSID(o1, o2) {
-        if (!o1 && !o2)
-            return true;
-        if (!o1 || !o2)
-            return false;
-        return o1.sid === o2.sid;
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate(prevProps: ChatFrameProps) {
         let isDifferentChannel = this.props.sid !== this.sid;
 
         if (prevProps.visible !== this.props.visible) {
@@ -492,17 +577,17 @@ export class ChatFrame extends React.Component {
                     groupedMessages: this.deferredGroupedMessages,
                     reactions: this.deferredReactions
                 });
-                this.deferredReactions = null;
-                this.deferredGroupedMessages = null;
+                this.deferredReactions = {};
+                this.deferredGroupedMessages = [];
             }
             if (this.props.visible && this.unread) {
                 //update unreads...
                 this.consumptionFrontier++;
                 let idx = this.consumptionFrontier;
-                this.props.auth.chatClient.callWithRetry(() => {
+                this.props.appState.chatClient.callWithRetry(async () => {
                     if (this.consumptionFrontier !== idx)
                         return;
-                    return this.activeChannel.setAllMessagesConsumed()
+                    return this.activeChannel?.setAllMessagesConsumed();
                 });
                 this.updateUnreadCount(this.lastSeenMessageIndex, this.lastSeenMessageIndex);
             }
@@ -523,7 +608,7 @@ export class ChatFrame extends React.Component {
             if (!this.currentPage[this.activeChannel.sid])
                 return;
             this.currentPage[this.activeChannel.sid].prevPage().then(messagePage => {
-                if (this.activeChannel.sid !== intendedChanelSID) {
+                if (!this.activeChannel || this.activeChannel.sid !== intendedChanelSID) {
                     this.loadingMessages = false;
                     return;
                 }
@@ -554,16 +639,15 @@ export class ChatFrame extends React.Component {
         if (this.state.chatDisabled) {
             return <div></div>
         }
-        if (!this.props.auth.user) {
+        if (!this.props.appState.user) {
             return <div></div>
         }
-        let date_stamp_arr = [];
+        let date_stamp_arr: Array<number> = [];
         // BCP: A good idea that doesn't quite work: chats are fine, but DMs show sender's name, not receiver's...
         let toWhom = this.chanInfo?.attributes?.mode === "directMessage"
             ? "Send a direct message"
             : this.activeChannel?.friendlyName ? "Send a message to " + this.activeChannel.friendlyName : "Send a message to this channel";
-        return <div className="embeddedChatFrame"
-        >
+        return <div className="embeddedChatFrame">
             {this.props.header}
             {/*<Layout>*/}
             <div
@@ -587,9 +671,10 @@ export class ChatFrame extends React.Component {
                         style={{ width: "100%" }}
                         dataSource={this.state.groupedMessages} size="small"
                         renderItem={
-                            item => {
+                            (item: GroupedMessages) => {
                                 let itemUID = item.author;
-                                let isMyMessage = itemUID === this.props.auth.userProfile.id;
+                                let isMyMessage = this.props.appState.userProfile ?
+                                    itemUID === this.props.appState.userProfile.id : false;
                                 // let options = "";
                                 // if (isMyMessage)
                                 //     options = <Popconfirm
@@ -622,7 +707,8 @@ export class ChatFrame extends React.Component {
                                                         <UserStatusDisplay
                                                             popover={true}
                                                             profileID={item.author}
-                                                            timestamp={this.formatTime(item.timestamp)} />
+                                                        // timestamp={this.formatTime(item.timestamp)} TODO: This does nothing
+                                                        />
                                                     </div>
 
                                                     <div>
@@ -668,7 +754,7 @@ export class ChatFrame extends React.Component {
                                 {/*}} />*/}
                             </Form.Item>
                             <Button className="emojiPickerButton" onClick={(event) => {
-                                this.props.auth.chatClient.openEmojiPicker(null, event, this);
+                                this.props.appState.chatClient.openEmojiPicker(null, event, this);
                             }}><SmileOutlined /></Button>
                         </div>
                     </Form>
@@ -681,7 +767,7 @@ export class ChatFrame extends React.Component {
     }
 
 
-    wrapWithOptions(m, isMyMessage, data) {
+    wrapWithOptions(m: Message, isMyMessage: boolean) {
         let options = [];
         // options.push(<a href="#" key="react" onClick={()=>{
         //     _this.setState({
@@ -690,19 +776,20 @@ export class ChatFrame extends React.Component {
         // }}><SmileOutlined/> </a>);
         //
         let actionButton;
-        if (m.attributes && m.attributes.linkTo) {
-            actionButton = <Button onClick={() => { this.props.history.push(m.attributes.path) }}>Join Video</Button>
+        let attrs: any = m.attributes;
+        if (m.attributes && attrs.linkTo) {
+            actionButton = <Button onClick={() => { this.props.history.push(attrs.path) }}>Join Video</Button>
         }
-        // if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
+        // if (isMyMessage || this.props.appState.isModerator || this.props.appState.isAdmin)
         options.push(
             <div key="emojiPicker">
                 <Tag key="add-react" onClick={(event) => {
-                    this.props.auth.chatClient.openEmojiPicker(m, event, this);
+                    this.props.appState.chatClient.openEmojiPicker(m, event, this);
                 }}><SmileOutlined />+</Tag>
             </div>
         );
 
-        if (isMyMessage || this.props.auth.isModerator || this.props.auth.isAdmin)
+        if (isMyMessage || this.props.appState.isModerator || this.props.appState.isAdmin)
             options.push(
                 <div key="deleteButton" className="deleteButton">
                     <Popconfirm
@@ -712,7 +799,6 @@ export class ChatFrame extends React.Component {
                         okText="Yes"
                         cancelText="No"
                     >
-                        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                         <a href="#">X</a>
                     </Popconfirm>
                 </div>
@@ -744,26 +830,22 @@ export class ChatFrame extends React.Component {
                     <div className="reactionWrapper">
                         {
                             Object.keys(reactions).sort().map(emojiId => {
-                                if (this.state.reactions[m.sid][emojiId] <= 0)
+                                if (this.state.reactions[m.sid][emojiId].count <= 0)
                                     return <></>;
                                 let hasMyReaction = this.state.reactions[m.sid][emojiId].emojiMessage;
                                 let tagClassname = (hasMyReaction ? "emojiReact-mine" : "emojiReact");
                                 // let authors = this.state.reactions[m.sid][emojiId].
                                 let reactors = this.state.reactions[m.sid][emojiId].authors.map((id) => <UserStatusDisplay
                                     profileID={id}
-                                    inline={true}
                                     key={id}
                                 />)
-                                if (reactors.length === 1) {
-                                    reactors = reactors[0];
-                                }
-                                else if (reactors.length > 1) {
-                                    reactors = reactors.reduce((prev, cur) => [prev, ", ", cur]);
-                                }
-                                return this.state.reactions[m.sid][emojiId] <= 0 ? null :
+                                let reactorList = intersperse(reactors, <>, </>);
+                                return this.state.reactions[m.sid][emojiId].count <= 0 ? null :
                                     <Tooltip key={emojiId}
-                                        title={<div>{reactors} reacted with a {emojiId}</div>}
-                                    ><Tag.CheckableTag className={tagClassname} checked={hasMyReaction}
+                                        title={<div>{reactorList} reacted with a {emojiId}</div>}
+                                    ><Tag.CheckableTag
+                                        className={tagClassname}
+                                        checked={hasMyReaction != null}
                                         onChange={this.sendReaction.bind(this, m, { id: emojiId })}>
                                             <Emoji size={15} emoji={emojiId} />
                                             {this.state.reactions[m.sid][emojiId].count}
@@ -771,7 +853,7 @@ export class ChatFrame extends React.Component {
                             })
                         }
                         <Tag key="add-react" onClick={(event) => {
-                            this.props.auth.chatClient.openEmojiPicker(m, event, this);
+                            this.props.appState.chatClient.openEmojiPicker(m, event, this);
                         }}><SmileOutlined />+</Tag>
 
                     </div>
@@ -780,10 +862,10 @@ export class ChatFrame extends React.Component {
     }
 }
 
-const AuthConsumer = withRouter((props) => (
+const AuthConsumer = withRouter((props: ChatFrameProps) => (
     <AuthUserContext.Consumer>
-        {value => (
-            <ChatFrame {...props} auth={value} />
+        {value => (value == null ? <span>TODO: ChatFrame when clowdrState is null.</span> :
+            <ChatFrame {...props} appState={value} />
         )}
     </AuthUserContext.Consumer>
 ));
