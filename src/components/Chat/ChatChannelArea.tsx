@@ -31,7 +31,7 @@ interface ChatChannelAreaState {
     unreadCount: number;
     visible: boolean;
     title: JSX.Element;
-    members: JSX.Element;
+    members: string;
     membersCount: number;
     newVideoChatLoading: boolean;
     newVideoChatVisible: boolean;
@@ -50,7 +50,7 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
             chat: this.props.appState.chatClient.joinedChannels[this.props.sid],
             visible: this.props.visible,
             title: <></>,
-            members: <></>,
+            members: "",
             membersCount: 0,
             newVideoChatLoading: false,
             newVideoChatVisible: false,
@@ -90,11 +90,8 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
                 title = <>{chat.channel.friendlyName}</>;
             }
             try {
-                let profiles = chat.members.map((id) => <UserStatusDisplay
-                    profileID={id}
-                    key={id}
-                />);
-                let membersStr = <div>In this chat: {intersperse(profiles, <>, </>)}</div>
+                let members = intersperse(chat.members, ", ");
+                let membersStr = "In this chat: " + members.reduce((a, s) => a + s);
                 this.setState({ members: membersStr, title: title, membersCount: chat.members.length });
             } catch (err) {
                 console.log(chat.channel.sid)
