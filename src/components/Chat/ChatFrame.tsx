@@ -453,7 +453,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
     };
 
     messageRemoved = (channel: Channel, message: Message) => {
-        if (this.messages[channel.sid]) {
+        if (!this.messages[channel.sid]) {
             console.log("[ChatFrame]: attempt to remove message from non-existing channel " + channel.sid);
             return;
         }
@@ -462,7 +462,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
     };
 
     messageUpdated = (channel: Channel, message: Message) => {
-        if (this.messages[channel.sid]) {
+        if (!this.messages[channel.sid]) {
             console.log("[ChatFrame]: attempt to update message in non-existing channel " + channel.sid);
             return;
         }
