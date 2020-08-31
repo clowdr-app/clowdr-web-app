@@ -647,6 +647,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
         let toWhom = this.chanInfo?.attributes?.mode === "directMessage"
             ? "Send a direct message"
             : this.activeChannel?.friendlyName ? "Send a message to " + this.activeChannel.friendlyName : "Send a message to this channel";
+
         return <div className="embeddedChatFrame">
             {this.props.header}
             {/*<Layout>*/}
@@ -692,8 +693,6 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                                         addDate = true;
                                     }
                                 }
-
-
 
                                 return (
                                     <List.Item style={{ padding: '0', width: "100%", textAlign: 'left' }}
@@ -834,15 +833,15 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                                     return <></>;
                                 let hasMyReaction = this.state.reactions[m.sid][emojiId].emojiMessage;
                                 let tagClassname = (hasMyReaction ? "emojiReact-mine" : "emojiReact");
-                                // let authors = this.state.reactions[m.sid][emojiId].
-                                let reactors = this.state.reactions[m.sid][emojiId].authors.map((id) => <UserStatusDisplay
-                                    profileID={id}
-                                    key={id}
-                                />)
-                                let reactorList = intersperse(reactors, <>, </>);
+
+                                let reactors: Array<string> = this.state.reactions[m.sid][emojiId].authors.map(id => {
+                                    return this.props.appState.programCache.failFast_GetUserProfileByProfileID(id)?.get("displayName");
+                                }).filter(x => x !== null);
+
+                                let reactorList = intersperse(reactors, ", ").reduce((a, s) => a + s);
                                 return this.state.reactions[m.sid][emojiId].count <= 0 ? null :
                                     <Tooltip key={emojiId}
-                                        title={<div>{reactorList} reacted with a {emojiId}</div>}
+                                        title={reactorList + " reacted with a " + emojiId}
                                     ><Tag.CheckableTag
                                         className={tagClassname}
                                         checked={hasMyReaction != null}

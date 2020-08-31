@@ -204,6 +204,21 @@ export default class ProgramCache {
         return this._dataById['UserProfile'][id];
     }
 
+    /**
+     *  Used when we want the data to be fetched but don't want to wait for it.
+     */
+    failFast_GetUserProfileByProfileID(id: string, component?: React.Component): ParseObject | null {
+        this.getUserProfiles();
+        if (component) {
+            if (!this._updateSubscribers['UserProfile'])
+                this._updateSubscribers['UserProfile'] = {};
+            if (!this._updateSubscribers['UserProfile'][id])
+                this._updateSubscribers['UserProfile'][id] = [];
+            this._updateSubscribers['UserProfile'][id].push(component);
+        }
+        return this._dataById['UserProfile'][id] || null;
+    }
+
     async getUserProfiles(objToSetStateOnUpdate?: React.Component) {
         return this._fetchTableAndSubscribe("UserProfile", objToSetStateOnUpdate);
     }
