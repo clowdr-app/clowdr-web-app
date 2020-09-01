@@ -1,5 +1,5 @@
 let UserProfile = Parse.Object.extend("UserProfile");
-let Converation = Parse.Object.extend("Conversation");
+let Conversation = Parse.Object.extend("Conversation");
 let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
 let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
 let BondedChannel = Parse.Object.extend("BondedChannel");
@@ -243,7 +243,7 @@ Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
                 let parseID = attributes.parseID;
                 if (parseID) {
                     //Validate that this user has access to the convo
-                    let convoQ = new Parse.Query(Converation);
+                    let convoQ = new Parse.Query(Conversation);
                     let convo = await convoQ.get(parseID, {sessionToken: request.user.getSessionToken()});
                     if (convo) {
                         //make a new breakout room in this space, then drop a link into the chat to it.
@@ -414,7 +414,7 @@ Parse.Cloud.define("chat-addToSID", async (request) => {
                 let parseID = attributes.parseID;
                 if(parseID){
                     //Validate that this user has access to the convo
-                    let convoQ = new Parse.Query(Converation);
+                    let convoQ = new Parse.Query(Conversation);
                     let convo  = await convoQ.get(parseID, {sessionToken: request.user.getSessionToken()});
                     if(convo){
                         //Now get all of the UIDs from the profileIDs to add
@@ -627,11 +627,11 @@ Parse.Cloud.define("chat-createDM", async (request) => {
 
         let parseUser2 = await profile2q.get(messageWith, {useMasterKey: true});
         //Look for an existing channel between these users.
-        let convoQ = new Parse.Query(Converation);
+        let convoQ = new Parse.Query(Conversation);
         convoQ.equalTo("isDM", true);
         convoQ.equalTo("member1", parseUser2);
         convoQ.equalTo("member2", profile);
-        let otherQ = new Parse.Query(Converation);
+        let otherQ = new Parse.Query(Conversation);
         otherQ.equalTo("isDM", true);
         otherQ.equalTo("member1", profile);
         otherQ.equalTo("member2", parseUser2);
@@ -653,7 +653,7 @@ Parse.Cloud.define("chat-createDM", async (request) => {
             }
             return {"status": "ok", sid: convo.get("sid")};
         }
-        convo = new Converation();
+        convo = new Conversation();
         convo.set("isDM", true)
         convo.set("friendlyName", "DM with " + conversationName + " from " + profile.get("displayName"));
         convo.set("member1", profile);

@@ -738,8 +738,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
         handleNewParseLiveActivity(activity: LiveActivity) {  // TS: ???
             if (activity.get("topic") === "privateBreakoutRooms") {
-                // @ts-ignore  @Jon    subscribeToNewPrivateRooms doesn't want an argument
-                //Jon: OK, deleted it...
                 this.subscribeToNewPrivateRooms();
             } else if (activity.get("topic") === "profile") {
                 window.location.reload(true);

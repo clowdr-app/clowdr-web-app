@@ -921,6 +921,8 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
 
         if (!session) {
             session = new ProgramSession();
+            // TODO: Ed: How is this supposed to work:
+            // We just created a brand new session, so how is confKey set?
             allSessions[session.get("confKey")] = session;
 
             ses.Title ? session.set("title", ses.Title.trim()) : session.set("title", ses.Title);
