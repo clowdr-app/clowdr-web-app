@@ -1,14 +1,14 @@
 import { Base } from './Base';
-import { PrivilegedInstanceDetails } from './PrivilegedInstanceDetails';
+import { File } from 'parse';
 
 export interface Conference extends Base {
     adminEmail: string;
     adminName: string;
     conferenceName: string;
-    id: string;
-    landingPage: string;
-    loggedInText: PrivilegedInstanceDetails;
-    headerImage: any;
+    headerImage: File;
     isInitialized: boolean;
+    landingPage: string;
     welcomeText: string;
+
+    // TODO: loggedInText: PrivilegedInstanceDetails;
 }

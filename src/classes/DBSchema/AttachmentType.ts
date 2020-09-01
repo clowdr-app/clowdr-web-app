@@ -1,14 +1,14 @@
 import { Base } from './Base';
-import { ProgramItem } from './ProgramItem';
+import { File } from 'parse';
 
 export interface AttachmentType extends Base {
-    id: string;
-    isCoverImage: boolean;
-    programItem: ProgramItem;
     displayAsLink: boolean;
-    url: string;
-    file: any;
-    supportsFile: boolean;
-    ordinal: number;
+    file: File;
+    isCoverImage: boolean;
     name: string;
+    ordinal: number;
+    supportsFile: boolean;
+    url: string;
+
+    // TODO: programItem: ProgramItem;
 }

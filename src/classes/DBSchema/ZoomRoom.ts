@@ -1,17 +1,15 @@
 import { Base } from './Base';
-import { Conference } from './Conference';
-import { ZoomHostAccount } from './ZoomHostAccount';
-import { ProgramRoom } from './ProgramRoom';
 
 export interface ZoomRoom extends Base {
-    conference: Conference;
-    startTime: Date;
     endTime: Date;
+    join_url: string;
     meetingID: string;
     meetingPassword: string;
-    hostAccount: ZoomHostAccount;
-    programRoom: ProgramRoom;
     requireRegistration: boolean;
+    startTime: Date;
     start_url: string;
-    join_url: string;
+
+    // TODO: conference: Conference;
+    // TODO: hostAccount: ZoomHostAccount;
+    // TODO: programRoom: ProgramRoom;
 }

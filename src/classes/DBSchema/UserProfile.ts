@@ -1,36 +1,31 @@
 import { Base } from './Base';
-import { User } from './User';
-import { Conference } from './Conference';
-import { Flair } from './Flair';
-import { UserPresence } from './UserPresence';
-import { ProgramPerson } from './ProgramPerson';
-import { BreakoutRoom } from './BreakoutRoom';
 
+// This is embedded in UserProfile and is not itself a table in the DB
 export interface UserProfileTag {
-    label: string;
     alwaysShow: boolean;
+    label: string;
     priority: number;
     tooltip: string;
 }
 
 export interface UserProfile extends Base {
-    id: string;
-    conference: Conference;
-    displayName: string;
-    user: User;
-    realName: string;
-    tags: Array<UserProfileTag>;
-    primaryFlair: Flair;
-    webpage: string;
     affiliation: string;
-    country: string;
     bio: string;
-    pronouns: string;
+    country: string;
+    displayName: string;
+    isBanned: boolean;
     position: string;
     profilePhoto: any;
-    isBanned: boolean;
-    presence: UserPresence;
-    programPersons: Array<ProgramPerson>;
-    watchedRooms: Array<BreakoutRoom>;
+    pronouns: string;
+    realName: string;
+    tags: Array<UserProfileTag>;
+    webpage: string;
     welcomeModalShown: boolean;
+
+    // TODO: conference: Conference;
+    // TODO: primaryFlair: Flair;
+    // TODO: presence: UserPresence;
+    // TODO: programPersons: Array<ProgramPerson>;
+    // TODO: user: User;
+    // TODO: watchedRooms: Array<BreakoutRoom>;
 }

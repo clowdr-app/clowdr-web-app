@@ -1,9 +1,9 @@
 import { Base } from "./Base";
 
 export interface Registration extends Base {
-    email: string;
-    name: string;
     affiliation: string;
     country: string;
+    email: string;
     invitationSentDate: Date;
+    name: string;
 }

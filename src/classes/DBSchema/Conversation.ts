@@ -1,9 +1,9 @@
 import { Base } from './Base';
-import { UserProfile } from './UserProfile';
 
 export interface Conversation extends Base {
     isDM: boolean;
     sid: string;
-    member1: UserProfile;
-    member2: UserProfile;
+
+    // TODO: member1: UserProfile;
+    // TODO: member2: UserProfile;
 }
