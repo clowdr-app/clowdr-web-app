@@ -327,7 +327,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
             config.setACL(acl);
             config.set("instance", this.props.auth.currentConference);
             config.save().then((val: any) => { //TS: what is val? Maybe we need a new configuration schema
-                config.key = val.id;
+                config.set("key", val.id);
                 this.setState({ alert: "add success", config: [config, ...this.state.config] })
             }).catch((err: Error) => {
                 this.setState({ alert: "add error" });
