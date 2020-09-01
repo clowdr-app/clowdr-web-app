@@ -129,6 +129,11 @@ export default class ChatClient {
             console.log("[ChatClient]: null twilio client");
             return null;
         }
+        if (!uniqueName) {
+            console.log("[ChatClient]: invalid uniqueName");
+            return null;
+        }
+
         let channel = await this.callWithRetry(() => this.twilio!.getChannelByUniqueName(uniqueName));
         let chan = this.joinedChannels[channel.sid];
         this.channelSIDsThatWeHaventMessagedIn.push(channel.sid);
