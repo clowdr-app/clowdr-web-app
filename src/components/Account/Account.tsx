@@ -7,12 +7,14 @@ import withLoginRequired from "../Session/withLoginRequired";
 import { ClowdrState } from "../../ClowdrTypes";
 import { RuleObject } from "antd/lib/form";
 import { Store } from 'antd/lib/form/interface';
-import User from '../../classes/ParseObjects/User';
-import UserProfile from '../../classes/ParseObjects/UserProfile';
+import {
+    User,
+    UserProfile,
+    Flair,
+    ProgramItem,
+    ProgramPerson
+} from "../../classes/ParseObjects";
 import { UserProfileTag } from '../../classes/DBSchema/UserProfile';
-import Flair from '../../classes/ParseObjects/Flair';
-import ProgramItem from '../../classes/ParseObjects/ProgramItem';
-import ProgramPerson from '../../classes/ParseObjects/ProgramPerson';
 import assert from 'assert';
 
 interface Props { //TS: Props from both context (ClowdrState) and AccountFromToken.js. Is that OK?? Cauz we will export all of them.

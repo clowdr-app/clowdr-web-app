@@ -1,7 +1,7 @@
 import Parse from "parse";
 import { PrivilegedAction as Schema } from "../DBSchema/PrivilegedAction";
 
-export default class PrivilegedAction
+export class PrivilegedAction
     extends Parse.Object
     implements Schema {
 

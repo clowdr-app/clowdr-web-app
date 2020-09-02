@@ -8,12 +8,13 @@ import ProgramPersonDisplay from "../Program/ProgramPersonDisplay";
 import { Document, Page, pdfjs } from 'react-pdf';
 import VideoRoom from "../VideoChat/VideoRoom";
 import { ClowdrState } from "../../ClowdrTypes";
-import ProgramItem from "../../classes/ParseObjects/ProgramItem";
-import ProgramPerson from "../../classes/ParseObjects/ProgramPerson";
-import AttachmentType from "../../classes/ParseObjects/AttachmentType";
-import ProgramItemAttachment from "../../classes/ParseObjects/ProgramItemAttachment";
-import ProgramSession from "../../classes/ParseObjects/ProgramSession";
-import ProgramSessionEvent from "../../classes/ParseObjects/ProgramSessionEvent";
+import {
+    ProgramItem,
+    ProgramPerson,
+    AttachmentType,
+    ProgramSession,
+    ProgramSessionEvent
+} from "../../classes/ParseObjects";
 import ReactMarkdown from "react-markdown";
 import { RouteComponentProps } from "react-router-dom";
 import { withRouter } from 'react-router';

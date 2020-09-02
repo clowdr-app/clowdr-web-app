@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { InstanceConfiguration as Schema } from "../DBSchema/InstanceConfiguration";
-import ClowdrInstance from "./ClowdrInstance";
+import { ClowdrInstance } from "./ClowdrInstance";
 
-export default class InstanceConfiguration
+export class InstanceConfiguration
     extends Parse.Object
     implements Schema {
 

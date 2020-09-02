@@ -1,10 +1,10 @@
 import Parse from "parse";
 import { ProgramSessionEvent as Schema } from "../DBSchema/ProgramSessionEvent";
-import ClowdrInstance from "./ClowdrInstance";
-import ProgramItem from "./ProgramItem";
-import ProgramSession from "./ProgramSession";
+import { ClowdrInstance } from "./ClowdrInstance";
+import { ProgramItem } from "./ProgramItem";
+import { ProgramSession } from "./ProgramSession";
 
-export default class ProgramSessionEvent
+export class ProgramSessionEvent
     extends Parse.Object
     implements Schema {
 

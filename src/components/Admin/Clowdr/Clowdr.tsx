@@ -11,8 +11,7 @@ import {
 } from '@ant-design/icons';
 import { ClowdrState, EditableCellProps } from "../../../ClowdrTypes";
 import { Store } from 'antd/lib/form/interface';
-import ClowdrInstance from '../../../classes/ParseObjects/ClowdrInstance';
-import InstanceConfiguration from '../../../classes/ParseObjects/InstanceConfiguration';
+import { ClowdrInstance } from "../../../classes/ParseObjects";
 
 // TS: Since the "Props" and "State" interfaces are not exported, I
 // think iClowdStateter to simply name them Props and

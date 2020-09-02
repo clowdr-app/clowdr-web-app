@@ -1,7 +1,7 @@
 import Parse from "parse";
 import { ZoomHostAccount as Schema } from "../DBSchema/ZoomHostAccount";
 
-export default class ZoomHostAccount
+export class ZoomHostAccount
     extends Parse.Object
     implements Schema {
 

@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { SocialSpace as Schema } from "../DBSchema/SocialSpace";
-import ClowdrInstance from "./ClowdrInstance";
+import { ClowdrInstance } from "./ClowdrInstance";
 
-export default class SocialSpace
+export class SocialSpace
     extends Parse.Object
     implements Schema {
 

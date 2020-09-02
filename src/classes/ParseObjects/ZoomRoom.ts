@@ -1,10 +1,10 @@
 import Parse from "parse";
 import { ZoomRoom as Schema } from "../DBSchema/ZoomRoom";
-import ClowdrInstance from "./ClowdrInstance";
-import ProgramRoom from "./ProgramRoom";
-import ZoomHostAccount from "./ZoomHostAccount";
+import { ClowdrInstance } from "./ClowdrInstance";
+import { ProgramRoom } from "./ProgramRoom";
+import { ZoomHostAccount } from "./ZoomHostAccount";
 
-export default class ZoomRoom
+export class ZoomRoom
     extends Parse.Object
     implements Schema {
 

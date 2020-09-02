@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { ClowdrState, EditableCellProps } from '../../../ClowdrTypes';
 import { Store } from 'antd/lib/form/interface';
-import InstanceConfiguration from '../../../classes/ParseObjects/InstanceConfiguration';
+import { InstanceConfiguration } from "../../../classes/ParseObjects";
 
 interface ConfigurationProps {
     auth: ClowdrState,

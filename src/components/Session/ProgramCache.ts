@@ -1,17 +1,19 @@
 import Parse, { LiveQueryClient, LiveQuerySubscription } from "parse";
 import { ParseObject } from "../../Util";
-import ClowdrInstance from "../../classes/ParseObjects/ClowdrInstance";
-import ProgramSessionEvent from "../../classes/ParseObjects/ProgramSessionEvent";
-import ProgramRoom from "../../classes/ParseObjects/ProgramRoom";
-import ProgramItem from "../../classes/ParseObjects/ProgramItem";
-import ProgramSession from "../../classes/ParseObjects/ProgramSession";
-import ProgramTrack from "../../classes/ParseObjects/ProgramTrack";
-import ProgramPerson from "../../classes/ParseObjects/ProgramPerson";
-import UserProfile from "../../classes/ParseObjects/UserProfile";
-import AttachmentType from "../../classes/ParseObjects/AttachmentType";
-import ZoomHostAccount from "../../classes/ParseObjects/ZoomHostAccount";
-import ZoomRoom from "../../classes/ParseObjects/ZoomRoom";
-import MeetingRegistration from "../../classes/ParseObjects/MeetingRegistration";
+import {
+    ClowdrInstance,
+    ProgramSessionEvent,
+    ProgramRoom,
+    ProgramItem,
+    ProgramSession,
+    ProgramTrack,
+    ProgramPerson,
+    UserProfile,
+    AttachmentType,
+    ZoomHostAccount,
+    ZoomRoom,
+    MeetingRegistration
+} from "../../classes/ParseObjects";
 
 // TODO: This should be made into a generic cache class parameterised by the
 //       type of the thing it stores. Then have multiple caches for the various

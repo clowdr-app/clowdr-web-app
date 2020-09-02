@@ -1,13 +1,15 @@
 import React, { Component } from "react";
 import { AuthUserContext } from "../Session";
 import { ClowdrState } from "../../ClowdrTypes";
-import ProgramSession from "../../classes/ParseObjects/ProgramSession";
-import ProgramRoom from "../../classes/ParseObjects/ProgramRoom";
+import {
+    ProgramSession,
+    ProgramRoom,
+    ProgramItem,
+    ProgramSessionEvent
+} from "../../classes/ParseObjects";
 import moment from "moment";
 import { Collapse, Divider, Spin } from "antd";
-import ProgramItem from "../../classes/ParseObjects/ProgramItem";
 import ProgramItemDetails from "../ProgramItem/ProgramItemDetails";
-import ProgramSessionEvent from "../../classes/ParseObjects/ProgramSessionEvent";
 import Parse from "parse";
 import assert from "assert";
 

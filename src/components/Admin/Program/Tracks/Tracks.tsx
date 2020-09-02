@@ -12,8 +12,7 @@ import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { RadioChangeEvent } from "antd/lib/radio";
 import { Store } from 'antd/lib/form/interface';
 import assert from 'assert';
-import ProgramTrack from '../../../../classes/ParseObjects/ProgramTrack';
-import SocialSpace from '../../../../classes/ParseObjects/SocialSpace';
+import { ProgramTrack, SocialSpace } from "../../../../classes/ParseObjects";
 
 interface ProgramTracksProps {
     auth: ClowdrState;

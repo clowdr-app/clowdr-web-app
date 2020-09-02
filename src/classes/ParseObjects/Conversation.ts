@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { Conversation as Schema } from "../DBSchema/Conversation";
-import UserProfile from "./UserProfile";
+import { UserProfile } from "./UserProfile";
 
-export default class Conversation
+export class Conversation
     extends Parse.Object
     implements Schema {
 

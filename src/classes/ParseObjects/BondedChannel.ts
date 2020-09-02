@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { BondedChannel as Schema } from "../DBSchema/BondedChannel";
-import TwilioChannelMirror from "./TwilioChannelMirror";
+import { TwilioChannelMirror } from "./TwilioChannelMirror";
 
-export default class BondedChannel
+export class BondedChannel
     extends Parse.Object
     implements Schema {
 

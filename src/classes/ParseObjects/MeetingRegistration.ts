@@ -1,7 +1,7 @@
 import Parse from "parse";
 import { MeetingRegistration as Schema } from "../DBSchema/MeetingRegistration";
 
-export default class MeetingRegistration
+export class MeetingRegistration
     extends Parse.Object
     implements Schema {
 

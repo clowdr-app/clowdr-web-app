@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { PrivilegedInstanceDetails as Schema } from "../DBSchema/PrivilegedInstanceDetails";
-import ClowdrInstance from "./ClowdrInstance";
+import { ClowdrInstance } from "./ClowdrInstance";
 
-export default class PrivilegedInstanceDetails
+export class PrivilegedInstanceDetails
     extends Parse.Object
     implements Schema {
 

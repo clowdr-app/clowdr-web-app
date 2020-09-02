@@ -2,15 +2,17 @@
 import * as Parse from 'parse';
 
 import ProgramCache from "./components/Session/ProgramCache";
-import ChatClient from "./classes/ChatClient";
-import Conversation from "./classes/ParseObjects/Conversation";
 import { Channel } from "twilio-chat/lib/channel";
-import BreakoutRoom from './classes/ParseObjects/BreakoutRoom';
-import UserPresence from './classes/ParseObjects/UserPresence';
-import UserProfile from './classes/ParseObjects/UserProfile';
-import ClowdrInstance from './classes/ParseObjects/ClowdrInstance';
-import SocialSpace from './classes/ParseObjects/SocialSpace';
-import User from './classes/ParseObjects/User';
+import { ChatClient } from "./classes";
+import {
+    Conversation,
+    BreakoutRoom,
+    UserPresence,
+    UserProfile,
+    ClowdrInstance,
+    SocialSpace,
+    User
+} from "./classes/ParseObjects";
 
 export type UserSessionToken = string
 

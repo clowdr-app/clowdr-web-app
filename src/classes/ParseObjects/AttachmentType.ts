@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { AttachmentType as Schema } from '../DBSchema/AttachmentType';
-import ProgramItem from "./ProgramItem";
+import { ProgramItem } from "./ProgramItem";
 
-export default class AttachmentType
+export class AttachmentType
     extends Parse.Object
     implements Schema {
 

@@ -4,8 +4,7 @@ import { Button, Form, Input, Menu, message, Modal, Select, Spin, Switch } from 
 import { ChatChannelConsumer, ClowdrState, MultiChatApp } from "../../ClowdrTypes";
 import CollapsedChatDisplay from "./CollapsedChatDisplay";
 import { Channel } from "twilio-chat/lib/channel";
-import ProgramItem from "../../classes/ParseObjects/ProgramItem";
-import UserProfile from "../../classes/ParseObjects/UserProfile";
+import { ProgramItem, UserProfile } from "../../classes/ParseObjects";
 import Parse from "parse";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";

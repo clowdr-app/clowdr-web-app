@@ -1,7 +1,7 @@
 import Parse from "parse";
 import { Flair as Schema } from "../DBSchema/Flair";
 
-export default class Flair
+export class Flair
     extends Parse.Object
     implements Schema {
 

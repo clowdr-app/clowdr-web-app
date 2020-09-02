@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { ProgramTrack as Schema } from "../DBSchema/ProgramTrack";
-import ClowdrInstance from "./ClowdrInstance";
+import { ClowdrInstance } from "./ClowdrInstance";
 
-export default class ProgramTrack
+export class ProgramTrack
     extends Parse.Object
     implements Schema {
 

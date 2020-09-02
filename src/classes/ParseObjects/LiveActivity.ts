@@ -1,7 +1,7 @@
 import Parse from "parse";
 import { LiveActivity as Schema } from "../DBSchema/LiveActivity";
 
-export default class LiveActivity
+export class LiveActivity
     extends Parse.Object
     implements Schema {
 

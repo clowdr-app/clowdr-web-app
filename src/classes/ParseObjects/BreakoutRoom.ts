@@ -1,11 +1,11 @@
 import Parse from "parse";
 import { BreakoutRoom as Schema } from '../DBSchema/BreakoutRoom';
-import ClowdrInstance from "./ClowdrInstance";
-import Conversation from "./Conversation";
-import UserProfile from "./UserProfile";
-import ProgramItem from "./ProgramItem";
+import { ClowdrInstance } from "./ClowdrInstance";
+import { Conversation } from "./Conversation";
+import { UserProfile } from "./UserProfile";
+import { ProgramItem } from "./ProgramItem";
 
-export default class BreakoutRoom
+export class BreakoutRoom
     extends Parse.Object
     implements Schema {
 

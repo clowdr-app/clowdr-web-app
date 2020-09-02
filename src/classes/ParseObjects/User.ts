@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { User as Schema } from "../DBSchema/User";
-import UserProfile from "./UserProfile";
+import { UserProfile } from "./UserProfile";
 
-export default class User
+export class User
     extends Parse.User
     implements Schema {
 

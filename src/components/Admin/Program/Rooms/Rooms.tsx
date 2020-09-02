@@ -21,9 +21,7 @@ import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { RcFile, UploadChangeParam } from "antd/lib/upload/interface";
 import { Store } from 'antd/lib/form/interface';
 import assert from 'assert';
-import ProgramRoom from '../../../../classes/ParseObjects/ProgramRoom';
-import ZoomRoom from '../../../../classes/ParseObjects/ZoomRoom';
-import ZoomHostAccount from '../../../../classes/ParseObjects/ZoomHostAccount';
+import { ProgramRoom, ZoomRoom, ZoomHostAccount } from "../../../../classes/ParseObjects";
 var moment = require('moment');
 var timezone = require('moment-timezone');
 

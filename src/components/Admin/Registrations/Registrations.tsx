@@ -6,7 +6,7 @@ import { AuthUserContext } from "../../Session";
 import { ClowdrState } from '../../../ClowdrTypes';
 import { UploadChangeParam, RcFile } from 'antd/lib/upload';
 import assert from 'assert';
-import Registration from '../../../classes/ParseObjects/Registration';
+import { Registration } from "../../../classes/ParseObjects";
 import { Store } from 'antd/lib/form/interface';
 
 var moment = require('moment');

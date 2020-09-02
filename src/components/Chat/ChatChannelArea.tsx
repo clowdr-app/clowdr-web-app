@@ -11,7 +11,7 @@ import { intersperse } from "../../Util";
 import { RouteComponentProps, withRouter } from "react-router";
 import { ClowdrState } from "../../ClowdrTypes";
 import assert from "assert";
-import ProgramItem from "../../classes/ParseObjects/ProgramItem";
+import { ProgramItem } from "../../classes/ParseObjects";
 
 interface ChatChannelAreaProps extends RouteComponentProps {
     sid: string;

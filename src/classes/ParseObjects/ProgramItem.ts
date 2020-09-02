@@ -1,14 +1,14 @@
 import Parse from "parse";
 import { ProgramItem as Schema } from "../DBSchema/ProgramItem";
-import ProgramPerson from "./ProgramPerson";
-import ProgramItemAttachment from "./ProgramItemAttachment";
-import BreakoutRoom from "./BreakoutRoom";
-import ClowdrInstance from "./ClowdrInstance";
-import ProgramSessionEvent from "./ProgramSessionEvent";
-import ProgramSession from "./ProgramSession";
-import ProgramTrack from "./ProgramTrack";
+import { ProgramPerson } from "./ProgramPerson";
+import { ProgramItemAttachment } from "./ProgramItemAttachment";
+import { BreakoutRoom } from "./BreakoutRoom";
+import { ClowdrInstance } from "./ClowdrInstance";
+import { ProgramSessionEvent } from "./ProgramSessionEvent";
+import { ProgramSession } from "./ProgramSession";
+import { ProgramTrack } from "./ProgramTrack";
 
-export default class ProgramItem
+export class ProgramItem
     extends Parse.Object
     implements Schema {
 

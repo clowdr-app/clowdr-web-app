@@ -7,9 +7,11 @@ import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { SelectValue } from "antd/es/select";
 import { Store } from 'antd/lib/form/interface';
 import assert from 'assert';
-import ProgramSession from '../../../../classes/ParseObjects/ProgramSession';
-import ProgramRoom from '../../../../classes/ParseObjects/ProgramRoom';
-import ProgramItem from '../../../../classes/ParseObjects/ProgramItem';
+import {
+    ProgramSession,
+    ProgramRoom,
+    ProgramItem
+} from "../../../../classes/ParseObjects";
 var moment = require('moment');
 var timezone = require('moment-timezone');
 

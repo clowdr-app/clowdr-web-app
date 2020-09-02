@@ -1,11 +1,13 @@
 import React from 'react';
 import { ClowdrState } from "../../ClowdrTypes";
-import ProgramSession from "../../classes/ParseObjects/ProgramSession"
 import { AuthUserContext } from '../Session';
-import ProgramItem from "../../classes/ParseObjects/ProgramItem";
 import { Collapse } from 'antd';
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
-import ProgramSessionEvent from "../../classes/ParseObjects/ProgramSessionEvent";
+import {
+    ProgramSession,
+    ProgramItem,
+    ProgramSessionEvent
+} from "../../classes/ParseObjects"
 import ProgramSessionEventDisplay from "../Program/ProgramSessionEventDisplay";
 
 interface ExpandableSessionDisplayProps {

@@ -4,7 +4,7 @@ import { message, Upload } from 'antd';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { RcFile, UploadChangeParam } from 'antd/lib/upload/interface';
 import Parse from "parse";
-import UserProfile from '../../classes/ParseObjects/UserProfile';
+import { UserProfile } from "../../classes/ParseObjects";
 
 interface Props {
     userProfile: UserProfile

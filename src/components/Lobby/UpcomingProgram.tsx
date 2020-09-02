@@ -1,14 +1,16 @@
 import React from 'react';
 import { NavLink } from "react-router-dom";
 import { ClowdrState } from "../../ClowdrTypes";
-import ProgramSession from "../../classes/ParseObjects/ProgramSession"
 import { Collapse, Divider, Spin, Button } from "antd";
 import { AuthUserContext } from '../Session';
 import ExpandableSessionDisplay from "./ExpandableSessionDisplay"
 import moment from "moment";
-import ProgramSessionEvent from "../../classes/ParseObjects/ProgramSessionEvent";
 import ProgramSessionEventDisplay from "../Program/ProgramSessionEventDisplay";
-import ProgramTrack from "../../classes/ParseObjects/ProgramTrack";
+import {
+    ProgramSession,
+    ProgramSessionEvent,
+    ProgramTrack
+} from "../../classes/ParseObjects"
 import { startTImeOffsetForProgramDisplay } from "../../globals";
 
 interface UpcomingProgramProps {

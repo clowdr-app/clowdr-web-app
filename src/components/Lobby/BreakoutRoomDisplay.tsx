@@ -1,7 +1,7 @@
 import React from 'react';
 import { ClowdrState } from "../../ClowdrTypes";
 import { AuthUserContext } from '../Session';
-import BreakoutRoom from "../../classes/ParseObjects/BreakoutRoom";
+import { BreakoutRoom } from "../../classes/ParseObjects";
 import { Skeleton } from "antd";
 import UserStatusDisplay from "./UserStatusDisplay";
 

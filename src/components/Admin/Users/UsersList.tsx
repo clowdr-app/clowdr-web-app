@@ -6,8 +6,7 @@ import { SearchOutlined } from "@material-ui/icons";
 import Highlighter from 'react-highlight-words';
 import { ClowdrState, UserSessionToken } from "../../../ClowdrTypes";
 import assert from 'assert';
-import UserProfile from "../../../classes/ParseObjects/UserProfile";
-import User from "../../../classes/ParseObjects/User";
+import { UserProfile, User } from "../../../classes/ParseObjects";
 import { FilterDropdownProps } from "antd/lib/table/interface";
 
 interface UsersListProps {

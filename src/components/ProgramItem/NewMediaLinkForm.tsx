@@ -2,9 +2,7 @@ import React from "react";
 import { Button, Form, Input, message, Modal, Select } from "antd";
 import { AuthUserContext } from "../Session";
 import { ClowdrState } from "../../ClowdrTypes";
-import AttachmentType from "../../classes/ParseObjects/AttachmentType";
-import ProgramItem from "../../classes/ParseObjects/ProgramItem";
-import ProgramItemAttachment from "../../classes/ParseObjects/ProgramItemAttachment";
+import { AttachmentType, ProgramItem, ProgramItemAttachment } from "../../classes/ParseObjects";
 import Parse from "parse";
 
 interface NewMediaLinkFormProps {

@@ -1,8 +1,7 @@
 import Chat from "twilio-chat";
 import { Channel } from "twilio-chat/lib/channel"
 import { Client } from "twilio-chat/lib/client"
-import UserProfile from '../classes/ParseObjects/UserProfile';
-import ClowdrInstance from '../classes/ParseObjects/ClowdrInstance';
+import { UserProfile, ClowdrInstance, Conversation } from "../classes/ParseObjects";
 import Parse from "parse";
 import { backOff } from "exponential-backoff";
 import { message } from "antd"
@@ -13,7 +12,6 @@ import { ContextualActiveUsers } from "../components/Lobby/ContextualActiveusers
 import { ChatFrame } from "../components/Chat/ChatFrame";
 import { Message } from "twilio-chat/lib/message";
 import assert from "assert";
-import Conversation from "./ParseObjects/Conversation";
 
 interface ChannelInfoAttrs {
     parseID?: string;
@@ -33,7 +31,7 @@ export interface ChannelInfo {
     conversation: Conversation | null;
 }
 
-export default class ChatClient {
+export class ChatClient {
     joinedChannels: { [x: string]: ChannelInfo } = {};
     channelPromises: { [x: string]: Promise<Channel> } = {};
     channelWaiters: { [x: string]: (channel: Channel) => void } = {};

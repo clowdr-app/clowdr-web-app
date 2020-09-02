@@ -1,9 +1,9 @@
 import Parse from "parse";
 import { InstancePermission as Schema } from "../DBSchema/InstancePermission";
-import ClowdrInstance from "./ClowdrInstance";
-import PrivilegedAction from "./PrivilegedAction";
+import { ClowdrInstance } from "./ClowdrInstance";
+import { PrivilegedAction } from "./PrivilegedAction";
 
-export default class InstancePermission
+export class InstancePermission
     extends Parse.Object
     implements Schema {
 

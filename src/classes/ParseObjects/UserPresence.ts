@@ -1,9 +1,9 @@
 import Parse from "parse";
 import { UserPresence as Schema } from "../DBSchema/UserPresence";
-import SocialSpace from "./SocialSpace";
-import User from "./User";
+import { SocialSpace } from "./SocialSpace";
+import { User } from "./User";
 
-export default class UserPresence
+export class UserPresence
     extends Parse.Object
     implements Schema {
 

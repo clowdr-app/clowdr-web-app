@@ -1,8 +1,8 @@
 import Parse from "parse";
 import { MeetingRegistration as Schema } from "../DBSchema/MeetingRegistration";
-import ClowdrInstance from "./ClowdrInstance";
+import { ClowdrInstance } from "./ClowdrInstance";
 
-export default class MeetingRegistration
+export class MeetingRegistration
     extends Parse.Object
     implements Schema {
 

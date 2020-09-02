@@ -4,19 +4,21 @@ import * as H from 'history';
 import AuthUserContext from './context';
 import Parse, { LiveQueryClient } from "parse";
 import { notification, Spin } from "antd";
-import ChatClient from "../../classes/ChatClient"
+import { ChatClient } from "../../classes"
 import ProgramCache from "./ProgramCache";
-import BreakoutRoom from '../../classes/ParseObjects/BreakoutRoom';
-import User from '../../classes/ParseObjects/User';
-import UserProfile from '../../classes/ParseObjects/UserProfile';
-import UserPresence from '../../classes/ParseObjects/UserPresence';
-import SocialSpace from '../../classes/ParseObjects/SocialSpace';
-import ClowdrInstance from '../../classes/ParseObjects/ClowdrInstance';
-import LiveActivity from '../../classes/ParseObjects/LiveActivity';
+import {
+    BreakoutRoom,
+    User,
+    UserProfile,
+    UserPresence,
+    SocialSpace,
+    ClowdrInstance,
+    LiveActivity,
+    InstancePermission,
+    Flair
+} from "../../classes/ParseObjects";
 import assert from 'assert';
 import { MaybeParseUser, MaybeClowdrInstance, ClowdrStateHelpers } from "../../ClowdrTypes";
-import InstancePermission from '../../classes/ParseObjects/InstancePermission';
-import Flair from '../../classes/ParseObjects/Flair';
 
 interface Props {
     history?: H.History | null;

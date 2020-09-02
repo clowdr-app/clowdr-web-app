@@ -1,9 +1,9 @@
 import Parse from "parse";
 import { ProgramPerson as Schema } from "../DBSchema/ProgramPerson";
-import ProgramItem from "./ProgramItem";
-import UserProfile from "./UserProfile";
+import { ProgramItem } from "./ProgramItem";
+import { UserProfile } from "./UserProfile";
 
-export default class ProgramPerson
+export class ProgramPerson
     extends Parse.Object
     implements Schema {
 

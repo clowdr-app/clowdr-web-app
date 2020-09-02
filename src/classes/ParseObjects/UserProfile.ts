@@ -1,13 +1,13 @@
 import Parse from "parse";
 import { UserProfile as Schema, UserProfileTag } from "../DBSchema/UserProfile";
-import ClowdrInstance from "./ClowdrInstance";
-import UserPresence from "./UserPresence";
-import ProgramPerson from "./ProgramPerson";
-import User from "./User";
-import BreakoutRoom from "./BreakoutRoom";
-import Flair from "./Flair";
+import { ClowdrInstance } from "./ClowdrInstance";
+import { UserPresence } from "./UserPresence";
+import { ProgramPerson } from "./ProgramPerson";
+import { User } from "./User";
+import { BreakoutRoom } from "./BreakoutRoom";
+import { Flair } from "./Flair";
 
-export default class UserProfile
+export class UserProfile
     extends Parse.Object
     implements Schema {
 
