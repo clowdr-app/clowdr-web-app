@@ -1,17 +1,18 @@
 import React, { Component } from "react";
 import { AuthUserContext } from "../Session";
 import { ClowdrState } from "../../ClowdrTypes";
-import ProgramSession from "../../classes/ProgramSession";
-import ProgramRoom from "../../classes/ProgramRoom";
+import ProgramSession from "../../classes/ParseObjects/ProgramSession";
+import ProgramRoom from "../../classes/ParseObjects/ProgramRoom";
 import moment from "moment";
 import { Collapse, Divider, Spin } from "antd";
-import ProgramItem from "../../classes/ProgramItem";
+import ProgramItem from "../../classes/ParseObjects/ProgramItem";
 import ProgramItemDetails from "../ProgramItem/ProgramItemDetails";
-import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
+import ProgramSessionEvent from "../../classes/ParseObjects/ProgramSessionEvent";
 import Parse from "parse";
+import assert from "assert";
 
 interface RoomProgramSummaryProps {
-    appState: ClowdrState | null;
+    appState: ClowdrState;
     ProgramRoom: ProgramRoom;
 }
 
@@ -52,9 +53,11 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
     }
 
     componentDidMount() {
-        this.props.appState?.programCache.getProgramRoom(this.props.ProgramRoom.id, this).then(async (room) => {
-            let [sessions, allEvents] = await Promise.all([this.props.appState?.programCache.getProgramSessions(this),
-            this.props.appState?.programCache.getProgramSessionEvents(this)]);
+        this.props.appState.programCache.getProgramRoom(this.props.ProgramRoom.id, this).then(async (room) => {
+            assert(room, "The room no longer exists in the database, what on earth happened?");
+
+            let [sessions, allEvents] = await Promise.all([this.props.appState.programCache.getProgramSessions(this),
+            this.props.appState.programCache.getProgramSessionEvents(this)]);
             this.setState({
                 ProgramRoom: room,
                 ProgramSessions: sessions,
@@ -73,32 +76,38 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
         let now = Date.now();
         let sessionEvents: ProgramSessionEvent[] = [];
         for (let session of sessions) {
-            if (session.get("events")) {
-                sessionEvents = sessionEvents.concat(session.get("events")
-                    .map((e: ProgramSessionEvent) =>
-                        allEvents.find(ev => ev.id === e.id)));
+            if (session.events) {
+                sessionEvents = sessionEvents.concat(session.events
+                    .map((e) => {
+                        let x = allEvents.find(ev => ev.id === e.id);
+                        // Necessary because `find` isn't guaranteed - though
+                        // we rather hope that `allEvents` really does contain
+                        // _all_ the events so it will always succeed.
+                        assert(x);
+                        return x;
+                    }));
             }
 
-            if (session.get("startTime") > now && moment(session.get("startTime")) < nextUpdateTime) {
-                nextUpdateTime = moment(session.get('startTime'));
+            if (session.startTime > now && moment(session.startTime) < nextUpdateTime) {
+                nextUpdateTime = moment(session.startTime);
             }
         }
         for (let event of sessionEvents) {
-            if (event && event.get("startTime") > now && moment(event.get("startTime")) < nextUpdateTime) {
-                nextUpdateTime = moment(event.get("startTime"));
+            if (event && event.startTime > now && moment(event.startTime) < nextUpdateTime) {
+                nextUpdateTime = moment(event.startTime);
             }
         }
         return nextUpdateTime;
     }
 
     dateSorter(a: ProgramSession, b: ProgramSession) {
-        var timeA = a.get("startTime") ? a.get("startTime") : new Date();
-        var timeB = b.get("startTime") ? b.get("startTime") : new Date();
+        var timeA = a.startTime ? a.startTime : new Date();
+        var timeB = b.startTime ? b.startTime : new Date();
         return timeA > timeB ? 1 : timeA === timeB ? 0 : -1;
     }
     eventDateSorter(a: ProgramSessionEvent, b: ProgramSessionEvent) {
-        var timeA = a.get("startTime") ? a.get("startTime") : new Date();
-        var timeB = b.get("startTime") ? b.get("startTime") : new Date();
+        var timeA = a.startTime ? a.startTime : new Date();
+        var timeB = b.startTime ? b.startTime : new Date();
         return timeA > timeB ? 1 : timeA === timeB ? 0 : -1;
     }
     componentDidUpdate(prevProps: Readonly<RoomProgramSummaryProps>, prevState: Readonly<RoomProgramSummaryState>, snapshot?: any): void {
@@ -117,34 +126,38 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
     }
 
     componentWillUnmount(): void {
-        this.props.appState?.programCache.cancelSubscription("ProgramSession", this, undefined);
+        this.props.appState.programCache.cancelSubscription("ProgramSession", this, undefined);
         if (this.props.ProgramRoom)
-            this.props.appState?.programCache.cancelSubscription("ProgramRoom", this, this.props.ProgramRoom.id);
+            this.props.appState.programCache.cancelSubscription("ProgramRoom", this, this.props.ProgramRoom.id);
     }
 
     sessionView(sessions: ProgramSession[], title: string) {
         // if(sessions.length === 0){
         //     return <></>
         // }
-        let now = new Date();
+        let now = Date.now();
         return sessions.map(session => {
             let header;
-            if (session.get("startTime") < now && session.get("endTime") < now) {
+            if (session.startTime < now && session.endTime < now) {
                 //past
-                header = session.get("title") + " (Ended " + moment(session.get("endTime")).calendar() + ")";
+                header = session.title + " (Ended " + moment(session.endTime).calendar() + ")";
             }
-            else if (session.get("startTime") < now && session.get("endTime") > now) {
+            else if (session.startTime < now && session.endTime > now) {
                 //active
-                header = "Now: " + session.get("title") + " (until " + moment(session.get("endTime")).calendar() + ")";
+                header = "Now: " + session.title + " (until " + moment(session.endTime).calendar() + ")";
             } else {
                 //future
-                header = session.get("title") + " (Starting " + moment(session.get("startTime")).calendar() + ")";
+                header = session.title + " (Starting " + moment(session.startTime).calendar() + ")";
             }
             let curEvents: string[] = [];
             let sessionEvents: ProgramSessionEvent[] = [];
-            if (session.get("events")) {
-                sessionEvents = session.get("events").map((e: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(ev => ev.id === e.id));
-                curEvents = sessionEvents.filter(ev => ev.get("startTime") <= Date.now() && ev.get("endTime") >= Date.now()).map(e => e.get("programItem").id);
+            if (session.events) {
+                sessionEvents = session.events.map((e) => {
+                    let x = this.state.ProgramSessionEvents.find(ev => ev.id === e.id);
+                    assert(x);
+                    return x;
+                });
+                curEvents = sessionEvents.filter(ev => ev.startTime <= Date.now() && ev.endTime >= Date.now()).map(e => e.programItem.id);
             }
             let activeKeys = curEvents.concat([]);
             for (let itemID of Object.keys(this.state.expandedItems)) {
@@ -158,7 +171,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                     onChange={(expandedKeys) => {
                         this.setState((prevState) => {
                             let openItems = prevState.expandedItems;
-                            for (let item of session.get("items")) {
+                            for (let item of session.items) {
                                 openItems[item.id] = expandedKeys.includes(item.id);
                             }
                             return { expandedItems: openItems };
@@ -169,24 +182,25 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                         if (!event) {
                             return <div></div>
                         }
-                        let item = session.get("items").find((i: ProgramItem) => i.id === event.get("programItem").id);
+                        let item = session.items.find((i: ProgramItem) => i.id === event.programItem.id);
+                        assert(item);
                         let title;
-                        let now = new Date();
-                        if (event.get("endTime") < now) {
-                            title = item.get("title") + " (ended " + moment().to(event.get("endTime")) + ")";
+                        let now = Date.now();
+                        if (event.endTime < now) {
+                            title = item.title + " (ended " + moment().to(event.endTime) + ")";
                         }
-                        else if (event.get("startTime") > now) {
-                            title = item.get("title") + " (" + moment().to(event.get("startTime")) + ")";
+                        else if (event.startTime > now) {
+                            title = item.title + " (" + moment().to(event.startTime) + ")";
                         }
                         else {
-                            title = item.get("title") + " (Now)";
+                            title = item.title + " (Now)";
                         }
 
-                        return <Collapse.Panel key={event.get("programItem").id} header={title}>
+                        return <Collapse.Panel key={event.programItem.id} header={title}>
                             <ProgramItemDetails ProgramItem={item} isInRoom={false} openChat={false} />
                         </Collapse.Panel>
-                    }) : session.get('items') ? session.get('items').map((item: ProgramItem) => {
-                        return <Collapse.Panel key={item.id} header={item.get("title")}>
+                    }) : session.items ? session.items.map((item: ProgramItem) => {
+                        return <Collapse.Panel key={item.id} header={item.title}>
                             <ProgramItemDetails ProgramItem={item} isInRoom={false} openChat={false} hiddenKeys={['joinLive', 'session']} />
                         </Collapse.Panel>
                     })
@@ -217,17 +231,17 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                     let openItems = prevState.expandedItems;
                     if (!expandedKeys.includes("Past"))
                         for (let session of this.state.pastSessions)
-                            for (let item of session.get("items")) {
+                            for (let item of session.items) {
                                 openItems[item.id] = false
                             }
                     if (!expandedKeys.includes("Future"))
                         for (let session of this.state.futureSessions)
-                            for (let item of session.get("items")) {
+                            for (let item of session.items) {
                                 openItems[item.id] = false
                             }
                     for (let session of this.state.curSessions)
                         if (!expandedKeys.includes(session.id))
-                            for (let item of session.get("items")) {
+                            for (let item of session.items) {
                                 openItems[item.id] = false
                             }
                     return { expandedItems: openItems };
@@ -239,7 +253,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                             let openItems = prevState.expandedItems;
                             for (let session of this.state.pastSessions)
                                 if (!expandedKeys.includes(session.id))
-                                    for (let item of session.get("items")) {
+                                    for (let item of session.items) {
                                         openItems[item.id] = false
                                     }
                             return { expandedItems: openItems };
@@ -255,7 +269,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                             let openItems = prevState.expandedItems;
                             for (let session of this.state.futureSessions)
                                 if (!expandedKeys.includes(session.id))
-                                    for (let item of session.get("items")) {
+                                    for (let item of session.items) {
                                         openItems[item.id] = false;
                                     }
                             return { expandedItems: openItems };
@@ -276,18 +290,18 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
         let curEvents: number[] = [];
         let curEvent: ProgramSessionEvent | null = null;
 
-        let filteredSessions = this.state.ProgramSessions.filter(s => s.get("room") && s.get("room").id === this.props.ProgramRoom.id);
+        let filteredSessions = this.state.ProgramSessions.filter(s => s.room && s.room.id === this.props.ProgramRoom.id);
         for (let s of filteredSessions) {
-            var timeS = s.get("startTime") ? s.get("startTime") : new Date();
-            var timeE = s.get("endTime") ? s.get("endTime") : new Date();
+            var timeS = s.startTime ? s.startTime : new Date();
+            var timeE = s.endTime ? s.endTime : new Date();
             if (timeS <= now && timeE >= now) {
                 curSessions.push(s);
-                if (s.get("events")) {
-                    let sessionEvents = s.get("events").map((e: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(ev => ev.id === e.id));
+                if (s.events) {
+                    let sessionEvents = s.events.map((e: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(ev => ev.id === e.id));
                     // @ts-ignore
-                    curEvents = sessionEvents.filter(ev => ev.get("startTime") <= Date.now() && ev.get("endTime") >= Date.now()).map(e => e.get("programItem").id);
+                    curEvents = sessionEvents.filter(ev => ev.startTime <= Date.now() && ev.endTime >= Date.now()).map(e => e.programItem.id);
                     //@ts-ignore
-                    curEvent = sessionEvents.find(ev => ev.get("startTime") <= Date.now() && ev.get("endTime") >= Date.now());
+                    curEvent = sessionEvents.find(ev => ev.startTime <= Date.now() && ev.endTime >= Date.now());
                 }
             } else if (timeS > now) {
                 futureSessions.push(s);
@@ -295,23 +309,26 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
                 pastSessions.push(s);
             }
         }
-        let expanded = {};
+        let expanded: { [k: string]: boolean } = {};
         for (let id of curEvents) {
-            // @ts-ignore
             expanded[id] = true;
         }
         if (curEvent != null && curEvent !== this.state.currentEvent) {
-            //set the chat
-            this.props.appState?.programCache.getProgramItem(curEvent.get("programItem").id, undefined).then(
+            // Set the chat
+            // TODO: Ed: Why is this being indirected through the cache?
+            //       Couldn't we just use `curEvent.programItem` directly?
+            this.props.appState.programCache.getProgramItem(curEvent.programItem.id, undefined).then(
                 async (item) => {
-                    let chatSID = item.get("chatSID");
+                    assert(item, "The program item no longer exists in the database. Was it deleted?");
+
+                    let chatSID = item.chatSID;
                     if (!chatSID) {
                         chatSID = await Parse.Cloud.run("chat-getSIDForProgramItem", {
                             programItem: item.id
                         });
                     }
                     if (chatSID) {
-                        this.props.appState?.chatClient.openChatAndJoinIfNeeded(chatSID, true);
+                        this.props.appState.chatClient.openChatAndJoinIfNeeded(chatSID, true);
                     }
                 }
             )
@@ -331,7 +348,7 @@ class RoomProgramSummary extends Component<RoomProgramSummaryProps, RoomProgramS
 
 const AuthConsumer = (props: PublicRoomProgramSummaryProps) => (
     <AuthUserContext.Consumer>
-        {value => (
+        {value => (value == null ? <span>TODO: RoomProgramSummary when clowdrState is null.</span> :
             <RoomProgramSummary {...props} appState={value} />
         )}
     </AuthUserContext.Consumer>

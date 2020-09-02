@@ -64,11 +64,11 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
 
         assert(this.props.auth.currentConference, "Current conference is null");
 
-        let text = this.props.auth.currentConference && this.props.auth.currentConference.get("landingPage") ?
-            this.props.auth.currentConference.get("landingPage") : defaultText;
+        let text = this.props.auth.currentConference && this.props.auth.currentConference.landingPage ?
+            this.props.auth.currentConference.landingPage : defaultText;
         let privateText = undefined;
-        if (this.props.auth.currentConference.get("loggedInText") && this.props.auth.currentConference.get("loggedInText").get("value"))
-            privateText = this.props.auth.currentConference.get("loggedInText").get("value");
+        if (this.props.auth.currentConference.loggedInText && this.props.auth.currentConference.loggedInText.value)
+            privateText = this.props.auth.currentConference.loggedInText.value;
         this.state = {
             isLoggedIn: false,
             text: text,
@@ -82,11 +82,11 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
         assert(this.props.auth.currentConference, "Current conference is null");
 
         if (this.props.auth.isAdmin) {
-            let loggedInConfig = this.props.auth.currentConference.get("loggedInText");
+            let loggedInConfig = this.props.auth.currentConference.loggedInText;
             if (!loggedInConfig) {
                 await Parse.Cloud.run("init-loggedIn-homepage", { id: this.props.auth.currentConference.id });
                 await this.props.auth.currentConference.fetchWithInclude("loggedInText");
-                this.setState({ privateText: this.props.auth.currentConference.get("loggedInText").get("value") })
+                this.setState({ privateText: this.props.auth.currentConference.loggedInText.value })
             }
         }
     }
@@ -125,8 +125,8 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
 
         this.setState({ isEditingPrivateDesc: false });
         console.log('Will save...');
-        this.props.auth.currentConference.get("loggedInText").set("value", this.state.privateText);
-        await this.props.auth.currentConference.get("loggedInText").save();
+        this.props.auth.currentConference.loggedInText.set("value", this.state.privateText);
+        await this.props.auth.currentConference.loggedInText.save();
         message.success("Saved");
     }
 

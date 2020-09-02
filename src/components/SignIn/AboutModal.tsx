@@ -25,8 +25,8 @@ class WelcomePortal extends React.Component<WelcomePortalProps, WelcomePortalSta
         this.state = { visible: false };
     }
     componentDidMount() {
-        if (!this.props.auth.userProfile.get("welcomeModalShown")) {
-            let welcomeText = this.props.auth.currentConference.get("welcomeText");
+        if (!this.props.auth.userProfile.welcomeModalShown) {
+            let welcomeText = this.props.auth.currentConference.welcomeText;
             if (!welcomeText) {
                 welcomeText = <Typography.Paragraph>CLOWDR is an open-source tool to support virtual conferences,
                 and is currently in beta testing.

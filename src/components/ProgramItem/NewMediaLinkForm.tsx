@@ -2,13 +2,13 @@ import React from "react";
 import { Button, Form, Input, message, Modal, Select } from "antd";
 import { AuthUserContext } from "../Session";
 import { ClowdrState } from "../../ClowdrTypes";
-import AttachmentType from "../../classes/AttachmentType";
-import ProgramItem from "../../classes/ProgramItem";
-import ProgramItemAttachment from "../../classes/ProgramItemAttachment";
+import AttachmentType from "../../classes/ParseObjects/AttachmentType";
+import ProgramItem from "../../classes/ParseObjects/ProgramItem";
+import ProgramItemAttachment from "../../classes/ParseObjects/ProgramItemAttachment";
 import Parse from "parse";
 
 interface NewMediaLinkFormProps {
-    appState: ClowdrState | null;
+    appState: ClowdrState;
     ProgramItem: ProgramItem;
 }
 interface PublicNewMediaLinkFormProps {
@@ -60,18 +60,20 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
     };
 
     componentDidMount() {
-        let promises = [this.props.appState?.programCache.getAttachmentTypes(this)];
-        if (this.props.ProgramItem && this.props.ProgramItem.get("attachments"))
-            promises.push(Parse.Object.fetchAllIfNeeded(this.props.ProgramItem.get("attachments")));
-        Promise.all(promises).then((results) => {
-            let types: ProgramItemAttachment[] = results[0];
-            let existingAttachments: ProgramItemAttachment[] = [];
-            if (results.length > 1) {
-                existingAttachments = results[1];
-                types = types.filter((v) => !existingAttachments.find(y => y.get("attachmentType").id === v.id));
-            }
+        let typesPromise: Promise<AttachmentType[]> = this.props.appState.programCache.getAttachmentTypes(this);
+        let attachmentsPromise: Promise<ProgramItemAttachment[]>;
+        if (this.props.ProgramItem && this.props.ProgramItem.attachments) {
+            attachmentsPromise = Parse.Object.fetchAllIfNeeded<ProgramItemAttachment>(this.props.ProgramItem.attachments);
+        }
+        else {
+            attachmentsPromise = new Promise(resolve => resolve([]));
+        }
 
-            this.setState({ AttachmentTypes: types, existingAttachments: existingAttachments, loading: false });
+        Promise.all([typesPromise, attachmentsPromise]).then((results) => {
+            let types = results[0];
+            let attachments = results[1];
+            types = types.filter((v) => !attachments.find(y => y.attachmentType.id === v.id));
+            this.setState({ AttachmentTypes: types, existingAttachments: attachments, loading: false });
         })
     }
 
@@ -80,7 +82,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
         let buttonText = "New Attachment/Media Link";
 
         let selectOptions = this.state.AttachmentTypes.map((a) => ({
-            label: a.get("name"),
+            label: a.name,
             value: a.id, object: a
         }))
         return <div>
@@ -123,10 +125,10 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
                                 attachment.set("file", parseFile);
                                 await attachment.save();
                             }
-                            if (!this.props.ProgramItem.get("attachments")) {
+                            if (!this.props.ProgramItem.attachments) {
                                 this.props.ProgramItem.set("attachments", []);
                             }
-                            this.props.ProgramItem.get("attachments").push(attachment);
+                            this.props.ProgramItem.attachments.push(attachment);
                             await this.props.ProgramItem.save();
                             message.success("Successfully created attachment");
                             this.form.current.resetFields();
@@ -147,7 +149,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
                             // @ts-ignore
                             let attachmentType = optionObj.object;
 
-                            if (!attachmentType.get("supportsFile")) {
+                            if (!attachmentType.supportsFile) {
                                 this.form.current.resetFields(['file'])
                                 this.setState({ selectedFile: undefined });
                             }
@@ -167,7 +169,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
                             {
                                 validator: async (rule, value) => {
                                     let message = "Please input the link to your attachment"
-                                    if (this.state.attachmentType && this.state.attachmentType.get("supportsFile")) {
+                                    if (this.state.attachmentType && this.state.attachmentType.supportsFile) {
                                         message = "Please input either an external link OR upload a file";
                                     }
                                     let otherValue = this.form.current.getFieldValue("file");
@@ -188,7 +190,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
                         label="Upload file"
                         rules={[{
                             validator: async (rule, value) => {
-                                if (this.state.attachmentType && this.state.attachmentType.get("supportsFile")) {
+                                if (this.state.attachmentType && this.state.attachmentType.supportsFile) {
                                     let otherValue = this.form.current.getFieldValue("url");
                                     if (otherValue && value)
                                         throw new Error("Please input either an external link OR upload a file");
@@ -198,7 +200,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
                                 return;
                             }
                         }]}
-                        extra={!this.state.attachmentType ? "Please select an attachment type" : !this.state.attachmentType.get("supportsFile") ? "We do not currently accept uploads for this kind of attachment, please attach a link instead." : ""}
+                        extra={!this.state.attachmentType ? "Please select an attachment type" : !this.state.attachmentType.supportsFile ? "We do not currently accept uploads for this kind of attachment, please attach a link instead." : ""}
                     >
                         <Input
                             onChange={event => {
@@ -207,7 +209,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
                                 else
                                     this.setState({ selectedFile: undefined });
                             }}
-                            type="file" ref={this.fileUpload} disabled={!this.state.attachmentType || !this.state.attachmentType.get("supportsFile")} />
+                            type="file" ref={this.fileUpload} disabled={!this.state.attachmentType || !this.state.attachmentType.supportsFile} />
 
                     </Form.Item>
                 </Form>
@@ -218,7 +220,7 @@ class NewMediaLinkForm extends React.Component<NewMediaLinkFormProps, NewMediaLi
 }
 const AuthConsumer = (props: PublicNewMediaLinkFormProps) => (
     <AuthUserContext.Consumer>
-        {value => (
+        {value => (value == null ? <span>TODO: NewMediaLinkForm when clowdrState is null.</span> :
             <NewMediaLinkForm {...props} appState={value} />
         )}
     </AuthUserContext.Consumer>

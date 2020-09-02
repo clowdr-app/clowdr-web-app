@@ -6,31 +6,24 @@ import { AuthUserContext } from "../../Session";
 import { ClowdrState } from '../../../ClowdrTypes';
 import { UploadChangeParam, RcFile } from 'antd/lib/upload';
 import assert from 'assert';
+import Registration from '../../../classes/ParseObjects/Registration';
+import { Store } from 'antd/lib/form/interface';
 
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
 interface RegistrationProps {
-    auth: ClowdrState,
+    auth: ClowdrState
 }
 
 interface RegistrationState {
     loading: boolean,
     searched: boolean,
-    searchResult: Parse.Object[],
-    regs: any[], //TS: should be Parse.Object[], but not sure
-    filteredRegs: any[], //TS: should not be any
+    searchResult: Registration[],
+    regs: Registration[],
+    filteredRegs: Registration[],
     visible: boolean,
     sending: boolean
-}
-
-//TS: I created a schema for the new registration form here, and it worked. See line 69. I'm not sure if we can use interfaces like that,
-//or maybe we need to find out a way to make Parse.Object work for this.
-interface RegistrationSchema {
-    email: string,
-    name: string,
-    affiliation: string
-    country: string
 }
 
 function validateEmail(email: string) {
@@ -53,7 +46,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
             sending: false
         };
         this.currentConference = props.auth.currentConference;
-        console.log("Current conference is " + this.currentConference.get("conferenceName"));
+        console.log("Current conference is " + this.currentConference.conferenceName);
     }
 
     onChange(info: UploadChangeParam) {
@@ -68,12 +61,12 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         }
     }
 
-    onCreate(values: RegistrationSchema) {
+    onCreate(values: Registration) {
         assert(this.props.auth.currentConference, "Current conference is null");
 
         var _this = this;
 
-        let exists = this.state.regs.find(r => r.get("email") === values.email)
+        let exists = this.state.regs.find(r => r.email === values.email)
         if (exists)
             console.log("[Admin/Registrations]: Email already exists");
         console.log("[Admin/Registrations]: Valid email? " + validateEmail(values.email));
@@ -136,7 +129,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
     download() {
         assert(this.props.auth.currentConference, "Current conference is null");
 
-        let query = new Parse.Query("Registration");
+        let query = new Parse.Query<Registration>("Registration");
         query.equalTo("conference", this.props.auth.currentConference.id);
         query.addDescending("updatedAt")
         query.limit(10000);
@@ -149,14 +142,16 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
         }).catch(err => console.log('[Registration]: error: ' + err));
     }
 
-    refreshList(value: any) { //TS: should be Store
+    refreshList(value: Store) {
         let regs = this.state.regs;
         if (value) {
-            regs = value; // TS: Might be 'regs = value as Parse.Object[]'?
+            // TODO: Again, totally broken - need to create items in the DB
+            // @ts-ignore
+            regs = [value];
         }
         this.setState({
             filteredRegs: regs,
-            regs: [regs, ...this.state.regs],
+            regs: [...regs, ...this.state.regs],
             loading: false
         });
     }
@@ -198,21 +193,21 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                 title: 'Name',
                 dataIndex: 'name',
                 key: 'name',
-                sorter: (a: Parse.Object, b: Parse.Object) => {
-                    var varA = a.get("name");
-                    var varB = b.get("name");
+                sorter: (a: Registration, b: Registration) => {
+                    var varA = a.name;
+                    var varB = b.name;
                     return varA.localeCompare(varB);
                 },
-                render: (_: string, record: Parse.Object) => <span>{record.get("name")}</span>,
+                render: (_: string, record: Registration) => <span>{record.name}</span>,
             },
             {
                 title: 'Email',
                 dataIndex: 'email',
                 key: 'email',
-                render: (_: string, record: Parse.Object) => <span>{record.get("email")}</span>,
-                sorter: (a: Parse.Object, b: Parse.Object) => {
-                    var varA = a.get("email");
-                    var varB = b.get("email");
+                render: (_: string, record: Registration) => <span>{record.email}</span>,
+                sorter: (a: Registration, b: Registration) => {
+                    var varA = a.email;
+                    var varB = b.email;
                     return varA.localeCompare(varB);
                 },
             },
@@ -220,10 +215,10 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                 title: 'Affiliation',
                 dataIndex: 'affiliation',
                 key: 'affiliation',
-                render: (_: string, record: Parse.Object) => <span>{record.get("affiliation")}</span>,
-                sorter: (a: Parse.Object, b: Parse.Object) => {
-                    var varA = a.get("affiliation");
-                    var varB = b.get("affiliation");
+                render: (_: string, record: Registration) => <span>{record.affiliation}</span>,
+                sorter: (a: Registration, b: Registration) => {
+                    var varA = a.affiliation;
+                    var varB = b.affiliation;
                     return varA.localeCompare(varB);
                 },
             },
@@ -231,28 +226,28 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                 title: 'Country',
                 dataIndex: 'country',
                 key: 'country',
-                render: (_: string, record: Parse.Object) => <span>{record.get("country")}</span>,
-                sorter: (a: Parse.Object, b: Parse.Object) => {
-                    var varA = a.get("country");
-                    var varB = b.get("country");
+                render: (_: string, record: Registration) => <span>{record.country}</span>,
+                sorter: (a: Registration, b: Registration) => {
+                    var varA = a.country;
+                    var varB = b.country;
                     return varA.localeCompare(varB);
                 },
             },
             {
                 title: 'Created',
                 dataIndex: 'created',
-                sorter: (a: Parse.Object, b: Parse.Object) => {
-                    return moment(a.get("createdAt")) - moment(b.get("createdAt"));
+                sorter: (a: Registration, b: Registration) => {
+                    return moment(a.createdAt) - moment(b.createdAt);
                 },
-                render: (_: string, record: Parse.Object) => <span>{timezone(record.get("createdAt")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
+                render: (_: string, record: Registration) => <span>{timezone(record.createdAt).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z")}</span>,
                 key: 'created',
             },
             {
                 title: 'Invitation',
                 dataIndex: 'invitationSent',
-                render: (_: string, record: Parse.Object) => {
-                    if (record.get("invitationSentDate")) {
-                        return <span>{moment(record.get("invitationSentDate")).calendar()} <Button onClick={this.sendInvitation.bind(this, record)}>Re-send</Button></span>
+                render: (_: string, record: Registration) => {
+                    if (record.invitationSentDate) {
+                        return <span>{moment(record.invitationSentDate).calendar()} <Button onClick={this.sendInvitation.bind(this, record)}>Re-send</Button></span>
                     }
                     return <span><Button loading={this.state.sending} onClick={this.sendInvitation.bind(this, record)}>Send</Button></span>
                 },
@@ -318,7 +313,7 @@ class Registrations extends React.Component<RegistrationProps, RegistrationState
                         this.setState({
                             searched: true,
                             searchResult: this.state.regs.filter(
-                                (reg: Parse.Object) => reg.get('name') && reg.get('name').toLowerCase().includes(key.toLowerCase()))
+                                (reg: Registration) => reg.name && reg.name.toLowerCase().includes(key.toLowerCase()))
                         });
                     }
                 }

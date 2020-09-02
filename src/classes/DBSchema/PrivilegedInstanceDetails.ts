@@ -1,8 +1,6 @@
 import { Base } from './Base';
 
 export interface PrivilegedInstanceDetails extends Base {
-    key: string;
-    value: string;
-
-    // TODO: instance: Conference;
+    key?: string;
+    value?: string;
 }

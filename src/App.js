@@ -119,7 +119,7 @@ class App extends Component {
     navBar() {
         let logo = undefined;
         let className = "logo"
-        let headerImage = this.props.clowdrAppState.currentConference.get("headerImage");
+        let headerImage = this.props.clowdrAppState?.currentConference?.headerImage;
         if (headerImage) {
             if (this.props.clowdrAppState.user && this.props.clowdrAppState.isAdmin) {
                 logo = <Upload style={{ verticalAlign: "top" }} accept=".png, .jpg" name='logo' beforeUpload={this.onLogoUpload.bind(this)} fileList={[]}>

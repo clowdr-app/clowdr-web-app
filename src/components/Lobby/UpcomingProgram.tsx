@@ -1,18 +1,18 @@
 import React from 'react';
 import { NavLink } from "react-router-dom";
 import { ClowdrState } from "../../ClowdrTypes";
-import ProgramSession from "../../classes/ProgramSession"
+import ProgramSession from "../../classes/ParseObjects/ProgramSession"
 import { Collapse, Divider, Spin, Button } from "antd";
 import { AuthUserContext } from '../Session';
 import ExpandableSessionDisplay from "./ExpandableSessionDisplay"
 import moment from "moment";
-import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
+import ProgramSessionEvent from "../../classes/ParseObjects/ProgramSessionEvent";
 import ProgramSessionEventDisplay from "../Program/ProgramSessionEventDisplay";
-import ProgramTrack from "../../classes/ProgramTrack";
+import ProgramTrack from "../../classes/ParseObjects/ProgramTrack";
 import { startTImeOffsetForProgramDisplay } from "../../globals";
 
 interface UpcomingProgramProps {
-    auth: ClowdrState | null;
+    auth: ClowdrState;
 }
 
 interface UpcomingProgramState {
@@ -43,8 +43,8 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     componentDidMount(): void {
-        Promise.all([this.props.auth?.programCache.getProgramSessions(this), this.props.auth?.programCache.getProgramSessionEvents(this),
-        this.props.auth?.programCache.getProgramTracks(this)])
+        Promise.all([this.props.auth.programCache.getProgramSessions(this), this.props.auth.programCache.getProgramSessionEvents(this),
+        this.props.auth.programCache.getProgramTracks(this)])
             .then(([sessions, events, tracks]) => {
                 //find the next time we should update
                 this.setState({
@@ -77,9 +77,9 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     componentWillUnmount(): void {
-        this.props.auth?.programCache.cancelSubscription("ProgramSession", this);
-        this.props.auth?.programCache.cancelSubscription("ProgramSessionEvent", this);
-        this.props.auth?.programCache.cancelSubscription("ProgramTrack", this);
+        this.props.auth.programCache.cancelSubscription("ProgramSession", this);
+        this.props.auth.programCache.cancelSubscription("ProgramSessionEvent", this);
+        this.props.auth.programCache.cancelSubscription("ProgramTrack", this);
     }
 
     sessionView(sessions: ProgramSession[], title: string) {
@@ -90,9 +90,9 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         let lastFormattedTime = null;
 
         for (let session of sessions.sort(this.dateSorter)) {
-            let formattedTime = moment(session.get("startTime")).calendar();
+            let formattedTime = moment(session.startTime).calendar();
             if (title === "Live")
-                formattedTime = "Until " + moment(session.get("endTime")).calendar();
+                formattedTime = "Until " + moment(session.endTime).calendar();
             if (!session)
                 continue;
             if (formattedTime !== lastFormattedTime) {
@@ -107,12 +107,12 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
     }
 
     dateSorter(a: ProgramSession | ProgramSessionEvent, b: ProgramSession | ProgramSessionEvent) {
-        let now = new Date().getTime();
-        var timeA = a.get("startTime") ? a.get("startTime").getTime() : now;
-        var timeB = b.get("startTime") ? b.get("startTime").getTime() : now;
-        if (timeA === timeB && b.get("endTime") && a.get("endTime")) {
-            timeA = a.get("endTime").getTime();
-            timeB = b.get("endTime").getTime();
+        let now = Date.now();
+        var timeA = a.startTime ? a.startTime : now;
+        var timeB = b.startTime ? b.startTime : now;
+        if (timeA === timeB && b.endTime && a.endTime) {
+            timeA = a.endTime;
+            timeB = b.endTime;
         }
         return timeA > timeB ? 1 : timeA === timeB ? a.id.toString().localeCompare(b.id.toString()) : -1;
     }
@@ -133,26 +133,26 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         let programDetails = [];
         let lastFormattedTime = null;
 
-        let now = new Date();
+        let now = Date.now();
 
         // Find the item at, or closest to, "now"
-        let currentItem = this.state.curItems.find(item => item.get("startTime") <= now && item.get("endTime") >= now);
+        let currentItem = this.state.curItems.find(item => item.startTime <= now && item.endTime >= now);
         if (!currentItem)
-            currentItem = this.state.curItems.find(item => item.get("startTime") > now);
+            currentItem = this.state.curItems.find(item => item.startTime > now);
 
         for (let item of this.state.curItems) {
             if (item === currentItem) {
                 programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
-                this.lastRenderedNow = item.get("startTime");
+                this.lastRenderedNow = new Date(item.startTime);
             }
-            let formattedTime = moment(item.get("startTime")).calendar();
+            let formattedTime = moment(item.startTime).calendar();
             if (formattedTime !== lastFormattedTime)
                 programDetails.push(<div className="programTime" key={"program-time" + item.id}>{formattedTime}</div>)
             lastFormattedTime = formattedTime;
             if (item instanceof ProgramSession) {
                 programDetails.push(<ExpandableSessionDisplay session={item} isLive={false} key={item.id} />)
             } else if (item instanceof ProgramSessionEvent) {
-                let isCurrent = item.get("startTime") <= now && item.get("endTime") >= now;
+                let isCurrent = item.startTime <= now && item.endTime >= now;
                 programDetails.push(<ProgramSessionEventDisplay key={item.id} id={item.id} auth={this.props.auth} className={isCurrent ? "programEventLive" : "programEvent"} />)
             } else {
                 console.log(item)
@@ -161,7 +161,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         if (this.state.curItems.length > 0 && !currentItem) {
             let item = this.state.curItems[this.state.curItems.length - 1];
             programDetails.push(<div key="now" ref={this.currentProgramTimeRef}><Divider className="social-sidebar-divider"><NavLink to="/live/now">Now</NavLink></Divider></div>)
-            this.lastRenderedNow = item.get("startTime");
+            this.lastRenderedNow = new Date(item.startTime);
         }
 
         return <div id="upcomingProgramContainer">
@@ -184,7 +184,7 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
         let littleBitAfterNow = now + 60000 * startTImeOffsetForProgramDisplay;
 
         for (let session of sessions) {
-            if (session.get("startTime") >= littleBitAfterNow && moment(session.get("startTime")) < nextUpdateTime) {
+            if (session.startTime >= littleBitAfterNow && moment(session.startTime) < nextUpdateTime) {
                 nextUpdateTime = moment(session.get('startTime'));
             }
         }
@@ -196,17 +196,21 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
 
         for (let s of this.state.ProgramSessions) {
             let displayAsEvents = false;
-            if (s.get("programTrack")) {
-                let t = this.state.ProgramTracks.find(v => v.id === s.get("programTrack").id);
+            if (s.programTrack) {
+                let t = this.state.ProgramTracks.find(v => v.id === s.programTrack.id);
                 if (t)
-                    displayAsEvents = t.get("showAsEvents");
+                    displayAsEvents = t.showAsEvents;
             }
             if (!displayAsEvents) {
                 items.push(s);
             }
-            else if (s.get("events") && s.get("events").length) {
-                let sessionEvents = s.get("events").map((ev: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(e => e.id === ev.id)).filter((e: ProgramSessionEvent) => e !== null);
-                items = items.concat(sessionEvents);
+            else if (s.events && s.events.length) {
+                let sessionEvents
+                    = s.events
+                        .map((ev: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(e => e.id === ev.id))
+                        .filter((e: ProgramSessionEvent | undefined) => e !== undefined);
+                // It is safe to assert the type here because we filtered out the undefined items above :)
+                items = items.concat(sessionEvents as Array<ProgramSessionEvent>);
             }
         }
         items = items.sort(this.dateSorter);
@@ -225,7 +229,7 @@ const AuthConsumer = () => (
     // <Router.Consumer>
     //     {router => (
     <AuthUserContext.Consumer>
-        {value => (
+        {value => (value == null ? <span>TODO: UpcomingProgram when clowdrState is null.</span> :
             <UpcomingProgram auth={value} />
         )}
     </AuthUserContext.Consumer>

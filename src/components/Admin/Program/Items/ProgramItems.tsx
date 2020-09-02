@@ -4,8 +4,8 @@ import Parse from "parse";
 import { AuthUserContext } from "../../../Session";
 import { DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 import { ClowdrState } from '../../../../ClowdrTypes';
-import ProgramTrack from '../../../../classes/ProgramTrack';
-import ProgramPerson from '../../../../classes/ProgramPerson';
+import ProgramTrack from '../../../../classes/ParseObjects/ProgramTrack';
+import ProgramPerson from '../../../../classes/ParseObjects/ProgramPerson';
 import { ColumnsType } from 'antd/lib/table';
 import assert from 'assert';
 import { Store } from 'antd/lib/form/interface';
@@ -85,8 +85,8 @@ class ProgramItems extends React.Component<Props, State> {
                         placeholder="Choose authors"
                         optionFilterProp="label"
                         options={this.state.ProgramPersons.sort((a, b) => (
-                            a.get('name').localeCompare(b.get('name'))
-                        )).map(p => ({ value: p.id, label: p.get('name') }))}
+                            a.name.localeCompare(b.name)
+                        )).map(p => ({ value: p.id, label: p.name }))}
                         mode="tags"
                     />
                 }
@@ -99,7 +99,7 @@ class ProgramItems extends React.Component<Props, State> {
                                 key={track.id}
                                 value={track.id}
                             >
-                                {track.get('name')}
+                                {track.name}
                             </Option>
                         ))}
                     </Select>
@@ -138,16 +138,16 @@ class ProgramItems extends React.Component<Props, State> {
 
             const onEdit = (record: Store) => {
                 let currentAuthors: string[] = [];
-                if (record.get("authors")) {
-                    record.get("authors").forEach((a: ProgramPerson) => {
+                if (record.authors) {
+                    record.authors.forEach((a: ProgramPerson) => {
                         currentAuthors.push(a.id);
                     })
                 }
                 form.setFieldsValue({
-                    title: record.get("title") ? record.get("title") : "",
+                    title: record.title ? record.title : "",
                     authors: currentAuthors,
-                    abstract: record.get("abstract"),
-                    track: record.get("track") ? record.get("track").get("name") : ""
+                    abstract: record.abstract,
+                    track: record.track ? record.track.name : ""
                 });
                 setEditingKey(record.id);
             };
@@ -156,7 +156,7 @@ class ProgramItems extends React.Component<Props, State> {
                 // delete from database
                 let data = {
                     clazz: "ProgramItem",
-                    conference: { clazz: "ClowdrInstance", id: record.get("conference").id },
+                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -225,11 +225,11 @@ class ProgramItems extends React.Component<Props, State> {
                         let data = {
                             clazz: "ProgramItem",
                             id: item.id,
-                            conference: { clazz: "ClowdrInstance", id: item.get("conference").id },
-                            title: item.get("title"),
-                            authors: item.get("authors").map((a: ProgramPerson) => { return { clazz: "ProgramPerson", id: a.id } }),
-                            abstract: item.get("abstract"),
-                            track: { clazz: "ProgramTrack", id: item.get("track").id }
+                            conference: { clazz: "ClowdrInstance", id: item.conference.id },
+                            title: item.title,
+                            authors: item.authors.map((a: ProgramPerson) => { return { clazz: "ProgramPerson", id: a.id } }),
+                            abstract: item.abstract,
+                            track: { clazz: "ProgramTrack", id: item.track.id }
                         }
                         Parse.Cloud.run("update-obj", data)
                             .then(c => this.setState({ alert: "save success" }))
@@ -258,11 +258,11 @@ class ProgramItems extends React.Component<Props, State> {
                     // @ts-ignore | See https://ant.design/components/table/
                     editable: true,
                     sorter: (a, b) => {
-                        const titleA = a.get("title") ? a.get("title") : "";
-                        const titleB = b.get("title") ? b.get("title") : "";
+                        const titleA = a.title ? a.title : "";
+                        const titleB = b.title ? b.title : "";
                         return titleA.localeCompare(titleB);
                     },
-                    render: (text, record) => <span>{record.get("title")}</span>
+                    render: (text, record) => <span>{record.title}</span>
                 },
                 {
                     title: 'Abstract',
@@ -271,13 +271,13 @@ class ProgramItems extends React.Component<Props, State> {
                     // @ts-ignore | See https://ant.design/components/table/
                     editable: true,
                     sorter: (a, b) => {
-                        const abstractA = a.get("abstract") ? a.get("abstract") : "";
-                        const abstractB = b.get("abstract") ? b.get("abstract") : "";
+                        const abstractA = a.abstract ? a.abstract : "";
+                        const abstractB = b.abstract ? b.abstract : "";
                         return abstractA.localeCompare(abstractB);
                     },
                     render: (text, record) =>
                         <span>
-                            {record.get("abstract").length > 150 ? record.get("abstract").substring(0, 150) + "..." : record.get("abstract")}
+                            {record.abstract.length > 150 ? record.abstract.substring(0, 150) + "..." : record.abstract}
                         </span>
                 },
                 {
@@ -286,8 +286,8 @@ class ProgramItems extends React.Component<Props, State> {
                     width: '20%',
                     // @ts-ignore | See https://ant.design/components/table/
                     editable: true,
-                    render: (text, record) => record.get("authors") ? <ul>{record.get("authors").map((author: ProgramPerson) => (
-                        <li key={author.id} value={author.get("name")}>{author.get("name")}</li>
+                    render: (text, record) => record.authors ? <ul>{record.authors.map((author: ProgramPerson) => (
+                        <li key={author.id} value={author.name}>{author.name}</li>
                     ))}</ul> : <span> </span>
                 },
                 {
@@ -297,11 +297,11 @@ class ProgramItems extends React.Component<Props, State> {
                     // @ts-ignore | See https://ant.design/components/table/
                     editable: true,
                     sorter: (a, b) => {
-                        const trackA = a.get("track") ? a.get("track").get("name") : "";
-                        const trackB = b.get("track") ? b.get("track").get("name") : "";
+                        const trackA = a.track ? a.track.name : "";
+                        const trackB = b.track ? b.track.name : "";
                         return trackA.localeCompare(trackB);
                     },
-                    render: (text, record) => <span>{record.get("track") ? record.get("track").get("name") : ""}</span>
+                    render: (text, record) => <span>{record.track ? record.track.name : ""}</span>
                 },
                 {
                     title: 'Action',
@@ -454,10 +454,10 @@ class ProgramItems extends React.Component<Props, State> {
                             this.setState({
                                 searchResult: this.state.ProgramItems.filter(
                                     item =>
-                                        (item.get('title') && item.get('title').toLowerCase().includes(key.toLowerCase()))
-                                        || (item.get('track') && item.get('track').get('name') && item.get('track').get("name").toLowerCase().includes(key.toLowerCase()))
-                                        || (item.get('abstract') && item.get('abstract').toLowerCase().includes(key.toLowerCase()))
-                                        || (item.get('authors') && item.get('authors').some((a: ProgramPerson) => a.get("name") && a.get("name").toLowerCase().includes(key.toLowerCase())))
+                                        (item.title && item.title.toLowerCase().includes(key.toLowerCase()))
+                                        || (item.track && item.track.name && item.track.name.toLowerCase().includes(key.toLowerCase()))
+                                        || (item.abstract && item.abstract.toLowerCase().includes(key.toLowerCase()))
+                                        || (item.authors && item.authors.some((a: ProgramPerson) => a.name && a.name.toLowerCase().includes(key.toLowerCase())))
                                 )
                             })
                         }

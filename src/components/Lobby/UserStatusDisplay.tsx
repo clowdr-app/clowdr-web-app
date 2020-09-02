@@ -72,7 +72,7 @@ class UserStatusDisplay extends React.Component<any, any> {
         let badgeColor = "";
         let badgeStyle: PresetStatusColorType = "default";
         let dntWaiver = "";
-        if (this.state.presence && this.state.presence.get("isOnline")) {
+        if (this.state.presence && this.state.presence.isOnline) {
             presenceDesc = "(Online)";
             badgeColor = "green";
         }
@@ -85,33 +85,33 @@ class UserStatusDisplay extends React.Component<any, any> {
             onClick = this.openDM.bind(this);
         }
         let avatar;
-        if (this.state.profile && this.state.profile.get("profilePhoto") != null)
-            avatar = <Avatar src={this.state.profile.get("profilePhoto").url()} />
+        if (this.state.profile && this.state.profile.profilePhoto != null)
+            avatar = <Avatar src={this.state.profile.profilePhoto.url()} />
 
         let affiliation = "";
         let parensData = [];
-        if (this.state.profile.get("pronouns"))
-            parensData.push(this.state.profile.get("pronouns"));
-        if (this.state.profile.get("position") && this.state.profile.get("affiliation"))
-            parensData.push(this.state.profile.get("position") + " @ " +
-                this.state.profile.get("affiliation"));
-        else if (this.state.profile.get("position"))
-            parensData.push(this.state.profile.get("position"));
-        else if (this.state.profile.get("affiliation"))
-            parensData.push(this.state.profile.get("affiliation"));
+        if (this.state.profile.pronouns)
+            parensData.push(this.state.profile.pronouns);
+        if (this.state.profile.position && this.state.profile.affiliation)
+            parensData.push(this.state.profile.position + " @ " +
+                this.state.profile.affiliation);
+        else if (this.state.profile.position)
+            parensData.push(this.state.profile.position);
+        else if (this.state.profile.affiliation)
+            parensData.push(this.state.profile.affiliation);
         if (parensData.length > 0) {
             affiliation = "(" + parensData.join(", ") + ")";
         }
         let bio = <></>;
-        if (this.state.profile.get("bio")) {
-            bio = <div className="userBio"><b>Bio:</b><ReactMarkdown source={this.state.profile.get("bio")}
+        if (this.state.profile.bio) {
+            bio = <div className="userBio"><b>Bio:</b><ReactMarkdown source={this.state.profile.bio}
                 renderers={{ link: this.linkRenderer }}
             /> </div>
         }
         let authorship = <></>;
-        if (this.state.profile.get("programPersons")) {
+        if (this.state.profile.programPersons) {
             let persons = [];
-            for (let programPerson of this.state.profile.get("programPersons")) {
+            for (let programPerson of this.state.profile.programPersons) {
                 persons.push(<ProgramPersonAuthorship id={programPerson.id} key={programPerson.id}
                     auth={this.props.auth}
                 />);
@@ -123,38 +123,38 @@ class UserStatusDisplay extends React.Component<any, any> {
         let tags: JSX.Element[] = [];
         let tagToHighlight: any;
         let tagsToHighlight = [];
-        if (this.state.profile.get("tags")) {
-            tags = this.state.profile.get("tags").map((t: any) => {
-                let tag = <Tag key={t.id} color={t.get('color')} closable={false}
-                    style={{ marginRight: 3 }}>{t.get("label")}</Tag>
-                if (t.get("alwaysShow"))
+        if (this.state.profile.tags) {
+            tags = this.state.profile.tags.map((t: any) => {
+                let tag = <Tag key={t.id} color={t.color} closable={false}
+                    style={{ marginRight: 3 }}>{t.label}</Tag>
+                if (t.alwaysShow)
                     tagsToHighlight.push(tag);
-                else if (!tagToHighlight || t.get("priority") < tagToHighlight.get("priority"))
+                else if (!tagToHighlight || t.priority < tagToHighlight.priority)
                     tagToHighlight = t;
-                if (t.get("tooltip"))
-                    return <Tooltip mouseEnterDelay={0.5} key={t.id} title={t.get("tooltip")}>{tag}</Tooltip>
+                if (t.tooltip)
+                    return <Tooltip mouseEnterDelay={0.5} key={t.id} title={t.tooltip}>{tag}</Tooltip>
                 else return tag;
             }
             )
         }
         if (tagToHighlight) {
-            tagsToHighlight.push(<Tag key={tagToHighlight.id} color={tagToHighlight.get('color')} closable={false}
-                style={{ marginRight: 3 }}>{tagToHighlight.get("label")}</Tag>);
+            tagsToHighlight.push(<Tag key={tagToHighlight.id} color={tagToHighlight.color} closable={false}
+                style={{ marginRight: 3 }}>{tagToHighlight.label}</Tag>);
         }
 
         let popoverTitle =
             <div className="nameAndAvatar">
-                {avatar} {this.state.profile.get("displayName")} {affiliation}
+                {avatar} {this.state.profile.displayName} {affiliation}
                 <div> {tags} {presenceDesc}</div>
             </div>;
         let webpage = <></>;
-        if ("" + this.state.profile.get("webpage") !== "undefined") {
+        if ("" + this.state.profile.webpage !== "undefined") {
             webpage = <div>
-                <a href={this.state.profile.get("webpage")} rel="noopener noreferrer" target="_blank">
-                    {this.state.profile.get("webpage")}</a>
+                <a href={this.state.profile.webpage} rel="noopener noreferrer" target="_blank">
+                    {this.state.profile.webpage}</a>
             </div>;
         }
-        let dmButton = <Button className="dmButton" type="primary" loading={this.state.loading} onClick={onClick}>Send a message to {this.state.profile.get("displayName")}</Button>
+        let dmButton = <Button className="dmButton" type="primary" loading={this.state.loading} onClick={onClick}>Send a message to {this.state.profile.displayName}</Button>
         let firstLine =
             <div>
                 {dntWaiver}
@@ -178,7 +178,7 @@ class UserStatusDisplay extends React.Component<any, any> {
                 onClick={onClick}>
                 <Popover
                     title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
-                    {this.state.profile.get("displayName")}
+                    {this.state.profile.displayName}
                 </Popover>
             </span>
         }
@@ -190,7 +190,7 @@ class UserStatusDisplay extends React.Component<any, any> {
                 <>
                     &nbsp;&nbsp;&nbsp; {/* BCP: Better way to do this? */}
                     <Badge status={badgeStyle} color={badgeColor} />
-                    <span className="userName">{this.state.profile.get("displayName")}</span>
+                    <span className="userName">{this.state.profile.displayName}</span>
                         &nbsp;
                         <span className="highlightedTags">{tagsToHighlight}</span>
                 </>
@@ -209,7 +209,7 @@ class UserStatusDisplay extends React.Component<any, any> {
                     mouseEnterDelay={0.5}
                     content={popoverContent}>
                 <Badge  status={badgeStyle} color={badgeColor} />
-                   {this.state.profile.get("displayName")} {statusDesc}</Popover>
+                   {this.state.profile.displayName} {statusDesc}</Popover>
             </div>
         */
     }

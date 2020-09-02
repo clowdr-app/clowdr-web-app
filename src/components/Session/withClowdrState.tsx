@@ -2,18 +2,21 @@ import React from 'react';
 import * as H from 'history';
 
 import AuthUserContext from './context';
-import Parse, { User, Role, LiveQueryClient } from "parse";
+import Parse, { LiveQueryClient } from "parse";
 import { notification, Spin } from "antd";
 import ChatClient from "../../classes/ChatClient"
 import ProgramCache from "./ProgramCache";
-import BreakoutRoom from '../../classes/BreakoutRoom';
-import UserProfile from '../../classes/UserProfile';
-import UserPresence from '../../classes/UserPresence';
-import SocialSpace from '../../classes/SocialSpace';
-import ClowdrInstance from '../../classes/ClowdrInstance';
-import LiveActivity from '../../classes/LiveActivity';
+import BreakoutRoom from '../../classes/ParseObjects/BreakoutRoom';
+import User from '../../classes/ParseObjects/User';
+import UserProfile from '../../classes/ParseObjects/UserProfile';
+import UserPresence from '../../classes/ParseObjects/UserPresence';
+import SocialSpace from '../../classes/ParseObjects/SocialSpace';
+import ClowdrInstance from '../../classes/ParseObjects/ClowdrInstance';
+import LiveActivity from '../../classes/ParseObjects/LiveActivity';
 import assert from 'assert';
 import { MaybeParseUser, MaybeClowdrInstance, ClowdrStateHelpers } from "../../ClowdrTypes";
+import InstancePermission from '../../classes/ParseObjects/InstancePermission';
+import Flair from '../../classes/ParseObjects/Flair';
 
 interface Props {
     history?: H.History | null;
@@ -72,7 +75,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
     class WithClowdrState extends React.Component<Props, State> {
         // TS: @Jon - I (BCP) don't understand the logic here very well (Crista doesn't either).  Why do we initialize all these fields of "this" and then copy most of them to this.state??
         //Jon: When we first implemented this, we pushed updates from live queries into sub-components by modifying the state of this context object. Calling setState on the WithClowdrState will result in every component on the page being re-rendered. This is not a good patten. I have been trying to refactor things away so that mostly what is in state are helper methods to expose to components, and any of the actual data is stored as fields of this.
-        watchedRoomMembers: Record<RoomID, BreakoutRoom[]>;
+        watchedRoomMembers: Record<RoomID, string[]>;
         // authCallbacks: ((_:User|null)=>void)[];   // @ Jon: This seems never to be assigned to!
         //Jon: Yes, I think this is no longer used
         // BCP: OK, removing it (and all references to it)
@@ -217,9 +220,9 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     let convo = chan.conversation;
                     if (chan.channel.attributes && chan.channel.attributes.mode === "group")
                         return false;
-                    if (convo.get("isDM") === true &&
-                        (convo.get("member2").id === profileOfUserToDM.id ||
-                            convo.get("member1").id === profileOfUserToDM.id))
+                    if (convo.isDM === true &&
+                        (convo.member2.id === profileOfUserToDM.id ||
+                            convo.member1.id === profileOfUserToDM.id))
                         return true;
                     return false;
                 })
@@ -233,7 +236,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             console.log("calling create DM")
             let res = await Parse.Cloud.run("chat-createDM", {
                 confID: this.state.currentConference.id,
-                conversationName: profileOfUserToDM.get("displayName"),
+                conversationName: profileOfUserToDM.displayName,
                 messageWith: profileOfUserToDM.id
             });
             if (res.status === "ok")
@@ -266,7 +269,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             throw new Error("Method not implemented.");
         }
         async setActiveConference(conf: ClowdrInstance) {
-            console.log('[wA]: changing conference to ' + conf.get("conferenceName"));
+            console.log('[wA]: changing conference to ' + conf.conferenceName);
             this.refreshUser(conf, true);
         }
 
@@ -275,7 +278,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         async setActiveConferenceByName(confName: string) {
-            let confQ = new Parse.Query("ClowdrInstance");
+            let confQ = new Parse.Query<ClowdrInstance>("ClowdrInstance");
             confQ.equalTo("conferenceName", confName);
             let res = await confQ.first();
             this.refreshUser(res, true);
@@ -312,7 +315,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     this.newPresences = [];
                     this.presenceUpdateScheduled = false;
                     for (let presence of newPresences) {
-                        this.presences[presence.get("user").id] = presence;
+                        this.presences[presence.user.id] = presence;
                     }
                     for (let presenceWatcher of this.presenceWatchers) {
                         presenceWatcher.setState({ presences: this.presences });
@@ -333,7 +336,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             }
             this.subscribeToPublicRooms()
 
-            let query = new Parse.Query("UserPresence");
+            let query = new Parse.Query<UserPresence>("UserPresence");
             query.limit(2000);
             query.equalTo("conference", this.currentConference);
             query.equalTo("isOnline", true);
@@ -349,21 +352,21 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 this.updatePresences();
             })
             this.socialSpaceSubscription.on('delete', (presence: UserPresence) => {
-                delete this.presences[presence.get("user").id];
+                delete this.presences[presence.user.id];
                 this.updatePresences();
             })
             this.socialSpaceSubscription.on('leave', (presence: UserPresence) => {
-                delete this.presences[presence.get("user").id];
+                delete this.presences[presence.user.id];
                 this.updatePresences();
             })
             this.socialSpaceSubscription.on('update', (presence: UserPresence) => {
-                this.presences[presence.get("user").id] = presence;
+                this.presences[presence.user.id] = presence;
                 this.updatePresences();
             })
 
             let presences = await query.find();
             for (let presence of presences) {
-                this.presences[presence.get("user").id] = presence;
+                this.presences[presence.user.id] = presence;
             }
             this.updatePresences();
         }
@@ -385,7 +388,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             }
             else {
                 space = spaceOrName;
-                spaceName = spaceOrName.get("name");
+                spaceName = spaceOrName.name;
             }
 
             if (!user) {
@@ -397,16 +400,16 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 user = this.state.user;
             }
 
-            if (!this.state.activeSpace || spaceName !== this.state.activeSpace.get("name")) {
+            if (!this.state.activeSpace || spaceName !== this.state.activeSpace.name) {
                 if (!userProfile) {
                     assert(this.state.userProfile, "User profile is null");
                     userProfile = this.state.userProfile;
                 }
 
-                if (userProfile.get("presence") &&
-                    (!userProfile.get("presence").get("socialSpace") ||
-                        userProfile.get('presence').get('socialSpace').id !== space.id)) {
-                    let presence = userProfile.get("presence");
+                if (userProfile.presence &&
+                    (!userProfile.presence.socialSpace ||
+                        userProfile.presence.socialSpace.id !== space.id)) {
+                    let presence = userProfile.presence;
                     presence.set("socialSpace", space);
                     presence.save();
                 }
@@ -415,7 +418,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     this.state.chatClient.disableRightSideChat();
                 }
                 else {
-                    this.state.chatClient.setRightSideChat(space.get("chatChannel"));
+                    this.state.chatClient.setRightSideChat(space.chatChannel);
                 }
 
                 this.setState({
@@ -423,7 +426,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 });
             }
             else {
-                this.state.chatClient.setRightSideChat(space.get("chatChannel"));
+                this.state.chatClient.setRightSideChat(space.chatChannel);
             }
         }
 
@@ -439,7 +442,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         async _refreshUser(preferredConference?: MaybeClowdrInstance): Promise<MaybeParseUser> {
 
             let _this = this;
-            return Parse.User.currentAsync().then(async function (user) {
+            return User.currentAsync<User>().then(async function (user) {
                 if (user) {
                     try {
 
@@ -449,8 +452,8 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         }
 
                         // Valid conferences for this user
-                        let profiles = await user.relation("profiles").query().include(["conference", "conference.loggedInText"]).find();
-                        let validConferences: ClowdrInstance[] = profiles.map(p => p.get("conference"));
+                        let profiles = await user.profiles.include(["conference", "conference.loggedInText"]).find();
+                        let validConferences: ClowdrInstance[] = profiles.map(p => p.conference);
                         // console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
 
                         // Roles for this user
@@ -474,26 +477,27 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                             profileQ.include("tags");
                             profileQ.include("presence")
                             activeProfile = await profileQ.get(currentProfileID);
-                            conf = activeProfile.get("conference");
-                            if (preferredConference && preferredConference.id !== activeProfile.get("conference").id) {
+                            conf = activeProfile.conference;
+                            if (preferredConference && preferredConference.id !== activeProfile.conference.id) {
                                 activeProfile = null;
                             }
                         }
                         for (let role of roles) {
-                            if (role.get("name") === "ClowdrSysAdmin") {
+                            let name = role.getName();
+                            if (name === "ClowdrSysAdmin") {
                                 isAdmin = true;
                                 isClowdrAdmin = true;
                             }
-                            if (activeProfile && role.get("name") === (activeProfile.get("conference").id + "-admin")) {
+                            if (activeProfile && name === (activeProfile.conference.id + "-admin")) {
                                 isAdmin = true;
                                 isClowdrAdmin = true;
                                 isManager = true;
                                 isModerator = true;
                             }
-                            if (activeProfile && role.get("name") === (activeProfile.get("conference").id + "-moderator")) {
+                            if (activeProfile && name === (activeProfile.conference.id + "-moderator")) {
                                 isModerator = true;
                             }
-                            if (activeProfile && role.get("name") === (activeProfile.get("conference").id + "-manager")) {
+                            if (activeProfile && name === (activeProfile.conference.id + "-manager")) {
                                 isModerator = true;
                                 isManager = true;
                             }
@@ -524,18 +528,18 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
                             window.location.reload(false);
                         }
-                        const privsQuery = new Parse.Query("InstancePermission");
-                        privsQuery.equalTo("conference", activeProfile.get("conference"));
+                        const privsQuery = new Parse.Query<InstancePermission>("InstancePermission");
+                        privsQuery.equalTo("conference", activeProfile.conference);
                         privsQuery.include("action");
                         let permissions = await privsQuery.find();
 
-                        const spacesQ = new Parse.Query("SocialSpace");
+                        const spacesQ = new Parse.Query<SocialSpace>("SocialSpace");
                         spacesQ.limit(1000);
-                        spacesQ.equalTo("conference", activeProfile.get("conference"));
+                        spacesQ.equalTo("conference", activeProfile.conference);
                         let spaces = await spacesQ.find();
-                        let spacesByName: Record<string, Parse.Object> = {};
+                        let spacesByName: Record<string, SocialSpace> = {};
                         for (let space of spaces) {
-                            spacesByName[space.get("name")] = space;
+                            spacesByName[space.name] = space;
                         }
                         let priorConference = _this.state.currentConference;
                         _this.currentConference = conf;
@@ -563,7 +567,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                                 isModerator: isModerator,
                                 isManager: isManager,
                                 isClowdrAdmin: isClowdrAdmin,
-                                permissions: permissions.map(p => p.get("action").get("action")),
+                                permissions: permissions.map(p => p.action.action),
                                 validConferences: validConferences,
                                 currentConference: conf,
                                 loading: false,
@@ -615,7 +619,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     }
                     let conference: ClowdrInstance | null = null;
                     let defaultConferenceName = _this.getDefaultConferenceName();
-                    let confQ = new Parse.Query("ClowdrInstance")
+                    let confQ = new Parse.Query<ClowdrInstance>("ClowdrInstance")
                     confQ.equalTo("conferenceName", defaultConferenceName);
                     conference = await confQ.first() || null;
                     _this.setState({
@@ -678,7 +682,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             if (!this.currentConference) {
                 throw new Error("Not logged in");
             }
-            let query = new Parse.Query("BreakoutRoom");
+            let query = new Parse.Query<BreakoutRoom>("BreakoutRoom");
             query.equalTo("conference", this.currentConference);
             query.include("members");
             query.include("programItem");
@@ -737,9 +741,9 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         handleNewParseLiveActivity(activity: LiveActivity) {  // TS: ???
-            if (activity.get("topic") === "privateBreakoutRooms") {
+            if (activity.topic === "privateBreakoutRooms") {
                 this.subscribeToNewPrivateRooms();
-            } else if (activity.get("topic") === "profile") {
+            } else if (activity.topic === "profile") {
                 window.location.reload(true);
             }
         }
@@ -749,32 +753,32 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             let oldRoom = this.watchedRoomMembers[updatedRoom.id];
             if (!oldRoom) {
                 this.watchedRoomMembers[updatedRoom.id] = [];
-                if (updatedRoom.get("members")) {
-                    this.watchedRoomMembers[updatedRoom.id] = updatedRoom.get("members").filter((m: UserProfile) => m.id !== this.state.user.id).map((m: UserProfile) => m.get("displayName"));
+                if (updatedRoom.members) {
+                    this.watchedRoomMembers[updatedRoom.id] = updatedRoom.members.filter((m: UserProfile) => m.id !== this.state.user.id).map((m: UserProfile) => m.displayName);
                 }
             }
-            if (updatedRoom && oldRoom && this.state.userProfile.get("watchedRooms")) {
-                if (this.state.userProfile.get("watchedRooms").find((r: BreakoutRoom) => r.id === updatedRoom.id)) {
+            if (updatedRoom && oldRoom && this.state.userProfile.watchedRooms) {
+                if (this.state.userProfile.watchedRooms.find((r: BreakoutRoom) => r.id === updatedRoom.id)) {
                     //We have a watch on it.
 
                     //Who is new?
-                    let update: UserProfile[] = [];
-                    if (updatedRoom.get("members")) {
-                        update = updatedRoom.get("members").filter((m: UserProfile) => m.id !== this.state.user.id).map((m: UserProfile) => m.get("displayName"));
+                    let update: string[] = [];
+                    if (updatedRoom.members) {
+                        update = updatedRoom.members.filter((m: UserProfile) => m.id !== this.state.user.id).map((m: UserProfile) => m.displayName);
                     }
                     let newUsers = update.filter(u => !oldRoom.includes(u));
                     let goneUsers = oldRoom.filter(u => !update.includes(u));
                     if (newUsers.length) {
                         notification.info({
-                            message: "Activity in " + updatedRoom.get("title"),
-                            description: newUsers.join(", ") + (newUsers.length > 1 ? " have" : " has") + " joined. To turn off these notifications, select the room '" + updatedRoom.get("title") + "' and un-follow it",
+                            message: "Activity in " + updatedRoom.title,
+                            description: newUsers.join(", ") + (newUsers.length > 1 ? " have" : " has") + " joined. To turn off these notifications, select the room '" + updatedRoom.title + "' and un-follow it",
                             placement: 'topLeft',
                         });
                     }
                     if (goneUsers.length) {
                         notification.info({
-                            message: "Activity in " + updatedRoom.get("title"),
-                            description: goneUsers.join(", ") + (goneUsers.length > 1 ? " have" : " has") + " left. To turn off these notifications, select the room '" + updatedRoom.get("title") + "' and un-follow it",
+                            message: "Activity in " + updatedRoom.title,
+                            description: goneUsers.join(", ") + (goneUsers.length > 1 ? " have" : " has") + " left. To turn off these notifications, select the room '" + updatedRoom.title + "' and un-follow it",
                             placement: 'topLeft',
                         });
                     }
@@ -784,7 +788,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
         async subscribeToNewPrivateRooms() {
             if (!this.mounted) return;
-            let newRoomsQuery = new Parse.Query("BreakoutRoom");
+            let newRoomsQuery = new Parse.Query<BreakoutRoom>("BreakoutRoom");
             newRoomsQuery.equalTo("conference", this.currentConference);
             newRoomsQuery.include("members");
             newRoomsQuery.equalTo("isPrivate", true)
@@ -835,24 +839,23 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             assert(acl && this.user);
             if (acl.getWriteAccess(this.user))
                 return true;
-            if (this.state.roles.find((v: Role) => this.state.currentConference && (v.get('name') === this.state.currentConference.id + '-manager' || v.get('name') === this.state.currentConference.id + "-admin")))
+            if (this.state.roles.find((v: Parse.Role) => this.state.currentConference && (v.getName() === this.state.currentConference.id + '-manager' || v.getName() === this.state.currentConference.id + "-admin")))
                 return true;
             return false;
         }
 
         componentDidMount() {
-            const Flair = Parse.Object.extend("Flair");
-            const query = new Parse.Query(Flair);
+            const query = new Parse.Query<Flair>("Flair");
             let _this = this;
             query.find().then((u) => {
                 //convert to something that the dom will be happier with
                 let res: AllFlairData[] = [];
                 let flairColors: Record<string, FlairUIData> = {};
                 for (let flair of u) {
-                    flairColors[flair.get("label")] = { color: flair.get("color"), tooltip: flair.get("tooltip") };
+                    flairColors[flair.label] = { color: flair.color, tooltip: flair.tooltip };
                     res.push({
-                        value: flair.get("label"), color: flair.get("color"), id: flair.id, tooltip: flair.get("tooltip"),
-                        priority: flair.get("priority")
+                        value: flair.label, color: flair.color, id: flair.id, tooltip: flair.tooltip,
+                        priority: flair.priority
                     })
                 }
                 _this.setState({

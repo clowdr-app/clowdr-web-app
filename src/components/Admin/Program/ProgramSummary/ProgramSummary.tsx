@@ -202,7 +202,7 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                             <UploadOutlined /> Click to upload program data
                     </Button>
                     </Upload>
-                    <Popconfirm title={"Are you sure you want to delete the entire program? This can't be undone. Conference: " + this.currentConference.get("conferenceName")} onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
+                    <Popconfirm title={"Are you sure you want to delete the entire program? This can't be undone. Conference: " + this.currentConference.conferenceName} onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
                 </Space>
                 <Table
                     columns={columns}

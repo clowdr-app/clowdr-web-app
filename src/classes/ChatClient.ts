@@ -1,8 +1,8 @@
 import Chat from "twilio-chat";
 import { Channel } from "twilio-chat/lib/channel"
 import { Client } from "twilio-chat/lib/client"
-import UserProfile from '../classes/UserProfile';
-import ClowdrInstance from '../classes/ClowdrInstance';
+import UserProfile from '../classes/ParseObjects/UserProfile';
+import ClowdrInstance from '../classes/ParseObjects/ClowdrInstance';
 import Parse from "parse";
 import { backOff } from "exponential-backoff";
 import { message } from "antd"
@@ -13,6 +13,7 @@ import { ContextualActiveUsers } from "../components/Lobby/ContextualActiveusers
 import { ChatFrame } from "../components/Chat/ChatFrame";
 import { Message } from "twilio-chat/lib/message";
 import assert from "assert";
+import Conversation from "./ParseObjects/Conversation";
 
 interface ChannelInfoAttrs {
     parseID?: string;
@@ -29,7 +30,7 @@ export interface ChannelInfo {
     components: Array<any>; // TODO
     visibleComponents: Array<any>; // TODO
     messages: Array<string>;
-    conversation: Parse.Object<Parse.Attributes> | null;
+    conversation: Conversation | null;
 }
 
 export default class ChatClient {
@@ -365,7 +366,7 @@ export default class ChatClient {
             conversation: null,
         };
         ret.attributes = await this.callWithRetry(() => channel.getAttributes());
-        let convoQ = new Parse.Query("Conversation");
+        let convoQ = new Parse.Query<Conversation>("Conversation");
         let shouldHaveParseConvo = ret.attributes.category === "userCreated";
         if (shouldHaveParseConvo) {
             if (!ret.attributes.parseID)

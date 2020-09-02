@@ -4,9 +4,10 @@ import { message, Upload } from 'antd';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { RcFile, UploadChangeParam } from 'antd/lib/upload/interface';
 import Parse from "parse";
+import UserProfile from '../../classes/ParseObjects/UserProfile';
 
-interface Props {  //TS:  from Acccount.tsx, not from ClowdrTypes
-    userProfile: Parse.Object
+interface Props {
+    userProfile: UserProfile
 }
 
 interface State {
@@ -38,7 +39,7 @@ function beforeUpload(file: RcFile): boolean {
 class Avatar extends React.Component<Props, State> {
     state = {
         loading: false,
-        imageUrl: this.props.userProfile && this.props.userProfile.get("profilePhoto") ? this.props.userProfile.get("profilePhoto").url() : undefined
+        imageUrl: this.props.userProfile && this.props.userProfile.profilePhoto ? this.props.userProfile.profilePhoto.url() : undefined
     };
 
     handleChange = (info: UploadChangeParam) => {
@@ -79,7 +80,7 @@ class Avatar extends React.Component<Props, State> {
         </>;
 
         /*TS: The two imageUrl have different types. Could we just use this.state.imageUrl in <Upload>?*/
-        // let imageUrl: Parse.File|string|undefined = this.props.userProfile.get("profilePhoto");
+        // let imageUrl: Parse.File|string|undefined = this.props.userProfile.profilePhoto;
         // if(imageUrl && typeof imageUrl !== 'string'){
         //     imageUrl = imageUrl.url();
         // }

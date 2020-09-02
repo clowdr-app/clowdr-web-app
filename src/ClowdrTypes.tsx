@@ -3,18 +3,18 @@ import * as Parse from 'parse';
 
 import ProgramCache from "./components/Session/ProgramCache";
 import ChatClient from "./classes/ChatClient";
-import Conversation from "./classes/Conversation";
+import Conversation from "./classes/ParseObjects/Conversation";
 import { Channel } from "twilio-chat/lib/channel";
-import BreakoutRoom from './classes/BreakoutRoom';
-import UserPresence from './classes/UserPresence';
-import UserProfile from './classes/UserProfile';
-import ClowdrInstance from './classes/ClowdrInstance';
-import SocialSpace from './classes/SocialSpace';
-import Role from './classes/Role';
+import BreakoutRoom from './classes/ParseObjects/BreakoutRoom';
+import UserPresence from './classes/ParseObjects/UserPresence';
+import UserProfile from './classes/ParseObjects/UserProfile';
+import ClowdrInstance from './classes/ParseObjects/ClowdrInstance';
+import SocialSpace from './classes/ParseObjects/SocialSpace';
+import User from './classes/ParseObjects/User';
 
 export type UserSessionToken = string
 
-export type MaybeParseUser = Parse.User | null;
+export type MaybeParseUser = User | null;
 export type MaybeUserProfile = UserProfile | null;
 export type MaybeClowdrInstance = ClowdrInstance | null;
 
@@ -47,7 +47,7 @@ export interface ClowdrState {
     validConferences: Array<ClowdrInstance>;
     currentConference: MaybeClowdrInstance;
     loading: boolean;
-    roles: Array<Role>;
+    roles: Array<Parse.Role>;
     programCache: ProgramCache;
     helpers: ClowdrStateHelpers;
     chatClient: ChatClient;
@@ -58,12 +58,12 @@ export interface ClowdrState {
     isAdmininstrator: boolean;
 }
 
-export interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+export interface EditableCellProps<T extends Parse.Object> extends React.HTMLAttributes<HTMLElement> {
     editing: boolean;
     dataIndex: string;
     title: string;  // could be 'any' based on Antd website
     inputType: 'number' | 'text';   // based on Antd website
-    record: Parse.Object;
+    record: T;
     index: number;
     children: React.ReactNode;
 }

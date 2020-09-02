@@ -28,7 +28,7 @@ type MessageAttributes = {
 
 interface GroupedMessages {
     author: string;
-    timestamp: Date;
+    timestamp: number;
     messages: Message[];
     sid: string;
 }
@@ -96,7 +96,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
     dmOtherUser: string | null = null;
     isAnnouncements: boolean = false;
     unread: number = 0;
-    deferredGroupedMessages: { author: string; timestamp: Date; messages: Message[]; sid: string; }[] = [];
+    deferredGroupedMessages: GroupedMessages[] = [];
     deferredReactions: { [x: string]: { [y: string]: EmojiObject; }; } = {};
     count: number = 0;
     settingConsumedIdx: number = 0;
@@ -233,11 +233,11 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                 chanInfo.visibleComponents.push(this);
             this.dmOtherUser = null;
             if (chanInfo.attributes.mode === "directMessage") {
-                let p1 = chanInfo.conversation?.get("member1").id;
-                let p2 = chanInfo.conversation?.get("member2").id;
-                this.dmOtherUser = p1;
+                let p1 = chanInfo.conversation?.member1.id;
+                let p2 = chanInfo.conversation?.member2.id;
+                this.dmOtherUser = p1 || null;
                 if (this.props.appState.userProfile && p1 === this.props.appState.userProfile.id)
-                    this.dmOtherUser = p2;
+                    this.dmOtherUser = p2 || null;
             }
             let stateUpdate = {
                 chatLoading: false,
@@ -359,7 +359,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                 // Any kind of message
                 lastGroup = {
                     author: message.author,
-                    timestamp: message.timestamp,
+                    timestamp: message.timestamp.getTime(),
                     messages: messageAttributes.associatedMessage ? [] : [message],
                     sid: message.sid
                 };
@@ -447,9 +447,11 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
         if (this.isAnnouncements) {
             //get the sender
             this.props.appState.programCache.getUserProfileByProfileID(message.author).then((profile) => {
+                assert(profile, "Message exists with an author that no longer exists - was the user deleted?");
+
                 const args = {
                     message:
-                        <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>
+                        <span>Announcement from {profile.displayName} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>
                             <span>{moment(message.timestamp).format('LT')}</span>
                         </Tooltip>
                         </span>,
@@ -864,7 +866,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
 
                                 let reactors: Array<string> = [];
                                 this.state.reactions[m.sid][emojiId].authors.forEach(id => {
-                                    let name = this.props.appState.programCache.failFast_GetUserProfileByProfileID(id)?.get("displayName");
+                                    let name = this.props.appState.programCache.failFast_GetUserProfileByProfileID(id)?.displayName;
                                     if (name) {
                                         reactors.push(name);
                                     }
