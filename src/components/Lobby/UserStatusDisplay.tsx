@@ -50,9 +50,7 @@ class UserStatusDisplay extends React.Component<any, any> {
     }
 
     async openDM() {
-        console.log("Create or open DM " + this.state.profile.id)
         if (!this.loadingDMCall) {
-            console.log('Calling')
             this.loadingDMCall = true;
             this.setState({ loading: true })
             await this.props.auth.helpers.createOrOpenDM(this.state.profile);
