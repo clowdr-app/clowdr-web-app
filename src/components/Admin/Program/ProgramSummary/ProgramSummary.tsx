@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, message, Popconfirm, Select, Spin, Table, Upload, Space } from "antd";
+import {Button, message, Popconfirm, Select, Spin, Table, Upload, Space, AutoComplete, Card} from "antd";
 import Parse from "parse";
 import { AuthUserContext } from "../../../Session";
 
@@ -103,7 +103,8 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
     }
 
     async deleteProgram() {
-        this.setState({ deleteLoading: true });
+        let deleteLoading = message.loading({content: "Deleting program... (this may take a bit of time)"})
+        this.setState({deleteLoading: true});
         try {
             let itemsQ = new Parse.Query("ProgramItem");
             itemsQ.equalTo("conference", this.currentConference);
@@ -125,10 +126,17 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
             eventQ.limit(10000);
 
             let [items, persons, tracks, rooms, sessions, events] = await Promise.all([itemsQ.find(),
-            personsQ.find(), trackQ.find(), roomQ.find(), sessionQ.find(), eventQ.find()]);
-            await Parse.Object.destroyAll(items.concat(persons).concat(tracks).concat(rooms).concat(sessions).concat(events));
+                personsQ.find(), trackQ.find(), roomQ.find(), sessionQ.find(), eventQ.find()]);
+            await Promise.all([Parse.Object.destroyAll(items),
+            Parse.Object.destroyAll(persons),
+            Parse.Object.destroyAll(tracks),
+            Parse.Object.destroyAll(rooms),
+            Parse.Object.destroyAll(sessions),
+            Parse.Object.destroyAll(events)]);
+            deleteLoading();
             message.info("Deleted entire program");
-        } catch (err) {
+        } catch(err) {
+            deleteLoading();
             message.error("Unable to delete program");
             console.error(err);
             console.log(err.errors);
@@ -191,13 +199,15 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                         onChange={(val) => {
                             this.setState({ uploadTimezone: val.toString() })
                         }}></Select>
-                    <Select style={{ width: 200 }} placeholder="Select upload format"
-                        options={[{ label: "XML ('ACM DL') export from conf.researchr.org", value: "conf-xml" },
-                        { label: "JSON ('confero') export from conf.researchr.org", value: "conf-json" }]}
-                        onChange={(val) => {
-                            this.setState({ uploadFormat: val.toString() })
-                        }}></Select>
-                    <Upload accept=".json, .xml" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
+                    <Select style={{width: 200}} placeholder="Select upload format"
+                            options={[
+                                {label: "CSV", value: "csv"},
+                                {label: "XML ('ACM DL') export from conf.researchr.org", value: "conf-xml"},
+                                {label: "JSON ('confero') export from conf.researchr.org", value: "conf-json"}]}
+                            onChange={(val) => {
+                                this.setState({uploadFormat: val.toString()})
+                            }}></Select>
+                    <Upload accept=".json, .xml, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
                         <Button loading={this.state.uploadLoading}>
                             <UploadOutlined /> Click to upload program data
                     </Button>

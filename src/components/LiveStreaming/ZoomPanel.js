@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Button, Space, Typography } from 'antd';
 import Parse from "parse";
+import {videoURLFromData} from './utils';
 
 class ZoomPanel extends Component {
     constructor(props) {
@@ -14,48 +15,21 @@ class ZoomPanel extends Component {
     }
 
     componentWillUnmount() {
-        this.props.auth.programCache.cancelSubscription("MeetingRegistration", this);
     }
 
     async componentDidMount() {
         if (this.props.auth.user) {
-            this.props.auth.programCache.getMeetingRegistrations(this).then(async (registrations) => {
-                if (this.props.room && this.props.room.get("zoomRoom")) {
-                    let reg = registrations.find(v => v.get("meetingID") === this.props.room.get("id1"))
-                    let link;
-                    if (!reg) {
-                        let res = await Parse.Cloud.run("zoom-meeting-register", {
-                            room: this.props.room.get("zoomRoom").id
-                        });
-                        link = res.join_url;
-                    }
-                    else {
-                        link = reg.get("link");
-                    }
-                    this.setState({ MeetingRegistrations: registrations, personalJoinLink: link });
-                }
-            })
-        }
-        // if (this.props.auth.isModerator && this.props.room) {
-        //     //Get the start url
-        //     let zoomRoom = this.props.room.get("zoomRoom");
-        //     if (zoomRoom) {
-        //         let rooms = await this.props.auth.programCache.getZoomRooms();
-        //         zoomRoom = rooms.find(v => v.id === zoomRoom.id);
-        //         let start_url = zoomRoom.get("start_url");
-        //         if (zoomRoom.get("start_url_expiration") < Date.now()) {
-        //             let res = await Parse.Cloud.run("zoom-refresh-start-url", {
-        //                 room: zoomRoom.id
-        //             });
-        //             start_url = res.start_url;
-        //         }
-        //         this.setState({
-        //             start_url: start_url
-        //         });
-        //
-        //     }
-        // }
+            let country = this.props.auth.userProfile.get("country");
+            var src = this.props.room.get("src1");
+            var id = this.props.room.get("id1");
+            var pwd = this.props.room.get("pwd1");
 
+            var inChina = false;
+            if (country && (country.toLowerCase().includes("china") || country.toLowerCase().trim() == "cn")) {
+                inChina = true;
+            }
+            this.setState({personalJoinLink: videoURLFromData(src, id, pwd, country)})
+        }
     }
 
     async joinZoomByBrowser() {

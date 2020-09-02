@@ -174,7 +174,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 cancelBreakoutRoomsSubscription: this.cancelBreakoutRoomsSubscription.bind(this),
                 chatClient: new ChatClient(),
                 parseLive: this.parseLive,
-                presences: {},
+                presences: this.presences,
                 userProfile: null,
                 permissions: null,
                 leftSidebar: null,
