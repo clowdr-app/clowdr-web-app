@@ -54,7 +54,11 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
         let query = new Parse.Query<ClowdrInstance>("ClowdrInstance");
         let res = await query.find();
         console.log('[Admin/Clowdr]: Found ' + res.length + ' instances');
-        // res.map(v => v.key = v.key); // Add a 'key' for the rows of the table
+        res.forEach((v) => {
+            // What a hack...lists must have keys
+            // @ts-ignore
+            v.key = v.id;
+        });
         this.setState({
             instances: res,
             loading: false

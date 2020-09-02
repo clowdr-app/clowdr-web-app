@@ -355,7 +355,7 @@ class ProgramItems extends React.Component<Props, State> {
                     ...col,
                     onCell: (record: Store) => ({
                         record,
-                        inputType: 'text',
+                        inputtype: 'text',
                         // @ts-ignore | See https://ant.design/components/table/
                         dataIndex: col.dataIndex,
                         title: col.title,

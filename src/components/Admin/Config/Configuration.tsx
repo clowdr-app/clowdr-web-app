@@ -60,8 +60,6 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
         query.equalTo("instance", this.props.auth.currentConference);
         let res = await query.find();
         console.log('[Admin/Config]: Found ' + res.length + ' vars');
-        //TS: seems like we are changing datatypes here?
-        res.map((v: any) => v.key = v.key); // Add a 'key' for the rows of the table
         this.setState({
             config: res,
             loading: false

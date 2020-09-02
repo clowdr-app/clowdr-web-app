@@ -31,10 +31,6 @@ export class UserProfile
         return this.get("displayName");
     }
 
-    get isBanned(): boolean {
-        return this.get("isBanned");
-    }
-
     get position(): string {
         return this.get("position");
     }

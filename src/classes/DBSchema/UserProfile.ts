@@ -13,7 +13,6 @@ export interface UserProfile extends Base {
     bio?: string;
     country?: string;
     displayName?: string;
-    isBanned?: boolean;
     position?: string;
     profilePhoto?: any;
     pronouns?: string;

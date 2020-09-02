@@ -1,4 +1,5 @@
 import * as React from "react";
+import Parse from "parse";
 import { AuthUserContext } from "../../Session";
 import withLoginRequired from "../../Session/withLoginRequired";
 import { Button, Input, message, Space, Switch, Table, Tooltip } from "antd";
@@ -6,7 +7,7 @@ import { SearchOutlined } from "@material-ui/icons";
 import Highlighter from 'react-highlight-words';
 import { ClowdrState, UserSessionToken } from "../../../ClowdrTypes";
 import assert from 'assert';
-import { UserProfile, User } from "../../../classes/ParseObjects";
+import { UserProfile } from "../../../classes/ParseObjects";
 import { FilterDropdownProps } from "antd/lib/table/interface";
 
 interface UsersListProps {
@@ -17,7 +18,7 @@ interface UsersListProps {
 interface UsersListState {
     loading: boolean,
     banUpdating: boolean,
-    allUsers: User[],
+    allUsers: UserProfile[],
     roles: Record<string, string[]>,
     roleUpdating: boolean,
     searchedColumn: string,
@@ -56,7 +57,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         }
     }
 
-    async updateBan(item: User) {
+    async updateBan(item: UserProfile) {
         assert(this.props.auth.currentConference, "Current conference is null");
 
         this.setState({ banUpdating: true })
@@ -74,7 +75,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                     identity: idToken,
                     conference: this.props.auth.currentConference.id,
                     profileID: item.id,
-                    isBan: (item.isBanned === "No")
+                    isBan: (item.user.isBanned === "No")
                 }),
                 headers: {
                     'Content-Type': 'application/json'
@@ -83,10 +84,10 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         let res = await data.json();
         if (res.status === "OK") {
             let updatedItem = item;
-            if (item.isBanned === "Yes")
-                updatedItem.set("isBanned", "No");
+            if (item.user.isBanned === "Yes")
+                updatedItem.user.set("isBanned", "No");
             else
-                updatedItem.set("isBanned", "Yes");
+                updatedItem.user.set("isBanned", "Yes");
             this.setState((prevState: UsersListState) => ({
                 banUpdating: false,
                 allUsers: prevState.allUsers.map(u => (u.id === item.id ? updatedItem : u))
@@ -126,7 +127,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         let { count, results }: { count: number, results: UserProfile[] }
             = await parseUserQ.find();
         nRetrieved = results.length;
-        let allUsers = results.map((item) => item.user);
+        let allUsers = results;
         while (nRetrieved < count) {
             parseUserQ = new Parse.Query("UserProfile")
             parseUserQ.equalTo("conference", this.props.auth.currentConference);
@@ -138,7 +139,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             // // results = dat.results;
             nRetrieved += results.length;
             if (results) {
-                allUsers = allUsers.concat(results.map(item => item.user));
+                allUsers = allUsers.concat(results);
             }
         }
         let roleObj: Record<string, string[]> = {};
@@ -150,19 +151,21 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
     async refreshRoles() {
         assert(this.props.auth.currentConference, "Current conference is null");
 
-        let roleData = [];
+        let roleData: Array<Promise<{
+            role: { name: string },
+            users: string[]
+        }>> = [];
         for (let role of roles) {
             roleData.push(Parse.Cloud.run('admin-userProfiles-by-role', {
                 id: this.props.auth.currentConference.id,
                 roleName: role.name
             }).then((ids) => {
                 return { 'role': role, 'users': ids }
-            }))
+            }));
         }
         let roleUsers = await Promise.all(roleData);
-        let roleObj = {};
+        let roleObj: Record<string, string[]> = {};
         for (let role of roleUsers) {
-            // @ts-ignore     TS: Need help with this!
             roleObj[role.role.name] = role.users;
         }
 
@@ -180,7 +183,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         clearFilters();
         this.setState({ searchText: '' });
     };
-    getColumnSearchProps = (dataIndex: keyof User) => ({
+    getColumnSearchProps = (dataIndex: keyof UserProfile | "isBanned") => ({
         filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: FilterDropdownProps) => {
             assert(clearFilters);
 
@@ -212,16 +215,21 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             </div>
         },
         filterIcon: (filtered: boolean): React.ReactNode => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
-        onFilter: (value: string | number | boolean, record: User): boolean => {
+        onFilter: (value: string | number | boolean, record: UserProfile): boolean => {
             assert(typeof value === "string");
-            return record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+            if (dataIndex === "isBanned") {
+                return record.user.isBanned.toLowerCase().includes(value.toLowerCase());
+            }
+            else {
+                return record[dataIndex].toString().toLowerCase().includes(value.toLowerCase());
+            }
         },
         onFilterDropdownVisibleChange: (visible: boolean) => {
             if (visible) {
                 setTimeout(() => { if (this.searchInput != null) this.searchInput.select(); })
             }
         },
-        render: (text: string, item: User) => {
+        render: (text: string, item: UserProfile) => {
             if (dataIndex === "isBanned") {
                 return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={text === "Yes"} loading={this.state.banUpdating} onChange={this.updateBan.bind(this, item)}></Switch>
             }
@@ -238,7 +246,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
         },
     });
 
-    async updateRole(roleName: string, item: User, shouldHaveRole: boolean) {
+    async updateRole(roleName: string, item: UserProfile, shouldHaveRole: boolean) {
         assert(this.props.auth.currentConference, "Current conference is null");
 
         this.setState({ roleUpdating: true })
@@ -264,10 +272,10 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
 
         const columns = [
             {
-                title: 'Username',
-                dataIndex: 'username',
-                key: 'username',
-                ...this.getColumnSearchProps('username'),
+                title: 'Name',
+                dataIndex: 'displayName',
+                key: 'displayName',
+                ...this.getColumnSearchProps('displayName'),
             },
             {
                 title: 'Banned',
@@ -277,7 +285,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             }, {
                 title: <Tooltip title="Administrators have full access to all that managers do, plus the ability to manage internal clowdr settings"><>Admin</></Tooltip>,
                 key: 'admin',
-                render: (text: string, item: User) => {
+                render: (text: string, item: UserProfile) => {
                     let hasRole = this.state.roles['admin'] && this.state.roles['admin'].includes(item.id);
                     return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
                         onChange={this.updateRole.bind(this, 'admin', item, !hasRole)}></Switch>
@@ -286,7 +294,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             {
                 title: <Tooltip title="Content managers can edit the program"><>Manager</></Tooltip>,
                 key: 'manager',
-                render: (text: string, item: User) => {
+                render: (text: string, item: UserProfile) => {
                     let hasRole = this.state.roles['manager'] && this.state.roles['manager'].includes(item.id);
                     return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
                         onChange={this.updateRole.bind(this, 'manager', item, !hasRole)}></Switch>
@@ -295,13 +303,18 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
             {
                 title: <Tooltip title="Moderators can enter all private channels and send global announcements"><>Moderator</></Tooltip>,
                 key: 'moderator',
-                render: (text: string, item: User) => {
+                render: (text: string, item: UserProfile) => {
                     let hasRole = this.state.roles['moderator'] && this.state.roles['moderator'].includes(item.id);
                     return <Switch checkedChildren="Yes" unCheckedChildren="No" checked={hasRole} loading={this.state.roleUpdating}
                         onChange={this.updateRole.bind(this, 'moderator', item, !hasRole)}></Switch>
                 }
             },
         ];
+        // Add the key to the users - this is a bit unsafe but nevermind
+        this.state.allUsers.forEach(item => {
+            // @ts-ignore
+            item.key = item.id;
+        });
         return <div>
             <h2>User Management</h2>
             <Table dataSource={this.state.allUsers} columns={columns}>
