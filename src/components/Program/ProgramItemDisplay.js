@@ -26,7 +26,7 @@ class ProgramItemDisplay extends React.Component {
             //@ts-ignore
             let evs = await Promise.all(events);
             let sessions = await Promise.all(evs.map((ev) =>
-                this.props.auth?.programCache.getProgramSession(ev.get("programSession").id, null)));
+                ev.get("programSession") ? this.props.auth?.programCache.getProgramSession(ev.get("programSession").id, null) : undefined));
             this.setState({ events: evs, sessions: sessions });
         }
 
@@ -71,15 +71,17 @@ class ProgramItemDisplay extends React.Component {
         if (this.state.sessions) {
             sessionInfo = [];
             for (let event of this.state.events.sort(this.sortEvents)) {
-                let session = this.state.sessions.find(s => s.id === event.get("programSession").id);
-                var timeE = session.get("endTime") ? session.get("endTime") : new Date();
+                if(event.get("programSession")) {
+                    let session = this.state.sessions.find(s => s.id === event.get("programSession").id);
+                    var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
-                sessionInfo.push(<List.Item key={event.id} style={{ color: "white" }}>
-                    <a href="#" onClick={() => {
-                        this.props.history.push("/live/now/" + session.get("room").get("name"))
-                    }
-                    }>{session.get("title")} </a>({moment(event.get("startTime")).tz(timezone.tz.guess()).calendar()})
-                </List.Item>);
+                    sessionInfo.push(<List.Item key={event.id} style={{color: "white"}}>
+                        <a href="#" onClick={() => {
+                            this.props.history.push("/live/now/" + session.get("room").get("name"))
+                        }
+                        }>{session.get("title")} </a>({moment(event.get("startTime")).tz(timezone.tz.guess()).calendar()})
+                    </List.Item>);
+                }
             }
             sessionInfo = <List className="sessionListItem">
                 {sessionInfo}

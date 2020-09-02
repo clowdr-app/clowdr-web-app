@@ -88,7 +88,7 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             //@ts-ignore
             let evs = await Promise.all(events);
             // @ts-ignore
-            let sessions = await Promise.all(evs.map((ev) => this.props.appState?.programCache.getProgramSession(ev.get("programSession").id, null)));
+            let sessions = await Promise.all(evs.map((ev) => ev.get("programSession") ? this.props.appState?.programCache.getProgramSession(ev.get("programSession").id, null) : undefined));
             // @ts-ignore
             stateUpdate.sessions = sessions;
             // @ts-ignore
@@ -174,35 +174,37 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                 if (this.props.hiddenKeys && this.props.hiddenKeys.includes(event.id))
                     continue;
                 hasValidEvents = true;
-                let session = this.state.sessions.find(s => s.id === event.get("programSession").id);
-                if (session) {
-                    var timeS = session.get("startTime") ? session.get("startTime") : new Date();
-                    var timeE = session.get("endTime") ? session.get("endTime") : new Date();
+                if(event.get("programSession")) {
+                    let session = this.state.sessions.find(s => s.id === event.get("programSession").id);
+                    if (session) {
+                        var timeS = session.get("startTime") ? session.get("startTime") : new Date();
+                        var timeE = session.get("endTime") ? session.get("endTime") : new Date();
 
-                    let title = session.get("title");
-                    if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") === "YouTube") {
-                        let when = "now"
-                        if (timeS <= now && timeE >= now)
-                            title = <a href="#" className="sessionLink" onClick={() => {
-                                // @ts-ignore
-                                this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                            }}>{title}</a>
+                        let title = session.get("title");
+                        if (session.get("room") && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.get("room").get("src1") === "YouTube") {
+                            let when = "now"
+                            if (timeS <= now && timeE >= now)
+                                title = <a href="#" className="sessionLink" onClick={() => {
+                                    // @ts-ignore
+                                    this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                                }}>{title}</a>
 
-                        // if (timeE >= now)
-                        //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
-                        // this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                        // }}>Join Session</Button></Space>
-                        /* BCP: Crista and i decided it doesn't make sense any more to have these links be live (because it's not clear where they should go)...
-                       title = <a href="#" className="sessionLink" onClick={()=>{
-                           // @ts-ignore
-                           this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
-                       }}>{title}</a>
-                       */
+                            // if (timeE >= now)
+                            //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
+                            // this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                            // }}>Join Session</Button></Space>
+                            /* BCP: Crista and i decided it doesn't make sense any more to have these links be live (because it's not clear where they should go)...
+                           title = <a href="#" className="sessionLink" onClick={()=>{
+                               // @ts-ignore
+                               this.props.history.push("/live/" + when + "/" + session.get("room").get("name"))
+                           }}>{title}</a>
+                           */
+                        }
+                        sessionInfo.push(<div className="sessionListItem" key={event.id}>
+                            {title} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))})
+                            {roomInfo}
+                        </div>);
                     }
-                    sessionInfo.push(<div className="sessionListItem" key={event.id}>
-                        {title} ({this.formatTime(event.get("startTime"))} - {this.formatTime(event.get('endTime'))})
-                       {roomInfo}
-                    </div>);
                 }
             }
             // sessionInfo = <List>

@@ -72,11 +72,9 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     async componentDidMount() {
-        let [rooms, zoomHostAccounts, zoomRooms] = await Promise.all([this.props.auth.programCache.getProgramRooms(this),
-        this.props.auth.programCache.getZoomHostAccounts(this),
-        this.props.auth.programCache.getZoomRooms(this)
+        let [rooms] = await Promise.all([this.props.auth.programCache.getProgramRooms(this),
         ]);
-        this.setState({ ProgramRooms: rooms, ZoomRooms: zoomRooms, ZoomHostAccounts: zoomHostAccounts, loading: false });
+        this.setState({ ProgramRooms: rooms, loading: false });
     }
 
     onChange(info: UploadChangeParam) {
@@ -93,7 +91,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     beforeUpload(file: RcFile, _: any) {
-
+        let uploadLoading = message.loading({content: "Uploading rooms"})
         const reader: FileReader = new FileReader();
         reader.onload = () => {
             assert(this.props.auth.currentConference, "Current conference is null.");
@@ -101,6 +99,10 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
             const data = { content: reader.result, conference: this.props.auth.currentConference.id };
             Parse.Cloud.run("rooms-upload", data).then(
                 // () => this.refreshList()
+                ()=>{
+                    uploadLoading();
+                    message.success({content: "Uploaded data. Please refresh this page to view new data."})
+                }
             );
         }
         reader.readAsText(file);
@@ -186,34 +188,6 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     case ('qa'):
                         inputNode = <Input placeholder="Q&A tool link" />
                         break;
-                    case ('hostAccount'):
-                        inputNode = (
-                            <Select
-                                showSearch
-                                placeholder="Select a Main Channel"
-                                optionFilterProp="children"
-                                dropdownMatchSelectWidth={false}
-                                filterOption={(input: string, option: any): boolean =>
-                                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                                }
-                            >
-                                {this.state.ZoomHostAccounts.sort((a: Parse.Object, b: Parse.Object) => a.get("name")
-                                    .localeCompare(b.get('name'))).map((account: Parse.Object): JSX.Element => (<Option key={account.id} value={account.id}>{account.get('name')}</Option>))
-
-                                }
-
-                            </Select>
-                        );
-                        break;
-                    case ("requireRegistration"):
-                        inputNode = <Checkbox defaultChecked={record.get("zoomRoom").get("requireRegistration")} />
-                        break;
-                    case ('startTime'):
-                        inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
-                        break;
-                    case ('endTime'):
-                        inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
-                        break;
                     default:
                         inputNode = <span>{dataIndex}</span>;
                         break;
@@ -297,36 +271,12 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     let room: Parse.Object | undefined = newData.find(item => item.id === id);
 
                     if (room) {
-                        if (row.src1 && row.src1.startsWith("managed-")) {
-                            if (!room.get("zoomRoom")) {
-                                let id: string = row.src1.substr(8);
-                                let hostAccount: Parse.Object | undefined = this.state.ZoomHostAccounts.find(item => item.id === id);
-                                //Create a new zoomRoom
-                                let zoomRoom: Parse.Object = new ZoomRoom();
-                                zoomRoom.set("hostAccount", hostAccount);
-                                zoomRoom.set("conference", room.get("conference"));
-                                zoomRoom.set("programRoom", room);
-                                await zoomRoom.save();
-                                room.set("zoomRoom", zoomRoom);
-                                room.set("src1", null);
-                                room.set("src2", null);
-                                room.set("id1", null);
-                                room.set("id2", null);
-                                room.set("pwd1", null);
-                                room.set("pwd2", null);
-                            }
-                            else {
-                                message.error("This path should not be reachable")
-                                return;
-                            }
-                        } else {
-                            room.set("src1", row.src1);
-                            room.set("id1", row.id1);
-                            room.set("pwd1", row.pwd1);
-                            room.set("src2", row.src2);
-                            room.set("id2", row.id2);
-                            room.set("pwd2", row.pwd2);
-                        }
+                        room.set("src1", row.src1);
+                        room.set("id1", row.id1);
+                        room.set("pwd1", row.pwd1);
+                        room.set("src2", row.src2);
+                        room.set("id2", row.id2);
+                        room.set("pwd2", row.pwd2);
                         room.set("name", row.name);
 
                         room.set("qa", row.qa);
@@ -495,7 +445,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult.filter(r => !r.get("zoomRoom") || r.get("id1")) : this.state.ProgramRooms.filter(r => !r.get("zoomRoom") || r.get("id1"))}
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramRooms}
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
