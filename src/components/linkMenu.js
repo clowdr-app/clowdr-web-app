@@ -41,9 +41,11 @@ class LinkMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.props.clowdrAppState.programCache.getProgramTracks(this).then(tracks => {
-            this.setState({ ProgramTracks: tracks });
-        })
+        if (this.props.clowdrAppState.programCache) {
+            this.props.clowdrAppState.programCache.getProgramTracks(this).then(tracks => {
+                this.setState({ ProgramTracks: tracks });
+            });
+        }
     }
     componentWillUnmount() {
         this.props.clowdrAppState.programCache.cancelSubscription("ProgramTrack", this);

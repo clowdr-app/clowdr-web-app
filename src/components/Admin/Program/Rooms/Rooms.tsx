@@ -72,11 +72,9 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     async componentDidMount() {
-        let [rooms, zoomHostAccounts, zoomRooms] = await Promise.all([this.props.auth.programCache.getProgramRooms(this),
-        this.props.auth.programCache.getZoomHostAccounts(this),
-        this.props.auth.programCache.getZoomRooms(this)
+        let [rooms] = await Promise.all([this.props.auth.programCache.getProgramRooms(this),
         ]);
-        this.setState({ ProgramRooms: rooms, ZoomRooms: zoomRooms, ZoomHostAccounts: zoomHostAccounts, loading: false });
+        this.setState({ ProgramRooms: rooms, loading: false });
     }
 
     onChange(info: UploadChangeParam) {
@@ -93,7 +91,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     beforeUpload(file: RcFile, _: any) {
-
+        let uploadLoading = message.loading({content: "Uploading rooms"})
         const reader: FileReader = new FileReader();
         reader.onload = () => {
             assert(this.props.auth.currentConference, "Current conference is null.");
@@ -101,6 +99,10 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
             const data = { content: reader.result, conference: this.props.auth.currentConference.id };
             Parse.Cloud.run("rooms-upload", data).then(
                 // () => this.refreshList()
+                ()=>{
+                    uploadLoading();
+                    message.success({content: "Uploaded data. Please refresh this page to view new data."})
+                }
             );
         }
         reader.readAsText(file);
@@ -186,34 +188,6 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     case ('qa'):
                         inputNode = <Input placeholder="Q&A tool link" />
                         break;
-                    case ('hostAccount'):
-                        inputNode = (
-                            <Select
-                                showSearch
-                                placeholder="Select a Main Channel"
-                                optionFilterProp="children"
-                                dropdownMatchSelectWidth={false}
-                                filterOption={(input: string, option: any): boolean =>
-                                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                                }
-                            >
-                                {this.state.ZoomHostAccounts.sort((a, b) => a.name
-                                    .localeCompare(b.name)).map((account): JSX.Element => (<Option key={account.id} value={account.id}>{account.name}</Option>))
-
-                                }
-
-                            </Select>
-                        );
-                        break;
-                    case ("requireRegistration"):
-                        inputNode = <Checkbox defaultChecked={record.zoomRoom.requireRegistration} />
-                        break;
-                    case ('startTime'):
-                        inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
-                        break;
-                    case ('endTime'):
-                        inputNode = <DatePicker showTime={{ format: 'HH:mm' }} />;
-                        break;
                     default:
                         inputNode = <span>{dataIndex}</span>;
                         break;
@@ -297,36 +271,12 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     let room: ProgramRoom | undefined = newData.find(item => item.id === id);
 
                     if (room) {
-                        if (row.src1 && row.src1.startsWith("managed-")) {
-                            if (!room.zoomRoom) {
-                                let id: string = row.src1.substr(8);
-                                let hostAccount = this.state.ZoomHostAccounts.find(item => item.id === id);
-                                //Create a new zoomRoom
-                                let zoomRoom = new ZoomRoom();
-                                zoomRoom.set("hostAccount", hostAccount);
-                                zoomRoom.set("conference", room.conference);
-                                zoomRoom.set("programRoom", room);
-                                await zoomRoom.save();
-                                room.set("zoomRoom", zoomRoom);
-                                room.set("src1", null);
-                                room.set("src2", null);
-                                room.set("id1", null);
-                                room.set("id2", null);
-                                room.set("pwd1", null);
-                                room.set("pwd2", null);
-                            }
-                            else {
-                                message.error("This path should not be reachable")
-                                return;
-                            }
-                        } else {
-                            room.set("src1", row.src1);
-                            room.set("id1", row.id1);
-                            room.set("pwd1", row.pwd1);
-                            room.set("src2", row.src2);
-                            room.set("id2", row.id2);
-                            room.set("pwd2", row.pwd2);
-                        }
+                        room.set("src1", row.src1);
+                        room.set("id1", row.id1);
+                        room.set("pwd1", row.pwd1);
+                        room.set("src2", row.src2);
+                        room.set("id2", row.id2);
+                        room.set("pwd2", row.pwd2);
                         room.set("name", row.name);
 
                         room.set("qa", row.qa);
@@ -495,7 +445,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                             },
                         }}
                         bordered
-                        dataSource={this.state.searched ? this.state.searchResult.filter(r => !r.zoomRoom || r.id1) : this.state.ProgramRooms.filter(r => !r.zoomRoom || r.id1)}
+                        dataSource={this.state.searched ? this.state.searchResult : this.state.ProgramRooms}
                         columns={mergedColumns}
                         rowClassName="editable-row"
                         rowKey='id'
@@ -505,271 +455,6 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
             );
         }
 
-        const EditableTableForControlledRooms = () => {
-            const [form] = Form.useForm();
-            const [data, setData] = useState(this.state.ProgramRooms);
-            const [editingKey, setEditingKey] = useState('');
-
-            const isEditing = (record: ProgramRoom): boolean => record.id === editingKey;
-
-            const edit = (record: ProgramRoom) => {
-                form.setFieldsValue({
-                    name: record.name ? record.name : "",
-                    src1: record.src1 ? record.src1 : "",
-                    id1: record.id1 ? record.id1 : "",
-                    pwd1: record.pwd1 ? record.pwd1 : "",
-                    hostAccount: record.zoomRoom.hostAccount.id,
-                    startTime: record.zoomRoom.startTime ? moment(record.zoomRoom.startTime) : "",
-                    endTime: record.zoomRoom.endTime ? moment(record.zoomRoom.endTime) : "",
-                    requireRegistration: record.zoomRoom.requireRegistration
-                });
-                console.log("setting editing key state", record.id);
-                setEditingKey(record.id);
-                console.log("editing key state done");
-            };
-
-            const cancel = (): void => {
-                setEditingKey('');
-            };
-
-            const onDelete = (record: ProgramRoom) => {
-                console.log("deleting item: " + record.name);
-                const newRooms: ProgramRoom[] = [...this.state.ProgramRooms];
-                this.setState({
-                    ProgramRooms: newRooms.filter(item => item.id !== record.id)
-                });
-                // delete from database
-                let data: object = {
-                    clazz: "ProgramRoom",
-                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
-                    id: record.id
-                }
-                Parse.Cloud.run("delete-obj", data)
-                    .then(() => this.setState({ alert: "delete success" }))
-                    .catch((err: Error) => {
-                        this.setState({ alert: "delete error" })
-                        // this.refreshList();
-                        console.log("[Admin/Rooms]: Unable to delete: " + err)
-                    })
-
-            };
-
-            const setIfDifferent = (obj: ZoomRoom, key: string, value: string) => {  // type of value???
-                let old: string = obj.get(key);
-                if (!old && !value)
-                    return;
-                if (!old || !value) {
-                    obj.set(key, value);
-                    return;
-                }
-                if (old === value)
-                    return;
-                if ((old.toString && old.toString() !== value.toString()) || (!old.toString && old !== value)) {
-                    obj.set(key, value);
-                    return;
-                }
-            }
-            const save = async (id: string) => {
-                try {
-                    const row = await form.validateFields();
-                    const newData: ProgramRoom[] = [...data];
-                    let room: ProgramRoom | undefined = newData.find((item: ProgramRoom) => item.id === id);
-
-                    if (room) {
-                        if (room.name !== row.name) {
-                            room.set("name", row.name);
-                            await room.save();
-                        }
-                        let zoomRoom = room.zoomRoom;
-                        if (zoomRoom) {
-                            let newHostAccount = this.state.ZoomHostAccounts.find(v => v.id === row.hostAccount);
-                            if (!zoomRoom.hostAccount || (typeof newHostAccount !== 'undefined' && zoomRoom.hostAccount.id !== newHostAccount.id))
-                                zoomRoom.set("hostAccount", newHostAccount);
-                            setIfDifferent(zoomRoom, "startTime", row.startTime.toDate());
-                            setIfDifferent(zoomRoom, "endTime", row.endTime.toDate());
-                            setIfDifferent(zoomRoom, "requireRegistration", row.requireRegistration);
-                            try {
-                                await zoomRoom.save();
-                                message.success("Saved room");
-                            } catch (err) {
-                                console.error(err);
-                                message.error("Unable to save room");
-                            }
-                        }
-                        setEditingKey('');
-                    } else {
-                        // TODO: This is completely unsafe - this will result in errors,
-                        // the logic around adding items needs fixing here. We should create
-                        // but not commit the new configuration, rather than storing the form
-                        // data directly
-                        // @ts-ignore
-                        newData.push(row as ProgramRoom);
-                        setData(newData);
-                        setEditingKey('');
-                    }
-                } catch (errInfo) {
-                    console.log('Validate Failed:', errInfo);
-                }
-            };
-
-            const columns = [
-                {
-                    title: 'Name',
-                    dataIndex: 'name',
-                    key: 'name',
-                    width: '10%',
-                    editable: true,
-                    // defaultSortOrder: 'ascend',
-                    sorter: (a: ProgramRoom, b: ProgramRoom) => {
-                        let nameA: string = a.name ? a.name : "";
-                        let nameB: string = b.name ? b.name : "";
-                        return nameA.localeCompare(nameB);
-                    },
-                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.name}</span>,
-                },
-                {
-                    title: 'Zoom Host Account',
-                    dataIndex: 'hostAccount',
-                    width: '15%',
-                    editable: true,
-                    sorter: (a: ProgramRoom, b: ProgramRoom) => {
-                        var srcA = a.zoomRoom.hostAccount.name;
-                        var srcB = b.zoomRoom.hostAccount.name;
-                        return srcA.localeCompare(srcB);
-                    },
-                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.zoomRoom.hostAccount.name}</span>,
-                    key: 'hostAccount',
-                },
-
-                {
-                    title: 'Start Time',
-                    dataIndex: 'startTime',
-                    width: '10%',
-                    editable: true,
-                    sorter: (a: ProgramRoom, b: ProgramRoom) => {
-                        let timeA = a.zoomRoom.startTime ? a.zoomRoom.startTime : 0;
-                        let timeB = b.zoomRoom.startTime ? b.zoomRoom.startTime : 0;
-                        return timeA < timeB ? -1 : timeA === timeB ? 0 : 1;
-                    },
-                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.zoomRoom.startTime ? timezone(record.zoomRoom.startTime).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
-                    key: 'startTime',
-                },
-                {
-                    title: 'End Time',
-                    dataIndex: 'endTime',
-                    width: '10%',
-                    editable: true,
-                    sorter: (a: ProgramRoom, b: ProgramRoom) => {
-                        let timeA = a.zoomRoom.endTime ? a.zoomRoom.endTime : 0;
-                        let timeB = b.zoomRoom.endTime ? b.zoomRoom.endTime : 0;
-                        return timeA < timeB ? -1 : timeA === timeB ? 0 : 1;
-                    },
-                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.zoomRoom.endTime ? timezone(record.zoomRoom.endTime).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
-                    key: 'endTime',
-                },
-                {
-                    title: 'Prevent Zoom link sharing',
-                    dataIndex: 'requireRegistration',
-                    width: '10%',
-                    editable: true,
-                    render: (_: string, record: ProgramRoom): JSX.Element => <span>
-                        {record.zoomRoom.requireRegistration ? "Enabled" : "Disabled"}</span>,
-                    key: 'requireRegistration',
-                },
-                {
-                    title: 'Generated Room ID',
-                    dataIndex: 'id1',
-                    width: '10%',
-                    editable: false,
-                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.zoomRoom.meetingID}</span>,
-                    key: 'roomid1',
-                },
-                {
-                    title: 'Generated Password',
-                    dataIndex: 'pwd1',
-                    width: '10%',
-                    editable: false,
-                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.zoomRoom.meetingPassword}</span>,
-                    key: 'pwd1',
-                },
-                {
-                    title: 'Action',
-                    dataIndex: 'action',
-                    render: (_: string, record: ProgramRoom): JSX.Element | null => {
-                        const editable = isEditing(record);
-                        if (this.state.ProgramRooms.length > 0) {
-                            return editable ?
-                                (
-                                    <span>
-                                        <a onClick={() => save(record.id)}
-                                            style={{ marginRight: 8 }}>
-                                            {<SaveTwoTone />}
-                                        </a>
-                                        <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                            <a>{<CloseCircleTwoTone />}</a>
-                                        </Popconfirm>
-                                    </span>
-                                )
-                                : (
-                                    <Space size='small'>
-                                        Join: <a title="Join as Host" target={'top'} href={record.zoomRoom.start_url}>as host</a>,
-                                        <a title="Join as participant" target={'top'} href={record.zoomRoom.join_url}>as participant</a>
-                                        {/*<a title="Edit" disabled={editingKey !== ''} onClick={() => edit(record)}>*/}
-                                        <a title="Edit" onClick={() => { if (editingKey === '') edit(record) }}>
-                                            {<EditOutlined />}
-                                        </a>
-                                        <Popconfirm
-                                            title="Are you sure delete this session?"
-                                            onConfirm={() => onDelete(record)}
-                                            okText="Yes"
-                                            cancelText="No"
-                                        >
-                                            <a title="Delete">{<DeleteOutlined />}</a>
-                                        </Popconfirm>
-                                    </Space>
-                                )
-                        } else {
-                            return null;
-                        }
-
-                    }
-                }
-            ];
-
-            const mergedColumns = columns.map(col => {
-                if (!col.editable) {
-                    return col;
-                }
-                return {
-                    ...col,
-                    onCell: (record: ProgramRoom) => ({
-                        record,
-                        inputType: 'text',
-                        dataIndex: col.dataIndex,
-                        title: col.title,
-                        editing: isEditing(record),
-                    }),
-                };
-            });
-
-            return (
-                <Form form={form} component={false}>
-                    <Table
-                        components={{
-                            body: {
-                                cell: EditableCell,
-                            },
-                        }}
-                        bordered
-                        dataSource={this.state.searched ? this.state.searchResult.filter(r => !r.id1 && r.zoomRoom) : this.state.ProgramRooms.filter(r => !r.id1 && r.zoomRoom)}
-                        columns={mergedColumns}
-                        rowClassName="editable-row"
-                        rowKey='id'
-                        pagination={false} //Please talk to Jon before considering re-enabling pagination here.
-                    />
-                </Form>
-            );
-        }
         // handle when a new item is added
         const handleAdd = () => {
             assert(this.props.auth.currentConference, "Current conference is null.");
@@ -851,7 +536,6 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 </table>
 
                 <EditableTableForUncontrolledRooms />
-                <EditableTableForControlledRooms />
             </div>
         );
     }

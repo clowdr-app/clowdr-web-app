@@ -12,6 +12,7 @@ import {
     ProgramTrack
 } from "../../classes/ParseObjects"
 import { startTImeOffsetForProgramDisplay } from "../../globals";
+import { removeUndefined } from '../../Util';
 
 interface UpcomingProgramProps {
     auth: ClowdrState;
@@ -208,11 +209,9 @@ class UpcomingProgram extends React.Component<UpcomingProgramProps, UpcomingProg
             }
             else if (s.events && s.events.length) {
                 let sessionEvents
-                    = s.events
-                        .map((ev: ProgramSessionEvent) => this.state.ProgramSessionEvents.find(e => e.id === ev.id))
-                        .filter((e: ProgramSessionEvent | undefined) => e !== undefined);
-                // It is safe to assert the type here because we filtered out the undefined items above :)
-                items = items.concat(sessionEvents as Array<ProgramSessionEvent>);
+                    = removeUndefined(s.events
+                        .map((ev) => this.state.ProgramSessionEvents.find(e => e.id === ev.id)));
+                items = items.concat(sessionEvents);
             }
         }
         items = items.sort(this.dateSorter);

@@ -28,8 +28,9 @@ interface Props {
 interface FlairUIData { color: string, tooltip: string }
 interface AllFlairData { value: string, color: string, tooltip: string, id: string, priority: number }
 
+// TODO: Why is this still separate from the thing in ClowdrTypes?
 interface State {
-    // TODO: Fill in the types
+    // TODO: Fill in the types - based them off ClowdrTypes.tsx
     user: any;
     users: any;
     loading: boolean;
@@ -69,9 +70,6 @@ type RoomID = string    // TS: Doesn't belong here?
 type UserID = string    // TS: Doesn't belong here?  And should this be the same as the next??
 type UserProfileID = string    // TS: Doesn't belong here?
 type Subscriber = React.Component;   // TS: What arguments?
-
-// TS: This should be an enumeration of strings -- get all the possibilities from the PrivilegedAction table in the DB
-type Permission = string
 
 const withClowdrState = (Component: React.Component<Props, State>) => {
     class WithClowdrState extends React.Component<Props, State> {
@@ -154,7 +152,6 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 createOrOpenDM: this.createOrOpenDM.bind(this),
                 setActiveConference: this.setActiveConference.bind(this),
                 setGlobalState: this.setState.bind(this),//well that seems dangerous...
-                // ifPermission: this.ifPermission.bind(this),
                 getPresences: this.getPresences.bind(this),
                 cancelPresenceSubscription: this.cancelPresenceSubscription.bind(this),
                 unmountProfileDisplay: this.unmountProfileDisplay.bind(this),
@@ -179,7 +176,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 cancelBreakoutRoomsSubscription: this.cancelBreakoutRoomsSubscription.bind(this),
                 chatClient: new ChatClient(),
                 parseLive: this.parseLive,
-                presences: {},
+                presences: this.presences,
                 userProfile: null,
                 permissions: null,
                 leftSidebar: null,

@@ -21,3 +21,7 @@ export function PromiseInjectNull<T>(p: Promise<T> | undefined | null): Promise<
 export function intersperse<T>(array: Array<T>, inter: T): Array<T> {
     return array.flatMap(e => [inter, e]).slice(1);
 }
+
+export function removeUndefined<T>(array: Array<T | undefined>): Array<T> {
+    return array.filter(x => x !== undefined) as Array<T>;
+}

@@ -62,12 +62,12 @@ class GuardedLanding extends Component<GuardedLandingProps, GuardedLandingState>
     constructor(props: GuardedLandingProps) {
         super(props);
 
-        assert(this.props.auth.currentConference, "Current conference is null");
-
         let text = this.props.auth.currentConference && this.props.auth.currentConference.landingPage ?
             this.props.auth.currentConference.landingPage : defaultText;
         let privateText = undefined;
-        if (this.props.auth.currentConference.loggedInText && this.props.auth.currentConference.loggedInText.value)
+        if (this.props.auth.currentConference &&
+            this.props.auth.currentConference.loggedInText &&
+            this.props.auth.currentConference.loggedInText.value)
             privateText = this.props.auth.currentConference.loggedInText.value;
         this.state = {
             isLoggedIn: false,

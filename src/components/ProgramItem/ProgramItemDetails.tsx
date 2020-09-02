@@ -19,7 +19,7 @@ import ReactMarkdown from "react-markdown";
 import { RouteComponentProps } from "react-router-dom";
 import { withRouter } from 'react-router';
 import assert from "assert";
-import { intersperse } from "../../Util";
+import { intersperse, removeUndefined } from "../../Util";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -80,20 +80,18 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             inBreakoutRoom: false,
             AttachmentTypes: attachmentTypes,
             chatSID: null,
-            isInRoom: this.props.isInRoom ? true : false
+            isInRoom: this.props.isInRoom ? true : false,
+            sessions: this.state.sessions,
+            events: this.state.events
         };
         if (item.events && item.events.length) {
             //load all of the sessions and times first
             let events = item.events
                 .map((e: ProgramSessionEvent) =>
                     this.props.appState.programCache.getProgramSessionEvent(e.id));
-            //@ts-ignore
             let evs = await Promise.all(events);
-            // @ts-ignore
-            let sessions = await Promise.all(evs.map((ev) => this.props.appState.programCache.getProgramSession(ev.programSession.id, null)));
-            // @ts-ignore
+            let sessions = removeUndefined(await Promise.all(evs.map((ev) => this.props.appState.programCache.getProgramSession(ev.programSession.id))));
             stateUpdate.sessions = sessions;
-            // @ts-ignore
             stateUpdate.events = evs;
         }
         if (item.attachments) {
@@ -177,37 +175,38 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
                 if (this.props.hiddenKeys && this.props.hiddenKeys.includes(event.id))
                     continue;
                 hasValidEvents = true;
-                let _session = this.state.sessions.find(s => s.id === event.programSession.id);
-                if (_session) {
-                    // Help the type inference
-                    let session = _session;
+                if (event.programSession) {
+                    let _session = this.state.sessions.find(s => s.id === event.programSession.id);
+                    if (_session) {
+                        let session = _session;
 
-                    let timeS = session.startTime ? session.startTime : 0;
-                    let timeE = session.endTime ? session.endTime : 0;
+                        let timeS = session.startTime ? session.startTime : 0;
+                        let timeE = session.endTime ? session.endTime : 0;
 
-                    let title = <>session.title</>;
-                    if (session.room && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.room.src1 === "YouTube") {
-                        let when = "now"
-                        if (timeS <= now && timeE >= now)
-                            title = <a href="#" className="sessionLink" onClick={() => {
-                                this.props.history.push("/live/" + when + "/" + session.room.name)
-                            }}>{title}</a>
+                        let title = <>session.title</>;
+                        if (session.room && (!this.props.hiddenKeys || !this.props.hiddenKeys.includes("joinLive"))) { // && session.room.src1 === "YouTube") {
+                            let when = "now"
+                            if (timeS <= now && timeE >= now)
+                                title = <a href="#" className="sessionLink" onClick={() => {
+                                    this.props.history.push("/live/" + when + "/" + session.room.name)
+                                }}>{title}</a>
 
-                        // if (timeE >= now)
-                        //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
-                        // this.props.history.push("/live/" + when + "/" + session.room.name)
-                        // }}>Join Session</Button></Space>
-                        /* BCP: Crista and i decided it doesn't make sense any more to have these links be live (because it's not clear where they should go)...
-                       title = <a href="#" className="sessionLink" onClick={()=>{
-                           // @ts-ignore
-                           this.props.history.push("/live/" + when + "/" + session.room.name)
-                       }}>{title}</a>
-                       */
+                            // if (timeE >= now)
+                            //     roomInfo = <Space><Button size="small" type="primary" onClick={() => {
+                            // this.props.history.push("/live/" + when + "/" + session.room.name)
+                            // }}>Join Session</Button></Space>
+                            /* BCP: Crista and i decided it doesn't make sense any more to have these links be live (because it's not clear where they should go)...
+                           title = <a href="#" className="sessionLink" onClick={()=>{
+                               // @ts-ignore
+                               this.props.history.push("/live/" + when + "/" + session.room.name)
+                           }}>{title}</a>
+                           */
+                        }
+                        sessionInfo.push(<div className="sessionListItem" key={event.id}>
+                            {title} ({this.formatTime(event.startTime)} - {this.formatTime(event.endTime)})
+                            {roomInfo}
+                        </div>);
                     }
-                    sessionInfo.push(<div className="sessionListItem" key={event.id}>
-                        {title} ({this.formatTime(event.startTime)} - {this.formatTime(event.endTime)})
-                       {roomInfo}
-                    </div>);
                 }
             }
             // sessionInfo = <List>
