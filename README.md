@@ -1,5 +1,4 @@
 # Clowdr
-else is watching the same content. We were unable to find a technology platform
 
 Clowdr is an open source tool suite to make it easier to run interactive and
 engaging virtual conferences. Imagine that your conference attendees could
@@ -40,6 +39,8 @@ virtual conference, please email us at
 deployment for your conference.
 
 # Information for Developers
+
+If you are looking for the most stable version, use the `stable` branch. If you want the latest code, which may or may not be stable and/or properly documented, use the `dev` branch.
 
 If you are only interested in making UI changes for a currently running
 conference, you can simply ask one of the developers for a copy of their
