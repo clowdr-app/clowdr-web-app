@@ -1,4 +1,5 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
+import { KnownKeys } from '../../Util';
 
 export interface ProgramTrack extends Base {
     badgeText?: string;
@@ -10,3 +11,15 @@ export interface ProgramTrack extends Base {
     perProgramItemVideo?: boolean;
     showAsEvents?: boolean;
 }
+
+export const ProgramTrackFields: Array<KnownKeys<ProgramTrack>> = [
+    ...BaseFields,
+    "badgeText",
+    "badgeColor",
+    "displayName",
+    "exhibit",
+    "name",
+    "perProgramItemChat",
+    "perProgramItemVideo",
+    "showAsEvents"
+];

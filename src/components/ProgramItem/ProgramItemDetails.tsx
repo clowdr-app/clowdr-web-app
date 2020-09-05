@@ -89,8 +89,9 @@ class ProgramItemDetails extends React.Component<ProgramItemDetailProps, Program
             let events = item.events
                 .map((e: ProgramSessionEvent) =>
                     this.props.appState.programCache.getProgramSessionEvent(e.id));
-            let evs = await Promise.all(events);
-            let sessions = removeUndefined(await Promise.all(evs.map((ev) => this.props.appState.programCache.getProgramSession(ev.programSession.id))));
+            let evs = removeUndefined(await Promise.all(events));
+            let sessions = removeUndefined(await Promise.all(evs.map((ev) =>
+                this.props.appState.programCache.getProgramSession(ev.programSession.id))));
             stateUpdate.sessions = sessions;
             stateUpdate.events = evs;
         }

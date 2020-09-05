@@ -1,4 +1,5 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
+import { KnownKeys } from '../../Util';
 
 // This is embedded in UserProfile and is not itself a table in the DB
 export interface UserProfileTag {
@@ -21,3 +22,18 @@ export interface UserProfile extends Base {
     webpage?: string;
     welcomeModalShown?: boolean;
 }
+
+export const UserProfileFields: Array<KnownKeys<UserProfile>> = [
+    ...BaseFields,
+    "affiliation",
+    "bio",
+    "country",
+    "displayName",
+    "position",
+    "profilePhoto",
+    "pronouns",
+    "realName",
+    "tags",
+    "webpage",
+    "welcomeModalShown"
+];

@@ -1,4 +1,5 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
+import { KnownKeys } from '../../Util';
 
 export interface ZoomRoom extends Base {
     endTime?: number;
@@ -9,3 +10,14 @@ export interface ZoomRoom extends Base {
     startTime?: number;
     start_url?: string;
 }
+
+export const ZoomRoomFields: Array<KnownKeys<ZoomRoom>> = [
+    ...BaseFields,
+    "endTime",
+    "join_url",
+    "meetingID",
+    "meetingPassword",
+    "requireRegistration",
+    "startTime",
+    "start_url"
+];
