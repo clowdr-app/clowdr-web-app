@@ -378,13 +378,14 @@ async function uploadProgramFromCSV(data, conferenceID, timezone){
         if (record['Event Start Time'] || record['Event End Time']) {
             if (!session)
                 throw "All scheduled events must be in a session, but found one that wasn't. Either put it in a session or remove the start/end times. Item: " + iName;
-            let sTime = moment.tz(record['Event Start Time'], "YYYY/MM/DD HH:mm", timezone);
-            if (!sTime.isValid()) {
-                throw "Invalid start time specified '" + sTime + "'. Please use the format YYYY/MM/DD HH:mm";
+            console.log("--> " + record['Event Start Time'] + " " + timezone);
+            let sTime = moment.tz(record['Event Start Time'], timezone);
+            if (!sTime) {
+                throw "Invalid start time specified '" + sTime + "' in record" + JSON.stringify(record) + ". Please use the format YYYY-MM-DD HH:mm";
             }
-            let eTime = moment.tz(record['Event End Time'], "YYYY/MM/DD HH:mm", timezone);
-            if (!eTime.isValid()) {
-                throw "Invalid end time specified '" + eTime + "'. Please use the format YYYY/MM/DD HH:mm";
+            let eTime = moment.tz(record['Event End Time'], timezone);
+            if (!eTime) {
+                throw "Invalid end time specified '" + eTime + "' in record"  + JSON.stringify(record) + ". Please use the format YYYY-MM-DD HH:mm";
             }
             if (eTime < sTime)
                 throw "Invalid start/end time specified: start must be before end (found " + sTime + ", " + eTime + ")";
