@@ -1,0 +1,1240 @@
+@import '~antd/dist/antd.css';
+
+.site-layout .site-layout-background {
+    background: #fff;
+}
+
+[data-theme="dark"] .site-layout .site-layout-background {
+    background: #141414;
+}
+
+.ant-layout {
+    background-color: white;
+}
+
+.ant-layout-header {
+    height     : 50px;
+    padding    : 0 0px;
+    color      : rgba(0, 0, 0, 0.65);
+    line-height: 50px;
+    background : #001529;
+}
+
+.logo {
+    width        : 120px;
+    height       : 50px;
+    /* background: rgba(255, 255, 255, 0.2); */
+    /* margin    : 0px 10px 0px 0px; */
+    float        : left;
+
+    .img {
+        vertical-align: top;
+    }
+}
+
+.missing-logo {
+    width     : 120px;
+    height    : 64px;
+    background: rgba(255, 255, 255, 0.2);
+    /* margin : 0px 10px 0px 0px; */
+    float     : left;
+}
+
+#top-content {
+    top             : 0;
+    left            : 0;
+    right           : 0;
+    background-color: white;
+    border-bottom   : 1px solid #e7e7e7;
+}
+
+.space-align-container {
+    display    : flex;
+    align-items: flex-start;
+    flex-wrap  : wrap;
+    background : #fff;
+}
+
+.space-align-block {
+    margin : 8px 4px;
+    border : 1px solid #fff;
+    padding: 4px;
+    flex   : none;
+}
+
+.space-align-block .mock-block {
+    display   : inline-block;
+    padding   : 32px 8px 16px;
+    background: rgba(150, 150, 150, 0.2);
+}
+
+.avatar-uploader {
+    &>.ant-upload {
+        width : 128px;
+        height: 128px;
+    }
+}
+
+.site-layout-background:after {
+    content: "";
+    display: block;
+}
+
+.videoEmbed h4 {
+    color: black;
+}
+
+.embedded-react-player {
+    position: absolute;
+    top     : 0;
+    left    : 0;
+}
+
+.player-wrapper {
+    position           : relative;
+    padding-top        : 56.25%
+        /* Player ratio: 100 / (1280 / 720) */
+}
+
+.ant-collapse {
+    &>.ant-collapse-item.ant-collapse-no-arrow.chat-list-panel {
+        &>.ant-collapse-header {
+            padding: 4px 0 4px 5px;
+        }
+
+        &>.ant-collapse-header:hover {
+            background-color: #dddfe2;
+        }
+    }
+}
+
+.fill {
+    img {
+        width: 100%;
+    }
+}
+
+#sidepopoutcontainer>div>div.ant-tabs-content.ant-tabs-content-no-animated.ant-tabs-right-content.ant-tabs-card-content {
+    padding-right: 0;
+}
+
+.active-chats-list-title {
+    position: absolute;
+    left    : 35px;
+}
+
+#tab-general {
+    /*padding-left: 0;*/
+    background-color: white;
+    color           : #4a4a4a;
+    font-weight     : bold;
+    border-right    : 2px solid #cacaca;
+    border-bottom   : 2px solid #cacaca;
+    border-top      : 2px solid #cacaca;
+    padding-right   : 0px;
+}
+
+.video-masonry-grid {
+    display    : -webkit-box;
+    /* Not needed if autoprefixing */
+    display    : -ms-flexbox;
+    /* Not needed if autoprefixing */
+    display    : flex;
+    margin-left: auto;
+    /* gutter size offset */
+    width      : auto;
+    height     : 80vh;
+}
+
+.video-masonry-column {
+    padding-left   : 0px;
+    /* gutter size */
+    background-clip: padding-box;
+
+    &>div {
+        /* change div to reference your elements you put in <Masonry> */
+        margin-bottom: 0px;
+    }
+}
+
+/* Style your items */
+
+#sidepopoutcontainer>div>div.ant-tabs-content.ant-tabs-content-no-animated.ant-tabs-right-content.ant-tabs-card-content {
+    height: 100%;
+
+    &>div.ant-tabs-tabpane.ant-tabs-tabpane-active {
+        height          : 100%;
+        background-color: white;
+    }
+}
+
+.action-bar {
+    background-color: #F8F8F8;
+    border-top      : 0.5px solid #e7e7e7;
+    border-bottom   : 0.5px solid #e7e7e7;
+    height          : initial;
+    line-height     : normal;
+    padding         : 0;
+    height          : 26px;
+}
+
+.chatMessage {
+    position: relative;
+
+    .messageActions {
+        position        : absolute;
+        background-color: white;
+        border          : 1px solid #d1d1d1;
+        border-radius   : 2px;
+        padding-left    : 5px;
+        padding-right   : 5px;
+        /*display       : flex;*/
+        /*flex-direction: row;*/
+        display         : none;
+        top             : 0;
+        right           : 0;
+        z-index         : 10;
+    }
+
+    &:hover {
+        background-color: #f0f2f5;
+
+        .messageActions {
+            display       : flex;
+            flex-direction: row;
+        }
+    }
+}
+
+.deleteButton a {
+    color      : red;
+    font-weight: bold;
+}
+
+.lobbySessionTab {
+    position                  : absolute;
+    z-index                   : 4;
+    border-right              : 1px solid #e7e7e7;
+    border-top                : 1px solid #e7e7e7;
+    border-bottom             : 1px solid #e7e7e7;
+    background-color          : #F8F8F8;
+    margin-top                : 10px;
+    padding                   : 4px;
+    border-top-right-radius   : 2px;
+    border-bottom-right-radius: 2px;
+    border-top-left-radius    : 2px;
+    border-bottom-left-radius : 2px;
+}
+
+.chatMessage p {
+    margin      : 0;
+    padding-left: 5px;
+}
+
+.roomDragger {
+    top             : 0;
+    right           : -10px;
+    bottom          : 0;
+    position        : absolute;
+    background-color: #DFE2E8;
+    width           : 10px;
+    z-index         : 100;
+    cursor          : ew-resize;
+}
+
+.lobby-participant-list .activeBreakoutRoom {
+    text-indent: -22px;
+    padding    : 0 0 0 22px;
+}
+
+.collapsedChatDisplay {
+    display        : flex;
+    flex-direction : row;
+    width          : 100%;
+    justify-content: space-between;
+    align-items    : center;
+}
+
+.collapsedChatDisplay .userTag {
+    overflow     : hidden;
+    white-space  : nowrap;
+    text-overflow: ellipsis;
+}
+
+.collapsedChatDisplay .inlineactions {}
+
+.activeBreakoutRoom {
+    line-height  : 1;
+    padding      : 0;
+    font-size    : 2.2ex;
+    text-overflow: ellipsis;
+    /*overflow-y : auto;*/
+    /* overflow  :hidden; */
+}
+
+.smallButton {
+    padding    : 0;
+    margin-left: 5px;
+    line-height: 1;
+    height     : initial;
+}
+
+.activeRoomsList .ant-list-item {
+    padding-top   : 0;
+    padding-bottom: 0;
+    text-overflow : ellipsis;
+}
+
+.chat-unread-count {
+    /*height: 1em;*/
+}
+
+.personHoverable {}
+
+.personHoverable:hover {
+    background-color: white;
+}
+
+#channelChanger .ant-menu-inline>.ant-menu-submenu>.ant-menu-submenu-title {
+    font-weight  : bold;
+    line-height  : 1.1;
+    height       : auto;
+    border-bottom: 1px solid #2A3746;
+}
+
+#rightPopout .ant-menu-inline>.ant-menu-submenu>.ant-menu-submenu-title {
+    line-height: 1.1;
+    height     : auto;
+}
+
+#sidepopoutcontainer .ant-menu-inline>.ant-menu-submenu>.ant-menu-submenu-title {
+    line-height: 1.1;
+    height     : auto;
+}
+
+.chatLink {
+    color: #379FFF;
+}
+
+.chatLink:hover {
+    cursor          : pointer;
+    color           : black;
+    background-color: #8cc8ff;
+}
+
+.slido {
+    height: 500px;
+    width : 100%;
+}
+
+#rightPopout .ant-menu-sub.ant-menu-inline>.ant-menu-item {
+    line-height: 1.1;
+    height     : auto;
+}
+
+#sidepopoutcontainer .ant-menu-sub.ant-menu-inline>.ant-menu-item {
+    line-height: 1.1;
+    height     : auto;
+}
+
+.dragIconMiddle {
+    color           : white;
+    top             : calc(50vh - 20px);
+    display         : inline-block;
+    /*padding       : 3px;*/
+    right           : -10px;
+    padding-top     : 1px;
+    z-index         : 101;
+    font-family     : FontAwesome !important;
+    background-color: #97a7b7;
+    font-weight     : bold;
+    font-size       : 2em;
+    height          : 40px;
+    width           : 10px;
+    position        : absolute;
+}
+
+.dragIconMiddle:hover {
+    background-color: #138A07;
+}
+
+.dragIconTop {
+    background-color: #97a7b7;
+    top             : 25vh;
+    right           : 3px;
+    z-index         : 101;
+    position        : absolute;
+}
+
+.dragIconBottom {
+    background-color: red;
+    top             : 75vh;
+    right           : 3px;
+    z-index         : 101;
+    position        : absolute;
+}
+
+.activeRoomsTab {
+    /*position:relative;*/
+    /*min-width: 10px;*/
+}
+
+.activeRoomsSider {}
+
+.dragIconMiddle svg {
+    position: absolute;
+    left    : -7px;
+}
+
+.collapseIcon {
+    width : 5px;
+    height: 20px;
+}
+
+.overflowHelper {
+    text-align: right;
+}
+
+.dragIconMiddleRight svg {
+    position: absolute;
+    left    : -7px;
+}
+
+.dragIconMiddleRight {
+    color           : white;
+    top             : calc(50vh - 20px);
+    display         : inline-block;
+    /*padding       : 3px;*/
+    left            : 0px;
+    padding-top     : 1px;
+    z-index         : 101;
+    font-family     : FontAwesome !important;
+    background-color: #97a7b7;
+    font-weight     : bold;
+    font-size       : 2em;
+    height          : 40px;
+    width           : 10px;
+    position        : absolute;
+}
+
+.dragIconMiddleRight:hover {
+    background-color: #138A07;
+}
+
+.roomDraggerRight {
+    top             : 0;
+    left            : 0;
+    bottom          : 0;
+    position        : absolute;
+    background-color: #DFE2E8;
+    width           : 10px;
+    z-index         : 100;
+    cursor          : ew-resize;
+}
+
+.chatIdentitySidebar {
+    /* font-weight: bold; */
+    /* font-size: 16px;*/
+    text-align: center;
+}
+
+.chatTab {
+    height          : 100%;
+    display         : flex;
+    flex-direction  : column;
+    background-color: #FAFAFA;
+    /*position      : fixed;*/
+    /*bottom        : 0;*/
+    /*right         : 0;*/
+    overflow-y      : hidden;
+}
+
+#activeUsersList {
+    overflow-y: scroll;
+}
+
+#sidebarChat {
+    overflow-y    : hidden;
+    display       : flex;
+    flex-direction: column;
+    flex          : 1;
+}
+
+.activeRoomsTab {
+    height: 100%;
+    width : 100%;
+}
+
+.ant-form-inline .ant-form-item,
+.aclSelector {
+    flex     : initial;
+    flex-wrap: initial;
+}
+
+.personFiltered {}
+
+.chatChannelID {}
+
+.App {
+    display       : flex;
+    flex-direction: column;
+    height        : 100vh;
+}
+
+span.availabilityOption {
+    display: none;
+}
+
+div.availabilityOptionsOpen {
+    /*width: 200px;*/
+}
+
+div.availabilityOptionsOpen span.availabilityOption {
+    display: inline;
+}
+
+#statusForm .ant-form-item {
+    padding: 0;
+    margin : 0;
+}
+
+#bottom-chat-container {
+    /*position: fixed;*/
+    /*bottom: 0;*/
+    /*height: 25px;*/
+}
+
+#bottom-chat-button-bar {
+    overflow-x    : hidden;
+    display       : flex;
+    flex-direction: row-reverse;
+    position      : relative;
+}
+
+.bottomChatWindowContainer .ant-btn {
+    min-width   : 100px;
+    margin-left : 2px;
+    margin-right: 2px;
+}
+
+.chatIdentitySidebar {
+    color           : black;
+    background-color: #d6e4ff;
+}
+
+.chatButtonCollapsed {
+    text-overflow: ellipsis;
+    width        : 238px;
+    overflow     : hidden;
+}
+
+.chatButtonExpanded {
+    width   : 238px;
+    overflow: hidden;
+}
+
+.embeddedChatFrame {
+    background-color: #FAFAFA;
+    bottom          : 0;
+    width           : 100%;
+    height          : 100%;
+    flex-direction  : column;
+    display         : flex;
+}
+
+.embeddedChatListContainer {
+    align-items   : flex-start;
+    align-content : flex-start;
+    overflow-y    : auto;
+    display       : flex;
+    flex-direction: column-reverse;
+    overflow-wrap : break-word;
+    /*position    : relative;*/
+    /*bottom      :40px;*/
+    /*max-height  : 30px;*/
+    flex-grow     : 100;
+    flex-shrink   : 100;
+    width         : 100%;
+    /*position    : fixed;*/
+    /*bottom      : 50px;*/
+}
+
+.embeddedChatMessage {
+    width     : 100%;
+    box-sizing: border-box;
+}
+
+.bottomChatWindow {
+    position      : fixed;
+    width         : 240px;
+    height        : 400px;
+    bottom        : 0;
+    border        : 2px solid #1890FF;
+    display       : flex;
+    flex          : 1 1 auto;
+    flex-direction: column;
+    box-sizing    : border-box;
+}
+
+.bottomChatWindowCollapsed {
+    display: none;
+}
+
+.embeddedChatMessageEntry {
+    /*position: relative;*/
+    /*bottom: 0;*/
+    width    : 100%;
+    flex-grow: 1;
+}
+
+.chatMessageContainer {
+    flex-direction  : column-reverse;
+    padding         : 5px;
+    background-color: #fafafa;
+}
+
+.bottomChatHeaderItems {
+    display: flex;
+}
+
+.bottomChatHeader {
+    /* background-color: #1890FF;  */
+    background-color: #d6e4ff;
+    /* BCP          : check */
+    border-bottom   : 1px solid #6666;
+    /*flex          : 1 1 5%;*/
+    flex-grow       : 1;
+    /*max-height    : 2em;*/
+}
+
+.highlightedTags>.ant-tag {
+    padding-left : 1px;
+    padding-right: 1px;
+    line-height  : 1.1;
+    font-size    : 0.75em;
+}
+
+.userDisplay {
+    width: 100%;
+
+    &:hover {
+        cursor          : pointer;
+        background-color: #8cc8ff;
+    }
+
+    .userName {
+        color: black;
+    }
+}
+
+.presenceDesc {}
+
+.bottomEmbeddedChatFrame {}
+
+.userPopover {
+    max-width: 700px;
+}
+
+.bottomChatIdentity {
+    background-color: #d6e4ff;
+    color           : black;
+    padding-left    : 2px;
+    flex-grow       : 2;
+    /* font-weight  :bolder; */
+
+    a {
+        color: #0056b3;
+    }
+
+    a:hover {
+        color: #030852;
+    }
+}
+
+.programContainer {
+    display       : flex;
+    flex-direction: column;
+
+    .program-programDay {
+        display       : flex;
+        flex-direction: row;
+    }
+
+    .sessionTimeBandContainer {
+        display       : flex;
+        flex-direction: row;
+    }
+
+    .programSession {
+        display       : flex;
+        flex-direction: row;
+    }
+}
+
+.program-programDay .day {
+    min-width: 100px;
+}
+
+td.ant-table-cell {
+    &.program-table-date {
+        white-space   : nowrap;
+        vertical-align: top;
+    }
+
+    &.program-table-timeBand {
+        white-space: nowrap
+    }
+
+    &.program-table-programItem {
+        padding: 2px;
+    }
+}
+
+#sidepopoutcontainer .social-sidebar-divider {
+    margin          : 0;
+    background-color: #d6e4ff;
+    border          : 0;
+}
+
+.social-sidebar-divider {
+    margin          : 0;
+    background-color: #d6e4ff;
+    border          : 0;
+
+    a {
+        color: black;
+    }
+
+    &.ant-divider-horizontal.ant-divider-with-text {
+        margin: 0;
+    }
+
+    .ant-divider-inner-text {
+        color: black;
+    }
+}
+
+.sidebar-section-separator {
+    height          : 2px;
+    background-color: #198fff;
+    /* BCP          : unused now, I think? */
+    margin          : 0;
+}
+
+span.ant-divider-inner-text {
+    color : #0264c1;
+    /* BCP: Not sure what this does */
+}
+
+/* For Mobile */
+
+@media screen and (max-width: 540px) {
+    .lobby-participant-list {
+        column-fill : balance;
+        column-count: 2;
+    }
+}
+
+/* For Tablets */
+
+@media screen and (min-width: 540px) and (max-width: 1200px) {
+    .lobby-participant-list {
+        column-fill : balance;
+        column-count: 3;
+    }
+}
+
+/* For Bigger screens */
+
+@media screen and (min-width: 1200px) {
+    .lobby-participant-list {
+        column-fill : balance;
+        column-count: 3;
+    }
+}
+
+.lobby-participant-item {
+    margin-bottom: 0;
+    max-width    : 400px;
+    min-width    : 250px;
+    flex         : 1;
+}
+
+.new-breakout-room-button {
+    text-align   : center;
+    margin-bottom: 20px;
+}
+
+.lobby-section-header {
+    font-size    : 2.0em;
+    text-align   : left;
+    margin-top   : 10px;
+    margin-bottom: 10px;
+}
+
+.dmButton {
+    margin-top   : 10px;
+    align        : center;
+    margin-bottom: 3px;
+}
+
+.filterOptions .ant-tag-checkable:not(.ant-tag-checkable-checked) {
+    border: 1px solid #d9d9d9;
+}
+
+.programStarNotStarred {
+    color: #ffc53d;
+
+    &:hover {
+        color         : #ffc53d;
+        -webkit-filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, .4));
+        filter        : drop-shadow(1px 2px 1px rgba(0, 0, 0, .4));
+    }
+}
+
+.programStarStarred {
+    color: #d48806;
+}
+
+.text-indented {
+    margin-left: 22px;
+    text-indent: -22px;
+}
+
+.program-collapse {
+    &>.ant-collapse-item>.ant-collapse-header {
+        padding-bottom: 0;
+        padding-top   : 0;
+    }
+}
+
+.ant-collapse>.ant-collapse-item>.ant-collapse-header {
+    padding-bottom: 2px;
+    padding-top   : 2px;
+}
+
+.program-collapse>.ant-collapse-item>.ant-collapse-content>.ant-collapse-content-box {
+    padding-top   : 0;
+    padding-bottom: 0;
+    padding-left  : 4px;
+    padding-right : 4px;
+}
+
+.program-session-collapse {
+    &>.ant-collapse-item {
+        &>.ant-collapse-header {
+            padding-bottom: 0;
+            padding-top   : 0;
+        }
+
+        &>.ant-collapse-content>div.ant-collapse-content-box {
+            padding-top   : 0;
+            padding-bottom: 0;
+        }
+    }
+}
+
+.leave-zoom-button {
+    position: absolute;
+    right   : 0;
+}
+
+.multiChatWindow {
+    background-color: white;
+    /*   border     : 2px solid #1890FF; */
+    /* BCP          : Changed (I think this looks right) */
+    border          : 2px solid #d6e4ff;
+    display         : flex;
+    flex-direction  : column;
+    box-sizing      : border-box;
+    height          : 100%;
+    width           : 100%;
+}
+
+.multiChatWindowHeader {
+    /* background-color: #1890FF; */
+    background-color: #d6e4ff;
+    color           : black;
+    /* font-weight  : bold; */
+    font-size       : 16px;
+    text-align      : center;
+
+    button.ant-btn-primary {
+        background-color: #d6e4ff;
+        text-shadow     : none;
+        border          : none;
+        color           : black;
+    }
+
+    button.ant-btn-primary:hover {
+        background-color: #597ef7;
+        border          : none;
+        color           : black;
+    }
+
+    .title {
+        float: left;
+    }
+
+    .actions {
+        float: right;
+    }
+}
+
+.multiChatWindowContent {
+    display       : flex;
+    flex          : 1 1 auto;
+    flex-grow     : 4;
+    flex-direction: row;
+    overflow      : hidden;
+    height        : 100%;
+}
+
+.multiChatChannelChanger {
+    min-width: 200px;
+    max-width: 200px;
+    flex-grow: 1;
+    height   : 100%;
+}
+
+.multiChatWindowChatArea {
+    background-color: #FAFAFA;
+    /*width         : 100%;*/
+    /*height        : 100%;*/
+    flex-grow       : 4;
+    height          : 100%;
+    overflow        : auto;
+    flex-direction  : column;
+    display         : flex;
+}
+
+.react-resizable {
+    position: relative;
+}
+
+.react-resizable-handle {
+    position           : absolute;
+    width              : 20px;
+    height             : 20px;
+    background-repeat  : no-repeat;
+    background-origin  : content-box;
+    box-sizing         : border-box;
+    background-image   : url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDYiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iNnB4Ij48ZyBvcGFjaXR5PSIwLjMwMiI+PHBhdGggZD0iTSA2IDYgTCAwIDYgTCAwIDQuMiBMIDQgNC4yIEwgNC4yIDQuMiBMIDQuMiAwIEwgNiAwIEwgNiA2IEwgNiA2IFoiIGZpbGw9IiMwMDAwMDAiLz48L2c+PC9zdmc+');
+    background-position: bottom right;
+    padding            : 0 3px 3px 0;
+}
+
+.react-resizable-handle-sw {
+    bottom   : 0;
+    left     : 0;
+    cursor   : sw-resize;
+    transform: rotate(90deg);
+}
+
+.react-resizable-handle-se {
+    bottom: 0;
+    right : 0;
+    cursor: se-resize;
+}
+
+.react-resizable-handle-nw {
+    top      : 0;
+    left     : 0;
+    cursor   : nw-resize;
+    transform: rotate(180deg);
+}
+
+.react-resizable-handle-ne {
+    top      : 0;
+    right    : 0;
+    cursor   : ne-resize;
+    transform: rotate(270deg);
+}
+
+.react-resizable-handle-w,
+.react-resizable-handle-e {
+    top       : 50%;
+    margin-top: -10px;
+    cursor    : ew-resize;
+}
+
+.react-resizable-handle-w {
+    left     : 0;
+    transform: rotate(135deg);
+}
+
+.react-resizable-handle-e {
+    right    : 0;
+    transform: rotate(315deg);
+}
+
+.react-resizable-handle-n,
+.react-resizable-handle-s {
+    left       : 50%;
+    margin-left: -10px;
+    cursor     : ns-resize;
+}
+
+.react-resizable-handle-n {
+    top      : 0;
+    transform: rotate(225deg);
+}
+
+.react-resizable-handle-s {
+    bottom   : 0;
+    transform: rotate(45deg);
+}
+
+.hiddenChat {
+    display: none;
+}
+
+.visibleChat {
+    /*position:fixed;*/
+    width         : 100%;
+    height        : 100%;
+    bottom        : 0;
+    /* border     : 2px solid #1890FF; */
+    border        : 2px solid #d6e4ff;
+    display       : flex;
+    flex          : 1 1 auto;
+    flex-direction: column;
+    box-sizing    : border-box;
+}
+
+#channelChanger {
+    height    : 100%;
+    overflow-y: auto;
+
+    .ant-menu-sub.ant-menu-inline>.ant-menu-item {
+        line-height: 1.1;
+        height     : auto;
+    }
+}
+
+.small-icon-button {}
+
+.expandableProgramSummaryLive .summaryProgramItem-past a,
+.expandableProgramSummaryLive .summaryProgramItem-future a {
+    color     : #adc6ff;
+    font-style: italic;
+}
+
+.Resizer {
+    background             : #000;
+    opacity                : 0.2;
+    z-index                : 1;
+    -moz-box-sizing        : border-box;
+    -webkit-box-sizing     : border-box;
+    box-sizing             : border-box;
+    -moz-background-clip   : padding;
+    -webkit-background-clip: padding;
+    background-clip        : padding-box;
+
+    &:hover {
+        -webkit-transition: all 2s ease;
+        transition        : all 2s ease;
+    }
+
+    &.horizontal {
+        height       : 11px;
+        margin       : -5px 0;
+        border-top   : 5px solid rgba(255, 255, 255, 0);
+        border-bottom: 5px solid rgba(255, 255, 255, 0);
+        cursor       : row-resize;
+        width        : 100%;
+
+        &:hover {
+            border-top   : 5px solid rgba(0, 0, 0, 0.5);
+            border-bottom: 5px solid rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    &.vertical {
+        width       : 11px;
+        margin      : 0 -5px;
+        border-left : 5px solid #cccccc;
+        border-right: 5px solid #cccccc;
+        cursor      : col-resize;
+
+        &:hover {
+            border-left : 5px solid rgba(0, 0, 0, 0.5);
+            border-right: 5px solid rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    &.disabled {
+        cursor: not-allowed;
+
+        &:hover {
+            border-color: transparent;
+        }
+    }
+}
+
+.middlePane {
+    height: 100%;
+}
+
+.page-content {
+    padding : 5px;
+    overflow: auto;
+    height  : 100%;
+}
+
+.sessionListItem {
+    padding: 0;
+}
+
+.chat-search {
+    width: 100%;
+}
+
+#sidepopoutcontainer {
+    height: 100%;
+}
+
+#contextualActiveUsers {
+    height: 100%;
+}
+
+#socialTabContainer {
+    height        : 100%;
+    overflow      : hidden;
+    display       : flex;
+    flex-direction: column;
+}
+
+#upcomingProgramContainer {
+    overflow-y    : hidden;
+    height        : 100%;
+    display       : flex;
+    flex-direction: column;
+}
+
+#upcomingProgram {
+    overflow-y: scroll;
+    height    : 100%;
+}
+
+.programTime {
+    background-color: #efefef;
+    text-align      : center;
+}
+
+.program-item-display {
+    padding-left : 3px;
+    padding-right: 3px;
+}
+
+.summaryProgramEvent-past {
+    a {
+        color: #1890ff;
+
+        &:hover {
+            color: #2998FF;
+        }
+    }
+}
+
+.summaryProgramEvent-live {
+    background-color: #2f54eb;
+    border-bottom   : 2px solid white;
+
+    .summaryProgramEvent-live a {
+        color: white;
+    }
+}
+
+.program-scroll-button {}
+
+.icon-text {
+    font-size: xx-small;
+}
+
+.reactionWrapper {
+    /*padding: 0 10px 5px;*/
+    /*border-bottom: 1px solid #dcdcdc;*/
+    display       : flex;
+    flex-direction: row;
+    flex-wrap     : wrap;
+    width         : 100%;
+
+    &>.ant-tag {
+        border-radius   : 10px;
+        color           : black;
+        background-color: #CFCFCF;
+
+        &>button {
+            height: 15px;
+        }
+
+        &>span {
+            height: 15px;
+        }
+    }
+
+    &>.ant-tag-checkable-checked {
+        background-color: #E8F5FA;
+        border-color    : #1A8BBB;
+    }
+}
+
+.emojiReact-mine {}
+
+.reaction-number {
+    width          : 10px;
+    height         : 10px;
+    /*margin-bottom: 2.5px;*/
+}
+
+.bottomChatClose button {
+    /* color: white; */
+    color: gray;
+
+    &:hover {
+        color: #E8F5FA;
+    }
+}
+
+#messageReactionPicker {
+    z-index : 1000;
+    position: absolute;
+}
+
+.notifications .ant-tag {
+    border-radius   : 5px;
+    background-color: #fc858b;
+    color           : white;
+    border          : none;
+
+    .ant-badge {
+        padding-right   : 5px;
+        /*padding-top   : 4px;*/
+        /*padding-bottom: 4px;*/
+    }
+}
+
+.ant-badge-count {
+    background-color: #fc858b;
+}
+
+/*
+.notifications .ant-tag .ant-badge-count{
+    background-color: #ff9ca1;
+}
+*/
+
+.chatEntryWrapper {
+    display       : flex;
+    flex-direction: row;
+
+    &>.ant-row {
+        margin-bottom: 0;
+        flex-grow    : 10;
+    }
+}
+
+.emojiPickerButton {
+    padding: 5px;
+}

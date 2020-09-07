@@ -8,7 +8,7 @@ import Lobby from "./components/Lobby"
 import SignIn from "./components/SignIn"
 import AccountFromToken from "./components/Account/AccountFromToken"
 import { UploadOutlined } from '@ant-design/icons';
-import './App.css';
+import './App.scss';
 import LinkMenu from "./components/linkMenu";
 import SignOut from "./components/SignOut";
 import Moderation from "./components/Moderation";
