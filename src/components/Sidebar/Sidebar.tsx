@@ -1,6 +1,6 @@
 import React from 'react';
 import './Sidebar.scss';
-import { useConference } from '../../hooks/useConference';
+import useConference from '../../hooks/useConference';
 
 interface ISidebarProps {
 }

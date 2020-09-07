@@ -14,8 +14,9 @@ import { ZoomHostAccountFields } from '../DBSchema/ZoomHostAccount';
 import { ZoomRoomFields } from '../DBSchema/ZoomRoom';
 import { objectKeys } from '../Util';
 import { Base } from '../Data/Base';
-import { ProgramItem, ProgramSessionEvent, ProgramSession, ProgramTrack, ProgramRoom, ProgramPerson, UserProfile, AttachmentType, MeetingRegistration, ZoomHostAccount, ZoomRoom, Conference } from '../Data';
+import { ProgramItem, ProgramSessionEvent, ProgramSession, ProgramTrack, ProgramRoom, ProgramPerson, UserProfile, AttachmentType, MeetingRegistration, ZoomHostAccount, ZoomRoom, Conference, User } from '../Data';
 import { ConferenceFields } from '../DBSchema/Conference';
+import { UserFields } from '../DBSchema/User';
 
 // IMPORTANT: Whenever changes are made to the schema, the version number should
 //            be increased.
@@ -66,6 +67,11 @@ export default interface IDBSchema extends DBSchema {
         key: string;
     }
 
+    User: {
+        value: Schemas.User;
+        key: string;
+    }
+
     UserProfile: {
         value: Schemas.UserProfile;
         key: string;
@@ -100,6 +106,7 @@ export type IDBSchemaUnion
     | Schemas.ProgramTrack
     | Schemas.ProgramRoom
     | Schemas.ProgramPerson
+    | Schemas.User
     | Schemas.UserProfile
     | Schemas.AttachmentType
     | Schemas.MeetingRegistration
@@ -114,6 +121,7 @@ export const IDBStoreSpecs: Record<StoreNames<IDBSchema>, string[]> = {
     ProgramTrack: ProgramTrackFields,
     ProgramRoom: ProgramRoomFields,
     ProgramPerson: ProgramPersonFields,
+    User: UserFields,
     UserProfile: UserProfileFields,
     AttachmentType: AttachmentTypeFields,
     MeetingRegistration: MeetingRegistrationFields,
@@ -134,6 +142,7 @@ export const IDBStoreDataConstructors: {
     ProgramTrack: ProgramTrack,
     ProgramRoom: ProgramRoom,
     ProgramPerson: ProgramPerson,
+    User: User,
     UserProfile: UserProfile,
     AttachmentType: AttachmentType,
     MeetingRegistration: MeetingRegistration,
