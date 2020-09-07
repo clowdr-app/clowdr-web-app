@@ -1,8 +1,19 @@
 import Parse, { LiveQueryClient, LiveQuerySubscription } from "parse";
-import ClowdrInstance from "../../classes/ClowdrInstance";
-import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
-import ProgramRoom from "../../classes/ProgramRoom";
 import { ParseObject } from "../../Util";
+import {
+    ClowdrInstance,
+    ProgramSessionEvent,
+    ProgramRoom,
+    ProgramItem,
+    ProgramSession,
+    ProgramTrack,
+    ProgramPerson,
+    UserProfile,
+    AttachmentType,
+    ZoomHostAccount,
+    ZoomRoom,
+    MeetingRegistration
+} from "../../classes/ParseObjects";
 
 // TODO: This should be made into a generic cache class parameterised by the
 //       type of the thing it stores. Then have multiple caches for the various
@@ -34,7 +45,7 @@ export default class ProgramCache {
         this.getEntireProgram();
     }
 
-    async _fetchTableAndSubscribe(tableName: string, objToSetStateOnUpdate?: React.Component) {
+    async _fetchTableAndSubscribe<T extends ParseObject>(tableName: string, objToSetStateOnUpdate?: React.Component): Promise<T[]> {
         if (objToSetStateOnUpdate) {
             if (!this._listSubscribers[tableName])
                 this._listSubscribers[tableName] = [];
@@ -73,9 +84,10 @@ export default class ProgramCache {
                     }
                 }
             });
-            sub.on("update", async (obj) => {
-                if (obj.get("attachments") && obj.get("attachments").length > 0) {
-                    await Parse.Object.fetchAllIfNeeded(obj.get("attachments"));
+            sub.on("update", async (obj: Parse.Object | ProgramItem) => {
+                if ("attachments" in obj &&
+                    obj.attachments.length > 0) {
+                    await Parse.Object.fetchAllIfNeeded(obj.attachments);
                 }
                 this._data[tableName] = this._data[tableName].map(v => v.id === obj.id ? obj : v);
 
@@ -112,7 +124,7 @@ export default class ProgramCache {
         return await this._dataPromises[tableName];
     }
 
-    async getProgramItem(id: string, component?: React.Component): Promise<ParseObject> {
+    async getProgramItem(id: string, component?: React.Component): Promise<ProgramItem | undefined> {
         await this.getProgramItems();
         if (component) {
             if (!this._updateSubscribers['ProgramItem'])
@@ -121,10 +133,9 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramItem'][id] = [];
             this._updateSubscribers['ProgramItem'][id].push(component);
         }
-        return this._dataById['ProgramItem'][id];
+        return this._dataById['ProgramItem'][id] as (ProgramItem | undefined);
     }
-
-    async getProgramSessionEvent(id: string, component?: React.Component) {
+    async getProgramSessionEvent(id: string, component?: React.Component): Promise<ProgramSessionEvent> {
         await this.getProgramSessionEvents();
         if (component) {
             if (!this._updateSubscribers['ProgramSessionEvent'])
@@ -133,13 +144,13 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramSessionEvent'][id] = [];
             this._updateSubscribers['ProgramSessionEvent'][id].push(component);
         }
-        return this._dataById['ProgramSessionEvent'][id];
+        return this._dataById['ProgramSessionEvent'][id] as ProgramSessionEvent;
     }
-    async getProgramSession(id: string) {
+    async getProgramSession(id: string): Promise<ProgramSession | undefined> {
         await this.getProgramSessions();
-        return this._dataById['ProgramSession'][id];
+        return this._dataById['ProgramSession'][id] as (ProgramSession | undefined);
     }
-    async getProgramTrack(id: string, component?: React.Component) {
+    async getProgramTrack(id: string, component?: React.Component): Promise<ProgramTrack | undefined> {
         await this.getProgramTracks();
         if (component) {
             if (!this._updateSubscribers['ProgramTrack'])
@@ -148,12 +159,12 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramTrack'][id] = [];
             this._updateSubscribers['ProgramTrack'][id].push(component);
         }
-        return this._dataById['ProgramTrack'][id];
+        return this._dataById['ProgramTrack'][id] as (ProgramTrack | undefined);
     }
 
-    async getProgramItemByConfKey(confKey: string, component?: React.Component) {
+    async getProgramItemByConfKey(confKey: string, component?: React.Component): Promise<ProgramItem | undefined> {
         let items = await this.getProgramItems();
-        let item = items.find((v: any) => v.get("confKey") === confKey);
+        let item = items.find((v: any) => v.confKey === confKey);
         if (item) {
             let id = item.id;
             if (component) {
@@ -166,7 +177,7 @@ export default class ProgramCache {
         }
         return item;
     }
-    subscribeComponentToIDOnTable(table: string, id: string, component?: React.Component) {
+    subscribeComponentToIDOnTable(table: string, id: string, component?: React.Component): void {
         if (component) {
             if (!this._updateSubscribers[table])
                 this._updateSubscribers[table] = {};
@@ -175,7 +186,7 @@ export default class ProgramCache {
             this._updateSubscribers[table][id].push(component);
         }
     }
-    async getProgramRoom(roomID: string, component?: React.Component) {
+    async getProgramRoom(roomID: string, component?: React.Component): Promise<ProgramRoom | undefined> {
         let rooms = await this.getProgramRooms();
         let room = rooms.find((v: any) => v.id === roomID);
         if (room) {
@@ -183,7 +194,7 @@ export default class ProgramCache {
         }
         return room;
     }
-    async getProgramPersonByID(personID: string, component?: React.Component) {
+    async getProgramPersonByID(personID: string, component?: React.Component): Promise<ProgramPerson | undefined> {
         let persons = await this.getProgramPersons();
         let person = persons.find((v: any) => v.id === personID);
         if (person) {
@@ -192,7 +203,7 @@ export default class ProgramCache {
         return person;
     }
 
-    async getUserProfileByProfileID(id: string, component?: React.Component) {
+    async getUserProfileByProfileID(id: string, component?: React.Component): Promise<UserProfile | undefined> {
         await this.getUserProfiles();
         if (component) {
             if (!this._updateSubscribers['UserProfile'])
@@ -201,13 +212,13 @@ export default class ProgramCache {
                 this._updateSubscribers['UserProfile'][id] = [];
             this._updateSubscribers['UserProfile'][id].push(component);
         }
-        return this._dataById['UserProfile'][id];
+        return this._dataById['UserProfile'][id] as (UserProfile | undefined);
     }
 
     /**
      *  Used when we want the data to be fetched but don't want to wait for it.
      */
-    failFast_GetUserProfileByProfileID(id: string, component?: React.Component): ParseObject | null {
+    failFast_GetUserProfileByProfileID(id: string, component?: React.Component): UserProfile | undefined {
         this.getUserProfiles();
         if (component) {
             if (!this._updateSubscribers['UserProfile'])
@@ -216,51 +227,51 @@ export default class ProgramCache {
                 this._updateSubscribers['UserProfile'][id] = [];
             this._updateSubscribers['UserProfile'][id].push(component);
         }
-        return this._dataById['UserProfile'][id] || null;
+        return this._dataById['UserProfile'][id] as (UserProfile | undefined);
     }
 
-    async getUserProfiles(objToSetStateOnUpdate?: React.Component) {
+    async getUserProfiles(objToSetStateOnUpdate?: React.Component): Promise<UserProfile[]> {
         return this._fetchTableAndSubscribe("UserProfile", objToSetStateOnUpdate);
     }
-    async getAttachmentTypes(objToSetStateOnUpdate?: React.Component) {
+    async getAttachmentTypes(objToSetStateOnUpdate?: React.Component): Promise<AttachmentType[]> {
         return this._fetchTableAndSubscribe("AttachmentType", objToSetStateOnUpdate);
     }
-    async getProgramRooms(objToSetStateOnUpdate?: React.Component) {
+    async getProgramRooms(objToSetStateOnUpdate?: React.Component): Promise<ProgramRoom[]> {
         return this._fetchTableAndSubscribe("ProgramRoom", objToSetStateOnUpdate);
     }
-    async getProgramTracks(objToSetStateOnUpdate?: React.Component) {
+    async getProgramTracks(objToSetStateOnUpdate?: React.Component): Promise<ProgramTrack[]> {
         return this._fetchTableAndSubscribe("ProgramTrack", objToSetStateOnUpdate);
     }
-    async getProgramPersons(objToSetStateOnUpdate?: React.Component) {
+    async getProgramPersons(objToSetStateOnUpdate?: React.Component): Promise<ProgramPerson[]> {
         return this._fetchTableAndSubscribe("ProgramPerson", objToSetStateOnUpdate);
     }
-    async getProgramItems(objToSetStateOnUpdate?: React.Component) {
+    async getProgramItems(objToSetStateOnUpdate?: React.Component): Promise<ProgramItem[]> {
         return this._fetchTableAndSubscribe("ProgramItem",
             // ['track','breakoutRoom','programSession'],
             objToSetStateOnUpdate);
     }
-    async getProgramSessionEvents(objToSetStateOnUpdate?: React.Component) {
+    async getProgramSessionEvents(objToSetStateOnUpdate?: React.Component): Promise<ProgramSessionEvent[]> {
         return this._fetchTableAndSubscribe("ProgramSessionEvent",
             objToSetStateOnUpdate);
     }
-    async getProgramSessions(objToSetStateOnUpdate?: React.Component) {
+    async getProgramSessions(objToSetStateOnUpdate?: React.Component): Promise<ProgramSession[]> {
         return this._fetchTableAndSubscribe("ProgramSession", objToSetStateOnUpdate);
     }
-    async getZoomHostAccounts(objToSetStateOnUpdate?: React.Component) {
+    async getZoomHostAccounts(objToSetStateOnUpdate?: React.Component): Promise<ZoomHostAccount[]> {
         return this._fetchTableAndSubscribe("ZoomHostAccount", objToSetStateOnUpdate);
     }
-    async getZoomRooms(objToSetStateOnUpdate?: React.Component) {
+    async getZoomRooms(objToSetStateOnUpdate?: React.Component): Promise<ZoomRoom[]> {
         return this._fetchTableAndSubscribe("ZoomRoom", objToSetStateOnUpdate);
     }
-    async getMeetingRegistrations(objToSetStateOnUpdate?: React.Component) {
+    async getMeetingRegistrations(objToSetStateOnUpdate?: React.Component): Promise<MeetingRegistration[]> {
         return this._fetchTableAndSubscribe("MeetingRegistration", objToSetStateOnUpdate);
     }
-    async getProgramTrackByName(trackName: string) {
+    async getProgramTrackByName(trackName: string): Promise<ProgramTrack | undefined> {
         let tracks = await this.getProgramTracks();
-        return tracks.find((v: any) => v.get("name") === trackName);
+        return tracks.find((v: any) => v.name === trackName);
     }
 
-    async getZoomJoinLink(programRoom: ProgramRoom) {
+    async getZoomJoinLink(programRoom: ProgramRoom): Promise<string> {
         if (this._zoomLinks[programRoom.id]) {
             return this._zoomLinks[programRoom.id];
         }
@@ -271,20 +282,34 @@ export default class ProgramCache {
     This command can't support live query right now, since it would update all
     programItems, not just the ones in the requested track
      */
-    async getProgramItemsByTrackName(trackName: string) {
-        let [items, track] = await Promise.all([this.getProgramItems(),
-        this.getProgramTrackByName(trackName)])
-        return items.filter((item: any) => item.get("track") && item.get("track").id === track.id);
+    async getProgramItemsByTrackName(trackName: string): Promise<ProgramItem[]> {
+        let [items, track] = await Promise.all([
+            this.getProgramItems(),
+            this.getProgramTrackByName(trackName)
+        ]);
+        if (track) {
+            // Assist type inference
+            let t: ProgramTrack = track;
+            return items.filter((item: any) => item.track && item.track.id === t.id);
+        }
+        else {
+            return [];
+        }
     }
 
-    getProgramRoomForEvent(programSessionEvent: ProgramSessionEvent) {
-        let s = programSessionEvent.get("programSession");
-        let session = this._dataById["ProgramSession"][s.id];
-        let room = session.get("room");
-        return room;
+    getProgramRoomForEvent(programSessionEvent: ProgramSessionEvent): ProgramRoom | undefined {
+        let s = programSessionEvent.programSession;
+        let session = this._dataById["ProgramSession"][s.id] as ProgramSession | undefined;
+        return session?.room as (ProgramRoom | undefined);
     }
 
-    async getEntireProgram(objToSetStateOnUpdate?: React.Component) {
+    async getEntireProgram(objToSetStateOnUpdate?: React.Component): Promise<{
+        ProgramItems: ProgramItem[],
+        ProgramRooms: ProgramRoom[],
+        ProgramTracks: ProgramTrack[],
+        ProgramPersons: ProgramPerson[],
+        ProgramSessions: ProgramSession[]
+    }> {
         let results = await Promise.all([this.getProgramItems(objToSetStateOnUpdate),
         this.getProgramRooms(objToSetStateOnUpdate),
         this.getProgramTracks(objToSetStateOnUpdate),

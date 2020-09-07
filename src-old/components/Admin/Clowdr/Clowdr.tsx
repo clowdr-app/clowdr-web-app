@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { ClowdrState, EditableCellProps } from "../../../ClowdrTypes";
 import { Store } from 'antd/lib/form/interface';
+import { ClowdrInstance } from "../../../classes/ParseObjects";
 
 // TS: Since the "Props" and "State" interfaces are not exported, I
 // think iClowdStateter to simply name them Props and
@@ -23,9 +24,9 @@ interface AdminClowdrProps {
 interface AdminClowdrState {
     loading: boolean;
     initialized: boolean;
-    instances: Parse.Object[];
+    instances: ClowdrInstance[];
     searched: boolean;
-    searchResult: Parse.Object[];
+    searchResult: ClowdrInstance[];
     alert: string | undefined;
     visible: boolean
 }
@@ -50,10 +51,14 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
     }
 
     async refreshList() {
-        let query = new Parse.Query("ClowdrInstance");
+        let query = new Parse.Query<ClowdrInstance>("ClowdrInstance");
         let res = await query.find();
         console.log('[Admin/Clowdr]: Found ' + res.length + ' instances');
-        // res.map(v => v.key = v.get('key')); // Add a 'key' for the rows of the table
+        res.forEach((v) => {
+            // What a hack...lists must have keys
+            // @ts-ignore
+            v.key = v.id;
+        });
         this.setState({
             instances: res,
             loading: false
@@ -65,7 +70,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
 
     render() {
         // Set up editable table cell
-        const EditableCell: React.FC<EditableCellProps> = ({
+        const EditableCell: React.FC<EditableCellProps<ClowdrInstance>> = ({
             editing,
             dataIndex,
             title,
@@ -121,13 +126,13 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.instances);
             const [editingKey, setEditingKey] = useState('');
-            const isEditing = (record: Parse.Object): boolean => record.id === editingKey;
+            const isEditing = (record: ClowdrInstance): boolean => record.id === editingKey;
 
-            const edit = (record: Parse.Object): void => {
+            const edit = (record: ClowdrInstance): void => {
                 form.setFieldsValue({
-                    conferenceName: record.get("conferenceName") ? record.get("conferenceName") : "",
-                    adminName: record.get("adminName") ? record.get("adminName") : "",
-                    adminEmail: record.get("adminEmail") ? record.get("adminEmail") : ""
+                    conferenceName: record.conferenceName ? record.conferenceName : "",
+                    adminName: record.adminName ? record.adminName : "",
+                    adminEmail: record.adminEmail ? record.adminEmail : ""
                 });
                 setEditingKey(record.id)
             }
@@ -136,7 +141,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 setEditingKey('');
             };
 
-            const onActivate = (record: Parse.Object): void => {
+            const onActivate = (record: ClowdrInstance): void => {
                 let data = {
                     id: record.id
                 }
@@ -152,7 +157,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     });
             };
 
-            const onDelete = (record: Parse.Object): void => {
+            const onDelete = (record: ClowdrInstance): void => {
                 const newInstanceList = [...this.state.instances];
                 // delete from database
                 let data = {
@@ -176,18 +181,18 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 console.log("Entering save func");
                 try {
                     const row: Store = await form.validateFields();
-                    const newData: Parse.Object[] = [...data];
-                    let instance: Parse.Object | undefined = newData.find(i => i.id === id);
+                    const newData = [...data];
+                    let instance = newData.find(i => i.id === id);
                     if (instance) {
                         instance.set("conferenceName", row.conferenceName);
                         instance.set("adminName", row.adminName);
                         instance.set("adminEmail", row.adminEmail);
                         let data = {
                             id: instance.id,
-                            conferenceName: instance.get('conferenceName'),
-                            shortName: instance.get('conferenceName').replace(" ", ""),
-                            adminName: instance.get('adminName'),
-                            adminEmail: instance.get('adminEmail')
+                            conferenceName: instance.conferenceName,
+                            shortName: instance.conferenceName.replace(" ", ""),
+                            adminName: instance.adminName,
+                            adminEmail: instance.adminEmail
                         }
                         Parse.Cloud.run("update-clowdr-instance", data)
                             .then(() => {
@@ -203,7 +208,12 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                         setEditingKey('');
                     }
                     else {
-                        newData.push(row as Parse.Object);
+                        // TODO: This is completely unsafe - this will result in errors,
+                        // the logic around adding items needs fixing here. We should create
+                        // but not commit the new configuration, rather than storing the form
+                        // data directly
+                        // @ts-ignore
+                        newData.push(row);
                         setData(newData);
                         setEditingKey('');
                     }
@@ -218,12 +228,12 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     dataIndex: 'conferenceName',
                     editable: true,
                     width: '40%',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let valueA: string = a.get("conferenceName") ? a.get("conferenceName") : "";
-                        let valueB: string = b.get("conferenceName") ? b.get("conferenceName") : "";
+                    sorter: (a: ClowdrInstance, b: ClowdrInstance) => {
+                        let valueA: string = a.conferenceName ? a.conferenceName : "";
+                        let valueB: string = b.conferenceName ? b.conferenceName : "";
                         return valueA.localeCompare(valueB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("conferenceName")}</span>,
+                    render: (_: string, record: ClowdrInstance): JSX.Element => <span>{record.conferenceName}</span>,
                     key: 'conferenceName',
                 },
                 {
@@ -232,12 +242,12 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     key: 'adminName',
                     editable: true,
                     width: '30%',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let nameA: string = a.get("adminName") ? a.get("adminName") : "";
-                        let nameB: string = b.get("adminName") ? b.get("adminName") : "";
+                    sorter: (a: ClowdrInstance, b: ClowdrInstance) => {
+                        let nameA: string = a.adminName ? a.adminName : "";
+                        let nameB: string = b.adminName ? b.adminName : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("adminName")}</span>,
+                    render: (_: string, record: ClowdrInstance): JSX.Element => <span>{record.adminName}</span>,
                 },
                 {
                     title: 'Admin Email',
@@ -245,18 +255,18 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     key: 'adminEmail',
                     editable: true,
                     width: '20%',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let nameA: string = a.get("adminEmail") ? a.get("adminEmail") : "";
-                        let nameB: string = b.get("adminEmail") ? b.get("adminEmail") : "";
+                    sorter: (a: ClowdrInstance, b: ClowdrInstance) => {
+                        let nameA: string = a.adminEmail ? a.adminEmail : "";
+                        let nameB: string = b.adminEmail ? b.adminEmail : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("adminEmail")}</span>,
+                    render: (_: string, record: ClowdrInstance): JSX.Element => <span>{record.adminEmail}</span>,
                 },
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: Parse.Object): JSX.Element | null => {
-                        let active = record.get("isInitialized") ?
+                    render: (_: string, record: ClowdrInstance): JSX.Element | null => {
+                        let active = record.isInitialized ?
                             <CheckCircleTwoTone twoToneColor='#52c41a' title="This instance is activated" /> :
                             <Popconfirm
                                 title="Activate this CLOWDR instance?"
@@ -266,7 +276,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                             >
                                 <a title="This instance is not yet activated. Click to activate.">{<WarningTwoTone twoToneColor="#ff3333" />}</a>
                             </Popconfirm>
-                        let del = record.get("isInitialized") ? <></> :
+                        let del = record.isInitialized ? <></> :
                             <Popconfirm
                                 title="Delete this CLOWDR instance?"
                                 onConfirm={() => onDelete(record)}
@@ -316,7 +326,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 }
                 return {
                     ...col,
-                    onCell: (record: Parse.Object) => ({
+                    onCell: (record: ClowdrInstance) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -393,7 +403,10 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
 
         </tr></tbody></table>
 
-            <Input.Search
+            {/* TODO: Ed: This code is completely broken according to the type information
+                      It seems to be trying to access InstanceConfiguration stuff, but
+                      on ClowdrInstance objects?!
+             <Input.Search
                 allowClear
                 onSearch={key => {
                     if (key === "") {
@@ -404,13 +417,13 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                         this.setState({
                             searchResult: this.state.instances.filter(
                                 config =>
-                                    (config.get('key') && config.get('key').toLowerCase().includes(key.toLowerCase()))
-                                    || (config.get('value') && config.get('value').toLowerCase().includes(key.toLowerCase())))
+                                    (config.key && config.key.toLowerCase().includes(key.toLowerCase()))
+                                    || (config.value && config.value.toLowerCase().includes(key.toLowerCase())))
                         })
                     }
                 }
                 }
-            />
+            /> */}
             <EditableTable />
         </div>
     }

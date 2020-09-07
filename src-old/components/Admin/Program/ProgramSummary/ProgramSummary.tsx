@@ -9,21 +9,23 @@ import { RcFile, UploadChangeParam } from 'antd/lib/upload/interface';
 import momentTZ from 'moment-timezone';
 
 interface ProgramSummaryProps {
-    auth: ClowdrState,
+    auth: ClowdrState;
 }
 
+type ProgramUploadFormats = "conf-json" | "conf-xml" | "csv";
+
 interface ProgramSummaryState {
-    loading: boolean,
-    visible: boolean,
-    deleteLoading: boolean,
-    ProgramSessions: Parse.Object[],
-    ProgramItems: Parse.Object[],
-    ProgramTracks: Parse.Object[],
-    ProgramRooms: Parse.Object[],
-    ProgramPersons: Parse.Object[],
-    uploadLoading: boolean,
-    uploadTimezone: string,
-    uploadFormat: string
+    loading: boolean;
+    visible: boolean;
+    deleteLoading: boolean;
+    ProgramSessions: Parse.Object[];
+    ProgramItems: Parse.Object[];
+    ProgramTracks: Parse.Object[];
+    ProgramRooms: Parse.Object[];
+    ProgramPersons: Parse.Object[];
+    uploadLoading: boolean;
+    uploadTimezone: string;
+    uploadFormat: ProgramUploadFormats;
 }
 
 class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummaryState> {
@@ -205,14 +207,14 @@ class ProgramSummary extends React.Component<ProgramSummaryProps, ProgramSummary
                                 {label: "XML ('ACM DL') export from conf.researchr.org", value: "conf-xml"},
                                 {label: "JSON ('confero') export from conf.researchr.org", value: "conf-json"}]}
                             onChange={(val) => {
-                                this.setState({uploadFormat: val.toString()})
+                                this.setState({uploadFormat: val.toString() as ProgramUploadFormats})
                             }}></Select>
                     <Upload accept=".json, .xml, .csv" onChange={this.onChange.bind(this)} beforeUpload={this.beforeUpload.bind(this)}>
                         <Button loading={this.state.uploadLoading}>
                             <UploadOutlined /> Click to upload program data
                     </Button>
                     </Upload>
-                    <Popconfirm title={"Are you sure you want to delete the entire program? This can't be undone. Conference: " + this.currentConference.get("conferenceName")} onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
+                    <Popconfirm title={"Are you sure you want to delete the entire program? This can't be undone. Conference: " + this.currentConference.conferenceName} onConfirm={this.deleteProgram.bind(this)}><Button type="primary" danger loading={this.state.deleteLoading}>Delete entire program</Button></Popconfirm>
                 </Space>
                 <Table
                     columns={columns}

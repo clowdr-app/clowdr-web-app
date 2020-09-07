@@ -22,17 +22,20 @@ import { ChannelInfo } from "../../classes/ChatClient";
 import assert from "assert";
 import { intersperse } from "../../Util";
 
+type MessageAttributes = {
+    associatedMessage?: string
+};
+
 interface GroupedMessages {
     author: string;
-    timestamp: Date;
+    timestamp: number;
     messages: Message[];
     sid: string;
 }
 
 interface EmojiObject {
-    count: number;
     emojiMessage: Message | null;
-    authors: Array<string>;
+    authors: Set<string>;
 }
 
 const emojiSupport = (text: any) => <>{emojify(text.value, { output: 'unicode' })}</>;
@@ -93,7 +96,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
     dmOtherUser: string | null = null;
     isAnnouncements: boolean = false;
     unread: number = 0;
-    deferredGroupedMessages: { author: string; timestamp: Date; messages: Message[]; sid: string; }[] = [];
+    deferredGroupedMessages: GroupedMessages[] = [];
     deferredReactions: { [x: string]: { [y: string]: EmojiObject; }; } = {};
     count: number = 0;
     settingConsumedIdx: number = 0;
@@ -230,11 +233,11 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                 chanInfo.visibleComponents.push(this);
             this.dmOtherUser = null;
             if (chanInfo.attributes.mode === "directMessage") {
-                let p1 = chanInfo.conversation?.get("member1").id;
-                let p2 = chanInfo.conversation?.get("member2").id;
-                this.dmOtherUser = p1;
+                let p1 = chanInfo.conversation?.member1.id;
+                let p2 = chanInfo.conversation?.member2.id;
+                this.dmOtherUser = p1 || null;
                 if (this.props.appState.userProfile && p1 === this.props.appState.userProfile.id)
-                    this.dmOtherUser = p2;
+                    this.dmOtherUser = p2 || null;
             }
             let stateUpdate = {
                 chatLoading: false,
@@ -296,61 +299,86 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
         }
     }
 
-    groupMessages(messages: Array<Message>) {
-        let ret = [];
-        let reactions: { [x: string]: { [y: string]: EmojiObject } } = {};
-        let lastMessage = undefined;
-        if (!messages)
+    groupMessages(messages?: Array<Message> | null) {
+        if (!messages) {
             return;
-        let lastSID;
-        let lastIndex = -1;
+        }
+
+        let ret: Array<GroupedMessages> = [];
+        let reactions: { [x: string]: { [y: string]: EmojiObject } } = {};
+
+        const handleEmojiMessage = (message: Message, associatedMessage: string) => {
+            // Find or create the reaction group
+            let reactionGroup: { [x: string]: EmojiObject };
+            if (!reactions[associatedMessage]) {
+                reactionGroup = reactions[associatedMessage] = {};
+            }
+            else {
+                reactionGroup = reactions[associatedMessage];
+            }
+
+            let emojiId = message.body;
+            // Find or create the object for the particular emoji
+            let emojiObj: EmojiObject;
+            if (!reactionGroup[emojiId]) {
+                emojiObj = reactionGroup[emojiId] = { emojiMessage: null, authors: new Set() }
+            }
+            else {
+                emojiObj = reactionGroup[emojiId];
+            }
+
+            // Add the author to the set
+            emojiObj.authors.add(message.author);
+        };
+
+        let lastGroup: GroupedMessages | undefined = undefined;
+        let lastSID: string | undefined;
+        let lastIndex: number = -1;
 
         let authorIDs: { [x: string]: string } = {};
         for (let message of messages) {
-            if (lastSID && lastSID === message.sid) {
+            if (lastSID === message.sid) {
                 continue;
             }
             lastSID = message.sid;
             lastIndex = message.index;
-            let messageAttributes: any = message.attributes;
-            if (!lastMessage || (!messageAttributes.associatedMessage && (message.author !== lastMessage.author || moment(message.timestamp).diff(lastMessage.timestamp, 'minutes') > 5))) {
-                if (lastMessage)
-                    ret.push(lastMessage);
+            let messageAttributes: MessageAttributes = message.attributes;
+            if (!lastGroup || (!messageAttributes.associatedMessage && (message.author !== lastGroup.author || moment(message.timestamp).diff(lastGroup.timestamp, 'minutes') > 5))) {
+                if (lastGroup) {
+                    ret.push(lastGroup);
+                }
+
                 let authorID = message.author;
                 authorIDs[authorID] = authorID;
-                lastMessage = {
+
+                if (messageAttributes.associatedMessage) {
+                    // Emoji message
+                    handleEmojiMessage(message, messageAttributes.associatedMessage);
+                }
+
+                // Any kind of message
+                lastGroup = {
                     author: message.author,
-                    timestamp: message.timestamp,
+                    timestamp: message.timestamp.getTime(),
                     messages: messageAttributes.associatedMessage ? [] : [message],
                     sid: message.sid
                 };
             } else {
-
                 if (messageAttributes.associatedMessage) {
-                    let messageWithObj: { [x: string]: EmojiObject } = reactions[messageAttributes.associatedMessage] === undefined ? {} : reactions[messageAttributes.associatedMessage];
-                    let emojiObj: EmojiObject = messageWithObj[message.body] === undefined ? { count: 0, emojiMessage: null, authors: [] } : messageWithObj[message.body];
-
-                    if (!emojiObj.authors.includes(message.author)) {
-                        if (this.props.appState.userProfile && message.author === this.props.appState.userProfile.id) {
-                            let newCount = emojiObj.emojiMessage ? emojiObj.count : emojiObj.count + 1;
-                            emojiObj = { ...emojiObj, emojiMessage: message, count: newCount };
-                        } else {
-                            emojiObj = { ...emojiObj, count: emojiObj.count + 1 };
-                        }
-                        emojiObj.authors.push(message.author);
-                    }
-                    messageWithObj = { ...messageWithObj, [message.body]: emojiObj };
-                    reactions = { ...reactions, [messageAttributes.associatedMessage]: messageWithObj };
-
+                    // Emoji reaction message
+                    handleEmojiMessage(message, messageAttributes.associatedMessage);
                 } else {
-                    lastMessage.messages.push(message);
+                    // Normal message
+                    lastGroup.messages.push(message);
                 }
             }
         }
 
-        if (lastMessage)
-            ret.push(lastMessage);
-        let atLeastOneIsVisible = this.chanInfo && this.chanInfo.visibleComponents.length > 0;
+        if (lastGroup) {
+            ret.push(lastGroup);
+        }
+
+        let atLeastOneIsVisible: boolean = !!this.chanInfo && this.chanInfo.visibleComponents.length > 0;
         if ((this.props.visible || atLeastOneIsVisible) && lastIndex >= 0) {
             this.consumptionFrontier++;
             let idx = this.consumptionFrontier;
@@ -419,9 +447,11 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
         if (this.isAnnouncements) {
             //get the sender
             this.props.appState.programCache.getUserProfileByProfileID(message.author).then((profile) => {
+                assert(profile, "Message exists with an author that no longer exists - was the user deleted?");
+
                 const args = {
                     message:
-                        <span>Announcement from {profile.get("displayName")} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>
+                        <span>Announcement from {profile.displayName} @ <Tooltip mouseEnterDelay={0.5} title={moment(message.timestamp).calendar()}>
                             <span>{moment(message.timestamp).format('LT')}</span>
                         </Tooltip>
                         </span>,
@@ -829,17 +859,21 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                     <div className="reactionWrapper">
                         {
                             Object.keys(reactions).sort().map(emojiId => {
-                                if (this.state.reactions[m.sid][emojiId].count <= 0)
+                                if (this.state.reactions[m.sid][emojiId].authors.size === 0)
                                     return <></>;
                                 let hasMyReaction = this.state.reactions[m.sid][emojiId].emojiMessage;
                                 let tagClassname = (hasMyReaction ? "emojiReact-mine" : "emojiReact");
 
-                                let reactors: Array<string> = this.state.reactions[m.sid][emojiId].authors.map(id => {
-                                    return this.props.appState.programCache.failFast_GetUserProfileByProfileID(id)?.get("displayName");
-                                }).filter(x => x !== null);
+                                let reactors: Array<string> = [];
+                                this.state.reactions[m.sid][emojiId].authors.forEach(id => {
+                                    let name = this.props.appState.programCache.failFast_GetUserProfileByProfileID(id)?.displayName;
+                                    if (name) {
+                                        reactors.push(name);
+                                    }
+                                });
 
                                 let reactorList = intersperse(reactors, ", ").reduce((a, s) => a + s);
-                                return this.state.reactions[m.sid][emojiId].count <= 0 ? null :
+                                return this.state.reactions[m.sid][emojiId].authors.size === 0 ? null :
                                     <Tooltip key={emojiId}
                                         title={reactorList + " reacted with a " + emojiId}
                                     ><Tag.CheckableTag
@@ -847,7 +881,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                                         checked={hasMyReaction != null}
                                         onChange={this.sendReaction.bind(this, m, { id: emojiId })}>
                                             <Emoji size={15} emoji={emojiId} />
-                                            {this.state.reactions[m.sid][emojiId].count}
+                                            {this.state.reactions[m.sid][emojiId].authors.size}
                                         </Tag.CheckableTag></Tooltip>
                             })
                         }

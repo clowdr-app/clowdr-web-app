@@ -7,6 +7,11 @@ import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { SelectValue } from "antd/lib/select";
 import { Store } from 'antd/lib/form/interface';
 import assert from 'assert';
+import {
+    ProgramSession,
+    ProgramRoom,
+    ProgramItem
+} from "../../../../classes/ParseObjects";
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
@@ -26,10 +31,10 @@ interface ProgramSessionsState {
     loading: boolean;
     toggle: boolean;
     searched: boolean;
-    ProgramSessions: Parse.Object[];
-    ProgramRooms: Parse.Object[];
-    ProgramItems: Parse.Object[];
-    searchResult: Parse.Object[];
+    ProgramSessions: ProgramSession[];
+    ProgramRooms: ProgramRoom[];
+    ProgramItems: ProgramItem[];
+    searchResult: ProgramSession[];
     alert: string;
     visible: boolean
 }
@@ -119,7 +124,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
         }
 
         // Set up editable table cell
-        const EditableCell: React.FC<EditableCellProps> =
+        const EditableCell: React.FC<EditableCellProps<ProgramSession>> =
             ({ editing, dataIndex, title, inputType,
                 record, index, children,
                 ...restProps }): JSX.Element => {
@@ -138,7 +143,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                         inputNode = (
                             <Select placeholder="Choose the room" >
                                 {this.state.ProgramRooms.map(r => (
-                                    <Option key={r.id} value={r.get('name')}>{r.get('name')}</Option>
+                                    <Option key={r.id} value={r.name}>{r.name}</Option>
                                 ))}
                             </Select>
                         );
@@ -158,8 +163,8 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                                     option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                                 }
                             >
-                                {this.state.ProgramItems.map((it: Parse.Object): JSX.Element => (
-                                    <Option key={it.id} value={it.id}>{it.get('title')}</Option>
+                                {this.state.ProgramItems.map((it): JSX.Element => (
+                                    <Option key={it.id} value={it.id}>{it.title}</Option>
                                 ))}
                             </Select>
                         );
@@ -196,20 +201,20 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
             const [data, setData] = useState(this.state.ProgramSessions);
             const [editingKey, setEditingKey] = useState('');
 
-            const isEditing = (record: Parse.Object): boolean => record.id === editingKey;
+            const isEditing = (record: ProgramSession): boolean => record.id === editingKey;
 
-            const edit = (record: Parse.Object): void => {
+            const edit = (record: ProgramSession): void => {
                 let currentItems: string[] = [];
-                if (record.get("items")) {
-                    record.get("items").forEach((a: Parse.Object) => {
+                if (record.items) {
+                    record.items.forEach((a) => {
                         currentItems.push(a.id);
                     })
                 }
                 form.setFieldsValue({
-                    title: record.get("title") ? record.get("title") : "",
-                    start: record.get("startTime") ? moment(record.get("startTime")) : "",
-                    end: record.get("endTime") ? moment(record.get("endTime")) : "",
-                    room: record.get("room") ? record.get("room").get("name") : "",
+                    title: record.title ? record.title : "",
+                    start: record.startTime ? moment(record.startTime) : "",
+                    end: record.endTime ? moment(record.endTime) : "",
+                    room: record.room ? record.room.name : "",
                     items: currentItems
                 });
                 setEditingKey(record.id);
@@ -219,12 +224,12 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                 setEditingKey('');
             };
 
-            const onDelete = (record: Parse.Object): void => {
-                console.log("deleting session: " + record.get("title"));
+            const onDelete = (record: ProgramSession): void => {
+                console.log("deleting session: " + record.title);
                 // delete from database
                 let data: object = {
                     clazz: "ProgramSession",
-                    conference: { clazz: "ClowdrInstance", id: record.get("conference").id },
+                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -242,11 +247,11 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                 console.log("Entering save func");
                 try {
                     const row: Store = await form.validateFields();
-                    const newData: Parse.Object[] = [...data];
-                    let session: Parse.Object | undefined = newData.find(s => s.id === id);
+                    const newData = [...data];
+                    let session = newData.find(s => s.id === id);
 
                     if (session) {
-                        let newRoom: Parse.Object | undefined = this.state.ProgramRooms.find(t => t.get('name') === row.room);
+                        let newRoom: Parse.Object | undefined = this.state.ProgramRooms.find(t => t.name === row.room);
                         let newItems: Parse.Object[] = [];
                         for (let item of row.items) {
                             let newItem: Parse.Object | undefined = this.state.ProgramItems.find(t => t.id === item);
@@ -259,7 +264,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
 
                         let data = {
                             clazz: "ProgramSession",
-                            conference: { clazz: "ClowdrInstance", id: session.get("conference").id },
+                            conference: { clazz: "ClowdrInstance", id: session.conference.id },
                             id: session.id,
                             title: row.title,
                             startTime: row.start.toDate(),
@@ -285,7 +290,12 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                         setEditingKey('');
                     }
                     else {
-                        newData.push(row as Parse.Object);
+                        // TODO: This is completely unsafe - this will result in errors,
+                        // the logic around adding items needs fixing here. We should create
+                        // but not commit the new configuration, rather than storing the form
+                        // data directly
+                        // @ts-ignore
+                        newData.push(row);
                         setData(newData);
                         setEditingKey('');
                     }
@@ -302,24 +312,24 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                     width: '30%',
                     editable: true,
                     // defaultSortOrder: 'ascend',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let titleA: string = a.get("title") ? a.get("title") : "";
-                        let titleB: string = b.get("title") ? b.get("title") : "";
+                    sorter: (a: ProgramSession, b: ProgramSession) => {
+                        let titleA: string = a.title ? a.title : "";
+                        let titleB: string = b.title ? b.title : "";
                         return titleA.localeCompare(titleB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("title")}</span>,
+                    render: (_: string, record: ProgramSession): JSX.Element => <span>{record.title}</span>,
                 },
                 {
                     title: 'Start Time',
                     dataIndex: 'start',
                     width: '15%',
                     editable: true,
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let timeA: Date = a.get("startTime") ? a.get("startTime") : new Date();
-                        let timeB: Date = b.get("startTime") ? b.get("startTime") : new Date();
-                        return timeA > timeB;
+                    sorter: (a: ProgramSession, b: ProgramSession) => {
+                        let timeA = a.startTime ? a.startTime : 0;
+                        let timeB = b.startTime ? b.startTime : 0;
+                        return timeA < timeB ? -1 : timeA === timeB ? 0 : 1;
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("startTime") ? timezone(record.get("startTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
+                    render: (_: string, record: ProgramSession): JSX.Element => <span>{record.startTime ? timezone(record.startTime).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
                     key: 'start',
                 },
                 {
@@ -327,12 +337,12 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                     dataIndex: 'end',
                     width: '15%',
                     editable: true,
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let timeA: Date = a.get("endTime") ? a.get("endTime") : new Date();
-                        let timeB: Date = b.get("endTime") ? b.get("endTime") : new Date();
-                        return timeA > timeB;
+                    sorter: (a: ProgramSession, b: ProgramSession) => {
+                        let timeA = a.endTime ? a.endTime : 0;
+                        let timeB = b.endTime ? b.endTime : 0;
+                        return timeA < timeB ? -1 : timeA === timeB ? 0 : 1;
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("endTime") ? timezone(record.get("endTime")).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
+                    render: (_: string, record: ProgramSession): JSX.Element => <span>{record.endTime ? timezone(record.endTime).tz(timezone.tz.guess()).format("YYYY-MM-DD HH:mm z") : ""}</span>,
                     key: 'end',
                 },
                 {
@@ -340,12 +350,12 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                     dataIndex: 'room',
                     width: '15%',
                     editable: true,
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        const roomA = a.get("room") && a.get("room").get("name") ? a.get("room").get("name") : " ";
-                        const roomB = b.get("room") && b.get("room").get("name") ? b.get("room").get("name") : " ";
+                    sorter: (a: ProgramSession, b: ProgramSession) => {
+                        const roomA = a.room && a.room.name ? a.room.name : " ";
+                        const roomB = b.room && b.room.name ? b.room.name : " ";
                         return roomA.localeCompare(roomB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("room") ? record.get("room").get('name') : ""}</span>,
+                    render: (_: string, record: ProgramSession): JSX.Element => <span>{record.room ? record.room.name : ""}</span>,
                     key: 'room',
                 },
                 {
@@ -353,12 +363,12 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                     dataIndex: 'items',
                     width: '25%',
                     editable: true,
-                    render: (_: string, record: Parse.Object): JSX.Element => {
-                        if (record.get("items")) {
+                    render: (_: string, record: ProgramSession): JSX.Element => {
+                        if (record.items) {
                             return <ul>{
-                                record.get("items").map((item: Parse.Object) => (
+                                record.items.map((item) => (
                                     <li key={item.id}>
-                                        {item.get('title')}
+                                        {item.title}
                                     </li>
                                 ))
                             }</ul>
@@ -373,7 +383,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                     title: 'Action',
                     dataIndex: 'action',
                     // width: '10%',
-                    render: (_: string, record: Parse.Object): JSX.Element | null => {
+                    render: (_: string, record: ProgramSession): JSX.Element | null => {
                         const editable: boolean = isEditing(record);
                         if (this.state.ProgramSessions.length > 0) {
                             return editable ? (
@@ -420,7 +430,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                 }
                 return {
                     ...col,
-                    onCell: (record: Parse.Object) => ({
+                    onCell: (record: ProgramSession) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -466,11 +476,11 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                                             this.setState({ searched: true });
                                             this.setState({
                                                 searchResult: this.state.ProgramSessions.filter(
-                                                    session => (session.get('title') && session.get('title').toLowerCase().includes(key.toLowerCase()))
-                                                        || (session.get('startTime') && session.get('startTime').toString().toLowerCase().includes(key.toLowerCase()))
-                                                        || (session.get('endTime') && session.get('endTime').toString().toLowerCase().includes(key.toLowerCase()))
-                                                        || (session.get('items') && session.get('items').some((element: Parse.Object) => element.get('title') && element.get('title').toLowerCase().includes(key)))
-                                                        || (session.get('room') && session.get('room').get('name') && session.get('room').get('name').toLowerCase().includes(key.toLowerCase())))
+                                                    session => (session.title && session.title.toLowerCase().includes(key.toLowerCase()))
+                                                        || (session.startTime && session.startTime.toString().toLowerCase().includes(key.toLowerCase()))
+                                                        || (session.endTime && session.endTime.toString().toLowerCase().includes(key.toLowerCase()))
+                                                        || (session.items && session.items.some((element) => element.title && element.title.toLowerCase().includes(key)))
+                                                        || (session.room && session.room.name && session.room.name.toLowerCase().includes(key.toLowerCase())))
                                             })
                                         }
                                     }}

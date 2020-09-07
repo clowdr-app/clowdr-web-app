@@ -21,6 +21,7 @@ import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { RcFile, UploadChangeParam } from "antd/lib/upload/interface";
 import { Store } from 'antd/lib/form/interface';
 import assert from 'assert';
+import { ProgramRoom, ZoomRoom, ZoomHostAccount } from "../../../../classes/ParseObjects";
 var moment = require('moment');
 var timezone = require('moment-timezone');
 
@@ -33,14 +34,13 @@ interface ProgramRoomsState {
     editing: boolean;
     edt_room: Object | undefined;
     searched: boolean;
-    ProgramRooms: Parse.Object[];
-    searchResult: Parse.Object[];
+    ProgramRooms: ProgramRoom[];
+    searchResult: ProgramRoom[];
     alert: string;
     visible: boolean;
-    ZoomHostAccounts: Parse.Object[];
-    ZoomRooms: Parse.Object[]
+    ZoomHostAccounts: ZoomHostAccount[];
+    ZoomRooms: ZoomRoom[];
 }
-let ZoomRoom = Parse.Object.extend("ZoomRoom");
 
 const liveRoomSources: string[] = ['YouTube', 'Twitch', 'Facebook', 'iQIYI', 'ZoomUS', 'ZoomCN'];
 
@@ -62,7 +62,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
     }
 
     onDelete(value: any) {  // no usage?
-        console.log("Deleting " + value + " " + value.get("name"));
+        console.log("Deleting " + value + " " + value.name);
         // Delete the watchers first
         value.destroy();
     }
@@ -117,7 +117,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
         const { Option } = Select;
 
         // set up editable cell
-        const EditableCell: React.FC<EditableCellProps>
+        const EditableCell: React.FC<EditableCellProps<ProgramRoom>>
             = ({ editing, dataIndex, title,
                 inputType, record, index, children,
                 ...restProps }): JSX.Element => {
@@ -138,8 +138,8 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                 }
                             >
                                 <Option key="managed" value="">--CLOWDR Managed Zoom Accounts--</Option>
-                                {this.state.ZoomHostAccounts.sort((a: Parse.Object, b: Parse.Object) => a.get("name")
-                                    .localeCompare(b.get('name'))).map((account: Parse.Object): JSX.Element => (<Option key={account.id} value={"managed-" + account.id}>Zoom {account.get('name')}</Option>))
+                                {this.state.ZoomHostAccounts.sort((a, b) => a.name
+                                    .localeCompare(b.name)).map((account): JSX.Element => (<Option key={account.id} value={"managed-" + account.id}>Zoom {account.name}</Option>))
 
                                 }
                                 <Option key="other" value="">--Other sources--</Option>
@@ -221,18 +221,18 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
             const [data, setData] = useState(this.state.ProgramRooms);
             const [editingKey, setEditingKey] = useState('');
 
-            const isEditing = (record: Parse.Object): boolean => record.id === editingKey;
+            const isEditing = (record: ProgramRoom): boolean => record.id === editingKey;
 
-            const edit = (record: Parse.Object) => {
+            const edit = (record: ProgramRoom) => {
                 form.setFieldsValue({
-                    name: record.get("name") ? record.get("name") : "",
-                    src1: record.get("src1") ? record.get("src1") : "",
-                    id1: record.get("id1") ? record.get("id1") : "",
-                    pwd1: record.get("pwd1") ? record.get("pwd1") : "",
-                    src2: record.get("src2") ? record.get("src2") : "",
-                    id2: record.get("id2") ? record.get("id2") : "",
-                    pwd2: record.get("pwd2") ? record.get("pwd2") : "",
-                    qa: record.get("qa") ? record.get("qa") : ""
+                    name: record.name ? record.name : "",
+                    src1: record.src1 ? record.src1 : "",
+                    id1: record.id1 ? record.id1 : "",
+                    pwd1: record.pwd1 ? record.pwd1 : "",
+                    src2: record.src2 ? record.src2 : "",
+                    id2: record.id2 ? record.id2 : "",
+                    pwd2: record.pwd2 ? record.pwd2 : "",
+                    qa: record.qa ? record.qa : ""
                 });
                 console.log("setting editing key state", record.id);
                 setEditingKey(record.id);
@@ -243,16 +243,16 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 setEditingKey('');
             };
 
-            const onDelete = (record: Parse.Object) => {
-                console.log("deleting item: " + record.get("name"));
-                const newRooms: Parse.Object[] = [...this.state.ProgramRooms];
+            const onDelete = (record: ProgramRoom) => {
+                console.log("deleting item: " + record.name);
+                const newRooms: ProgramRoom[] = [...this.state.ProgramRooms];
                 this.setState({
-                    ProgramRooms: newRooms.filter((item: Parse.Object): boolean => item.id !== record.id)
+                    ProgramRooms: newRooms.filter((item: ProgramRoom): boolean => item.id !== record.id)
                 });
                 // delete from database
                 let data = {
                     clazz: "ProgramRoom",
-                    conference: { clazz: "ClowdrInstance", id: record.get("conference").id },
+                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -267,8 +267,8 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
             const save = async (id: string) => {
                 try {
                     const row: Store = await form.validateFields();
-                    const newData: Parse.Object[] = [...data];
-                    let room: Parse.Object | undefined = newData.find(item => item.id === id);
+                    const newData: ProgramRoom[] = [...data];
+                    let room: ProgramRoom | undefined = newData.find(item => item.id === id);
 
                     if (room) {
                         room.set("src1", row.src1);
@@ -288,7 +288,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                         })
                         setEditingKey('');
                     } else {
-                        newData.push(row as Parse.Object);
+                        newData.push(row as ProgramRoom);
                         setData(newData);
                         setEditingKey('');
                     }
@@ -305,24 +305,24 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     width: '10%',
                     editable: true,
                     // defaultSortOrder: 'ascend',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let nameA: string = a.get("name") ? a.get("name") : "";
-                        let nameB: string = b.get("name") ? b.get("name") : "";
+                    sorter: (a: ProgramRoom, b: ProgramRoom) => {
+                        let nameA: string = a.name ? a.name : "";
+                        let nameB: string = b.name ? b.name : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("name")}</span>,
+                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.name}</span>,
                 },
                 {
                     title: 'Main Media Source',
                     dataIndex: 'src1',
                     width: '15%',
                     editable: true,
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let srcA: string = a.get("src1") ? a.get("src1") : "";
-                        let srcB: string = b.get("src1") ? b.get("src1") : "";
+                    sorter: (a: ProgramRoom, b: ProgramRoom) => {
+                        let srcA: string = a.src1 ? a.src1 : "";
+                        let srcB: string = b.src1 ? b.src1 : "";
                         return srcA.localeCompare(srcB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("src1")}</span>,
+                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.src1}</span>,
                     key: 'roomsrc1',
                 },
                 {
@@ -330,7 +330,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     dataIndex: 'id1',
                     width: '10%',
                     editable: true,
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("id1")}</span>,
+                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.id1}</span>,
                     key: 'roomid1',
                 },
                 {
@@ -338,7 +338,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     dataIndex: 'pwd1',
                     width: '10%',
                     editable: true,
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("pwd1")}</span>,
+                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.pwd1}</span>,
                     key: 'pwd1',
                 },
                 {
@@ -346,12 +346,12 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     dataIndex: 'src2',
                     width: '15%',
                     editable: true,
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let srcA: string = a.get("src2") ? a.get("src2") : "";
-                        let srcB: string = b.get("src2") ? b.get("src2") : "";
+                    sorter: (a: ProgramRoom, b: ProgramRoom) => {
+                        let srcA: string = a.src2 ? a.src2 : "";
+                        let srcB: string = b.src2 ? b.src2 : "";
                         return srcA.localeCompare(srcB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("src2")}</span>,
+                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.src2}</span>,
                     key: 'roomsrc2',
                 },
                 {
@@ -359,7 +359,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     dataIndex: 'id2',
                     width: '10%',
                     editable: true,
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("id2")}</span>,
+                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.id2}</span>,
                     key: 'roomid2',
                 },
                 {
@@ -367,7 +367,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                     dataIndex: 'pwd2',
                     width: '10%',
                     editable: true,
-                    render: (_: string, record: Parse.Object): JSX.Element => <span>{record.get("pwd2")}</span>,
+                    render: (_: string, record: ProgramRoom): JSX.Element => <span>{record.pwd2}</span>,
                     key: 'pwd2',
                 },
                 // {
@@ -375,13 +375,13 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 //     dataIndex: 'qa',
                 //     width: '20%',
                 //     editable: true,
-                //     render: (text, record) => <span>{record.get("qa")}</span>,
+                //     render: (text, record) => <span>{record.qa}</span>,
                 //     key: 'qa',
                 // },
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: Parse.Object): JSX.Element | null => {
+                    render: (_: string, record: ProgramRoom): JSX.Element | null => {
                         const editable: boolean = isEditing(record);
                         if (this.state.ProgramRooms.length > 0) {
                             return editable ?
@@ -426,7 +426,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 }
                 return {
                     ...col,
-                    onCell: (record: Parse.Object) => ({
+                    onCell: (record: ProgramRoom) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -513,7 +513,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                                             this.setState({ searched: true });
                                             this.setState({
                                                 searchResult: this.state.ProgramRooms.filter(
-                                                    room => (room.get('name') && room.get('name').toLowerCase().includes(key.toLowerCase()))
+                                                    room => (room.name && room.name.toLowerCase().includes(key.toLowerCase()))
                                                 )
                                             });
                                         }

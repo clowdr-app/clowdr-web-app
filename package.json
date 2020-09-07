@@ -43,6 +43,7 @@
     "fscreen": "^1.0.2",
     "gh-pages": "^2.2.0",
     "googleapis": "^51.0.0",
+    "idb": "^5.0.4",
     "material-ui": "^0.20.2",
     "moment": "^2.27.0",
     "moment-timezone": "^0.5.31",

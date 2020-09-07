@@ -1,8 +1,7 @@
 import Chat from "twilio-chat";
 import { Channel } from "twilio-chat/lib/channel"
 import { Client } from "twilio-chat/lib/client"
-import UserProfile from '../classes/UserProfile';
-import ClowdrInstance from '../classes/ClowdrInstance';
+import { UserProfile, ClowdrInstance, Conversation } from "../classes/ParseObjects";
 import Parse from "parse";
 import { backOff } from "exponential-backoff";
 import { message } from "antd"
@@ -29,10 +28,10 @@ export interface ChannelInfo {
     components: Array<any>; // TODO
     visibleComponents: Array<any>; // TODO
     messages: Array<string>;
-    conversation: Parse.Object<Parse.Attributes> | null;
+    conversation: Conversation | null;
 }
 
-export default class ChatClient {
+export class ChatClient {
     joinedChannels: { [x: string]: ChannelInfo } = {};
     channelPromises: { [x: string]: Promise<Channel> } = {};
     channelWaiters: { [x: string]: (channel: Channel) => void } = {};
@@ -365,7 +364,7 @@ export default class ChatClient {
             conversation: null,
         };
         ret.attributes = await this.callWithRetry(() => channel.getAttributes());
-        let convoQ = new Parse.Query("Conversation");
+        let convoQ = new Parse.Query<Conversation>("Conversation");
         let shouldHaveParseConvo = ret.attributes.category === "userCreated";
         if (shouldHaveParseConvo) {
             if (!ret.attributes.parseID)

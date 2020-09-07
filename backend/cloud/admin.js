@@ -200,8 +200,10 @@ async function activate(instance) {
                 console.log(`[activate]: creating new user profile for Clowdr Admin`);
                 if (clowdrU.get("email") !== user.get("email")) {
                     let clowdrUp = new UserProfile();
-                    clowdrUp.set('realName', clowdrU.get("displayname"));
-                    clowdrUp.set('displayName', clowdrU.get("displayname"));
+                    // TODO: Ed: I think this is wrong? User records don't have
+                    // a 'displayName' so this 'get' is invalid
+                    clowdrUp.set('realName', clowdrU.get("displayName"));
+                    clowdrUp.set('displayName', clowdrU.get("displayName"));
                     clowdrUp.set('user', clowdrU);
                     clowdrUp.set('conference', instance);
                     let profileACL = new Parse.ACL();

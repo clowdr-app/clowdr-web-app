@@ -4,8 +4,7 @@ import { Button, Form, Input, Menu, message, Modal, Select, Spin, Switch } from 
 import { ChatChannelConsumer, ClowdrState, MultiChatApp } from "../../ClowdrTypes";
 import CollapsedChatDisplay from "./CollapsedChatDisplay";
 import { Channel } from "twilio-chat/lib/channel";
-import ProgramItem from "../../classes/ProgramItem";
-import UserProfile from "../../classes/UserProfile";
+import { ProgramItem, UserProfile } from "../../classes/ParseObjects";
 import Parse from "parse";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
@@ -68,13 +67,18 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
 
     componentDidUpdate(prevProps: Readonly<ChatChannelChangerProps>, prevState: Readonly<ChatChannelChangerState>, snapshot?: any): void {
         if (this.haveProgram && (this.state.ProgramItems !== prevState.ProgramItems || this.state.UserProfiles !== prevState.UserProfiles || this.state.allChannels !== prevState.allChannels)) {
-            let options = [];
-            options = this.state.ProgramItems.filter(item => item.get("chatSID") != null).map(item => ({
-                labeltext: item.get("title"), value: item.id, object: item,
+            let options: Array<{
+                labeltext: string,
+                value: string,
+                object: ProgramItem | UserProfile,
+                label: JSX.Element
+            }> = [];
+            options = this.state.ProgramItems.filter(item => item.chatSID != null).map(item => ({
+                labeltext: item.title, value: item.id, object: item,
                 label: <ProgramItemDisplay id={item.id} auth={this.props.appState} hideLink={true} />
             }));
             options = options.concat(this.state.UserProfiles.map(profile => ({
-                labeltext: profile.get("displayName"),
+                labeltext: profile.displayName,
                 value: profile.id,
                 object: profile,
                 label: <UserStatusDisplay profileID={profile.id} hideLink={true} />
@@ -164,14 +168,14 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
             let i1 = chan1.attributes.programItemID;
             let i = this.state.ProgramItems.find(i => i.id === i1);
             if (i) {
-                s1 = i.get("title");
+                s1 = i.title;
             }
         }
         if (chan2.attributes && chan2.attributes.category === "programItem") {
             let i2 = chan2.attributes.programItemID;
             let i = this.state.ProgramItems.find(i => i.id === i2);
             if (i) {
-                s2 = i.get("title");
+                s2 = i.title;
             }
         }
         if (s1 && s2) {
@@ -260,7 +264,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                     // @ts-ignore
                     this.setState({ openingChat: true, filter: option.label })
                     if (obj instanceof ProgramItem) {
-                        sid = obj.get("chatSID");
+                        sid = obj.chatSID;
                         if (!sid) {
                             sid = await Parse.Cloud.run("chat-getSIDForProgramItem", {
                                 programItem: obj.id
@@ -270,7 +274,7 @@ class ChatChannelChanger extends React.Component<ChatChannelChangerProps, ChatCh
                             await this.props.appState.chatClient.openChatAndJoinIfNeeded(sid, false);
                         }
                         else {
-                            message.error("Unable to find chat ID for " + obj.get("title"))
+                            message.error("Unable to find chat ID for " + obj.title)
                         }
                     } else if (obj instanceof UserProfile) {
                         await this.props.appState.helpers.createOrOpenDM(obj);

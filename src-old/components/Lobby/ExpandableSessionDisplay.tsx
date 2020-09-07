@@ -1,11 +1,13 @@
 import React from 'react';
 import { ClowdrState } from "../../ClowdrTypes";
-import ProgramSession from "../../classes/ProgramSession"
 import { AuthUserContext } from '../Session';
-import ProgramItem from "../../classes/ProgramItem";
 import { Collapse } from 'antd';
 import ProgramItemDisplay from "../Program/ProgramItemDisplay";
-import ProgramSessionEvent from "../../classes/ProgramSessionEvent";
+import {
+    ProgramSession,
+    ProgramItem,
+    ProgramSessionEvent
+} from "../../classes/ParseObjects"
 import ProgramSessionEventDisplay from "../Program/ProgramSessionEventDisplay";
 
 interface ExpandableSessionDisplayProps {
@@ -30,15 +32,15 @@ class ExpandableSessionDisplay extends React.Component<ExpandableSessionDisplayP
         }
     }
     componentDidMount(): void {
-        if (this.props.session.get("events")) {
-            let events = this.props.session.get("events").map((e: ProgramSessionEvent) => this.props.auth?.programCache.getProgramSessionEvent(e.id));
+        if (this.props.session.events) {
+            let events = this.props.session.events.map((e: ProgramSessionEvent) => this.props.auth?.programCache.getProgramSessionEvent(e.id));
             //@ts-ignore
             Promise.all(events).then((ev) => this.setState({ events: ev }));
         }
     }
     dateSorter(a: ProgramSessionEvent, b: ProgramSessionEvent) {
-        var timeA = a.get("startTime") ? a.get("startTime") : new Date();
-        var timeB = b.get("startTime") ? b.get("startTime") : new Date();
+        var timeA = a.startTime ? a.startTime : new Date();
+        var timeB = b.startTime ? b.startTime : new Date();
         return timeA > timeB ? 1 : timeA === timeB ? 0 : -1;
     }
 
@@ -46,7 +48,7 @@ class ExpandableSessionDisplay extends React.Component<ExpandableSessionDisplayP
 
         let items;
         let expandedKeys: React.ReactText[] = [];
-        if (this.props.session.get("events") && this.state.events.length) {
+        if (this.props.session.events && this.state.events.length) {
             if (!this.state.events.length)
                 return <div></div>
             let events = this.state.events.sort(this.dateSorter);
@@ -55,10 +57,10 @@ class ExpandableSessionDisplay extends React.Component<ExpandableSessionDisplayP
                 let future = [];
                 let now = [];
                 let past = [];
-                let curTime = new Date();
+                let curTime = Date.now();
                 for (let event of this.state.events) {
-                    let startTime = event.get("startTime");
-                    let endTime = event.get("endTime");
+                    let startTime = event.startTime;
+                    let endTime = event.endTime;
                     if (endTime < curTime) {
                         past.push(event)
                     } else if (startTime <= curTime && endTime >= curTime) {
@@ -78,8 +80,8 @@ class ExpandableSessionDisplay extends React.Component<ExpandableSessionDisplayP
                 return <ProgramSessionEventDisplay key={item.id} id={item.id} auth={this.props.auth} showBreakoutRoom={true} />
             })
         }
-        else if (this.props.session.get("items")) {
-            items = this.props.session.get('items').map((item: ProgramItem) => {
+        else if (this.props.session.items) {
+            items = this.props.session.items.map((item: ProgramItem) => {
                 return <div key={item.id}>
                     <ProgramItemDisplay id={item.id} auth={this.props.auth} showBreakoutRoom={true} />
                 </div>
@@ -91,7 +93,7 @@ class ExpandableSessionDisplay extends React.Component<ExpandableSessionDisplayP
             className = "expandableProgramSummaryLive"
         }
         return <Collapse className="program-session-collapse" defaultActiveKey={expandedKeys}>
-            <Collapse.Panel key={this.props.session.id} header={this.props.session.get("title")} className={className}>
+            <Collapse.Panel key={this.props.session.id} header={this.props.session.title} className={className}>
                 {items}
             </Collapse.Panel></Collapse>
     }

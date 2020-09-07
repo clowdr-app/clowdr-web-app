@@ -12,6 +12,7 @@ import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
 import { RadioChangeEvent } from "antd/lib/radio";
 import { Store } from 'antd/lib/form/interface';
 import assert from 'assert';
+import { ProgramTrack, SocialSpace } from "../../../../classes/ParseObjects";
 
 interface ProgramTracksProps {
     auth: ClowdrState;
@@ -20,11 +21,11 @@ interface ProgramTracksProps {
 interface ProgramTracksState {
     loading: boolean;
     alert: string | undefined;
-    ProgramTracks: Parse.Object[];
-    socialSpaces: Parse.Object[];
+    ProgramTracks: ProgramTrack[];
+    socialSpaces: SocialSpace[];
     editing: boolean;
     searched: boolean;
-    searchResult: Parse.Object[];
+    searchResult: ProgramTrack[];
     visible: boolean
 }
 
@@ -49,7 +50,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
     }
 
     async componentDidMount() {
-        let socialSpaceQ = new Parse.Query("SocialSpace");
+        let socialSpaceQ = new Parse.Query<SocialSpace>("SocialSpace");
         socialSpaceQ.equalTo("conference", this.props.auth.currentConference);
         let [spaces, tracks] = await Promise.all([socialSpaceQ.find(),
         this.props.auth.programCache.getProgramTracks(this)]);
@@ -60,26 +61,26 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
         this.props.auth.programCache.cancelSubscription("ProgramTrack", this, undefined);
     }
 
-    onChangeExhibit(record: Parse.Object, e: RadioChangeEvent) {
+    onChangeExhibit(record: ProgramTrack, e: RadioChangeEvent) {
         console.log("--> radio changed " + e.target.value);
         record.set("exhibit", e.target.value);
     }
 
-    onChangeChat(record: Parse.Object) {
-        record.set("perProgramItemChat", !record.get("perProgramItemChat"));
+    onChangeChat(record: ProgramTrack) {
+        record.set("perProgramItemChat", !record.perProgramItemChat);
     }
 
-    onChangeVideo(record: Parse.Object) {
-        record.set("perProgramItemVideo", !record.get("perProgramItemVideo"));
+    onChangeVideo(record: ProgramTrack) {
+        record.set("perProgramItemVideo", !record.perProgramItemVideo);
     }
 
-    onToggle(record: Parse.Object, key: string) { //why did nobody write this like this?? :(
+    onToggle(record: ProgramTrack, key: string) { //why did nobody write this like this?? :(
         record.set(key, !record.get(key));
     }
 
     render() {
         // Set up editable table cell
-        const EditableCell: React.FC<EditableCellProps> = ({
+        const EditableCell: React.FC<EditableCellProps<ProgramTrack>> = ({
             editing,
             dataIndex,
             title,
@@ -100,7 +101,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                 case ('perProgramItemChat'):
                     inputNode = (
                         <span title="Do the track's items get their own text channels?"><Checkbox
-                            defaultChecked={record.get("perProgramItemChat")}
+                            defaultChecked={record.perProgramItemChat}
                             onChange={this.onChangeChat.bind(this, record)}
                         >
                         </Checkbox></span>
@@ -109,7 +110,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                 case ('perProgramItemVideo'):
                     inputNode = (
                         <span title="Do the track's items get their own video channels?"><Checkbox
-                            defaultChecked={record.get("perProgramItemVideo")}
+                            defaultChecked={record.perProgramItemVideo}
                             onChange={this.onChangeVideo.bind(this, record)}
                         >
                         </Checkbox></span>
@@ -118,7 +119,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                 case ('showAsEvents'):
                     inputNode = (
                         <span title="Do the track's items show as individual events in the program (default is grouped as sessions)?"><Checkbox
-                            defaultChecked={record.get("showAsEvents")}
+                            defaultChecked={record.showAsEvents}
                             onChange={this.onToggle.bind(this, record, "showAsEvents")}
                         >
                         </Checkbox></span>
@@ -127,7 +128,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                 case ('exhibit'):
                     inputNode = (
                         <Radio.Group onChange={this.onChangeExhibit.bind(this, record)}
-                            value={record.get("exhibit")}>
+                            value={record.exhibit}>
                             <Radio value="None"><span title="Don't show in Exhibit Hall">None</span></Radio>
                             <Radio value="List"><span title="Show in Exhibit Hall as a simple list of all items">List</span></Radio>
                             <Radio value="Grid"><span title="Show in Exhibit Hall as a grid of images, one per item">Grid</span></Radio>
@@ -176,18 +177,18 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [data, setData] = useState(this.state.ProgramTracks);
             const [editingKey, setEditingKey] = useState('');
-            const isEditing = (record: Parse.Object): boolean => record.id === editingKey;
+            const isEditing = (record: ProgramTrack): boolean => record.id === editingKey;
 
-            const edit = (record: Parse.Object): void => {
+            const edit = (record: ProgramTrack): void => {
                 form.setFieldsValue({
-                    name: record.get("name") ? record.get("name") : "",
-                    displayName: record.get("displayName") ? record.get("displayName") : "",
-                    exhibit: record.get("exhibit") ? record.get("exhibit") : "",
-                    perProgramItemChat: record.get("perProgramItemChat"),
-                    perProgramItemVideo: record.get("perProgramItemVideo"),
-                    badgeText: record.get("badgeText"),
-                    badgeColor: record.get("badgeColor"),
-                    showAsEvents: record.get("showAsEvents")
+                    name: record.name ? record.name : "",
+                    displayName: record.displayName ? record.displayName : "",
+                    exhibit: record.exhibit ? record.exhibit : "",
+                    perProgramItemChat: record.perProgramItemChat,
+                    perProgramItemVideo: record.perProgramItemVideo,
+                    badgeText: record.badgeText,
+                    badgeColor: record.badgeColor,
+                    showAsEvents: record.showAsEvents
                 });
                 setEditingKey(record.id)
             }
@@ -196,11 +197,11 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                 setEditingKey('');
             };
 
-            const onDelete = (record: Parse.Object): void => {
+            const onDelete = (record: ProgramTrack): void => {
                 // delete from database
                 let data = {
                     clazz: "ProgramTrack",
-                    conference: { clazz: "ClowdrInstance", id: record.get("conference").id },
+                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -216,8 +217,8 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                 console.log("Entering save func");
                 try {
                     const row: Store = await form.validateFields();
-                    const newData: Parse.Object[] = [...data];
-                    let track: Parse.Object | undefined = newData.find(track => track.id === id);
+                    const newData = [...data];
+                    let track = newData.find(track => track.id === id);
 
                     if (track) {
                         track.set("name", row.name);
@@ -228,7 +229,9 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                         setEditingKey('');
                     }
                     else {
-                        newData.push(row as Parse.Object);
+                        // TODO: Totally broken - see comments in rest of admin interface
+                        // @ts-ignore
+                        newData.push(row as ProgramTrack);
                     }
                 } catch (errInfo) {
                     console.log('Validate Failed:', errInfo);
@@ -242,24 +245,24 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     key: 'name',
                     editable: true,
                     width: '20%',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let nameA: string = a.get("name") ? a.get("name") : "";
-                        let nameB: string = b.get("name") ? b.get("name") : "";
+                    sorter: (a: ProgramTrack, b: ProgramTrack) => {
+                        let nameA: string = a.name ? a.name : "";
+                        let nameB: string = b.name ? b.name : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element | null => <span>{record.get("name")}</span>,
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => <span>{record.name}</span>,
                 },
                 {
                     title: 'Display Name',
                     dataIndex: 'displayName',
                     editable: true,
                     width: '20%',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        let displayNameA: string = a.get("displayName") ? a.get("displayName") : "";
-                        let displayNameB: string = b.get("displayName") ? b.get("displayName") : "";
+                    sorter: (a: ProgramTrack, b: ProgramTrack) => {
+                        let displayNameA: string = a.displayName ? a.displayName : "";
+                        let displayNameB: string = b.displayName ? b.displayName : "";
                         return displayNameA.localeCompare(displayNameB);
                     },
-                    render: (_: string, record: Parse.Object): JSX.Element | null => <span>{record.get("displayName")}</span>,
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => <span>{record.displayName}</span>,
                     key: 'displayName',
                 },
                 {
@@ -267,8 +270,8 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     dataIndex: 'exhibit',
                     editable: true,
                     width: '5%',
-                    //render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
-                    render: (_: string, record: Parse.Object): JSX.Element | null => <span>{record.get("exhibit")}</span>,
+                    //render: (text,record) => <span>{record.perProgramItemChat ? (record.perProgramItemChat ? "True" : "False") : "False"}</span>,
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => <span>{record.exhibit}</span>,
                     key: 'exhibit',
                 },
                 {
@@ -276,8 +279,8 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     dataIndex: 'perProgramItemChat',
                     editable: true,
                     width: '5%',
-                    //render: (text,record) => <span>{record.get("perProgramItemChat") ? (record.get("perProgramItemChat") ? "True" : "False") : "False"}</span>,
-                    render: (_: string, record: Parse.Object): JSX.Element | null => <Checkbox checked={!!record.get("perProgramItemChat")} disabled></Checkbox>,
+                    //render: (text,record) => <span>{record.perProgramItemChat ? (record.perProgramItemChat ? "True" : "False") : "False"}</span>,
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => <Checkbox checked={!!record.perProgramItemChat} disabled></Checkbox>,
                     key: 'perProgramItemChat',
                 },
                 {
@@ -285,8 +288,8 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     dataIndex: 'perProgramItemVideo',
                     editable: true,
                     width: '5%',
-                    //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
-                    render: (_: string, record: Parse.Object): JSX.Element | null => <Checkbox checked={!!record.get("perProgramItemVideo")} disabled></Checkbox>,
+                    //render: (text,record) => <span>{record.perProgramItemVideo ? (record.perProgramItemVideo ? "True" : "False") : "False"}</span>,
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => <Checkbox checked={!!record.perProgramItemVideo} disabled></Checkbox>,
                     key: 'perProgramItemVideo',
                 },
                 {
@@ -294,29 +297,29 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                     dataIndex: 'showAsEvents',
                     editable: true,
                     width: '5%',
-                    //render: (text,record) => <span>{record.get("perProgramItemVideo") ? (record.get("perProgramItemVideo") ? "True" : "False") : "False"}</span>,
-                    render: (_: string, record: Parse.Object): JSX.Element | null => <Checkbox checked={!!record.get("showAsEvents")} disabled></Checkbox>,
+                    //render: (text,record) => <span>{record.perProgramItemVideo ? (record.perProgramItemVideo ? "True" : "False") : "False"}</span>,
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => <Checkbox checked={!!record.showAsEvents} disabled></Checkbox>,
                     key: 'showAsEvents',
                 },
                 {
                     title: 'Tag Text',
                     dataIndex: 'badgeText',
                     editable: true,
-                    render: (_: string, record: Parse.Object): JSX.Element | null => <span>{record.get("badgeText")}</span>,
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => <span>{record.badgeText}</span>,
                     key: 'badgeText',
                 },
                 {
                     title: 'Tag Color',
                     dataIndex: 'badgeColor',
                     editable: true,
-                    render: (_: string, record: Parse.Object): JSX.Element | null => <span>{record.get("badgeColor")}</span>,
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => <span>{record.badgeColor}</span>,
                     key: 'badgeColor',
                 },
 
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: Parse.Object): JSX.Element | null => {
+                    render: (_: string, record: ProgramTrack): JSX.Element | null => {
                         const editable: boolean = isEditing(record);
                         if (this.state.ProgramTracks.length > 0) {
                             return editable ? (
@@ -363,7 +366,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                 }
                 return {
                     ...col,
-                    onCell: (record: Parse.Object) => ({
+                    onCell: (record: ProgramTrack) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -452,8 +455,8 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                         this.setState({
                             searchResult: this.state.ProgramTracks.filter(
                                 track =>
-                                    (track.get('name') && track.get('name').toLowerCase().includes(key.toLowerCase()))
-                                    || (track.get('displayName') && track.get('displayName').toLowerCase().includes(key.toLowerCase())))
+                                    (track.name && track.name.toLowerCase().includes(key.toLowerCase()))
+                                    || (track.displayName && track.displayName.toLowerCase().includes(key.toLowerCase())))
                         })
                     }
                 }

@@ -142,7 +142,7 @@ Parse.Cloud.define("login-fromToken", async (request) => {
     let userQ = new Parse.Query(Parse.User);
     let user = await userQ.get(userID, { useMasterKey: true });
     if (user.get("loginKey") && user.get('loginKey') === token) {
-        console.log("Logging in from token: " + user.get("displayname"));
+        console.log("Logging in from token: " + user.get("displayName"));
         // user.set("loginKey",null);
         // await user.save({},{useMasterKey: true});
         let fakeSession = Parse.Object.extend("_Session");
@@ -185,7 +185,7 @@ Parse.Cloud.define("login-resendInvite", async (request) => {
 
         var toEmail = new sgMail.Email(user.get("email"));
         var subject = 'Account signup link for ' + config.conference.get("conferenceName");
-        var content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayname") + ",\n" +
+        var content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayName") + ",\n" +
             config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
             "The Clowdr app will organize the conference program, live sessions, networking, and more. "
             + instructionsText + "\n\n" +
@@ -257,7 +257,7 @@ Parse.Cloud.define("reset-password", async (request) => {
             let toEmail = new sgMail.Email(user.get("email"));
             let subject = 'Account signup link for ' + config.conference.get("conferenceName");
 
-            let content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayname") + ",\n" +
+            let content = new sgMail.Content('text/plain', 'Dear ' + user.get("displayName") + ",\n" +
                 config.conference.get("conferenceName") + " is using Clowdr.org to provide an interactive virtual conference experience. " +
                 "The Clowdr app will organize the conference program, live sessions, networking, and more. "
                 + instructionsText + "\n\n" +

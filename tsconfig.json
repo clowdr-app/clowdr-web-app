@@ -37,6 +37,6 @@
     "noFallthroughCasesInSwitch": true,
 */
   },
-  "include": ["src", "src-old/components/VideoChat/VideoFrontend"],
+  "include": ["src"],
   "typeRoots": ["./src/types", "./node_modules/@types"]
 }

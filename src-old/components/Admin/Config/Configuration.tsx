@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { ClowdrState, EditableCellProps } from '../../../ClowdrTypes';
 import { Store } from 'antd/lib/form/interface';
+import { InstanceConfiguration } from "../../../classes/ParseObjects";
 
 interface ConfigurationProps {
     auth: ClowdrState,
@@ -17,10 +18,10 @@ interface ConfigurationProps {
 interface ConfigurationState {
     loading: boolean,
     initialized: boolean,
-    config: Parse.Object[],
+    config: InstanceConfiguration[],
     searched: boolean,
     alert: string | undefined,
-    searchResult: Parse.Object[],
+    searchResult: InstanceConfiguration[],
     visible: boolean
 }
 
@@ -42,7 +43,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
     componentDidMount() {
         // Has this conference been initialized?
         console.log('[Admin/Config]: active space ' + this.props.auth.activeSpace);
-        if (this.props.auth.activeSpace && this.props.auth.activeSpace.get('chatChannel')) {  //TS: activeSpace?
+        if (this.props.auth.activeSpace && this.props.auth.activeSpace.chatChannel) {  //TS: activeSpace?
             this.setState({ initialized: true });
         }
         else
@@ -55,12 +56,10 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
     }
 
     async refreshList() {
-        let query = new Parse.Query("InstanceConfiguration");
+        let query = new Parse.Query<InstanceConfiguration>("InstanceConfiguration");
         query.equalTo("instance", this.props.auth.currentConference);
         let res = await query.find();
         console.log('[Admin/Config]: Found ' + res.length + ' vars');
-        //TS: seems like we are changing datatypes here?
-        res.map((v: any) => v.key = v.get('key')); // Add a 'key' for the rows of the table
         this.setState({
             config: res,
             loading: false
@@ -87,7 +86,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
 
     render() {
         // Set up editable table cell
-        const EditableCell: React.FC<EditableCellProps> = ({
+        const EditableCell: React.FC<EditableCellProps<InstanceConfiguration>> = ({
             editing,
             dataIndex,
             title,
@@ -139,12 +138,12 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.config);
             const [editingKey, setEditingKey] = useState('');
-            const isEditing = (record: Parse.Object) => record.id === editingKey;
+            const isEditing = (record: InstanceConfiguration) => record.id === editingKey;
 
-            const edit = (record: Parse.Object) => {
+            const edit = (record: InstanceConfiguration) => {
                 form.setFieldsValue({
-                    key: record.get("key") ? record.get("key") : "",
-                    value: record.get("value") ? record.get("value") : ""
+                    key: record.key ? record.key : "",
+                    value: record.value ? record.value : ""
                 });
                 setEditingKey(record.id)
             }
@@ -153,7 +152,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                 setEditingKey('');
             };
 
-            const onDelete = (record: Parse.Object) => {
+            const onDelete = (record: InstanceConfiguration) => {
                 const newConfigList = [...this.state.config];
                 // delete from database
                 record.destroy().then(() => {
@@ -195,7 +194,12 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                         setEditingKey('');
                     }
                     else {
-                        newData.push(row as Parse.Object);
+                        // TODO: This is completely unsafe - this will result in errors,
+                        // the logic around adding items needs fixing here. We should create
+                        // but not commit the new configuration, rather than storing the form
+                        // data directly
+                        // @ts-ignore
+                        newData.push(row);
                         setData(newData);
                         setEditingKey('');
                     }
@@ -211,30 +215,30 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                     key: 'key',
                     editable: true,
                     width: '50%',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        var nameA = a.get("key") ? a.get("key") : "";
-                        var nameB = b.get("key") ? b.get("key") : "";
+                    sorter: (a: InstanceConfiguration, b: InstanceConfiguration) => {
+                        var nameA = a.key ? a.key : "";
+                        var nameB = b.key ? b.key : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (_: string, record: Parse.Object) => <span>{record.get("key")}</span>,
+                    render: (_: string, record: InstanceConfiguration) => <span>{record.key}</span>,
                 },
                 {
                     title: 'Value',
                     dataIndex: 'value',
                     editable: true,
                     width: '50%',
-                    sorter: (a: Parse.Object, b: Parse.Object) => {
-                        var valueA = a.get("value") ? a.get("value") : "";
-                        var valueB = b.get("value") ? b.get("value") : "";
+                    sorter: (a: InstanceConfiguration, b: InstanceConfiguration) => {
+                        var valueA = a.value ? a.value : "";
+                        var valueB = b.value ? b.value : "";
                         return valueA.localeCompare(valueB);
                     },
-                    render: (_: string, record: Parse.Object) => <span>{record.get("value")}</span>,
+                    render: (_: string, record: InstanceConfiguration) => <span>{record.value}</span>,
                     key: 'value',
                 },
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: Parse.Object) => {
+                    render: (_: string, record: InstanceConfiguration) => {
                         const editable = isEditing(record);
                         if (this.state.config.length > 0) {
                             return editable ? (
@@ -281,7 +285,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                 }
                 return {
                     ...col,
-                    onCell: (record: Parse.Object) => ({
+                    onCell: (record: InstanceConfiguration) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -314,8 +318,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                 throw new Error("Cannot generate new conference config: current conference is null!");
             }
 
-            const Config = Parse.Object.extend("InstanceConfiguration");
-            const config = new Config();
+            const config = new InstanceConfiguration();
             config.set("key", "Please enter a name");
             config.set("value", "Please enter a value");
 
@@ -327,7 +330,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
             config.setACL(acl);
             config.set("instance", this.props.auth.currentConference);
             config.save().then((val: any) => { //TS: what is val? Maybe we need a new configuration schema
-                config.key = val.id;
+                config.set("key", val.id);
                 this.setState({ alert: "add success", config: [config, ...this.state.config] })
             }).catch((err: Error) => {
                 this.setState({ alert: "add error" });
@@ -381,8 +384,8 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                         this.setState({
                             searchResult: this.state.config.filter(
                                 config =>
-                                    (config.get('key') && config.get('key').toLowerCase().includes(key.toLowerCase()))
-                                    || (config.get('value') && config.get('value').toLowerCase().includes(key.toLowerCase())))
+                                    (config.key && config.key.toLowerCase().includes(key.toLowerCase()))
+                                    || (config.value && config.value.toLowerCase().includes(key.toLowerCase())))
                         })
                     }
                 }

@@ -7,26 +7,34 @@ import withLoginRequired from "../Session/withLoginRequired";
 import { ClowdrState } from "../../ClowdrTypes";
 import { RuleObject } from "antd/lib/form";
 import { Store } from 'antd/lib/form/interface';
-import UserProfile from '../../classes/UserProfile';
+import {
+    User,
+    UserProfile,
+    Flair,
+    ProgramItem,
+    ProgramPerson
+} from "../../classes/ParseObjects";
+import { UserProfileTag } from '../../classes/DBSchema/UserProfile';
+import assert from 'assert';
 
 interface Props { //TS: Props from both context (ClowdrState) and AccountFromToken.js. Is that OK?? Cauz we will export all of them.
     auth: ClowdrState;
     onFinish: () => void;
     embedded: boolean;
-    user: Parse.User;
+    user: User;
     userProfile: UserProfile;
 }
 
 interface State {
-    user: Parse.Object | null;
+    user: User | null;
     email: string | undefined;
-    tags: Parse.Object[] | undefined;  //TS:@Jon@Crista tags is in no usage  //TS: Flair object??
-    flair: Parse.Object | undefined;   //TS: no usage
+    tags: UserProfileTag[] | undefined;
+    flair: Flair | undefined;   //TS: no usage
     selectedFlair: string[] | undefined;
     loading: boolean;
     flairColors: Record<string, FlairColor> | undefined;
     allFlair: FlairItem[] | undefined;
-    flairObj: Parse.Object[] | undefined;
+    flairObj: Flair[] | undefined;
     topicColors: Record<string, string>;
     allTopics: FlairItem[] | undefined;  //TS: no usage
     topicObj: Parse.Object[] | undefined;  //TS: no usage
@@ -48,8 +56,8 @@ interface FlairColor {
 }
 
 class Account extends React.Component<Props, State> {
-    ProgramPersons: Parse.Object[];
-    ProgramItems: Parse.Object[];
+    ProgramPersons: ProgramPerson[];
+    ProgramItems: ProgramItem[];
     programPersonOptions: { value: string, label: string }[];
 
     constructor(props: Props) {
@@ -79,27 +87,27 @@ class Account extends React.Component<Props, State> {
 
     setStateFromUser() {
         let selectedFlairs: string[] = [];
-        if (this.props.userProfile.get("tags"))
-            this.props.userProfile.get("tags").forEach((tag: Parse.Object) => {
-                selectedFlairs.push(tag.get("label"));
+        if (this.props.userProfile.tags)
+            this.props.userProfile.tags.forEach((tag) => {
+                assert(tag.label);
+                selectedFlairs.push(tag.label);
             });
         this.setState({
             user: this.props.user,
             email: this.props.user.getEmail(),
-            tags: this.props.user.get("tags"),
-            flair: this.props.user.get("primaryFlair"),
+            tags: this.props.userProfile.tags,
+            flair: this.props.userProfile.primaryFlair,
             selectedFlair: selectedFlairs
         });
-        const Flair = Parse.Object.extend("Flair");
         const flairQ = new Parse.Query(Flair);
         let _this = this;
-        flairQ.find().then((u: Parse.Object[]) => {
+        flairQ.find().then((u) => {
             //convert to something that the dom will be happier with
             let res: FlairItem[] = [];
             let flairColors: Record<string, FlairColor> = {};
             for (let flair of u) {
-                flairColors[flair.get("label")] = { color: flair.get("color"), tooltip: flair.get("tooltip") };
-                res.push({ value: flair.get("label"), color: flair.get("color"), id: flair.id })
+                flairColors[flair.label] = { color: flair.color, tooltip: flair.tooltip };
+                res.push({ value: flair.label, color: flair.color, id: flair.id })
             }
             _this.setState({
                 flairColors: flairColors,
@@ -110,24 +118,26 @@ class Account extends React.Component<Props, State> {
             console.error(err)
         });
 
-        const BioTopic = Parse.Object.extend("BioTopic");
-        const bioQuery = new Parse.Query(BioTopic);
-        bioQuery.find().then((u: Parse.Object[]) => {
-            //convert to something that the dom will be happier with
-            let res: FlairItem[] = [];
-            let topicColors: Record<string, string> = {};
-            for (let topic of u) {
-                topicColors[topic.get("label")] = topic.get("color");  //TS:@Jon @Crista no lable in BioTopic??
-                res.push({ value: topic.get("label"), color: topic.get("color"), id: topic.id })
-            }
-            _this.setState({
-                topicColors: topicColors,
-                allTopics: res,
-                topicObj: u
-            });
-        }).catch((err: Error) => {
-            console.error(err)
-        });
+        // TODO: Ed: I commented this out because BioTopic isn't used anywhere
+        //       else in the entire codebase?
+        // const BioTopic = Parse.Object.extend("BioTopic");
+        // const bioQuery = new Parse.Query(BioTopic);
+        // bioQuery.find().then((u) => {
+        //     //convert to something that the dom will be happier with
+        //     let res: FlairItem[] = [];
+        //     let topicColors: Record<string, string> = {};
+        //     for (let topic of u) {
+        //         topicColors[topic.label] = topic.color;  //TS:@Jon @Crista no lable in BioTopic??
+        //         res.push({ value: topic.label, color: topic.color, id: topic.id })
+        //     }
+        //     _this.setState({
+        //         topicColors: topicColors,
+        //         allTopics: res,
+        //         topicObj: u
+        //     });
+        // }).catch((err: Error) => {
+        //     console.error(err)
+        // });
 
     }
 
@@ -152,7 +162,7 @@ class Account extends React.Component<Props, State> {
             await this.props.user.save();
         }
         if (this.state.flairObj) {
-            this.props.userProfile.set("tags", this.state.flairObj.filter((item) => (values.flair.includes(item.get("label")))));
+            this.props.userProfile.set("tags", this.state.flairObj.filter((item) => (values.flair.includes(item.label))));
         }
         this.props.userProfile.set("displayName", values.displayName);
         this.props.userProfile.set("affiliation", values.affiliation);
@@ -185,27 +195,27 @@ class Account extends React.Component<Props, State> {
         this.ProgramPersons = persons;
         this.ProgramItems = items;
 
-        let peopleToItems: Record<string, Parse.Object[]> = {};
+        let peopleToItems: Record<string, ProgramItem[]> = {};
         let matchingPersons = [];
 
         for (let item of this.ProgramItems) {
-            for (let person of item.get("authors")) {
+            for (let person of item.authors) {
                 if (!peopleToItems[person.id])
                     peopleToItems[person.id] = [];
                 peopleToItems[person.id].push(item);
             }
         }
-        this.programPersonOptions = this.ProgramPersons.filter((person: Parse.Object) => (
-            (person.get("userProfile") == null || person.get("userProfile").id === this.props.userProfile.id) &&
-            peopleToItems[person.id])).map((person: Parse.Object) => (
+        this.programPersonOptions = this.ProgramPersons.filter((person) => (
+            (person.userProfile == null || person.userProfile.id === this.props.userProfile.id) &&
+            peopleToItems[person.id])).map((person) => (
                 {
                     value: person.id,
-                    label: person.get('name') + " (" + peopleToItems[person.id].map((item: Parse.Object) => item.get("title")).join(", ") + ")"
+                    label: person.name + " (" + peopleToItems[person.id].map((item) => item.title).join(", ") + ")"
                 })
             );
-        matchingPersons = this.ProgramPersons.filter((person: Parse.Object) =>
-            person.get("userProfile") && person.get("userProfile").id === this.props.userProfile.id
-        ).map((person: Parse.Object) => (person.id));
+        matchingPersons = this.ProgramPersons.filter((person) =>
+            person.userProfile && person.userProfile.id === this.props.userProfile.id
+        ).map((person) => (person.id));
 
         this.setState({
             authorRecords: matchingPersons,
@@ -247,7 +257,7 @@ class Account extends React.Component<Props, State> {
             return <Skeleton />
         }
 
-        let passwordRequired: boolean = !this.props.user.get("passwordSet");
+        let passwordRequired: boolean = !this.props.user.passwordSet;
         if (this.state.loading) {
             return <Spin />
         }
@@ -263,13 +273,13 @@ class Account extends React.Component<Props, State> {
                 layout="horizontal"
                 initialValues={{
                     size: 50,
-                    displayName: this.props.userProfile.get("displayName"),
-                    website: this.props.userProfile.get("webpage"),
-                    affiliation: this.props.userProfile.get("affiliation"),
-                    country: this.props.userProfile.get("country"),
-                    bio: this.props.userProfile.get("bio"),
-                    pronouns: this.props.userProfile.get("pronouns"),
-                    position: this.props.userProfile.get("position"),
+                    displayName: this.props.userProfile.displayName,
+                    website: this.props.userProfile.webpage,
+                    affiliation: this.props.userProfile.affiliation,
+                    country: this.props.userProfile.country,
+                    bio: this.props.userProfile.bio,
+                    pronouns: this.props.userProfile.pronouns,
+                    position: this.props.userProfile.position,
                     flair: this.state.selectedFlair,
                     programPersons: this.state.authorRecords
                 }}

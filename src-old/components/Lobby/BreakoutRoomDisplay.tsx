@@ -1,7 +1,7 @@
 import React from 'react';
 import { ClowdrState } from "../../ClowdrTypes";
 import { AuthUserContext } from '../Session';
-import BreakoutRoom from "../../classes/BreakoutRoom";
+import { BreakoutRoom } from "../../classes/ParseObjects";
 import { Skeleton } from "antd";
 import UserStatusDisplay from "./UserStatusDisplay";
 
@@ -36,18 +36,19 @@ class BreakoutRoomDisplay extends React.Component<BreakoutRoomDisplayProps, Brea
     }
 
     render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | React.ReactNodeArray | React.ReactPortal | boolean | null | undefined {
-        let list = <></>;
-        if (!this.state.breakoutRoom)
+        let list: Array<JSX.Element> = [<></>];
+        if (!this.state.breakoutRoom) {
             return <Skeleton.Input />
-        if (this.state.breakoutRoom.get("members") && this.state.breakoutRoom.get("members").length > 0)
-            list = this.state.breakoutRoom.get("members").map((user: any) => {
+        }
+
+        if (this.state.breakoutRoom.members && this.state.breakoutRoom.members.length > 0) {
+            list = this.state.breakoutRoom.members.map((user) => {
                 if (user) {
                     return <UserStatusDisplay popover={true} profileID={user.id} key={user.id} />
                 }
                 return <></>
-            }) //}>
-        else
-            list = <></>
+            })
+        }
         return <div>{list}</div>
     }
 }

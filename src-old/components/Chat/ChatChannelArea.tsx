@@ -11,6 +11,7 @@ import { intersperse } from "../../Util";
 import { RouteComponentProps, withRouter } from "react-router";
 import { ClowdrState } from "../../ClowdrTypes";
 import assert from "assert";
+import { ProgramItem } from "../../classes/ParseObjects";
 
 interface ChatChannelAreaProps extends RouteComponentProps {
     sid: string;
@@ -67,8 +68,8 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
             return;
         }
         if (chat.attributes.mode === "directMessage" && chat.conversation) {
-            let p1 = chat.conversation.get("member1");
-            let p2 = chat.conversation.get("member2");
+            let p1 = chat.conversation.member1;
+            let p2 = chat.conversation.member2;
             let profileID = p1.id;
             assert(this.props.appState.userProfile, "userProfile is null");
             if (profileID === this.props.appState.userProfile.id)
@@ -152,10 +153,10 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
             return;
         }
         if (dat.attributes.category === 'programItem') {
-            let itemQ = new Parse.Query("ProgramItem");
+            let itemQ = new Parse.Query<ProgramItem>("ProgramItem");
             let item = await itemQ.get(dat.attributes.programItemID || "");
-            if (item.get("breakoutRoom")) {
-                this.props.history.push("/video/" + item.get('breakoutRoom').id)
+            if (item.breakoutRoom) {
+                this.props.history.push("/video/" + item.breakoutRoom.id)
                 return;
             }
         }
