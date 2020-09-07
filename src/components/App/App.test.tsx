@@ -1,6 +1,6 @@
 import React from "react";
 import { MemoryRouter } from "react-router-dom";
-import { render, waitForElement, act } from "@testing-library/react";
+import { render, waitForElement } from "@testing-library/react";
 import Cache from "../../classes/Cache/Cache";
 import App from "./App";
 
