@@ -27,7 +27,7 @@ import {
     WechatOutlined,
     YoutubeOutlined
 } from '@ant-design/icons';
-import SubMenu from "antd/es/menu/SubMenu";
+import SubMenu from "antd/lib/menu/SubMenu";
 import { withRouter } from "react-router";
 
 

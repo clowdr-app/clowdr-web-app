@@ -19,27 +19,27 @@ import {
     Typography
 } from "antd";
 import './VideoChat.css';
-import { VideoContext, VideoProvider } from "clowdr-video-frontend/lib/components/VideoProvider";
-import AppStateProvider from "clowdr-video-frontend/lib/state";
+import { VideoContext, VideoProvider } from "./VideoFrontend/components/VideoProvider";
+import AppStateProvider from "./VideoFrontend/state";
 import IconButton from "@material-ui/core/IconButton";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from "@material-ui/core/DialogContent";
-import AudioInputList from "clowdr-video-frontend/lib/components/MenuBar/DeviceSelector/AudioInputList/AudioInputList";
+import AudioInputList from "./VideoFrontend/components/MenuBar/DeviceSelector/AudioInputList/AudioInputList";
 import AudioOutputList
-    from "clowdr-video-frontend/lib/components/MenuBar/DeviceSelector/AudioOutputList/AudioOutputList";
-import VideoInputList from "clowdr-video-frontend/lib/components/MenuBar/DeviceSelector/VideoInputList/VideoInputList";
+    from "./VideoFrontend/components/MenuBar/DeviceSelector/AudioOutputList/AudioOutputList";
+import VideoInputList from "./VideoFrontend/components/MenuBar/DeviceSelector/VideoInputList/VideoInputList";
 import { makeStyles } from "@material-ui/styles";
 import { createStyles } from "@material-ui/core";
 import SettingsInputComponentIcon from '@material-ui/icons/SettingsInputComponent';
 import withLoginRequired from "../Session/withLoginRequired";
 import NewRoomForm from "../Lobby/NewRoomForm";
-import { isMobile } from "clowdr-video-frontend/lib/utils";
-import useFullScreenToggle from "clowdr-video-frontend/lib/hooks/useFullScreenToggle/useFullScreenToggle";
+import { isMobile } from "./VideoFrontend/utils";
+import useFullScreenToggle from "./VideoFrontend/hooks/useFullScreenToggle/useFullScreenToggle";
 import fscreen from "fscreen";
 import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
 import FullscreenIcon from '@material-ui/icons/Fullscreen';
 import FlipCameraIosIcon from '@material-ui/icons/FlipCameraIos';
-import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
+import useVideoContext from "./VideoFrontend/hooks/useVideoContext/useVideoContext";
 import ReportToModsButton from "./ReportToModsButton";
 import { SyncOutlined } from '@ant-design/icons'
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
@@ -251,13 +251,11 @@ class VideoRoom extends Component {
         setTimeout(function () {
             if (_this.loadingVideo) {
                 window.localStorage.setItem("videoReloads", "" + (numReloads + 1));
-                // window.location.reload(false);
             }
         }, timeout);
         if (!this.mounted)
             return;
         console.log("Joining room " + room.id + ", setting chat channel: " + room.get("twilioChatID"))
-        // this.props.clowdrAppState.helpers.setGlobalState({currentRoom: room, chatChannel: room.get("twilioChatID")});
         let watchedByMe = false;
         if (this.props.clowdrAppState.userProfile.get("watchedRooms")) {
             watchedByMe = this.props.clowdrAppState.userProfile.get("watchedRooms").find(v => v.id === room.id);
@@ -270,8 +268,6 @@ class VideoRoom extends Component {
         if (user) {
             if (room.get("twilioChatID"))
                 this.props.clowdrAppState.chatClient.initChatClient(user, this.props.clowdrAppState.currentConference, this.props.clowdrAppState.userProfile).then(() => {
-                    // this.props.clowdrAppState.chatClient.openChatAndJoinIfNeeded(room.get("twilioChatID")).then((chan)=>{
-                    // })
                     if (this.state.isMounted)
                         this.props.clowdrAppState.chatClient.setRightSideChat(room.get("twilioChatID"));
                 });
@@ -362,38 +358,17 @@ class VideoRoom extends Component {
                 if (!this.state.members.find(v => v.id === member.id)) {
                     //new member appeared
                     hadChange = true;
-                    // if (this.state.members.length > 0 && this.props.clowdrAppState.userProfile.id !== member.id)
-                    //     notification.info({
-                    //         message: member.get("displayName") + " has joined this room",
-                    //         placement: 'topLeft',
-                    //     });
                 }
             }
             for (let member of this.state.members) {
                 if (this.props.clowdrAppState.userProfile.id !== member.id && !this.state.room.get("members").find(v => v.id === member.id)) {
                     hadChange = true;
-                    // notification.info({
-                    //     message: member.get("displayName") + " has left this room",
-                    //     placement: 'topLeft',
-                    // });
                 }
             }
             if (hadChange) {
                 this.setState({ members: this.state.room.get("members") });
             }
         }
-        // if (this.state.room && this.state.room.get("isPrivate")) {
-        //Was there an update to the ACL?
-        // let room = this.props.clowdrAppState.activePrivateVideoRooms.find(r => r.id === this.state.room.id);
-        // console.log(room)
-        // console.log(this.state.room.getACL().permissionsById)
-        // if(room)
-        // console.log(room.getACL().permissionsById);
-        // if(room && room.getACL().permissionsById !== this.state.room.getACL().permissionsById){
-        //     console.log("Updated ACL")
-        //     this.setState({room: room});
-        // }
-        // }
     }
 
     onError(err) {
@@ -495,21 +470,6 @@ class VideoRoom extends Component {
         if (!this.state.meetingName || !this.state.token) {
             return <div><Spin />Loading...</div>
         }
-        // let greeting;
-        // if (this.state.room.get("visibility") === "unlisted") {
-        //
-        //     greeting = <div>
-        //         This room is private. Only the following users can see it:
-        //         <RoomVisibilityController clowdrAppState={this.props.clowdrAppState} roomID={this.state.room.id} sid={this.state.room.get("twilioID")} acl={this.state.room.getACL()}/>
-        //         Any user who can see this room can edit the access list.
-        //     </div>
-        //
-        // } else {
-        //     greeting = <Paragraph>
-        //         Invite your friends to join this room by sharing this page's address, or telling them the name of this
-        //         room ({this.state.meetingName}).
-        //     </Paragraph>
-        // }
 
         let visibilityDescription, privacyDescription, ACLdescription, fullLabel;
         if (this.state.room.get("isPrivate")) {
@@ -610,7 +570,6 @@ class VideoRoom extends Component {
                             //     const audioTrack = localTracks.find(track => track.kind === 'audio');
                             //     audioTrack.disable();
                             // }
-
                         }
                         }
                         onDisconnect={this.handleLogout.bind(this)}>
@@ -660,22 +619,6 @@ class VideoRoom extends Component {
                                             this.state.room.get("capacity") + "; currently " + (this.state.room.get("capacity") - nMembers) + " spot" + ((this.state.room.get("capacity") - nMembers) !== 1 ? "s" : "") + " available."} ><Tag color={membersListColor}>{nMembers + "/" + this.state.room.get("capacity")}</Tag></Tooltip>
                                         {fullLabel}{visibilityDescription}
                                         {privacyDescription}</h3>)}
-
-
-                                    {/*<div style={{width: "100%", display:"flex"}}>*/}
-                                    {/*    <Collapse style={{flexGrow: 1}}>*/}
-                                    {/*        <Collapse.Panel key="watchers" header={"Users following this room: "+nWatchers}>*/}
-                                    {/*            <List size="small" renderItem={item => <List.Item><UserDescriptor id={item.id} /></List.Item>}*/}
-                                    {/*            dataSource={this.state.room.get("watchers")}*/}
-                                    {/*            />*/}
-
-                                    {/*        </Collapse.Panel>*/}
-                                    {/*    </Collapse>*/}
-                                    {/*    <Tooltip mouseEnterDelay={0.5} title="Follow this room to get notifications in-app when people come and go">*/}
-                                    {/*        <Switch checkedChildren="Following" unCheckedChildren="Not Following" onChange={this.toggleWatch.bind(this)}*/}
-                                    {/*                loading={this.state.watchLoading}*/}
-                                    {/*                style={{marginTop: "5px", marginLeft:"5px"}} checked={this.state.watchedByMe}/></Tooltip>*/}
-                                    {/*</div>*/}
                                 </div>
                                 <div style={{}}>
                                     <FlipCameraButton /><DeviceSelector /><ToggleFullscreenButton /> <ReportToModsButton room={this.state.room} />

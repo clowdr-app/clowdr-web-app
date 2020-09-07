@@ -4,7 +4,7 @@ import Parse from "parse";
 import { AuthUserContext } from "../../../Session";
 import { DeleteOutlined, EditOutlined, SaveTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 import { ClowdrState, EditableCellProps } from "../../../../ClowdrTypes";
-import { SelectValue } from "antd/es/select";
+import { SelectValue } from "antd/lib/select";
 import { Store } from 'antd/lib/form/interface';
 import assert from 'assert';
 var moment = require('moment');

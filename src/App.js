@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { BrowserRouter, NavLink, Route } from 'react-router-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
 import BrowserDetection from 'react-browser-detection';
-import { Button, Layout, message, Select, Spin, Tooltip, Typography, Upload } from 'antd';
+import { Button, Layout, message, Spin, Upload } from 'antd';
 
 import Home from "./components/Home"
 import Lobby from "./components/Lobby"
@@ -25,8 +25,6 @@ import Parse from "parse";
 import ForgotPassword from "./components/Account/ForgotPassword";
 
 import Account from "./components/Account";
-import VideoChat from "./components/VideoChat";
-// import ScheduleList from "./components/Admin/Schedule";
 // import UsersList from "./components/Admin/Users";
 //
 import Registrations from "./components/Admin/Registrations";
@@ -40,7 +38,6 @@ import ProgramSessions from "./components/Admin/Program/Sessions";
 // import EditUser from "./components/Admin/Users/EditUser";
 // import ChannelList from "./components/ChannelList";
 //import Chat from "./components/Chat";
-import GenericHeader from "./components/GenericHeader";
 import GenericLanding from "./components/GenericLanding";
 import SocialTab from "./components/SocialTab";
 import About from "./components/About";
@@ -183,8 +180,6 @@ class App extends Component {
             <Route exact path="/exhibits/:track/:style" component={Exhibits} />
             {/* <Route exact path="/exhibits/srcposters" component={SRCPosters}/> */}
 
-            <Route exact path="/video/:parseRoomID" component={VideoRoom} />
-
             <Route exact path="/video/:conf/:roomName" component={VideoRoom} />
             <Route exact path="/moderation" component={Moderation} />
 
@@ -193,14 +188,12 @@ class App extends Component {
             {/*<Route exact path="/channelList" component={ChannelList}/>*/}
 
             <Route exact path="/account" component={Account} />
-            <Route exact path="/videoChat/:roomId" component={VideoChat} />
             <Route exact path="/lobby" component={Lobby} />
             {/* <Route exact path="/signup" component={SignUp}/> */}
             <Route exact path="/signin" component={SignIn} />
             <Route exact path="/signout" component={SignOut} />
             <Route exact path="/admin" component={(props) => <SignIn {...props} dontBounce={true} />} />
 
-            {/*<Route exact path='/admin/schedule' component={withRouter(withAuthentication(ScheduleList))} />*/}
             <Route exact path='/admin/users' component={UsersList} />
             {/*<Route exact path='/admin/users/edit/:userID' component={withRouter(withAuthentication(EditUser))} />*/}
             <Route exact path='/admin/clowdr' component={Clowdr} />
