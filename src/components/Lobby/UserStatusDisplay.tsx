@@ -178,7 +178,7 @@ class UserStatusDisplay extends React.Component<any, any> {
                 onClick={onClick}>
                 <Popover
                     title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
-                    {this.state.profile.get("displayName")}
+                    <span>{this.state.profile.get("displayName")}</span>
                 </Popover>
             </span>
         }
@@ -187,13 +187,13 @@ class UserStatusDisplay extends React.Component<any, any> {
             onClick={onClick}>
             <Popover
                 title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
-                <>
+                <div>
                     &nbsp;&nbsp;&nbsp; {/* BCP: Better way to do this? */}
                     <Badge status={badgeStyle} color={badgeColor} />
                     <span className="userName">{this.state.profile.get("displayName")}</span>
                         &nbsp;
                         <span className="highlightedTags">{tagsToHighlight}</span>
-                </>
+                </div>
             </Popover>
             {timestamp}
         </div>
