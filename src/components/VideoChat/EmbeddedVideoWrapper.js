@@ -1,74 +1,51 @@
 import { createStyles, makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 
-import useRoomState from "clowdr-video-frontend/lib/hooks/useRoomState/useRoomState";
-import MenuBar from "clowdr-video-frontend/lib/components/MenuBar/MenuBar";
+import useRoomState from "./VideoFrontend/hooks/useRoomState/useRoomState";
+import ConnectBridge from "./VideoFrontend/components/MenuBar/ConnectBridge";
 import ConnectTriggeringLocalVideoPreview
-    from "clowdr-video-frontend/lib/components/LocalVideoPreview/ConnectTriggeringLocalVideoPreview"
+    from "./VideoFrontend/components/LocalVideoPreview/ConnectTriggeringLocalVideoPreview"
 import ReconnectingNotification
-    from "clowdr-video-frontend/lib/components/ReconnectingNotification/ReconnectingNotification";
+    from "./VideoFrontend/components/ReconnectingNotification/ReconnectingNotification";
 import { styled } from "@material-ui/core";
-import React from "react";
+import React, { useState } from "react";
 import { PushpinFilled, PushpinOutlined } from "@ant-design/icons"
 
-import useVideoContext from "clowdr-video-frontend/lib/hooks/useVideoContext/useVideoContext";
-import useParticipants from "clowdr-video-frontend/lib/hooks/useParticipants/useParticipants";
+import useVideoContext from "./VideoFrontend/hooks/useVideoContext/useVideoContext";
+import useParticipants from "./VideoFrontend/hooks/useParticipants/useParticipants";
 import useSelectedParticipant
-    from "clowdr-video-frontend/lib/components/VideoProvider/useSelectedParticipant/useSelectedParticipant";
+    from "./VideoFrontend/components/VideoProvider/useSelectedParticipant/useSelectedParticipant";
 import ParticipantConnectionIndicator
-    from "clowdr-video-frontend/lib/components/ParticipantInfo/ParticipantConnectionIndicator/ParticipantConnectionIndicator";
-import NetworkQualityLevel from "clowdr-video-frontend/lib/components/NewtorkQualityLevel/NetworkQualityLevel";
-import AudioLevelIndicator from "clowdr-video-frontend/lib/components/AudioLevelIndicator/AudioLevelIndicator";
+    from "./VideoFrontend/components/ParticipantInfo/ParticipantConnectionIndicator/ParticipantConnectionIndicator";
+import NetworkQualityLevel from "./VideoFrontend/components/NewtorkQualityLevel/NetworkQualityLevel";
+import AudioLevelIndicator from "./VideoFrontend/components/AudioLevelIndicator/AudioLevelIndicator";
 import { ScreenShare, VideocamOff } from "@material-ui/icons";
-import usePublications from "clowdr-video-frontend/lib/hooks/usePublications/usePublications";
+import usePublications from "./VideoFrontend/hooks/usePublications/usePublications";
 import useParticipantNetworkQualityLevel
-    from "clowdr-video-frontend/lib/hooks/useParticipantNetworkQualityLevel/useParticipantNetworkQualityLevel";
-import useTrack from "clowdr-video-frontend/lib/hooks/useTrack/useTrack";
-import useIsTrackSwitchedOff from "clowdr-video-frontend/lib/hooks/useIsTrackSwitchedOff/useIsTrackSwitchedOff";
-import Publication from "clowdr-video-frontend/lib/components/Publication/Publication";
+    from "./VideoFrontend/hooks/useParticipantNetworkQualityLevel/useParticipantNetworkQualityLevel";
+import useTrack from "./VideoFrontend/hooks/useTrack/useTrack";
+import useIsTrackSwitchedOff from "./VideoFrontend/hooks/useIsTrackSwitchedOff/useIsTrackSwitchedOff";
+import Publication from "./VideoFrontend/components/Publication/Publication";
 import Masonry from "react-masonry-css";
-import useIsUserActive from "clowdr-video-frontend/lib/components/Controls/useIsUserActive/useIsUserActive";
-import ToggleAudioButton from "clowdr-video-frontend/lib/components/Controls/ToggleAudioButton/ToggleAudioButton";
-import ToggleVideoButton from "clowdr-video-frontend/lib/components/Controls/ToggleVideoButton/ToggleVideoButton";
+import useIsUserActive from "./VideoFrontend/components/Controls/useIsUserActive/useIsUserActive";
+import ToggleAudioButton from "./VideoFrontend/components/Controls/ToggleAudioButton/ToggleAudioButton";
+import ToggleVideoButton from "./VideoFrontend/components/Controls/ToggleVideoButton/ToggleVideoButton";
 import ToggleScreenShareButton
-    from "clowdr-video-frontend/lib/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
-import EndCallButton from "clowdr-video-frontend/lib/components/Controls/EndCallButton/EndCallButton";
+    from "./VideoFrontend/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
+import EndCallButton from "./VideoFrontend/components/Controls/EndCallButton/EndCallButton";
 import UserStatusDisplay from "../Lobby/UserStatusDisplay";
 
 const Main = styled('main')({
-    // overflow: 'hidden',
 });
-
-// const ParticipantContainer = styled('Grid')(({ theme }) => ({
-//     // position: 'relative',
-//     height: '80vh',
-//     // display: 'grid',
-//     flexGrow: 1,
-//     // gridTemplateColumns: `${theme.sidebarWidth}px 1fr`,
-//     gridTemplateAreas: '". participantList"',
-//     // gridTemplateRows: '100%',
-//     spacing: 0,
-//     // [theme.breakpoints.down('xs')]: {
-//     //     gridTemplateAreas: '"participantList" "."',
-//     //     gridTemplateColumns: `auto`,
-//     //     gridTemplateRows: `calc(100% - ${theme.sidebarMobileHeight + 12}px) ${theme.sidebarMobileHeight + 6}px`,
-//     //     gridGap: '6px',
-//     // },
-// }));
 
 export default function App() {
     const roomState = useRoomState();
-
-    // Here we would like the height of the main container to be the height of the viewport.
-    // On some mobile browsers, 'height: 100vh' sets the height equal to that of the screen,
-    // not the viewport. This looks bad when the mobile browsers location bar is open.
-    // We will dynamically set the height with 'window.innerHeight', which means that this
-    // will look good on mobile browsers even after the location bar opens or closes.
-    // const height = useHeight();
+    const fullVideoContext = useVideoContext();
+    const [setRoomName] = useState('');
 
     return (
         <div>
-            <MenuBar />
+            <ConnectBridge videoContext={fullVideoContext} setRoomName={setRoomName} />
             <Main>
                 {roomState === 'disconnected' ? <ConnectTriggeringLocalVideoPreview /> : <div>
                     <ParticipantStrip />
@@ -100,10 +77,7 @@ function ParticipantStrip() {
     const showControls = isUserActive || roomState === 'disconnected';
 
     const [selectedParticipant, setSelectedParticipant] = useSelectedParticipant();
-    // const height = useHeight();o
-    // let nImages = participants.length;
-    let nImages = tmp.length; //don't forget +1 for you!
-    // console.log(nImages)
+    let nImages = tmp.length;
     let defaultPriority = "low";
     let breakpointColumnsObj = {
         default: 4,
@@ -173,10 +147,6 @@ function ParticipantStrip() {
     }
 
     return (
-        // <ParticipantStripContainer>
-        //     <ScrollContainer>
-        // <Container style={{ height }}>
-
         <div style={{ paddingLeft: "5px" }}>
             {selectedParticipant ? <Participant
                 key={selectedParticipant.sid}
@@ -189,11 +159,6 @@ function ParticipantStrip() {
             /> : ""}
             <Masonry breakpointCols={breakpointColumnsObj}
                 className="video-masonry-grid" columnClassName="video-masonry-column">
-                {/*{selectedParticipant === localParticipant ? "" : <Participant*/}
-                {/*        participant={localParticipant}*/}
-                {/*        isSelected={selectedParticipant === localParticipant}*/}
-                {/*        onClick={() => setSelectedParticipant(localParticipant)}*/}
-                {/*    />}*/}
                 {tmp.filter((participant) => (participant !== selectedParticipant))
                     .map((participant, idx) =>
                         (<Participant
@@ -219,7 +184,6 @@ function ParticipantStrip() {
                 )}
             </div>
         </div>
-        // </ParticipantStripContainer>
     );
 }
 
@@ -232,30 +196,15 @@ function Participant({
     priority,
     showWhenJustListening,
 }) {
-    /*
-       const justListening = (audioPublication == null && videoPublication == null);
-           <div>
-               showWhenJustListening = {showWhenJustListening.toString()} <br/>
-               audioPublication = { audioPublication != null ? audioPublication.toString() : "null"} <br/>
-               videoPublication = { videoPublication != null ? videoPublication.toString() : "null"} <br/>
-               {justListening ? "Just listening!" : ""}
-             */
     return <ParticipantInfo participant={participant} onClick={onClick} isSelected={isSelected}>
         <ParticipantTracks participant={participant} disableAudio={disableAudio}
             enableScreenShare={enableScreenShare} videoPriority={priority} />
     </ParticipantInfo>;
-    /*
-            </div>;
-            */
 }
 
 const useStyles = makeStyles((theme) =>
     createStyles({
         container: {
-            // position: 'relative',
-            // display: 'flex',
-            // alignItems: 'stretch',
-            // overflow: 'hidden',
             cursor: 'pointer',
             '& video': {
                 filter: 'none',
@@ -266,8 +215,6 @@ const useStyles = makeStyles((theme) =>
             },
             border: "1px solid black",
             [theme.breakpoints.down('xs')]: {
-                // height: theme.sidebarMobileHeight,
-                // marginRight: '3px',
                 fontSize: '10px',
             },
         },
@@ -283,7 +230,6 @@ const useStyles = makeStyles((theme) =>
             background: 'transparent',
         },
         hideVideo: {
-            // background: 'black',
         },
         identity: {
             fontSize: '12px',
@@ -357,7 +303,6 @@ function ParticipantInfo({ participant, onClick, isSelected, children }) {
                     {isSelected ? <PushpinFilled /> : <PushpinOutlined />}
                 </div>
             </div>
-            {/*{isVideoSwitchedOff && <BandwidthWarning />}*/}
             {children}
         </div>
     );
@@ -370,9 +315,7 @@ function ParticipantTracks({
     videoPriority,
 }) {
     const { room } = useVideoContext();
-    // eslint-disable-next-line no-undef
     const publications = usePublications(participant);
-    // eslint-disable-next-line no-undef
     const isLocal = participant === room.localParticipant;
 
     let filteredPublications;
