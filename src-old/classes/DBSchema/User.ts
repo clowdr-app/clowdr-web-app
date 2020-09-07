@@ -1,4 +1,5 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
+import { KnownKeys } from '../../Util';
 
 export interface User extends Base {
     email?: string;
@@ -7,3 +8,12 @@ export interface User extends Base {
     username?: string;
     isBanned?: "Yes" | "No";
 }
+
+export const UserFields: Array<KnownKeys<User>> = [
+    ...BaseFields,
+    "email",
+    "loginKey",
+    "passwordSet",
+    "username",
+    "isBanned"
+];

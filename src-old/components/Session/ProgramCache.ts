@@ -14,118 +14,112 @@ import {
     ZoomRoom,
     MeetingRegistration
 } from "../../classes/ParseObjects";
+import ClowdrCache from "../../classes/Cache";
+import IDBSchema from "../../classes/Cache/Schema";
+import { StoreNames } from "idb";
+import { SubscriptionEvent } from "../../classes/Cache/ClowdrCache";
 
 // TODO: This should be made into a generic cache class parameterised by the
 //       type of the thing it stores. Then have multiple caches for the various
 //       listed uses in the numerous wrapper functions of this existing class.
 export default class ProgramCache {
-    conference: ClowdrInstance | null;
+    conference: ClowdrInstance;
     parseLive: Parse.LiveQueryClient;
-    _dataPromises: { [tableName: string]: Promise<any> };
-    _dataResolves: { [tableName: string]: (p: any) => void };
-    _data: { [tableName: string]: ParseObject[] };
-    _dataById: { [tableName: string]: { [k: string]: ParseObject } };
     _subscriptions: { [tableName: string]: LiveQuerySubscription };
     _listSubscribers: { [tableName: string]: React.Component[] };
     _updateSubscribers: { [tableName: string]: { [id: string]: React.Component[] } };
     _zoomLinks: { [roomId: string]: any };
 
-    constructor(conference: ClowdrInstance | null, parseLive: LiveQueryClient) {
+    idbCache: ClowdrCache;
+
+    constructor(conference: ClowdrInstance, parseLive: LiveQueryClient) {
         this.conference = conference;
         this.parseLive = parseLive;
-        this._dataPromises = {};
-        this._dataResolves = {};
-        this._data = {};
-        this._dataById = {};
         this._subscriptions = {};
         this._listSubscribers = {};
         this._updateSubscribers = {};
         this._zoomLinks = {};
 
+        this.idbCache = new ClowdrCache(this.conference.id);
+
         this.getEntireProgram();
     }
 
-    async _fetchTableAndSubscribe<T extends ParseObject>(tableName: string, objToSetStateOnUpdate?: React.Component): Promise<T[]> {
+    async _fetchTableAndSubscribe<T extends ParseObject>(
+        tableName: string,
+        objToSetStateOnUpdate?: React.Component): Promise<T[]> {
+
         if (objToSetStateOnUpdate) {
             if (!this._listSubscribers[tableName])
                 this._listSubscribers[tableName] = [];
             this._listSubscribers[tableName].push(objToSetStateOnUpdate);
         }
-        if (!this._dataPromises[tableName]) {
-            this._dataPromises[tableName] = new Promise(async (resolve, reject) => {
-                if (this._data[tableName])
-                    resolve(this._data[tableName]);
-                if (this._dataResolves[tableName])
-                    reject("Should not be possible...")
-                this._dataResolves[tableName] = resolve;
-            });
-            let query = new Parse.Query(tableName);
-            query.equalTo("conference", this.conference);
 
-            query.limit(10000);
-            let sub = this.parseLive.subscribe(query);
-            this._subscriptions[tableName] = sub;
-            sub.on("create", obj => {
-                this._dataById[tableName][obj.id] = obj;
-                this._data[tableName] = [obj, ...this._data[tableName]];
-                if (this._listSubscribers[tableName]) {
-                    for (let subscriber of this._listSubscribers[tableName]) {
-                        subscriber.setState({ [tableName + "s"]: this._data[tableName] });
-                    }
+        let storeName = tableName as StoreNames<IDBSchema>;
+
+        this.idbCache.subscribe(
+            storeName,
+            "ProgramCache_fetchTableAndSubscribe",
+            async (event, ids) => {
+                let allData = this.idbCache.getAll(storeName);
+                let outputData = allData.then(xs => this.mapToParseObject(storeName, xs));
+
+                switch (event) {
+                    case SubscriptionEvent.Fetched:
+                        // Do nothing
+                        break;
+                    case SubscriptionEvent.Created:
+                        if (this._listSubscribers[tableName]) {
+                            for (let subscriber of this._listSubscribers[tableName]) {
+                                subscriber.setState({ [tableName + "s"]: await outputData });
+                            }
+                        }
+                        break;
+                    case SubscriptionEvent.Updated:
+                        /* I didn't mean to have this code in here: this is a big performance anti-pattern
+                         since any update to anything basically causes the entire thing to re-render, rather
+                         than just the component that changed. It would be good to refactor things to not
+                         rely on this. -JB
+
+                         Ed: The new IndexedDB-based cache callback interface solves the above problem -
+                             because you shouldn't be passing references to setState functions around!
+                             The callback should be registered for by each component that needs it, and
+                             that component's callback can then call setState if it wants to.
+                             Everything below is just a legacy interface hack.
+                        */
+
+                        if (this._listSubscribers[tableName]) {
+                            for (let subscriber of this._listSubscribers[tableName]) {
+                                subscriber.setState({ [tableName + "s"]: await outputData });
+                            }
+                        }
+                        for (let objId of ids) {
+                            let query = new Parse.Query(storeName);
+                            let obj = query.get(objId);
+
+                            if (this._updateSubscribers[tableName] && this._updateSubscribers[tableName][objId]) {
+                                for (let subscriber of this._updateSubscribers[tableName][objId]) {
+                                    subscriber.setState({ [tableName]: await obj });
+                                }
+                            }
+                        }
+                        break;
+                    case SubscriptionEvent.Deleted:
+                        if (this._listSubscribers[tableName]) {
+                            for (let subscriber of this._listSubscribers[tableName]) {
+                                subscriber.setState({ [tableName + "s"]: await outputData });
+                            }
+                        }
+                        break;
                 }
             });
-            sub.on("delete", obj => {
-                this._data[tableName] = this._data[tableName].filter(v => v.id !== obj.id);
-                delete this._dataById[tableName][obj.id];
-
-                if (this._listSubscribers[tableName]) {
-                    for (let subscriber of this._listSubscribers[tableName]) {
-                        subscriber.setState({ [tableName + "s"]: this._data[tableName] });
-                    }
-                }
-            });
-            sub.on("update", async (obj: Parse.Object | ProgramItem) => {
-                if ("attachments" in obj &&
-                    obj.attachments.length > 0) {
-                    await Parse.Object.fetchAllIfNeeded(obj.attachments);
-                }
-                this._data[tableName] = this._data[tableName].map(v => v.id === obj.id ? obj : v);
-
-
-                this._dataById[tableName][obj.id] = obj;
-                /* I didn't mean to have this code in here: this is a big performance anti-pattern
-                 since any update to anything basically causes the entire thing to re-render, rather
-                 than just the component that changed. It would be good to refactor things to not
-                 rely on this. -JB
-                */
-                if (this._listSubscribers[tableName]) {
-                    for (let subscriber of this._listSubscribers[tableName]) {
-                        subscriber.setState({ [tableName + "s"]: this._data[tableName] });
-                    }
-                }
-                if (this._updateSubscribers[tableName] && this._updateSubscribers[tableName][obj.id]) {
-                    for (let subscriber of this._updateSubscribers[tableName][obj.id]) {
-                        subscriber.setState({ [tableName]: obj });
-                    }
-                }
-            });
-            let data = await query.find();
-            this._data[tableName] = data;
-            this._dataById[tableName] = {};
-            for (let obj of data)
-                this._dataById[tableName][obj.id] = obj;
-
-            console.log("Loaded: " + tableName + ", " + data.length)
-            if (this._dataResolves[tableName]) {
-                this._dataResolves[tableName](data);
-                delete this._dataResolves[tableName];
-            }
-        }
-        return await this._dataPromises[tableName];
+        
+        return this.idbCache
+            .getAll(tableName as StoreNames<IDBSchema>)
+            .then((x) => this.mapToParseObject(storeName, x)) as Promise<T[]>;
     }
 
     async getProgramItem(id: string, component?: React.Component): Promise<ProgramItem | undefined> {
-        await this.getProgramItems();
         if (component) {
             if (!this._updateSubscribers['ProgramItem'])
                 this._updateSubscribers['ProgramItem'] = {};
@@ -133,10 +127,10 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramItem'][id] = [];
             this._updateSubscribers['ProgramItem'][id].push(component);
         }
-        return this._dataById['ProgramItem'][id] as (ProgramItem | undefined);
+        let item = await this.idbCache.get("ProgramItem", id);
+        return item ? this.toParseObject("ProgramItem", item) as Promise<ProgramItem> : undefined;
     }
-    async getProgramSessionEvent(id: string, component?: React.Component): Promise<ProgramSessionEvent> {
-        await this.getProgramSessionEvents();
+    async getProgramSessionEvent(id: string, component?: React.Component): Promise<ProgramSessionEvent | undefined> {
         if (component) {
             if (!this._updateSubscribers['ProgramSessionEvent'])
                 this._updateSubscribers['ProgramSessionEvent'] = {};
@@ -144,14 +138,14 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramSessionEvent'][id] = [];
             this._updateSubscribers['ProgramSessionEvent'][id].push(component);
         }
-        return this._dataById['ProgramSessionEvent'][id] as ProgramSessionEvent;
+        let item = await this.idbCache.get("ProgramSessionEvent", id);
+        return item ? this.toParseObject("ProgramSessionEvent", item) as Promise<ProgramSessionEvent> : undefined;
     }
     async getProgramSession(id: string): Promise<ProgramSession | undefined> {
-        await this.getProgramSessions();
-        return this._dataById['ProgramSession'][id] as (ProgramSession | undefined);
+        let item = await this.idbCache.get("ProgramSession", id);
+        return item ? this.toParseObject("ProgramSession", item) as Promise<ProgramSession> : undefined;
     }
     async getProgramTrack(id: string, component?: React.Component): Promise<ProgramTrack | undefined> {
-        await this.getProgramTracks();
         if (component) {
             if (!this._updateSubscribers['ProgramTrack'])
                 this._updateSubscribers['ProgramTrack'] = {};
@@ -159,11 +153,13 @@ export default class ProgramCache {
                 this._updateSubscribers['ProgramTrack'][id] = [];
             this._updateSubscribers['ProgramTrack'][id].push(component);
         }
-        return this._dataById['ProgramTrack'][id] as (ProgramTrack | undefined);
+        let item = await this.idbCache.get("ProgramTrack", id);
+        return item ? this.toParseObject("ProgramTrack", item) as Promise<ProgramTrack> : undefined;
     }
 
     async getProgramItemByConfKey(confKey: string, component?: React.Component): Promise<ProgramItem | undefined> {
         let items = await this.getProgramItems();
+        // TODO: Improve this by not getting all program items
         let item = items.find((v: any) => v.confKey === confKey);
         if (item) {
             let id = item.id;
@@ -204,7 +200,6 @@ export default class ProgramCache {
     }
 
     async getUserProfileByProfileID(id: string, component?: React.Component): Promise<UserProfile | undefined> {
-        await this.getUserProfiles();
         if (component) {
             if (!this._updateSubscribers['UserProfile'])
                 this._updateSubscribers['UserProfile'] = {};
@@ -212,22 +207,8 @@ export default class ProgramCache {
                 this._updateSubscribers['UserProfile'][id] = [];
             this._updateSubscribers['UserProfile'][id].push(component);
         }
-        return this._dataById['UserProfile'][id] as (UserProfile | undefined);
-    }
-
-    /**
-     *  Used when we want the data to be fetched but don't want to wait for it.
-     */
-    failFast_GetUserProfileByProfileID(id: string, component?: React.Component): UserProfile | undefined {
-        this.getUserProfiles();
-        if (component) {
-            if (!this._updateSubscribers['UserProfile'])
-                this._updateSubscribers['UserProfile'] = {};
-            if (!this._updateSubscribers['UserProfile'][id])
-                this._updateSubscribers['UserProfile'][id] = [];
-            this._updateSubscribers['UserProfile'][id].push(component);
-        }
-        return this._dataById['UserProfile'][id] as (UserProfile | undefined);
+        let item = await this.idbCache.get("UserProfile", id);
+        return item ? this.toParseObject("UserProfile", item) as Promise<UserProfile> : undefined;
     }
 
     async getUserProfiles(objToSetStateOnUpdate?: React.Component): Promise<UserProfile[]> {
@@ -297,10 +278,21 @@ export default class ProgramCache {
         }
     }
 
-    getProgramRoomForEvent(programSessionEvent: ProgramSessionEvent): ProgramRoom | undefined {
+    async getProgramRoomForEvent(programSessionEvent: ProgramSessionEvent): Promise<ProgramRoom | undefined> {
+        let data = await this.getProgramSessions();
         let s = programSessionEvent.programSession;
-        let session = this._dataById["ProgramSession"][s.id] as ProgramSession | undefined;
-        return session?.room as (ProgramRoom | undefined);
+        return data.find((x) => x.id === s.id)?.room;
+    }
+
+    private async toParseObject<K extends StoreNames<IDBSchema>>(name: K, item: IDBSchema[K]["value"]) {
+        let query = new Parse.Query(name);
+        return query.get(item.id);
+    }
+
+    private async mapToParseObject<K extends StoreNames<IDBSchema>>(name: K, items: Array<IDBSchema[K]["value"]>) {
+        let query = new Parse.Query(name);
+        query.containedIn("objectId", items.map((x) => x.id));
+        return query.find();
     }
 
     async getEntireProgram(objToSetStateOnUpdate?: React.Component): Promise<{
@@ -310,17 +302,21 @@ export default class ProgramCache {
         ProgramPersons: ProgramPerson[],
         ProgramSessions: ProgramSession[]
     }> {
-        let results = await Promise.all([this.getProgramItems(objToSetStateOnUpdate),
-        this.getProgramRooms(objToSetStateOnUpdate),
-        this.getProgramTracks(objToSetStateOnUpdate),
-        this.getProgramPersons(objToSetStateOnUpdate),
-        this.getProgramSessions(objToSetStateOnUpdate)]);
+        this.idbCache.initialiseConferenceCache(this.parseLive);
+
+        let results = await Promise.all([
+            this.idbCache.getAll("ProgramItem").then((x) => this.mapToParseObject("ProgramItem", x)),
+            this.idbCache.getAll("ProgramRoom").then((x) => this.mapToParseObject("ProgramRoom", x)),
+            this.idbCache.getAll("ProgramTrack").then((x) => this.mapToParseObject("ProgramTrack", x)),
+            this.idbCache.getAll("ProgramPerson").then((x) => this.mapToParseObject("ProgramPerson", x)),
+            this.idbCache.getAll("ProgramSession").then((x) => this.mapToParseObject("ProgramSession", x))
+        ]);
         return {
-            ProgramItems: results[0],
-            ProgramRooms: results[1],
-            ProgramTracks: results[2],
-            ProgramPersons: results[3],
-            ProgramSessions: results[4]
+            ProgramItems: results[0] as ProgramItem[],
+            ProgramRooms: results[1] as ProgramRoom[],
+            ProgramTracks: results[2] as ProgramTrack[],
+            ProgramPersons: results[3] as ProgramPerson[],
+            ProgramSessions: results[4] as ProgramSession[]
         }
     }
 

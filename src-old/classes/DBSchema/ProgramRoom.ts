@@ -1,4 +1,5 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
+import { KnownKeys } from '../../Util';
 
 export interface ProgramRoom extends Base {
     isEventFocusedRoom?: boolean;
@@ -14,3 +15,16 @@ export interface ProgramRoom extends Base {
 
     qa?: string;
 }
+
+export const ProgramRoomFields: Array<KnownKeys<ProgramRoom>> = [
+    ...BaseFields,
+    "isEventFocusedRoom",
+    "name",
+    "id1",
+    "src1",
+    "pwd1",
+    "id2",
+    "src2",
+    "pwd2",
+    "qa"
+];

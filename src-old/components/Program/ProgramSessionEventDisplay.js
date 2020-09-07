@@ -23,7 +23,7 @@ class ProgramSessionEventDisplay extends React.Component {
             ProgramItem: programItem,
             loading: false,
             ProgramTrack: track,
-            room: this.props.auth.programCache.getProgramRoomForEvent(event)
+            room: await this.props.auth.programCache.getProgramRoomForEvent(event)
         })
     }
 

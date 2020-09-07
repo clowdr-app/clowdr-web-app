@@ -19,7 +19,6 @@ export type { ProgramSession } from "./ProgramSession";
 export type { ProgramSessionEvent } from "./ProgramSessionEvent";
 export type { ProgramTrack } from "./ProgramTrack";
 export type { Registration } from "./Registration";
-export type { Role } from "./Role";
 export type { SocialSpace } from "./SocialSpace";
 export type { TwilioChannelMirror } from "./TwilioChannelMirror";
 export type { User } from "./User";

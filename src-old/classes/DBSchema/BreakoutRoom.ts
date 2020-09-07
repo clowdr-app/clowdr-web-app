@@ -1,4 +1,5 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
+import { KnownKeys } from '../../Util';
 
 export interface BreakoutRoom extends Base {
     capacity?: number;
@@ -9,3 +10,14 @@ export interface BreakoutRoom extends Base {
     twilioChatID?: string;
     twilioID?: string;
 }
+
+export const BreakoutRoomFields: Array<KnownKeys<BreakoutRoom>> = [
+    ...BaseFields,
+    "capacity",
+    "isPrivate",
+    "mode",
+    "persistence",
+    "title",
+    "twilioChatID",
+    "twilioID"
+];

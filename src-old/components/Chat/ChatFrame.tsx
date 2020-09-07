@@ -35,7 +35,7 @@ interface GroupedMessages {
 
 interface EmojiObject {
     emojiMessage: Message | null;
-    authors: Set<string>;
+    authors: Set<{ id: string, displayName: string }>;
 }
 
 const emojiSupport = (text: any) => <>{emojify(text.value, { output: 'unicode' })}</>;
@@ -299,7 +299,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
         }
     }
 
-    groupMessages(messages?: Array<Message> | null) {
+    async groupMessages(messages?: Array<Message> | null) {
         if (!messages) {
             return;
         }
@@ -307,7 +307,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
         let ret: Array<GroupedMessages> = [];
         let reactions: { [x: string]: { [y: string]: EmojiObject } } = {};
 
-        const handleEmojiMessage = (message: Message, associatedMessage: string) => {
+        const handleEmojiMessage = async (message: Message, associatedMessage: string) => {
             // Find or create the reaction group
             let reactionGroup: { [x: string]: EmojiObject };
             if (!reactions[associatedMessage]) {
@@ -328,7 +328,11 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
             }
 
             // Add the author to the set
-            emojiObj.authors.add(message.author);
+            let authorProfile = await this.props.appState.programCache.getUserProfileByProfileID(message.author);
+            emojiObj.authors.add({
+                id: message.author,
+                displayName: authorProfile?.displayName || "[Name unavailable]"
+            });
         };
 
         let lastGroup: GroupedMessages | undefined = undefined;
@@ -353,7 +357,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
 
                 if (messageAttributes.associatedMessage) {
                     // Emoji message
-                    handleEmojiMessage(message, messageAttributes.associatedMessage);
+                    await handleEmojiMessage(message, messageAttributes.associatedMessage);
                 }
 
                 // Any kind of message
@@ -366,7 +370,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
             } else {
                 if (messageAttributes.associatedMessage) {
                     // Emoji reaction message
-                    handleEmojiMessage(message, messageAttributes.associatedMessage);
+                    await handleEmojiMessage(message, messageAttributes.associatedMessage);
                 } else {
                     // Normal message
                     lastGroup.messages.push(message);
@@ -840,9 +844,7 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                                         {options}
                                     </div>}>
          */
-        let reactions = null;
-        if (this.state.reactions && this.state.reactions[m.sid])
-            reactions = this.state.reactions[m.sid];
+        let reactions = this.state.reactions[m.sid] || null;
         return <div key={m.sid}>
             <div ref={(el) => {
                 this.messagesEnd = el;
@@ -855,26 +857,26 @@ export class ChatFrame extends React.Component<_ChatFrameProps, ChatFrameState> 
                 {actionButton}
             </div>
             {
-                !reactions ? <></> : (
+                !reactions ? null : (
                     <div className="reactionWrapper">
                         {
                             Object.keys(reactions).sort().map(emojiId => {
-                                if (this.state.reactions[m.sid][emojiId].authors.size === 0)
-                                    return <></>;
                                 let hasMyReaction = this.state.reactions[m.sid][emojiId].emojiMessage;
                                 let tagClassname = (hasMyReaction ? "emojiReact-mine" : "emojiReact");
 
                                 let reactors: Array<string> = [];
-                                this.state.reactions[m.sid][emojiId].authors.forEach(id => {
-                                    let name = this.props.appState.programCache.failFast_GetUserProfileByProfileID(id)?.displayName;
+                                this.state.reactions[m.sid][emojiId].authors.forEach(x => {
+                                    let name = x.displayName;
                                     if (name) {
                                         reactors.push(name);
                                     }
                                 });
 
-                                let reactorList = intersperse(reactors, ", ").reduce((a, s) => a + s);
-                                return this.state.reactions[m.sid][emojiId].authors.size === 0 ? null :
-                                    <Tooltip key={emojiId}
+                                let reactorList = intersperse(reactors, ", ").reduce((a, s) => a + s, "");
+
+                                return this.state.reactions[m.sid][emojiId].authors.size === 0
+                                    ? null
+                                    : <Tooltip key={emojiId}
                                         title={reactorList + " reacted with a " + emojiId}
                                     ><Tag.CheckableTag
                                         className={tagClassname}

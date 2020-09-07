@@ -1,5 +1,6 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
 import { File } from 'parse';
+import { KnownKeys } from '../../Util';
 
 export interface Conference extends Base {
     adminEmail?: string;
@@ -10,3 +11,14 @@ export interface Conference extends Base {
     landingPage?: string;
     welcomeText?: string;
 }
+
+export const ConferenceFields: Array<KnownKeys<Conference>> = [
+    ...BaseFields,
+    "adminEmail",
+    "adminName",
+    "conferenceName",
+    "headerImage",
+    "isInitialized",
+    "landingPage",
+    "welcomeText"
+];

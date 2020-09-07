@@ -1,4 +1,5 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
+import { KnownKeys } from '../../Util';
 
 export interface UserPresence extends Base {
     isAvailable?: boolean;
@@ -9,3 +10,14 @@ export interface UserPresence extends Base {
     isOpenToConversation?: boolean;
     status?: string;
 }
+
+export const UserPresenceFields: Array<KnownKeys<UserPresence>> = [
+    ...BaseFields,
+    "isAvailable",
+    "isDND",
+    "isDNT",
+    "isLookingForConversation",
+    "isOnline",
+    "isOpenToConversation",
+    "status"
+];

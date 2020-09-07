@@ -571,7 +571,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                                 currentConference: conf,
                                 loading: false,
                                 roles: roles,
-                                programCache: new ProgramCache(conf, _this.parseLive),
+                                programCache: conf ? new ProgramCache(conf, _this.parseLive) : null,
                             });
                         }, () => {
                             assert(finishedStateFn);
@@ -624,7 +624,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                     _this.setState({
                         user: null,
                         currentConference: conference,
-                        programCache: new ProgramCache(conference, _this.parseLive),
+                        programCache: conference ? new ProgramCache(conference, _this.parseLive) : null,
                         loading: false,
                         users: {}
                     })

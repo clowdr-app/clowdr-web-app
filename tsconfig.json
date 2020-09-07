@@ -19,6 +19,7 @@
     "noEmit": true,
     "noImplicitReturns": true,      
     "jsx": "react",
+    "downlevelIteration": true,
 
 /* Strict Type-Checking Options 
     "strict": true,                           

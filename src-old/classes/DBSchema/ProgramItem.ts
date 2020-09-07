@@ -1,5 +1,6 @@
-import { Base } from './Base';
+import { Base, BaseFields } from './Base';
 import { File } from 'parse';
+import { KnownKeys } from '../../Util';
 
 export interface ProgramItem extends Base {
     abstract?: string;
@@ -9,3 +10,13 @@ export interface ProgramItem extends Base {
     posterImage?: File;
     title?: string;
 }
+
+export const ProgramItemFields: Array<KnownKeys<ProgramItem>> = [
+    ...BaseFields,
+    "abstract",
+    "chatSID",
+    "confKey",
+    "isPrivate",
+    "posterImage",
+    "title"
+];
