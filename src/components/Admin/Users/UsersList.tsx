@@ -295,7 +295,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 key: 'isBanned',
                 ...this.getColumnSearchProps('isBanned'),
             }, {
-                title: <Tooltip title="Administrators have full access to all that managers do, plus the ability to manage internal clowdr settings"><>Admin</></Tooltip>,
+                title: <Tooltip title="Administrators have full access to all that managers do, plus the ability to manage internal clowdr settings"><span>Admin</span></Tooltip>,
                 key: 'admin',
                 render: (text: string, item: { key: any; }) => {   // TS: Is this the best annotation?
                     let hasRole = this.state.roles['admin'] && this.state.roles['admin'].includes(item.key);
@@ -304,7 +304,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 }
             },
             {
-                title: <Tooltip title="Content managers can edit the program"><>Manager</></Tooltip>,
+                title: <Tooltip title="Content managers can edit the program"><span>Manager</span></Tooltip>,
                 key: 'manager',
                 render: (text: string, item: { key: any; }) => {
                     let hasRole = this.state.roles['manager'] && this.state.roles['manager'].includes(item.key);
@@ -313,7 +313,7 @@ class UsersList extends React.Component<UsersListProps, UsersListState> {
                 }
             },
             {
-                title: <Tooltip title="Moderators can enter all private channels and send global announcements"><>Moderator</></Tooltip>,
+                title: <Tooltip title="Moderators can enter all private channels and send global announcements"><span>Moderator</span></Tooltip>,
                 key: 'moderator',
                 render: (text: string, item: { key: any; }) => {
                     let hasRole = this.state.roles['moderator'] && this.state.roles['moderator'].includes(item.key);

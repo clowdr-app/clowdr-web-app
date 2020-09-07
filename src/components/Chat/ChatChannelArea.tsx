@@ -192,7 +192,7 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
                 mouseEnterDelay={0.5}
                 overlayStyle={{ zIndex: 10 }}
                 title={this.state.members}>
-                <>{this.state.title} ({this.state.membersCount} members)</>
+                <span>{this.state.title} ({this.state.membersCount} members)</span>
             </Tooltip>
         }
         let header = <div className="bottomChatHeader">

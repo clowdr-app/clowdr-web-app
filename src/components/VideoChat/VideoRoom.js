@@ -522,7 +522,7 @@ class VideoRoom extends Component {
         }
         if (this.state.room.get("persistence") === "ephemeral") {
             privacyDescription = (
-                <Tooltip mouseEnterDelay={0.5} title="This room wil be garbage collected after 5 minutes
+                <Tooltip mouseEnterDelay={0.5} title="This room wil be removed after 5 minutes
                     of being empty"><Tag key="persistence" color="#2db7f5">Ephemeral</Tag></Tooltip>)
         } else {
             privacyDescription = (

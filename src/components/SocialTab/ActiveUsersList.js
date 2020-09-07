@@ -50,7 +50,7 @@ class ActiveUsersList extends React.Component {
 
         return <div>
             <Divider className="social-sidebar-divider">
-                <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now.">{activeSpace}</Tooltip>
+                <Tooltip mouseEnterDelay={0.5} title="Social features in CLOWDR are organized around different 'rooms' that represent different aspects of the conference. The list below shows who else is in this room, right now."><span>{activeSpace}</span></Tooltip>
             </Divider>
             <div><PresenceForm /></div>
 
