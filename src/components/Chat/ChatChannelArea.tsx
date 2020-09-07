@@ -90,7 +90,11 @@ class ChatChannelArea extends React.Component<_ChatChannelAreaProps, ChatChannel
                 title = <>{chat.channel.friendlyName}</>;
             }
             try {
-                let members = intersperse(chat.members, ", ");
+                let memberNames = await Promise.all(chat.members.map(async (id) => {
+                    let profile = await this.props.appState.programCache.getUserProfileByProfileID(id);
+                    return profile.get("displayName");
+                }));
+                let members = intersperse(memberNames, ", ");
                 let membersStr = "In this chat: " + members.reduce((a, s) => a + s);
                 this.setState({ members: membersStr, title: title, membersCount: chat.members.length });
             } catch (err) {
