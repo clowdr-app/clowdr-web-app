@@ -1,4 +1,4 @@
-import { getTimeString } from "../../Util";
+import { getTimeString } from "../Util";
 
 class DebugLogger {
     private enabled: boolean = false;

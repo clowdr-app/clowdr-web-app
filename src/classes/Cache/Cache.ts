@@ -1,9 +1,9 @@
 import Parse from 'parse';
 import { openDB, deleteDB, IDBPDatabase, IDBPTransaction, StoreNames, IDBPObjectStore } from 'idb';
 import { OperationResult } from './OperationResult';
-import IDBSchema, { SchemaVersion, IDBSchemaUnion, IDBStoreSpecs, IDBStoreNames } from './Schema';
+import IDBSchema, { SchemaVersion, IDBSchemaUnion, IDBStoreSpecs, IDBStoreNames, IDBStoreDataConstructors } from './Schema';
 import DebugLogger from './DebugLogger';
-import { ClowdrInstance } from '../ParseObjects';
+import { Base } from '../Data/Base';
 
 export enum SubscriptionEvent {
     Fetched,
@@ -14,14 +14,20 @@ export enum SubscriptionEvent {
 
 export type SubscriberCallback = (event: SubscriptionEvent, ids: Array<string>) => Promise<void>;
 
-export default class ClowdrCache {
+export default class Cache {
     private dbPromise: Promise<IDBPDatabase<IDBSchema>> | null;
     private logger: DebugLogger = new DebugLogger("Cache");
 
     // Note: Don't change this - it matches MongoDB
     private readonly KEY_PATH = "id";
 
+    // TODO: Automated tests
+
     // TODO: Test multi-tab interaction
+
+    // TODO: Support indexes / relations - these will be key to performance.
+    //       Need to update `classes/Data/Base` functions at the same time to
+    //       make use of relations through the cache.
 
     constructor(
         public readonly conferenceId: string,
@@ -353,7 +359,7 @@ export default class ClowdrCache {
         store.put(itemToStore);
     }
 
-    notifySubscribers(name: StoreNames<IDBSchema>, event: SubscriptionEvent, ids: Array<string>) {
+    private notifySubscribers(name: StoreNames<IDBSchema>, event: SubscriptionEvent, ids: Array<string>) {
         let obj = this.subscribers[name];
         if (obj) {
             for (let id of obj.callbackIds) {
@@ -422,7 +428,7 @@ export default class ClowdrCache {
             delete this.liveQueries[name];
         }
 
-        let conferencesQuery = new Parse.Query<ClowdrInstance>("ClowdrInstance");
+        let conferencesQuery = new Parse.Query("ClowdrInstance");
         conferencesQuery.get(this.conferenceId);
         let query = new Parse.Query(name);
         query.matchesKeyInQuery("conference.id", "id", conferencesQuery);
@@ -467,23 +473,54 @@ export default class ClowdrCache {
         await initialFetchPromise;
     }
 
-    public async get<K extends StoreNames<IDBSchema>>(name: K, id: string): Promise<IDBSchema[K]["value"] | undefined> {
+    public async get<
+        K extends StoreNames<IDBSchema>,
+        T extends Base<IDBSchema[K]["value"]>>(
+        name: K,
+        id: string,
+        constr?: new (schemaValue: IDBSchema[K]["value"], dbValue?: Parse.Object | null) => Pick<T, any>
+    ): Promise<T | undefined> {
         let db = await this.dbPromise;
         if (!db) {
             let msg = `Attempted to get all items of ${name} but the cache is not connected.`;
             this.logger.error(msg);
             throw new Error(msg);
         }
-        return await db.get(name, id);
+        let schemaValue = await db.get(name, id);
+        // Cache hit?
+        if (schemaValue) {
+            // @ts-ignore - Yeah this is fine, TS just can't do dependent types
+            return constr ? new constr(schemaValue) : new IDBStoreDataConstructors[name](schemaValue);
+        }
+        // Cache miss
+        else {
+            let query = new Parse.Query(name);
+            return query.get(id).then(async dbValue => {
+                let db = await this.dbPromise;
+                if (!db) {
+                    // TODO: Handle cleanly
+                    throw new Error("Database was not connected!");
+                }
+                let transaction = db.transaction(name, "readwrite");
+                // @ts-ignore
+                this.updateData(name, dbValue, transaction.store);
+                await transaction.done;
+                // @ts-ignore
+                let result: T = constr ? new constr({ id: dbValue.id }, dbValue) : new IDBStoreDataConstructors[name]({ id: dbValue.id }, dbValue);
+                return result;
+            });
+        }
     }
 
-    public async getAll<K extends StoreNames<IDBSchema>>(name: K): Promise<Array<IDBSchema[K]["value"]>> {
+    public async getAll<K extends StoreNames<IDBSchema>>(name: K): Promise<Array<Base<IDBSchema[K]["value"]>>> {
         let db = await this.dbPromise;
         if (!db) {
             let msg = `Attempted to get all items of ${name} but the cache is not connected.`;
             this.logger.error(msg);
             throw new Error(msg);
         }
-        return await db.getAll(name);
+        let all: Array<IDBSchema[K]["value"]> = await db.getAll(name);
+        // @ts-ignore
+        return all.map(x => new IDBStoreDataConstructors[name](x));
     }
 }

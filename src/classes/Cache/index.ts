@@ -1,4 +1,4 @@
-import ClowdrCache from './ClowdrCache';
+import Cache from './Cache';
 export { OperationResult } from './OperationResult';
 
-export default ClowdrCache;
+export default Cache;

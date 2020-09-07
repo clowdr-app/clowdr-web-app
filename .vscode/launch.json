@@ -4,6 +4,22 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+    {
+        "name": "Launch tests via NPM",
+        "request": "launch",
+        "runtimeArgs": [
+            "run",
+            "test",
+            "--",
+            "--runInBand",
+            "--no-cache"
+        ],
+        "runtimeExecutable": "npm",
+        "skipFiles": [
+            "<node_internals>/**"
+        ],
+        "type": "pwa-node"
+    },
         {
             "name": "Launch db.js via NPM",
             "request": "launch",

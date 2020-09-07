@@ -12,7 +12,10 @@ import { AttachmentTypeFields } from '../DBSchema/AttachmentType';
 import { MeetingRegistrationFields } from '../DBSchema/MeetingRegistration';
 import { ZoomHostAccountFields } from '../DBSchema/ZoomHostAccount';
 import { ZoomRoomFields } from '../DBSchema/ZoomRoom';
-import { objectKeys } from '../../Util';
+import { objectKeys } from '../Util';
+import { Base } from '../Data/Base';
+import { ProgramItem, ProgramSessionEvent, ProgramSession, ProgramTrack, ProgramRoom, ProgramPerson, UserProfile, AttachmentType, MeetingRegistration, ZoomHostAccount, ZoomRoom, Conference } from '../Data';
+import { ConferenceFields } from '../DBSchema/Conference';
 
 // IMPORTANT: Whenever changes are made to the schema, the version number should
 //            be increased.
@@ -23,10 +26,15 @@ import { objectKeys } from '../../Util';
 // Decimal places are not allowed - only positive integers!
 export const SchemaVersion: number = 1;
 
-// TODO: Do we need any indexes?
+// TODO: How to define indexes / relations?
 
 export default interface IDBSchema extends DBSchema {
     // Note: Store names are case sensitive
+
+    ClowdrInstance: {
+        value: Schemas.Conference;
+        key: string;
+    }
 
     ProgramItem: {
         value: Schemas.ProgramItem;
@@ -85,7 +93,8 @@ export default interface IDBSchema extends DBSchema {
 }
 
 export type IDBSchemaUnion
-    = Schemas.ProgramItem
+    = Schemas.Conference
+    | Schemas.ProgramItem
     | Schemas.ProgramSessionEvent
     | Schemas.ProgramSession
     | Schemas.ProgramTrack
@@ -97,12 +106,8 @@ export type IDBSchemaUnion
     | Schemas.ZoomHostAccount
     | Schemas.ZoomRoom;
 
-type IDBStoreSpec<T> = {
-    name: StoreNames<T>;
-    fields: string[];
-};
-
 export const IDBStoreSpecs: Record<StoreNames<IDBSchema>, string[]> = {
+    ClowdrInstance: ConferenceFields,
     ProgramItem: ProgramItemFields,
     ProgramSessionEvent: ProgramSessionEventFields,
     ProgramSession: ProgramSessionFields,
@@ -118,3 +123,20 @@ export const IDBStoreSpecs: Record<StoreNames<IDBSchema>, string[]> = {
 
 export const IDBStoreNames: Array<StoreNames<IDBSchema>>
     = objectKeys(IDBStoreSpecs);
+
+export const IDBStoreDataConstructors: {
+    [K in keyof IDBSchema]: new (schemaValue: IDBSchema[K]["value"], dbValue?: Parse.Object | null) => Pick<Base<IDBSchema[K]["value"]>, any>;
+} = {
+    ClowdrInstance: Conference,
+    ProgramItem: ProgramItem,
+    ProgramSessionEvent: ProgramSessionEvent,
+    ProgramSession: ProgramSession,
+    ProgramTrack: ProgramTrack,
+    ProgramRoom: ProgramRoom,
+    ProgramPerson: ProgramPerson,
+    UserProfile: UserProfile,
+    AttachmentType: AttachmentType,
+    MeetingRegistration: MeetingRegistration,
+    ZoomHostAccount: ZoomHostAccount,
+    ZoomRoom: ZoomRoom,
+};
