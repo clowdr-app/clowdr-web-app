@@ -1,16 +1,11 @@
 import React from 'react';
 import './Page.scss';
 
-interface IPageProps {
+interface Props {
 }
-
-interface IPageState {
-}
-
-type Props = IPageProps;
 
 function Page(props: Props) {
-    // const [state, setState] = useState<IPageState>({});
+    // const [state, setState] = useState<boolean>({});
 
     return <div className="page"></div>;
 }

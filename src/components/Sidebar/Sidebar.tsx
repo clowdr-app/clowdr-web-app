@@ -2,14 +2,11 @@ import React from 'react';
 import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
 
-interface ISidebarProps {
+interface Props {
 }
 
-interface ISidebarState {
-}
-
-function Sidebar(props: ISidebarProps) {
-    // const [state, setState] = useState<ISidebarState>({});
+function Sidebar(props: Props) {
+    // const [state, setState] = useState<boolean>({});
     const conf = useConference();
 
     return <div className="sidebar">{conf.conferenceName}</div>;

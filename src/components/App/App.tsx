@@ -10,13 +10,8 @@ import UserContext from '../../contexts/UserContext';
 import Cache from '../../classes/Cache';
 import { Conference, User } from '../../classes/Data';
 
-interface IAppProps {
+interface Props {
 }
-
-interface IAppState {
-}
-
-type Props = IAppProps;
 
 /**
  * The main application component.
@@ -36,6 +31,7 @@ export default function App(props: Props) {
     // Get all relevant state information for this component
     // Note: These can't be used inside `useEffect` or other asynchronous
     //       functions.
+    // TODO: Initialise the new cache
     const [cache, setCache] = useState<Cache | null>(currentConferenceId ? new Cache(currentConferenceId) : null);
     const [conference, setConference] = useState<Conference | null>(null);
     const [user, setUser] = useState<User | null>(null);
@@ -57,6 +53,7 @@ export default function App(props: Props) {
                         // No...so let's create a cache for the selected conference
                         // Caches are tied to particularly conferences.
                         _cache = new Cache(currentConferenceId);
+                        // TODO: Initialise the new cache
                         setCache(_cache);
                     }
                     else {
@@ -142,18 +139,20 @@ export default function App(props: Props) {
     //  or welcome page) but reduces our work as we don't have to design an
     //  'empty' sidebar for when no conference is selected.
     if (conference) {
-        sidebar = <ConferenceContext.Provider value={conference}>
-            <Sidebar />
-        </ConferenceContext.Provider>;
+        sidebar = <Sidebar />;
     }
+
+    // TODO: Wrap this in an error boundary to handle null cache/conference/user
 
     // Hint: `user` could be null - see also, `useUser` and `useMaybeUser` hooks
     return <div className="app">
         <CacheContext.Provider value={cache}>
-            <UserContext.Provider value={user}>
-                {page}
-                {sidebar}
-            </UserContext.Provider>
+            <ConferenceContext.Provider value={conference}>
+                <UserContext.Provider value={user}>
+                    {page}
+                    {sidebar}
+                </UserContext.Provider>
+            </ConferenceContext.Provider>
         </CacheContext.Provider>
     </div>;
 }

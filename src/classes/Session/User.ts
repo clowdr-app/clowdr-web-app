@@ -1,6 +1,6 @@
 /**
  * Hint: You probably shouldn't be using this directly. Check to see if you
- * should be using a context.
+ * should be using a hook.
  */
 export default class Session {
     private static readonly currentUserIdKey = "currentUserId";

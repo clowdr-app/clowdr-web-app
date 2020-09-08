@@ -56,6 +56,7 @@ export class Base<T extends Schema> {
             return this.schemaValue;
         };
 
+        // TODO: Push this through the cache
         if (!this.dbValue) {
             let query = new Parse.Query(this.tableName);
             return query.get(this.schemaValue.id).then(copyFields);
