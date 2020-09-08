@@ -69,6 +69,12 @@ export class Base<T extends Schema> {
         return Promise.resolve(this.schemaValue);
     }
 
+    // TODO: Functions to avoid using the Cache directly
+    // i.e. Lookup/Get, Find, GetAll, Set/Put, Create, Destroy
+    // Can we do a generic query?
+    // (Specialise the type of the above to return the type of `this`
+    // so that subclasses are neat and tidy to access without duplicating code)
+
     protected get<K extends KnownKeys<BaseSchemaValueT<T>>>(prop: K): BaseSchemaValueT<T>[K] | Promise<BaseSchemaValueT<T>[K]> {
         if (this.schemaValue[prop]) {
             return this.schemaValue[prop];

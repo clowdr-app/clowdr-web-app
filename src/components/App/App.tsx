@@ -35,6 +35,7 @@ export default function App(props: Props) {
     const [cache, setCache] = useState<Cache | null>(currentConferenceId ? new Cache(currentConferenceId) : null);
     const [conference, setConference] = useState<Conference | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    // TODO: Handle the User Profile
 
     // State updates go inside a `useEffect`
     useEffect(() => {
@@ -62,6 +63,7 @@ export default function App(props: Props) {
 
                     // Now we can try to fetch the selected conference from the cache
                     // If the cache misses, it will go to the db for us.
+                    //   TODO: Lookup against the Conference class
                     let _conference = await _cache.get<"ClowdrInstance", Conference>("ClowdrInstance", currentConferenceId);
                     // Did the conference actually exist?
                     if (!_conference) {
@@ -99,6 +101,7 @@ export default function App(props: Props) {
                 if (currentUserId && currentUserId !== user?.id) {
                     // No, so let's go to the cache for it. The cache will hit
                     // the db for us if the user isn't already present.
+                    //   TODO: Lookup against the User class
                     let _user = await cache.get<"User", User>("User", currentUserId);
                     // Did a user with that id actually exist?
                     if (_user) {
