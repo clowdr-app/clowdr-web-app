@@ -4,6 +4,7 @@ import Page from '../Page/Page';
 import Session_Conference from '../../classes/Session/Conference';
 import Session_User from '../../classes/Session/User';
 import Sidebar from '../Sidebar/Sidebar';
+import CacheContext from '../../contexts/CacheContext';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserContext from '../../contexts/UserContext';
 import Cache from '../../classes/Cache';
@@ -22,6 +23,9 @@ type Props = IAppProps;
  * 
  * Must be wrapped in either a <BrowserRouter> or <MemoryRouter> component (the
  * latter for testing).
+ * 
+ * The App level takes care of the cache, conference and user contexts (/state).
+ * Underlying components can rely entirely on the respective hooks.
  */
 export default function App(props: Props) {
 
@@ -145,9 +149,11 @@ export default function App(props: Props) {
 
     // Hint: `user` could be null - see also, `useUser` and `useMaybeUser` hooks
     return <div className="app">
-        <UserContext.Provider value={user}>
-            {page}
-            {sidebar}
-        </UserContext.Provider>
+        <CacheContext.Provider value={cache}>
+            <UserContext.Provider value={user}>
+                {page}
+                {sidebar}
+            </UserContext.Provider>
+        </CacheContext.Provider>
     </div>;
 }
