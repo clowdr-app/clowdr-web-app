@@ -6,12 +6,12 @@ type SchemaT = Schema.AttachmentType;
 type K = "AttachmentType";
 const K_str: K = "AttachmentType";
 
-type T = DynamicT & SchemaT;
+type T = InstanceT & SchemaT;
 
 interface StaticT extends StaticBase<K, T> {
 }
 
-interface DynamicT extends Base<K, T> {
+interface InstanceT extends Base<K, T> {
 }
 
 export default class Class extends Base<K, T> implements T {

@@ -5,12 +5,12 @@ type SchemaT = Schema.ProgramItem;
 type K = "ProgramItem";
 const K_str: K = "ProgramItem";
 
-type T = DynamicT & SchemaT;
+type T = InstanceT & SchemaT;
 
 interface StaticT extends StaticBase<K, T> {
 }
 
-interface DynamicT extends Base<K, T> {
+interface InstanceT extends Base<K, T> {
 }
 
 // TODO: Tests
