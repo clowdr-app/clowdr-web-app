@@ -1,3 +1,4 @@
+import Parse from "parse";
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
@@ -9,6 +10,8 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserContext from '../../contexts/UserContext';
 import Cache from '../../classes/Cache';
 import { Conference, User } from '../../classes/Data';
+import * as DataLayer from "../../classes/DataLayer";
+import assert from "assert";
 
 interface Props {
 }
@@ -24,6 +27,13 @@ interface Props {
  */
 export default function App(props: Props) {
 
+    // TODO: Remove this - it's just for adhoc testing the data layer
+    useEffect(() => {
+        DataLayer.ProgramItem.get("ciAZ1zroPD", "282VywRdKR").then(result => {
+            console.log("Got program item", result);
+        });
+    });
+
     // Hint: Do not use `Session_*` interfaces anywhere else - rely on contexts.
     const currentConferenceId = Session_Conference.currentConferenceId;
     const currentUserId = Session_User.currentUserId;
@@ -32,6 +42,7 @@ export default function App(props: Props) {
     // Note: These can't be used inside `useEffect` or other asynchronous
     //       functions.
     // TODO: Initialise the new cache
+    // TODO: Under the new data layer API, the entire useCache thing isn't necessary
     const [cache, setCache] = useState<Cache | null>(currentConferenceId ? new Cache(currentConferenceId) : null);
     const [conference, setConference] = useState<Conference | null>(null);
     const [user, setUser] = useState<User | null>(null);

@@ -1,5 +1,6 @@
 import * as Schema from "../Schema";
 import { Base, StaticBase, StaticBaseImpl } from "./Base";
+import ProgramItem from "./ProgramItem";
 
 type SchemaT = Schema.AttachmentType;
 type K = "AttachmentType";
@@ -35,8 +36,8 @@ export default class Class extends Base<K, T> implements T {
         return this.data.supportsFile;
     }
 
-    get programItem(): Promise<any> {
-        throw new Error("Property not implemented");
+    get programItem(): Promise<ProgramItem | null> {
+        return this.related("programItem");
     }
 
     static get(conferenceId: string, id: string): Promise<T | null> {

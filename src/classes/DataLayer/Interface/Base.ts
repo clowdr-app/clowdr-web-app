@@ -1,6 +1,7 @@
 import CachedSchema from "../CachedSchema";
-import { NotPromisedFields, KnownKeys } from "../../Util";
+import { NotPromisedFields, KnownKeys, PromisedFields } from "../../Util";
 import * as Schema from "../Schema";
+import Caches from "../Cache";
 
 /*
  * 2020-09-09 A note to future developers on constructors
@@ -14,10 +15,17 @@ import * as Schema from "../Schema";
  * Constructor, and Base.
  */
 
-type CachedSchemaKeys = KnownKeys<CachedSchema>;
+// TODO: What's the interface for stuff we aren't going to cache?
+//       Ideally, it would be directly compatible with Base, so that if we ever
+//       decide to start caching something, it will be an easy switch
 
-type SaveableDataT<K extends CachedSchemaKeys, T extends Base<K, T>>
+export type CachedSchemaKeys = KnownKeys<CachedSchema>;
+
+export type FieldDataT<K extends CachedSchemaKeys, T extends Base<K, T>>
     = NotPromisedFields<CachedSchema[K]["value"]> & Schema.Base;
+
+export type RelatedDataT<K extends CachedSchemaKeys, T extends Base<K, T>>
+    = PromisedFields<CachedSchema[K]["value"]>;
 
 /**
  * Defines the statically accessible interface to all data-layer objects.
@@ -28,7 +36,7 @@ type SaveableDataT<K extends CachedSchemaKeys, T extends Base<K, T>>
 export interface StaticBase<K extends CachedSchemaKeys, T extends Base<K, T>> {
     // Must match the type of `Constructor` below
     new(conferenceId: string,
-        data: SaveableDataT<K, T>,
+        data: FieldDataT<K, T>,
         parse?: Parse.Object<CachedSchema[K]["value"]> | null): T;
 
     get(conferenceId: string, id: string): Promise<T | null>;
@@ -36,9 +44,9 @@ export interface StaticBase<K extends CachedSchemaKeys, T extends Base<K, T>> {
     // TODO: create(conferenceId: string, data: SaveableDataT<K, T>): Promise<T | null>;
 }
 
-type Constructor<K extends CachedSchemaKeys, T extends Base<K, T>>
+export type Constructor<K extends CachedSchemaKeys, T extends Base<K, T>>
     = new (conferenceId: string,
-        data: SaveableDataT<K, T>,
+        data: FieldDataT<K, T>,
         parse?: Parse.Object<CachedSchema[K]["value"]> | null) => Base<K, T>;
 
 /**
@@ -59,19 +67,21 @@ export abstract class StaticBaseImpl {
         conferenceId: string,
         id: string
     ): Promise<T | null> {
-        // TODO: Call into Caches
-        throw new Error("Method not implemented");
+        // TODO: Write a test for this
+        let cache = Caches.get(conferenceId);
+        return cache.get(tableName, id);
     }
 }
 
 /**
  * Provides the methods and properties common to all data objects (e.g. `id`).
  */
-export abstract class Base<K extends CachedSchemaKeys, T extends Base<K, T>> {
+export abstract class Base<K extends CachedSchemaKeys, T extends Base<K, T>> implements Schema.Base {
     // Must match the type of `Constructor` above
     constructor(
         protected conferenceId: string,
-        protected data: SaveableDataT<K, T>,
+        protected data: FieldDataT<K, T>,
+        // TODO: Expose access to the parse object for super-fancy queries
         protected parse: Parse.Object<CachedSchema[K]["value"]> | null = null) {
     }
 
@@ -85,5 +95,10 @@ export abstract class Base<K extends CachedSchemaKeys, T extends Base<K, T>> {
 
     get updatedAt(): Date {
         return this.data.updatedAt;
+    }
+
+    protected related<S extends keyof RelatedDataT<K, T>>(field: S): Promise<RelatedDataT<K, T>[S] | null> {
+        // TODO: Ideally, this.parse gets created (if it doesn't already exist) so it can be re-used later
+        throw new Error("Method not implemented");
     }
 }
