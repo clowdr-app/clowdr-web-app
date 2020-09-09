@@ -1,5 +1,5 @@
 {
-    "name": "virtual-conf",
+    "name": "clowdr",
     "version": "0.1.0",
     "private": true,
     "dependencies": {
@@ -128,7 +128,6 @@
         ]
     },
     "scripts": {
-        "server": "node-env-run server --exec \"nodemon --ignore './utils/'\" | pino-colada",
         "start": "node scripts/start.js",
         "build": "node scripts/build.js",
         "test": "node scripts/test.js",
