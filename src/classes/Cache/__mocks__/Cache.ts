@@ -1,4 +1,4 @@
-import DebugLogger from "../DebugLogger";
+import DebugLogger from "../../DebugLogger";
 import { OperationResult } from "../OperationResult";
 import { StoreNames } from "idb";
 import IDBSchema, { IDBStoreDataConstructors } from "../Schema";

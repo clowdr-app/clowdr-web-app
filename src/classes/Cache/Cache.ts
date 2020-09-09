@@ -2,7 +2,7 @@ import Parse from 'parse';
 import { openDB, deleteDB, IDBPDatabase, IDBPTransaction, StoreNames, IDBPObjectStore } from 'idb';
 import { OperationResult } from './OperationResult';
 import IDBSchema, { SchemaVersion, IDBSchemaUnion, IDBStoreSpecs, IDBStoreNames, IDBStoreDataConstructors } from './Schema';
-import DebugLogger from './DebugLogger';
+import DebugLogger from '../DebugLogger';
 import { Base } from '../Data/Base';
 
 export enum SubscriptionEvent {
@@ -155,6 +155,8 @@ export default class Cache {
     }
 
 
+    // TODO: This is wrong, it creates a whole new transaction rather than
+    //       using the existing one
     private async createStore(db: IDBPDatabase<IDBSchema>, name: StoreNames<IDBSchema>) {
         this.logger.info(`Creating store: ${name}`);
 
@@ -165,6 +167,8 @@ export default class Cache {
         //       How do we safely specify them?
     }
 
+    // TODO: This is wrong, it creates a whole new transaction rather than
+    //       using the existing one
     private async upgradeStore(db: IDBPDatabase<IDBSchema>, name: StoreNames<IDBSchema>) {
         this.logger.info(`Upgrading store: ${name}`);
 
@@ -174,12 +178,16 @@ export default class Cache {
         }
     }
 
+    // TODO: This is wrong, it creates a whole new transaction rather than
+    //       using the existing one
     private async deleteStore(db: IDBPDatabase<IDBSchema>, name: string) {
         this.logger.info(`Deleting store: ${name}`);
         // @ts-ignore - `name` won't be in the schema anymore - by design!
         db.deleteObjectStore(name);
     }
 
+    // TODO: This is wrong, it creates a whole new transaction rather than
+    //       using the existing one
     private async upgradeItem(
         db: IDBPDatabase<IDBSchema>,
         name: StoreNames<IDBSchema>,
@@ -196,6 +204,8 @@ export default class Cache {
             }
         }
         if (edited) {
+            // TODO: This is wrong, it creates a whole new transaction rather than
+            //       using the existing one
             await db.put(name, updatedItem);
         }
     }

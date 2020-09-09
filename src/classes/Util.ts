@@ -14,6 +14,23 @@ export function objectKeys<T>(o: T): Array<KnownKeys<T>> {
     return Object.keys(o) as Array<KnownKeys<T>>;
 }
 
+export type NotPromisedKeys<T> = {
+    [K in keyof T]: T[K] extends Promise<infer T | null> ? never : K;
+}[keyof T];
+
+export type NotPromisedFields<T> = {
+    [K in NotPromisedKeys<T>]: T[K];
+};
+
+export type PromisedKeys<T> = {
+    [K in keyof T]: T[K] extends Promise<infer T | null> ? K : never;
+}[keyof T];
+
+export type PromisedFields<T> = {
+    [K in PromisedKeys<T>]: T[K] extends Promise<infer T | null> ? T : never;
+};
+
+
 export type PropertyNames<S, T> = {
     [K in keyof S]: S[K] extends T ? K : never;
 }[keyof S];
