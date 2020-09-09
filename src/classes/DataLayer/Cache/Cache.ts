@@ -1,10 +1,11 @@
 import Parse from "parse";
+import { keys } from "ts-transformer-keys";
 import DebugLogger from "../../DebugLogger";
 import CachedSchema from "../CachedSchema";
 import * as Interface from "../Interface";
 import * as Schema from "../Schema";
 import { Base, CachedSchemaKeys, Constructor } from "../Interface/Base";
-import { KnownKeys } from "../../Util";
+import { KnownKeys, NotPromisedFields } from "../../Util";
 
 export default class Cache {
     Constructors: {
@@ -17,8 +18,8 @@ export default class Cache {
     Fields: {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["value"]>>;
     } = {
-            AttachmentType: Schema.AttachmentTypeFields,
-            ProgramItem: Schema.ProgramItemFields
+            AttachmentType: keys<NotPromisedFields<Schema.AttachmentType>>(),
+            ProgramItem: keys<NotPromisedFields<Schema.ProgramItem>>(),
         };
 
     private isInitialised: boolean = false;

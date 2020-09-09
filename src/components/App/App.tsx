@@ -1,4 +1,3 @@
-import Parse from "parse";
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
@@ -10,8 +9,6 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserContext from '../../contexts/UserContext';
 import Cache from '../../classes/Cache';
 import { Conference, User } from '../../classes/Data';
-import * as DataLayer from "../../classes/DataLayer";
-import assert from "assert";
 
 interface Props {
 }
@@ -26,13 +23,6 @@ interface Props {
  * Underlying components can rely entirely on the respective hooks.
  */
 export default function App(props: Props) {
-
-    // TODO: Remove this - it's just for adhoc testing the data layer
-    useEffect(() => {
-        DataLayer.ProgramItem.get("ciAZ1zroPD", "282VywRdKR").then(result => {
-            console.log("Got program item", result);
-        });
-    });
 
     // Hint: Do not use `Session_*` interfaces anywhere else - rely on contexts.
     const currentConferenceId = Session_Conference.currentConferenceId;

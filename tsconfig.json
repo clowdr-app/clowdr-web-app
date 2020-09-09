@@ -16,10 +16,11 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "noEmit": false,
     "noImplicitReturns": true,      
     "jsx": "react",
     "downlevelIteration": true,
+    "outDir": "build"
 
 /* Strict Type-Checking Options 
     "strict": true,                           

@@ -1,6 +1,5 @@
 import { ProgramItem } from "../Interface";
-import { NotPromisedFields } from "../../Util";
-import { BaseFields, Base } from ".";
+import { Base } from ".";
 
 export default interface Schema extends Base {
     displayAsLink: boolean;
@@ -11,12 +10,3 @@ export default interface Schema extends Base {
 
     programItem: Promise<ProgramItem | null>;
 }
-
-export const Fields: Array<keyof NotPromisedFields<Schema>> = [
-    ...BaseFields,
-    "displayAsLink",
-    "isCoverImage",
-    "name",
-    "ordinal",
-    "supportsFile"
-];

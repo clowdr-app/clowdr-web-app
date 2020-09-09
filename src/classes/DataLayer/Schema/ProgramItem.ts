@@ -1,5 +1,4 @@
-import { BaseFields, Base } from ".";
-import { NotPromisedFields } from "../../Util";
+import { Base } from ".";
 
 export default interface Schema extends Base {
     abstract: string;
@@ -17,13 +16,3 @@ export default interface Schema extends Base {
     // TODO: programSession: Promise<ProgramSession | null>;
     // TODO: track: Promise<ProgramTrack | null>;
 }
-
-export const Fields: Array<keyof NotPromisedFields<Schema>> = [
-    ...BaseFields,
-    "abstract",
-    "chatSID",
-    "confKey",
-    "isPrivate",
-    "posterImage",
-    "title"
-];
