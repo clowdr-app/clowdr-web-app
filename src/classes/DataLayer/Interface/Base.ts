@@ -82,6 +82,7 @@ export abstract class Base<K extends CachedSchemaKeys, T extends Base<K, T>> imp
         protected conferenceId: string,
         protected data: FieldDataT<K, T>,
         // TODO: Expose access to the parse object for super-fancy queries
+        // TODO: Use deprecated JSDoc to disuade use of the above exposure function
         protected parse: Parse.Object<CachedSchema[K]["value"]> | null = null) {
     }
 
