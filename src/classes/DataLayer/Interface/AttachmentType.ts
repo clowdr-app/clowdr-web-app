@@ -1,6 +1,6 @@
 import * as Schema from "../Schema";
 import { Base, StaticBase, StaticBaseImpl } from "./Base";
-import ProgramItem from "./ProgramItem";
+import { Conference } from ".";
 
 type SchemaT = Schema.AttachmentType;
 type K = "AttachmentType";
@@ -36,8 +36,8 @@ export default class Class extends Base<K, T> implements T {
         return this.data.supportsFile;
     }
 
-    get programItem(): Promise<ProgramItem | null> {
-        return this.related("programItem");
+    get conference(): Promise<Conference> {
+        return this.related("conference");
     }
 
     static get(conferenceId: string, id: string): Promise<T | null> {

@@ -1,2 +1,2 @@
 export { default as AttachmentType } from "./AttachmentType";
-export { default as ProgramItem } from "./ProgramItem";
+export { default as Conference } from "./Conference";

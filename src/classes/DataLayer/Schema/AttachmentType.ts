@@ -1,4 +1,4 @@
-import { ProgramItem } from "../Interface";
+import { Conference } from "../Interface";
 import { Base } from ".";
 
 export default interface Schema extends Base {
@@ -7,6 +7,5 @@ export default interface Schema extends Base {
     name: string;
     ordinal: number;
     supportsFile: boolean;
-
-    programItem: Promise<ProgramItem | null>;
+    conference: Promise<Conference>;
 }

@@ -13,7 +13,7 @@ const testAttachmentTypeData = {
     supportsFile: false
 };
 const testObject
-    = new AttachmentType(testConferenceId, testAttachmentTypeData);
+    = new AttachmentType(testConferenceId, "AttachmentType", testAttachmentTypeData);
 
 describe("AttachmentType", () => {
     it("returns the displayAsLink", () => {
@@ -36,8 +36,8 @@ describe("AttachmentType", () => {
         expect(testObject.supportsFile).toEqual(testAttachmentTypeData.supportsFile);
     });
 
-    it("returns the programItem", async () => {
-        expect(await testObject.programItem).toBeTruthy();
+    it("returns the conference", async () => {
+        expect(await testObject.conference).toBeTruthy();
     });
 
     it("returns the id", () => {

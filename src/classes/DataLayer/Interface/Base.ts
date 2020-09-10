@@ -1,5 +1,6 @@
+import Parse from "parse";
 import CachedSchema from "../CachedSchema";
-import { NotPromisedFields, KnownKeys, PromisedFields } from "../../Util";
+import { NotPromisedFields, KnownKeys, PromisedFields, PromisedKeys } from "../../Util";
 import * as Schema from "../Schema";
 import Caches from "../Cache";
 
@@ -28,6 +29,22 @@ export type RelatedDataT<K extends CachedSchemaKeys, T extends Base<K, T>>
     = PromisedFields<CachedSchema[K]["value"]>;
 
 /**
+ * When retrieving fields from Parse objects that are actually related tables,
+ * we don't get back a `Promise<Table>`, we get back a
+ * `Parse.Object<Schema.Table>`. So this type transformer remaps fields of type
+ * `Promise<Interface<K,_>>` to `Parse.Object<Schema[K]>`.
+ *
+ * (Note: The `code` / `types` used in this comment are intuitive not accurate.)
+ */
+export type PromisesRemapped<T>
+    = { [K in keyof T]: T[K] extends Promise<infer S>
+        ? S extends Base<infer K2, infer T2>
+        ? Parse.Object<PromisesRemapped<CachedSchema[K2]["value"]>>
+        : never
+        : T[K]
+    };
+
+/**
  * Defines the statically accessible interface to all data-layer objects.
  * 
  * The intention is the be used via their concrete classes, such as 
@@ -36,8 +53,9 @@ export type RelatedDataT<K extends CachedSchemaKeys, T extends Base<K, T>>
 export interface StaticBase<K extends CachedSchemaKeys, T extends Base<K, T>> {
     // Must match the type of `Constructor` below
     new(conferenceId: string,
+        tableName: K,
         data: FieldDataT<K, T>,
-        parse?: Parse.Object<CachedSchema[K]["value"]> | null): T;
+        parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null): T;
 
     get(conferenceId: string, id: string): Promise<T | null>;
 
@@ -45,9 +63,11 @@ export interface StaticBase<K extends CachedSchemaKeys, T extends Base<K, T>> {
 }
 
 export type Constructor<K extends CachedSchemaKeys, T extends Base<K, T>>
-    = new (conferenceId: string,
+    = new (
+        conferenceId: string,
+        tableName: K,
         data: FieldDataT<K, T>,
-        parse?: Parse.Object<CachedSchema[K]["value"]> | null) => Base<K, T>;
+        parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null) => Base<K, T>;
 
 /**
  * Provides a vanilla reusable implementation of the static base methods.
@@ -62,13 +82,13 @@ export abstract class StaticBaseImpl {
     //     throw new Error("Method not implemented");
     // }
 
-    static get<K extends CachedSchemaKeys, T extends Base<K, T>>(
+    static async get<K extends CachedSchemaKeys, T extends Base<K, T>>(
         tableName: K,
         conferenceId: string,
         id: string
     ): Promise<T | null> {
         // TODO: Write a test for this
-        let cache = Caches.get(conferenceId);
+        let cache = await Caches.get(conferenceId);
         return cache.get(tableName, id);
     }
 }
@@ -80,10 +100,29 @@ export abstract class Base<K extends CachedSchemaKeys, T extends Base<K, T>> imp
     // Must match the type of `Constructor` above
     constructor(
         protected conferenceId: string,
+        protected tableName: K,
         protected data: FieldDataT<K, T>,
-        // TODO: Expose access to the parse object for super-fancy queries
-        // TODO: Use deprecated JSDoc to disuade use of the above exposure function
-        protected parse: Parse.Object<CachedSchema[K]["value"]> | null = null) {
+        protected parse: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null = null) {
+    }
+
+    /**
+     * DO NOT USE THIS without consulting the lead development team! This
+     * function is not recommended for use! This bypasses the cache!
+     * 
+     * This function exists only for scenarios where high-performance database
+     * queries are required, such as complex lookups that the cache cannot
+     * handle.
+     * 
+     * @deprecated Do not use - see doc comment.
+     */
+    async getUncachedParseObject(): Promise<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>> {
+        if (this.parse) {
+            return this.parse;
+        }
+        else {
+            let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(this.tableName);
+            return query.get(this.id);
+        }
     }
 
     get id(): string {
@@ -98,7 +137,7 @@ export abstract class Base<K extends CachedSchemaKeys, T extends Base<K, T>> imp
         return this.data.updatedAt;
     }
 
-    protected related<S extends keyof RelatedDataT<K, T>>(field: S): Promise<RelatedDataT<K, T>[S] | null> {
+    protected related<S extends keyof RelatedDataT<K, T>>(field: S): Promise<RelatedDataT<K, T>[S]> {
         // TODO: Ideally, this.parse gets created (if it doesn't already exist) so it can be re-used later
         throw new Error("Method not implemented");
     }

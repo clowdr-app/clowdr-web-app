@@ -11,12 +11,12 @@ export default class Caches {
         this.caches.clear();
     }
 
-    static get(conferenceId: string): Cache {
+    static async get(conferenceId: string): Promise<Cache> {
         let cache = this.caches.get(conferenceId);
 
         if (!cache) {
             cache = new Cache(conferenceId);
-            cache.initialise();
+            await cache.initialise();
             this.caches.set(conferenceId, cache);
         }
 

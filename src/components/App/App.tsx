@@ -1,3 +1,4 @@
+import Parse from "parse";
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
@@ -9,6 +10,9 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserContext from '../../contexts/UserContext';
 import Cache from '../../classes/Cache';
 import { Conference, User } from '../../classes/Data';
+import * as DataLayer from "../../classes/DataLayer";
+import * as Schema from '../../classes/DataLayer/Schema';
+import { PromisesRemapped } from "../../classes/DataLayer/Interface/Base";
 
 interface Props {
 }
@@ -23,6 +27,25 @@ interface Props {
  * Underlying components can rely entirely on the respective hooks.
  */
 export default function App(props: Props) {
+
+    // useEffect(() => {
+    //     DataLayer.Conference.get("ciAZ1zroPD", "ciAZ1zroPD").then(
+    //         async (result: DataLayer.Conference | null) => {
+    //             console.log("Got conference", result);
+
+    //             if (result) {
+    //                 let parseConf = await result.getUncachedParseObject();
+    //                 let newAT = new Parse.Object("AttachmentType") as Parse.Object<PromisesRemapped<Schema.AttachmentType>>;
+    //                 newAT.set("conference", parseConf);
+    //                 newAT.set("displayAsLink", true);
+    //                 newAT.set("isCoverImage", false);
+    //                 newAT.set("name", "Test AttachmentType In DB");
+    //                 newAT.set("ordinal", 0);
+    //                 newAT.set("supportsFile", false);
+    //                 newAT.save();
+    //             }
+    //         });
+    // });
 
     // Hint: Do not use `Session_*` interfaces anywhere else - rely on contexts.
     const currentConferenceId = Session_Conference.currentConferenceId;
