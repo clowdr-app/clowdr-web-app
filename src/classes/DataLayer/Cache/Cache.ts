@@ -8,6 +8,7 @@ import { CachedBase, CachedSchemaKeys, CachedConstructor, PromisesRemapped, Cach
 import { NotPromisedFields, NotPromisedKeys, PromisedNonArrayFields, PromisedArrayFields } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
+import assert from "assert";
 
 export default class Cache {
     readonly CachedConstructors: {
@@ -38,6 +39,8 @@ export default class Cache {
     readonly KEY_PATH: "id" = "id";
 
     private dbPromise: Promise<IDBPDatabase<CachedSchema>> | null = null;
+    private conference: Parse.Object<PromisesRemapped<Schema.Conference>> | null = null;
+
     private isInitialised: boolean = false;
 
     private logger: DebugLogger = new DebugLogger("Cache");
@@ -85,34 +88,95 @@ export default class Cache {
     async initialise(): Promise<void> {
         if (!this.isInitialised) {
             if (!this.dbPromise) {
-                return new Promise((resolve, reject) => {
-                    this.logger.info("Opening database.");
-                    this.dbPromise = openDB<CachedSchema>(this.DatabaseName, SchemaVersion, {
-                        upgrade: this.upgrade.bind(this),
-                        blocked: this.blocked.bind(this),
-                        blocking: this.blocking.bind(this),
-                        terminated: this.terminated.bind(this)
-                    }).then((db) => {
-                        this.isInitialised = true;
+                this.logger.info("Opening database.");
+                this.dbPromise = openDB<CachedSchema>(this.DatabaseName, SchemaVersion, {
+                    upgrade: this.upgrade.bind(this),
+                    blocked: this.blocked.bind(this),
+                    blocking: this.blocking.bind(this),
+                    terminated: this.terminated.bind(this)
+                });
+
+                if (!this.isInitialised) {
+                    this.isInitialised = true;
+
+                    this.dbPromise.then(async db => {
+                        this.conference = await new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("ClowdrInstance").get(this.conferenceId) || null;
+                        if (!this.conference) {
+                            throw new Error(`Conference ${this.conferenceId} could not be loaded.`);
+                        }
 
                         // TODO: Decide whether to clear the cache or not
                         // If clearing the cache, don't resolve until it's empty
                         // Else resolve early and download new data in the background
 
-                        resolve();
+                        await Promise.all(CachedStoreNames.map(store => {
+                            return this.fillCache(store, db);
+                        }));
 
-                        return db;
-                    }).catch(reason => {
-                        this.logger.error("Could not open database", reason);
-                        reject(reason);
-                        return Promise.reject(reason);
-                    });;
-                });
+                        // TODO: Subscribe to live queries
+                    });
+                }
             }
         }
         else {
             this.logger.info("Already initialised.");
         }
+    }
+
+    private async fillCache<K extends CachedSchemaKeys, T extends CachedBase<K, T>>(
+        tableName: K,
+        db: IDBPDatabase<CachedSchema> | null = null
+    ): Promise<Array<T>> {
+        if (!this.IsInitialised || !this.dbPromise || !this.conference) {
+            return Promise.reject("Not initialised");
+        }
+
+        let itemsQ = await new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName)
+            .equalTo("conference", this.conf<K, T>());
+        return itemsQ.map(parse => {
+            return this.addItemToCache<K, T>(parse, tableName, db);
+        });
+    }
+
+    private async addItemToCache<K extends CachedSchemaKeys, T extends CachedBase<K, T>>(
+        parse: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>,
+        tableName: K,
+        _db: IDBPDatabase<CachedSchema> | null = null
+    ): Promise<T> {
+        // TODO: Test for `id` not being available via `get` function
+        let schema: any = {
+            id: parse.id
+        };
+        for (let key of this.Fields[tableName]) {
+            if (key !== "id") {
+                // Yes this cast is safe
+                schema[key] = parse.get(key as any);
+            }
+        }
+
+        if (_db) {
+            this.logger.info("Filling item", {
+                conferenceId: this.conferenceId,
+                tableName: tableName,
+                id: parse.id,
+                value: schema
+            });
+            await _db.put(tableName, schema);
+        }
+        else if (this.dbPromise) {
+            this.logger.info("Filling item", {
+                conferenceId: this.conferenceId,
+                tableName: tableName,
+                id: parse.id,
+                value: schema
+            });
+
+            let db = await this.dbPromise;
+            await db.put(tableName, schema);
+        }
+
+        const constr = this.CachedConstructors[tableName];
+        return new constr(this.conferenceId, schema, parse) as T;
     }
 
     /**
@@ -122,6 +186,8 @@ export default class Cache {
      */
     private async closeConnection() {
         if (this.dbPromise) {
+            this.conference = null;
+
             this.logger.warn("Shutting down providers not implemented.");
             // TODO: Shutdown live queries
 
@@ -239,8 +305,7 @@ export default class Cache {
 
     private async deleteStore(t: IDBPTransaction<CachedSchema>, name: string) {
         this.logger.info(`Deleting store: ${name}`);
-        // @ts-ignore - `name` won't be in the schema anymore - by design!
-        t.db.deleteObjectStore(name);
+        t.db.deleteObjectStore(name as any);
     }
 
     private async upgradeItem<K extends CachedSchemaKeys>(
@@ -252,8 +317,6 @@ export default class Cache {
         let edited = false;
         for (let key in item) {
             if (!StoreFieldNames.includes(key)) {
-                // @ts-ignore - Yes, it's okay, we're deleting a key that's not
-                //              supposed to be part of the item anyway!
                 delete updatedItem[key];
                 edited = true;
             }
@@ -383,9 +446,7 @@ export default class Cache {
                 id: id
             });
 
-            // @ts-ignore - This is fine, TypeScript's type inference just isn't
-            // quite good enough
-            return new this.CachedConstructors[tableName](this.conferenceId, tableName, result);
+            return new this.CachedConstructors[tableName](this.conferenceId, result) as T;
         }
         else {
             this.logger.info("Cache miss", {
@@ -395,6 +456,35 @@ export default class Cache {
             });
 
             return Promise.reject(`${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
+        }
+    }
+
+    private async getAllFromCache<K extends CachedSchemaKeys, T extends CachedBase<K, T>>(
+        tableName: K
+    ): Promise<Array<T>> {
+        if (!this.IsInitialised || !this.dbPromise) {
+            return Promise.reject("Not initialised");
+        }
+
+        let db = await this.dbPromise;
+        let result = await db.getAll(tableName);
+        if (result.length !== 0) {
+            this.logger.info("Cache multi-hit", {
+                conferenceId: this.conferenceId,
+                tableName: tableName
+            });
+
+            return result.map(x => {
+                return new this.CachedConstructors[tableName](this.conferenceId, x) as T;
+            });
+        }
+        else {
+            this.logger.info("Cache multi-miss", {
+                conferenceId: this.conferenceId,
+                tableName: tableName
+            });
+
+            return this.fillCache(tableName);
         }
     }
 
@@ -420,7 +510,6 @@ export default class Cache {
     // }
 
     // TODO: create
-    // TODO: getAll
     // TODO: uniqueRelated
     // TODO: nonUniqueRelated
 
@@ -431,31 +520,7 @@ export default class Cache {
         return this.getFromCache(tableName, id).catch(reason => {
             let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
             return query.get(id).then(async parse => {
-                // TODO: Test for `id` not being available via `get` function
-                let schema: any = {
-                    id: parse.id
-                };
-                for (let key of this.Fields[tableName]) {
-                    if (key !== "id") {
-                        // Yes this cast is safe
-                        schema[key] = parse.get(key as any);
-                    }
-                }
-
-                if (this.dbPromise) {
-                    this.logger.info("Filling item", {
-                        conferenceId: this.conferenceId,
-                        tableName: tableName,
-                        id: id,
-                        value: schema
-                    });
-
-                    let db = await this.dbPromise;
-                    await db.put(tableName, schema);
-                }
-
-                const constr = this.CachedConstructors[tableName];
-                return new constr(this.conferenceId, schema, parse);
+                return await this.addItemToCache<K, T>(parse, tableName);
             }).catch(reason => {
                 this.logger.warn("Fetch from database of cached item failed", {
                     conferenceId: this.conferenceId,
@@ -469,6 +534,32 @@ export default class Cache {
         }) as Promise<T | null>;
     }
 
+    async getAll<K extends CachedSchemaKeys, T extends CachedBase<K, T>>(
+        tableName: K
+    ): Promise<Array<T>> {
+        return this.getAllFromCache(tableName).catch(reason => {
+            assert(this.conference, "Conference is null");
+
+            let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
+            query.equalTo("conference", this.conf<K, T>());
+            return query.map(async parse => {
+                return await this.addItemToCache<K, T>(parse, tableName);
+            }).catch(reason => {
+                this.logger.warn("Fetch from database of all cached items failed", {
+                    conferenceId: this.conferenceId,
+                    tableName: tableName,
+                    reason: reason
+                });
+
+                return [];
+            });
+        }) as Promise<Array<T>>;
+    }
+
+
+    private conf<K extends CachedSchemaKeys, T extends CachedBase<K, T>>() {
+        return this.conference as unknown as PromisesRemapped<CachedSchema[K]["value"]>["conference"];
+    }
     // async related<
     //     K extends CachedSchemaKeys,
     //     T extends Base<K, T>,

@@ -51,9 +51,9 @@ export default class Class extends CachedBase<K, T> implements T {
         return StaticBaseImpl.get(K_str, id, conferenceId);
     }
 
-    // static create(conferenceId, data): Promise<T> {
-    //     return StaticBaseImpl.create(conferenceId, data, TheClass);
-    // }
+    static getAll(conferenceId: string): Promise<Array<T>> {
+        return StaticBaseImpl.getAll(K_str, conferenceId);
+    }
 }
 
 // The line of code below triggers type-checking of Class for static members

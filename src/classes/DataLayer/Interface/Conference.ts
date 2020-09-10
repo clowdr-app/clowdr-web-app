@@ -27,6 +27,10 @@ export default class Class extends UncachedBase<K, T> implements T {
     static get(id: string): Promise<T | null> {
         return StaticBaseImpl.get(K_str, id);
     }
+
+    static getAll(): Promise<Array<T>> {
+        return StaticBaseImpl.getAll(K_str);
+    }
 }
 
 // The line of code below triggers type-checking of Class for static members

@@ -16,8 +16,8 @@ export default class Caches {
 
         if (!cache) {
             cache = new Cache(conferenceId);
-            await cache.initialise();
             this.caches.set(conferenceId, cache);
+            await cache.initialise();
         }
 
         return cache;

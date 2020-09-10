@@ -28,9 +28,15 @@ interface Props {
 export default function App(props: Props) {
 
     useEffect(() => {
+        DataLayer.Conference.getAll().then(async result => {
+            console.log("Got conferences", result.map(r => r.conferenceName));
+        });
+        DataLayer.AttachmentType.getAll("ciAZ1zroPD").then(async result => {
+            console.log("Got attachment types", result.map(x => x.name));
+        });
         DataLayer.Conference.get("ciAZ1zroPD").then(
-            async (result: DataLayer.Conference | null) => {
-                console.log("Got conference", result);
+            async result => {
+                console.log("Got conference", result?.conferenceName);
 
                 // if (result) {
                 //     let parseConf = await result.getUncachedParseObject();

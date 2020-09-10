@@ -61,6 +61,7 @@ export interface StaticCachedBase<K extends CachedSchemaKeys, T extends CachedBa
         parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null): T;
 
     get(id: string, conferenceId: string): Promise<T | null>;
+    getAll(conferenceId: string): Promise<Array<T>>;
 }
 
 export type CachedConstructor<K extends CachedSchemaKeys, T extends CachedBase<K, T>>
@@ -75,6 +76,7 @@ export interface StaticUncachedBase<K extends UncachedSchemaKeys, T extends Unca
     new(parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>): T;
 
     get(id: string): Promise<T | null>;
+    getAll(): Promise<Array<T>>;
 }
 
 export type UncachedConstructor<K extends UncachedSchemaKeys, T extends UncachedBase<K, T>>
@@ -85,14 +87,22 @@ export type UncachedConstructor<K extends UncachedSchemaKeys, T extends Uncached
  * Provides a vanilla reusable implementation of the static base methods.
  */
 export abstract class StaticBaseImpl {
-    // static create
-    //     <K extends GlobalSchemaKeys, T extends Base<K, T>>(
-    //         conferenceId: string,
-    //         data: SaveableDataT<K, T>,
-    //         constr: Constructor<K, T>
-    //     ): Promise<T | null> {
-    //     throw new Error("Method not implemented");
-    // }
+    private static IsCachable(tableName: any, conferenceId?: string): conferenceId is string {
+        return CachedStoreNames.includes(tableName as any) && !!conferenceId;
+    }
+
+    // This cannot be made into a static field due to the fact TypeScript
+    // doesn't guarantee the order modules will be compiled, meaning if this
+    // were a field, `Interface.XYZ` might be undefined at the point this object
+    // gets initialised.
+    private static get UncachedConstructors(): ({
+        // The 'any' can't be replaced here - it would require dependent types.
+        [K in UncachedSchemaKeys]: UncachedConstructor<K, any>;
+    }) {
+        return {
+            ClowdrInstance: Interface.Conference
+        };
+    }
 
     static async get<K extends WholeSchemaKeys, T extends IBase<K, T>>(
         tableName: K,
@@ -102,26 +112,15 @@ export abstract class StaticBaseImpl {
         // TODO: Write a test for this
 
         // Yes these casts are safe
-        if (CachedStoreNames.includes(tableName as any) && conferenceId) {
+        if (StaticBaseImpl.IsCachable(tableName, conferenceId)) {
             let cache = await Caches.get(conferenceId);
             return cache.get(tableName as any, id) as any;
         }
-        else {
-            // This cannot be made static due to the fact TypeScript doesn't guarantee
-            // the order modules will be compiled, meaning if this field were static,
-            // `Interface.XYZ` might be undefined at the point this object gets
-            // initialised.
-            const UncachedConstructors: {
-                // The 'any' can't be replaced here - it would require dependent types.
-                [K in UncachedSchemaKeys]: UncachedConstructor<K, any>;
-            } = {
-                    ClowdrInstance: Interface.Conference
-                };
-            
+        else {            
             let _tableName = tableName as UncachedSchemaKeys;
             let query = new Parse.Query<Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>>(tableName);
             return query.get(id).then(async parse => {
-                const constr = UncachedConstructors[_tableName];
+                const constr = this.UncachedConstructors[_tableName];
                 return new constr(parse);
             }).catch(reason => {
                 console.warn("Fetch from database of uncached item failed", {
@@ -132,6 +131,30 @@ export abstract class StaticBaseImpl {
 
                 return null;
             }) as Promise<T | null>;
+        }
+    }
+
+    static async getAll<K extends WholeSchemaKeys, T extends IBase<K, T>>(
+        tableName: K,
+        conferenceId?: string) {
+        if (StaticBaseImpl.IsCachable(tableName, conferenceId)) {
+            let cache = await Caches.get(conferenceId);
+            return cache.getAll(tableName as any) as any;
+        }
+        else {
+            let _tableName = tableName as UncachedSchemaKeys;
+            let query = new Parse.Query<Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>>(tableName);
+            return query.map(async parse => {
+                const constr = this.UncachedConstructors[_tableName];
+                return new constr(parse) as unknown as T;
+            }).catch(reason => {
+                console.warn("Fetch all from database of uncached table failed", {
+                    tableName: tableName,
+                    reason: reason
+                });
+
+                return null;
+            });
         }
     }
 }
