@@ -28,24 +28,24 @@ interface Props {
  */
 export default function App(props: Props) {
 
-    // useEffect(() => {
-    //     DataLayer.Conference.get("ciAZ1zroPD", "ciAZ1zroPD").then(
-    //         async (result: DataLayer.Conference | null) => {
-    //             console.log("Got conference", result);
+    useEffect(() => {
+        DataLayer.Conference.get("ciAZ1zroPD", "ciAZ1zroPD").then(
+            async (result: DataLayer.Conference | null) => {
+                console.log("Got conference", result);
 
-    //             if (result) {
-    //                 let parseConf = await result.getUncachedParseObject();
-    //                 let newAT = new Parse.Object("AttachmentType") as Parse.Object<PromisesRemapped<Schema.AttachmentType>>;
-    //                 newAT.set("conference", parseConf);
-    //                 newAT.set("displayAsLink", true);
-    //                 newAT.set("isCoverImage", false);
-    //                 newAT.set("name", "Test AttachmentType In DB");
-    //                 newAT.set("ordinal", 0);
-    //                 newAT.set("supportsFile", false);
-    //                 newAT.save();
-    //             }
-    //         });
-    // });
+                // if (result) {
+                //     let parseConf = await result.getUncachedParseObject();
+                //     let newAT = new Parse.Object("AttachmentType") as Parse.Object<PromisesRemapped<Schema.AttachmentType>>;
+                //     newAT.set("conference", parseConf);
+                //     newAT.set("displayAsLink", true);
+                //     newAT.set("isCoverImage", false);
+                //     newAT.set("name", "Test AttachmentType In DB");
+                //     newAT.set("ordinal", 0);
+                //     newAT.set("supportsFile", false);
+                //     newAT.save();
+                // }
+            });
+    });
 
     // Hint: Do not use `Session_*` interfaces anywhere else - rely on contexts.
     const currentConferenceId = Session_Conference.currentConferenceId;

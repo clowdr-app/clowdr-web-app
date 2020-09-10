@@ -1,5 +1,5 @@
 import * as Schema from "../Schema";
-import { Base, StaticBase, StaticBaseImpl } from "./Base";
+import { CachedBase, StaticCachedBase, StaticBaseImpl } from "./Base";
 import { Conference } from ".";
 
 type SchemaT = Schema.AttachmentType;
@@ -8,13 +8,13 @@ const K_str: K = "AttachmentType";
 
 type T = InstanceT & SchemaT;
 
-interface StaticT extends StaticBase<K, T> {
+interface StaticT extends StaticCachedBase<K, T> {
 }
 
-interface InstanceT extends Base<K, T> {
+interface InstanceT extends CachedBase<K, T> {
 }
 
-export default class Class extends Base<K, T> implements T {
+export default class Class extends CachedBase<K, T> implements T {
 
     get displayAsLink(): boolean {
         return this.data.displayAsLink;
@@ -37,7 +37,8 @@ export default class Class extends Base<K, T> implements T {
     }
 
     get conference(): Promise<Conference> {
-        return this.related("conference");
+        throw new Error("Method no implemented");
+        // return this.uniqueRelated("conference");
     }
 
     static get(conferenceId: string, id: string): Promise<T | null> {

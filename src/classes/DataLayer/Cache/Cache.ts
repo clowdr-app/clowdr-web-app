@@ -4,39 +4,43 @@ import DebugLogger from "../../DebugLogger";
 import CachedSchema, { SchemaVersion } from "../CachedSchema";
 import * as Interface from "../Interface";
 import * as Schema from "../Schema";
-import { Base, CachedSchemaKeys, Constructor, RelatedDataT, PromisesRemapped } from "../Interface/Base";
+import { CachedBase, CachedSchemaKeys, CachedConstructor, PromisesRemapped, WholeSchemaKeys, IBase, UncachedSchemaKeys, UncachedConstructor } from "../Interface/Base";
 import { NotPromisedFields, NotPromisedKeys, PromisedNonArrayFields, PromisedArrayFields } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
+import UncachedSchema from "../UncachedSchema";
 
 export default class Cache {
-    readonly Constructors: {
+    readonly CachedConstructors: {
         // The 'any' can't be replaced here - it would require dependent types.
-        [K in CachedSchemaKeys]: Constructor<K, any>;
+        [K in CachedSchemaKeys]: CachedConstructor<K, any>;
     } = {
-            AttachmentType: Interface.AttachmentType,
+            AttachmentType: Interface.AttachmentType
+        };
+    
+    readonly UncachedConstructors: {
+        // The 'any' can't be replaced here - it would require dependent types.
+        [K in UncachedSchemaKeys]: UncachedConstructor<K, any>;
+    } = {
             ClowdrInstance: Interface.Conference
         };
 
     readonly Fields: {
         [K in CachedSchemaKeys]: Array<NotPromisedKeys<CachedSchema[K]["value"]>>;
     } = {
-            AttachmentType: keys<NotPromisedFields<Schema.AttachmentType>>(),
-            ClowdrInstance: keys<NotPromisedFields<Schema.Conference>>(),
+            AttachmentType: keys<NotPromisedFields<Schema.AttachmentType>>()
         };
 
     readonly UniqueRelations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
-            AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>(),
-            ClowdrInstance: keys<PromisedNonArrayFields<Schema.Conference>>(),
+            AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>()
         };
 
     readonly NonUniqueRelations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
-            AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>(),
-            ClowdrInstance: keys<PromisedArrayFields<Schema.Conference>>(),
+            AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>()
         };
     
     readonly CachedStoreNames = keys<CachedSchema>() as Array<CachedSchemaKeys>;
@@ -99,7 +103,13 @@ export default class Cache {
                         terminated: this.terminated.bind(this)
                     }).then((db) => {
                         this.isInitialised = true;
+
+                        // TODO: Decide whether to clear the cache or not
+                        // If clearing the cache, don't resolve until it's empty
+                        // Else resolve early and download new data in the background
+
                         resolve();
+
                         return db;
                     }).catch(reason => {
                         this.logger.error("Could not open database", reason);
@@ -365,7 +375,7 @@ export default class Cache {
         // TODO: Alert user?
     }
 
-    private async getFromCache<K extends CachedSchemaKeys, T extends Base<K, T>>(
+    private async getFromCache<K extends CachedSchemaKeys, T extends CachedBase<K, T>>(
         tableName: K,
         id: string
     ): Promise<T> {
@@ -384,7 +394,7 @@ export default class Cache {
 
             // @ts-ignore - This is fine, TypeScript's type inference just isn't
             // quite good enough
-            return new this.Constructors[tableName](this.conferenceId, tableName, result);
+            return new this.CachedConstructors[tableName](this.conferenceId, tableName, result);
         }
         else {
             this.logger.info("Cache miss", {
@@ -397,66 +407,86 @@ export default class Cache {
         }
     }
 
-    private async relatedFromCache<
-        K extends CachedSchemaKeys,
-        T extends Base<K, T>,
-        F extends keyof RelatedDataT<K, T>
-    >(
-        tableName: K,
-        id: string,
-        field: F
-    ): Promise<RelatedDataT<K, T>[F]> {
-        if (!this.IsInitialised || !this.dbPromise) {
-            return Promise.reject("Not initialised");
-        }
+    // private async relatedFromCache<
+    //     K extends CachedCachedSchemaKeys,
+    //     T extends Base<K, T>,
+    //     F extends keyof RelatedDataT<K, T>
+    // >(
+    //     tableName: K,
+    //     id: string,
+    //     field: F
+    // ): Promise<RelatedDataT<K, T>[F]> {
+    //     if (!this.IsInitialised || !this.dbPromise) {
+    //         return Promise.reject("Not initialised");
+    //     }
 
-        let db = await this.dbPromise;
-        let result = await db.getAllFromIndex(
-            tableName,
-            field as unknown as keyof CachedSchema[K]["indexes"],
-            id as any);
-        return result as any;
-    }
+    //     let db = await this.dbPromise;
+    //     let result = await db.getAllFromIndex(
+    //         tableName,
+    //         field as unknown as keyof CachedSchema[K]["indexes"],
+    //         id as any);
+    //     return result as any;
+    // }
 
     // TODO: create
-    // TODO: related
+    // TODO: getAll
+    // TODO: uniqueRelated
+    // TODO: nonUniqueRelated
 
-    async get<K extends CachedSchemaKeys, T extends Base<K, T>>(
+    async get<K extends WholeSchemaKeys, T extends IBase<K, T>>(
         tableName: K,
         id: string
     ): Promise<T | null> {
-        return this.getFromCache<K, T>(tableName, id).catch(reason => {
-            let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
-            return query.get(id).then(async parse => {
-                // We have to force the types throughout this function because
-                // TypeScript can't do full dependent types (yet)
-
-                // TODO: Test for `id` not being available via `get` function
-                let schema: any = {
-                    id: parse.id
-                };
-                for (let key of this.Fields[tableName]) {
-                    if (key !== "id") {
-                        schema[key] = parse.get(key as any);
+        if (tableName in this.CachedStoreNames) {
+            let _tableName = tableName as CachedSchemaKeys;
+            return this.getFromCache(_tableName, id).catch(reason => {
+                let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
+                return query.get(id).then(async parse => {
+                    // TODO: Test for `id` not being available via `get` function
+                    let schema: any = {
+                        id: parse.id
+                    };
+                    for (let key of this.Fields[_tableName]) {
+                        if (key !== "id") {
+                            // Yes this cast is safe
+                            schema[key] = parse.get(key as any);
+                        }
                     }
-                }
 
-                if (this.dbPromise) {
-                    this.logger.info("Filling item", {
+                    if (this.dbPromise) {
+                        this.logger.info("Filling item", {
+                            conferenceId: this.conferenceId,
+                            tableName: tableName,
+                            id: id,
+                            value: schema
+                        });
+
+                        let db = await this.dbPromise;
+                        await db.put(_tableName, schema);
+                    }
+
+                    const constr = this.CachedConstructors[_tableName];
+                    return new constr(this.conferenceId, _tableName, schema, parse);
+                }).catch(reason => {
+                    this.logger.warn("Fetch from database of cached item failed", {
                         conferenceId: this.conferenceId,
                         tableName: tableName,
                         id: id,
-                        value: schema
+                        reason: reason
                     });
 
-                    let db = await this.dbPromise;
-                    await db.put(tableName, schema);
-                }
-
-                const constr = this.Constructors[tableName] as unknown as Constructor<K, any>;
-                return new constr(this.conferenceId, tableName, schema, parse) as T;
+                    return null;
+                });
+            }) as Promise<T | null>;
+        }
+        else {
+            let _tableName = tableName as UncachedSchemaKeys;
+            let query = new Parse.Query<Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>>(tableName);
+            return query.get(id).then(async parse => {
+                const constr = this.UncachedConstructors[_tableName];
+                return new constr(this.conferenceId, _tableName, parse);
             }).catch(reason => {
-                this.logger.warn("Fetch from database failed", {
+                this.logger.warn("Fetch from database of uncached item failed", {
                     conferenceId: this.conferenceId,
                     tableName: tableName,
                     id: id,
@@ -464,22 +494,30 @@ export default class Cache {
                 });
 
                 return null;
-            });;
-        });        
+            }) as Promise<T | null>;
+        }
     }
 
-    related<
-        K extends CachedSchemaKeys,
-        T extends Base<K, T>,
-        S extends keyof RelatedDataT<K, T>
-    >(
-        tableName: K,
-        id: string,
-        field: S,
-        parse: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null = null,
-        parseObjectCreated: ((obj: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>) => void) | null = null
-    ): Promise<RelatedDataT<K, T>[S]> {
-        // TODO
-        throw new Error("Method not implemented");
-    }
+    // async related<
+    //     K extends CachedSchemaKeys,
+    //     T extends Base<K, T>,
+    //     F extends keyof RelatedDataT<K, T>
+    // >(
+    //     tableName: K,
+    //     id: string,
+    //     field: F,
+    //     parse: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null = null,
+    //     parseObjectCreated: ((obj: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>) => void) | null = null
+    // ): Promise<RelatedDataT<K, T>[F] | null> {
+    //     return this.relatedFromCache<K, T, F>(tableName, id, field).catch(async reason => {
+    //         if (parse) {
+    //         }
+    //         else {
+    //             let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
+    //             parse = await query.get(id);
+    //         }
+
+    //         return null;
+    //     });
+    // }
 }

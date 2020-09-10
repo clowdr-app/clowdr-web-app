@@ -20,10 +20,4 @@ export default interface CachedSchema extends IDB.DBSchema {
         value: Schema.AttachmentType;
         indexes: Indexes<Schema.AttachmentType>;
     };
-
-    ClowdrInstance: {
-        key: string;
-        value: Schema.Conference;
-        indexes: Indexes<Schema.Conference>;
-    };
 }

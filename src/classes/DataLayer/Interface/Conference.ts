@@ -1,5 +1,5 @@
 import * as Schema from "../Schema";
-import { Base, StaticBase, StaticBaseImpl } from "./Base";
+import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
 
 type SchemaT = Schema.Conference;
 type K = "ClowdrInstance";
@@ -7,15 +7,15 @@ const K_str: K = "ClowdrInstance";
 
 type T = InstanceT & SchemaT;
 
-interface StaticT extends StaticBase<K, T> {
+interface StaticT extends StaticUncachedBase<K, T> {
 }
 
-interface InstanceT extends Base<K, T> {
+interface InstanceT extends UncachedBase<K, T> {
 }
 
 // TODO: Tests
 
-export default class Class extends Base<K, T> implements T {
+export default class Class extends UncachedBase<K, T> implements T {
 
     static get(conferenceId: string, id: string): Promise<T | null> {
         return StaticBaseImpl.get(K_str, conferenceId, id);
