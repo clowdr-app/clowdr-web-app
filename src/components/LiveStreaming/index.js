@@ -180,13 +180,15 @@ class LiveStreaming extends Component {
             if (this.state.expanded) {
                 this.toggleExpanded();
             }
-            let current = this.getLiveRooms(this.props.match.params.when);
-            this.setState({
-                liveRooms: current[0],
-                currentSessions: current[1],
-                upcomingRooms: current[2],
-                upcomingSessions: current[3]
-            })
+           if(this.state.ProgramSessions) {
+               let current = this.getLiveRooms(this.props.match.params.when);
+               this.setState({
+                   liveRooms: current[0],
+                   currentSessions: current[1],
+                   upcomingRooms: current[2],
+                   upcomingSessions: current[3]
+               })
+           }
         }
         if (this.props.match && this.props.match.params.roomName) {
             this.expandVideoByName(this.props.match.params.roomName);
