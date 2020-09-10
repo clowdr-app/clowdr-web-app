@@ -240,9 +240,11 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys, T extends Uncac
     }
 
     protected async uniqueRelated<S extends keyof RelatedDataT<K, T>, T2 extends RelatedDataT<K, T>[S]>(field: S): Promise<T2> {
-        // TODO: Utilise `parseObjectCreated` to init `this.parse`
+        // TODO: Uncached -> Cached
+        // TODO: Uncached -> Uncached
         throw new Error("Method not implemented");
     }
+    // TODO: nonUniqueRelated
 }
 
 type CachableBase<K extends CachedSchemaKeys, T extends IBase<K, T>>

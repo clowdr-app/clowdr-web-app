@@ -525,7 +525,7 @@ export default class Cache {
                 id: id
             });
 
-            return Promise.reject(`${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
+            throw new Error(`${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
         }
     }
 
@@ -558,26 +558,47 @@ export default class Cache {
         }
     }
 
-    // private async relatedFromCache<
-    //     K extends CachedSchemaKeys,
-    //     T extends Base<K, T>,
-    //     F extends keyof RelatedDataT<K, T>
-    // >(
-    //     tableName: K,
-    //     id: string,
-    //     field: F
-    // ): Promise<RelatedDataT<K, T>[F]> {
-    //     if (!this.IsInitialised || !this.dbPromise) {
-    //         return Promise.reject("Not initialised");
-    //     }
+    private async uniqueRelatedFromCache<
+        K extends CachedSchemaKeys,
+        T extends CachedBase<K, T>,
+        S extends PromisedKeys<CachedSchema[K]["value"]>,
+        T2 extends RelatedDataT<K, T>[S]>(
+            tableName: K,
+            field: S,
+            id: string
+    ): Promise<T2> {
+        if (!this.IsInitialised || !this.dbPromise) {
+            return Promise.reject("Not initialised");
+        }
 
-    //     let db = await this.dbPromise;
-    //     let result = await db.getAllFromIndex(
-    //         tableName,
-    //         field as unknown as keyof CachedSchema[K]["indexes"],
-    //         id as any);
-    //     return result as any;
-    // }
+        let db = await this.dbPromise;
+        let result = await db.getFromIndex(tableName, field as any, id as any) || null;
+        if (result) {
+            this.logger.info("Cache hit", {
+                conferenceId: this.conferenceId,
+                tableName: tableName,
+                id: id,
+                field: field
+            });
+
+            const relationTableNames = this.RelationsToTableNames[tableName];
+            // @ts-ignore
+            const relationTableName: WholeSchemaKeys = relationTableNames[field];
+            // It cannot be a cached schema key - it's an uncached relation
+            const constr = this.Constructors[relationTableName as CachedSchemaKeys];
+            return new constr(this.conferenceId, result) as T2;
+        }
+        else {
+            this.logger.info("Cache relation miss", {
+                conferenceId: this.conferenceId,
+                tableName: tableName,
+                id: id,
+                field: field
+            });
+
+            throw new Error(`Target of ${field} for ${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
+        }
+    }
 
     // TODO: create
     // TODO: nonUniqueRelated
@@ -643,7 +664,9 @@ export default class Cache {
             parseObjectCreated: ((obj: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>) => void) | null = null
     ): Promise<T2> {
         if (this.CachedRelations[tableName].includes(field as any)) {
-            throw new Error("Method not implemented for cached relations");
+            return this.uniqueRelatedFromCache<K, T, S, T2>(tableName, field, id).catch(async _ => {
+                throw new Error("Method not implemented for cached relations when target not found in cache");
+            });
         }
         else {
             if (!parse) { 
@@ -664,27 +687,4 @@ export default class Cache {
             return new constr(result) as T2;
         }
     }
-
-    // async related<
-    //     K extends CachedSchemaKeys,
-    //     T extends Base<K, T>,
-    //     F extends keyof RelatedDataT<K, T>
-    // >(
-    //     tableName: K,
-    //     id: string,
-    //     field: F,
-    //     parse: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null = null,
-    //     parseObjectCreated: ((obj: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>) => void) | null = null
-    // ): Promise<RelatedDataT<K, T>[F] | null> {
-    //     return this.relatedFromCache<K, T, F>(tableName, id, field).catch(async reason => {
-    //         if (parse) {
-    //         }
-    //         else {
-    //             let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
-    //             parse = await query.get(id);
-    //         }
-
-    //         return null;
-    //     });
-    // }
 }
