@@ -6,8 +6,6 @@ type SchemaT = Schema.Conference;
 type K = "ClowdrInstance";
 const K_str: K = "ClowdrInstance";
 
-// TODO: Tests
-
 export default class Class extends UncachedBase<K> implements SchemaT {
     constructor(parse: Parse.Object<PromisesRemapped<SchemaT>>) {
         super(K_str, parse);

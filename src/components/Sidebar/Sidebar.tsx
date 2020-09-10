@@ -8,11 +8,11 @@ interface Props {
 function Sidebar(props: Props) {
     // const [state, setState] = useState<boolean>({});
     const conf = useConference();
-    const [text/*, setText*/] = useState("Please log in to view the conference");
+    const [text, setText] = useState("Please log in to view the conference");
 
     useEffect(() => {
         async function updateText() {
-            // TODO: setText((await conf.loggedInText).value);
+            setText((await conf.loggedInText).value);
         };
 
         updateText();

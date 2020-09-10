@@ -157,8 +157,6 @@ export abstract class StaticBaseImpl {
         id: string,
         conferenceId?: string,
     ): Promise<T | null> {
-        // TODO: Write a test for this
-
         // Yes these casts are safe
         if (StaticBaseImpl.IsCachable(tableName, conferenceId)) {
             let _tableName = tableName as CachedSchemaKeys;
@@ -229,8 +227,6 @@ export abstract class StaticBaseImpl {
 }
 
 export interface IBase<K extends WholeSchemaKeys> extends Schema.Base {
-    // TODO: Define accessor functions, etc here first
-
     getUncachedParseObject(): Promise<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>;
 }
 
@@ -316,8 +312,10 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
             throw new Error("Method not implemented - Uncached -> Cached");
         }
         else {
-            // TODO: Uncached -> Uncached
-            throw new Error("Method not implemented - Uncached -> Uncached");
+            return this.parse.get(field as any).then((parse: any) => {
+                let constr = Cache.Constructors[relTableName as unknown as UncachedSchemaKeys];
+                return new constr(parse);
+            });
         }
     }
     // TODO: nonUniqueRelated

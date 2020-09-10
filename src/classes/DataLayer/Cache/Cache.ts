@@ -479,7 +479,7 @@ export default class Cache {
      * this version cannot open.
      */
     private async blocked(): Promise<void> {
-        // TODO
+        // TODO: blocked
         this.logger.error("Database blocked alert - not implemented.");
     }
 
@@ -488,7 +488,7 @@ export default class Cache {
      * from opening.
      */
     private async blocking(): Promise<void> {
-        // TODO
+        // TODO: blocking
         this.logger.error("Database blocking alert - not implemented.");
         if (this.IsDebugEnabled) {
             this.logger.warn("Debug enabled. Closing cache connection.");
@@ -501,10 +501,10 @@ export default class Cache {
      * called when db.close() is called.
      */
     private async terminated(): Promise<void> {
-        // TODO
+        // TODO: terminated
         this.logger.error("Database terminated alert - not implemented.");
         // TODO: Terminate live queries
-        // TODO: Alert user?
+        // TODO: Alert user to termination?
     }
 
     private async getFromCache<K extends CachedSchemaKeys, T extends CachedBase<K>>(

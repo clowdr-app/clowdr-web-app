@@ -6,8 +6,6 @@ type SchemaT = Schema.PrivilegedInstanceDetails;
 type K = "PrivilegedInstanceDetails";
 const K_str: K = "PrivilegedInstanceDetails";
 
-// TODO: Tests
-
 export default class Class extends UncachedBase<K> implements SchemaT {
     constructor(parse: Parse.Object<PromisesRemapped<SchemaT>>) {
         super(K_str, parse);
