@@ -1,7 +1,7 @@
 import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { render, waitForElement } from "@testing-library/react";
-import Cache from "../../classes/Cache/Cache";
+// TODO: import Cache from "../../classes/Cache/Cache";
 import App from "./App";
 
 jest.mock("../../classes/Cache/Cache.ts");

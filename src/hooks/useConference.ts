@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import ConferenceContext from '../contexts/ConferenceContext';
-import { Conference } from '../classes/Data';
+import { Conference } from '../classes/DataLayer';
 import assert from 'assert';
 
 /**

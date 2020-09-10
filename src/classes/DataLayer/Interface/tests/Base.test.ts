@@ -36,7 +36,7 @@ const testAttachmentTypeData = {
     supportsFile: false
 };
 const testObject
-    = new CustomAttachmentType(testConferenceId, "AttachmentType", testAttachmentTypeData);
+    = new CustomAttachmentType(testConferenceId, testAttachmentTypeData);
 
 describe("Base", () => {
     it("returns the id", () => {

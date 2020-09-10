@@ -1,5 +1,5 @@
 import * as Schema from "../Schema";
-import { CachedBase, StaticCachedBase, StaticBaseImpl } from "./Base";
+import { CachedBase, StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT } from "./Base";
 import { Conference } from ".";
 
 type SchemaT = Schema.AttachmentType;
@@ -15,6 +15,12 @@ interface InstanceT extends CachedBase<K, T> {
 }
 
 export default class Class extends CachedBase<K, T> implements T {
+    constructor(
+        conferenceId: string,
+        data: FieldDataT<K, T>,
+        parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
+        super(conferenceId, K_str, data, parse);
+    }
 
     get displayAsLink(): boolean {
         return this.data.displayAsLink;
@@ -41,8 +47,8 @@ export default class Class extends CachedBase<K, T> implements T {
         // return this.uniqueRelated("conference");
     }
 
-    static get(conferenceId: string, id: string): Promise<T | null> {
-        return StaticBaseImpl.get(K_str, conferenceId, id);
+    static get(id: string, conferenceId: string): Promise<T | null> {
+        return StaticBaseImpl.get(K_str, id, conferenceId);
     }
 
     // static create(conferenceId, data): Promise<T> {

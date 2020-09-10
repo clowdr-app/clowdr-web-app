@@ -1,7 +1,10 @@
+import { keys } from "ts-transformer-keys";
+
 import Parse from "parse";
 import CachedSchema from "../CachedSchema";
 import { NotPromisedFields, KnownKeys, PromisedFields } from "../../Util";
 import * as Schema from "../Schema";
+import * as Interface from "../Interface";
 import Caches from "../Cache";
 import UncachedSchema from "../UncachedSchema";
 
@@ -17,15 +20,13 @@ import UncachedSchema from "../UncachedSchema";
  * Constructor, and Base.
  */
 
-// TODO: What's the interface for stuff we aren't going to cache?
-//       Ideally, it would be directly compatible with Base, so that if we ever
-//       decide to start caching something, it will be an easy switch
-
 export type CachedSchemaKeys = KnownKeys<CachedSchema>;
 export type UncachedSchemaKeys = KnownKeys<UncachedSchema>;
 export type WholeSchemaKeys = CachedSchemaKeys | UncachedSchemaKeys;
 
 export type WholeSchema = CachedSchema | UncachedSchema;
+
+export const CachedStoreNames = keys<CachedSchema>() as Array<CachedSchemaKeys>;
 
 export type FieldDataT<K extends WholeSchemaKeys, T extends IBase<K, T>>
     = NotPromisedFields<WholeSchema[K]["value"]> & Schema.Base;
@@ -51,37 +52,33 @@ export type PromisesRemapped<T>
     };
 
 export interface StaticBase<K extends WholeSchemaKeys, T extends IBase<K, T>> {
-    get(conferenceId: string, id: string): Promise<T | null>;
 }
 
 export interface StaticCachedBase<K extends CachedSchemaKeys, T extends CachedBase<K, T>> extends StaticBase<K, T> {
     // Must match the type of `CachedConstructor` below
     new(conferenceId: string,
-        tableName: K,
         data: FieldDataT<K, T>,
         parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null): T;
+
+    get(id: string, conferenceId: string): Promise<T | null>;
 }
 
 export type CachedConstructor<K extends CachedSchemaKeys, T extends CachedBase<K, T>>
     = new (
         conferenceId: string,
-        tableName: K,
         data: FieldDataT<K, T>,
         parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null) => CachedBase<K, T>;
 
 
 export interface StaticUncachedBase<K extends UncachedSchemaKeys, T extends UncachedBase<K, T>> extends StaticBase<K, T> {
     // Must match the type of `UncachedConstructor` below
-    new(conferenceId: string,
-        tableName: K,
-        parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>): T;
+    new(parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>): T;
+
+    get(id: string): Promise<T | null>;
 }
 
 export type UncachedConstructor<K extends UncachedSchemaKeys, T extends UncachedBase<K, T>>
-    = new (
-        conferenceId: string,
-        tableName: K,
-        parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>) => UncachedBase<K, T>;
+    = new (parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>) => UncachedBase<K, T>;
 
 
 /**
@@ -99,12 +96,43 @@ export abstract class StaticBaseImpl {
 
     static async get<K extends WholeSchemaKeys, T extends IBase<K, T>>(
         tableName: K,
-        conferenceId: string,
-        id: string
+        id: string,
+        conferenceId?: string,
     ): Promise<T | null> {
         // TODO: Write a test for this
-        let cache = await Caches.get(conferenceId);
-        return cache.get(tableName, id);
+
+        // Yes these casts are safe
+        if (CachedStoreNames.includes(tableName as any) && conferenceId) {
+            let cache = await Caches.get(conferenceId);
+            return cache.get(tableName as any, id) as any;
+        }
+        else {
+            // This cannot be made static due to the fact TypeScript doesn't guarantee
+            // the order modules will be compiled, meaning if this field were static,
+            // `Interface.XYZ` might be undefined at the point this object gets
+            // initialised.
+            const UncachedConstructors: {
+                // The 'any' can't be replaced here - it would require dependent types.
+                [K in UncachedSchemaKeys]: UncachedConstructor<K, any>;
+            } = {
+                    ClowdrInstance: Interface.Conference
+                };
+            
+            let _tableName = tableName as UncachedSchemaKeys;
+            let query = new Parse.Query<Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>>(tableName);
+            return query.get(id).then(async parse => {
+                const constr = UncachedConstructors[_tableName];
+                return new constr(parse);
+            }).catch(reason => {
+                console.warn("Fetch from database of uncached item failed", {
+                    tableName: tableName,
+                    id: id,
+                    reason: reason
+                });
+
+                return null;
+            }) as Promise<T | null>;
+        }
     }
 }
 
@@ -118,7 +146,6 @@ export interface IBase<K extends WholeSchemaKeys, T extends IBase<K, T>> extends
  * Provides the methods and properties common to all data objects (e.g. `id`).
  */
 export abstract class CachedBase<K extends CachedSchemaKeys, T extends CachedBase<K, T>> implements IBase<K, T> {
-    // Must match the type of `Constructor` above
     constructor(
         protected conferenceId: string,
         protected tableName: K,
@@ -168,7 +195,6 @@ export abstract class CachedBase<K extends CachedSchemaKeys, T extends CachedBas
 
 export abstract class UncachedBase<K extends UncachedSchemaKeys, T extends UncachedBase<K, T>> implements IBase<K, T> {
     constructor(
-        protected conferenceId: string,
         protected tableName: K,
         protected parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>) {
     }

@@ -1,5 +1,5 @@
 import * as Schema from "../Schema";
-import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
+import { StaticUncachedBase, StaticBaseImpl, UncachedBase, PromisesRemapped } from "./Base";
 
 type SchemaT = Schema.Conference;
 type K = "ClowdrInstance";
@@ -16,9 +16,16 @@ interface InstanceT extends UncachedBase<K, T> {
 // TODO: Tests
 
 export default class Class extends UncachedBase<K, T> implements T {
+    constructor(parse: Parse.Object<PromisesRemapped<SchemaT>>) {
+        super(K_str, parse);
+    }
 
-    static get(conferenceId: string, id: string): Promise<T | null> {
-        return StaticBaseImpl.get(K_str, conferenceId, id);
+    get conferenceName(): string {
+        return this.parse.get("conferenceName");
+    }
+
+    static get(id: string): Promise<T | null> {
+        return StaticBaseImpl.get(K_str, id);
     }
 }
 

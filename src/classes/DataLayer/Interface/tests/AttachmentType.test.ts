@@ -13,7 +13,7 @@ const testAttachmentTypeData = {
     supportsFile: false
 };
 const testObject
-    = new AttachmentType(testConferenceId, "AttachmentType", testAttachmentTypeData);
+    = new AttachmentType(testConferenceId, testAttachmentTypeData);
 
 describe("AttachmentType", () => {
     it("returns the displayAsLink", () => {

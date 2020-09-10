@@ -5,11 +5,10 @@ import Page from '../Page/Page';
 import Session_Conference from '../../classes/Session/Conference';
 import Session_User from '../../classes/Session/User';
 import Sidebar from '../Sidebar/Sidebar';
-import CacheContext from '../../contexts/CacheContext';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserContext from '../../contexts/UserContext';
-import Cache from '../../classes/Cache';
-import { Conference, User } from '../../classes/Data';
+import Caches from '../../classes/DataLayer/Cache';
+import { User } from '../../classes/Data';
 import * as DataLayer from "../../classes/DataLayer";
 import * as Schema from '../../classes/DataLayer/Schema';
 import { PromisesRemapped } from "../../classes/DataLayer/Interface/Base";
@@ -29,7 +28,7 @@ interface Props {
 export default function App(props: Props) {
 
     useEffect(() => {
-        DataLayer.Conference.get("ciAZ1zroPD", "ciAZ1zroPD").then(
+        DataLayer.Conference.get("ciAZ1zroPD").then(
             async (result: DataLayer.Conference | null) => {
                 console.log("Got conference", result);
 
@@ -54,10 +53,7 @@ export default function App(props: Props) {
     // Get all relevant state information for this component
     // Note: These can't be used inside `useEffect` or other asynchronous
     //       functions.
-    // TODO: Initialise the new cache
-    // TODO: Under the new data layer API, the entire useCache thing isn't necessary
-    const [cache, setCache] = useState<Cache | null>(currentConferenceId ? new Cache(currentConferenceId) : null);
-    const [conference, setConference] = useState<Conference | null>(null);
+    const [conference, setConference] = useState<DataLayer.Conference | null>(null);
     const [user, setUser] = useState<User | null>(null);
     // TODO: Handle the User Profile
 
@@ -72,28 +68,13 @@ export default function App(props: Props) {
             if (currentConferenceId) {
                 // Have we already loaded the right conference from the cache?
                 if (!conference || conference.id !== currentConferenceId) {
-                    // Does the cache exist?
-                    let _cache;
-                    if (!cache) {
-                        // No...so let's create a cache for the selected conference
-                        // Caches are tied to particularly conferences.
-                        _cache = new Cache(currentConferenceId);
-                        // TODO: Initialise the new cache
-                        setCache(_cache);
-                    }
-                    else {
-                        _cache = cache;
-                    }
-
                     // Now we can try to fetch the selected conference from the cache
                     // If the cache misses, it will go to the db for us.
-                    //   TODO: Lookup against the Conference class
-                    let _conference = await _cache.get<"ClowdrInstance", Conference>("ClowdrInstance", currentConferenceId);
+                    let _conference = await DataLayer.Conference.get(currentConferenceId);
                     // Did the conference actually exist?
                     if (!_conference) {
                         // No? Darn...mustv'e been a fake id. Clear out the state.
                         Session_Conference.currentConferenceId = null;
-                        setCache(null);
                     }
                     else {
                         // Yes! Great, store the result in the state.
@@ -105,9 +86,6 @@ export default function App(props: Props) {
             else {
                 // No conference selected - let's make sure our state reflects
                 // that fact.
-                if (cache) {
-                    setCache(null);
-                }
                 if (conference) {
                     setConference(null);
                 }
@@ -120,24 +98,24 @@ export default function App(props: Props) {
          */
         async function updateUser() {
             // Has a conference been selected and a cache created?
-            if (currentConferenceId && cache) {
+            if (currentConferenceId) {
                 // Have we already loaded the correct user?
                 if (currentUserId && currentUserId !== user?.id) {
                     // No, so let's go to the cache for it. The cache will hit
                     // the db for us if the user isn't already present.
                     //   TODO: Lookup against the User class
-                    let _user = await cache.get<"User", User>("User", currentUserId);
-                    // Did a user with that id actually exist?
-                    if (_user) {
-                        // Yes, good, let's store the user for later.
-                        // This will also trigger a re-rendering.
-                        setUser(_user);
-                    }
-                    else {
-                        // No, darn, must've been a fake id.
-                        Session_User.currentUserId = null;
-                        setUser(null);
-                    }
+                    // let _user = await DataLayer.User.get(currentUserId, currentConferenceId);
+                    // // Did a user with that id actually exist?
+                    // if (_user) {
+                    //     // Yes, good, let's store the user for later.
+                    //     // This will also trigger a re-rendering.
+                    //     setUser(_user);
+                    // }
+                    // else {
+                    //     // No, darn, must've been a fake id.
+                    Session_User.currentUserId = null;
+                    setUser(null);
+                    // }
                 }
             }
             else {
@@ -173,13 +151,11 @@ export default function App(props: Props) {
 
     // Hint: `user` could be null - see also, `useUser` and `useMaybeUser` hooks
     return <div className="app">
-        <CacheContext.Provider value={cache}>
-            <ConferenceContext.Provider value={conference}>
-                <UserContext.Provider value={user}>
-                    {page}
-                    {sidebar}
-                </UserContext.Provider>
-            </ConferenceContext.Provider>
-        </CacheContext.Provider>
+        <ConferenceContext.Provider value={conference}>
+            <UserContext.Provider value={user}>
+                {page}
+                {sidebar}
+            </UserContext.Provider>
+        </ConferenceContext.Provider>
     </div>;
 }

@@ -4,11 +4,10 @@ import DebugLogger from "../../DebugLogger";
 import CachedSchema, { SchemaVersion } from "../CachedSchema";
 import * as Interface from "../Interface";
 import * as Schema from "../Schema";
-import { CachedBase, CachedSchemaKeys, CachedConstructor, PromisesRemapped, WholeSchemaKeys, IBase, UncachedSchemaKeys, UncachedConstructor } from "../Interface/Base";
+import { CachedBase, CachedSchemaKeys, CachedConstructor, PromisesRemapped, CachedStoreNames } from "../Interface/Base";
 import { NotPromisedFields, NotPromisedKeys, PromisedNonArrayFields, PromisedArrayFields } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
-import UncachedSchema from "../UncachedSchema";
 
 export default class Cache {
     readonly CachedConstructors: {
@@ -16,13 +15,6 @@ export default class Cache {
         [K in CachedSchemaKeys]: CachedConstructor<K, any>;
     } = {
             AttachmentType: Interface.AttachmentType
-        };
-    
-    readonly UncachedConstructors: {
-        // The 'any' can't be replaced here - it would require dependent types.
-        [K in UncachedSchemaKeys]: UncachedConstructor<K, any>;
-    } = {
-            ClowdrInstance: Interface.Conference
         };
 
     readonly Fields: {
@@ -42,8 +34,7 @@ export default class Cache {
     } = {
             AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>()
         };
-    
-    readonly CachedStoreNames = keys<CachedSchema>() as Array<CachedSchemaKeys>;
+
     readonly KEY_PATH: "id" = "id";
 
     private dbPromise: Promise<IDBPDatabase<CachedSchema>> | null = null;
@@ -260,7 +251,7 @@ export default class Cache {
         let updatedItem = { ...item };
         let edited = false;
         for (let key in item) {
-            if (StoreFieldNames.indexOf(key) === -1) {
+            if (!StoreFieldNames.includes(key)) {
                 // @ts-ignore - Yes, it's okay, we're deleting a key that's not
                 //              supposed to be part of the item anyway!
                 delete updatedItem[key];
@@ -306,7 +297,7 @@ export default class Cache {
 
         // Gather stores to upgrade or delete
         for (let storeName of existingStoreNames) {
-            if (this.CachedStoreNames.indexOf(storeName) > -1) {
+            if (CachedStoreNames.includes(storeName)) {
                 toUpgrade.push(storeName);
             }
             else {
@@ -315,8 +306,8 @@ export default class Cache {
         }
 
         // Gather stores to create
-        for (let storeName of this.CachedStoreNames) {
-            if (existingStoreNames.indexOf(storeName) === -1) {
+        for (let storeName of CachedStoreNames) {
+            if (!existingStoreNames.includes(storeName)) {
                 toCreate.push(storeName);
             }
         }
@@ -433,60 +424,40 @@ export default class Cache {
     // TODO: uniqueRelated
     // TODO: nonUniqueRelated
 
-    async get<K extends WholeSchemaKeys, T extends IBase<K, T>>(
+    async get<K extends CachedSchemaKeys, T extends CachedBase<K, T>>(
         tableName: K,
         id: string
     ): Promise<T | null> {
-        if (tableName in this.CachedStoreNames) {
-            let _tableName = tableName as CachedSchemaKeys;
-            return this.getFromCache(_tableName, id).catch(reason => {
-                let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
-                return query.get(id).then(async parse => {
-                    // TODO: Test for `id` not being available via `get` function
-                    let schema: any = {
-                        id: parse.id
-                    };
-                    for (let key of this.Fields[_tableName]) {
-                        if (key !== "id") {
-                            // Yes this cast is safe
-                            schema[key] = parse.get(key as any);
-                        }
+        return this.getFromCache(tableName, id).catch(reason => {
+            let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
+            return query.get(id).then(async parse => {
+                // TODO: Test for `id` not being available via `get` function
+                let schema: any = {
+                    id: parse.id
+                };
+                for (let key of this.Fields[tableName]) {
+                    if (key !== "id") {
+                        // Yes this cast is safe
+                        schema[key] = parse.get(key as any);
                     }
+                }
 
-                    if (this.dbPromise) {
-                        this.logger.info("Filling item", {
-                            conferenceId: this.conferenceId,
-                            tableName: tableName,
-                            id: id,
-                            value: schema
-                        });
-
-                        let db = await this.dbPromise;
-                        await db.put(_tableName, schema);
-                    }
-
-                    const constr = this.CachedConstructors[_tableName];
-                    return new constr(this.conferenceId, _tableName, schema, parse);
-                }).catch(reason => {
-                    this.logger.warn("Fetch from database of cached item failed", {
+                if (this.dbPromise) {
+                    this.logger.info("Filling item", {
                         conferenceId: this.conferenceId,
                         tableName: tableName,
                         id: id,
-                        reason: reason
+                        value: schema
                     });
 
-                    return null;
-                });
-            }) as Promise<T | null>;
-        }
-        else {
-            let _tableName = tableName as UncachedSchemaKeys;
-            let query = new Parse.Query<Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>>(tableName);
-            return query.get(id).then(async parse => {
-                const constr = this.UncachedConstructors[_tableName];
-                return new constr(this.conferenceId, _tableName, parse);
+                    let db = await this.dbPromise;
+                    await db.put(tableName, schema);
+                }
+
+                const constr = this.CachedConstructors[tableName];
+                return new constr(this.conferenceId, schema, parse);
             }).catch(reason => {
-                this.logger.warn("Fetch from database of uncached item failed", {
+                this.logger.warn("Fetch from database of cached item failed", {
                     conferenceId: this.conferenceId,
                     tableName: tableName,
                     id: id,
@@ -494,8 +465,8 @@ export default class Cache {
                 });
 
                 return null;
-            }) as Promise<T | null>;
-        }
+            });
+        }) as Promise<T | null>;
     }
 
     // async related<
