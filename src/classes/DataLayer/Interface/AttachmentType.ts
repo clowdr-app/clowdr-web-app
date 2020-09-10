@@ -43,8 +43,7 @@ export default class Class extends CachedBase<K, T> implements T {
     }
 
     get conference(): Promise<Conference> {
-        throw new Error("Method no implemented");
-        // return this.uniqueRelated("conference");
+        return this.uniqueRelated("conference");
     }
 
     static get(id: string, conferenceId: string): Promise<T | null> {

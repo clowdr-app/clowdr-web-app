@@ -208,11 +208,12 @@ export abstract class CachedBase<K extends CachedSchemaKeys, T extends CachedBas
         return this.data.updatedAt;
     }
 
-    // TODO: Define stuff in the interface first
-    // protected uniqueRelated<S extends keyof RelatedDataT<K, T>>(field: S): Promise<RelatedDataT<K, T>[S]> {
-    //     // TODO: Utilise `parseObjectCreated` to init `this.parse`
-    //     throw new Error("Method not implemented");
-    // }
+    protected async uniqueRelated<S extends keyof RelatedDataT<K, T>, T2 extends RelatedDataT<K, T>[S]>(field: S): Promise<T2> {
+        let cache = await Caches.get(this.conferenceId);
+        return cache.uniqueRelated<K, T, S, T2>(this.tableName, field, this.id, this.parse, (newParse) => {
+            this.parse = newParse;
+        });
+    }
     // TODO: nonUniqueRelated
 }
 
@@ -236,6 +237,11 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys, T extends Uncac
 
     get updatedAt(): Date {
         return this.parse.updatedAt;
+    }
+
+    protected async uniqueRelated<S extends keyof RelatedDataT<K, T>, T2 extends RelatedDataT<K, T>[S]>(field: S): Promise<T2> {
+        // TODO: Utilise `parseObjectCreated` to init `this.parse`
+        throw new Error("Method not implemented");
     }
 }
 

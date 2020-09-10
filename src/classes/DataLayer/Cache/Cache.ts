@@ -4,32 +4,86 @@ import DebugLogger from "../../DebugLogger";
 import CachedSchema, { SchemaVersion } from "../CachedSchema";
 import * as Interface from "../Interface";
 import * as Schema from "../Schema";
-import { CachedBase, CachedSchemaKeys, CachedConstructor, PromisesRemapped, CachedStoreNames } from "../Interface/Base";
-import { NotPromisedFields, NotPromisedKeys, PromisedNonArrayFields, PromisedArrayFields } from "../../Util";
+import { CachedBase, CachedSchemaKeys, CachedConstructor, PromisesRemapped, CachedStoreNames, RelatedDataT, UncachedBase, UncachedSchemaKeys, UncachedConstructor, WholeSchemaKeys, WholeSchema } from "../Interface/Base";
+import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields, PromisedFieldsExtending, PromisedKeys } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
 import assert from "assert";
 
 export default class Cache {
-    readonly CachedConstructors: {
+    /**
+     * Constructors of both cached and uncached tables.
+     */
+    readonly Constructors:
         // The 'any' can't be replaced here - it would require dependent types.
+    {
         [K in CachedSchemaKeys]: CachedConstructor<K, any>;
+    } & {
+        [K in UncachedSchemaKeys]: UncachedConstructor<K, any>;
     } = {
-            AttachmentType: Interface.AttachmentType
+            AttachmentType: Interface.AttachmentType,
+            ClowdrInstance: Interface.Conference
         };
 
+    /**
+     * All fields including related fields.
+     */
     readonly Fields: {
-        [K in CachedSchemaKeys]: Array<NotPromisedKeys<CachedSchema[K]["value"]>>;
+        [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["value"]>;
     } = {
-            AttachmentType: keys<NotPromisedFields<Schema.AttachmentType>>()
+            AttachmentType: keys<Schema.AttachmentType>()
         };
 
+    /**
+     * All relations including to uncached tables.
+     */
+    readonly Relations: {
+        [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
+    } = {
+            AttachmentType: keys<PromisedFields<Schema.AttachmentType>>()
+        };
+
+    readonly RelationsToTableNames: {
+        [K in CachedSchemaKeys]: {
+            [K2 in PromisedKeys<CachedSchema[K]["value"]>]:
+            CachedSchema[K]["value"][K2] extends Promise<any> ? WholeSchemaKeys : never
+        }
+    } = {
+            AttachmentType: {
+                conference: "ClowdrInstance"
+            }
+        };
+
+    /**
+     * Only relations to cached tables.
+     */
+    readonly CachedRelations: {
+        [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
+    } = {
+            AttachmentType: keys<PromisedFieldsExtending<Schema.AttachmentType, CachedBase<CachedSchemaKeys, any>>>()
+        };
+
+    /**
+     * Only relations to uncached tables.
+     */
+    readonly UncachedRelations: {
+        [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
+    } = {
+            AttachmentType: keys<PromisedFieldsExtending<Schema.AttachmentType, UncachedBase<UncachedSchemaKeys, any>>>()
+        };
+
+    /**
+     * All relations to unique items including to uncached tables.
+     */
     readonly UniqueRelations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
             AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>()
         };
 
+    /**
+     * All relations to non-unique items including to uncached tables.
+     */
     readonly NonUniqueRelations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
@@ -39,7 +93,7 @@ export default class Cache {
     readonly KEY_PATH: "id" = "id";
 
     private dbPromise: Promise<IDBPDatabase<CachedSchema>> | null = null;
-    private conference: Parse.Object<PromisesRemapped<Schema.Conference>> | null = null;
+    private conference: Promise<Parse.Object<PromisesRemapped<Schema.Conference>>> | null = null;
 
     private isInitialised: boolean = false;
 
@@ -89,33 +143,37 @@ export default class Cache {
         if (!this.isInitialised) {
             if (!this.dbPromise) {
                 this.logger.info("Opening database.");
-                this.dbPromise = openDB<CachedSchema>(this.DatabaseName, SchemaVersion, {
-                    upgrade: this.upgrade.bind(this),
-                    blocked: this.blocked.bind(this),
-                    blocking: this.blocking.bind(this),
-                    terminated: this.terminated.bind(this)
-                });
-
-                if (!this.isInitialised) {
-                    this.isInitialised = true;
-
-                    this.dbPromise.then(async db => {
-                        this.conference = await new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("ClowdrInstance").get(this.conferenceId) || null;
-                        if (!this.conference) {
-                            throw new Error(`Conference ${this.conferenceId} could not be loaded.`);
-                        }
-
-                        // TODO: Decide whether to clear the cache or not
-                        // If clearing the cache, don't resolve until it's empty
-                        // Else resolve early and download new data in the background
-
-                        await Promise.all(CachedStoreNames.map(store => {
-                            return this.fillCache(store, db);
-                        }));
-
-                        // TODO: Subscribe to live queries
+                this.conference = new Promise((resolve, reject) => {
+                    this.dbPromise = openDB<CachedSchema>(this.DatabaseName, SchemaVersion, {
+                        upgrade: this.upgrade.bind(this),
+                        blocked: this.blocked.bind(this),
+                        blocking: this.blocking.bind(this),
+                        terminated: this.terminated.bind(this)
                     });
-                }
+
+                    if (!this.isInitialised) {
+                        this.isInitialised = true;
+
+                        this.dbPromise.then(async db => {
+                            let conf = await new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("ClowdrInstance").get(this.conferenceId) || null;
+                            if (!conf) {
+                                reject(`Conference ${this.conferenceId} could not be loaded.`);
+                                throw new Error(`Conference ${this.conferenceId} could not be loaded.`);
+                            }
+                            resolve(conf);
+
+                            // TODO: Decide whether to clear the cache or not
+                            // If clearing the cache, don't resolve until it's empty
+                            // Else resolve early and download new data in the background
+
+                            await Promise.all(CachedStoreNames.map(store => {
+                                return this.fillCache(store, db);
+                            }));
+
+                            // TODO: Subscribe to live queries
+                        });
+                    }
+                });
             }
         }
         else {
@@ -131,8 +189,7 @@ export default class Cache {
             return Promise.reject("Not initialised");
         }
 
-        let itemsQ = await new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName)
-            .equalTo("conference", this.conf<K, T>());
+        let itemsQ = await this.newParseQuery(tableName);
         return itemsQ.map(parse => {
             return this.addItemToCache<K, T>(parse, tableName, db);
         });
@@ -149,8 +206,17 @@ export default class Cache {
         };
         for (let key of this.Fields[tableName]) {
             if (key !== "id") {
-                // Yes this cast is safe
-                schema[key] = parse.get(key as any);
+                // Yes these casts are safe
+                
+                if (this.Relations[tableName].includes(key as any)) {
+                    // Exclude uncached relations data
+                    if (this.CachedRelations[tableName].includes(key as any)) {
+                        schema[key] = parse.get(key as any).id;
+                    }
+                }
+                else {
+                    schema[key] = parse.get(key as any);
+                }
             }
         }
 
@@ -175,7 +241,7 @@ export default class Cache {
             await db.put(tableName, schema);
         }
 
-        const constr = this.CachedConstructors[tableName];
+        const constr = this.Constructors[tableName];
         return new constr(this.conferenceId, schema, parse) as T;
     }
 
@@ -279,18 +345,22 @@ export default class Cache {
 
         let uniqueRels = this.UniqueRelations[name] as Array<keyof CachedSchema[Name]["indexes"]>;
         for (let rel of uniqueRels) {
-            store.createIndex(rel, this.KEY_PATH, {
-                unique: true,
-                multiEntry: false
-            });
+            if (this.CachedRelations[name].includes(rel as any)) {
+                store.createIndex(rel, this.KEY_PATH, {
+                    unique: true,
+                    multiEntry: false
+                });
+            }
         }
 
         let nonUniqueRels = this.NonUniqueRelations[name] as Array<keyof CachedSchema[Name]["indexes"]>;
         for (let rel of nonUniqueRels) {
-            store.createIndex(rel, this.KEY_PATH, {
-                unique: false,
-                multiEntry: false
-            });
+            if (this.CachedRelations[name].includes(rel as any)) {
+                store.createIndex(rel, this.KEY_PATH, {
+                    unique: false,
+                    multiEntry: false
+                });
+            }
         }
     }
 
@@ -446,7 +516,7 @@ export default class Cache {
                 id: id
             });
 
-            return new this.CachedConstructors[tableName](this.conferenceId, result) as T;
+            return new this.Constructors[tableName](this.conferenceId, result) as T;
         }
         else {
             this.logger.info("Cache miss", {
@@ -475,7 +545,7 @@ export default class Cache {
             });
 
             return result.map(x => {
-                return new this.CachedConstructors[tableName](this.conferenceId, x) as T;
+                return new this.Constructors[tableName](this.conferenceId, x) as T;
             });
         }
         else {
@@ -489,7 +559,7 @@ export default class Cache {
     }
 
     // private async relatedFromCache<
-    //     K extends CachedCachedSchemaKeys,
+    //     K extends CachedSchemaKeys,
     //     T extends Base<K, T>,
     //     F extends keyof RelatedDataT<K, T>
     // >(
@@ -510,15 +580,23 @@ export default class Cache {
     // }
 
     // TODO: create
-    // TODO: uniqueRelated
     // TODO: nonUniqueRelated
+
+    private async newParseQuery<K extends CachedSchemaKeys>(tableName: K) {
+        let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
+        assert(this.isInitialised);
+        assert(this.conference);
+        let conf = (await this.conference) as any;
+        query.equalTo("conference", conf);
+        return query;
+    }
 
     async get<K extends CachedSchemaKeys, T extends CachedBase<K, T>>(
         tableName: K,
         id: string
     ): Promise<T | null> {
-        return this.getFromCache(tableName, id).catch(reason => {
-            let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
+        return this.getFromCache(tableName, id).catch(async reason => {
+            let query = await this.newParseQuery(tableName);
             return query.get(id).then(async parse => {
                 return await this.addItemToCache<K, T>(parse, tableName);
             }).catch(reason => {
@@ -537,11 +615,8 @@ export default class Cache {
     async getAll<K extends CachedSchemaKeys, T extends CachedBase<K, T>>(
         tableName: K
     ): Promise<Array<T>> {
-        return this.getAllFromCache(tableName).catch(reason => {
-            assert(this.conference, "Conference is null");
-
-            let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
-            query.equalTo("conference", this.conf<K, T>());
+        return this.getAllFromCache(tableName).catch(async reason => {
+            let query = await this.newParseQuery(tableName);
             return query.map(async parse => {
                 return await this.addItemToCache<K, T>(parse, tableName);
             }).catch(reason => {
@@ -556,10 +631,40 @@ export default class Cache {
         }) as Promise<Array<T>>;
     }
 
+    async uniqueRelated<
+        K extends CachedSchemaKeys,
+        T extends CachedBase<K, T>,
+        S extends PromisedKeys<CachedSchema[K]["value"]>,
+        T2 extends RelatedDataT<K, T>[S]>(
+            tableName: K,
+            field: S,
+            id: string,
+            parse: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>> | null = null,
+            parseObjectCreated: ((obj: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>) => void) | null = null
+    ): Promise<T2> {
+        if (this.CachedRelations[tableName].includes(field as any)) {
+            throw new Error("Method not implemented for cached relations");
+        }
+        else {
+            if (!parse) { 
+                let query = await this.newParseQuery(tableName);
+                parse = await query.get(id);
+                if (parseObjectCreated) {
+                    parseObjectCreated(parse);
+                }
+            }
 
-    private conf<K extends CachedSchemaKeys, T extends CachedBase<K, T>>() {
-        return this.conference as unknown as PromisesRemapped<CachedSchema[K]["value"]>["conference"];
+            let result = parse.get(field as any);
+
+            const relationTableNames = this.RelationsToTableNames[tableName];
+            // @ts-ignore
+            const relationTableName: WholeSchemaKeys = relationTableNames[field];
+            // It cannot be a cached schema key - it's an uncached relation
+            const constr = this.Constructors[relationTableName as UncachedSchemaKeys];
+            return new constr(result) as T2;
+        }
     }
+
     // async related<
     //     K extends CachedSchemaKeys,
     //     T extends Base<K, T>,

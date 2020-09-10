@@ -1,4 +1,3 @@
-import Parse from "parse";
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
@@ -7,11 +6,8 @@ import Session_User from '../../classes/Session/User';
 import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserContext from '../../contexts/UserContext';
-import Caches from '../../classes/DataLayer/Cache';
 import { User } from '../../classes/Data';
 import * as DataLayer from "../../classes/DataLayer";
-import * as Schema from '../../classes/DataLayer/Schema';
-import { PromisesRemapped } from "../../classes/DataLayer/Interface/Base";
 
 interface Props {
 }
@@ -28,11 +24,15 @@ interface Props {
 export default function App(props: Props) {
 
     useEffect(() => {
+        DataLayer.AttachmentType.getAll("ciAZ1zroPD").then(async result => {
+            let results = await Promise.all(result.map(async x => ({
+                name: x.name,
+                conferenceName: (await x.conference).conferenceName
+            })));
+            console.log("Got attachment types", results);
+        });
         DataLayer.Conference.getAll().then(async result => {
             console.log("Got conferences", result.map(r => r.conferenceName));
-        });
-        DataLayer.AttachmentType.getAll("ciAZ1zroPD").then(async result => {
-            console.log("Got attachment types", result.map(x => x.name));
         });
         DataLayer.Conference.get("ciAZ1zroPD").then(
             async result => {

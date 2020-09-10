@@ -7,8 +7,8 @@ export type ParseObject = Parse.Object<Parse.Attributes>;
 export type KnownKeys<T> = {
     [K in keyof T]: string extends K ? never : number extends K ? never : K;
 } extends {
-    [_ in keyof T]: infer U;
-} ? U : never;
+        [_ in keyof T]: infer U;
+    } ? U : never;
 
 export function objectKeys<T>(o: T): Array<KnownKeys<T>> {
     return Object.keys(o) as Array<KnownKeys<T>>;
@@ -30,16 +30,29 @@ export type PromisedFields<T> = {
     [K in PromisedKeys<T>]: T[K] extends Promise<infer S> ? S : never;
 };
 
+export type PromisedKeysExtending<T, S> = {
+    [K in keyof T]:
+    T[K] extends Promise<infer U>
+    ? (U extends S ? K
+        : U extends Array<S> ? K
+        : never)
+    : never;
+}[keyof T];
+
+export type PromisedFieldsExtending<T, S> = {
+    [K in PromisedKeysExtending<T, S>]: T[K] extends Promise<infer U> ? U : never;
+};
+
 export type PromisedNonArrayKeys<T> = {
     [K in keyof T]:
-        T[K] extends Promise<Array<infer S>> ? never :
-        T[K] extends Promise<infer S> ? K : never;
+    T[K] extends Promise<Array<infer S>> ? never :
+    T[K] extends Promise<infer S> ? K : never;
 }[keyof T];
 
 export type PromisedNonArrayFields<T> = {
     [K in PromisedNonArrayKeys<T>]:
-        T[K] extends Promise<Array<infer S>> ? never :
-        T[K] extends Promise<infer S> ? S : never;
+    T[K] extends Promise<Array<infer S>> ? never :
+    T[K] extends Promise<infer S> ? S : never;
 };
 
 export type PromisedArrayKeys<T> = {
