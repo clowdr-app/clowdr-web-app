@@ -9,4 +9,9 @@ export default interface UncachedSchema extends IDB.DBSchema {
         value: Schema.Conference;
         indexes: Indexes<Schema.Conference>;
     };
+    PrivilegedInstanceDetails: {
+        key: string;
+        value: Schema.PrivilegedInstanceDetails;
+        indexes: Indexes<Schema.PrivilegedInstanceDetails>;
+    };
 }

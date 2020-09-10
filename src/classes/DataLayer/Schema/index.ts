@@ -4,3 +4,4 @@ export type { default as Conference } from "./Conference";
 export type { default as ProgramPerson } from "./ProgramPerson";
 export type { default as ProgramItem } from "./ProgramItem";
 export type { default as ProgramTrack } from "./ProgramTrack";
+export type { default as PrivilegedInstanceDetails } from "./PrivilegedInstanceDetails";

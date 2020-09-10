@@ -7,18 +7,10 @@ type SchemaT = Schema.ProgramTrack;
 type K = "ProgramTrack";
 const K_str: K = "ProgramTrack";
 
-type T = InstanceT & SchemaT;
-
-interface StaticT extends StaticCachedBase<K, T> {
-}
-
-interface InstanceT extends CachedBase<K, T> {
-}
-
-export default class Class extends CachedBase<K, T> implements T {
+export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
         conferenceId: string,
-        data: FieldDataT<K, T>,
+        data: FieldDataT[K],
         parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
         super(conferenceId, K_str, data, parse);
     }
@@ -58,15 +50,15 @@ export default class Class extends CachedBase<K, T> implements T {
         return this.uniqueRelated("conference");
     }
 
-    static get(id: string, conferenceId: string): Promise<T | null> {
+    static get(id: string, conferenceId: string): Promise<Class | null> {
         return StaticBaseImpl.get(K_str, id, conferenceId);
     }
 
-    static getAll(conferenceId: string): Promise<Array<T>> {
+    static getAll(conferenceId: string): Promise<Array<Class>> {
         return StaticBaseImpl.getAll(K_str, conferenceId);
     }
 }
 
 // The line of code below triggers type-checking of Class for static members
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _: StaticT = Class;
+const _: StaticCachedBase<K> = Class;

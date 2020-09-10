@@ -1,10 +1,10 @@
 import * as Schema from "../Schema";
 import { StaticUncachedBase, StaticBaseImpl, UncachedBase, PromisesRemapped } from "./Base";
-import { PrivilegedInstanceDetails } from ".";
+import { Conference } from ".";
 
-type SchemaT = Schema.Conference;
-type K = "ClowdrInstance";
-const K_str: K = "ClowdrInstance";
+type SchemaT = Schema.PrivilegedInstanceDetails;
+type K = "PrivilegedInstanceDetails";
+const K_str: K = "PrivilegedInstanceDetails";
 
 // TODO: Tests
 
@@ -13,13 +13,18 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         super(K_str, parse);
     }
 
-    get conferenceName(): string {
-        return this.parse.get("conferenceName");
+    get key(): string {
+        return this.parse.get("key");
     }
 
-    get loggedInText(): Promise<PrivilegedInstanceDetails> {
-        return this.uniqueRelated("loggedInText");
+    get value(): string {
+        return this.parse.get("value");
     }
+
+    get conference(): Promise<Conference> {
+        return this.uniqueRelated("conference");
+    }
+
 
     static get(id: string): Promise<Class | null> {
         return StaticBaseImpl.get(K_str, id);

@@ -8,6 +8,7 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserContext from '../../contexts/UserContext';
 import { User } from '../../classes/Data';
 import * as DataLayer from "../../classes/DataLayer";
+import { getTimeString } from '../../classes/Util';
 
 interface Props {
 }
@@ -25,18 +26,24 @@ export default function App(props: Props) {
 
     useEffect(() => {
         DataLayer.AttachmentType.getAll("ciAZ1zroPD").then(async result => {
-            let results = await Promise.all(result.map(async x => ({
+            let results1 = result.map(x => x.name);
+            console.log(`${getTimeString(new Date())} Got attachment types`, results1);
+
+            let results2 = await Promise.all(result.map(async x => ({
                 name: x.name,
                 conferenceName: (await x.conference).conferenceName
             })));
-            console.log("Got attachment types", results);
+            console.log(`${getTimeString(new Date())} Got attachment types with conference names`, results2);
         });
         DataLayer.Conference.getAll().then(async result => {
-            console.log("Got conferences", result.map(r => r.conferenceName));
+            console.log(`${getTimeString(new Date())} Got conferences`, result.map(r => r.conferenceName));
         });
         DataLayer.ProgramItem.get("6ZSU9G1Iwl", "ciAZ1zroPD").then(async result => {
             if (result) {
-                console.log("Got program item", {
+                console.log(`${getTimeString(new Date())} Got program item`, {
+                    title: result.title
+                });
+                console.log(`${getTimeString(new Date())} Got program item with track`, {
                     title: result.title,
                     track: await result.track
                 });
@@ -44,7 +51,7 @@ export default function App(props: Props) {
         });
         DataLayer.Conference.get("ciAZ1zroPD").then(
             async result => {
-                console.log("Got conference", result?.conferenceName);
+                console.log(`${getTimeString(new Date())} Got conference`, result?.conferenceName);
 
                 // if (result) {
                 //     let parseConf = await result.getUncachedParseObject();

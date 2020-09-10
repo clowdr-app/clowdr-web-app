@@ -2,10 +2,9 @@ import { keys } from "ts-transformer-keys";
 
 import Parse from "parse";
 import CachedSchema from "../CachedSchema";
-import { NotPromisedFields, KnownKeys, PromisedFields } from "../../Util";
+import { KnownKeys, PromisedKeys, NotPromisedKeys } from "../../Util";
 import * as Schema from "../Schema";
-import * as Interface from "../Interface";
-import Caches from "../Cache";
+import Caches, { Cache } from "../Cache";
 import UncachedSchema from "../UncachedSchema";
 
 /*
@@ -20,19 +19,75 @@ import UncachedSchema from "../UncachedSchema";
  * Constructor, and Base.
  */
 
+export type RelationsToTableNamesT =
+    {
+        [K in CachedSchemaKeys]: {
+            [K2 in PromisedKeys<CachedSchema[K]["value"]>]:
+            CachedSchema[K]["value"][K2] extends Promise<any> ? WholeSchemaKeys : never
+        }
+    } & {
+        [K in UncachedSchemaKeys]: {
+            [K2 in PromisedKeys<UncachedSchema[K]["value"]>]:
+            UncachedSchema[K]["value"][K2] extends Promise<any> ? WholeSchemaKeys : never
+        }
+    };
+
+export const RelationsToTableNames: RelationsToTableNamesT = {
+    AttachmentType: {
+        conference: "ClowdrInstance"
+    },
+    ProgramPerson: {
+        conference: "ClowdrInstance",
+        programItems: "ProgramItem"
+    },
+    ProgramItem: {
+        conference: "ClowdrInstance",
+        authors: "ProgramPerson",
+        track: "ProgramTrack"
+    },
+    ProgramTrack: {
+        conference: "ClowdrInstance"
+    },
+    ClowdrInstance: {
+        loggedInText: "PrivilegedInstanceDetails"
+    },
+    PrivilegedInstanceDetails: {
+        conference: "PrivilegedInstanceDetails"
+    }
+};
+
 export type CachedSchemaKeys = KnownKeys<CachedSchema>;
 export type UncachedSchemaKeys = KnownKeys<UncachedSchema>;
-export type WholeSchemaKeys = CachedSchemaKeys | UncachedSchemaKeys;
-
-export type WholeSchema = CachedSchema | UncachedSchema;
+export type WholeSchemaKeys = KnownKeys<RelationsToTableNamesT>;
+export type WholeSchema = CachedSchema & UncachedSchema;
 
 export const CachedStoreNames = keys<CachedSchema>() as Array<CachedSchemaKeys>;
 
-export type FieldDataT<K extends WholeSchemaKeys, T extends IBase<K, T>>
-    = NotPromisedFields<WholeSchema[K]["value"]> & Schema.Base;
+export type FieldDataT
+    = {
+        [K in CachedSchemaKeys]: {
+            [K2 in NotPromisedKeys<CachedSchema[K]["value"]>]: CachedSchema[K]["value"][K2]
+        } & {
+            [K in NotPromisedKeys<Schema.Base>]: Schema.Base[K]
+        }
+    } & {
+        [K in UncachedSchemaKeys]: {
+            [K2 in NotPromisedKeys<UncachedSchema[K]["value"]>]: UncachedSchema[K]["value"][K2]
+        } & {
+            [K in NotPromisedKeys<Schema.Base>]: Schema.Base[K]
+        }
+    };
 
-export type RelatedDataT<K extends WholeSchemaKeys, T extends IBase<K, T>>
-    = PromisedFields<WholeSchema[K]["value"]>;
+export type RelatedDataT
+    = {
+        [K in CachedSchemaKeys]: {
+            [K2 in PromisedKeys<CachedSchema[K]["value"]>]: CachedSchema[K]["value"][K2] extends Promise<infer Q> ? Q : never
+        }
+    } & {
+        [K in UncachedSchemaKeys]: {
+            [K2 in PromisedKeys<UncachedSchema[K]["value"]>]: UncachedSchema[K]["value"][K2] extends Promise<infer Q> ? Q : never
+        }
+    };
 
 
 /**
@@ -45,66 +100,59 @@ export type RelatedDataT<K extends WholeSchemaKeys, T extends IBase<K, T>>
  */
 export type PromisesRemapped<T>
     = { [K in keyof T]: T[K] extends Promise<infer S>
-        ? S extends IBase<infer K2, infer T2>
-    ? Parse.Object<PromisesRemapped<WholeSchema[K2]["value"]>>
+        ? S extends IBase<infer K2>
+        ? Parse.Object<PromisesRemapped<WholeSchema[K2]["value"]>>
         : never
         : T[K]
     };
 
-export interface StaticBase<K extends WholeSchemaKeys, T extends IBase<K, T>> {
+export interface StaticBase<K extends WholeSchemaKeys> {
 }
 
-export interface StaticCachedBase<K extends CachedSchemaKeys, T extends CachedBase<K, T>> extends StaticBase<K, T> {
+export interface StaticCachedBase<K extends CachedSchemaKeys> extends StaticBase<K> {
     // Must match the type of `CachedConstructor` below
     new(conferenceId: string,
-        data: FieldDataT<K, T>,
-        parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null): T;
+        data: FieldDataT[K],
+        parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null): IBase<K>;
 
-    get(id: string, conferenceId: string): Promise<T | null>;
-    getAll(conferenceId: string): Promise<Array<T>>;
+    get(id: string, conferenceId: string): Promise<IBase<K> | null>;
+    getAll(conferenceId: string): Promise<Array<IBase<K>>>;
 }
 
-export type CachedConstructor<K extends CachedSchemaKeys, T extends CachedBase<K, T>>
+export type CachedConstructor<K extends CachedSchemaKeys>
     = new (
         conferenceId: string,
-        data: FieldDataT<K, T>,
-        parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null) => CachedBase<K, T>;
+        data: FieldDataT[K],
+        parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null) => IBase<K>;
 
+export type UncachedConstructor<K extends UncachedSchemaKeys>
+    = new (parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>) => IBase<K>;
 
-export interface StaticUncachedBase<K extends UncachedSchemaKeys, T extends UncachedBase<K, T>> extends StaticBase<K, T> {
+export type Constructor<K extends WholeSchemaKeys>
+    = K extends CachedSchemaKeys ? CachedConstructor<K>
+    : K extends UncachedSchemaKeys ? UncachedConstructor<K>
+    : never;
+
+export interface StaticUncachedBase<K extends UncachedSchemaKeys> extends StaticBase<K> {
     // Must match the type of `UncachedConstructor` below
-    new(parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>): T;
+    new(parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>): IBase<K>;
 
-    get(id: string): Promise<T | null>;
-    getAll(): Promise<Array<T>>;
+    get(id: string): Promise<IBase<K> | null>;
+    getAll(): Promise<Array<IBase<K>>>;
 }
-
-export type UncachedConstructor<K extends UncachedSchemaKeys, T extends UncachedBase<K, T>>
-    = new (parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>) => UncachedBase<K, T>;
-
 
 /**
  * Provides a vanilla reusable implementation of the static base methods.
  */
 export abstract class StaticBaseImpl {
-    private static IsCachable(tableName: any, conferenceId?: string): conferenceId is string {
+    private static IsCachable(
+        tableName: WholeSchemaKeys,
+        conferenceId?: string
+    ): conferenceId is string {
         return CachedStoreNames.includes(tableName as any) && !!conferenceId;
     }
 
-    // This cannot be made into a static field due to the fact TypeScript
-    // doesn't guarantee the order modules will be compiled, meaning if this
-    // were a field, `Interface.XYZ` might be undefined at the point this object
-    // gets initialised.
-    private static get UncachedConstructors(): ({
-        // The 'any' can't be replaced here - it would require dependent types.
-        [K in UncachedSchemaKeys]: UncachedConstructor<K, any>;
-    }) {
-        return {
-            ClowdrInstance: Interface.Conference
-        };
-    }
-
-    static async get<K extends WholeSchemaKeys, T extends IBase<K, T>>(
+    static async get<K extends WholeSchemaKeys, T extends IBase<K>>(
         tableName: K,
         id: string,
         conferenceId?: string,
@@ -113,15 +161,26 @@ export abstract class StaticBaseImpl {
 
         // Yes these casts are safe
         if (StaticBaseImpl.IsCachable(tableName, conferenceId)) {
+            let _tableName = tableName as CachedSchemaKeys;
             let cache = await Caches.get(conferenceId);
-            return cache.get(tableName as any, id) as any;
+            return cache.get(_tableName, id) as unknown as T;
         }
-        else {            
-            let _tableName = tableName as UncachedSchemaKeys;
-            let query = new Parse.Query<Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>>(tableName);
+        else {
+            let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
             return query.get(id).then(async parse => {
-                const constr = this.UncachedConstructors[_tableName];
-                return new constr(parse);
+                if (CachedStoreNames.includes(tableName as CachedSchemaKeys)) {
+                    const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
+                    conferenceId = _parse.get("conference" as any).id as string;
+
+                    let _tableName = tableName as CachedSchemaKeys;
+                    let cache = await Caches.get(conferenceId);
+                    return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
+                }
+                else {
+                    const constr = Cache.Constructors[tableName as UncachedSchemaKeys];
+                    const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
+                    return new constr(_parse) as T;
+                }
             }).catch(reason => {
                 console.warn("Fetch from database of uncached item failed", {
                     tableName: tableName,
@@ -130,36 +189,46 @@ export abstract class StaticBaseImpl {
                 });
 
                 return null;
-            }) as Promise<T | null>;
+            });
         }
     }
 
-    static async getAll<K extends WholeSchemaKeys, T extends IBase<K, T>>(
+    static async getAll<K extends WholeSchemaKeys, T extends IBase<K>>(
         tableName: K,
-        conferenceId?: string) {
+        conferenceId?: string): Promise<Array<T>> {
         if (StaticBaseImpl.IsCachable(tableName, conferenceId)) {
             let cache = await Caches.get(conferenceId);
             return cache.getAll(tableName as any) as any;
         }
         else {
-            let _tableName = tableName as UncachedSchemaKeys;
-            let query = new Parse.Query<Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>>(tableName);
+            let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
             return query.map(async parse => {
-                const constr = this.UncachedConstructors[_tableName];
-                return new constr(parse) as unknown as T;
+                if (CachedStoreNames.includes(tableName as any)) {
+                    const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
+                    conferenceId = _parse.get("conference" as any).id as string;
+
+                    let _tableName = tableName as CachedSchemaKeys;
+                    let cache = await Caches.get(conferenceId);
+                    return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
+                }
+                else {
+                    const constr = Cache.Constructors[tableName as UncachedSchemaKeys];
+                    const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
+                    return new constr(_parse) as T;
+                }
             }).catch(reason => {
                 console.warn("Fetch all from database of uncached table failed", {
                     tableName: tableName,
                     reason: reason
                 });
 
-                return null;
+                throw new Error("Fetch all from database of uncached table failed");
             });
         }
     }
 }
 
-export interface IBase<K extends WholeSchemaKeys, T extends IBase<K, T>> extends Schema.Base {
+export interface IBase<K extends WholeSchemaKeys> extends Schema.Base {
     // TODO: Define accessor functions, etc here first
 
     getUncachedParseObject(): Promise<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>;
@@ -168,11 +237,11 @@ export interface IBase<K extends WholeSchemaKeys, T extends IBase<K, T>> extends
 /**
  * Provides the methods and properties common to all data objects (e.g. `id`).
  */
-export abstract class CachedBase<K extends CachedSchemaKeys, T extends CachedBase<K, T>> implements IBase<K, T> {
+export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K> {
     constructor(
         protected conferenceId: string,
         protected tableName: K,
-        protected data: FieldDataT<K, T>,
+        protected data: FieldDataT[K],
         protected parse: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null = null) {
     }
 
@@ -208,16 +277,16 @@ export abstract class CachedBase<K extends CachedSchemaKeys, T extends CachedBas
         return this.data.updatedAt;
     }
 
-    protected async uniqueRelated<S extends keyof RelatedDataT<K, T>, T2 extends RelatedDataT<K, T>[S]>(field: S): Promise<T2> {
+    protected async uniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
         let cache = await Caches.get(this.conferenceId);
-        return cache.uniqueRelated<K, T, S, T2>(this.tableName, field, this.id, this.parse, (newParse) => {
+        return cache.uniqueRelated<K, S>(this.tableName, field, this.id, this.parse, (newParse) => {
             this.parse = newParse;
         });
     }
     // TODO: nonUniqueRelated
 }
 
-export abstract class UncachedBase<K extends UncachedSchemaKeys, T extends UncachedBase<K, T>> implements IBase<K, T> {
+export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBase<K> {
     constructor(
         protected tableName: K,
         protected parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>) {
@@ -239,25 +308,22 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys, T extends Uncac
         return this.parse.updatedAt;
     }
 
-    protected async uniqueRelated<S extends keyof RelatedDataT<K, T>, T2 extends RelatedDataT<K, T>[S]>(field: S): Promise<T2> {
-        // TODO: Uncached -> Cached
-        // TODO: Uncached -> Uncached
-        throw new Error("Method not implemented");
+    protected async uniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
+        let relTableNames = RelationsToTableNames[this.tableName];
+        let relTableName = relTableNames[field as unknown as keyof RelationsToTableNamesT[K]];
+        if (CachedStoreNames.includes(relTableName as any)) {
+            // TODO: Uncached -> Cached
+            throw new Error("Method not implemented - Uncached -> Cached");
+        }
+        else {
+            // TODO: Uncached -> Uncached
+            throw new Error("Method not implemented - Uncached -> Uncached");
+        }
     }
     // TODO: nonUniqueRelated
 }
 
-type CachableBase<K extends CachedSchemaKeys, T extends IBase<K, T>>
-    = T extends CachedBase<K, infer T2>
-    ? CachedBase<K, T>
-    : never;
-
-type UncachableBase<K extends UncachedSchemaKeys, T extends IBase<K, T>>
-    = T extends UncachedBase<K, infer T2>
-    ? UncachedBase<K, T>
-    : never;
-
-export type Base<K extends WholeSchemaKeys, T extends IBase<K, T>>
-    = K extends CachedSchemaKeys ? CachableBase<K, T>
-    : K extends UncachedSchemaKeys ? UncachableBase<K, T>
+export type Base<K extends WholeSchemaKeys>
+    = K extends CachedSchemaKeys ? CachedBase<K>
+    : K extends UncachedSchemaKeys ? UncachedBase<K>
     : never;
