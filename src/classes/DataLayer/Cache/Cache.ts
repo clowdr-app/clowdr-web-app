@@ -134,8 +134,7 @@ export default class Cache {
 
     constructor(
         public readonly conferenceId: string,
-        // TODO: Disable debugging by default
-        enableDebug: boolean = true) {
+        enableDebug: boolean = false) {
         if (enableDebug) {
             this.logger.enable();
         }
