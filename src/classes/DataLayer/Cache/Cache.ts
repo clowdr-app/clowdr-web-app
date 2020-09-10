@@ -22,6 +22,9 @@ export default class Cache {
         [K in UncachedSchemaKeys]: UncachedConstructor<K, any>;
     } = {
             AttachmentType: Interface.AttachmentType,
+            ProgramPerson: Interface.ProgramPerson,
+            ProgramItem: Interface.ProgramItem,
+            ProgramTrack: Interface.ProgramTrack,
             ClowdrInstance: Interface.Conference
         };
 
@@ -31,7 +34,10 @@ export default class Cache {
     readonly Fields: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["value"]>;
     } = {
-            AttachmentType: keys<Schema.AttachmentType>()
+            AttachmentType: keys<Schema.AttachmentType>(),
+            ProgramPerson: keys<Schema.ProgramPerson>(),
+            ProgramItem: keys<Schema.ProgramItem>(),
+            ProgramTrack: keys<Schema.ProgramTrack>(),
         };
 
     /**
@@ -40,7 +46,10 @@ export default class Cache {
     readonly Relations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
-            AttachmentType: keys<PromisedFields<Schema.AttachmentType>>()
+            AttachmentType: keys<PromisedFields<Schema.AttachmentType>>(),
+            ProgramPerson: keys<PromisedFields<Schema.ProgramPerson>>(),
+            ProgramItem: keys<PromisedFields<Schema.ProgramItem>>(),
+            ProgramTrack: keys<PromisedFields<Schema.ProgramTrack>>(),
         };
 
     readonly RelationsToTableNames: {
@@ -51,6 +60,18 @@ export default class Cache {
     } = {
             AttachmentType: {
                 conference: "ClowdrInstance"
+            },
+            ProgramPerson: {
+                conference: "ClowdrInstance",
+                programItems: "ProgramItem"
+            },
+            ProgramItem: {
+                conference: "ClowdrInstance",
+                authors: "ProgramPerson",
+                track: "ProgramTrack"
+            },
+            ProgramTrack: {
+                conference: "ClowdrInstance"
             }
         };
 
@@ -60,7 +81,10 @@ export default class Cache {
     readonly CachedRelations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
-            AttachmentType: keys<PromisedFieldsExtending<Schema.AttachmentType, CachedBase<CachedSchemaKeys, any>>>()
+            AttachmentType: keys<PromisedFieldsExtending<Schema.AttachmentType, CachedBase<CachedSchemaKeys, any>>>(),
+            ProgramPerson: keys<PromisedFieldsExtending<Schema.ProgramPerson, CachedBase<CachedSchemaKeys, any>>>(),
+            ProgramItem: keys<PromisedFieldsExtending<Schema.ProgramItem, CachedBase<CachedSchemaKeys, any>>>(),
+            ProgramTrack: keys<PromisedFieldsExtending<Schema.ProgramTrack, CachedBase<CachedSchemaKeys, any>>>(),
         };
 
     /**
@@ -69,7 +93,10 @@ export default class Cache {
     readonly UncachedRelations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
-            AttachmentType: keys<PromisedFieldsExtending<Schema.AttachmentType, UncachedBase<UncachedSchemaKeys, any>>>()
+            AttachmentType: keys<PromisedFieldsExtending<Schema.AttachmentType, UncachedBase<UncachedSchemaKeys, any>>>(),
+            ProgramPerson: keys<PromisedFieldsExtending<Schema.ProgramPerson, UncachedBase<UncachedSchemaKeys, any>>>(),
+            ProgramItem: keys<PromisedFieldsExtending<Schema.ProgramItem, UncachedBase<UncachedSchemaKeys, any>>>(),
+            ProgramTrack: keys<PromisedFieldsExtending<Schema.ProgramTrack, UncachedBase<UncachedSchemaKeys, any>>>(),
         };
 
     /**
@@ -78,7 +105,10 @@ export default class Cache {
     readonly UniqueRelations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
-            AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>()
+            AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>(),
+            ProgramPerson: keys<PromisedNonArrayFields<Schema.ProgramPerson>>(),
+            ProgramItem: keys<PromisedNonArrayFields<Schema.ProgramItem>>(),
+            ProgramTrack: keys<PromisedNonArrayFields<Schema.ProgramTrack>>(),
         };
 
     /**
@@ -87,7 +117,10 @@ export default class Cache {
     readonly NonUniqueRelations: {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
-            AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>()
+            AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>(),
+            ProgramPerson: keys<PromisedArrayFields<Schema.ProgramPerson>>(),
+            ProgramItem: keys<PromisedArrayFields<Schema.ProgramItem>>(),
+            ProgramTrack: keys<PromisedArrayFields<Schema.ProgramTrack>>(),
         };
 
     readonly KEY_PATH: "id" = "id";
@@ -211,7 +244,12 @@ export default class Cache {
                 if (this.Relations[tableName].includes(key as any)) {
                     // Exclude uncached relations data
                     if (this.CachedRelations[tableName].includes(key as any)) {
-                        schema[key] = parse.get(key as any).id;
+                        if (this.UniqueRelations[tableName].includes(key as any)) {
+                            schema[key] = parse.get(key as any).id;
+                        }
+                        else {
+                            schema[key] = parse.get(key as any).map((x: any) => x.id);
+                        }
                     }
                 }
                 else {
@@ -242,7 +280,7 @@ export default class Cache {
         }
 
         const constr = this.Constructors[tableName];
-        return new constr(this.conferenceId, schema, parse) as T;
+        return new constr(this.conferenceId, schema, parse as any) as T;
     }
 
     /**
@@ -539,7 +577,7 @@ export default class Cache {
         let db = await this.dbPromise;
         let result = await db.getAll(tableName);
         if (result.length !== 0) {
-            this.logger.info("Cache multi-hit", {
+            this.logger.info("Cache get-all hit", {
                 conferenceId: this.conferenceId,
                 tableName: tableName
             });
@@ -549,7 +587,7 @@ export default class Cache {
             });
         }
         else {
-            this.logger.info("Cache multi-miss", {
+            this.logger.info("Cache get-all miss", {
                 conferenceId: this.conferenceId,
                 tableName: tableName
             });
@@ -574,7 +612,7 @@ export default class Cache {
         let db = await this.dbPromise;
         let result = await db.getFromIndex(tableName, field as any, id as any) || null;
         if (result) {
-            this.logger.info("Cache hit", {
+            this.logger.info("Cache unique relation hit", {
                 conferenceId: this.conferenceId,
                 tableName: tableName,
                 id: id,
@@ -589,7 +627,7 @@ export default class Cache {
             return new constr(this.conferenceId, result) as T2;
         }
         else {
-            this.logger.info("Cache relation miss", {
+            this.logger.info("Cache unique relation miss", {
                 conferenceId: this.conferenceId,
                 tableName: tableName,
                 id: id,
@@ -665,7 +703,20 @@ export default class Cache {
     ): Promise<T2> {
         if (this.CachedRelations[tableName].includes(field as any)) {
             return this.uniqueRelatedFromCache<K, T, S, T2>(tableName, field, id).catch(async _ => {
-                throw new Error("Method not implemented for cached relations when target not found in cache");
+                let query = await this.newParseQuery(tableName);
+                let obj = await query.get(id);
+                return obj.get(field as any).then(async (parse: any) => {
+                    return await this.addItemToCache(parse, tableName) as T2;
+                }).catch((reason: any) => {
+                    this.logger.warn("Fetch from database of cached unique related item failed", {
+                        conferenceId: this.conferenceId,
+                        tableName: tableName,
+                        id: id,
+                        reason: reason
+                    });
+
+                    throw new Error("Fetch from database of cached unique related item failed");
+                });
             });
         }
         else {

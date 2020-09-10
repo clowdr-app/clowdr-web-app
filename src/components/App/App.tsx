@@ -34,6 +34,14 @@ export default function App(props: Props) {
         DataLayer.Conference.getAll().then(async result => {
             console.log("Got conferences", result.map(r => r.conferenceName));
         });
+        DataLayer.ProgramItem.get("6ZSU9G1Iwl", "ciAZ1zroPD").then(async result => {
+            if (result) {
+                console.log("Got program item", {
+                    title: result.title,
+                    track: await result.track
+                });
+            }
+        });
         DataLayer.Conference.get("ciAZ1zroPD").then(
             async result => {
                 console.log("Got conference", result?.conferenceName);
