@@ -15,7 +15,7 @@ interface UserStatusDisplayProps extends RouteComponentProps {
 
 class UserStatusDisplay extends React.Component<any, any> {
     mounted: boolean = false;
-    loading: boolean = true;
+    loadingDMCall: boolean = false;
 
     constructor(props: any) {
         super(props)
@@ -50,12 +50,12 @@ class UserStatusDisplay extends React.Component<any, any> {
     }
 
     async openDM() {
-        if (!this.loading) {
-            this.loading = true;
+        if (!this.loadingDMCall) {
+            this.loadingDMCall = true;
             this.setState({ loading: true })
             await this.props.auth.helpers.createOrOpenDM(this.state.profile);
             this.setState({ loading: false })
-            this.loading = false;
+            this.loadingDMCall = false;
         }
     }
     linkRenderer = (props: any) => {
@@ -187,13 +187,13 @@ class UserStatusDisplay extends React.Component<any, any> {
             onClick={onClick}>
             <Popover
                 title={popoverTitle} content={popoverContent} mouseEnterDelay={0.5}>
-                <>
+                <div>
                     &nbsp;&nbsp;&nbsp; {/* BCP: Better way to do this? */}
                     <Badge status={badgeStyle} color={badgeColor} />
                     <span className="userName">{this.state.profile.get("displayName")}</span>
                         &nbsp;
                         <span className="highlightedTags">{tagsToHighlight}</span>
-                </>
+                </div>
             </Popover>
             {timestamp}
         </div>
