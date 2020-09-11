@@ -639,6 +639,8 @@ export default class Cache {
     }
 
     // TODO: create
+    // TODO: put / set
+    // TODO: invalidate
 
     private async newParseQuery<K extends CachedSchemaKeys>(tableName: K) {
         assert(this.isInitialised);
