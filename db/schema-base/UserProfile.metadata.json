@@ -7,7 +7,7 @@
                 "_id": 1
             },
             "name": "_id_",
-            "ns": "c05f56e7caec424f9a7f544c8a5c57d4.UserProfile"
+            "ns": "UserProfile"
         },
         {
             "v": 1,
@@ -15,7 +15,7 @@
                 "user": 1
             },
             "name": "profileByUser",
-            "ns": "c05f56e7caec424f9a7f544c8a5c57d4.UserProfile",
+            "ns": "UserProfile",
             "sparse": false,
             "weights": {},
             "background": true

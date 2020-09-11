@@ -41,7 +41,7 @@ class AccountFromToken extends React.Component {
                 try {
                     if (res && res.token) {
                         await Parse.User.become(res.token);
-                        let confQ = new Parse.Query("ClowdrInstance");
+                        let confQ = new Parse.Query("Conference");
                         let conf = await confQ.get(confID);
                         await this.props.clowdrAppState.refreshUser(conf, true);
                         let currentStep = 1;

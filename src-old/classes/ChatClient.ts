@@ -1,7 +1,7 @@
 import Chat from "twilio-chat";
 import { Channel } from "twilio-chat/lib/channel"
 import { Client } from "twilio-chat/lib/client"
-import { UserProfile, ClowdrInstance, Conversation } from "../classes/ParseObjects";
+import { UserProfile, Conference, Conversation } from "../classes/ParseObjects";
 import Parse from "parse";
 import { backOff } from "exponential-backoff";
 import { message } from "antd"
@@ -50,7 +50,7 @@ export class ChatClient {
     rhsChatResolve: (() => void) = () => { }; // ...and this too.
     desiredRHSChat: string | null = null;
     userProfile: UserProfile | null = null;
-    conference: ClowdrInstance | null | undefined = null;
+    conference: Conference | null | undefined = null;
     emojiPickerRef: React.RefObject<any> | null = null;
     reactingTo: Message | null = null;
     reactingToFrame: ChatFrame | null = null;
@@ -252,7 +252,7 @@ export class ChatClient {
 
     initChatClient(
         user: Parse.User<Parse.Attributes>,
-        conference: ClowdrInstance | null | undefined,
+        conference: Conference | null | undefined,
         userProfile: UserProfile,
     ): Promise<Client | null> {
         this.userProfile = userProfile;
@@ -426,7 +426,7 @@ export class ChatClient {
 
     async _initChatClient(
         user: Parse.User<Parse.Attributes>,
-        conference: ClowdrInstance | null | undefined,
+        conference: Conference | null | undefined,
     ): Promise<Client | null> {
         if (this.twilio && this.chatUser && this.chatUser.id === user.id && this.conference && conference && this.conference.id === conference.id) {
             return this.twilio;
@@ -560,7 +560,7 @@ export class ChatClient {
             this.twilio = null;
         }
     }
-    getToken = async (user: Parse.User<Parse.Attributes>, conference: ClowdrInstance | null | undefined) => {
+    getToken = async (user: Parse.User<Parse.Attributes>, conference: Conference | null | undefined) => {
         let idToken = user.getSessionToken();
         if (idToken) {
             console.log("Fetching chat token for " + idToken + ", " + conference?.id);

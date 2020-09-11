@@ -1,13 +1,13 @@
 import Parse from "parse";
-import { PrivilegedInstanceDetails as Schema } from "../DBSchema/PrivilegedInstanceDetails";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { PrivilegedConferenceDetails as Schema } from "../DBSchema/PrivilegedConferenceDetails";
+import { Conference } from "./Conference";
 
-export class PrivilegedInstanceDetails
+export class PrivilegedConferenceDetails
     extends Parse.Object
     implements Schema {
 
     constructor() {
-        super("PrivilegedInstanceDetails");
+        super("PrivilegedConferenceDetails");
     }
 
     get key(): string {
@@ -18,8 +18,8 @@ export class PrivilegedInstanceDetails
         return this.get("value");
     }
 
-    get instance(): ClowdrInstance {
-        return this.get("instance");
+    get instance(): Conference {
+        return this.get("conference");
     }
 }
-Parse.Object.registerSubclass('PrivilegedInstanceDetails', PrivilegedInstanceDetails);
+Parse.Object.registerSubclass('PrivilegedConferenceDetails', PrivilegedConferenceDetails);

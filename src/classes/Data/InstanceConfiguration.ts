@@ -1,13 +1,13 @@
 import Parse from "parse";
-import { InstanceConfiguration as Schema, InstanceConfigurationFields } from "../DBSchema/InstanceConfiguration";
+import { ConferenceConfiguration as Schema, ConferenceConfigurationFields } from "../DBSchema/ConferenceConfiguration";
 import { Conference } from "./Conference";
 import { Base } from "./Base";
 import { Conference as ConferenceSchema, ConferenceFields } from "../DBSchema/Conference";
 
-export class InstanceConfiguration extends Base<Schema> {
+export class ConferenceConfiguration extends Base<Schema> {
 
     constructor(value: Schema, dbValue: Parse.Object | null = null) {
-        super("InstanceConfiguration", InstanceConfigurationFields, value, dbValue);
+        super("ConferenceConfiguration", ConferenceConfigurationFields, value, dbValue);
     }
 
     get key(): string | Promise<string> {
@@ -19,7 +19,7 @@ export class InstanceConfiguration extends Base<Schema> {
     }
 
     get instance(): Conference | Promise<Conference> {
-        return this.related<ConferenceSchema, Conference>("instance", ConferenceFields, Conference);
+        return this.related<ConferenceSchema, Conference>("conference", ConferenceFields, Conference);
     }
 
 }

@@ -1,6 +1,6 @@
 import Parse from "parse";
 import { ProgramRoom as Schema } from "../DBSchema/ProgramRoom";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 import { SocialSpace } from "./SocialSpace";
 import { ZoomRoom } from "./ZoomRoom";
 
@@ -48,7 +48,7 @@ export class ProgramRoom
         return this.get("qa");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

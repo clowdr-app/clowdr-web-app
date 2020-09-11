@@ -1,13 +1,13 @@
 import Parse from "parse";
 import { Conference as Schema } from "../DBSchema/Conference";
-import { PrivilegedInstanceDetails } from "./PrivilegedInstanceDetails";
+import { PrivilegedConferenceDetails } from "./PrivilegedConferenceDetails";
 
-export class ClowdrInstance
+export class Conference
     extends Parse.Object
     implements Schema {
 
     constructor() {
-        super("ClowdrInstance");
+        super("Conference");
     }
 
     get adminEmail(): string {
@@ -38,8 +38,8 @@ export class ClowdrInstance
         return this.get("welcomeText");
     }
 
-    get loggedInText(): PrivilegedInstanceDetails {
+    get loggedInText(): PrivilegedConferenceDetails {
         return this.get("loggedInText");
     }
 }
-Parse.Object.registerSubclass('ClowdrInstance', ClowdrInstance);
+Parse.Object.registerSubclass('Conference', Conference);

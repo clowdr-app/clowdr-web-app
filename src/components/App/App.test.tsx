@@ -37,7 +37,7 @@ describe("App", () => {
 
         MockedCache.mockCacheData = {
             get: (tableName: string, id: string) => {
-                if (tableName === "ClowdrInstance" && id === "mock_id") {
+                if (tableName === "Conference" && id === "mock_id") {
                     return Promise.resolve({
                         id: "mock_id",
                         conferenceName: "mock_conferenceName"

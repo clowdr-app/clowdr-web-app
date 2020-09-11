@@ -252,7 +252,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
                 // delete from database
                 let data = {
                     clazz: "ProgramRoom",
-                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
+                    conference: { clazz: "Conference", id: record.conference.id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -461,7 +461,7 @@ class Rooms extends React.Component<ProgramRoomsProps, ProgramRoomsState> {
 
             let data = {
                 clazz: "ProgramRoom",
-                conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
+                conference: { clazz: "Conference", id: this.props.auth.currentConference.id },
                 name: "Please enter the name of the room",
             }
 

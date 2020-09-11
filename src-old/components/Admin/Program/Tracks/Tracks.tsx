@@ -201,7 +201,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
                 // delete from database
                 let data = {
                     clazz: "ProgramTrack",
-                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
+                    conference: { clazz: "Conference", id: record.conference.id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -404,7 +404,7 @@ class Tracks extends React.Component<ProgramTracksProps, ProgramTracksState> {
 
             let data = {
                 clazz: "ProgramTrack",
-                conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
+                conference: { clazz: "Conference", id: this.props.auth.currentConference.id },
                 name: "One-word-name",
                 displayName: "Publicly visible name",
                 exhibit: "None",

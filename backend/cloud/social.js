@@ -3,14 +3,14 @@
 
 let SocialSpace = Parse.Object.extend("SocialSpace");
 
-let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
+let ConferenceConfig = Parse.Object.extend("ConferenceConfiguration");
 const Twilio = require("twilio");
 const backOff = require('exponential-backoff').backOff;
 
 
 async function getConfig(conference){
-    let configQ = new Parse.Query(InstanceConfig);
-    configQ.equalTo("instance", conference);
+    let configQ = new Parse.Query(ConferenceConfig);
+    configQ.equalTo("conference", conference);
     // configQ.cache(60);
     let res = await configQ.find({useMasterKey: true});
     let config = {};
@@ -27,8 +27,8 @@ async function getConfig(conference){
             permission: ['addMember','deleteOwnMessage','editOwnMessage','editOwnMessageAttributes','inviteMember','leaveChannel','sendMessage','sendMediaMessage',
             'editChannelName','editChannelAttributes']
         })
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key","TWILIO_CHAT_CHANNEL_MANAGER_ROLE");
         newConf.set("value", role.sid);
         await newConf.save({},{useMasterKey: true});

@@ -3,7 +3,7 @@ import { ProgramItem as Schema } from "../DBSchema/ProgramItem";
 import { ProgramPerson } from "./ProgramPerson";
 import { ProgramItemAttachment } from "./ProgramItemAttachment";
 import { BreakoutRoom } from "./BreakoutRoom";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 import { ProgramSessionEvent } from "./ProgramSessionEvent";
 import { ProgramSession } from "./ProgramSession";
 import { ProgramTrack } from "./ProgramTrack";
@@ -52,7 +52,7 @@ export class ProgramItem
         return this.get("breakoutRoom");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

@@ -1,10 +1,10 @@
 import * as Schema from "../Schema";
 import { StaticCachedBase, StaticBaseImpl, PromisesRemapped, CachedBase, FieldDataT } from "./Base";
-import { PrivilegedInstanceDetails } from ".";
+import { PrivilegedConferenceDetails } from ".";
 
 type SchemaT = Schema.Conference;
-type K = "ClowdrInstance";
-const K_str: K = "ClowdrInstance";
+type K = "Conference";
+const K_str: K = "Conference";
 
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
@@ -18,7 +18,7 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.conferenceName;
     }
 
-    get loggedInText(): Promise<PrivilegedInstanceDetails> {
+    get loggedInText(): Promise<PrivilegedConferenceDetails> {
         return this.uniqueRelated("loggedInText");
     }
 

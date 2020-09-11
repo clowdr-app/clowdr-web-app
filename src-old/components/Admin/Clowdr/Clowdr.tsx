@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { ClowdrState, EditableCellProps } from "../../../ClowdrTypes";
 import { Store } from 'antd/lib/form/interface';
-import { ClowdrInstance } from "../../../classes/ParseObjects";
+import { Conference } from "../../../classes/ParseObjects";
 
 // TS: Since the "Props" and "State" interfaces are not exported, I
 // think iClowdStateter to simply name them Props and
@@ -24,9 +24,9 @@ interface AdminClowdrProps {
 interface AdminClowdrState {
     loading: boolean;
     initialized: boolean;
-    instances: ClowdrInstance[];
+    instances: Conference[];
     searched: boolean;
-    searchResult: ClowdrInstance[];
+    searchResult: Conference[];
     alert: string | undefined;
     visible: boolean
 }
@@ -51,7 +51,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
     }
 
     async refreshList() {
-        let query = new Parse.Query<ClowdrInstance>("ClowdrInstance");
+        let query = new Parse.Query<Conference>("Conference");
         let res = await query.find();
         console.log('[Admin/Clowdr]: Found ' + res.length + ' instances');
         res.forEach((v) => {
@@ -70,7 +70,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
 
     render() {
         // Set up editable table cell
-        const EditableCell: React.FC<EditableCellProps<ClowdrInstance>> = ({
+        const EditableCell: React.FC<EditableCellProps<Conference>> = ({
             editing,
             dataIndex,
             title,
@@ -126,9 +126,9 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.instances);
             const [editingKey, setEditingKey] = useState('');
-            const isEditing = (record: ClowdrInstance): boolean => record.id === editingKey;
+            const isEditing = (record: Conference): boolean => record.id === editingKey;
 
-            const edit = (record: ClowdrInstance): void => {
+            const edit = (record: Conference): void => {
                 form.setFieldsValue({
                     conferenceName: record.conferenceName ? record.conferenceName : "",
                     adminName: record.adminName ? record.adminName : "",
@@ -141,7 +141,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 setEditingKey('');
             };
 
-            const onActivate = (record: ClowdrInstance): void => {
+            const onActivate = (record: Conference): void => {
                 let data = {
                     id: record.id
                 }
@@ -157,8 +157,8 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     });
             };
 
-            const onDelete = (record: ClowdrInstance): void => {
-                const newInstanceList = [...this.state.instances];
+            const onDelete = (record: Conference): void => {
+                const newConferenceList = [...this.state.instances];
                 // delete from database
                 let data = {
                     id: record.id
@@ -167,7 +167,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     .then(() => {
                         this.setState({
                             alert: "delete success",
-                            instances: newInstanceList.filter(instance => instance.id !== record.id)
+                            instances: newConferenceList.filter(instance => instance.id !== record.id)
                         });
                         console.log("[Admin/Clowdr]: sent delete request to cloud");
                     })
@@ -228,12 +228,12 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     dataIndex: 'conferenceName',
                     editable: true,
                     width: '40%',
-                    sorter: (a: ClowdrInstance, b: ClowdrInstance) => {
+                    sorter: (a: Conference, b: Conference) => {
                         let valueA: string = a.conferenceName ? a.conferenceName : "";
                         let valueB: string = b.conferenceName ? b.conferenceName : "";
                         return valueA.localeCompare(valueB);
                     },
-                    render: (_: string, record: ClowdrInstance): JSX.Element => <span>{record.conferenceName}</span>,
+                    render: (_: string, record: Conference): JSX.Element => <span>{record.conferenceName}</span>,
                     key: 'conferenceName',
                 },
                 {
@@ -242,12 +242,12 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     key: 'adminName',
                     editable: true,
                     width: '30%',
-                    sorter: (a: ClowdrInstance, b: ClowdrInstance) => {
+                    sorter: (a: Conference, b: Conference) => {
                         let nameA: string = a.adminName ? a.adminName : "";
                         let nameB: string = b.adminName ? b.adminName : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (_: string, record: ClowdrInstance): JSX.Element => <span>{record.adminName}</span>,
+                    render: (_: string, record: Conference): JSX.Element => <span>{record.adminName}</span>,
                 },
                 {
                     title: 'Admin Email',
@@ -255,17 +255,17 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                     key: 'adminEmail',
                     editable: true,
                     width: '20%',
-                    sorter: (a: ClowdrInstance, b: ClowdrInstance) => {
+                    sorter: (a: Conference, b: Conference) => {
                         let nameA: string = a.adminEmail ? a.adminEmail : "";
                         let nameB: string = b.adminEmail ? b.adminEmail : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (_: string, record: ClowdrInstance): JSX.Element => <span>{record.adminEmail}</span>,
+                    render: (_: string, record: Conference): JSX.Element => <span>{record.adminEmail}</span>,
                 },
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: ClowdrInstance): JSX.Element | null => {
+                    render: (_: string, record: Conference): JSX.Element | null => {
                         let active = record.isInitialized ?
                             <CheckCircleTwoTone twoToneColor='#52c41a' title="This instance is activated" /> :
                             <Popconfirm
@@ -326,7 +326,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
                 }
                 return {
                     ...col,
-                    onCell: (record: ClowdrInstance) => ({
+                    onCell: (record: Conference) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -355,7 +355,7 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
             );
         };
 
-        const newInstance = () => {
+        const newConference = () => {
             console.log("[Admin/Clowdr]: Creating new instance ");
             let data = {
                 conferenceName: "NEW CONFERENCE " + Math.floor(Math.random() * 10000).toString(),
@@ -384,9 +384,9 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
         return <div><table style={{ width: "100%" }}><tbody><tr>
             <td><Button
                 type="primary"
-                onClick={newInstance}
+                onClick={newConference}
             >
-                New Instance
+                New Conference
             </Button>
 
                 {this.state.alert ? <Alert
@@ -404,8 +404,8 @@ class Clowdr extends React.Component<AdminClowdrProps, AdminClowdrState> {
         </tr></tbody></table>
 
             {/* TODO: Ed: This code is completely broken according to the type information
-                      It seems to be trying to access InstanceConfiguration stuff, but
-                      on ClowdrInstance objects?!
+                      It seems to be trying to access ConferenceConfiguration stuff, but
+                      on Conference objects?!
              <Input.Search
                 allowClear
                 onSearch={key => {

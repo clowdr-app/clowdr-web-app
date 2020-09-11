@@ -155,7 +155,7 @@ Parse.Cloud.define("rooms-upload", async (request) => {
     const data = request.params.content;
     const conferenceID = request.params.conference;
 
-    var Conference = Parse.Object.extend("ClowdrInstance");
+    var Conference = Parse.Object.extend("Conference");
     var q = new Parse.Query(Conference);
     let conference = await q.get(conferenceID);
 
@@ -412,7 +412,7 @@ async function uploadProgramFromCSV(data, conferenceID, timezone){
         }
 
     }
-    let confQ = new Parse.Query("ClowdrInstance")
+    let confQ = new Parse.Query("Conference")
     confQ.equalTo("objectId", conferenceID)
     let conf = await confQ.first();
     let itemsQ = new Parse.Query("ProgramItem");
@@ -711,7 +711,7 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone) {
     }
 
 
-    let confQ = new Parse.Query("ClowdrInstance")
+    let confQ = new Parse.Query("Conference")
     confQ.equalTo("objectId", conferenceID)
     let conf = await confQ.first();
 
@@ -999,7 +999,7 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
             rooms[loc] = 1;
     });
 
-    let confQ = new Parse.Query("ClowdrInstance")
+    let confQ = new Parse.Query("Conference")
     confQ.equalTo("objectId", conferenceID)
     let conf = await confQ.first();
 
@@ -1241,12 +1241,12 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
 }
 
 //=======
-let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
+let ConferenceConfig = Parse.Object.extend("ConferenceConfiguration");
 
 let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
 async function getConfig(conference) {
-    let configQ = new Parse.Query(InstanceConfig);
-    configQ.equalTo("instance", conference);
+    let configQ = new Parse.Query(ConferenceConfig);
+    configQ.equalTo("conference", conference);
     let res = await configQ.find({ useMasterKey: true });
     let config = {};
     for (let obj of res) {

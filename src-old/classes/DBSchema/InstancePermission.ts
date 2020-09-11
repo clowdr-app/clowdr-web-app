@@ -1,9 +1,9 @@
 import { Base, BaseFields } from './Base';
 import { KnownKeys } from '../../Util';
 
-export interface InstancePermission extends Base {
+export interface ConferencePermission extends Base {
 }
 
-export const InstancePermissionFields: Array<KnownKeys<InstancePermission>> = [
+export const ConferencePermissionFields: Array<KnownKeys<ConferencePermission>> = [
     ...BaseFields
 ];

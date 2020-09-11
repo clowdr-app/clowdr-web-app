@@ -1,6 +1,6 @@
 import Parse from "parse";
 import { MeetingRegistration as Schema } from "../DBSchema/MeetingRegistration";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 
 export class MeetingRegistration
     extends Parse.Object
@@ -22,7 +22,7 @@ export class MeetingRegistration
         return this.get("registrantID");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

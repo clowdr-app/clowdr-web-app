@@ -97,8 +97,8 @@ q.first().then(version => {
 async function addRequiredData() {
     console.log('Adding required data');
 
-    let Instance = Parse.Object.extend('ClowdrInstance');
-    let instance = new Instance();
+    let Conference = Parse.Object.extend('Conference');
+    let instance = new Conference();
     instance.set('conferenceName', 'XYZ');
     instance.set('shortName', 'xyz');
     instance.set('isInitialized', true);
@@ -106,7 +106,7 @@ async function addRequiredData() {
     instance.set('adminEmail', "clowdr@localhost");
 
     let data = fs.readFileSync('art/clowdr-logo.png');     
-    let base64Image = new Buffer(data, 'binary').toString('base64');
+    let base64Image = Buffer.from(data, 'binary').toString('base64');
     let file = new Parse.File('clowdr-logo.png', {base64: base64Image});
     await file.save();
     instance.set('headerImage', file);
@@ -122,7 +122,7 @@ async function addRequiredData() {
 
     instance.save().then(async i => {
         await activate(i);
-    }).catch(err => console.log('Instance saved:' + err));
+    }).catch(err => console.log('Conference saved:' + err));
 
 }
 

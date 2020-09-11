@@ -2,9 +2,9 @@ import * as Schema from "../Schema";
 import { StaticCachedBase, StaticBaseImpl, CachedBase, PromisesRemapped, FieldDataT } from "./Base";
 import { Conference } from ".";
 
-type SchemaT = Schema.PrivilegedInstanceDetails;
-type K = "PrivilegedInstanceDetails";
-const K_str: K = "PrivilegedInstanceDetails";
+type SchemaT = Schema.PrivilegedConferenceDetails;
+type K = "PrivilegedConferenceDetails";
+const K_str: K = "PrivilegedConferenceDetails";
 
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
@@ -22,8 +22,8 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.value;
     }
 
-    get instance(): Promise<Conference> {
-        return this.uniqueRelated("instance");
+    get conference(): Promise<Conference> {
+        return this.uniqueRelated("conference");
     }
 
 

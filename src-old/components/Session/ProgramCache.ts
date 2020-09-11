@@ -1,7 +1,7 @@
 import Parse, { LiveQueryClient, LiveQuerySubscription } from "parse";
 import { ParseObject } from "../../Util";
 import {
-    ClowdrInstance,
+    Conference,
     ProgramSessionEvent,
     ProgramRoom,
     ProgramItem,
@@ -23,7 +23,7 @@ import { SubscriptionEvent } from "../../classes/Cache/ClowdrCache";
 //       type of the thing it stores. Then have multiple caches for the various
 //       listed uses in the numerous wrapper functions of this existing class.
 export default class ProgramCache {
-    conference: ClowdrInstance;
+    conference: Conference;
     parseLive: Parse.LiveQueryClient;
     _subscriptions: { [tableName: string]: LiveQuerySubscription };
     _listSubscribers: { [tableName: string]: React.Component[] };
@@ -32,7 +32,7 @@ export default class ProgramCache {
 
     idbCache: ClowdrCache;
 
-    constructor(conference: ClowdrInstance, parseLive: LiveQueryClient) {
+    constructor(conference: Conference, parseLive: LiveQueryClient) {
         this.conference = conference;
         this.parseLive = parseLive;
         this._subscriptions = {};

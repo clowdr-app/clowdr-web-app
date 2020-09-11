@@ -3,14 +3,14 @@
 
 const Twilio = require("twilio");
 
-let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
+let Conference = Parse.Object.extend("Conference");
 
-let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
+let ConferenceConfig = Parse.Object.extend("ConferenceConfiguration");
 let SocialSpace = Parse.Object.extend("SocialSpace");
 
 async function getConfig(conf) {
-    let q = new Parse.Query(InstanceConfig)
-    q.equalTo("instance", conf);
+    let q = new Parse.Query(ConferenceConfig)
+    q.equalTo("conference", conf);
     let res = await q.find({useMasterKey: true});
     let config = {};
     for (let obj of res) {
@@ -107,8 +107,8 @@ var privilegeRoles = {
 };
 
 let PrivilegedAction = Parse.Object.extend("PrivilegedAction");
-let PrivilegedInstanceDetails = Parse.Object.extend("PrivilegedInstanceDetails");
-let InstancePermission = Parse.Object.extend("InstancePermission");
+let PrivilegedConferenceDetails = Parse.Object.extend("PrivilegedConferenceDetails");
+let ConferencePermission = Parse.Object.extend("ConferencePermission");
 
 var adminRole;
 
@@ -267,7 +267,7 @@ async function activate(instance) {
 Parse.Cloud.define("init-loggedIn-homepage", async (request) => {
     let confID = request.params.id;
 
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     confQ.include("loggedInText")
     try {
         let conf = await confQ.get(confID, {useMasterKey: true});
@@ -277,10 +277,10 @@ Parse.Cloud.define("init-loggedIn-homepage", async (request) => {
         if (conf.get("loggedInText")) {
             return {status: "OK"}
         } else {
-            let newConfig = new PrivilegedInstanceDetails();
+            let newConfig = new PrivilegedConferenceDetails();
             newConfig.set("key", "LOGGED_IN_HOMEPAGE");
             newConfig.set("value", conf.get("landingPage"));
-            newConfig.set("instance", conf);
+            newConfig.set("conference", conf);
             let acl = new Parse.ACL();
             acl.setPublicWriteAccess(false);
             acl.setPublicReadAccess(false);
@@ -302,7 +302,7 @@ Parse.Cloud.define("activate-clowdr-instance", async (request) => {
     let confID = request.params.id;
     console.log('[init]: conference ' + confID);
 
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     let conf = await confQ.get(confID);
 
     if (!conf) {
@@ -316,7 +316,7 @@ Parse.Cloud.define("activate-clowdr-instance", async (request) => {
         conf.set('headerText', conf.get("conferenceName"));
         conf.set("landingPage", `<h2>${conf.get("conferenceName")} is using CLOWDR!</h2>`);
 
-        // Finally, set an ACL on ClowdrInstance
+        // Finally, set an ACL on Conference
         let roleACL = new Parse.ACL();
         roleACL.setPublicReadAccess(true);
         roleACL.setPublicWriteAccess(false);
@@ -339,7 +339,7 @@ Parse.Cloud.define("init-conference-2", async (request) => {
     let confID = request.params.conference;
     console.log('[init]: conference ' + confID);
 
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     let conf = await confQ.get(confID, {useMasterKey: true});
 
     if (await userInRoles(request.user, ["ClowdrSysAdmin"])) {
@@ -351,10 +351,10 @@ Parse.Cloud.define("init-conference-2", async (request) => {
                 config.twilio = Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
             let newChatService = await config.twilio.chat.services.create({friendlyName: 'clowdr_chat'});
-            let tokenConfig = new InstanceConfig();
+            let tokenConfig = new ConferenceConfig();
             tokenConfig.set("value", newChatService.sid);
             tokenConfig.set("key", "TWILIO_CHAT_SERVICE_SID");
-            tokenConfig.set("instance", conf);
+            tokenConfig.set("conference", conf);
             await tokenConfig.save({},{useMasterKey: true});
 
         }
@@ -368,13 +368,13 @@ Parse.Cloud.define("init-conference-2", async (request) => {
             acl.setPublicReadAccess(false);
             acl.setRoleReadAccess(conf.id + "-conference", true);
 
-            let permissionQ = new Parse.Query(InstancePermission);
+            let permissionQ = new Parse.Query(ConferencePermission);
             permissionQ.equalTo("conference", conf);
             let privs = await permissionQ.find({useMasterKey: true});
             for (let action of Object.values(privilegeRoles)) {
                 if (!privs.find(p => p.get('action').get('action') === action)) {
                     console.log("Creating instance permission for " + action)
-                    let priv = new InstancePermission();
+                    let priv = new ConferencePermission();
                     priv.set("conference", conf);
                     priv.set("action", action);
                     priv.setACL(acl);
@@ -395,7 +395,7 @@ Parse.Cloud.define("create-clowdr-instance", async (request) => {
     if (await userInRoles(request.user, ["ClowdrSysAdmin"])) {
         console.log('[create clowdr]: user has permission to create instance');
 
-        let Clazz = Parse.Object.extend("ClowdrInstance");
+        let Clazz = Parse.Object.extend("Conference");
         let obj = new Clazz();
         obj.isInitialized = false;
         let res = await obj.save(data, {useMasterKey: true});
@@ -418,7 +418,7 @@ Parse.Cloud.define("delete-clowdr-instance", async (request) => {
 
     if (await userInRoles(request.user, ["ClowdrSysAdmin"])) {
         console.log('[delete instance]: user has permission to delete instance');
-        let obj = await new Parse.Query(ClowdrInstance).get(id);
+        let obj = await new Parse.Query(Conference).get(id);
         if (obj) {
             await obj.destroy({useMasterKey: true});
         }
@@ -438,7 +438,7 @@ Parse.Cloud.define("update-clowdr-instance", async (request) => {
     
     console.log('[update instance]: request to update ' + id + " " + JSON.stringify(data));
 
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     let conf = await confQ.get(id, {useMasterKey: true});
     if (!conf) {
         throw new Error("Conference " + id);
@@ -462,8 +462,8 @@ Parse.Cloud.define("logo-upload", async (request) => {
     const imgData = request.params.content;
     const conferenceId = request.params.conferenceId;
 
-    var Instance = Parse.Object.extend("ClowdrInstance");
-    var query = new Parse.Query(Instance);
+    var Conference = Parse.Object.extend("Conference");
+    var query = new Parse.Query(Conference);
     let conf = await query.get(conferenceId);
     let file = new Parse.File(conf.id + '-logo', {base64: imgData});
     await file.save({useMasterKey: true});
@@ -475,7 +475,7 @@ Parse.Cloud.define("admin-userProfiles-by-role", async (request) => {
     let id = request.params.id;
     let roleName = request.params.roleName;
 
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     let conf = await confQ.get(id, {useMasterKey: true});
     if (!conf) {
         throw new Error("Conference " + id + ": Not valid");
@@ -505,7 +505,7 @@ Parse.Cloud.define("admin-role", async (request) => {
     let userProfileId = request.params.userProfileId;
     let shouldHaveRole = request.params.shouldHaveRole;
 
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     let conf = await confQ.get(id, {useMasterKey: true});
     if (!conf) {
         throw new Error("Conference " + id + ": Not valid");

@@ -37,8 +37,8 @@ export default class Cache {
                 ProgramPerson: Interface.ProgramPerson,
                 ProgramItem: Interface.ProgramItem,
                 ProgramTrack: Interface.ProgramTrack,
-                ClowdrInstance: Interface.Conference,
-                PrivilegedInstanceDetails: Interface.PrivilegedInstanceDetails
+                Conference: Interface.Conference,
+                PrivilegedConferenceDetails: Interface.PrivilegedConferenceDetails
             };
         }
         return Cache.constructors;
@@ -54,8 +54,8 @@ export default class Cache {
             ProgramPerson: keys<Schema.ProgramPerson>(),
             ProgramItem: keys<Schema.ProgramItem>(),
             ProgramTrack: keys<Schema.ProgramTrack>(),
-            ClowdrInstance: keys<Schema.Conference>(),
-            PrivilegedInstanceDetails: keys<Schema.PrivilegedInstanceDetails>(),
+            Conference: keys<Schema.Conference>(),
+            PrivilegedConferenceDetails: keys<Schema.PrivilegedConferenceDetails>(),
         };
 
     /**
@@ -68,8 +68,8 @@ export default class Cache {
             ProgramPerson: keys<PromisedFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedFields<Schema.ProgramTrack>>(),
-            ClowdrInstance: keys<PromisedFields<Schema.Conference>>(),
-            PrivilegedInstanceDetails: keys<PromisedFields<Schema.PrivilegedInstanceDetails>>(),
+            Conference: keys<PromisedFields<Schema.Conference>>(),
+            PrivilegedConferenceDetails: keys<PromisedFields<Schema.PrivilegedConferenceDetails>>(),
         };
 
     /**
@@ -82,8 +82,8 @@ export default class Cache {
             ProgramPerson: keys<PromisedNonArrayFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedNonArrayFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedNonArrayFields<Schema.ProgramTrack>>(),
-            ClowdrInstance: keys<PromisedNonArrayFields<Schema.Conference>>(),
-            PrivilegedInstanceDetails: keys<PromisedNonArrayFields<Schema.PrivilegedInstanceDetails>>(),
+            Conference: keys<PromisedNonArrayFields<Schema.Conference>>(),
+            PrivilegedConferenceDetails: keys<PromisedNonArrayFields<Schema.PrivilegedConferenceDetails>>(),
         };
 
     /**
@@ -96,8 +96,8 @@ export default class Cache {
             ProgramPerson: keys<PromisedArrayFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedArrayFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedArrayFields<Schema.ProgramTrack>>(),
-            ClowdrInstance: keys<PromisedArrayFields<Schema.Conference>>(),
-            PrivilegedInstanceDetails: keys<PromisedArrayFields<Schema.PrivilegedInstanceDetails>>(),
+            Conference: keys<PromisedArrayFields<Schema.Conference>>(),
+            PrivilegedConferenceDetails: keys<PromisedArrayFields<Schema.PrivilegedConferenceDetails>>(),
         };
 
     readonly KEY_PATH: "id" = "id";
@@ -162,7 +162,7 @@ export default class Cache {
                         this.isInitialised = true;
 
                         this.dbPromise.then(async db => {
-                            let conf = await new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("ClowdrInstance").get(this.conferenceId) || null;
+                            let conf = await new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
                             if (!conf) {
                                 reject(`Conference ${this.conferenceId} could not be loaded.`);
                                 throw new Error(`Conference ${this.conferenceId} could not be loaded.`);
@@ -582,13 +582,10 @@ export default class Cache {
         let conf = (await this.conference) as any;
 
         let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
-        if (tableName !== "ClowdrInstance") {
+        if (tableName !== "Conference") {
             let r2t: Record<string, string> = RelationsToTableNames[tableName];
             if ("conference" in r2t) {
                 query.equalTo("conference" as any, conf);
-            }
-            else if ("instance" in r2t) {
-                query.equalTo("instance" as any, conf);
             }
         }
         return query;

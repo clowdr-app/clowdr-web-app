@@ -1,15 +1,15 @@
 import Parse from "parse";
-import { InstancePermission as Schema, InstancePermissionFields } from "../DBSchema/InstancePermission";
+import { ConferencePermission as Schema, ConferencePermissionFields } from "../DBSchema/ConferencePermission";
 import { Conference } from "./Conference";
 import { PrivilegedAction } from "./PrivilegedAction";
 import { Base } from "./Base";
 import { PrivilegedAction as PrivilegedActionSchema, PrivilegedActionFields } from "../DBSchema/PrivilegedAction";
 import { Conference as ConferenceSchema, ConferenceFields } from "../DBSchema/Conference";
 
-export class InstancePermission extends Base<Schema> {
+export class ConferencePermission extends Base<Schema> {
 
     constructor(value: Schema, dbValue: Parse.Object | null = null) {
-        super("InstancePermission", InstancePermissionFields, value, dbValue);
+        super("ConferencePermission", ConferencePermissionFields, value, dbValue);
     }
 
     get action(): PrivilegedAction | Promise<PrivilegedAction> {

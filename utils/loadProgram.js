@@ -136,7 +136,7 @@ function getAuthors(authorKeys) {
 }
 
 async function loadProgram() {
-    let confQ = new Parse.Query("ClowdrInstance")
+    let confQ = new Parse.Query("Conference")
     confQ.equalTo("conferenceName", conferenceName);
     let conf = await confQ.first();
 

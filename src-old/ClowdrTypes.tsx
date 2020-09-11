@@ -9,7 +9,7 @@ import {
     BreakoutRoom,
     UserPresence,
     UserProfile,
-    ClowdrInstance,
+    Conference,
     SocialSpace,
     User
 } from "./classes/ParseObjects";
@@ -18,14 +18,14 @@ export type UserSessionToken = string
 
 export type MaybeParseUser = User | null;
 export type MaybeUserProfile = UserProfile | null;
-export type MaybeClowdrInstance = ClowdrInstance | null;
+export type MaybeConference = Conference | null;
 
 export interface ClowdrStateHelpers {
     getBreakoutRoom: (id: string, component: React.Component) => Promise<BreakoutRoom | null>;
     cancelBreakoutRoomSubscription: (id: string, component: React.Component) => void;
     setExpandedProgramRoom: (room: Parse.Object | null) => void;
     createOrOpenDM: (profileOfUserToDM: UserProfile) => Promise<void>;
-    setActiveConference: (conf: ClowdrInstance) => Promise<void>;
+    setActiveConference: (conf: Conference) => Promise<void>;
     // `setGlobalState` is so dangerous that it's untypeable!
     //    To give it a type, we would need to know the type of ClowdrState,
     //    which itself includes ClowdrStateHelpers. TypeScript doesn't allow
@@ -46,15 +46,15 @@ export interface ClowdrState {
     isAdmin: boolean;
     isClowdrAdmin: boolean;
     permissions: Array<string>;
-    validConferences: Array<ClowdrInstance>;
-    currentConference: MaybeClowdrInstance;
+    validConferences: Array<Conference>;
+    currentConference: MaybeConference;
     loading: boolean;
     roles: Array<Parse.Role>;
     programCache: ProgramCache;
     helpers: ClowdrStateHelpers;
     chatClient: ChatClient;
     activeSpace: SocialSpace;
-    refreshUser(instance?: MaybeClowdrInstance, forceRefresh?: boolean): Promise<MaybeParseUser>;
+    refreshUser(instance?: MaybeConference, forceRefresh?: boolean): Promise<MaybeParseUser>;
     isModerator: boolean;
     isManager: boolean;
     isAdmininstrator: boolean;

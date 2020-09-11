@@ -1,6 +1,6 @@
 import Parse from "parse";
 import { ZoomRoom as Schema } from "../DBSchema/ZoomRoom";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 import { ProgramRoom } from "./ProgramRoom";
 import { ZoomHostAccount } from "./ZoomHostAccount";
 
@@ -40,7 +40,7 @@ export class ZoomRoom
         return this.get("start_url");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

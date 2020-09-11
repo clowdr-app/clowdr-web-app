@@ -48,14 +48,14 @@ export default interface CachedSchema extends CachableDBSchema {
         value: Schema.ProgramTrack;
         indexes: Indexes<Schema.ProgramTrack>;
     };
-    ClowdrInstance: {
+    Conference: {
         key: string;
         value: Schema.Conference;
         indexes: Indexes<Schema.Conference>;
     };
-    PrivilegedInstanceDetails: {
+    PrivilegedConferenceDetails: {
         key: string;
-        value: Schema.PrivilegedInstanceDetails;
-        indexes: Indexes<Schema.PrivilegedInstanceDetails>;
+        value: Schema.PrivilegedConferenceDetails;
+        indexes: Indexes<Schema.PrivilegedConferenceDetails>;
     };
 }

@@ -1,6 +1,6 @@
 import Parse from "parse";
 import { BreakoutRoom as Schema } from '../DBSchema/BreakoutRoom';
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 import { Conversation } from "./Conversation";
 import { UserProfile } from "./UserProfile";
 import { ProgramItem } from "./ProgramItem";
@@ -41,7 +41,7 @@ export class BreakoutRoom
         return this.get("twilioID");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

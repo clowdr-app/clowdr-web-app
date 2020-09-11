@@ -1,13 +1,13 @@
 import Parse from "parse";
-import { InstanceConfiguration as Schema } from "../DBSchema/InstanceConfiguration";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { ConferenceConfiguration as Schema } from "../DBSchema/ConferenceConfiguration";
+import { Conference } from "./Conference";
 
-export class InstanceConfiguration
+export class ConferenceConfiguration
     extends Parse.Object
     implements Schema {
 
     constructor() {
-        super("InstanceConfiguration");
+        super("ConferenceConfiguration");
     }
 
     get key(): string {
@@ -18,9 +18,9 @@ export class InstanceConfiguration
         return this.get("value");
     }
 
-    get instance(): ClowdrInstance {
-        return this.get("instance");
+    get instance(): Conference {
+        return this.get("conference");
     }
 
 }
-Parse.Object.registerSubclass('InstanceConfiguration', InstanceConfiguration);
+Parse.Object.registerSubclass('ConferenceConfiguration', ConferenceConfiguration);

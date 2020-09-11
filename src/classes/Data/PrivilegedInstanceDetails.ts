@@ -1,13 +1,13 @@
 import Parse from "parse";
-import { PrivilegedInstanceDetails as Schema, PrivilegedInstanceDetailsFields } from "../DBSchema/PrivilegedInstanceDetails";
+import { PrivilegedConferenceDetails as Schema, PrivilegedConferenceDetailsFields } from "../DBSchema/PrivilegedConferenceDetails";
 import { Conference } from "./Conference";
 import { Base } from "./Base";
 import { Conference as ConferenceSchema, ConferenceFields } from "../DBSchema/Conference";
 
-export class PrivilegedInstanceDetails extends Base<Schema> {
+export class PrivilegedConferenceDetails extends Base<Schema> {
 
     constructor(value: Schema, dbValue: Parse.Object | null = null) {
-        super("PrivilegedInstanceDetails", PrivilegedInstanceDetailsFields, value, dbValue);
+        super("PrivilegedConferenceDetails", PrivilegedConferenceDetailsFields, value, dbValue);
     }
 
     get key(): string | Promise<string> {

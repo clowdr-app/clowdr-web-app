@@ -3,13 +3,13 @@
 
 let UserProfile = Parse.Object.extend("UserProfile");
 let SocialSpace = Parse.Object.extend("SocialSpace");
-let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
+let Conference = Parse.Object.extend("Conference");
 
 Parse.Cloud.define("presence-addToPage", async (request) => {
     let confID = request.params.confID;
     let spaceID = request.params.spaceID;
     let userQ = new Parse.Query(UserProfile);
-    let conf = new ClowdrInstance();
+    let conf = new Conference();
     conf.id = confID;
     userQ.equalTo("user", request.user);
     userQ.equalTo("conference", conf);
@@ -26,7 +26,7 @@ Parse.Cloud.define("presence-removeFromPage", async (request) => {
     let confID = request.params.confID;
     let spaceID = request.params.spaceID;
     let userQ = new Parse.Query(UserProfile);
-    let conf = new ClowdrInstance();
+    let conf = new Conference();
     conf.id = confID;
     userQ.equalTo("user", request.user);
     userQ.equalTo("conference", conf);

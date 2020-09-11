@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { Parse } from "../parse/parse";
 import { AuthUserContext } from "../Session";
-import { MaybeParseUser, MaybeClowdrInstance } from "../../ClowdrTypes";
+import { MaybeParseUser, MaybeConference } from "../../ClowdrTypes";
 import { RouteComponentProps, withRouter } from 'react-router'
 
 interface SignOutProps extends RouteComponentProps {
-    refreshUser: (instance?: MaybeClowdrInstance, forceRefresh?: boolean) => Promise<MaybeParseUser>;
+    refreshUser: (instance?: MaybeConference, forceRefresh?: boolean) => Promise<MaybeParseUser>;
 }
 
 interface SignOutState {

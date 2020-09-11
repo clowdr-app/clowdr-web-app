@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { ClowdrState, EditableCellProps } from '../../../ClowdrTypes';
 import { Store } from 'antd/lib/form/interface';
-import { InstanceConfiguration } from "../../../classes/ParseObjects";
+import { ConferenceConfiguration } from "../../../classes/ParseObjects";
 
 interface ConfigurationProps {
     auth: ClowdrState,
@@ -18,10 +18,10 @@ interface ConfigurationProps {
 interface ConfigurationState {
     loading: boolean,
     initialized: boolean,
-    config: InstanceConfiguration[],
+    config: ConferenceConfiguration[],
     searched: boolean,
     alert: string | undefined,
-    searchResult: InstanceConfiguration[],
+    searchResult: ConferenceConfiguration[],
     visible: boolean
 }
 
@@ -56,8 +56,8 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
     }
 
     async refreshList() {
-        let query = new Parse.Query<InstanceConfiguration>("InstanceConfiguration");
-        query.equalTo("instance", this.props.auth.currentConference);
+        let query = new Parse.Query<ConferenceConfiguration>("ConferenceConfiguration");
+        query.equalTo("conference", this.props.auth.currentConference);
         let res = await query.find();
         console.log('[Admin/Config]: Found ' + res.length + ' vars');
         this.setState({
@@ -86,7 +86,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
 
     render() {
         // Set up editable table cell
-        const EditableCell: React.FC<EditableCellProps<InstanceConfiguration>> = ({
+        const EditableCell: React.FC<EditableCellProps<ConferenceConfiguration>> = ({
             editing,
             dataIndex,
             title,
@@ -138,9 +138,9 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
             const [form] = Form.useForm();
             const [data, setData] = useState(this.state.config);
             const [editingKey, setEditingKey] = useState('');
-            const isEditing = (record: InstanceConfiguration) => record.id === editingKey;
+            const isEditing = (record: ConferenceConfiguration) => record.id === editingKey;
 
-            const edit = (record: InstanceConfiguration) => {
+            const edit = (record: ConferenceConfiguration) => {
                 form.setFieldsValue({
                     key: record.key ? record.key : "",
                     value: record.value ? record.value : ""
@@ -152,7 +152,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                 setEditingKey('');
             };
 
-            const onDelete = (record: InstanceConfiguration) => {
+            const onDelete = (record: ConferenceConfiguration) => {
                 const newConfigList = [...this.state.config];
                 // delete from database
                 record.destroy().then(() => {
@@ -215,30 +215,30 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                     key: 'key',
                     editable: true,
                     width: '50%',
-                    sorter: (a: InstanceConfiguration, b: InstanceConfiguration) => {
+                    sorter: (a: ConferenceConfiguration, b: ConferenceConfiguration) => {
                         var nameA = a.key ? a.key : "";
                         var nameB = b.key ? b.key : "";
                         return nameA.localeCompare(nameB);
                     },
-                    render: (_: string, record: InstanceConfiguration) => <span>{record.key}</span>,
+                    render: (_: string, record: ConferenceConfiguration) => <span>{record.key}</span>,
                 },
                 {
                     title: 'Value',
                     dataIndex: 'value',
                     editable: true,
                     width: '50%',
-                    sorter: (a: InstanceConfiguration, b: InstanceConfiguration) => {
+                    sorter: (a: ConferenceConfiguration, b: ConferenceConfiguration) => {
                         var valueA = a.value ? a.value : "";
                         var valueB = b.value ? b.value : "";
                         return valueA.localeCompare(valueB);
                     },
-                    render: (_: string, record: InstanceConfiguration) => <span>{record.value}</span>,
+                    render: (_: string, record: ConferenceConfiguration) => <span>{record.value}</span>,
                     key: 'value',
                 },
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    render: (_: string, record: InstanceConfiguration) => {
+                    render: (_: string, record: ConferenceConfiguration) => {
                         const editable = isEditing(record);
                         if (this.state.config.length > 0) {
                             return editable ? (
@@ -285,7 +285,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                 }
                 return {
                     ...col,
-                    onCell: (record: InstanceConfiguration) => ({
+                    onCell: (record: ConferenceConfiguration) => ({
                         record,
                         inputType: 'text',
                         dataIndex: col.dataIndex,
@@ -318,7 +318,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
                 throw new Error("Cannot generate new conference config: current conference is null!");
             }
 
-            const config = new InstanceConfiguration();
+            const config = new ConferenceConfiguration();
             config.set("key", "Please enter a name");
             config.set("value", "Please enter a value");
 
@@ -328,7 +328,7 @@ class Configuration extends React.Component<ConfigurationProps, ConfigurationSta
             acl.setRoleWriteAccess(this.props.auth.currentConference.id + "-admin", true);
             acl.setRoleReadAccess(this.props.auth.currentConference.id + "-admin", true);
             config.setACL(acl);
-            config.set("instance", this.props.auth.currentConference);
+            config.set("conference", this.props.auth.currentConference);
             config.save().then((val: any) => { //TS: what is val? Maybe we need a new configuration schema
                 config.set("key", val.id);
                 this.setState({ alert: "add success", config: [config, ...this.state.config] })

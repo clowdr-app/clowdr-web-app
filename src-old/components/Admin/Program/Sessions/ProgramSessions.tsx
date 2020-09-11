@@ -85,7 +85,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
 
         let data: object = {
             clazz: "ProgramSession",
-            conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
+            conference: { clazz: "Conference", id: this.props.auth.currentConference.id },
             title: "***NEWLY ADDED SESSION***",
             items: [],
             confKey: Math.floor(Math.random() * 10000000).toString()
@@ -229,7 +229,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
                 // delete from database
                 let data: object = {
                     clazz: "ProgramSession",
-                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
+                    conference: { clazz: "Conference", id: record.conference.id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -264,7 +264,7 @@ class ProgramSessions extends React.Component<ProgramSessionsProps, ProgramSessi
 
                         let data = {
                             clazz: "ProgramSession",
-                            conference: { clazz: "ClowdrInstance", id: session.conference.id },
+                            conference: { clazz: "Conference", id: session.conference.id },
                             id: session.id,
                             title: row.title,
                             startTime: row.start.toDate(),

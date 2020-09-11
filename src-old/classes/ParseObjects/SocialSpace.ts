@@ -1,6 +1,6 @@
 import Parse from "parse";
 import { SocialSpace as Schema } from "../DBSchema/SocialSpace";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 
 export class SocialSpace
     extends Parse.Object
@@ -22,7 +22,7 @@ export class SocialSpace
         return this.get("name");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

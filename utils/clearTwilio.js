@@ -1,9 +1,9 @@
 const fs = require("fs");
 const Parse = require("parse/node");
-let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
+let Conference = Parse.Object.extend("Conference");
 require('dotenv').config()
 
-let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
+let ConferenceConfig = Parse.Object.extend("ConferenceConfiguration");
 const Twilio = require("twilio");
 
 console.log(process.env.TWILIO_CHAT_SERVICE_SID)
@@ -12,8 +12,8 @@ Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE
 Parse.serverURL = 'https://parseapi.back4app.com/'
 // const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 async function getConfig(conference) {
-    let configQ = new Parse.Query(InstanceConfig);
-    configQ.equalTo("instance", conference);
+    let configQ = new Parse.Query(ConferenceConfig);
+    configQ.equalTo("conference", conference);
     // configQ.cache(60);
     let res = await configQ.find({ useMasterKey: true });
     let config = {};
@@ -28,10 +28,10 @@ async function getConfig(conference) {
             config.twilio = Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
         let newChatService = await config.twilio.chat.services.create({ friendlyName: 'clowdr_chat' });
-        let tokenConfig = new InstanceConfig();
+        let tokenConfig = new ConferenceConfig();
         tokenConfig.set("value", newChatService.sid);
         tokenConfig.set("key", "TWILIO_CHAT_SERVICE_SID");
-        tokenConfig.set("instance", conference);
+        tokenConfig.set("conference", conference);
         await tokenConfig.save({}, { useMasterKey: true });
         config.TWILIO_CHAT_SERVICE_SID = newChatService.sid;
 
@@ -47,8 +47,8 @@ async function getConfig(conference) {
             permission: ['addMember', 'deleteOwnMessage', 'editOwnMessage', 'editOwnMessageAttributes', 'inviteMember', 'leaveChannel', 'sendMessage', 'sendMediaMessage',
                 'editChannelName', 'editChannelAttributes']
         })
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key", "TWILIO_CHAT_CHANNEL_MANAGER_ROLE");
         newConf.set("value", role.sid);
         await newConf.save({}, { useMasterKey: true });
@@ -60,8 +60,8 @@ async function getConfig(conference) {
             type: 'channel',
             permission: ['deleteOwnMessage']
         })
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key", "TWILIO_CHAT_CHANNEL_OBSERVER_ROLE");
         newConf.set("value", role.sid);
         await newConf.save({}, { useMasterKey: true });
@@ -76,8 +76,8 @@ async function getConfig(conference) {
                 friendlyName: "Announcements", type: "private",
                 attributes: JSON.stringify(attributes)
             });
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key", "TWILIO_ANNOUNCEMENTS_CHANNEL");
         newConf.set("value", chatRoom.sid);
         await newConf.save({}, { useMasterKey: true });
@@ -87,7 +87,7 @@ async function getConfig(conference) {
 }
 
 async function fixUsers() {
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     confQ.equalTo("conferenceName", "ICFP 2020")
     return confQ.find({ useMasterKey: true }).then(async (confs) => {
         for (let conf of confs) {

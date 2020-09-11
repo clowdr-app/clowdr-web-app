@@ -34,25 +34,25 @@ export type RelationsToTableNamesT =
 
 export const RelationsToTableNames: RelationsToTableNamesT = {
     AttachmentType: {
-        conference: "ClowdrInstance"
+        conference: "Conference"
     },
     ProgramPerson: {
-        conference: "ClowdrInstance",
+        conference: "Conference",
         programItems: "ProgramItem"
     },
     ProgramItem: {
-        conference: "ClowdrInstance",
+        conference: "Conference",
         authors: "ProgramPerson",
         track: "ProgramTrack"
     },
     ProgramTrack: {
-        conference: "ClowdrInstance"
+        conference: "Conference"
     },
-    ClowdrInstance: {
-        loggedInText: "PrivilegedInstanceDetails",
+    Conference: {
+        loggedInText: "PrivilegedConferenceDetails",
     },
-    PrivilegedInstanceDetails: {
-        instance: "ClowdrInstance"
+    PrivilegedConferenceDetails: {
+        conference: "Conference"
     }
 };
 
@@ -158,7 +158,7 @@ export abstract class StaticBaseImpl {
         conferenceId?: string,
     ): Promise<T | null> {
         // Yes these casts are safe
-        if (StaticBaseImpl.IsCachable(tableName, conferenceId) || tableName === "ClowdrInstance") {
+        if (StaticBaseImpl.IsCachable(tableName, conferenceId) || tableName === "Conference") {
             let _tableName = tableName as CachedSchemaKeys;
             let cache = await Caches.get(conferenceId ? conferenceId : id);
             return cache.get(_tableName, id) as unknown as T;
@@ -203,7 +203,7 @@ export abstract class StaticBaseImpl {
             return query.map(async parse => {
                 if (CachedStoreNames.includes(tableName as any)) {
                     const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
-                    if (tableName === "ClowdrInstance") {
+                    if (tableName === "Conference") {
                         conferenceId = _parse.id;
                     }
                     else {
@@ -357,10 +357,7 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
             return this.parse.get(field as string).fetch().then(async (result: any) => {
                 let confId = result.get("conference");
                 if (!confId) {
-                    confId = result.get("instance");
-                    if (!confId) {
-                        throw new Error("Can't handle cachable item that lacks a conference id...");
-                    }
+                    throw new Error("Can't handle cachable item that lacks a conference id...");
                 }
 
                 let cache = await Caches.get(confId);
@@ -383,7 +380,7 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
             return this.parse.get(field as string).map(async (result: any) => {
                 let confId = result.get("conference");
                 if (!confId) {
-                    confId = result.get("instance");
+                    confId = result.get("conference");
                     if (!confId) {
                         throw new Error("Can't handle cachable item that lacks a conference id...");
                     }

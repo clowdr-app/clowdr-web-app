@@ -1,7 +1,7 @@
 let UserProfile = Parse.Object.extend("UserProfile");
 let Conversation = Parse.Object.extend("Conversation");
-let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
-let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
+let Conference = Parse.Object.extend("Conference");
+let ConferenceConfig = Parse.Object.extend("ConferenceConfiguration");
 let BondedChannel = Parse.Object.extend("BondedChannel");
 let TwilioChannelMirror = Parse.Object.extend("TwilioChannelMirror");
 let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
@@ -26,8 +26,8 @@ async function callWithRetry(twilioFunctionToCall) {
 }
 
 async function getConfig(conference){
-    let configQ = new Parse.Query(InstanceConfig);
-    configQ.equalTo("instance", conference);
+    let configQ = new Parse.Query(ConferenceConfig);
+    configQ.equalTo("conference", conference);
     // configQ.cache(60);
     let res = await configQ.find({useMasterKey: true});
     let config = {};
@@ -47,8 +47,8 @@ async function getConfig(conference){
             permission: ['addMember','deleteOwnMessage','editOwnMessage','editOwnMessageAttributes','inviteMember','leaveChannel','sendMessage','sendMediaMessage',
             'editChannelName','editChannelAttributes']
         })
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key","TWILIO_CHAT_CHANNEL_MANAGER_ROLE");
         newConf.set("value", role.sid);
         await newConf.save({},{useMasterKey: true});
@@ -60,8 +60,8 @@ async function getConfig(conference){
             type: 'channel',
             permission: ['deleteOwnMessage']
         })
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key","TWILIO_CHAT_CHANNEL_OBSERVER_ROLE");
         newConf.set("value", role.sid);
         await newConf.save({},{useMasterKey: true});
@@ -74,8 +74,8 @@ async function getConfig(conference){
         let chatRoom = await config.twilioChat.channels.create(
             {friendlyName: "Announcements", type: "private",
                 attributes: JSON.stringify(attributes)});
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key","TWILIO_ANNOUNCEMENTS_CHANNEL");
         newConf.set("value", chatRoom.sid);
         await newConf.save({},{useMasterKey: true});
@@ -85,7 +85,7 @@ async function getConfig(conference){
 }
 
 Parse.Cloud.job("reapInactiveUsers", async (request) => {
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     return confQ.find({useMasterKey: true}).then(async (confs) => {
         for (let conf of confs) {
             let config = await getConfig(conf);
@@ -194,7 +194,7 @@ async function getBondedChannel(conf, config, originalChatSID){
 Parse.Cloud.define("chat-getBondedChannelForSID", async (request) => {
     let confID = request.params.conference;
     let userQ = new Parse.Query(UserProfile);
-    let conf = new ClowdrInstance();
+    let conf = new Conference();
     conf.id = confID;
     userQ.equalTo("user", request.user);
     userQ.equalTo("conference", conf);
@@ -213,7 +213,7 @@ Parse.Cloud.define("chat-getBondedChannelForSID", async (request) => {
 Parse.Cloud.define("chat-getBreakoutRoom", async (request) => {
     let confID = request.params.conference;
     let userQ = new Parse.Query(UserProfile);
-    let conf = new ClowdrInstance();
+    let conf = new Conference();
     let sid = request.params.sid;
     let socialSpaceID = request.params.socialSpaceID;
     let roomName = request.params.title;
@@ -395,7 +395,7 @@ Parse.Cloud.define("chat-addToSID", async (request) => {
     let sid = request.params.sid;
     let title = request.params.title;
     let userQ = new Parse.Query(UserProfile);
-    let conf = new ClowdrInstance();
+    let conf = new Conference();
     conf.id = confID;
     userQ.equalTo("user", request.user);
     userQ.equalTo("conference", conf);
@@ -530,7 +530,7 @@ async function userInRoles(user, allowedRoles) {
 Parse.Cloud.define("join-announcements-channel", async (request) => {
     let confID = request.params.conference;
     let userQ = new Parse.Query(UserProfile);
-    let conf = new ClowdrInstance();
+    let conf = new Conference();
     conf.id = confID;
     userQ.equalTo("user", request.user);
     userQ.equalTo("conference", conf);
@@ -540,7 +540,7 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
         let config = await getConfig(conf);
 
         //Now find out if we are a moderator or not...
-        const accesToConf = new Parse.Query('InstancePermission');
+        const accesToConf = new Parse.Query('ConferencePermission');
         accesToConf.equalTo("conference", conf);
         let actionQ = new Parse.Query("PrivilegedAction");
         actionQ.equalTo("action","announcement-global");
@@ -597,7 +597,7 @@ Parse.Cloud.define("chat-destroy", async (request) => {
         if (!await userInRoles(request.user, [confID + "-moderator", confID + "-admin", confID + "-manager"])) {
             throw "You are not permitted to delete this chat";
         }
-        let conf = new ClowdrInstance();
+        let conf = new Conference();
         conf.id = confID;
         let config = await getConfig(conf);
         await callWithRetry(()=>config.twilioChat.channels(sid).remove());
@@ -615,7 +615,7 @@ Parse.Cloud.define("chat-createDM", async (request) => {
 
     console.log("Create DM called " + conversationName)
     let userQ = new Parse.Query(UserProfile);
-    let conf = new ClowdrInstance();
+    let conf = new Conference();
     conf.id = confID;
     userQ.equalTo("user", request.user);
     userQ.equalTo("conference", conf);

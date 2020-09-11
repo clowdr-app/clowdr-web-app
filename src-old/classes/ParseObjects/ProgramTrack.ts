@@ -1,6 +1,6 @@
 import Parse from "parse";
 import { ProgramTrack as Schema } from "../DBSchema/ProgramTrack";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 
 export class ProgramTrack
     extends Parse.Object
@@ -42,7 +42,7 @@ export class ProgramTrack
         return this.get("showAsEvents");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

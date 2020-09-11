@@ -12,13 +12,13 @@ import {
     UserProfile,
     UserPresence,
     SocialSpace,
-    ClowdrInstance,
+    Conference,
     LiveActivity,
-    InstancePermission,
+    ConferencePermission,
     Flair
 } from "../../classes/ParseObjects";
 import assert from 'assert';
-import { MaybeParseUser, MaybeClowdrInstance, ClowdrStateHelpers } from "../../ClowdrTypes";
+import { MaybeParseUser, MaybeConference, ClowdrStateHelpers } from "../../ClowdrTypes";
 
 interface Props {
     history?: H.History | null;
@@ -36,7 +36,7 @@ interface State {
     loading: boolean;
     roles: Array<Parse.Role<Parse.Attributes>>;
     currentRoom: any;
-    refreshUser: (instance?: MaybeClowdrInstance, forceRefresh?: boolean) => Promise<MaybeParseUser>;
+    refreshUser: (instance?: MaybeConference, forceRefresh?: boolean) => Promise<MaybeParseUser>;
     setSocialSpace: (spaceOrName: string | SocialSpace,
         user?: User,
         userProfile?: UserProfile,
@@ -44,7 +44,7 @@ interface State {
     subscribeToBreakoutRooms: any;
     cancelBreakoutRoomsSubscription: any;
     setActiveRoom: any;
-    currentConference: ClowdrInstance | null;
+    currentConference: Conference | null;
     activeRoom: any;
     helpers: ClowdrStateHelpers;
     chatClient: ChatClient;
@@ -63,7 +63,7 @@ interface State {
     isClowdrAdmin: boolean;
     flairColors: Record<string, FlairUIData>;
     allFlair: AllFlairData[];  // TS: Call it allFlairs??
-    validConferences: Array<ClowdrInstance>;
+    validConferences: Array<Conference>;
 }
 
 type RoomID = string    // TS: Doesn't belong here?
@@ -111,7 +111,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         isClowdrAdmin: boolean;
         activeRoomSubscribers: React.Component[];
         activePrivateVideoRooms: BreakoutRoom[];
-        currentConference: ClowdrInstance | null = null;
+        currentConference: Conference | null = null;
 
         constructor(props: Props) {
             super(props);
@@ -267,7 +267,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         subscribeToVideoRoomState() {
             throw new Error("Method not implemented.");
         }
-        async setActiveConference(conf: ClowdrInstance) {
+        async setActiveConference(conf: Conference) {
             console.log('[wA]: changing conference to ' + conf.conferenceName);
             this.refreshUser(conf, true);
         }
@@ -277,7 +277,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
         }
 
         async setActiveConferenceByName(confName: string) {
-            let confQ = new Parse.Query<ClowdrInstance>("ClowdrInstance");
+            let confQ = new Parse.Query<Conference>("Conference");
             confQ.equalTo("conferenceName", confName);
             let res = await confQ.first();
             this.refreshUser(res, true);
@@ -429,7 +429,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
             }
         }
 
-        refreshUser(preferredConference?: MaybeClowdrInstance, forceRefresh: boolean = false): Promise<MaybeParseUser> {
+        refreshUser(preferredConference?: MaybeConference, forceRefresh: boolean = false): Promise<MaybeParseUser> {
             if (!this.refreshUserPromise || forceRefresh) {
                 let result = this._refreshUser(preferredConference);
                 this.refreshUserPromise = result;
@@ -438,7 +438,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                 return this.refreshUserPromise;
             }
         }
-        async _refreshUser(preferredConference?: MaybeClowdrInstance): Promise<MaybeParseUser> {
+        async _refreshUser(preferredConference?: MaybeConference): Promise<MaybeParseUser> {
 
             let _this = this;
             return User.currentAsync<User>().then(async function (user) {
@@ -452,7 +452,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
                         // Valid conferences for this user
                         let profiles = await user.profiles.include(["conference", "conference.loggedInText"]).find();
-                        let validConferences: ClowdrInstance[] = profiles.map(p => p.conference);
+                        let validConferences: Conference[] = profiles.map(p => p.conference);
                         // console.log("[withAuth]: valid conferences: " + validConferences.map(c => c.id).join(", "));
 
                         // Roles for this user
@@ -504,9 +504,9 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         if (!activeProfile) {
                             if (!preferredConference) {
                                 let defaultConferenceName = _this.getDefaultConferenceName();
-                                let confQ = new Parse.Query("ClowdrInstance")
+                                let confQ = new Parse.Query("Conference")
                                 confQ.equalTo("conferenceName", defaultConferenceName);
-                                conf = await confQ.first() as (ClowdrInstance | null);
+                                conf = await confQ.first() as (Conference | null);
                                 if (!conf) {
                                     console.error("Default conference doesn't exist in the database!");
                                     throw new Error("Defalt conference doesn't exist in the database.");
@@ -527,7 +527,7 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
 
                             window.location.reload(false);
                         }
-                        const privsQuery = new Parse.Query<InstancePermission>("InstancePermission");
+                        const privsQuery = new Parse.Query<ConferencePermission>("ConferencePermission");
                         privsQuery.equalTo("conference", activeProfile.conference);
                         privsQuery.include("action");
                         let permissions = await privsQuery.find();
@@ -616,9 +616,9 @@ const withClowdrState = (Component: React.Component<Props, State>) => {
                         await _this.chatClient.shutdown();
                         _this.chatClient = null;
                     }
-                    let conference: ClowdrInstance | null = null;
+                    let conference: Conference | null = null;
                     let defaultConferenceName = _this.getDefaultConferenceName();
-                    let confQ = new Parse.Query<ClowdrInstance>("ClowdrInstance")
+                    let confQ = new Parse.Query<Conference>("Conference")
                     confQ.equalTo("conferenceName", defaultConferenceName);
                     conference = await confQ.first() || null;
                     _this.setState({

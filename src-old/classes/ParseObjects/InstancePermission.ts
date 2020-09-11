@@ -1,23 +1,23 @@
 import Parse from "parse";
-import { InstancePermission as Schema } from "../DBSchema/InstancePermission";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { ConferencePermission as Schema } from "../DBSchema/ConferencePermission";
+import { Conference } from "./Conference";
 import { PrivilegedAction } from "./PrivilegedAction";
 
-export class InstancePermission
+export class ConferencePermission
     extends Parse.Object
     implements Schema {
 
     constructor() {
-        super("InstancePermission");
+        super("ConferencePermission");
     }
 
     get action(): PrivilegedAction {
         return this.get("action");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 
 }
-Parse.Object.registerSubclass('InstancePermission', InstancePermission);
+Parse.Object.registerSubclass('ConferencePermission', ConferencePermission);

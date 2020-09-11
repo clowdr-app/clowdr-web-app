@@ -1,6 +1,6 @@
 import Parse from "parse";
 import { UserProfile as Schema, UserProfileTag } from "../DBSchema/UserProfile";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 import { UserPresence } from "./UserPresence";
 import { ProgramPerson } from "./ProgramPerson";
 import { User } from "./User";
@@ -59,7 +59,7 @@ export class UserProfile
         return this.get("welcomeModalShown");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

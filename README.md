@@ -102,7 +102,7 @@ create an app space for Clowdr with any name you like.
       --javascriptKey JS_KEY \
       --restAPIKey REST_API_KEY \
       --databaseURI mongodb://localhost/clowdr \
-      --liveQueryServerOptions "{ \"classNames\": [\"BondedChannel\",\"BreakoutRoom\",\"ClowdrInstance\",\"Flair\",\"LiveActivity\",\"ProgramItem\",\"ProgramRoom\",\"ProgramSession\",\"ProgramTrack\",\"TwilioChannelMirror\",\"UserPresence\",\"UserProfile\"] }" \
+      --liveQueryServerOptions "{ \"classNames\": [\"BondedChannel\",\"BreakoutRoom\",\"Conference\",\"Flair\",\"LiveActivity\",\"ProgramItem\",\"ProgramRoom\",\"ProgramSession\",\"ProgramTrack\",\"TwilioChannelMirror\",\"UserPresence\",\"UserProfile\"] }" \
       --cloud ./backend/cloud/main.js
    ```
 1. Run parse dashboard:
@@ -116,7 +116,7 @@ create an app space for Clowdr with any name you like.
       --appName clowdr
    ```
 1. Open `http://localhost:4001` in a browser. Select the
-   `InstanceConfiguration` table, and click on the security icon on the
+   `ConferenceConfiguration` table, and click on the security icon on the
    top-right. Click "Class Level Permissions". Double check that Public read and
    write are unchecked, then add the role name `ClowdrSysAdmin` (press the enter
    key after typing this word), and check both Read and Write permissions for
@@ -132,7 +132,7 @@ create an app space for Clowdr with any name you like.
      successfully" but succeeds. (Hit CTRL-C to exit.)
    - After this command runs, you should be able to see all tables with some
      essential data stored in the database in Back4App. For verification, please
-     check the ClowdrInstance table -- there should be one row there for a
+     check the Conference table -- there should be one row there for a
      conference instance named XYZ. Check also the UserProfile table, and verify
      that there is one row there for user Clowdr Admin. You can check the few
      other tables that have data on them.

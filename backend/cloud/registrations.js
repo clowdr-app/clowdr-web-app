@@ -6,10 +6,10 @@ const sgMail = require('sendgrid').mail;
 const crypto = require('crypto');
 const moment = require("moment");
 
-let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
+let Conference = Parse.Object.extend("Conference");
 let UserProfile = Parse.Object.extend("UserProfile");
 
-let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
+let ConferenceConfig = Parse.Object.extend("ConferenceConfiguration");
 
 Parse.Cloud.define("registrations-upload", async (request) => {
     console.log('Request to upload registration data');
@@ -81,27 +81,27 @@ var conferenceInfoCache = {};
 
 async function getConferenceInfoForMailer(conf) {
     if (!conferenceInfoCache[conf.id]) {
-        let keyQuery = new Parse.Query(InstanceConfig);
-        keyQuery.equalTo("instance", conf);
+        let keyQuery = new Parse.Query(ConferenceConfig);
+        keyQuery.equalTo("conference", conf);
         keyQuery.equalTo("key", "SENDGRID_API_KEY");
-        let frontendURLQuery = new Parse.Query(InstanceConfig);
-        frontendURLQuery.equalTo("instance", conf);
+        let frontendURLQuery = new Parse.Query(ConferenceConfig);
+        frontendURLQuery.equalTo("conference", conf);
         frontendURLQuery.equalTo("key", "FRONTEND_URL");
-        let senderQuery = new Parse.Query(InstanceConfig);
-        senderQuery.equalTo("instance", conf);
+        let senderQuery = new Parse.Query(ConferenceConfig);
+        senderQuery.equalTo("conference", conf);
         senderQuery.equalTo("key", "SENDGRID_SENDER");
 
         let compoundQ = Parse.Query.or(keyQuery, frontendURLQuery, senderQuery);
         console.log("Looking for conference info for")
         console.log(conf)
 
-        compoundQ.include("instance");
+        compoundQ.include("conference");
         let config = await compoundQ.find({ useMasterKey: true });
         let sgKey = null, confObj = null, frontendURL = null, sender = null;
         for (let res of config) {
             if (res.get("key") === "SENDGRID_API_KEY") {
                 sgKey = res.get("value");
-                confObj = res.get("instance");
+                confObj = res.get("conference");
             } else if (res.get("key") === "FRONTEND_URL") {
                 frontendURL = res.get("value");
             } else if (res.get("key") === "SENDGRID_SENDER") {
@@ -165,7 +165,7 @@ Parse.Cloud.define("login-resendInvite", async (request) => {
     let userID = request.params.userID;
     let userQ = new Parse.Query(Parse.User);
     let confID = request.params.confID;
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     confQ.equalTo("conferenceName", confID);
     let conf = await confQ.first();
 
@@ -231,7 +231,7 @@ Parse.Cloud.define("reset-password", async (request) => {
     let profileQ = new Parse.Query(UserProfile);
     profileQ.matchesQuery("user", userQ);
 
-    let confQ = new Parse.Query(ClowdrInstance);
+    let confQ = new Parse.Query(Conference);
     confQ.equalTo("conferenceName", confID);
     let conf = await confQ.first();
     console.log(conf)
@@ -327,7 +327,7 @@ Parse.Cloud.define("registrations-inviteUser", async (request) => {
 
     let promises = [];
 
-    let fauxConf = new ClowdrInstance();
+    let fauxConf = new Conference();
     fauxConf.id = confID;
     let config = await getConferenceInfoForMailer(fauxConf);
     console.log('[InviteUser]: sender is ' + config.sender);

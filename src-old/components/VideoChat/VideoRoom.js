@@ -194,14 +194,14 @@ class VideoRoom extends Component {
 
         //find the room in parse...
         let BreakoutRoom = Parse.Object.extend("BreakoutRoom");
-        let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
+        let Conference = Parse.Object.extend("Conference");
 
         let room;
         if (parseRoomID) {
             let roomQuery = new Parse.Query(BreakoutRoom);
             room = await roomQuery.get(parseRoomID);
         } else {
-            let confQuery = new Parse.Query(ClowdrInstance);
+            let confQuery = new Parse.Query(Conference);
             confQuery.equalTo("conferenceName", confName)
             let roomQuery = new Parse.Query(BreakoutRoom);
             roomQuery.matchesQuery("conference", confQuery)

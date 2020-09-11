@@ -1,12 +1,12 @@
 import { Base, BaseFields } from './Base';
 import { KnownKeys } from '../Util';
 
-export interface PrivilegedInstanceDetails extends Base {
+export interface PrivilegedConferenceDetails extends Base {
     key: string;
     value: string;
 }
 
-export const PrivilegedInstanceDetailsFields: Array<KnownKeys<PrivilegedInstanceDetails>> = [
+export const PrivilegedConferenceDetailsFields: Array<KnownKeys<PrivilegedConferenceDetails>> = [
     ...BaseFields,
     "key",
     "value"

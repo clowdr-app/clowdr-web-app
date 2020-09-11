@@ -155,7 +155,7 @@ class ProgramItems extends React.Component<Props, State> {
                 // delete from database
                 let data = {
                     clazz: "ProgramItem",
-                    conference: { clazz: "ClowdrInstance", id: record.conference.id },
+                    conference: { clazz: "Conference", id: record.conference.id },
                     id: record.id
                 }
                 Parse.Cloud.run("delete-obj", data)
@@ -197,7 +197,7 @@ class ProgramItems extends React.Component<Props, State> {
                                 //Create a new program person
                                 let data = {
                                     clazz: "ProgramPerson",
-                                    conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
+                                    conference: { clazz: "Conference", id: this.props.auth.currentConference.id },
                                     confKey: "authors/author-" + new Date().getTime(),
                                     name: a
                                 }
@@ -224,7 +224,7 @@ class ProgramItems extends React.Component<Props, State> {
                         let data = {
                             clazz: "ProgramItem",
                             id: item.id,
-                            conference: { clazz: "ClowdrInstance", id: item.conference.id },
+                            conference: { clazz: "Conference", id: item.conference.id },
                             title: item.title,
                             authors: item.authors.map((a: ProgramPerson) => { return { clazz: "ProgramPerson", id: a.id } }),
                             abstract: item.abstract,
@@ -395,7 +395,7 @@ class ProgramItems extends React.Component<Props, State> {
 
             let data = {
                 clazz: "ProgramItem",
-                conference: { clazz: "ClowdrInstance", id: this.props.auth.currentConference.id },
+                conference: { clazz: "Conference", id: this.props.auth.currentConference.id },
                 title: "Please input the title",
                 confKey: "items/item-" + new Date().getTime(),
                 abstract: "Please input the abstract",

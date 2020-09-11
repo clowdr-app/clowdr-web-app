@@ -1,6 +1,6 @@
 import Parse from "parse";
 import { ProgramSession as Schema } from "../DBSchema/ProgramSession";
-import { ClowdrInstance } from "./ClowdrInstance";
+import { Conference } from "./Conference";
 import { ProgramSessionEvent } from "./ProgramSessionEvent";
 import { ProgramItem } from "./ProgramItem";
 import { ProgramRoom } from "./ProgramRoom";
@@ -30,7 +30,7 @@ export class ProgramSession
         return this.get("endTime");
     }
 
-    get conference(): ClowdrInstance {
+    get conference(): Conference {
         return this.get("conference");
     }
 

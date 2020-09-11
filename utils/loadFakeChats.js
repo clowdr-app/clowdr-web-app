@@ -52,7 +52,7 @@ function randomMembership(users, keysToPop) {
 }
 
 async function fn() {
-    let confQ = new Parse.Query("ClowdrInstance");
+    let confQ = new Parse.Query("Conference");
     confQ.equalTo("conferenceName", "ClowdrTest");
     let conf = await confQ.first();
 

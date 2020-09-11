@@ -2,8 +2,8 @@
 // ^ for eslint
 
 let UserProfile = Parse.Object.extend("UserProfile");
-let ClowdrInstance = Parse.Object.extend("ClowdrInstance");
-let InstanceConfig = Parse.Object.extend("InstanceConfiguration");
+let Conference = Parse.Object.extend("Conference");
+let ConferenceConfig = Parse.Object.extend("ConferenceConfiguration");
 let MeetingRegistration = Parse.Object.extend("MeetingRegistration");
 const axios = require('axios');
 var moment = require('moment');
@@ -13,8 +13,8 @@ const Twilio = require("twilio");
 const crypto = require('crypto');
 
 async function getConfig(conference){
-    let configQ = new Parse.Query(InstanceConfig);
-    configQ.equalTo("instance", conference);
+    let configQ = new Parse.Query(ConferenceConfig);
+    configQ.equalTo("conference", conference);
     // configQ.cache(60);
     let res = await configQ.find({useMasterKey: true});
     let config = {};
@@ -34,8 +34,8 @@ async function getConfig(conference){
             permission: ['addMember','deleteOwnMessage','editOwnMessage','editOwnMessageAttributes','inviteMember','leaveChannel','sendMessage','sendMediaMessage',
             'editChannelName','editChannelAttributes']
         })
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key","TWILIO_CHAT_CHANNEL_MANAGER_ROLE");
         newConf.set("value", role.sid);
         await newConf.save({},{useMasterKey: true});
@@ -47,8 +47,8 @@ async function getConfig(conference){
             type: 'channel',
             permission: ['deleteOwnMessage']
         })
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key","TWILIO_CHAT_CHANNEL_OBSERVER_ROLE");
         newConf.set("value", role.sid);
         await newConf.save({},{useMasterKey: true});
@@ -61,8 +61,8 @@ async function getConfig(conference){
         let chatRoom = await config.twilioChat.channels.create(
             {friendlyName: "Announcements", type: "private",
                 attributes: JSON.stringify(attributes)});
-        let newConf = new InstanceConfig();
-        newConf.set("instance", conference);
+        let newConf = new ConferenceConfig();
+        newConf.set("conference", conference);
         newConf.set("key","TWILIO_ANNOUNCEMENTS_CHANNEL");
         newConf.set("value", chatRoom.sid);
         await newConf.save({},{useMasterKey: true});
@@ -84,7 +84,7 @@ function generateSignature(apiKey, apiSecret, meetingNumber, role) {
 Parse.Cloud.define("zoom-getSignatureForMeeting", async (request) => {
     let confID = request.params.conference;
     let userQ = new Parse.Query(UserProfile);
-    let conf = new ClowdrInstance();
+    let conf = new Conference();
     conf.id = confID;
     userQ.equalTo("user", request.user);
     userQ.equalTo("conference", conf);

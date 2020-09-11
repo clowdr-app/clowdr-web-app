@@ -100,7 +100,7 @@ class App extends Component {
 
             Parse.Cloud.run("logo-upload", data).then(async (res) => {
                 message.info("Success! Your logo has been uploaded.");
-                let updatedItemQ = new Parse.Query("ClowdrInstance");
+                let updatedItemQ = new Parse.Query("Conference");
                 let updatedItem = await updatedItemQ.get(this.props.clowdrAppState.currentConference.id);
 
                 this.props.clowdrAppState.currentConference.set("headerImage", updatedItem.get("headerImage")); //well that is gross
