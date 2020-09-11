@@ -1,10 +1,10 @@
 import * as Schema from "../Schema";
-import { CachedBase, StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT } from "./Base";
-import { Conference, ProgramItem, UserProfile } from ".";
+import { StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT, CachedBase } from "./Base";
+import { Conference, UserProfile } from ".";
 
-type SchemaT = Schema.ProgramPerson;
-type K = "ProgramPerson";
-const K_str: K = "ProgramPerson";
+type SchemaT = Schema.Conversation;
+type K = "Conversation";
+const K_str: K = "Conversation";
 
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
@@ -14,20 +14,24 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get name(): string {
-        return this.data.name;
+    get isDM(): boolean {
+        return this.data.isDM;
     }
 
-    get programItems(): Promise<ProgramItem[]> {
-        return this.nonUniqueRelated("programItems");
+    get sid(): string {
+        return this.data.sid;
     }
 
     get conference(): Promise<Conference> {
         return this.uniqueRelated("conference");
     }
 
-    get userProfile(): Promise<UserProfile | null> {
-        return this.uniqueRelated("userProfile");
+    get member1(): Promise<UserProfile> {
+        return this.uniqueRelated("member1");
+    }
+
+    get member2(): Promise<UserProfile> {
+        return this.uniqueRelated("member2");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

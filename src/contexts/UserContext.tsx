@@ -1,5 +1,5 @@
 import React from 'react';
-import { User } from '../classes/Data';
+import { User } from '../classes/DataLayer';
 
 /**
  * Hint: You will never need to use this directly. Instead, use the `useUser` or

@@ -1,10 +1,10 @@
 import * as Schema from "../Schema";
-import { CachedBase, StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT } from "./Base";
-import { Conference, ProgramItem, UserProfile } from ".";
+import { StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT, CachedBase } from "./Base";
+import { Conference, ProgramSessionEvent, ProgramItem, ProgramRoom, ProgramTrack } from ".";
 
-type SchemaT = Schema.ProgramPerson;
-type K = "ProgramPerson";
-const K_str: K = "ProgramPerson";
+type SchemaT = Schema.ProgramSession;
+type K = "ProgramSession";
+const K_str: K = "ProgramSession";
 
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
@@ -14,20 +14,36 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get name(): string {
-        return this.data.name;
+    get title(): string {
+        return this.data.title;
     }
 
-    get programItems(): Promise<ProgramItem[]> {
-        return this.nonUniqueRelated("programItems");
+    get startTime(): number {
+        return this.data.startTime;
+    }
+
+    get endTime(): number {
+        return this.data.endTime;
     }
 
     get conference(): Promise<Conference> {
         return this.uniqueRelated("conference");
     }
 
-    get userProfile(): Promise<UserProfile | null> {
-        return this.uniqueRelated("userProfile");
+    get events(): Promise<ProgramSessionEvent[]> {
+        return this.nonUniqueRelated("events");
+    }
+
+    get items(): Promise<ProgramItem[]> {
+        return this.nonUniqueRelated("items");
+    }
+
+    get room(): Promise<ProgramRoom> {
+        return this.uniqueRelated("room");
+    }
+
+    get programTrack(): Promise<ProgramTrack> {
+        return this.uniqueRelated("programTrack");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

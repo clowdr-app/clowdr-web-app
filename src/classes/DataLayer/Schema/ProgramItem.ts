@@ -1,4 +1,7 @@
-import { Conference, ProgramPerson, ProgramTrack } from "../Interface";
+import {
+    BreakoutRoom, Conference, ProgramPerson, ProgramItemAttachment,
+    ProgramSession, ProgramSessionEvent, ProgramTrack
+} from "../Interface";
 import { Base } from ".";
 
 export default interface Schema extends Base {
@@ -9,13 +12,10 @@ export default interface Schema extends Base {
     title: string;
 
     authors: Promise<Array<ProgramPerson>>;
-
-    // TODO: attachments: Promise<Array<ProgramItemAttachment>>;
-    // TODO: breakoutRoom: Promise <BreakoutRoom>;
-
+    attachments: Promise<Array<ProgramItemAttachment>>;
+    breakoutRoom: Promise <BreakoutRoom>;
     conference: Promise<Conference>;
-
-    // TODO: events: Promise<Array<ProgramSessionEvent>>
-    // TODO: programSession: Promise<ProgramSession>
+    events: Promise<Array<ProgramSessionEvent>>
+    programSession: Promise<ProgramSession>
     track: Promise<ProgramTrack>;
 }

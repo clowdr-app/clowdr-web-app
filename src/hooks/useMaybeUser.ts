@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import UserContext from '../contexts/UserContext';
-import { User } from '../classes/Data';
+import { User } from '../classes/DataLayer';
 
 /**
  * Use this hook to access the current user (if any).

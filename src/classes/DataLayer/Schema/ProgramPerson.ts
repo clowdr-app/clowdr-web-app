@@ -1,4 +1,4 @@
-import { Conference, ProgramItem } from "../Interface";
+import { Conference, ProgramItem, UserProfile } from "../Interface";
 import { Base } from ".";
 
 export default interface Schema extends Base {
@@ -6,5 +6,5 @@ export default interface Schema extends Base {
 
     conference: Promise<Conference>;
     programItems: Promise<Array<ProgramItem>>;
-    // TODO: userProfile: Promise<UserProfile>
+    userProfile: Promise<UserProfile | null>;
 }

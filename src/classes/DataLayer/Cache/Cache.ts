@@ -34,11 +34,32 @@ export default class Cache {
         if (!Cache.constructors) {
             Cache.constructors = {
                 AttachmentType: Interface.AttachmentType,
-                ProgramPerson: Interface.ProgramPerson,
-                ProgramItem: Interface.ProgramItem,
-                ProgramTrack: Interface.ProgramTrack,
+                BondedChannel: Interface.BondedChannel,
+                BreakoutRoom: Interface.BreakoutRoom,
+                ConferenceConfiguration: Interface.ConferenceConfiguration,
+                ConferencePermission: Interface.ConferencePermission,
                 Conference: Interface.Conference,
-                PrivilegedConferenceDetails: Interface.PrivilegedConferenceDetails
+                Conversation: Interface.Conversation,
+                Flair: Interface.Flair,
+                LiveActivity: Interface.LiveActivity,
+                MeetingRegistration: Interface.MeetingRegistration,
+                PrivilegedAction: Interface.PrivilegedAction,
+                PrivilegedConferenceDetails: Interface.PrivilegedConferenceDetails,
+                ProgramItem: Interface.ProgramItem,
+                ProgramItemAttachment: Interface.ProgramItemAttachment,
+                ProgramPerson: Interface.ProgramPerson,
+                ProgramRoom: Interface.ProgramRoom,
+                ProgramSession: Interface.ProgramSession,
+                ProgramSessionEvent: Interface.ProgramSessionEvent,
+                ProgramTrack: Interface.ProgramTrack,
+                Registration: Interface.Registration,
+                SocialSpace: Interface.SocialSpace,
+                TwilioChannelMirror: Interface.TwilioChannelMirror,
+                User: Interface.User,
+                UserPresence: Interface.UserPresence,
+                UserProfile: Interface.UserProfile,
+                ZoomHostAccount: Interface.ZoomHostAccount,
+                ZoomRoom: Interface.ZoomRoom
             };
         }
         return Cache.constructors;
@@ -51,6 +72,16 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["value"]>;
     } = {
             AttachmentType: keys<Schema.AttachmentType>(),
+            BreakoutRoom: keys<Schema.BreakoutRoom>(),
+            Conversation: keys<Schema.Conversation>(),
+            LiveActivity: keys<Schema.LiveActivity>(),
+            ProgramItemAttachment: keys<Schema.ProgramItemAttachment>(),
+            ProgramRoom: keys<Schema.ProgramRoom>(),
+            ProgramSession: keys<Schema.ProgramSession>(),
+            ProgramSessionEvent: keys<Schema.ProgramSessionEvent>(),
+            SocialSpace: keys<Schema.SocialSpace>(),
+            User: keys<Schema.User>(),
+            UserProfile: keys<Schema.UserProfile>(),
             ProgramPerson: keys<Schema.ProgramPerson>(),
             ProgramItem: keys<Schema.ProgramItem>(),
             ProgramTrack: keys<Schema.ProgramTrack>(),
@@ -65,6 +96,16 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
             AttachmentType: keys<PromisedFields<Schema.AttachmentType>>(),
+            BreakoutRoom: keys<PromisedFields<Schema.BreakoutRoom>>(),
+            Conversation: keys<PromisedFields<Schema.Conversation>>(),
+            LiveActivity: keys<PromisedFields<Schema.LiveActivity>>(),
+            ProgramItemAttachment: keys<PromisedFields<Schema.ProgramItemAttachment>>(),
+            ProgramRoom: keys<PromisedFields<Schema.ProgramRoom>>(),
+            ProgramSession: keys<PromisedFields<Schema.ProgramSession>>(),
+            ProgramSessionEvent: keys<PromisedFields<Schema.ProgramSessionEvent>>(),
+            SocialSpace: keys<PromisedFields<Schema.SocialSpace>>(),
+            User: keys<PromisedFields<Schema.User>>(),
+            UserProfile: keys<PromisedFields<Schema.UserProfile>>(),
             ProgramPerson: keys<PromisedFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedFields<Schema.ProgramTrack>>(),
@@ -79,6 +120,16 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
             AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>(),
+            BreakoutRoom: keys<PromisedNonArrayFields<Schema.BreakoutRoom>>(),
+            Conversation: keys<PromisedNonArrayFields<Schema.Conversation>>(),
+            LiveActivity: keys<PromisedNonArrayFields<Schema.LiveActivity>>(),
+            ProgramItemAttachment: keys<PromisedNonArrayFields<Schema.ProgramItemAttachment>>(),
+            ProgramRoom: keys<PromisedNonArrayFields<Schema.ProgramRoom>>(),
+            ProgramSession: keys<PromisedNonArrayFields<Schema.ProgramSession>>(),
+            ProgramSessionEvent: keys<PromisedNonArrayFields<Schema.ProgramSessionEvent>>(),
+            SocialSpace: keys<PromisedNonArrayFields<Schema.SocialSpace>>(),
+            User: keys<PromisedNonArrayFields<Schema.User>>(),
+            UserProfile: keys<PromisedNonArrayFields<Schema.UserProfile>>(),
             ProgramPerson: keys<PromisedNonArrayFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedNonArrayFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedNonArrayFields<Schema.ProgramTrack>>(),
@@ -93,6 +144,16 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
     } = {
             AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>(),
+            BreakoutRoom: keys<PromisedArrayFields<Schema.BreakoutRoom>>(),
+            Conversation: keys<PromisedArrayFields<Schema.Conversation>>(),
+            LiveActivity: keys<PromisedArrayFields<Schema.LiveActivity>>(),
+            ProgramItemAttachment: keys<PromisedArrayFields<Schema.ProgramItemAttachment>>(),
+            ProgramRoom: keys<PromisedArrayFields<Schema.ProgramRoom>>(),
+            ProgramSession: keys<PromisedArrayFields<Schema.ProgramSession>>(),
+            ProgramSessionEvent: keys<PromisedArrayFields<Schema.ProgramSessionEvent>>(),
+            SocialSpace: keys<PromisedArrayFields<Schema.SocialSpace>>(),
+            User: keys<PromisedArrayFields<Schema.User>>(),
+            UserProfile: keys<PromisedArrayFields<Schema.UserProfile>>(),
             ProgramPerson: keys<PromisedArrayFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedArrayFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedArrayFields<Schema.ProgramTrack>>(),
@@ -111,7 +172,7 @@ export default class Cache {
 
     constructor(
         public readonly conferenceId: string,
-        enableDebug: boolean = false) {
+        enableDebug: boolean = true) {
         if (enableDebug) {
             this.logger.enable();
         }
@@ -219,11 +280,14 @@ export default class Cache {
                 if (rels.includes(key as string)) {
                     let uniqRels: Array<string> = this.UniqueRelations[tableName];
                     try {
-                        if (uniqRels.includes(key as string)) {
-                            schema[key] = parse.get(key as any).id;
-                        }
-                        else {
-                            schema[key] = parse.get(key as any).map((x: any) => x.id);
+                        let xs = parse.get(key as any);
+                        if (xs) {
+                            if (uniqRels.includes(key as string)) {
+                                schema[key] = xs.id;
+                            }
+                            else {
+                                schema[key] = parse.get(key as any).map((x: any) => x.id);
+                            }
                         }
                     }
                     catch (e) {

@@ -33,6 +33,31 @@ export default interface CachedSchema extends CachableDBSchema {
         value: Schema.AttachmentType;
         indexes: Indexes<Schema.AttachmentType>;
     };
+    BreakoutRoom: {
+        key: string;
+        value: Schema.BreakoutRoom;
+        indexes: Indexes<Schema.BreakoutRoom>;
+    };
+    Conference: {
+        key: string;
+        value: Schema.Conference;
+        indexes: Indexes<Schema.Conference>;
+    };
+    Conversation: {
+        key: string;
+        value: Schema.Conversation;
+        indexes: Indexes<Schema.Conversation>;
+    };
+    LiveActivity: {
+        key: string;
+        value: Schema.LiveActivity;
+        indexes: Indexes<Schema.LiveActivity>;
+    };
+    PrivilegedConferenceDetails: {
+        key: string;
+        value: Schema.PrivilegedConferenceDetails;
+        indexes: Indexes<Schema.PrivilegedConferenceDetails>;
+    };
     ProgramPerson: {
         key: string;
         value: Schema.ProgramPerson;
@@ -43,19 +68,44 @@ export default interface CachedSchema extends CachableDBSchema {
         value: Schema.ProgramItem;
         indexes: Indexes<Schema.ProgramItem>;
     };
+    ProgramItemAttachment: {
+        key: string;
+        value: Schema.ProgramItemAttachment;
+        indexes: Indexes<Schema.ProgramItemAttachment>;
+    };
+    ProgramRoom: {
+        key: string;
+        value: Schema.ProgramRoom;
+        indexes: Indexes<Schema.ProgramRoom>;
+    };
+    ProgramSession: {
+        key: string;
+        value: Schema.ProgramSession;
+        indexes: Indexes<Schema.ProgramSession>;
+    };
+    ProgramSessionEvent: {
+        key: string;
+        value: Schema.ProgramSessionEvent;
+        indexes: Indexes<Schema.ProgramSessionEvent>;
+    };
     ProgramTrack: {
         key: string;
         value: Schema.ProgramTrack;
         indexes: Indexes<Schema.ProgramTrack>;
     };
-    Conference: {
+    SocialSpace: {
         key: string;
-        value: Schema.Conference;
-        indexes: Indexes<Schema.Conference>;
+        value: Schema.SocialSpace;
+        indexes: Indexes<Schema.SocialSpace>;
     };
-    PrivilegedConferenceDetails: {
+    User: {
         key: string;
-        value: Schema.PrivilegedConferenceDetails;
-        indexes: Indexes<Schema.PrivilegedConferenceDetails>;
+        value: Schema.User;
+        indexes: Indexes<Schema.User>;
+    };
+    UserProfile: {
+        key: string;
+        value: Schema.UserProfile;
+        indexes: Indexes<Schema.UserProfile>;
     };
 }

@@ -13,6 +13,29 @@ export default class Class extends CachedBase<K> implements SchemaT {
         parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
         super(conferenceId, K_str, data, parse);
     }
+    get adminEmail(): string {
+        return this.data.adminEmail;
+    }
+
+    get adminName(): string {
+        return this.data.adminName;
+    }
+
+    get headerImage(): Parse.File | null {
+        return this.data.headerImage;
+    }
+
+    get isInitialized(): boolean {
+        return this.data.isInitialized;
+    }
+
+    get landingPage(): string {
+        return this.data.landingPage;
+    }
+
+    get welcomeText(): string {
+        return this.data.welcomeText;
+    }
 
     get conferenceName(): string {
         return this.data.conferenceName;

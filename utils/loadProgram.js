@@ -203,14 +203,6 @@ async function loadProgram() {
 
     // Create People next
     let ProgramPerson = Parse.Object.extend("ProgramPerson");
-    let qp = new Parse.Query(ProgramPerson);
-    qp.equalTo("conference", conf);
-    qp.limit(10000);
-    let people = await qp.find();
-    people.forEach((person) => {
-        allPeople[person.get("confKey")] = person;
-    })
-
     let newPeople = [];
     for (const person of data.People) {
         if (allPeople[person.Key]) {
@@ -221,13 +213,11 @@ async function loadProgram() {
         newPerson.set("name", person.Name);
         newPerson.set("bio", person.Bio);
         newPerson.set("affiliation", person.Affiliation);
-        newPerson.set("confKey", person.Key);
         newPerson.set("URL", person.URL);
         newPerson.set("URLPhoto", person.URLPhoto);
         newPerson.setACL(acl);
         newPerson.set("conference", conf);
         newPeople.push(newPerson);
-        allPeople[newPerson.get("confKey")] = newPerson;
     }
     try {
         await Parse.Object.saveAll(newPeople);
@@ -237,14 +227,6 @@ async function loadProgram() {
     console.log("People saved: " + newPeople.length);
 
     let ProgramItem = Parse.Object.extend("ProgramItem");
-    let q = new Parse.Query(ProgramItem);
-    q.equalTo("conference", conf);
-    q.limit(1000);
-    let items = await q.find();
-    items.forEach((item) => {
-        allItems[item.get("confKey")] = item;
-    })
-
     let newItems = [];
     for (const item of data.Items) {
         if (allItems[item.Key]) {
@@ -263,14 +245,12 @@ async function loadProgram() {
         newItem.set("abstract", item.Abstract);
         newItem.set("affiliations", item.Affiliations);
         newItem.set("conference", conf);
-        newItem.set("confKey", item.Key);
         newItem.set('track', track);
         newItem.setACL(acl);
         // get authors pointers
         let authors = getAuthors(item.Authors);
         newItem.set("authors", authors);
         newItems.push(newItem);
-        allItems[newItem.get("confKey")] = newItem;
     }
     try {
         await Parse.Object.saveAll(newItems);
@@ -280,14 +260,7 @@ async function loadProgram() {
     console.log("Items saved: " + newItems.length);
 
     let ProgramSession = Parse.Object.extend("ProgramSession");
-    let qs = new Parse.Query(ProgramSession);
-    qs.limit(10000);
-    let sessions = await qs.find();
-    sessions.forEach((session) => {
-        allSessions[session.get("confKey")] = session;
-    })
-
-    let newSessions = [];
+    let toSave = [];
     for (const ses of data.Sessions) {
         if (allSessions[ses.Key])
             continue;
@@ -309,7 +282,6 @@ async function loadProgram() {
         session.set("startTime", start.toDate());
         session.set("endTime", end.toDate());
         session.set("location", ses.Location);
-        session.set("confKey", ses.Key);
         session.set("conference", conf);
         session.setACL(acl);
 
@@ -333,7 +305,6 @@ async function loadProgram() {
         }
         session.set("items", items);
         toSave.push(session);
-        allSessions[ses.Key] = session;
         i++;
     }
     try {

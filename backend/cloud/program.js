@@ -616,18 +616,6 @@ async function uploadProgramFromCSV(data, conferenceID, timezone){
         console.log(err);
         throw err;
     }
-
-    //Last up: patch program item keys, we should really stop using this.
-    let itemQ = new Parse.Query("ProgramItem");
-    itemQ.equalTo("conference", conf);
-    itemQ.doesNotExist("confKey");
-    itemQ.limit(100000);
-    let itemsToFix = await itemQ.find({ useMasterKey: true });
-    for (let item of itemsToFix) {
-        item.set("confKey", item.get("track").id + "/" + item.id);
-    }
-    await Parse.Object.saveAll(itemsToFix, { useMasterKey: true });
-
 }
 
 async function uploadProgramFromConfXML(data, conferenceID, timezone) {
@@ -812,14 +800,6 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone) {
 
     // Create Items
     let ProgramItem = Parse.Object.extend("ProgramItem");
-    let q = new Parse.Query(ProgramItem);
-    q.equalTo("conference", conf);
-    q.limit(1000);
-    let items = await q.find({ useMasterKey: true });
-    items.forEach((item) => {
-        allItems[item.get("confKey")] = item;
-    })
-
     let authorsToSave = {};
     toSave = [];
     for (const item of Object.values(newItems)) {
@@ -867,12 +847,6 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone) {
 
     // Create Sessions
     let ProgramSession = Parse.Object.extend("ProgramSession");
-    let qs = new Parse.Query(ProgramSession);
-    qs.limit(10000);
-    let sessions = await qs.find({ useMasterKey: true });
-    sessions.forEach((session) => {
-        allSessions[session.get("confKey")] = session;
-    })
 
     toSave = [];
     for (const id of Object.keys(newSessions)) {
@@ -946,15 +920,6 @@ async function uploadProgramFromConfXML(data, conferenceID, timezone) {
 
     await Parse.Object.saveAll(toSave, { useMasterKey: true });
     await Parse.Object.saveAll(updateItems, { useMasterKey: true });
-    let itemQ = new Parse.Query("ProgramItem");
-    itemQ.equalTo("conference", conf);
-    itemQ.doesNotExist("confKey");
-    itemQ.limit(100000);
-    let itemsToFix = await itemQ.find({ useMasterKey: true });
-    for (let item of itemsToFix) {
-        item.set("confKey", item.get("track").id + "/" + item.id);
-    }
-    await Parse.Object.saveAll(itemsToFix, { useMasterKey: true });
     let sessionQ = new Parse.Query("ProgramSession");
     sessionQ.equalTo("conference", conf)
     sessionQ.limit(1000);
@@ -1064,13 +1029,6 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
 
     // Create People next
     let ProgramPerson = Parse.Object.extend("ProgramPerson");
-    let qp = new Parse.Query(ProgramPerson);
-    qp.equalTo("conference", conf);
-    qp.limit(10000);
-    let people = await qp.find({ useMasterKey: true });
-    people.forEach((person) => {
-        allPeople[person.get("confKey")] = person;
-    })
     let newPeople = [];
     for (const person of data.People) {
         if (allPeople[person.Key.trim()]) {
@@ -1081,13 +1039,11 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
         person.Name ? newPerson.set("name", person.Name.trim()) : newPerson.set("name", person.Name);
         person.Bio ? newPerson.set("bio", person.Bio.trim()) : newPerson.set("bio", person.Bio);
         person.Affiliation ? newPerson.set("affiliation", person.Affiliation.trim()) : newPerson.set("affiliation", person.Affiliation);
-        person.Key ? newPerson.set("confKey", person.Key.trim()) : newPerson.set("confKey", person.Key);
         person.URL ? newPerson.set("URL", person.URL.trim()) : newPerson.set("URL", person.URL);
         person.URLPhoto ? newPerson.set("URLPhoto", person.URLPhoto.trim()) : newPerson.set("URLPhoto", person.URLPhoto);
         newPerson.set("conference", conf);
         newPerson.setACL(acl);
         newPeople.push(newPerson);
-        allPeople[newPerson.get("confKey")] = newPerson;
     }
     try {
         await Parse.Object.saveAll(newPeople, { useMasterKey: true });
@@ -1098,14 +1054,6 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
 
     // Create Items
     let ProgramItem = Parse.Object.extend("ProgramItem");
-    let q = new Parse.Query(ProgramItem);
-    q.equalTo("conference", conf);
-    q.limit(1000);
-    let items = await q.find({ useMasterKey: true });
-    items.forEach((item) => {
-        allItems[item.get("confKey")] = item;
-    })
-
     let newItems = [];
     let authorsToSave = {};
     for (const item of data.Items) {
@@ -1126,7 +1074,6 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
         item.Abstract ? newItem.set("abstract", item.Abstract.trim()) : newItem.set("abstract", item.Abstract);
         newItem.set("affiliations", item.Affiliations);
         newItem.set("conference", conf);
-        item.Key ? newItem.set("confKey", item.Key.trim()) : newItem.set("confKey", item.Key);
         newItem.set('track', track);
         newItem.setACL(acl);
         // get authors pointers
@@ -1137,10 +1084,8 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
                 author.set("programItems", []);
             let items = author.get("programItems");
             items.push(newItem);
-            authorsToSave[author.get("confKey")] = author;
         }
         newItems.push(newItem);
-        allItems[newItem.get("confKey")] = newItem;
     }
     try {
         await Parse.Object.saveAll(newItems, { useMasterKey: true });
@@ -1152,19 +1097,9 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
 
     // Create Sessions
     let ProgramSession = Parse.Object.extend("ProgramSession");
-    let qs = new Parse.Query(ProgramSession);
-    qs.limit(10000);
-    let sessions = await qs.find({ useMasterKey: true });
-    sessions.forEach((session) => {
-        allSessions[session.get("confKey")] = session;
-    })
-
     let newSessions = [];
     for (const ses of data.Sessions) {
         let session = undefined;
-        if (allSessions[ses.Key])
-            session = allSessions[ses.Key];
-
         var start = Date.now(), end = Date.now();
         let times = ses.Time.split('-');
         if (times.length >= 2) {
@@ -1177,9 +1112,6 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
 
         if (!session) {
             session = new ProgramSession();
-            // TODO: Ed: How is this supposed to work:
-            // We just created a brand new session, so how is confKey set?
-            allSessions[session.get("confKey")] = session;
 
             ses.Title ? session.set("title", ses.Title.trim()) : session.set("title", ses.Title);
             ses.Abstract ? session.set("abstract", ses.Abstract.trim()) : session.set("abstract", ses.Abstract);
@@ -1188,7 +1120,6 @@ async function uploadProgramFromConfJSON(data, conferenceID, timezone) {
             session.set("startTime", start.toDate());
             session.set("endTime", end.toDate());
             ses.Location ? session.set("location", ses.Location.trim()) : session.set("location", ses.Location);
-            ses.Key ? session.set("confKey", ses.Key.trim()) : session.set("confKey", ses.Key);
             session.set("conference", conf);
             session.setACL(acl);
 

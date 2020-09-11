@@ -1,4 +1,4 @@
-import Parse from "parse";
+// import Parse from "parse";
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
@@ -7,9 +7,8 @@ import Session_User from '../../classes/Session/User';
 import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserContext from '../../contexts/UserContext';
-import { User } from '../../classes/Data';
 import * as DataLayer from "../../classes/DataLayer";
-import { getTimeString } from '../../classes/Util';
+// import { getTimeString } from '../../classes/Util';
 
 interface Props {
 }
@@ -25,63 +24,63 @@ interface Props {
  */
 export default function App(props: Props) {
 
-    useEffect(() => {
-        // TODO: Delete this - it's for testing only
-        Parse.User.currentAsync().then(async user => {
-            let msg = "";
-            if (!user) {
-                user = await Parse.User.logIn("clowdr@localhost", "admin");
-                msg = "Logged in";
-            }
-            else {
-                msg = "Already logged in";
-                ///await Parse.User.logOut();
-            }
-            console.log(msg, { name: user.getUsername(), email: user.getEmail() });
-        });
+    // useEffect(() => {
+    //     // TODO: Delete this - it's for testing only
+    //     Parse.User.currentAsync().then(async user => {
+    //         let msg = "";
+    //         if (!user) {
+    //             user = await Parse.User.logIn("clowdr@localhost", "admin");
+    //             msg = "Logged in";
+    //         }
+    //         else {
+    //             msg = "Already logged in";
+    //             ///await Parse.User.logOut();
+    //         }
+    //         console.log(msg, { name: user.getUsername(), email: user.getEmail() });
+    //     });
 
-        DataLayer.AttachmentType.getAll("ciAZ1zroPD").then(async result => {
-            let results1 = result.map(x => x.name);
-            console.log(`${getTimeString(new Date())} Got attachment types`, results1);
+    //     DataLayer.AttachmentType.getAll("ciAZ1zroPD").then(async result => {
+    //         let results1 = result.map(x => x.name);
+    //         console.log(`${getTimeString(new Date())} Got attachment types`, results1);
 
-            let results2 = await Promise.all(result.map(async x => ({
-                name: x.name,
-                conferenceName: (await x.conference).conferenceName
-            })));
-            console.log(`${getTimeString(new Date())} Got attachment types with conference names`, results2);
-        });
-        DataLayer.Conference.getAll().then(async result => {
-            console.log(`${getTimeString(new Date())} Got conferences`, result.map(r => r.conferenceName));
-        });
-        DataLayer.ProgramItem.get("6ZSU9G1Iwl", "ciAZ1zroPD").then(async result => {
-            if (result) {
-                console.log(`${getTimeString(new Date())} Got program item`, {
-                    title: result.title
-                });
-                console.log(`${getTimeString(new Date())} Got program item with track and authors`, {
-                    title: result.title,
-                    track: await result.track,
-                    authors: await result.authors
-                });
-            }
-        });
-        DataLayer.Conference.get("ciAZ1zroPD").then(
-            async result => {
-                console.log(`${getTimeString(new Date())} Got conference`, result?.conferenceName);
+    //         let results2 = await Promise.all(result.map(async x => ({
+    //             name: x.name,
+    //             conferenceName: (await x.conference).conferenceName
+    //         })));
+    //         console.log(`${getTimeString(new Date())} Got attachment types with conference names`, results2);
+    //     });
+    //     DataLayer.Conference.getAll().then(async result => {
+    //         console.log(`${getTimeString(new Date())} Got conferences`, result.map(r => r.conferenceName));
+    //     });
+    //     DataLayer.ProgramItem.get("6ZSU9G1Iwl", "ciAZ1zroPD").then(async result => {
+    //         if (result) {
+    //             console.log(`${getTimeString(new Date())} Got program item`, {
+    //                 title: result.title
+    //             });
+    //             console.log(`${getTimeString(new Date())} Got program item with track and authors`, {
+    //                 title: result.title,
+    //                 track: await result.track,
+    //                 authors: await result.authors
+    //             });
+    //         }
+    //     });
+    //     DataLayer.Conference.get("ciAZ1zroPD").then(
+    //         async result => {
+    //             console.log(`${getTimeString(new Date())} Got conference`, result?.conferenceName);
 
-                // if (result) {
-                //     let parseConf = await result.getUncachedParseObject();
-                //     let newAT = new Parse.Object("AttachmentType") as Parse.Object<PromisesRemapped<Schema.AttachmentType>>;
-                //     newAT.set("conference", parseConf);
-                //     newAT.set("displayAsLink", true);
-                //     newAT.set("isCoverImage", false);
-                //     newAT.set("name", "Test AttachmentType In DB");
-                //     newAT.set("ordinal", 0);
-                //     newAT.set("supportsFile", false);
-                //     newAT.save();
-                // }
-            });
-    });
+    //             // if (result) {
+    //             //     let parseConf = await result.getUncachedParseObject();
+    //             //     let newAT = new Parse.Object("AttachmentType") as Parse.Object<PromisesRemapped<Schema.AttachmentType>>;
+    //             //     newAT.set("conference", parseConf);
+    //             //     newAT.set("displayAsLink", true);
+    //             //     newAT.set("isCoverImage", false);
+    //             //     newAT.set("name", "Test AttachmentType In DB");
+    //             //     newAT.set("ordinal", 0);
+    //             //     newAT.set("supportsFile", false);
+    //             //     newAT.save();
+    //             // }
+    //         });
+    // });
 
     // Hint: Do not use `Session_*` interfaces anywhere else - rely on contexts.
     const currentConferenceId = Session_Conference.currentConferenceId;
@@ -91,7 +90,7 @@ export default function App(props: Props) {
     // Note: These can't be used inside `useEffect` or other asynchronous
     //       functions.
     const [conference, setConference] = useState<DataLayer.Conference | null>(null);
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<DataLayer.User | null>(null);
     // TODO: Handle the User Profile
 
     // State updates go inside a `useEffect`

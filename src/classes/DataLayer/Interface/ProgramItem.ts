@@ -1,6 +1,6 @@
 import * as Schema from "../Schema";
 import { CachedBase, StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT } from "./Base";
-import { Conference, ProgramPerson, ProgramTrack } from ".";
+import { Conference, ProgramPerson, ProgramTrack, ProgramItemAttachment, BreakoutRoom, ProgramSessionEvent, ProgramSession } from ".";
 
 type SchemaT = Schema.ProgramItem;
 type K = "ProgramItem";
@@ -13,6 +13,7 @@ export default class Class extends CachedBase<K> implements SchemaT {
         parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
         super(conferenceId, K_str, data, parse);
     }
+
     get abstract(): string {
         return this.data.abstract;
     }
@@ -43,6 +44,22 @@ export default class Class extends CachedBase<K> implements SchemaT {
 
     get track(): Promise<ProgramTrack> {
         return this.uniqueRelated("track");
+    }
+
+    get attachments(): Promise<ProgramItemAttachment[]> {
+        return this.nonUniqueRelated("attachments");
+    }
+
+    get breakoutRoom(): Promise<BreakoutRoom> {
+        return this.uniqueRelated("breakoutRoom");
+    }
+
+    get events(): Promise<ProgramSessionEvent[]> {
+        return this.uniqueRelated("events");
+    }
+
+    get programSession(): Promise<ProgramSession> {
+        return this.uniqueRelated("programSession");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

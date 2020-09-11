@@ -36,23 +36,109 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
     AttachmentType: {
         conference: "Conference"
     },
-    ProgramPerson: {
-        conference: "Conference",
-        programItems: "ProgramItem"
+    BondedChannel: {
+        children: "TwilioChannelMirror"
     },
-    ProgramItem: {
+    BreakoutRoom: {
         conference: "Conference",
-        authors: "ProgramPerson",
-        track: "ProgramTrack"
-    },
-    ProgramTrack: {
-        conference: "Conference"
+        conversation: "Conversation",
+        members: "UserProfile",
+        programItem: "ProgramItem",
+        watchers: "UserProfile"
     },
     Conference: {
         loggedInText: "PrivilegedConferenceDetails",
     },
+    ConferenceConfiguration: {
+        conference: "Conference"
+    },
+    ConferencePermission: {
+        action: "PrivilegedAction",
+        conference: "Conference"
+    },
+    Conversation: {
+        conference: "Conference",
+        member1: "UserProfile",
+        member2: "UserProfile",
+    },
+    Flair: {
+    },
+    LiveActivity: {
+    },
+    MeetingRegistration: {
+        conference: "Conference"
+    },
+    PrivilegedAction: {
+    },
     PrivilegedConferenceDetails: {
         conference: "Conference"
+    },
+    ProgramItem: {
+        conference: "Conference",
+        authors: "ProgramPerson",
+        track: "ProgramTrack",
+        attachments: "ProgramItemAttachment",
+        breakoutRoom: "BreakoutRoom",
+        events: "ProgramSessionEvent",
+        programSession: "ProgramSession"
+    },
+    ProgramItemAttachment: {
+        attachmentType: "AttachmentType",
+        programItem: "ProgramItem"
+    },
+    ProgramPerson: {
+        conference: "Conference",
+        programItems: "ProgramItem",
+        userProfile: "UserProfile",
+    },
+    ProgramRoom: {
+        conference: "Conference",
+        socialSpace: "SocialSpace",
+        zoomRoom: "ZoomRoom"
+    },
+    ProgramSession: {
+        conference: "Conference",
+        events: "ProgramSessionEvent",
+        items: "ProgramItem",
+        programTrack: "ProgramTrack",
+        room: "ProgramRoom"
+    },
+    ProgramSessionEvent: {
+        conference: "Conference",
+        programItem: "ProgramItem",
+        programSession: "ProgramSession"
+    },
+    ProgramTrack: {
+        conference: "Conference"
+    },
+    Registration: {
+    },
+    SocialSpace: {
+        conference: "Conference"
+    },
+    TwilioChannelMirror: {
+    },
+    User: {
+        profiles: "UserProfile"
+    },
+    UserPresence: {
+        socialSpace: "SocialSpace",
+        user: "UserProfile"
+    },
+    UserProfile: {
+        conference: "Conference",
+        presence: "UserPresence",
+        primaryFlair: "Flair",
+        programPersons: "ProgramPerson",
+        user: "User",
+        watchedRooms: "ProgramRoom"
+    },
+    ZoomHostAccount: {
+    },
+    ZoomRoom: {
+        conference: "Conference",
+        hostAccount: "ZoomHostAccount",
+        programRoom: "ProgramRoom"
     }
 };
 
@@ -176,7 +262,6 @@ export abstract class StaticBaseImpl {
                 else {
                     const constr = Cache.Constructors[tableName as UncachedSchemaKeys];
                     const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
-                    // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
                     return new constr(_parse) as T;
                 }
             }).catch(reason => {
@@ -217,7 +302,6 @@ export abstract class StaticBaseImpl {
                 else {
                     const constr = Cache.Constructors[tableName as UncachedSchemaKeys];
                     const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
-                    // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
                     return new constr(_parse) as T;
                 }
             }).catch(reason => {
@@ -297,8 +381,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
             return resultParse.get(targetId).then(async parse => {
                 const constr = Cache.Constructors[targetTableName as UncachedSchemaKeys];
                 const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
-                // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
-                return new constr(_parse) as RelatedDataT[K][S];
+                return new constr(_parse) as any;
             });
         }
     }
@@ -321,7 +404,6 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
             return resultParse.containedIn("id", targetIds).map(async parse => {
                 const constr = Cache.Constructors[targetTableName as UncachedSchemaKeys];
                 const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
-                // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
                 return new constr(_parse);
             }) as unknown as RelatedDataT[K][S];
         }
@@ -354,20 +436,19 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
         let relTableNames = RelationsToTableNames[this.tableName];
         let relTableName = relTableNames[field as unknown as keyof RelationsToTableNamesT[K]];
         if (CachedStoreNames.includes(relTableName as any)) {
-            return this.parse.get(field as string).fetch().then(async (result: any) => {
+            return this.parse.get(field as any).fetch().then(async (result: any) => {
                 let confId = result.get("conference");
                 if (!confId) {
                     throw new Error("Can't handle cachable item that lacks a conference id...");
                 }
 
                 let cache = await Caches.get(confId);
-                return cache.addItemToCache(result, relTableName);
+                return cache.addItemToCache(result, relTableName as any);
             });
         }
         else {
             return this.parse.get(field as any).fetch().then((result: any) => {
                 let constr = Cache.Constructors[relTableName as unknown as UncachedSchemaKeys];
-                // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
                 return new constr(result) as any;
             });
         }
@@ -377,23 +458,19 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
         let relTableNames = RelationsToTableNames[this.tableName];
         let relTableName = relTableNames[field as unknown as keyof RelationsToTableNamesT[K]];
         if (CachedStoreNames.includes(relTableName as any)) {
-            return this.parse.get(field as string).map(async (result: any) => {
+            return this.parse.get(field as any).map(async (result: any) => {
                 let confId = result.get("conference");
                 if (!confId) {
-                    confId = result.get("conference");
-                    if (!confId) {
-                        throw new Error("Can't handle cachable item that lacks a conference id...");
-                    }
+                    throw new Error("Can't handle cachable item that lacks a conference id...");
                 }
 
                 let cache = await Caches.get(confId);
-                return cache.addItemToCache(result, relTableName);
+                return cache.addItemToCache(result, relTableName as any);
             });
         }
         else {
             return this.parse.get(field as any).map((result: any) => {
                 let constr = Cache.Constructors[relTableName as unknown as UncachedSchemaKeys];
-                // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
                 return new constr(result) as any;
             });
         }

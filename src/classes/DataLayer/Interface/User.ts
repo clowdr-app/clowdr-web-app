@@ -1,10 +1,10 @@
 import * as Schema from "../Schema";
-import { CachedBase, StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT } from "./Base";
-import { Conference, ProgramItem, UserProfile } from ".";
+import { StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT, CachedBase } from "./Base";
+import { UserProfile } from ".";
 
-type SchemaT = Schema.ProgramPerson;
-type K = "ProgramPerson";
-const K_str: K = "ProgramPerson";
+type SchemaT = Schema.User;
+type K = "User";
+const K_str: K = "User";
 
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
@@ -14,20 +14,28 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get name(): string {
-        return this.data.name;
+    get email(): string {
+        return this.data.email;
     }
 
-    get programItems(): Promise<ProgramItem[]> {
-        return this.nonUniqueRelated("programItems");
+    get loginKey(): string {
+        return this.data.loginKey;
     }
 
-    get conference(): Promise<Conference> {
-        return this.uniqueRelated("conference");
+    get passwordSet(): boolean {
+        return this.data.passwordSet;
     }
 
-    get userProfile(): Promise<UserProfile | null> {
-        return this.uniqueRelated("userProfile");
+    get username(): string {
+        return this.data.username;
+    }
+
+    get isBanned(): "Yes" | "No" {
+        return this.data.isBanned;
+    }
+
+    get profiles(): Promise<UserProfile[]> {
+        return this.nonUniqueRelated("profiles");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {
