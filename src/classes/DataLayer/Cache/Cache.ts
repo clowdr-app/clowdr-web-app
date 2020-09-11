@@ -172,7 +172,7 @@ export default class Cache {
 
     constructor(
         public readonly conferenceId: string,
-        enableDebug: boolean = true) {
+        enableDebug: boolean = false) {
         if (enableDebug) {
             this.logger.enable();
         }
@@ -198,6 +198,24 @@ export default class Cache {
 
     get IsInitialised(): boolean {
         return this.isInitialised;
+    }
+
+    get Ready(): Promise<void> {
+        if (this.dbPromise) {
+            // Wrap in a new promise to hide the internal one
+            return new Promise(async (resolve, reject) => {
+                try {
+                    await this.dbPromise;
+                    resolve();
+                }
+                catch {
+                    reject("Cache failed to initialise.");
+                }
+            });
+        }
+        else {
+            return Promise.reject("You must call `initialise` first.");
+        }
     }
 
     get DatabaseName(): string {

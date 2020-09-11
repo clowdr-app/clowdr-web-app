@@ -1,0 +1,3 @@
+[submodule "submodules/shelving-mock-indexeddb"]
+	path = submodules/shelving-mock-indexeddb
+	url = git@github.com:EdNutting/shelving-mock-indexeddb.git
