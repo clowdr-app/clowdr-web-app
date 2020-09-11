@@ -49,10 +49,10 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         conference: "ClowdrInstance"
     },
     ClowdrInstance: {
-        loggedInText: "PrivilegedInstanceDetails"
+        loggedInText: "PrivilegedInstanceDetails",
     },
     PrivilegedInstanceDetails: {
-        conference: "PrivilegedInstanceDetails"
+        instance: "ClowdrInstance"
     }
 };
 
@@ -158,9 +158,9 @@ export abstract class StaticBaseImpl {
         conferenceId?: string,
     ): Promise<T | null> {
         // Yes these casts are safe
-        if (StaticBaseImpl.IsCachable(tableName, conferenceId)) {
+        if (StaticBaseImpl.IsCachable(tableName, conferenceId) || tableName === "ClowdrInstance") {
             let _tableName = tableName as CachedSchemaKeys;
-            let cache = await Caches.get(conferenceId);
+            let cache = await Caches.get(conferenceId ? conferenceId : id);
             return cache.get(_tableName, id) as unknown as T;
         }
         else {
@@ -169,7 +169,6 @@ export abstract class StaticBaseImpl {
                 if (CachedStoreNames.includes(tableName as CachedSchemaKeys)) {
                     const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
                     conferenceId = _parse.get("conference" as any).id as string;
-
                     let _tableName = tableName as CachedSchemaKeys;
                     let cache = await Caches.get(conferenceId);
                     return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
@@ -177,6 +176,7 @@ export abstract class StaticBaseImpl {
                 else {
                     const constr = Cache.Constructors[tableName as UncachedSchemaKeys];
                     const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
+                    // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
                     return new constr(_parse) as T;
                 }
             }).catch(reason => {
@@ -203,7 +203,12 @@ export abstract class StaticBaseImpl {
             return query.map(async parse => {
                 if (CachedStoreNames.includes(tableName as any)) {
                     const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
-                    conferenceId = _parse.get("conference" as any).id as string;
+                    if (tableName === "ClowdrInstance") {
+                        conferenceId = _parse.id;
+                    }
+                    else {
+                        conferenceId = _parse.get("conference" as any).id as string;
+                    }
 
                     let _tableName = tableName as CachedSchemaKeys;
                     let cache = await Caches.get(conferenceId);
@@ -212,6 +217,7 @@ export abstract class StaticBaseImpl {
                 else {
                     const constr = Cache.Constructors[tableName as UncachedSchemaKeys];
                     const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
+                    // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
                     return new constr(_parse) as T;
                 }
             }).catch(reason => {
@@ -275,9 +281,21 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
 
     protected async uniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
         let cache = await Caches.get(this.conferenceId);
-        return cache.uniqueRelated<K, S>(this.tableName, field, this.id, this.parse, (newParse) => {
-            this.parse = newParse;
-        });
+        let r2t: Record<string, string> = RelationsToTableNames[this.tableName];
+        let targetTableName = r2t[field as any];
+        let targetId = this.data[field as unknown as keyof FieldDataT[K]] as any as string;
+        if (CachedStoreNames.includes(targetTableName as any)) {
+            return cache.get(targetTableName as any, targetId).then(result => {
+                if (!result) {
+                    throw new Error("Target of uniquely related field not found!");
+                }
+                return result;
+            }) as unknown as RelatedDataT[K][S];
+        }
+        else {
+            // Lookup in parse
+            throw new Error("Method not implemented");
+        }
     }
     // TODO: nonUniqueRelated
 }
@@ -308,13 +326,24 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
         let relTableNames = RelationsToTableNames[this.tableName];
         let relTableName = relTableNames[field as unknown as keyof RelationsToTableNamesT[K]];
         if (CachedStoreNames.includes(relTableName as any)) {
-            // TODO: Uncached -> Cached
-            throw new Error("Method not implemented - Uncached -> Cached");
+            return this.parse.get(field as string).fetch().then(async (result: any) => {
+                let confId = result.get("conference");
+                if (!confId) {
+                    confId = result.get("instance");
+                    if (!confId) {
+                        throw new Error("Can't handle cachable item that lacks a conference id...");
+                    }
+                }
+
+                let cache = await Caches.get(confId);
+                return cache.addItemToCache(result, relTableName);
+            });
         }
         else {
-            return this.parse.get(field as any).then((parse: any) => {
+            return this.parse.get(field as any).fetch().then((result: any) => {
                 let constr = Cache.Constructors[relTableName as unknown as UncachedSchemaKeys];
-                return new constr(parse);
+                    // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
+                return new constr(result) as any;
             });
         }
     }

@@ -6,8 +6,8 @@ import * as Interface from "../Interface";
 import * as Schema from "../Schema";
 import {
     CachedBase, CachedSchemaKeys, PromisesRemapped, CachedStoreNames,
-    RelatedDataT, UncachedSchemaKeys, WholeSchemaKeys, WholeSchema,
-    RelationsToTableNames, RelationsToTableNamesT, FieldDataT, Constructor
+    RelatedDataT, WholeSchemaKeys, RelationsToTableNames,
+    RelationsToTableNamesT, FieldDataT, Constructor
 } from "../Interface/Base";
 import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
@@ -54,6 +54,8 @@ export default class Cache {
             ProgramPerson: keys<Schema.ProgramPerson>(),
             ProgramItem: keys<Schema.ProgramItem>(),
             ProgramTrack: keys<Schema.ProgramTrack>(),
+            ClowdrInstance: keys<Schema.Conference>(),
+            PrivilegedInstanceDetails: keys<Schema.PrivilegedInstanceDetails>(),
         };
 
     /**
@@ -66,6 +68,8 @@ export default class Cache {
             ProgramPerson: keys<PromisedFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedFields<Schema.ProgramTrack>>(),
+            ClowdrInstance: keys<PromisedFields<Schema.Conference>>(),
+            PrivilegedInstanceDetails: keys<PromisedFields<Schema.PrivilegedInstanceDetails>>(),
         };
 
     /**
@@ -78,6 +82,8 @@ export default class Cache {
             ProgramPerson: keys<PromisedNonArrayFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedNonArrayFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedNonArrayFields<Schema.ProgramTrack>>(),
+            ClowdrInstance: keys<PromisedNonArrayFields<Schema.Conference>>(),
+            PrivilegedInstanceDetails: keys<PromisedNonArrayFields<Schema.PrivilegedInstanceDetails>>(),
         };
 
     /**
@@ -90,6 +96,8 @@ export default class Cache {
             ProgramPerson: keys<PromisedArrayFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedArrayFields<Schema.ProgramItem>>(),
             ProgramTrack: keys<PromisedArrayFields<Schema.ProgramTrack>>(),
+            ClowdrInstance: keys<PromisedArrayFields<Schema.Conference>>(),
+            PrivilegedInstanceDetails: keys<PromisedArrayFields<Schema.PrivilegedInstanceDetails>>(),
         };
 
     readonly KEY_PATH: "id" = "id";
@@ -186,7 +194,7 @@ export default class Cache {
         tableName: K,
         db: IDBPDatabase<CachedSchema> | null = null
     ): Promise<Array<T>> {
-        if (!this.IsInitialised || !this.dbPromise || !this.conference) {
+        if (!this.IsInitialised || !this.dbPromise) {
             return Promise.reject("Not initialised");
         }
 
@@ -210,15 +218,23 @@ export default class Cache {
             if (key !== "id") {
                 // Yes these casts are safe
 
-                if (this.Relations[tableName].includes(key as any)) {
-                    let key2 = key as keyof RelationsToTableNamesT[K];
+                let rels: Array<string> = this.Relations[tableName];
+                if (rels.includes(key as string)) {
+                    let key2 = key as unknown as keyof RelationsToTableNamesT[K];
                     // Exclude uncached relations data
                     if (CachedStoreNames.includes(RelationsToTableNames[tableName][key2] as any)) {
-                        if (this.UniqueRelations[tableName].includes(key as any)) {
-                            schema[key] = parse.get(key as any).id;
+                        let uniqRels: Array<string> = this.UniqueRelations[tableName];
+                        try {
+                            if (uniqRels.includes(key as string)) {
+                                schema[key] = parse.get(key as any).id;
+                            }
+                            else {
+                                schema[key] = parse.get(key as any).map((x: any) => x.id);
+                            }
                         }
-                        else {
-                            schema[key] = parse.get(key as any).map((x: any) => x.id);
+                        catch (e) {
+                            this.logger.error(e);
+                            throw e;
                         }
                     }
                 }
@@ -347,29 +363,32 @@ export default class Cache {
     private async createStore<K extends CachedSchemaKeys>(t: IDBPTransaction<CachedSchema>, name: K) {
         this.logger.info(`Creating store: ${name}`);
 
-        let store = t.db.createObjectStore<K>(name, {
+        /*let store =*/
+        t.db.createObjectStore<K>(name, {
             keyPath: this.KEY_PATH
         });
 
-        let uniqueRels = this.UniqueRelations[name] as Array<keyof CachedSchema[K]["indexes"]>;
-        for (let rel of uniqueRels) {
-            if (CachedStoreNames.includes(RelationsToTableNames[name][rel as keyof RelationsToTableNamesT[K]] as any)) {
-                store.createIndex(rel, this.KEY_PATH, {
-                    unique: true,
-                    multiEntry: false
-                });
-            }
-        }
+        // let uniqueRels = this.UniqueRelations[name] as Array<keyof CachedSchema[K]["indexes"]>;
+        // for (let rel of uniqueRels) {
+        //     let r2t: Record<string, string> = RelationsToTableNames[name];
+        //     if (CachedStoreNames.includes(r2t[rel as string] as any)) {
+        //         store.createIndex(rel, this.KEY_PATH, {
+        //             unique: true,
+        //             multiEntry: false
+        //         });
+        //     }
+        // }
 
-        let nonUniqueRels = this.NonUniqueRelations[name] as Array<keyof CachedSchema[K]["indexes"]>;
-        for (let rel of nonUniqueRels) {
-            if (CachedStoreNames.includes(RelationsToTableNames[name][rel as keyof RelationsToTableNamesT[K]] as any)) {
-                store.createIndex(rel, this.KEY_PATH, {
-                    unique: false,
-                    multiEntry: false
-                });
-            }
-        }
+        // let nonUniqueRels = this.NonUniqueRelations[name] as Array<keyof CachedSchema[K]["indexes"]>;
+        // for (let rel of nonUniqueRels) {
+        //     let r2t: Record<string, string> = RelationsToTableNames[name];
+        //     if (CachedStoreNames.includes(r2t[rel as string] as any)) {
+        //         store.createIndex(rel, this.KEY_PATH, {
+        //             unique: false,
+        //             multiEntry: false
+        //         });
+        //     }
+        // }
     }
 
     private async upgradeStore(t: IDBPTransaction<CachedSchema>, name: CachedSchemaKeys) {
@@ -566,59 +585,65 @@ export default class Cache {
         }
     }
 
-    private async uniqueRelatedFromCache<
-        K extends CachedSchemaKeys,
-        S extends keyof RelatedDataT[K]>(
-            tableName: K,
-            field: S,
-            id: string
-        ): Promise<RelatedDataT[K][S]> {
-        if (!this.IsInitialised || !this.dbPromise) {
-            return Promise.reject("Not initialised");
-        }
+    // private async uniqueRelatedFromCache<
+    //     K extends CachedSchemaKeys,
+    //     S extends keyof RelatedDataT[K]>(
+    //         tableName: K,
+    //         field: S,
+    //         id: string
+    //     ): Promise<RelatedDataT[K][S]> {
+    //     if (!this.IsInitialised || !this.dbPromise) {
+    //         return Promise.reject("Not initialised");
+    //     }
 
-        let db = await this.dbPromise;
-        let result = await db.getFromIndex(
-            tableName,
-            field as keyof CachedSchema[K]["indexes"],
-            id as any)
-            || null;
-        if (result) {
-            this.logger.info("Cache unique relation hit", {
-                conferenceId: this.conferenceId,
-                tableName: tableName,
-                id: id,
-                field: field
-            });
+    //     let db = await this.dbPromise;
+    //     let r2t: Record<string, string> = RelationsToTableNames[tableName];
+    //     let targetTable = r2t[field as string] as any;
+    //     let result = await db.get(targetTable, id);
+    //     if (result) {
+    //         this.logger.info("Cache unique relation hit", {
+    //             conferenceId: this.conferenceId,
+    //             tableName: tableName,
+    //             id: id,
+    //             field: field
+    //         });
 
-            const relationTableNames = RelationsToTableNames[tableName];
-            // @ts-ignore
-            const relationTableName: WholeSchemaKeys = relationTableNames[field];
-            // It cannot be a cached schema key - it's an uncached relation
-            const constr = Cache.Constructors[relationTableName as CachedSchemaKeys];
-            return new constr(this.conferenceId, result as any) as unknown as RelatedDataT[K][S];
-        }
-        else {
-            this.logger.info("Cache unique relation miss", {
-                conferenceId: this.conferenceId,
-                tableName: tableName,
-                id: id,
-                field: field
-            });
+    //         const relationTableNames = RelationsToTableNames[tableName];
+    //         // @ts-ignore
+    //         const relationTableName: WholeSchemaKeys = relationTableNames[field];
+    //         // It cannot be a cached schema key - it's an uncached relation
+    //         const constr = Cache.Constructors[relationTableName as CachedSchemaKeys];
+    //         return new constr(this.conferenceId, result as any) as unknown as RelatedDataT[K][S];
+    //     }
+    //     else {
+    //         this.logger.info("Cache unique relation miss", {
+    //             conferenceId: this.conferenceId,
+    //             tableName: tableName,
+    //             id: id,
+    //             field: field
+    //         });
 
-            throw new Error(`Target of ${field} for ${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
-        }
-    }
+    //         throw new Error(`Target of ${field} for ${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
+    //     }
+    // }
 
     // TODO: create
-    // TODO: nonUniqueRelated
 
     private async newParseQuery<K extends CachedSchemaKeys>(tableName: K) {
-        let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
         assert(this.isInitialised);
         assert(this.conference);
         let conf = (await this.conference) as any;
-        query.equalTo("conference", conf);
+
+        let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
+        if (tableName !== "ClowdrInstance") {
+            let r2t: Record<string, string> = RelationsToTableNames[tableName];
+            if ("conference" in r2t) {
+                query.equalTo("conference" as any, conf);
+            }
+            else if ("instance" in r2t) {
+                query.equalTo("instance" as any, conf);
+            }
+        }
         return query;
     }
 
@@ -662,50 +687,54 @@ export default class Cache {
         }) as Promise<Array<T>>;
     }
 
-    async uniqueRelated<
-        K extends CachedSchemaKeys,
-        S extends keyof RelatedDataT[K]>(
-            tableName: K,
-            field: S,
-            id: string,
-            parse: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>> | null = null,
-            parseObjectCreated: ((obj: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>) => void) | null = null
-        ): Promise<RelatedDataT[K][S]> {
-        if (CachedStoreNames.includes(RelationsToTableNames[tableName][field as keyof RelationsToTableNamesT[K]] as any)) {
-            return this.uniqueRelatedFromCache<K, S>(tableName, field, id).catch(async _ => {
-                let query = await this.newParseQuery(tableName);
-                let obj = await query.get(id);
-                return obj.get(field as any).then(async (parse: any) => {
-                    return await this.addItemToCache(parse, tableName as any) as unknown as RelatedDataT[K][S];
-                }).catch((reason: any) => {
-                    this.logger.warn("Fetch from database of cached unique related item failed", {
-                        conferenceId: this.conferenceId,
-                        tableName: tableName,
-                        id: id,
-                        reason: reason
-                    });
+    // async uniqueRelated<
+    //     K extends CachedSchemaKeys,
+    //     S extends keyof RelatedDataT[K]>(
+    //         tableName: K,
+    //         field: S,
+    //         id: string,
+    //         parse: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>> | null = null,
+    //         parseObjectCreated: ((obj: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>) => void) | null = null
+    // ): Promise<RelatedDataT[K][S]> {
+    //     let r2t: Record<string, string> = RelationsToTableNames[tableName];
+    //     if (CachedStoreNames.includes(r2t[field as string] as any)) {
+    //         return this.uniqueRelatedFromCache<K, S>(tableName, field, id).catch(async _ => {
+    //             let query = await this.newParseQuery(tableName);
+    //             let obj = await query.get(id);
+    //             return obj.get(field as any).fetch().then(async (parse: any) => {
+    //                 let r2t: Record<string, string> = RelationsToTableNames[tableName];
+    //                 let targetTable = r2t[field as string];
+    //                 return await this.addItemToCache(parse, targetTable as any) as unknown as RelatedDataT[K][S];
+    //             }).catch((reason: any) => {
+    //                 this.logger.warn("Fetch from database of cached unique related item failed", {
+    //                     conferenceId: this.conferenceId,
+    //                     tableName: tableName,
+    //                     id: id,
+    //                     reason: reason
+    //                 });
 
-                    throw new Error("Fetch from database of cached unique related item failed");
-                });
-            });
-        }
-        else {
-            if (!parse) {
-                let query = await this.newParseQuery(tableName);
-                parse = await query.get(id);
-                if (parseObjectCreated) {
-                    parseObjectCreated(parse);
-                }
-            }
+    //                 throw new Error("Fetch from database of cached unique related item failed");
+    //             });
+    //         });
+    //     }
+    //     else {
+    //         if (!parse) {
+    //             let query = await this.newParseQuery(tableName);
+    //             parse = await query.get(id);
+    //             if (parseObjectCreated) {
+    //                 parseObjectCreated(parse);
+    //             }
+    //         }
 
-            let result = parse.get(field as any);
+    //         let result = parse.get(field as any);
 
-            const relationTableNames = RelationsToTableNames[tableName];
-            // @ts-ignore
-            const relationTableName: WholeSchemaKeys = relationTableNames[field];
-            // It cannot be a cached schema key - it's an uncached relation
-            const constr = Cache.Constructors[relationTableName as UncachedSchemaKeys];
-            return new constr(result as any) as unknown as RelatedDataT[K][S];
-        }
-    }
+    //         const relationTableNames = RelationsToTableNames[tableName];
+    //         // @ts-ignore
+    //         const relationTableName: WholeSchemaKeys = relationTableNames[field];
+    //         // It cannot be a cached schema key - it's an uncached relation
+    //         const constr = Cache.Constructors[relationTableName as UncachedSchemaKeys];
+    //         // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
+    //         return new constr(result as any) as unknown as RelatedDataT[K][S];
+    //     }
+    // }
 }

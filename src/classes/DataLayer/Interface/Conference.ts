@@ -1,18 +1,21 @@
 import * as Schema from "../Schema";
-import { StaticUncachedBase, StaticBaseImpl, UncachedBase, PromisesRemapped } from "./Base";
+import { StaticCachedBase, StaticBaseImpl, PromisesRemapped, CachedBase, FieldDataT } from "./Base";
 import { PrivilegedInstanceDetails } from ".";
 
 type SchemaT = Schema.Conference;
 type K = "ClowdrInstance";
 const K_str: K = "ClowdrInstance";
 
-export default class Class extends UncachedBase<K> implements SchemaT {
-    constructor(parse: Parse.Object<PromisesRemapped<SchemaT>>) {
-        super(K_str, parse);
+export default class Class extends CachedBase<K> implements SchemaT {
+    constructor(
+        conferenceId: string,
+        data: FieldDataT[K],
+        parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
+        super(conferenceId, K_str, data, parse);
     }
 
     get conferenceName(): string {
-        return this.parse.get("conferenceName");
+        return this.data.conferenceName;
     }
 
     get loggedInText(): Promise<PrivilegedInstanceDetails> {
@@ -30,4 +33,4 @@ export default class Class extends UncachedBase<K> implements SchemaT {
 
 // The line of code below triggers type-checking of Class for static members
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _: StaticUncachedBase<K> = Class;
+const _: StaticCachedBase<K> = Class;

@@ -2,7 +2,7 @@ import IDB from 'idb';
 
 import * as Schema from "./Schema";
 import { PromisedKeys } from "../Util";
-import { CachableBase } from './Schema/Base';
+import Base from './Schema/Base';
 
 // Note: IndexedDB is very limited - it can only handle 1-to-N indexes
 
@@ -23,7 +23,7 @@ interface IndexKeys {
 }
 interface DBSchemaValue {
     key: IDBValidKey;
-    value: CachableBase;
+    value: Base;
     indexes?: IndexKeys;
 }
 
@@ -47,5 +47,15 @@ export default interface CachedSchema extends CachableDBSchema {
         key: string;
         value: Schema.ProgramTrack;
         indexes: Indexes<Schema.ProgramTrack>;
+    };
+    ClowdrInstance: {
+        key: string;
+        value: Schema.Conference;
+        indexes: Indexes<Schema.Conference>;
+    };
+    PrivilegedInstanceDetails: {
+        key: string;
+        value: Schema.PrivilegedInstanceDetails;
+        indexes: Indexes<Schema.PrivilegedInstanceDetails>;
     };
 }

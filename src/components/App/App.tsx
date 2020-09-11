@@ -1,3 +1,4 @@
+import Parse from "parse";
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
@@ -25,6 +26,20 @@ interface Props {
 export default function App(props: Props) {
 
     useEffect(() => {
+        // TODO: Delete this - it's for testing only
+        Parse.User.currentAsync().then(async user => {
+            let msg = "";
+            if (!user) {
+                user = await Parse.User.logIn("clowdr@localhost", "admin");
+                msg = "Logged in";
+            }
+            else {
+                msg = "Already logged in";
+                ///await Parse.User.logOut();
+            }
+            console.log(msg, { name: user.getUsername(), email: user.getEmail() });
+        });
+
         DataLayer.AttachmentType.getAll("ciAZ1zroPD").then(async result => {
             let results1 = result.map(x => x.name);
             console.log(`${getTimeString(new Date())} Got attachment types`, results1);

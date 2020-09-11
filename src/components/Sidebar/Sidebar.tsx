@@ -15,7 +15,7 @@ function Sidebar(props: Props) {
             setText((await conf.loggedInText).value);
         };
 
-        updateText();
+        updateText().catch(() => { console.log("Logged in text not available - probably not logged in."); });
     });
 
     return <div className="sidebar"><h1>{conf.conferenceName}</h1>{text}</div>;
