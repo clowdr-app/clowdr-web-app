@@ -293,11 +293,39 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
             }) as unknown as RelatedDataT[K][S];
         }
         else {
-            // Lookup in parse
-            throw new Error("Method not implemented");
+            let resultParse = new Parse.Query(targetTableName);
+            return resultParse.get(targetId).then(async parse => {
+                const constr = Cache.Constructors[targetTableName as UncachedSchemaKeys];
+                const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
+                // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
+                return new constr(_parse) as RelatedDataT[K][S];
+            });
         }
     }
-    // TODO: nonUniqueRelated
+
+    protected async nonUniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
+        let cache = await Caches.get(this.conferenceId);
+        let r2t: Record<string, string> = RelationsToTableNames[this.tableName];
+        let targetTableName = r2t[field as any];
+        let targetIds = this.data[field as unknown as keyof FieldDataT[K]] as any as Array<string>;
+        if (CachedStoreNames.includes(targetTableName as any)) {
+            return Promise.all(targetIds.map(targetId => cache.get(targetTableName as any, targetId).then(result => {
+                if (!result) {
+                    throw new Error("Target of non-uniquely related field not found!");
+                }
+                return result;
+            }))) as unknown as RelatedDataT[K][S];
+        }
+        else {
+            let resultParse = new Parse.Query(targetTableName);
+            return resultParse.containedIn("id", targetIds).map(async parse => {
+                const constr = Cache.Constructors[targetTableName as UncachedSchemaKeys];
+                const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
+                // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
+                return new constr(_parse);
+            }) as unknown as RelatedDataT[K][S];
+        }
+    }
 }
 
 export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBase<K> {
@@ -342,12 +370,37 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
         else {
             return this.parse.get(field as any).fetch().then((result: any) => {
                 let constr = Cache.Constructors[relTableName as unknown as UncachedSchemaKeys];
-                    // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
+                // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
                 return new constr(result) as any;
             });
         }
     }
-    // TODO: nonUniqueRelated
+
+    protected async nonUniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
+        let relTableNames = RelationsToTableNames[this.tableName];
+        let relTableName = relTableNames[field as unknown as keyof RelationsToTableNamesT[K]];
+        if (CachedStoreNames.includes(relTableName as any)) {
+            return this.parse.get(field as string).map(async (result: any) => {
+                let confId = result.get("conference");
+                if (!confId) {
+                    confId = result.get("instance");
+                    if (!confId) {
+                        throw new Error("Can't handle cachable item that lacks a conference id...");
+                    }
+                }
+
+                let cache = await Caches.get(confId);
+                return cache.addItemToCache(result, relTableName);
+            });
+        }
+        else {
+            return this.parse.get(field as any).map((result: any) => {
+                let constr = Cache.Constructors[relTableName as unknown as UncachedSchemaKeys];
+                // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
+                return new constr(result) as any;
+            });
+        }
+    }
 }
 
 export type Base<K extends WholeSchemaKeys>

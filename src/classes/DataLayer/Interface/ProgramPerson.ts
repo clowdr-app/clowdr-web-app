@@ -19,7 +19,7 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get programItems(): Promise<ProgramItem[]> {
-        throw new Error("Method not implemented");
+        return this.nonUniqueRelated("programItems");
     }
 
     get conference(): Promise<Conference> {

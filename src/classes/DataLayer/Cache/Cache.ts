@@ -6,8 +6,8 @@ import * as Interface from "../Interface";
 import * as Schema from "../Schema";
 import {
     CachedBase, CachedSchemaKeys, PromisesRemapped, CachedStoreNames,
-    RelatedDataT, WholeSchemaKeys, RelationsToTableNames,
-    RelationsToTableNamesT, FieldDataT, Constructor
+    RelatedDataT, WholeSchemaKeys, RelationsToTableNames, FieldDataT,
+    Constructor
 } from "../Interface/Base";
 import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
@@ -145,8 +145,6 @@ export default class Cache {
 
     /**
      * Initialises the cache.
-     * 
-     * TODO: Extend tests for this, including the internal database upgrade stuff
      */
     async initialise(): Promise<void> {
         if (!this.isInitialised) {
@@ -209,7 +207,6 @@ export default class Cache {
         tableName: K,
         _db: IDBPDatabase<CachedSchema> | null = null
     ): Promise<T> {
-        // TODO: Test for `id` not being available via `get` function
         let schema: any = {
             id: parse.id
         };
@@ -220,22 +217,18 @@ export default class Cache {
 
                 let rels: Array<string> = this.Relations[tableName];
                 if (rels.includes(key as string)) {
-                    let key2 = key as unknown as keyof RelationsToTableNamesT[K];
-                    // Exclude uncached relations data
-                    if (CachedStoreNames.includes(RelationsToTableNames[tableName][key2] as any)) {
-                        let uniqRels: Array<string> = this.UniqueRelations[tableName];
-                        try {
-                            if (uniqRels.includes(key as string)) {
-                                schema[key] = parse.get(key as any).id;
-                            }
-                            else {
-                                schema[key] = parse.get(key as any).map((x: any) => x.id);
-                            }
+                    let uniqRels: Array<string> = this.UniqueRelations[tableName];
+                    try {
+                        if (uniqRels.includes(key as string)) {
+                            schema[key] = parse.get(key as any).id;
                         }
-                        catch (e) {
-                            this.logger.error(e);
-                            throw e;
+                        else {
+                            schema[key] = parse.get(key as any).map((x: any) => x.id);
                         }
+                    }
+                    catch (e) {
+                        this.logger.error(e);
+                        throw e;
                     }
                 }
                 else {
@@ -271,8 +264,6 @@ export default class Cache {
 
     /**
      * Shuts down cache providers and closes the database connection.
-     * 
-     * TODO: Test this
      */
     private async closeConnection() {
         if (this.dbPromise) {
@@ -301,8 +292,6 @@ export default class Cache {
      * closed before the database can be deleted. After the first attempt, this
      * function will wait to give other connections time to close, followed by
      * one re-attempt.
-     * 
-     * TODO: Test this
      */
     public async deleteDatabase(
         reload: boolean = false,
@@ -585,48 +574,6 @@ export default class Cache {
         }
     }
 
-    // private async uniqueRelatedFromCache<
-    //     K extends CachedSchemaKeys,
-    //     S extends keyof RelatedDataT[K]>(
-    //         tableName: K,
-    //         field: S,
-    //         id: string
-    //     ): Promise<RelatedDataT[K][S]> {
-    //     if (!this.IsInitialised || !this.dbPromise) {
-    //         return Promise.reject("Not initialised");
-    //     }
-
-    //     let db = await this.dbPromise;
-    //     let r2t: Record<string, string> = RelationsToTableNames[tableName];
-    //     let targetTable = r2t[field as string] as any;
-    //     let result = await db.get(targetTable, id);
-    //     if (result) {
-    //         this.logger.info("Cache unique relation hit", {
-    //             conferenceId: this.conferenceId,
-    //             tableName: tableName,
-    //             id: id,
-    //             field: field
-    //         });
-
-    //         const relationTableNames = RelationsToTableNames[tableName];
-    //         // @ts-ignore
-    //         const relationTableName: WholeSchemaKeys = relationTableNames[field];
-    //         // It cannot be a cached schema key - it's an uncached relation
-    //         const constr = Cache.Constructors[relationTableName as CachedSchemaKeys];
-    //         return new constr(this.conferenceId, result as any) as unknown as RelatedDataT[K][S];
-    //     }
-    //     else {
-    //         this.logger.info("Cache unique relation miss", {
-    //             conferenceId: this.conferenceId,
-    //             tableName: tableName,
-    //             id: id,
-    //             field: field
-    //         });
-
-    //         throw new Error(`Target of ${field} for ${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
-    //     }
-    // }
-
     // TODO: create
 
     private async newParseQuery<K extends CachedSchemaKeys>(tableName: K) {
@@ -686,55 +633,4 @@ export default class Cache {
             });
         }) as Promise<Array<T>>;
     }
-
-    // async uniqueRelated<
-    //     K extends CachedSchemaKeys,
-    //     S extends keyof RelatedDataT[K]>(
-    //         tableName: K,
-    //         field: S,
-    //         id: string,
-    //         parse: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>> | null = null,
-    //         parseObjectCreated: ((obj: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>) => void) | null = null
-    // ): Promise<RelatedDataT[K][S]> {
-    //     let r2t: Record<string, string> = RelationsToTableNames[tableName];
-    //     if (CachedStoreNames.includes(r2t[field as string] as any)) {
-    //         return this.uniqueRelatedFromCache<K, S>(tableName, field, id).catch(async _ => {
-    //             let query = await this.newParseQuery(tableName);
-    //             let obj = await query.get(id);
-    //             return obj.get(field as any).fetch().then(async (parse: any) => {
-    //                 let r2t: Record<string, string> = RelationsToTableNames[tableName];
-    //                 let targetTable = r2t[field as string];
-    //                 return await this.addItemToCache(parse, targetTable as any) as unknown as RelatedDataT[K][S];
-    //             }).catch((reason: any) => {
-    //                 this.logger.warn("Fetch from database of cached unique related item failed", {
-    //                     conferenceId: this.conferenceId,
-    //                     tableName: tableName,
-    //                     id: id,
-    //                     reason: reason
-    //                 });
-
-    //                 throw new Error("Fetch from database of cached unique related item failed");
-    //             });
-    //         });
-    //     }
-    //     else {
-    //         if (!parse) {
-    //             let query = await this.newParseQuery(tableName);
-    //             parse = await query.get(id);
-    //             if (parseObjectCreated) {
-    //                 parseObjectCreated(parse);
-    //             }
-    //         }
-
-    //         let result = parse.get(field as any);
-
-    //         const relationTableNames = RelationsToTableNames[tableName];
-    //         // @ts-ignore
-    //         const relationTableName: WholeSchemaKeys = relationTableNames[field];
-    //         // It cannot be a cached schema key - it's an uncached relation
-    //         const constr = Cache.Constructors[relationTableName as UncachedSchemaKeys];
-    //         // @ts-ignore - //TODO: Remove this ignore when an uncached table exists
-    //         return new constr(result as any) as unknown as RelatedDataT[K][S];
-    //     }
-    // }
 }

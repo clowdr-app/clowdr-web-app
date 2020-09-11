@@ -34,7 +34,7 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get authors(): Promise<Array<ProgramPerson>> {
-        throw new Error("Method not implemented");
+        return this.nonUniqueRelated("authors");
     }
 
     get conference(): Promise<Conference> {

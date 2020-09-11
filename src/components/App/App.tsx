@@ -58,9 +58,10 @@ export default function App(props: Props) {
                 console.log(`${getTimeString(new Date())} Got program item`, {
                     title: result.title
                 });
-                console.log(`${getTimeString(new Date())} Got program item with track`, {
+                console.log(`${getTimeString(new Date())} Got program item with track and authors`, {
                     title: result.title,
-                    track: await result.track
+                    track: await result.track,
+                    authors: await result.authors
                 });
             }
         });

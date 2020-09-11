@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    // TODO: Switch back to es5 for production?
     "target": "es6",
     "lib": [
       "dom",
