@@ -139,19 +139,19 @@ export default function App(props: Props) {
                 if (currentUserId && currentUserId !== user?.id) {
                     // No, so let's go to the cache for it. The cache will hit
                     // the db for us if the user isn't already present.
-                    //   TODO: Lookup against the User class
-                    // let _user = await DataLayer.User.get(currentUserId, currentConferenceId);
-                    // // Did a user with that id actually exist?
-                    // if (_user) {
-                    //     // Yes, good, let's store the user for later.
-                    //     // This will also trigger a re-rendering.
-                    //     setUser(_user);
-                    // }
-                    // else {
-                    //     // No, darn, must've been a fake id.
-                    Session_User.currentUserId = null;
-                    setUser(null);
-                    // }
+                    
+                    let _user = await DataLayer.User.get(currentUserId, currentConferenceId);
+                    // Did a user with that id actually exist?
+                    if (_user) {
+                        // Yes, good, let's store the user for later.
+                        // This will also trigger a re-rendering.
+                        setUser(_user);
+                    }
+                    else {
+                        // No, darn, must've been a fake id.
+                        Session_User.currentUserId = null;
+                        setUser(null);
+                    }
                 }
             }
             else {
