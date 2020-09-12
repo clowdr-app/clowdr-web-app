@@ -65,6 +65,20 @@ function generateConferences(): Array<TestDataT<"Conference">> {
         welcomeText: "Welcome to this mock conference!"
     });
 
+    result.push({
+        adminEmail: "mockAdminEmail2@mock.com",
+        adminName: "mockAdminName2",
+        conferenceName: "A Second Mock Conference",
+        createdAt: new Date(),
+        headerImage: null,
+        id: "mockConference2",
+        isInitialized: false,
+        landingPage: "A mock landing page",
+        loggedInText: "mockPrivilegedConferenceDetails2",
+        updatedAt: new Date(),
+        welcomeText: "Welcome to this second mock conference!"
+    });
+
     return result;
 }
 
@@ -89,6 +103,15 @@ function generatePrivilegedConferenceDetails(): Array<TestDataT<"PrivilegedConfe
 
     result.push({
         conference: "mockConference1",
+        createdAt: new Date(),
+        id: "mockPrivilegedConferenceDetails1",
+        key: "LOGGED_IN_TEXT",
+        updatedAt: new Date(),
+        value: "Welcome to this mock conference logged in text."
+    });
+
+    result.push({
+        conference: "mockConference2",
         createdAt: new Date(),
         id: "mockPrivilegedConferenceDetails1",
         key: "LOGGED_IN_TEXT",
