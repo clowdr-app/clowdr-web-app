@@ -13,12 +13,6 @@ import { UserProfile } from '../../classes/DataLayer';
 interface Props {
 }
 
-async function loginF() {
-    await Parse.User.logIn("clowdr@localhost", "admin");
-}
-// @ts-ignore
-window.login = loginF;
-
 /**
  * The main application component.
  * 
