@@ -3,9 +3,9 @@ import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
 import { UserProfile } from ".";
 import { PromisesRemapped } from "../WholeSchema";
 
-type SchemaT = Schema.User;
-type K = "User";
-const K_str: K = "User";
+type SchemaT = Schema._User;
+type K = "_User";
+const K_str: K = "_User";
 
 export default class Class extends UncachedBase<K> implements SchemaT {
     constructor(parse: Parse.Object<PromisesRemapped<SchemaT>>) {

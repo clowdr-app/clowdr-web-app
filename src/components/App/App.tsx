@@ -123,8 +123,13 @@ export default function App(props: Props) {
         userProfile
     ]);
 
+    function doLogin(id: string, password: string): Promise<void> {
+        // TODO: Do login
+        throw new Error("Method not implemented.");
+    }
+
     // The main page element - this is where the bulk of content goes
-    let page = <Page />;
+    let page = <Page doLogin={doLogin} />;
     // The sidebar element - only rendered if a conference is selected (user may
     // still be logged out though).
     let sidebar = <></>;

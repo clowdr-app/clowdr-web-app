@@ -44,10 +44,10 @@ export default interface UncachedSchema extends IDB.DBSchema {
         value: Schema.TwilioChannelMirror;
         indexes: Indexes<Schema.TwilioChannelMirror>;
     };
-    User: {
+    _User: {
         key: string;
-        value: Schema.User;
-        indexes: Indexes<Schema.User>;
+        value: Schema._User;
+        indexes: Indexes<Schema._User>;
     };
     UserPresence: {
         key: string;

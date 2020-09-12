@@ -21,7 +21,7 @@ export type { default as ProgramTrack } from "./ProgramTrack";
 export type { default as Registration } from "./Registration";
 export type { default as SocialSpace } from "./SocialSpace";
 export type { default as TwilioChannelMirror } from "./TwilioChannelMirror";
-export type { default as User } from "./User";
+export type { default as _User } from "./_User";
 export type { default as UserPresence } from "./UserPresence";
 export type { default as UserProfile, UserProfileTag } from "./UserProfile";
 export type { default as ZoomHostAccount } from "./ZoomHostAccount";

@@ -123,7 +123,7 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
     },
     TwilioChannelMirror: {
     },
-    User: {
+    _User: {
         profiles: "UserProfile"
     },
     UserPresence: {
@@ -135,7 +135,7 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         presence: "UserPresence",
         primaryFlair: "Flair",
         programPersons: "ProgramPerson",
-        user: "User",
+        user: "_User",
         watchedRooms: "ProgramRoom"
     },
     ZoomHostAccount: {

@@ -20,7 +20,7 @@ export { default as ProgramTrack } from "./ProgramTrack";
 export { default as Registration } from "./Registration";
 export { default as SocialSpace } from "./SocialSpace";
 export { default as TwilioChannelMirror } from "./TwilioChannelMirror";
-export { default as User } from "./User";
+export { default as _User } from "./_User";
 export { default as UserPresence } from "./UserPresence";
 export { default as UserProfile } from "./UserProfile";
 export { default as ZoomHostAccount } from "./ZoomHostAccount";

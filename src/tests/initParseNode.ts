@@ -16,4 +16,6 @@ export default function initParseNode() {
     );
     Parse.masterKey = process.env.PARSE_MASTER_KEY;
     Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
+
+    Parse.Cloud.useMasterKey();
 }

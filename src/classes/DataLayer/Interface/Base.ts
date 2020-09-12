@@ -2,7 +2,7 @@ import { keys } from "ts-transformer-keys";
 
 import Parse from "parse";
 import CachedSchema from "../CachedSchema";
-import { PromisedKeys, NotPromisedKeys } from "../../Util";
+import { PromisedKeys, NotPromisedKeys, KnownKeys } from "../../Util";
 import * as Schema from "../Schema";
 import Caches, { Cache } from "../Cache";
 import UncachedSchema from "../UncachedSchema";
@@ -213,7 +213,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         return this.data.updatedAt;
     }
 
-    protected async uniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
+    protected async uniqueRelated<S extends KnownKeys<RelatedDataT[K]>>(field: S): Promise<RelatedDataT[K][S]> {
         let cache = await Caches.get(this.conferenceId);
         let r2t: Record<string, string> = RelationsToTableNames[this.tableName];
         let targetTableName = r2t[field as any];
@@ -236,7 +236,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         }
     }
 
-    protected async nonUniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
+    protected async nonUniqueRelated<S extends KnownKeys<RelatedDataT[K]>>(field: S): Promise<RelatedDataT[K][S]> {
         let cache = await Caches.get(this.conferenceId);
         let r2t: Record<string, string> = RelationsToTableNames[this.tableName];
         let targetTableName = r2t[field as any];
@@ -282,7 +282,7 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
         return this.parse.updatedAt;
     }
 
-    protected async uniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
+    protected async uniqueRelated<S extends KnownKeys<RelatedDataT[K]>>(field: S): Promise<RelatedDataT[K][S]> {
         let relTableNames = RelationsToTableNames[this.tableName];
         // @ts-ignore
         let relTableName = relTableNames[field];
@@ -305,7 +305,7 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
         }
     }
 
-    protected async nonUniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
+    protected async nonUniqueRelated<S extends KnownKeys<RelatedDataT[K]>>(field: S): Promise<RelatedDataT[K][S]> {
         let relTableNames = RelationsToTableNames[this.tableName];
         // @ts-ignore
         let relTableName = relTableNames[field];

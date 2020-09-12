@@ -14,10 +14,10 @@ type SchemaRemapped<T> = {
     : T[K]
 };
 
-export type TestDataT<K extends keyof WholeSchema> = SchemaRemapped<WholeSchema[K]["value"]>;
+export type TestDataT<K extends WholeSchemaKeys> = SchemaRemapped<WholeSchema[K]["value"]>;
 
 export type TestDBData = {
-    [K in keyof WholeSchema]: Array<TestDataT<K>>
+    [K in WholeSchemaKeys]: Array<TestDataT<K>>
 };
 
 type ParseRestRequestObject = {
@@ -25,6 +25,10 @@ type ParseRestRequestObject = {
     path: string,
     body: any
 };
+
+export function generateMockPassword(userId: string) {
+    return "mockPassword_" + userId;
+}
 
 function generateAttachmentTypes(): Array<TestDataT<"AttachmentType">> {
     let result: Array<TestDataT<"AttachmentType">> = [];
@@ -95,20 +99,22 @@ function generatePrivilegedConferenceDetails(): Array<TestDataT<"PrivilegedConfe
     return result;
 }
 
-function generateUsers(): Array<TestDataT<"User">> {
-    let result: Array<TestDataT<"User">> = [];
+function generateUsers(): Array<TestDataT<"_User">> {
+    let result: Array<TestDataT<"_User">> = [];
 
+    let userId = "mockUser1";
     result.push({
         email: "mockUserEmail@mock.com",
         createdAt: new Date(),
-        id: "mockUser1",
+        id: userId,
         isBanned: "No",
         loginKey: null,
-        passwordSet: false,
+        passwordSet: true,
         profiles: ["mockUserProfile1"],
         updatedAt: new Date(),
-        username: "mockUser1"
-    });
+        username: "mockUser1",
+        password: generateMockPassword(userId)
+    } as any);
 
     return result;
 }
@@ -175,7 +181,7 @@ function generateUserProfiles(): Array<TestDataT<"UserProfile">> {
     return result;
 }
 
-function convertToRequestObjs<K extends keyof WholeSchema>(tableName: K, items: Array<TestDataT<K>>): Array<ParseRestRequestObject> {
+function convertToRequestObjs<K extends WholeSchemaKeys>(tableName: K, items: Array<TestDataT<K>>): Array<ParseRestRequestObject> {
     let RelationFields = RelationsToTableNames[tableName as WholeSchemaKeys] as Record<string, string>;
     return items.map(item => {
         let object: ParseRestRequestObject = {
@@ -207,7 +213,7 @@ function convertToRequestObjs<K extends keyof WholeSchema>(tableName: K, items: 
                             objectId: fieldValue
                         };
                     }
-                    object.body[fieldName] = finalValue;
+                    // TODO: object.body[fieldName] = finalValue;
                 }
                 else {
                     let _fieldValue = fieldValue as any;
@@ -258,7 +264,7 @@ export async function initTestDB(updateDB: boolean = true): Promise<TestDBData> 
         Registration: [],
         SocialSpace: [],
         TwilioChannelMirror: [],
-        User: [],
+        _User: [],
         UserPresence: [],
         UserProfile: [],
         ZoomHostAccount: [],
@@ -268,8 +274,15 @@ export async function initTestDB(updateDB: boolean = true): Promise<TestDBData> 
     let purgePromises = [];
     for (let tableName in result) {
         try {
-            let schema = new Parse.Schema(tableName);
-            purgePromises.push(schema.purge());
+            if (tableName === "_User") {
+                await (new Parse.Query<Parse.User>("_User").map(async user => {
+                    await user.destroy();
+                }));
+            }
+            else {
+                let schema = new Parse.Schema(tableName);
+                purgePromises.push(schema.purge());
+            }
         }
         catch (e) {
             console.warn(e);
@@ -291,8 +304,8 @@ export async function initTestDB(updateDB: boolean = true): Promise<TestDBData> 
     result.PrivilegedConferenceDetails = generatePrivilegedConferenceDetails();
     allItems = allItems.concat(convertToRequestObjs("PrivilegedConferenceDetails", result.PrivilegedConferenceDetails));
 
-    result.User = generateUsers();
-    allItems = allItems.concat(convertToRequestObjs("User", result.User));
+    result._User = generateUsers();
+    allItems = allItems.concat(convertToRequestObjs("_User", result._User));
 
     result.UserPresence = generateUserPresences();
     allItems = allItems.concat(convertToRequestObjs("UserPresence", result.UserPresence));
@@ -306,7 +319,8 @@ export async function initTestDB(updateDB: boolean = true): Promise<TestDBData> 
 
     if (updateDB) {
         const RESTController = require('parse/lib/node/RESTController');
-        await RESTController.request('POST', 'batch', {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        let restResult = await RESTController.request('POST', 'batch', {
             requests: allItems
         });
     }

@@ -6,7 +6,7 @@ import { CachedSchemaKeys, PromisesRemapped, RelationsToTableNames, WholeSchemaK
 import * as Interface from "../Interface";
 import * as Schema from "../Schema";
 import { CachedBase, CachedStoreNames, RelatedDataT, FieldDataT, Constructor } from "../Interface/Base";
-import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields } from "../../Util";
+import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields, KnownKeys } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
 import assert from "assert";
@@ -52,7 +52,7 @@ export default class Cache {
                 Registration: Interface.Registration,
                 SocialSpace: Interface.SocialSpace,
                 TwilioChannelMirror: Interface.TwilioChannelMirror,
-                User: Interface.User,
+                _User: Interface._User,
                 UserPresence: Interface.UserPresence,
                 UserProfile: Interface.UserProfile,
                 ZoomHostAccount: Interface.ZoomHostAccount,
@@ -66,7 +66,7 @@ export default class Cache {
      * All fields including related fields.
      */
     readonly Fields: {
-        [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["value"]>;
+        [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["value"]>>;
     } = {
             AttachmentType: keys<Schema.AttachmentType>(),
             BreakoutRoom: keys<Schema.BreakoutRoom>(),
@@ -89,7 +89,7 @@ export default class Cache {
      * All relations including to uncached tables.
      */
     readonly Relations: {
-        [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
+        [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedFields<Schema.AttachmentType>>(),
             BreakoutRoom: keys<PromisedFields<Schema.BreakoutRoom>>(),
@@ -112,7 +112,7 @@ export default class Cache {
      * All relations to unique items including to uncached tables.
      */
     readonly UniqueRelations: {
-        [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
+        [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>(),
             BreakoutRoom: keys<PromisedNonArrayFields<Schema.BreakoutRoom>>(),
@@ -135,7 +135,7 @@ export default class Cache {
      * All relations to non-unique items including to uncached tables.
      */
     readonly NonUniqueRelations: {
-        [K in CachedSchemaKeys]: Array<keyof CachedSchema[K]["indexes"]>;
+        [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>(),
             BreakoutRoom: keys<PromisedArrayFields<Schema.BreakoutRoom>>(),
@@ -284,13 +284,13 @@ export default class Cache {
             id: parse.id
         };
         for (let _key of this.Fields[tableName]) {
-            let key = _key as keyof (FieldDataT[K] | RelatedDataT[K]);
+            let key = _key as KnownKeys<(FieldDataT[K] | RelatedDataT[K])>;
             if (key !== "id") {
                 // Yes these casts are safe
 
-                let rels: Array<string> = this.Relations[tableName];
+                let rels = this.Relations[tableName] as Array<string>;
                 if (rels.includes(key as string)) {
-                    let uniqRels: Array<string> = this.UniqueRelations[tableName];
+                    let uniqRels = this.UniqueRelations[tableName] as Array<string>;
                     try {
                         let xs = parse.get(key as any);
                         if (xs) {
@@ -433,7 +433,7 @@ export default class Cache {
             keyPath: this.KEY_PATH
         });
 
-        // let uniqueRels = this.UniqueRelations[name] as Array<keyof CachedSchema[K]["indexes"]>;
+        // let uniqueRels = this.UniqueRelations[name] as Array<KnownKeys<CachedSchema[K]["indexes"]>>;
         // for (let rel of uniqueRels) {
         //     let r2t: Record<string, string> = RelationsToTableNames[name];
         //     if (CachedStoreNames.includes(r2t[rel as string] as any)) {
@@ -444,7 +444,7 @@ export default class Cache {
         //     }
         // }
 
-        // let nonUniqueRels = this.NonUniqueRelations[name] as Array<keyof CachedSchema[K]["indexes"]>;
+        // let nonUniqueRels = this.NonUniqueRelations[name] as Array<KnownKeys<CachedSchema[K]["indexes"]>>;
         // for (let rel of nonUniqueRels) {
         //     let r2t: Record<string, string> = RelationsToTableNames[name];
         //     if (CachedStoreNames.includes(r2t[rel as string] as any)) {
