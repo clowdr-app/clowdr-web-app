@@ -4,7 +4,7 @@ import { render } from "@testing-library/react";
 import ConferenceSelection from "./ConferenceSelection";
 import { testData } from "../../../tests/setupTests";
 import { Conference } from "../../../classes/DataLayer";
-import { removeNull } from "../../../classes/Util";
+import { removeNull, retryUntil } from "../../../classes/Util";
 
 jest.mock("../../../classes/DataLayer/Cache/Cache");
 
@@ -37,12 +37,16 @@ describe("ConferenceSelection", () => {
         expect(element.getByRole("heading").className).toBe("banner");
     })
 
-    it("displays conferences in the right order", () => {
+    it("displays conferences in the right order", async () => {
         const element = render(TestElement());
-        const select = element.getByRole("combobox") as HTMLSelectElement;
 
         const conferences = [...testConferences];
         conferences.sort((x, y) => x.conferenceName.localeCompare(y.conferenceName));
+
+        let select = await retryUntil(
+            () => element.getByRole("combobox") as HTMLSelectElement,
+            select => select.options.length !== 0
+        );
 
         for (let i = 0; i < select.options.length; i++) {
             expect(select.options[i].value).toBe(conferences[i].id);

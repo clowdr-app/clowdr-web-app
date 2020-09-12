@@ -94,3 +94,12 @@ export function getTimeString(time: Date): string {
 
     return `${hours}:${minutes}:${seconds}.${milliseconds}`;
 }
+
+export async function retryUntil<T>(init: () => T, check: (x: T) => boolean): Promise<T> {
+    let x = init();
+    while (!check(x)) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        x = init()
+    }
+    return x;
+}
