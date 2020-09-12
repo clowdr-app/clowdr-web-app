@@ -9,7 +9,7 @@ import getConference from "../../../tests/getConference";
 describe("ConferenceSelection", () => {
     const TestElement = () =>
         <MemoryRouter>
-            <ConferenceContext.Provider value={testConference}>
+            <ConferenceContext.Provider value={null}>
                 <ConferenceSelection />
             </ConferenceContext.Provider>
         </MemoryRouter>;
@@ -17,7 +17,7 @@ describe("ConferenceSelection", () => {
     let testConference: Conference;
 
     beforeAll(async () => {
-        testConference = await getConference();
+        // testConference = await getConference();
     });
 
     it("renders", () => {

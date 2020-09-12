@@ -5,6 +5,9 @@ import * as serviceWorker from './serviceWorker';
 import App from './components/App/App';
 import { BrowserRouter } from 'react-router-dom';
 import assert from 'assert';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 assert(process.env.REACT_APP_PARSE_APP_ID);
 assert(process.env.REACT_APP_PARSE_JS_KEY);

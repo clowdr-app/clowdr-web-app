@@ -27,7 +27,7 @@ describe("Page", () => {
         <MemoryRouter>
             <ConferenceContext.Provider value={conference}>
                 <UserProfileContext.Provider value={userProfile}>
-                    <Page />
+                    <Page doLogin={jest.fn()} />
                 </UserProfileContext.Provider>
             </ConferenceContext.Provider>
         </MemoryRouter>;

@@ -3,16 +3,17 @@ import { cleanup } from '@testing-library/react-hooks';
 import mockIndexedDB from './mockIndexedDB';
 import initParse from './initParse';
 import { initTestDB, TestDBData } from './initTestDB';
+import dotenv from 'dotenv';
 
 export let testData: TestDBData;
 
-beforeAll(async () => {
-    await initTestDB().then((_testData) => {
-        testData = _testData;
+dotenv.config();
 
-        initParse();
-        mockIndexedDB();
-    });
+beforeAll(async () => {
+    jest.useRealTimers();
+    testData = await initTestDB();
+    initParse();
+    mockIndexedDB();
 });
 
 beforeEach(() => {

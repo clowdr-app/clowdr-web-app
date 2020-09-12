@@ -1,7 +1,3 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 export type ParseObject = Parse.Object<Parse.Attributes>;
 
 export type KnownKeys<T> = {
