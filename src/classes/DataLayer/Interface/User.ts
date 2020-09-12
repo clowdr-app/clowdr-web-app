@@ -16,7 +16,7 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return this.parse.get("email");
     }
 
-    get loginKey(): string {
+    get loginKey(): string | null {
         return this.parse.get("loginKey");
     }
 

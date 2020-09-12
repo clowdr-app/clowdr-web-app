@@ -40,7 +40,7 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return this.parse.get("status");
     }
 
-    get socialSpace(): Promise<SocialSpace> {
+    get socialSpace(): Promise<SocialSpace | null> {
         return this.uniqueRelated("socialSpace");
     }
 
