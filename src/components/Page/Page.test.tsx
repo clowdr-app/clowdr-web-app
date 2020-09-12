@@ -7,8 +7,8 @@ import UserProfileContext from "../../contexts/UserProfileContext";
 import ConferenceSelection from "../Pages/ConferenceSelection/ConferenceSelection";
 import Login from "../Pages/Login/Login";
 import { Conference, UserProfile } from "../../classes/DataLayer";
-import { testData } from "../../tests/setupTests";
 import { mocked } from "ts-jest/utils";
+import getConference from "../../tests/getConference";
 
 jest.mock("../Pages/ConferenceSelection/ConferenceSelection", () => {
     const component = jest.requireActual("../Pages/ConferenceSelection/ConferenceSelection");
@@ -23,7 +23,7 @@ describe("Page", () => {
     const mockConferenceSelection = mocked(ConferenceSelection);
     const mockLogin = mocked(Login);
 
-    const PageTestElement = (conference: Conference | null, userProfile: UserProfile | null) =>
+    const TestElement = (conference: Conference | null, userProfile: UserProfile | null) =>
         <MemoryRouter>
             <ConferenceContext.Provider value={conference}>
                 <UserProfileContext.Provider value={userProfile}>
@@ -31,12 +31,6 @@ describe("Page", () => {
                 </UserProfileContext.Provider>
             </ConferenceContext.Provider>
         </MemoryRouter>;
-    
-    const getConference = async () => {
-        const conf = await Conference.get(testData.Conference[0].id);
-        expect(conf).toBeDefined();
-        return conf as Conference;
-    };
 
     let testConference: Conference;
 
@@ -50,7 +44,7 @@ describe("Page", () => {
     });
 
     it("renders with class name 'page'", () => {
-        let element = render(PageTestElement(null, null));
+        let element = render(TestElement(null, null));
 
         expect(element.container.children[0].className).toBe("page");
     });
@@ -58,7 +52,7 @@ describe("Page", () => {
     it("renders the conference selection page", async () => {
         mockConferenceSelection.mockImplementationOnce(() => <></>);
 
-        render(PageTestElement(null, null));
+        render(TestElement(null, null));
 
         expect(mockConferenceSelection).toBeCalledTimes(1);
     });
@@ -66,7 +60,7 @@ describe("Page", () => {
     it("does not render the conference selection page", async () => {
         mockConferenceSelection.mockImplementationOnce(() => <></>);
 
-        render(PageTestElement(testConference, null));
+        render(TestElement(testConference, null));
 
         expect(mockConferenceSelection).toBeCalledTimes(0);
     });
@@ -74,7 +68,7 @@ describe("Page", () => {
     it("renders the login page", async () => {
         mockLogin.mockImplementationOnce(() => <></>);
 
-        render(PageTestElement(testConference, null));
+        render(TestElement(testConference, null));
 
         expect(mockLogin).toBeCalledTimes(1);
     });
