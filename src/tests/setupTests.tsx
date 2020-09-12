@@ -21,8 +21,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-    jest.runAllImmediates();
-    jest.runAllTimers();
 });
 
 

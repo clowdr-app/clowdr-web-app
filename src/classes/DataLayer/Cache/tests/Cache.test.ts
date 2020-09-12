@@ -33,9 +33,6 @@ describe("Cache", () => {
 
             cache.initialise();
 
-            jest.runAllImmediates();
-            jest.runAllTimers();
-
             await cache.Ready;
 
             expect(cache.IsInitialised).toBe(true);

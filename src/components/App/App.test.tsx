@@ -41,7 +41,6 @@ describe("App", () => {
         let startedAt = Date.now();
         do {
             sideBarElements = await waitForElement(() => element.container.getElementsByClassName("sidebar"));
-            jest.runAllTimers();
         }
         while (!sideBarElements.length && (Date.now() - startedAt) < 3500);
 
