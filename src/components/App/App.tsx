@@ -83,7 +83,10 @@ export default function App(props: Props) {
          */
         async function updateUser() {
             Parse.User.currentAsync().then(async user => {
-                if (user) {
+                // It turns out the `user.id` can come back `undefined` when the
+                // Parse API thinks you're logged in but the user has been
+                // deleted in the database.
+                if (user && user.id) {
                     // Has a conference been selected?
                     if (currentConferenceId) {
                         // Yes, good, let's store the user for later.
