@@ -6,6 +6,8 @@ import { testData } from "../../../tests/setupTests";
 import { Conference } from "../../../classes/DataLayer";
 import { removeNull } from "../../../classes/Util";
 
+jest.mock("../../../classes/DataLayer/Cache/Cache");
+
 describe("ConferenceSelection", () => {
     const TestElement = () =>
         <MemoryRouter>
