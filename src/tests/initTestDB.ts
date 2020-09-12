@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IBase, RelationsToTableNames, WholeSchema, WholeSchemaKeys } from "../classes/DataLayer/WholeSchema";
 import initParseNode from "./initParseNode";
-import Parse from "parse";
+import Parse from "parse/node";
 
 type SchemaRemapped<T> = {
     [K in keyof T]:
