@@ -34,19 +34,17 @@ describe("AttachmentType", () => {
         expect(testObject.supportsFile).toEqual(testAttachmentTypeData.supportsFile);
     });
 
-    // it("returns the conference", async () => {
-    //     // TODO: Why does this test just hang? Yet under debug, it proceeds fine.
-    //     // Ed: I think the mock has some kind of race condition
-    //     let cache = await Caches.get(testData.Conference[0].id);
-    //     jest.runAllTimers();
-    //     await cache.Ready;
+    it("returns the conference", async () => {
+        jest.useRealTimers();
 
-    //     let confP = testObject.conference;
-    //     jest.runAllTimers();
-    //     let conf = await confP;
-    //     expect(conf).toBeTruthy();
-    //     expect(conf.id).toBe(testAttachmentTypeData.conference);
-    // });
+        let cache = await Caches.get(testData.Conference[0].id);
+        await cache.Ready;
+
+        let confP = testObject.conference;
+        let conf = await confP;
+        expect(conf).toBeTruthy();
+        expect(conf.id).toBe(testAttachmentTypeData.conference);
+    });
 
     it("returns the id", () => {
         expect(testObject.id).toEqual(testAttachmentTypeData.id);

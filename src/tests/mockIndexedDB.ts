@@ -1,12 +1,11 @@
 const idbMocks = require('../../submodules/shelving-mock-indexeddb');
 
 /**
- * Use in beforeEach to configure indexedDB fakes. Also calls jest.useFakeTimers.
+ * Use in beforeEach to configure indexedDB fakes.
  */
 export default function mockIndexedDB() {
     global.indexedDB = new idbMocks.IDBFactory();
 
-    jest.useFakeTimers();
     idbMocks.reset(); // Reset the fake indexedDB state
     global.IDBFactory = idbMocks.IDBFactory;
     global.IDBDatabase = idbMocks.IDBDatabase;

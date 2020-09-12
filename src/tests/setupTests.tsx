@@ -17,6 +17,7 @@ beforeAll(async () => {
 beforeEach(() => {
     localStorage.clear();
     mockIndexedDB();
+    jest.useFakeTimers();
 });
 
 afterEach(() => {
