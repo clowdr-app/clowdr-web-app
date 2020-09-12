@@ -98,11 +98,6 @@ export default interface CachedSchema extends CachableDBSchema {
         value: Schema.SocialSpace;
         indexes: Indexes<Schema.SocialSpace>;
     };
-    User: {
-        key: string;
-        value: Schema.User;
-        indexes: Indexes<Schema.User>;
-    };
     UserProfile: {
         key: string;
         value: Schema.UserProfile;

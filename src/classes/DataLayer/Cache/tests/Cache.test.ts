@@ -1,26 +1,8 @@
 import Cache from "../Cache";
-import mockIndexedDB from "../../../../tests/mockIndexedDB";
-import initParse from "../../../../tests/initParse";
 
 const testId = "test_conference_id";
 
 describe("Cache", () => {
-
-    beforeAll(() => {
-        initParse();
-    });
-
-    afterAll(() => {
-    });
-
-    beforeEach(() => {
-        mockIndexedDB();
-    });
-
-    afterEach(() => {
-        jest.runAllTimers()
-    });
-
     it("can be constructed", () => {
         expect(new Cache(testId)).toBeDefined();
     });

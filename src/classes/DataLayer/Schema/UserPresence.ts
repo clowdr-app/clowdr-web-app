@@ -1,5 +1,5 @@
 import { Base } from ".";
-import { SocialSpace, User } from "../Interface";
+import { SocialSpace, UserProfile } from "../Interface";
 
 export default interface Schema extends Base {
     isAvailable: boolean;
@@ -11,5 +11,5 @@ export default interface Schema extends Base {
     status: string;
 
     socialSpace: Promise<SocialSpace>;
-    user: Promise<User>;
+    user: Promise<UserProfile>;
 }

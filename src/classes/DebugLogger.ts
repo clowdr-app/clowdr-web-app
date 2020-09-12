@@ -1,6 +1,6 @@
 import { getTimeString } from "./Util";
 
-class DebugLogger {
+export default class DebugLogger {
     private enabled: boolean = false;
     
     constructor(
@@ -40,5 +40,3 @@ class DebugLogger {
         console.error(this.prefixMessage(msg), ...params);
     }
 }
-
-export default DebugLogger;

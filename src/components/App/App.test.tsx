@@ -1,13 +1,9 @@
 import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { render, waitForElement } from "@testing-library/react";
-// TODO: import Cache from "../../classes/Cache/Cache";
 import App from "./App";
 
-jest.mock("../../classes/Cache/Cache.ts");
-
 describe("App", () => {
-    const MockedCache: any = Cache as jest.Mocked<typeof Cache>;
 
     it("renders with class name 'app'", () => {
         let element = render(<MemoryRouter>
@@ -34,26 +30,6 @@ describe("App", () => {
     });
 
     it("renders a sidebar when a conference is selected", async () => {
-
-        MockedCache.mockCacheData = {
-            get: (tableName: string, id: string) => {
-                if (tableName === "Conference" && id === "mock_id") {
-                    return Promise.resolve({
-                        id: "mock_id",
-                        conferenceName: "mock_conferenceName"
-                    });
-                }
-
-                return Promise.resolve(undefined);
-            },
-            getAll: (tableName: string) => {
-                return Promise.resolve([]);
-            },
-            transaction: (tableName: string) => {
-                return { done: Promise.resolve() };
-            }
-        };
-
         sessionStorage.setItem("currentConferenceId", "mock_id");
 
         let element = render(<MemoryRouter>

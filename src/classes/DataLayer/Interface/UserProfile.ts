@@ -82,6 +82,17 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.nonUniqueRelated("watchedRooms");
     }
 
+    static getByUserId(userId: string, conferenceId: string): Promise<Class | null> {
+        return StaticBaseImpl
+            .get("User", userId)
+            .then(_user => {
+                const user = _user as User;
+                return user?.profiles.then(profiles => {
+                    return profiles.find(x => x.conferenceId === conferenceId) || null;
+                }) || null;
+            });
+    }
+
     static get(id: string, conferenceId: string): Promise<Class | null> {
         return StaticBaseImpl.get(K_str, id, conferenceId);
     }

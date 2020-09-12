@@ -18,7 +18,7 @@ export default interface Schema extends Base {
     profilePhoto: Parse.File;
     pronouns: string;
     realName: string;
-    tags: Array < UserProfileTag >;
+    tags: Array<UserProfileTag>;
     webpage: string
     welcomeModalShown: boolean;
 

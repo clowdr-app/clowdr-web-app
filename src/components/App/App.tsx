@@ -1,14 +1,14 @@
-// import Parse from "parse";
+import Parse from "parse";
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
 import Session_Conference from '../../classes/Session/Conference';
-import Session_User from '../../classes/Session/User';
 import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
-import UserContext from '../../contexts/UserContext';
+import UserProfileContext from '../../contexts/UserProfileContext';
 import * as DataLayer from "../../classes/DataLayer";
-// import { getTimeString } from '../../classes/Util';
+import useLogger from '../../hooks/useLogger';
+import { UserProfile } from '../../classes/DataLayer';
 
 interface Props {
 }
@@ -24,74 +24,15 @@ interface Props {
  */
 export default function App(props: Props) {
 
-    // useEffect(() => {
-    //     // TODO: Delete this - it's for testing only
-    //     Parse.User.currentAsync().then(async user => {
-    //         let msg = "";
-    //         if (!user) {
-    //             user = await Parse.User.logIn("clowdr@localhost", "admin");
-    //             msg = "Logged in";
-    //         }
-    //         else {
-    //             msg = "Already logged in";
-    //             ///await Parse.User.logOut();
-    //         }
-    //         console.log(msg, { name: user.getUsername(), email: user.getEmail() });
-    //     });
-
-    //     DataLayer.AttachmentType.getAll("ciAZ1zroPD").then(async result => {
-    //         let results1 = result.map(x => x.name);
-    //         console.log(`${getTimeString(new Date())} Got attachment types`, results1);
-
-    //         let results2 = await Promise.all(result.map(async x => ({
-    //             name: x.name,
-    //             conferenceName: (await x.conference).conferenceName
-    //         })));
-    //         console.log(`${getTimeString(new Date())} Got attachment types with conference names`, results2);
-    //     });
-    //     DataLayer.Conference.getAll().then(async result => {
-    //         console.log(`${getTimeString(new Date())} Got conferences`, result.map(r => r.conferenceName));
-    //     });
-    //     DataLayer.ProgramItem.get("6ZSU9G1Iwl", "ciAZ1zroPD").then(async result => {
-    //         if (result) {
-    //             console.log(`${getTimeString(new Date())} Got program item`, {
-    //                 title: result.title
-    //             });
-    //             console.log(`${getTimeString(new Date())} Got program item with track and authors`, {
-    //                 title: result.title,
-    //                 track: await result.track,
-    //                 authors: await result.authors
-    //             });
-    //         }
-    //     });
-    //     DataLayer.Conference.get("ciAZ1zroPD").then(
-    //         async result => {
-    //             console.log(`${getTimeString(new Date())} Got conference`, result?.conferenceName);
-
-    //             // if (result) {
-    //             //     let parseConf = await result.getUncachedParseObject();
-    //             //     let newAT = new Parse.Object("AttachmentType") as Parse.Object<PromisesRemapped<Schema.AttachmentType>>;
-    //             //     newAT.set("conference", parseConf);
-    //             //     newAT.set("displayAsLink", true);
-    //             //     newAT.set("isCoverImage", false);
-    //             //     newAT.set("name", "Test AttachmentType In DB");
-    //             //     newAT.set("ordinal", 0);
-    //             //     newAT.set("supportsFile", false);
-    //             //     newAT.save();
-    //             // }
-    //         });
-    // });
-
     // Hint: Do not use `Session_*` interfaces anywhere else - rely on contexts.
     const currentConferenceId = Session_Conference.currentConferenceId;
-    const currentUserId = Session_User.currentUserId;
 
     // Get all relevant state information for this component
     // Note: These can't be used inside `useEffect` or other asynchronous
     //       functions.
     const [conference, setConference] = useState<DataLayer.Conference | null>(null);
-    const [user, setUser] = useState<DataLayer.User | null>(null);
-    // TODO: Handle the User Profile
+    const [userProfile, setUserProfile] = useState<DataLayer.UserProfile | null>(null);
+    const logger = useLogger("App");
 
     // State updates go inside a `useEffect`
     useEffect(() => {
@@ -128,46 +69,56 @@ export default function App(props: Props) {
             }
         }
 
+        // Apply the update functions asynchronously - no waiting around
+        updateConference();
+    }, [
+        currentConferenceId,
+        conference
+    ]);
+
+    useEffect(() => {
         /**
          * Maintains the stored user object in state and the user id in the
          * session.
          */
         async function updateUser() {
-            // Has a conference been selected and a cache created?
-            if (currentConferenceId) {
-                // Have we already loaded the correct user?
-                if (currentUserId && currentUserId !== user?.id) {
-                    // No, so let's go to the cache for it. The cache will hit
-                    // the db for us if the user isn't already present.
-                    
-                    let _user = await DataLayer.User.get(currentUserId, currentConferenceId);
-                    // Did a user with that id actually exist?
-                    if (_user) {
+            Parse.User.currentAsync().then(async user => {
+                if (user) {
+                    // Has a conference been selected?
+                    if (currentConferenceId) {
                         // Yes, good, let's store the user for later.
                         // This will also trigger a re-rendering.
-                        setUser(_user);
+                        let profile = await DataLayer.UserProfile.getByUserId(user.id, currentConferenceId);
+                        setUserProfile(profile);
                     }
                     else {
-                        // No, darn, must've been a fake id.
-                        Session_User.currentUserId = null;
-                        setUser(null);
+                        // No conference selected, better make sure our internal
+                        // state matches that fact.
+                        setUserProfile(null);
+
+                        // Note: We don't actually log the user out here, we
+                        // just create a consistent state such that our app only
+                        // sees the logged in state when there is a conference
+                        // selected.
                     }
                 }
-            }
-            else {
-                // No conference selected, better make sure our internal state
-                // matches that fact.
-                if (user) {
-                    Session_User.currentUserId = null;
-                    setUser(null);
+                else {
+                    if (userProfile) {
+                        setUserProfile(null);
+                    }
                 }
-            }
+            }).catch(reason => {
+                logger.error("Failed to get current user from Parse.", reason);
+            });;
         }
 
-        // Apply the various update functions asynchronously - no waiting around
-        updateConference();
+        // Apply the update functions asynchronously
         updateUser();
-    });
+    }, [
+        currentConferenceId,
+        logger,
+        userProfile
+    ]);
 
     // The main page element - this is where the bulk of content goes
     let page = <Page />;
@@ -188,10 +139,10 @@ export default function App(props: Props) {
     // Hint: `user` could be null - see also, `useUser` and `useMaybeUser` hooks
     return <div className="app">
         <ConferenceContext.Provider value={conference}>
-            <UserContext.Provider value={user}>
+            <UserProfileContext.Provider value={userProfile}>
                 {page}
                 {sidebar}
-            </UserContext.Provider>
+            </UserProfileContext.Provider>
         </ConferenceContext.Provider>
     </div>;
 }

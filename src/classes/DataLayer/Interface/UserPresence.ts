@@ -1,6 +1,6 @@
 import * as Schema from "../Schema";
 import { StaticUncachedBase, StaticBaseImpl, PromisesRemapped, UncachedBase } from "./Base";
-import { User, SocialSpace } from ".";
+import { SocialSpace, UserProfile } from ".";
 
 type SchemaT = Schema.UserPresence;
 type K = "UserPresence";
@@ -43,7 +43,7 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return this.uniqueRelated("socialSpace");
     }
 
-    get user(): Promise<User> {
+    get user(): Promise<UserProfile> {
         return this.uniqueRelated("user");
     }
 

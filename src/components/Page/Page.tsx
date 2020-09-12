@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './Page.scss';
 import useMaybeConference from '../../hooks/useMaybeConference';
-import useMaybeUser from '../../hooks/useMaybeUser';
+import useMaybeUser from '../../hooks/useMaybeUserProfile';
+import useLogger from '../../hooks/useLogger';
 
 interface Props {
 }
@@ -11,6 +12,7 @@ function Page(props: Props) {
     const mUser = useMaybeUser();
     const [title, setTitle] = useState("Please log in to view the conference");
     const [text, setText] = useState("Please log in to view the conference");
+    const logger = useLogger("Page");
 
     useEffect(() => {
         async function updateText() {
@@ -29,7 +31,7 @@ function Page(props: Props) {
         };
 
         updateText().catch(() => {
-            console.log("Logged in text not available - not logged in?");
+            logger.info("Logged in text not available - not logged in?");
         });
     });
 
