@@ -1,6 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IBase, RelationsToTableNames, WholeSchema, WholeSchemaKeys } from "../classes/DataLayer/WholeSchema";
 import initParseNode from "./initParseNode";
+import Parse from "parse";
 
 type SchemaRemapped<T> = {
     [K in keyof T]:
@@ -166,14 +167,17 @@ export async function initTestDB(updateDB: boolean = true): Promise<TestDBData> 
         ZoomRoom: []
     };
 
+    let purgePromises = [];
     for (let tableName in result) {
         try {
             let schema = new Parse.Schema(tableName);
-            schema.purge();
+            purgePromises.push(schema.purge());
         }
-        catch {
+        catch (e) {
+            console.warn(e);
         }
     }
+    await Promise.all(purgePromises);
 
     let allItems: Array<ParseRestRequestObject> = [];
     result.Conference = generateConferences();
