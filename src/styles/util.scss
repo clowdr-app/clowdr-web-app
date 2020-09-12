@@ -1,0 +1,26 @@
+@function mm($x) {
+  @return ($x * 0.25) + em;
+}
+
+@function radius($x) {
+  @return ($x * 2) + px;
+}
+
+$font-sm: 0.9em;
+$font-lg: 1.2em;
+$font-xl: 1.5em;
+$font-2xl: 2em;
+$font-3xl: 2.5em;
+
+$gray-0: #000;
+$gray-1: #333;
+$gray-2: #666;
+$gray-3: #999;
+$gray-4: #bbb;
+$gray-6: #eee;
+
+$primary: rgb(185, 37, 0);
+$secondary: #d45113ff;
+$color-3: #f9a03fff;
+$color-4: #f8dda4ff;
+$color-5: #ddf9c1ff;

@@ -1,0 +1,64 @@
+@import "../../../styles/util";
+
+.conference-selection-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+
+  h1 {
+    font-size: $font-3xl;
+  }
+
+  .main {
+    margin: 0 auto;
+    width: mm(96);
+    text-align: center;
+  }
+
+  p {
+    color: $gray-2;
+  }
+
+  select {
+    margin-top: mm(2);
+    background-color: white;
+    border: 2px solid $gray-3;
+    border-radius: radius(2);
+    padding: mm(2) mm(5);
+  }
+
+  .join-button {
+    margin-top: mm(6);
+    padding: mm(2) mm(5);
+    color: white;
+    background-color: $primary;
+    border: none;
+    border-radius: radius(2);
+  }
+
+  .bottom-links {
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin-bottom: mm(10);
+    color: $gray-3;
+
+    .bottom-link {
+      color: inherit;
+    }
+
+    .dot {
+      display: inline-block;
+      margin: 0 mm(6);
+    }
+  }
+}

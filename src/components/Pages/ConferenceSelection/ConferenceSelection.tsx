@@ -16,18 +16,24 @@ export default function ConferenceSelection() {
     });
 
     return <div className="conference-selection-container">
-        <h1 className="banner">Welcome to Clowdr</h1>
-        <p>Please select your conference to begin</p>
-        <select disabled={conferences.length === 0}>
-            {conferences.map(conf =>
-                <option value={conf.id}>{conf.conferenceName}</option>
-            )}
-        </select>
-        <button className="join-button">Join</button>
-        <ul className="bottom-links">
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/legal">Legal</Link></li>
-            <li><Link to="/help">Help</Link></li>
-        </ul>
+        <div className="main">
+            <h1 className="banner">Welcome to Clowdr</h1>
+            <p>Please select your conference to begin</p>
+            <select disabled={conferences.length === 0}>
+                {conferences.map(conf =>
+                    <option value={conf.id}>{conf.conferenceName}</option>
+                )}
+            </select>
+            <div>
+                <button className="join-button">Join</button>
+            </div>
+        </div>
+        <div className="bottom-links">
+            <Link className="bottom-link" to="/about">About</Link>
+            <span className="dot">&middot;</span>
+            <Link className="bottom-link" to="/legal">Legal</Link>
+            <span className="dot">&middot;</span>
+            <Link className="bottom-link" to="/help">Help</Link>
+        </div>
     </div>;
 }
