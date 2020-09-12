@@ -2,13 +2,10 @@ import Parse from "parse";
 import { keys } from "ts-transformer-keys";
 import DebugLogger from "../../DebugLogger";
 import CachedSchema, { SchemaVersion } from "../CachedSchema";
+import { CachedSchemaKeys, PromisesRemapped, RelationsToTableNames, WholeSchemaKeys } from "../WholeSchema";
 import * as Interface from "../Interface";
 import * as Schema from "../Schema";
-import {
-    CachedBase, CachedSchemaKeys, PromisesRemapped, CachedStoreNames,
-    RelatedDataT, WholeSchemaKeys, RelationsToTableNames, FieldDataT,
-    Constructor
-} from "../Interface/Base";
+import { CachedBase, CachedStoreNames, RelatedDataT, FieldDataT, Constructor } from "../Interface/Base";
 import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";

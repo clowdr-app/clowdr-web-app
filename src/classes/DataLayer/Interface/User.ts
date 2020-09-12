@@ -1,6 +1,7 @@
 import * as Schema from "../Schema";
-import { StaticUncachedBase, StaticBaseImpl, PromisesRemapped, UncachedBase } from "./Base";
+import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
 import { UserProfile } from ".";
+import { PromisesRemapped } from "../WholeSchema";
 
 type SchemaT = Schema.User;
 type K = "User";

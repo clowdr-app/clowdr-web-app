@@ -2,10 +2,11 @@ import { keys } from "ts-transformer-keys";
 
 import Parse from "parse";
 import CachedSchema from "../CachedSchema";
-import { KnownKeys, PromisedKeys, NotPromisedKeys } from "../../Util";
+import { PromisedKeys, NotPromisedKeys } from "../../Util";
 import * as Schema from "../Schema";
 import Caches, { Cache } from "../Cache";
 import UncachedSchema from "../UncachedSchema";
+import { CachedSchemaKeys, IBase, PromisesRemapped, RelationsToTableNames, UncachedSchemaKeys, WholeSchema, WholeSchemaKeys } from "../WholeSchema";
 
 /*
  * 2020-09-09 A note to future developers on constructors
@@ -19,133 +20,6 @@ import UncachedSchema from "../UncachedSchema";
  * Constructor, and Base.
  */
 
-export type RelationsToTableNamesT =
-    {
-        [K in CachedSchemaKeys]: {
-            [K2 in PromisedKeys<CachedSchema[K]["value"]>]:
-            CachedSchema[K]["value"][K2] extends Promise<any> ? WholeSchemaKeys : never
-        }
-    } & {
-        [K in UncachedSchemaKeys]: {
-            [K2 in PromisedKeys<UncachedSchema[K]["value"]>]:
-            UncachedSchema[K]["value"][K2] extends Promise<any> ? WholeSchemaKeys : never
-        }
-    };
-
-export const RelationsToTableNames: RelationsToTableNamesT = {
-    AttachmentType: {
-        conference: "Conference"
-    },
-    BondedChannel: {
-        children: "TwilioChannelMirror"
-    },
-    BreakoutRoom: {
-        conference: "Conference",
-        conversation: "Conversation",
-        members: "UserProfile",
-        programItem: "ProgramItem",
-        watchers: "UserProfile"
-    },
-    Conference: {
-        loggedInText: "PrivilegedConferenceDetails",
-    },
-    ConferenceConfiguration: {
-        conference: "Conference"
-    },
-    ConferencePermission: {
-        action: "PrivilegedAction",
-        conference: "Conference"
-    },
-    Conversation: {
-        conference: "Conference",
-        member1: "UserProfile",
-        member2: "UserProfile",
-    },
-    Flair: {
-    },
-    LiveActivity: {
-    },
-    MeetingRegistration: {
-        conference: "Conference"
-    },
-    PrivilegedAction: {
-    },
-    PrivilegedConferenceDetails: {
-        conference: "Conference"
-    },
-    ProgramItem: {
-        conference: "Conference",
-        authors: "ProgramPerson",
-        track: "ProgramTrack",
-        attachments: "ProgramItemAttachment",
-        breakoutRoom: "BreakoutRoom",
-        events: "ProgramSessionEvent",
-        programSession: "ProgramSession"
-    },
-    ProgramItemAttachment: {
-        attachmentType: "AttachmentType",
-        programItem: "ProgramItem"
-    },
-    ProgramPerson: {
-        conference: "Conference",
-        programItems: "ProgramItem",
-        userProfile: "UserProfile",
-    },
-    ProgramRoom: {
-        conference: "Conference",
-        socialSpace: "SocialSpace",
-        zoomRoom: "ZoomRoom"
-    },
-    ProgramSession: {
-        conference: "Conference",
-        events: "ProgramSessionEvent",
-        items: "ProgramItem",
-        programTrack: "ProgramTrack",
-        room: "ProgramRoom"
-    },
-    ProgramSessionEvent: {
-        conference: "Conference",
-        programItem: "ProgramItem",
-        programSession: "ProgramSession"
-    },
-    ProgramTrack: {
-        conference: "Conference"
-    },
-    Registration: {
-    },
-    SocialSpace: {
-        conference: "Conference"
-    },
-    TwilioChannelMirror: {
-    },
-    User: {
-        profiles: "UserProfile"
-    },
-    UserPresence: {
-        socialSpace: "SocialSpace",
-        user: "UserProfile"
-    },
-    UserProfile: {
-        conference: "Conference",
-        presence: "UserPresence",
-        primaryFlair: "Flair",
-        programPersons: "ProgramPerson",
-        user: "User",
-        watchedRooms: "ProgramRoom"
-    },
-    ZoomHostAccount: {
-    },
-    ZoomRoom: {
-        conference: "Conference",
-        hostAccount: "ZoomHostAccount",
-        programRoom: "ProgramRoom"
-    }
-};
-
-export type CachedSchemaKeys = KnownKeys<CachedSchema>;
-export type UncachedSchemaKeys = KnownKeys<UncachedSchema>;
-export type WholeSchemaKeys = KnownKeys<RelationsToTableNamesT>;
-export type WholeSchema = CachedSchema & UncachedSchema;
 
 export const CachedStoreNames = keys<CachedSchema>() as Array<CachedSchemaKeys>;
 
@@ -175,27 +49,7 @@ export type RelatedDataT
         }
     };
 
-
-/**
- * When retrieving fields from Parse objects that are actually related tables,
- * we don't get back a `Promise<Table>`, we get back a
- * `Parse.Object<Schema.Table>`. So this type transformer remaps fields of type
- * `Promise<Interface<K,_>>` to `Parse.Object<Schema[K]>`.
- *
- * (Note: The `code` / `types` used in this comment are intuitive not accurate.)
- */
-export type PromisesRemapped<T>
-    = { [K in keyof T]: T[K] extends Promise<infer S>
-        ? S extends IBase<infer K2>
-        ? Parse.Object<PromisesRemapped<WholeSchema[K2]["value"]>>
-        : never
-        : T[K]
-    };
-
-export interface StaticBase<K extends WholeSchemaKeys> {
-}
-
-export interface StaticCachedBase<K extends CachedSchemaKeys> extends StaticBase<K> {
+export interface StaticCachedBase<K extends CachedSchemaKeys> {
     // Must match the type of `CachedConstructor` below
     new(conferenceId: string,
         data: FieldDataT[K],
@@ -219,7 +73,7 @@ export type Constructor<K extends WholeSchemaKeys>
     : K extends UncachedSchemaKeys ? UncachedConstructor<K>
     : never;
 
-export interface StaticUncachedBase<K extends UncachedSchemaKeys> extends StaticBase<K> {
+export interface StaticUncachedBase<K extends UncachedSchemaKeys> {
     // Must match the type of `UncachedConstructor` below
     new(parse: Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>): IBase<K>;
 
@@ -260,7 +114,7 @@ export abstract class StaticBaseImpl {
                     return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
                 }
                 else {
-                    const constr = Cache.Constructors[tableName as UncachedSchemaKeys];
+                    const constr = Cache.Constructors[tableName as UncachedSchemaKeys] as UncachedConstructor<any>;
                     const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
                     return new constr(_parse) as T;
                 }
@@ -300,7 +154,7 @@ export abstract class StaticBaseImpl {
                     return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
                 }
                 else {
-                    const constr = Cache.Constructors[tableName as UncachedSchemaKeys];
+                    const constr = Cache.Constructors[tableName as UncachedSchemaKeys] as UncachedConstructor<any>;
                     const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
                     return new constr(_parse) as T;
                 }
@@ -314,10 +168,6 @@ export abstract class StaticBaseImpl {
             });
         }
     }
-}
-
-export interface IBase<K extends WholeSchemaKeys> extends Schema.Base {
-    getUncachedParseObject(): Promise<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>;
 }
 
 /**
@@ -434,7 +284,8 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
 
     protected async uniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
         let relTableNames = RelationsToTableNames[this.tableName];
-        let relTableName = relTableNames[field as unknown as keyof RelationsToTableNamesT[K]];
+        // @ts-ignore
+        let relTableName = relTableNames[field];
         if (CachedStoreNames.includes(relTableName as any)) {
             return this.parse.get(field as any).fetch().then(async (result: any) => {
                 let confId = result.get("conference").id;
@@ -456,7 +307,8 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
 
     protected async nonUniqueRelated<S extends keyof RelatedDataT[K]>(field: S): Promise<RelatedDataT[K][S]> {
         let relTableNames = RelationsToTableNames[this.tableName];
-        let relTableName = relTableNames[field as unknown as keyof RelationsToTableNamesT[K]];
+        // @ts-ignore
+        let relTableName = relTableNames[field];
         if (CachedStoreNames.includes(relTableName as any)) {
             return this.parse.get(field as any).map(async (result: any) => {
                 let confId = result.get("conference").id;
