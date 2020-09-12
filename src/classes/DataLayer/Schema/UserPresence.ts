@@ -10,6 +10,6 @@ export default interface Schema extends Base {
     isOpenToConversation: boolean;
     status: string;
 
-    socialSpace: Promise<SocialSpace>;
+    socialSpace: Promise<SocialSpace | null>;
     user: Promise<UserProfile>;
 }

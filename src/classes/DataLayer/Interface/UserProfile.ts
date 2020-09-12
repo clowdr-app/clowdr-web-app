@@ -35,7 +35,7 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.position;
     }
 
-    get profilePhoto(): Parse.File {
+    get profilePhoto(): Parse.File | null {
         return this.data.profilePhoto;
     }
 

@@ -15,7 +15,7 @@ export default interface Schema extends Base {
     country: string;
     displayName: string;
     position: string;
-    profilePhoto: Parse.File;
+    profilePhoto: Parse.File | null;
     pronouns: string;
     realName: string;
     tags: Array<UserProfileTag>;

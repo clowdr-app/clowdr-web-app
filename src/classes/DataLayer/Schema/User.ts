@@ -3,7 +3,7 @@ import { UserProfile } from "../Interface";
 
 export default interface Schema extends Base {
     email: string;
-    loginKey: string;
+    loginKey: string | null;
     passwordSet: boolean;
     username: string;
     isBanned: "Yes" | "No";
