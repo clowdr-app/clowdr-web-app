@@ -164,7 +164,7 @@ export abstract class StaticBaseImpl {
                     reason: reason
                 });
 
-                throw new Error("Fetch all from database of uncached table failed");
+                return Promise.reject("Fetch all from database of uncached table failed");
             });
         }
     }
@@ -221,7 +221,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         if (CachedStoreNames.includes(targetTableName as any)) {
             return cache.get(targetTableName as any, targetId).then(result => {
                 if (!result) {
-                    throw new Error("Target of uniquely related field not found!");
+                    return Promise.reject("Target of uniquely related field not found!");
                 }
                 return result;
             }) as unknown as RelatedDataT[K][S];
@@ -244,7 +244,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         if (CachedStoreNames.includes(targetTableName as any)) {
             return Promise.all(targetIds.map(targetId => cache.get(targetTableName as any, targetId).then(result => {
                 if (!result) {
-                    throw new Error("Target of non-uniquely related field not found!");
+                    return Promise.reject("Target of non-uniquely related field not found!");
                 }
                 return result;
             }))) as unknown as RelatedDataT[K][S];
@@ -290,7 +290,7 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
             return this.parse.get(field as any).fetch().then(async (result: any) => {
                 let confId = result.get("conference").id;
                 if (!confId) {
-                    throw new Error("Can't handle cachable item that lacks a conference id...");
+                    return Promise.reject("Can't handle cachable item that lacks a conference id...");
                 }
 
                 let cache = await Caches.get(confId);
@@ -313,7 +313,7 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
             return this.parse.get(field as any).map(async (result: any) => {
                 let confId = result.get("conference").id;
                 if (!confId) {
-                    throw new Error("Can't handle cachable item that lacks a conference id...");
+                    return Promise.reject("Can't handle cachable item that lacks a conference id...");
                 }
 
                 let cache = await Caches.get(confId);

@@ -6,6 +6,8 @@ import Caches from "../../Cache";
 let testAttachmentTypeData: TestDataT<"AttachmentType">;
 let testObject: AttachmentType;
 
+jest.mock("../../Cache/Cache");
+
 describe("AttachmentType", () => {
     beforeAll(() => {
         testAttachmentTypeData = testData.AttachmentType[0];

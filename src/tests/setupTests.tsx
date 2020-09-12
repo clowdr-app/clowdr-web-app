@@ -1,6 +1,5 @@
 import 'jest-localstorage-mock';
 import { cleanup } from '@testing-library/react-hooks';
-import mockIndexedDB from './mockIndexedDB';
 import initParse from './initParse';
 import { initTestDB, TestDBData } from './initTestDB';
 import dotenv from 'dotenv';
@@ -13,7 +12,6 @@ beforeAll(async () => {
     jest.useRealTimers();
     testData = await initTestDB();
     initParse();
-    mockIndexedDB();
 });
 
 beforeEach(() => {

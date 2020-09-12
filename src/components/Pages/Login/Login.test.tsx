@@ -9,6 +9,8 @@ import getUserProfile from "../../../tests/getUserProfile";
 import { Simulate } from "react-dom/test-utils";
 import { generateMockPassword } from "../../../tests/initTestDB";
 
+jest.mock("../../../classes/DataLayer/Cache/Cache");
+
 describe("Login", () => {
     const mockDoLogin = jest.fn();
 
@@ -38,12 +40,12 @@ describe("Login", () => {
 
     it("renders a header", () => {
         let element = render(TestElement());
-        expect(element.getByRole("heading")).toBeDefined();
+        element.getByRole("heading");
     });
 
     it("renders a form", () => {
         let element = render(TestElement());
-        expect(element.getByRole("form")).toBeDefined();
+        element.getByRole("form");
     });
 
     it("renders the email input", () => {
@@ -69,6 +71,7 @@ describe("Login", () => {
     });
 
     it("calls setUser when the form is submitted and the user exists", async () => {
+        testUserProfile = await getUserProfile();
         const testUser = await testUserProfile.user;
 
         let element = render(TestElement());

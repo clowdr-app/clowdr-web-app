@@ -125,7 +125,7 @@ export default function App(props: Props) {
 
     function doLogin(id: string, password: string): Promise<void> {
         // TODO: Do login
-        throw new Error("Method not implemented.");
+        return Promise.reject("Method not implemented.");
     }
 
     // The main page element - this is where the bulk of content goes

@@ -10,6 +10,8 @@ import { Conference, UserProfile } from "../../classes/DataLayer";
 import { mocked } from "ts-jest/utils";
 import getConference from "../../tests/getConference";
 
+jest.mock("../../classes/DataLayer/Cache/Cache");
+
 jest.mock("../Pages/ConferenceSelection/ConferenceSelection", () => {
     const component = jest.requireActual("../Pages/ConferenceSelection/ConferenceSelection");
     return jest.fn(component.default);

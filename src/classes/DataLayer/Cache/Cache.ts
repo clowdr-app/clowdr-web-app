@@ -223,35 +223,47 @@ export default class Cache {
             if (!this.dbPromise) {
                 this.logger.info("Opening database.");
                 this.conference = new Promise((resolve, reject) => {
-                    this.dbPromise = openDB<CachedSchema>(this.DatabaseName, SchemaVersion, {
-                        upgrade: this.upgrade.bind(this),
-                        blocked: this.blocked.bind(this),
-                        blocking: this.blocking.bind(this),
-                        terminated: this.terminated.bind(this)
-                    });
-
-                    if (!this.isInitialised) {
-                        this.isInitialised = true;
-
-                        this.dbPromise.then(async db => {
-                            let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
-                            let conf = await confP;
-                            if (!conf) {
-                                reject(`Conference ${this.conferenceId} could not be loaded.`);
-                                throw new Error(`Conference ${this.conferenceId} could not be loaded.`);
-                            }
-                            resolve(conf);
-
-                            // TODO: Decide whether to clear the cache or not
-                            // If clearing the cache, don't resolve until it's empty
-                            // Else resolve early and download new data in the background
-
-                            await Promise.all(CachedStoreNames.map(store => {
-                                return this.fillCache(store, db);
-                            }));
-
-                            // TODO: Subscribe to live queries
+                    try {
+                        this.dbPromise = openDB<CachedSchema>(this.DatabaseName, SchemaVersion, {
+                            upgrade: this.upgrade.bind(this),
+                            blocked: this.blocked.bind(this),
+                            blocking: this.blocking.bind(this),
+                            terminated: this.terminated.bind(this)
                         });
+
+                        if (!this.isInitialised) {
+                            this.isInitialised = true;
+
+                            this.dbPromise.then(async db => {
+                                let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
+                                let conf = await confP;
+                                if (!conf) {
+                                    reject(`Conference ${this.conferenceId} could not be loaded.`);
+                                    return;
+                                }
+                                resolve(conf);
+
+                                // TODO: Decide whether to clear the cache or not
+                                // If clearing the cache, don't resolve until it's empty
+                                // Else resolve early and download new data in the background
+
+                                await Promise.all(CachedStoreNames.map(store => {
+                                    return this.fillCache(store, db);
+                                }));
+
+                                // TODO: Subscribe to live queries
+                            }).catch(reason => {
+                                this.logger.error(`Error initialising cache`, reason);
+                                reject(reason);
+                            });
+                        }
+                        else {
+                            resolve();
+                        }
+                    }
+                    catch (e) {
+                        this.logger.error(`Error initialising cache.`, e);
+                        reject(e);
                     }
                 });
             }
@@ -617,7 +629,7 @@ export default class Cache {
                 id: id
             });
 
-            throw new Error(`${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
+            return Promise.reject(`${id} is not present in ${tableName} cache for conference ${this.conferenceId}`);
         }
     }
 
@@ -657,13 +669,13 @@ export default class Cache {
     private async newParseQuery<K extends CachedSchemaKeys>(tableName: K) {
         assert(this.isInitialised);
         assert(this.conference);
-        let conf = (await this.conference) as any;
+        let conf = await this.conference;
 
         let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(tableName);
         if (tableName !== "Conference") {
             let r2t: Record<string, string> = RelationsToTableNames[tableName];
             if ("conference" in r2t) {
-                query.equalTo("conference" as any, conf);
+                query.equalTo("conference" as any, conf as any);
             }
         }
         return query;
@@ -673,11 +685,17 @@ export default class Cache {
         tableName: K,
         id: string
     ): Promise<T | null> {
-        return this.getFromCache(tableName, id).catch(async reason => {
+        try {
+            return await this.getFromCache(tableName, id) as T;
+        }
+        catch {
             let query = await this.newParseQuery(tableName);
-            return query.get(id).then(async parse => {
-                return await this.addItemToCache<K, T>(parse, tableName);
-            }).catch(reason => {
+            try {
+                let resultP = query.get(id);
+                let result = await resultP;
+                return await this.addItemToCache<K, T>(result, tableName);
+            }
+            catch (reason) {
                 this.logger.warn("Fetch from database of cached item failed", {
                     conferenceId: this.conferenceId,
                     tableName: tableName,
@@ -686,8 +704,8 @@ export default class Cache {
                 });
 
                 return null;
-            });
-        }) as Promise<T | null>;
+            }
+        }
     }
 
     async getAll<K extends CachedSchemaKeys, T extends CachedBase<K>>(

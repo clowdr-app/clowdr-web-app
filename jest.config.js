@@ -55,5 +55,10 @@ module.exports = {
     "watchPlugins": [
         "jest-watch-typeahead/filename",
         "jest-watch-typeahead/testname"
+    ],
+    "unmockedModulePathPatterns": [
+        "<rootDir>/node_modules/react",
+        "<rootDir>/node_modules/fbjs",
+        "<rootDir>/node_modules/core-js-pure"
     ]
 };

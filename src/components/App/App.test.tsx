@@ -4,6 +4,8 @@ import { render, waitForElement } from "@testing-library/react";
 import App from "./App";
 import { testData } from "../../tests/setupTests";
 
+jest.mock("../../classes/DataLayer/Cache/Cache");
+
 describe("App", () => {
 
     it("renders with class name 'app'", () => {

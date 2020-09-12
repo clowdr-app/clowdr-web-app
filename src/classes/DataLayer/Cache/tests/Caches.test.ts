@@ -8,10 +8,7 @@ jest.mock("../Cache");
 const testId = "test_conference_id";
 
 describe("Caches", () => {
-    const mockedCache = mocked(Cache, true);
-
     beforeEach(() => {
-        mockedCache.mockClear();
         Caches.clear();
     });
 
@@ -40,22 +37,9 @@ describe("Caches", () => {
     });
 
     describe("get", () => {
-        it("creates a cache if one doesn't exist", () => {
-            let cache = Caches.get(testId);
+        it("creates a cache if one doesn't exist", async () => {
+            let cache = await Caches.get(testId);
             expect(cache).toBeTruthy();
-            expect(Cache).toBeCalledTimes(1);
-        });
-
-        it("initialises a cache it creates", () => {
-            let cache = Caches.get(testId);
-            expect(cache).toBeTruthy();
-            expect(Cache).toBeCalledTimes(1);
-        });
-
-        it("returns an existing cache", () => {
-            Caches.get(testId);
-            Caches.get(testId);
-            expect(Cache).toBeCalledTimes(1);
         });
     });
 });
