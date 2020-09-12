@@ -11,13 +11,13 @@ beforeAll(async () => {
         testData = _testData;
 
         initParse();
+        mockIndexedDB();
     });
 });
 
 beforeEach(() => {
     localStorage.clear();
-    mockIndexedDB();
-    jest.useFakeTimers();
+    jest.useRealTimers();
 });
 
 afterEach(() => {
