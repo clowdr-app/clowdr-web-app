@@ -1,23 +1,30 @@
 import 'jest-localstorage-mock';
 import { cleanup } from '@testing-library/react-hooks';
+import mockIndexedDB from './mockIndexedDB';
+import initParse from './initParse';
+import { initTestDB, TestDBData } from './initTestDB';
 
-// import { unmountComponentAtNode } from "react-dom";
-// import { act } from "react-dom/test-utils";
+export let testData: TestDBData;
 
-jest.useFakeTimers();
+beforeAll(async () => {
+    await initTestDB().then((_testData) => {
+        testData = _testData;
+
+        initParse();
+    });
+});
 
 beforeEach(() => {
     localStorage.clear();
+    mockIndexedDB();
 });
 
 afterEach(() => {
-    // jest.clearAllMocks();
-    cleanup();
+    jest.runAllImmediates();
+    jest.runAllTimers();
 });
 
-// export const waitForComponentToPaint = async (wrapper: any) => {
-//     await act(async () => {
-//         await new Promise(resolve => setTimeout(resolve, 0));
-//         wrapper.update();
-//     });
-// };
+
+afterEach(() => {
+    cleanup();
+});

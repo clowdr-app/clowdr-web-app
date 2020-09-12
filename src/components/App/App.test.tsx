@@ -2,6 +2,7 @@ import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { render, waitForElement } from "@testing-library/react";
 import App from "./App";
+import { testData } from "../../tests/setupTests";
 
 describe("App", () => {
 
@@ -30,13 +31,19 @@ describe("App", () => {
     });
 
     it("renders a sidebar when a conference is selected", async () => {
-        sessionStorage.setItem("currentConferenceId", "mock_id");
+        sessionStorage.setItem("currentConferenceId", testData.Conference[0].id);
 
         let element = render(<MemoryRouter>
             <App />
         </MemoryRouter>);
 
-        const sideBarElements = await waitForElement(() => element.container.getElementsByClassName("sidebar"));
+        let sideBarElements;
+        let startedAt = Date.now();
+        do {
+            sideBarElements = await waitForElement(() => element.container.getElementsByClassName("sidebar"));
+            jest.runAllTimers();
+        }
+        while (!sideBarElements.length && (Date.now() - startedAt) < 3500);
 
         expect(sideBarElements.length).toBe(1);
     });

@@ -1,5 +1,6 @@
 import * as Schema from "../Schema";
-import { StaticCachedBase, StaticBaseImpl, CachedBase, PromisesRemapped, FieldDataT } from "./Base";
+import { PromisesRemapped } from "../WholeSchema";
+import { StaticCachedBase, StaticBaseImpl, CachedBase, FieldDataT } from "./Base";
 import { Conference } from ".";
 
 type SchemaT = Schema.PrivilegedConferenceDetails;

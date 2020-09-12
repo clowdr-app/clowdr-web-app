@@ -1,5 +1,6 @@
 import * as Schema from "../Schema";
-import { StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT, CachedBase } from "./Base";
+import { PromisesRemapped } from "../WholeSchema";
+import { StaticCachedBase, StaticBaseImpl, FieldDataT, CachedBase } from "./Base";
 import { Conference, Conversation, UserProfile, ProgramItem } from ".";
 
 type SchemaT = Schema.BreakoutRoom;

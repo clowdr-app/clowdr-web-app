@@ -234,7 +234,8 @@ export default class Cache {
                         this.isInitialised = true;
 
                         this.dbPromise.then(async db => {
-                            let conf = await new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
+                            let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
+                            let conf = await confP;
                             if (!conf) {
                                 reject(`Conference ${this.conferenceId} could not be loaded.`);
                                 throw new Error(`Conference ${this.conferenceId} could not be loaded.`);

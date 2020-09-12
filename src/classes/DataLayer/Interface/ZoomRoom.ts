@@ -1,5 +1,6 @@
 import * as Schema from "../Schema";
-import { StaticUncachedBase, StaticBaseImpl, PromisesRemapped, UncachedBase } from "./Base";
+import { PromisesRemapped } from "../WholeSchema";
+import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
 import { Conference, ZoomHostAccount, ProgramRoom } from ".";
 
 type SchemaT = Schema.ZoomRoom;

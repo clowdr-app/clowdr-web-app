@@ -1,6 +1,7 @@
 import * as Schema from "../Schema";
-import { CachedBase, StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT } from "./Base";
+import { CachedBase, StaticCachedBase, StaticBaseImpl, FieldDataT } from "./Base";
 import { Conference } from ".";
+import { PromisesRemapped } from "../WholeSchema";
 
 type SchemaT = Schema.AttachmentType;
 type K = "AttachmentType";

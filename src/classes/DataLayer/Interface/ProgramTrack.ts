@@ -1,7 +1,8 @@
 import * as Schema from "../Schema";
-import { CachedBase, StaticCachedBase, StaticBaseImpl, PromisesRemapped, FieldDataT } from "./Base";
+import { CachedBase, StaticCachedBase, StaticBaseImpl, FieldDataT } from "./Base";
 import { Conference } from ".";
 import { Exhibits } from "../Schema/ProgramTrack";
+import { PromisesRemapped } from "../WholeSchema";
 
 type SchemaT = Schema.ProgramTrack;
 type K = "ProgramTrack";
