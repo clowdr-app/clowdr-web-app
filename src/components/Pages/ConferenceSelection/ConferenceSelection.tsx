@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Conference } from "../../../classes/DataLayer";
 import { Link } from "react-router-dom";
 import "./ConferenceSelection.scss";
+import FooterLinks from "../../FooterLinks/FooterLinks";
 
 export default function ConferenceSelection() {
     const [conferences, setConferences] = useState<Conference[]>([]);
@@ -28,12 +29,6 @@ export default function ConferenceSelection() {
                 <button className="join-button">Join</button>
             </div>
         </div>
-        <div className="bottom-links">
-            <Link className="bottom-link" to="/about">About</Link>
-            <span className="dot">&middot;</span>
-            <Link className="bottom-link" to="/legal">Legal</Link>
-            <span className="dot">&middot;</span>
-            <Link className="bottom-link" to="/help">Help</Link>
-        </div>
+        <FooterLinks />
     </div>;
 }
