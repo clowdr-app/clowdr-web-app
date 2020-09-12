@@ -35,6 +35,7 @@ describe("AttachmentType", () => {
     });
 
     it("returns the conference", async () => {
+        jest.setTimeout(10000);
         jest.useRealTimers();
 
         let cache = await Caches.get(testData.Conference[0].id);
