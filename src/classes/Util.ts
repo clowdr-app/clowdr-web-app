@@ -82,6 +82,10 @@ export function removeUndefined<T>(array: Array<T | undefined>): Array<T> {
     return array.filter(x => x !== undefined) as Array<T>;
 }
 
+export function removeNull<T>(array: Array<T | null>): Array<T> {
+    return array.filter(x => x !== null) as Array<T>;
+}
+
 export function getTimeString(time: Date): string {
     const hours = time.getHours().toString().padStart(2, "0");
     const minutes = time.getMinutes().toString().padStart(2, "0");
