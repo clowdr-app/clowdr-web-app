@@ -57,6 +57,7 @@ describe("Page", () => {
     beforeEach(() => {
         mockConferenceSelection.mockClear();
         mockLogin.mockClear();
+        mockLoggedInWelcome.mockClear();
     });
 
     it("renders with class name 'page'", () => {
