@@ -8,6 +8,8 @@ export let testData: TestDBData;
 
 dotenv.config();
 
+jest.setTimeout(10000);
+
 beforeAll(async () => {
     jest.useRealTimers();
     testData = await initTestDB();
