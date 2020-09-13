@@ -9,6 +9,8 @@ import UserProfileContext from '../../contexts/UserProfileContext';
 import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
 import { useHistory } from "react-router-dom";
+import { UserProfile, _User } from "../../classes/DataLayer";
+import assert from "assert";
 
 interface Props {
 }
@@ -128,10 +130,10 @@ export default function App(props: Props) {
 
     async function doLogin(username: string, password: string): Promise<void> {
         let parseUser = await Parse.User.logIn(username, password);
-        if (parseUser) {
-            history.push("/");
-            history.go(0);
-        }
+        assert(conference);
+        UserProfile.getByUserId(parseUser.id, conference.id).then(profile => {
+            setUserProfile(profile);
+        });
     }
 
     // The main page element - this is where the bulk of content goes
