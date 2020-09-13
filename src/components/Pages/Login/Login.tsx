@@ -17,6 +17,8 @@ export default function Login(props: LoginProps) {
         event.preventDefault();
 
         const user = await _User.getByEmail(email);
+        // TODO: Validate that the user has a profile associated with the
+        // current conference
         if (user) {
             setEmail("");
             setPassword("");
@@ -50,14 +52,14 @@ export default function Login(props: LoginProps) {
         type="email"
         name="email"
         aria-label="Email"
-        defaultValue="Your email"
+        value={email}
         onChange={(e) => onChange("email", e)}
     />;
     const passwordBox = <input
         type="password"
         name="password"
         aria-label="Password"
-        defaultValue="Your password"
+        value={password}
         onChange={(e) => onChange("password", e)}
     />;
     const loginButton = <input
