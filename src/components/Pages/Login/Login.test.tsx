@@ -17,12 +17,12 @@ describe("Login", () => {
 
     function TestElement(resolve:
         (result: {
-            username: string,
+            email: string,
             password: string
         }) => void) {
-        mockDoLogin.mockImplementation((username: string, password: string) => {
+        mockDoLogin.mockImplementation((email: string, password: string) => {
             resolve({
-                username: username,
+                email: email,
                 password: password
             });
         });
@@ -87,8 +87,8 @@ describe("Login", () => {
 
         let element: RenderResult;
         let doLogin = (resolve: () => void) => {
-            return ({ username, password }: { username: string, password: string }) => {
-                expect(username).toBe(testUser.username);
+            return ({ email, password }: { email: string, password: string }) => {
+                expect(email).toBe(testUser.email);
                 expect(password).toBe(pwd);
 
                 expect(mockDoLogin).toBeCalledTimes(1);
