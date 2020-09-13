@@ -1,4 +1,5 @@
 const fs = require('fs');
+const fsExtra = require('fs-extra')
 const { exec } = require('child_process');
 const dotenv = require('dotenv');
 const { generateTestData } = require("../src/tests/initTestDB.js");
@@ -15,6 +16,9 @@ let testDirPath = "./db/test";
 
 if (!fs.existsSync(testDirPath)) {
     fs.mkdirSync(testDirPath);
+}
+else {
+    fsExtra.emptyDirSync(testDirPath);
 }
 
 let testData = generateTestData().json;

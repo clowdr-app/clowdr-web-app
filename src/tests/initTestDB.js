@@ -86,7 +86,8 @@ const RelationsToTableNames = {
     TwilioChannelMirror: {
     },
     _User: {
-        profiles: "UserProfile"
+        profiles: "UserProfile",
+        roles: "_Role"
     },
     UserPresence: {
         socialSpace: "SocialSpace",
@@ -106,6 +107,9 @@ const RelationsToTableNames = {
         conference: "Conference",
         hostAccount: "ZoomHostAccount",
         programRoom: "ProgramRoom"
+    },
+    _Role: {
+        users: "_User"
     }
 };
 
@@ -200,6 +204,68 @@ function generatePrivilegedConferenceDetails() {
         key: "LOGGED_IN_TEXT",
         updatedAt: new Date(),
         value: "Welcome to this mock conference logged in text."
+    });
+
+    return result;
+}
+
+function generateRoles() {
+    let result = [];
+
+    result.push({
+        id: "mockSysAdminRole1",
+        name: "ClowdrSysAdmin",
+        _wperm: ["mockConference1-admin"],
+        _rperm: ["*"],
+        _acl: {
+            "mockConference1-admin": { w: true },
+            "*": { r: true }
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        users: ["mockUser1"]
+    });
+
+    result.push({
+        id: "mockConference1-RoleAdmin",
+        name: "mockConference1-admin",
+        _wperm: ["mockConference1-admin"],
+        _rperm: ["*"],
+        _acl: {
+            "mockConference1-admin": { w: true },
+            "*": { r: true }
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        users: ["mockUser1"]
+    });
+
+    result.push({
+        id: "mockConference1-RoleManager",
+        name: "mockConference1-manager",
+        _wperm: ["mockConference1-admin"],
+        _rperm: ["*"],
+        _acl: {
+            "mockConference1-admin": { w: true },
+            "*": { r: true }
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        users: ["mockUser1"]
+    });
+
+    result.push({
+        id: "mockConference1-RoleConference",
+        name: "mockConference1-conference",
+        _wperm: ["mockConference1-admin"],
+        _rperm: ["*"],
+        _acl: {
+            "mockConference1-admin": { w: true },
+            "*": { r: true }
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        users: ["mockUser1"]
     });
 
     return result;
@@ -411,6 +477,9 @@ module.exports = {
 
         result.PrivilegedConferenceDetails = generatePrivilegedConferenceDetails();
         convertToMongoJSON("PrivilegedConferenceDetails", result.PrivilegedConferenceDetails, allItems);
+
+        result._Role = generateRoles();
+        convertToMongoJSON("_Role", result._Role, allItems);
 
         result._User = generateUsers();
         convertToMongoJSON("_User", result._User, allItems);
