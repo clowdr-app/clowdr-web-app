@@ -36,6 +36,10 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return this.nonUniqueRelated("profiles");
     }
 
+    static getByEmail(email: string): Promise<Class | null> {
+        return StaticBaseImpl.getByField(K_str, "email", email);
+    }
+
     static get(id: string, conferenceId?: string): Promise<Class | null> {
         return StaticBaseImpl.get(K_str, id, conferenceId);
     }
