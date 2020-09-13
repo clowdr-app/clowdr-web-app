@@ -49,5 +49,6 @@ export default class Class extends CachedBase<K> implements SchemaT {
 }
 
 // The line of code below triggers type-checking of Class for static members
+// @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _: StaticCachedBase<K> = Class;

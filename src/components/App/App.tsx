@@ -134,8 +134,14 @@ export default function App(props: Props) {
         });
     }
 
+    async function selectConference(id: string): Promise<void> {
+        const conference = await Conference.get(id);
+        Session_Conference.currentConferenceId = id;
+        setConference(conference);
+    }
+
     // The main page element - this is where the bulk of content goes
-    let page = <Page doLogin={doLogin} />;
+    let page = <Page doLogin={doLogin} selectConference={selectConference} />;
     // The sidebar element - only rendered if a conference is selected (user may
     // still be logged out though).
     let sidebar = <></>;
