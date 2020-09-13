@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { _User } from "../../../classes/DataLayer";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 
 export type doLoginF = (username: string, password: string) => Promise<boolean>;
