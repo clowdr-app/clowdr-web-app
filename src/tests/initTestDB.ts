@@ -27,7 +27,7 @@ type ParseRestRequestObject = {
 };
 
 export function generateMockPassword(userId: string) {
-    return "mockPassword_" + userId;
+    return "mock";
 }
 
 function generateAttachmentTypes(): Array<TestDataT<"AttachmentType">> {
@@ -127,7 +127,7 @@ function generateUsers(): Array<TestDataT<"_User">> {
 
     let userId = "mockUser1";
     result.push({
-        email: "mockUserEmail@mock.com",
+        email: "mock@mock.com",
         createdAt: new Date(),
         id: userId,
         isBanned: "No",
@@ -223,12 +223,18 @@ function convertToRequestObjs<K extends WholeSchemaKeys>(tableName: K, items: Ar
                     let relatedTableName = RelationFields[fieldName];
                     if (Array.isArray(fieldValue)) {
                         let ids: Array<string> = fieldValue;
-                        finalValue = ids.map(id => ({
-                            __type: "Pointer",
-                            className: relatedTableName,
-                            objectId: id
-                        }));
-                        // TODO: object.body[fieldName] = finalValue;
+                        if (ids.length > 0) {
+                            finalValue = ids.map(id => ({
+                                __type: "Pointer",
+                                className: relatedTableName,
+                                objectId: id
+                            }));
+
+                            object.body[fieldName] = {
+                                __op: "AddRelation",
+                                objects: finalValue
+                            };
+                        }
                     }
                     else {
                         finalValue = {
@@ -349,6 +355,15 @@ export async function initTestDB(updateDB: boolean = true): Promise<TestDBData> 
         let restResult = await RESTController.request('POST', 'batch', {
             requests: allItems
         });
+        if (Array.isArray(restResult)) {
+            for (let result of restResult) {
+                let resultJSON = JSON.stringify(result);
+                if (resultJSON.includes("error")) {
+                    console.error(result);
+                    throw new Error(`Failed to create test data:\n${resultJSON}`);
+                }
+            }
+        }
     }
 
     return result;
