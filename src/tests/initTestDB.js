@@ -438,8 +438,6 @@ function convertObjectToMongoJSON(tableName, item, result) {
 }
 
 function convertToMongoJSON(tableName, items, result) {
-    // TODO
-
     result[tableName] = items.map(item => {
         return convertObjectToMongoJSON(tableName, item, result);
     });
