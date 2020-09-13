@@ -11,7 +11,7 @@ export function objectKeys<T>(o: T): Array<KnownKeys<T>> {
 }
 
 export type NotPromisedKeys<T> = {
-    [K in keyof T]: T[K] extends Promise<infer S> ? never : K;
+    [K in keyof T]: T[K] extends Promise<infer _S> ? never : K;
 }[keyof T];
 
 export type NotPromisedFields<T> = {
@@ -19,7 +19,7 @@ export type NotPromisedFields<T> = {
 };
 
 export type PromisedKeys<T> = {
-    [K in keyof T]: T[K] extends Promise<infer S> ? K : never;
+    [K in keyof T]: T[K] extends Promise<infer _S> ? K : never;
 }[keyof T];
 
 export type PromisedFields<T> = {
@@ -41,18 +41,18 @@ export type PromisedFieldsExtending<T, S> = {
 
 export type PromisedNonArrayKeys<T> = {
     [K in keyof T]:
-    T[K] extends Promise<Array<infer S>> ? never :
-    T[K] extends Promise<infer S> ? K : never;
+    T[K] extends Promise<Array<infer _S>> ? never :
+    T[K] extends Promise<infer _S> ? K : never;
 }[keyof T];
 
 export type PromisedNonArrayFields<T> = {
     [K in PromisedNonArrayKeys<T>]:
-    T[K] extends Promise<Array<infer S>> ? never :
+    T[K] extends Promise<Array<infer _S>> ? never :
     T[K] extends Promise<infer S> ? S : never;
 };
 
 export type PromisedArrayKeys<T> = {
-    [K in keyof T]: T[K] extends Promise<Array<infer S>> ? K : never;
+    [K in keyof T]: T[K] extends Promise<Array<infer _S>> ? K : never;
 }[keyof T];
 
 export type PromisedArrayFields<T> = {

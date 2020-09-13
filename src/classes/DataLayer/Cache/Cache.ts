@@ -714,7 +714,7 @@ export default class Cache {
     async getAll<K extends CachedSchemaKeys, T extends CachedBase<K>>(
         tableName: K
     ): Promise<Array<T>> {
-        return this.getAllFromCache(tableName).catch(async reason => {
+        return this.getAllFromCache(tableName).catch(async () => {
             let query = await this.newParseQuery(tableName);
             return query.map(async parse => {
                 await parse.fetch();

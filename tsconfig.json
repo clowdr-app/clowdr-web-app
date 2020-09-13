@@ -2,11 +2,7 @@
   "compilerOptions": {
     // TODO: Switch back to es5 for production?
     "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,27 +14,20 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
-    "noImplicitReturns": true,      
+    "noImplicitReturns": true,
     "jsx": "react",
     "downlevelIteration": true,
-    "outDir": "build"
-
-/* Strict Type-Checking Options 
-    "strict": true,                           
-    "noImplicitAny": true,               
-    "strictNullChecks": true,              
-    "strictFunctionTypes": true,           
-    "strictPropertyInitialization": true,  
-    "noImplicitThis": true,                
-    "alwaysStrict": true,                 
+    "outDir": "build",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
     "suppressImplicitAnyIndexErrors": true,
-
- Additional Checks 
-    "noUnusedLocals": true,                
-    "noUnusedParameters": true,           
-    "noImplicitReturns": true,             
-    "noFallthroughCasesInSwitch": true,
-*/
+    "noFallthroughCasesInSwitch": true
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
   },
   "include": ["src"],
   "typeRoots": ["./src/types", "./node_modules/@types"]
