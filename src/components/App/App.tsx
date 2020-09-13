@@ -8,7 +8,7 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
 import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
-import { Conference, UserProfile } from "../../classes/DataLayer";
+import { Conference, UserProfile, _User } from "../../classes/DataLayer";
 import assert from "assert";
 
 interface Props {
@@ -126,13 +126,19 @@ export default function App(props: Props) {
         userProfile
     ]);
 
-    async function doLogin(username: string, password: string): Promise<void> {
-        let parseUser = await Parse.User.logIn(username, password);
-        assert(conference);
-        // TODO: Handle invalid username/password error
-        UserProfile.getByUserId(parseUser.id, conference.id).then(profile => {
+    async function doLogin(email: string, password: string): Promise<boolean> {
+        try {
+            assert(conference);
+
+            let parseUser = await _User.logIn(email, password);
+            let profile = await UserProfile.getByUserId(parseUser.id, conference.id);
             setUserProfile(profile);
-        });
+            return !!profile;
+        }
+        catch {
+            setUserProfile(null);
+            return false;
+        }
     }
 
     async function selectConference(id: string): Promise<void> {

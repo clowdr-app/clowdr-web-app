@@ -1,7 +1,9 @@
+import Parse from "parse";
 import * as Schema from "../Schema";
 import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
 import { UserProfile } from ".";
 import { PromisesRemapped } from "../WholeSchema";
+import { CoreManager, RequestOptions } from "parse";
 
 type SchemaT = Schema._User;
 type K = "_User";
@@ -36,8 +38,40 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return this.nonUniqueRelated("profiles");
     }
 
-    static getByEmail(email: string): Promise<Class | null> {
-        return StaticBaseImpl.getByField(K_str, "email", email);
+    static async logIn(email: string, password: string, options: RequestOptions = {}): Promise<Class> {
+        /* We're going to tap into the innards of the Parse JS SDK because for
+         * some reason, the backend supports email login but their frontend SDK
+         * doesn't!
+         */
+
+        const loginOptions: {
+            useMasterKey?: boolean,
+            installationId?: string
+        } = {};
+
+        if (options.hasOwnProperty('useMasterKey')) {
+            loginOptions.useMasterKey = options.useMasterKey;
+        }
+        if (options.hasOwnProperty('installationId')) {
+            loginOptions.installationId = options.installationId;
+        }
+
+        // @ts-ignore
+        const RESTController = CoreManager.getRESTController();
+        // @ts-ignore
+        const userController = CoreManager.getUserController();
+        const auth = {
+            email: email,
+            password: password
+        };
+        return RESTController.request(
+            'GET', 'login', auth, loginOptions
+        ).then((response: any) => {
+            let user = new Parse.User();
+            // @ts-ignore
+            user._finishFetch(response);
+            return userController.setCurrentUser(user);
+        });
     }
 
     static get(id: string, conferenceId?: string): Promise<Class | null> {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { _User } from "../../../classes/DataLayer";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 
-export type doLoginF = (username: string, password: string) => Promise<void>;
+export type doLoginF = (username: string, password: string) => Promise<boolean>;
 
 interface LoginProps {
     doLogin: doLoginF;
@@ -15,20 +15,10 @@ export default function Login(props: LoginProps) {
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-
-        const user = await _User.getByEmail(email);
-        // TODO: Validate that the user has a profile associated with the
-        // current conference
-        if (user) {
-            setEmail("");
-            setPassword("");
-            await doLogin(user.username, password);
-        }
-        else {
-            // TODO: Display error message
-            setEmail("");
-            setPassword("");
-        }
+        setEmail("");
+        setPassword("");
+        let _ok = await doLogin(email, password);
+        // TODO: If not ok, display error
     }
 
     function onChange(
