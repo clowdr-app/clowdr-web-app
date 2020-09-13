@@ -129,6 +129,7 @@ export default function App(props: Props) {
     async function doLogin(username: string, password: string): Promise<void> {
         let parseUser = await Parse.User.logIn(username, password);
         assert(conference);
+        // TODO: Handle invalid username/password error
         UserProfile.getByUserId(parseUser.id, conference.id).then(profile => {
             setUserProfile(profile);
         });

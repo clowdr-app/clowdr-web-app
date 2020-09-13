@@ -35,3 +35,7 @@ TAGS
 *.tmp
 **/.env.localdev
 **/logs
+
+db/test/**/*.*
+db/dump/**/*.*
+*.bson

@@ -1,6 +1,5 @@
 import { AttachmentType } from "..";
-import { TestDataT } from "../../../../tests/initTestDB";
-import { testData } from "../../../../tests/setupTests";
+import { testData, TestDataT } from "../../../../tests/setupTests";
 import Caches from "../../Cache";
 
 let testAttachmentTypeData: TestDataT<"AttachmentType">;

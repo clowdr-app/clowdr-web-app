@@ -196,11 +196,6 @@ export abstract class StaticBaseImpl {
                     return new constr(_parse) as T;
                 }
             }).catch(reason => {
-                console.warn("Fetch all from database of uncached table failed", {
-                    tableName: tableName,
-                    reason: reason
-                });
-
                 return Promise.reject("Fetch all from database of uncached table failed");
             });
         }

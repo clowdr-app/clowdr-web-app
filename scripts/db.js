@@ -176,9 +176,8 @@ async function activate(instance) {
         userprofile.save({}, {useMasterKey: true}).then(async up => {
             console.log(`[activate]: user profile ${up.get("realName")} saved`);
 
-            let profiles = [];
-            profiles.push(up);
-            u.set("profiles", profiles);
+            let profiles = u.relation('profiles');
+            profiles.add(up);
             let u2 = await u.save();
 
             const roleACL = new Parse.ACL();
