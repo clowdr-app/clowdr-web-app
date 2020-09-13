@@ -113,7 +113,7 @@ function generatePrivilegedConferenceDetails(): Array<TestDataT<"PrivilegedConfe
     result.push({
         conference: "mockConference2",
         createdAt: new Date(),
-        id: "mockPrivilegedConferenceDetails1",
+        id: "mockPrivilegedConferenceDetails2",
         key: "LOGGED_IN_TEXT",
         updatedAt: new Date(),
         value: "Welcome to this mock conference logged in text."
@@ -228,6 +228,7 @@ function convertToRequestObjs<K extends WholeSchemaKeys>(tableName: K, items: Ar
                             className: relatedTableName,
                             objectId: id
                         }));
+                        // TODO: object.body[fieldName] = finalValue;
                     }
                     else {
                         finalValue = {
@@ -235,8 +236,8 @@ function convertToRequestObjs<K extends WholeSchemaKeys>(tableName: K, items: Ar
                             className: relatedTableName,
                             objectId: fieldValue
                         };
+                        object.body[fieldName] = finalValue;
                     }
-                    // TODO: object.body[fieldName] = finalValue;
                 }
                 else {
                     let _fieldValue = fieldValue as any;
@@ -339,6 +340,8 @@ export async function initTestDB(updateDB: boolean = true): Promise<TestDBData> 
     if (allItems.length > 50) {
         throw new Error("Test data too long.");
     }
+
+    // TODO: Check for duplicate ids
 
     if (updateDB) {
         const RESTController = require('parse/lib/node/RESTController');
