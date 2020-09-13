@@ -348,7 +348,8 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
         // @ts-ignore
         let relTableName = relTableNames[field];
         if (CachedStoreNames.includes(relTableName as any)) {
-            return this.parse.get(field as any).map(async (result: any) => {
+            let relation = this.parse.get(field as any) as Parse.Relation<any>;
+            return relation.query().map(async (result: any) => {
                 let confId = result.get("conference").id;
                 if (!confId) {
                     return Promise.reject("Can't handle cachable item that lacks a conference id...");
@@ -356,13 +357,14 @@ export abstract class UncachedBase<K extends UncachedSchemaKeys> implements IBas
 
                 let cache = await Caches.get(confId);
                 return cache.addItemToCache(result, relTableName as any);
-            });
+            }) as RelatedDataT[K][S];
         }
         else {
-            return this.parse.get(field as any).map((result: any) => {
+            let relation = this.parse.get(field as any) as Parse.Relation<any>;
+            return relation.query().map((result: any) => {
                 let constr = Cache.Constructors[relTableName as unknown as UncachedSchemaKeys];
                 return new constr(result) as any;
-            });
+            }) as RelatedDataT[K][S];
         }
     }
 }
