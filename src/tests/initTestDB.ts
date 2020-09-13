@@ -133,7 +133,7 @@ function generateUsers(): Array<TestDataT<"_User">> {
         isBanned: "No",
         loginKey: null,
         passwordSet: true,
-        profiles: ["mockUserProfile1"],
+        profiles: [], // ["mockUserProfile1"],
         updatedAt: new Date(),
         username: "mockUser1",
         password: generateMockPassword(userId)
@@ -230,10 +230,10 @@ function convertToRequestObjs<K extends WholeSchemaKeys>(tableName: K, items: Ar
                                 objectId: id
                             }));
 
-                            object.body[fieldName] = {
-                                __op: "AddRelation",
-                                objects: finalValue
-                            };
+                            // object.body[fieldName] = {
+                            //     __op: "AddRelation",
+                            //     objects: finalValue
+                            // };
                         }
                     }
                     else {
@@ -242,8 +242,8 @@ function convertToRequestObjs<K extends WholeSchemaKeys>(tableName: K, items: Ar
                             className: relatedTableName,
                             objectId: fieldValue
                         };
-                        object.body[fieldName] = finalValue;
                     }
+                    object.body[fieldName] = finalValue;
                 }
                 else {
                     let _fieldValue = fieldValue as any;
@@ -305,8 +305,8 @@ export async function initTestDB(updateDB: boolean = true): Promise<TestDBData> 
     for (let tableName in result) {
         try {
             if (tableName === "_User") {
-                await (new Parse.Query<Parse.User>("_User").map(async user => {
-                    await user.destroy();
+                purgePromises.push(new Parse.Query<Parse.User>("_User").map(user => {
+                    return user.destroy();
                 }));
             }
             else {
