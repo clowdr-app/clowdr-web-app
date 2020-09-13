@@ -8,8 +8,7 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
 import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
-import { useHistory } from "react-router-dom";
-import { UserProfile, _User } from "../../classes/DataLayer";
+import { UserProfile } from "../../classes/DataLayer";
 import assert from "assert";
 
 interface Props {
@@ -34,7 +33,6 @@ export default function App(props: Props) {
     //       functions.
     const [conference, setConference] = useState<DataLayer.Conference | null>(null);
     const [userProfile, setUserProfile] = useState<DataLayer.UserProfile | null>(null);
-    const history = useHistory();
     const logger = useLogger("App");
 
     // State updates go inside a `useEffect`
