@@ -223,7 +223,7 @@ function generateRoles() {
         },
         createdAt: new Date(),
         updatedAt: new Date(),
-        users: ["mockUser1"]
+        users: ["ClowdrSysAdmin"]
     });
 
     result.push({
@@ -274,17 +274,30 @@ function generateRoles() {
 function generateUsers() {
     let result = [];
 
-    let userId = "mockUser1";
     result.push({
         email: "mock@mock.com",
         createdAt: new Date(),
-        id: userId,
+        id: "mockUser1",
         isBanned: "No",
         loginKey: null,
         passwordSet: true,
         updatedAt: new Date(),
         username: "mockUser1",
         profiles: ["mockUserProfile1"],
+        // admin
+        _hashed_password: "$2b$10$U1dOIN.fger7QO4sS9kwSelJdQgrr7D2hUCX5G4oMNR7uAPFQeXS2"
+    });
+
+    result.push({
+        email: "clowdr@sys.admin",
+        createdAt: new Date(),
+        id: "ClowdrSysAdmin",
+        isBanned: "No",
+        loginKey: null,
+        passwordSet: true,
+        updatedAt: new Date(),
+        username: "clowdr@localhost",
+        profiles: [],
         // admin
         _hashed_password: "$2b$10$U1dOIN.fger7QO4sS9kwSelJdQgrr7D2hUCX5G4oMNR7uAPFQeXS2"
     });
