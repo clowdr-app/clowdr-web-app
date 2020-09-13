@@ -8,7 +8,7 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
 import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
-import { UserProfile } from "../../classes/DataLayer";
+import { Conference, UserProfile } from "../../classes/DataLayer";
 import assert from "assert";
 
 interface Props {
