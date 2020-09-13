@@ -9,8 +9,10 @@
 $font-sm: 0.9em;
 $font-lg: 1.2em;
 $font-xl: 1.5em;
-$font-2xl: 2em;
-$font-3xl: 2.5em;
+$font-2xl: 1.8em;
+$font-3xl: 2.1em;
+$font-4xl: 2.4em;
+$font-5xl: 2.7em;
 
 $gray-0: #000;
 $gray-1: #333;
@@ -24,3 +26,8 @@ $secondary: #d45113ff;
 $color-3: #f9a03fff;
 $color-4: #f8dda4ff;
 $color-5: #ddf9c1ff;
+
+$break-sm: 640px;
+$break-md: 768px;
+$break-lg: 1024px;
+$break-xl: 1280px;
