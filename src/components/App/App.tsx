@@ -8,7 +8,7 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
 import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
-import { UserProfile } from '../../classes/DataLayer';
+import { useHistory } from "react-router-dom";
 
 interface Props {
 }
@@ -32,6 +32,7 @@ export default function App(props: Props) {
     //       functions.
     const [conference, setConference] = useState<DataLayer.Conference | null>(null);
     const [userProfile, setUserProfile] = useState<DataLayer.UserProfile | null>(null);
+    const history = useHistory();
     const logger = useLogger("App");
 
     // State updates go inside a `useEffect`
@@ -87,22 +88,24 @@ export default function App(props: Props) {
                 // Parse API thinks you're logged in but the user has been
                 // deleted in the database.
                 if (user && user.id) {
-                    // Has a conference been selected?
-                    if (currentConferenceId) {
-                        // Yes, good, let's store the user for later.
-                        // This will also trigger a re-rendering.
-                        let profile = await DataLayer.UserProfile.getByUserId(user.id, currentConferenceId);
-                        setUserProfile(profile);
-                    }
-                    else {
-                        // No conference selected, better make sure our internal
-                        // state matches that fact.
-                        setUserProfile(null);
+                    if (!userProfile || (await userProfile.user).id !== user.id) {
+                        // Has a conference been selected?
+                        if (currentConferenceId) {
+                            // Yes, good, let's store the user for later.
+                            // This will also trigger a re-rendering.
+                            let profile = await DataLayer.UserProfile.getByUserId(user.id, currentConferenceId);
+                            setUserProfile(profile);
+                        }
+                        else {
+                            // No conference selected, better make sure our internal
+                            // state matches that fact.
+                            setUserProfile(null);
 
-                        // Note: We don't actually log the user out here, we
-                        // just create a consistent state such that our app only
-                        // sees the logged in state when there is a conference
-                        // selected.
+                            // Note: We don't actually log the user out here, we
+                            // just create a consistent state such that our app only
+                            // sees the logged in state when there is a conference
+                            // selected.
+                        }
                     }
                 }
                 else {
@@ -123,9 +126,12 @@ export default function App(props: Props) {
         userProfile
     ]);
 
-    function doLogin(id: string, password: string): Promise<void> {
-        // TODO: Do login
-        return Promise.reject("Method not implemented.");
+    async function doLogin(username: string, password: string): Promise<void> {
+        let parseUser = await Parse.User.logIn(username, password);
+        if (parseUser) {
+            history.push("/");
+            history.go(0);
+        }
     }
 
     // The main page element - this is where the bulk of content goes
