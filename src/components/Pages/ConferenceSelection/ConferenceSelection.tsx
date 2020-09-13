@@ -36,19 +36,21 @@ export default function ConferenceSelection(props: Props) {
         <div className="main">
             <h1 className="banner">Welcome to Clowdr</h1>
             <p>Please select your conference to begin</p>
-            <select disabled={conferences.length === 0} onChange={e => setSelected(e.target.value)}>
-                {conferences.map((conf, i) =>
-                    <option key={i} value={conf.id}>{conf.conferenceName}</option>
-                )}
-            </select>
-            <div>
-                <button
-                    className={"join-button" + (selected == null ? " join-button-disabled" : "")}
-                    disabled={selected == null}
-                    onClick={submitSelection}
-                >
-                    Join
-                </button>
+            <div className="input-wrapper">
+                <select disabled={conferences.length === 0} onChange={e => setSelected(e.target.value)}>
+                    {conferences.map((conf, i) =>
+                        <option key={i} value={conf.id}>{conf.conferenceName}</option>
+                    )}
+                </select>
+                <div>
+                    <button
+                        className={"join-button" + (selected == null ? " join-button-disabled" : "")}
+                        disabled={selected == null}
+                        onClick={submitSelection}
+                    >
+                        Join
+                    </button>
+                </div>
             </div>
         </div>
         <FooterLinks />
