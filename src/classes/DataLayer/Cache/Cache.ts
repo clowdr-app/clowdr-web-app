@@ -237,6 +237,7 @@ export default class Cache {
                             this.dbPromise.then(async db => {
                                 let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
                                 let conf = await confP;
+                                conf = await conf.fetch();
                                 if (!conf) {
                                     reject(`Conference ${this.conferenceId} could not be loaded.`);
                                     return;
@@ -282,7 +283,8 @@ export default class Cache {
         }
 
         let itemsQ = await this.newParseQuery(tableName);
-        return itemsQ.map(parse => {
+        return itemsQ.map(async parse => {
+            await parse.fetch();
             return this.addItemToCache<K, T>(parse, tableName, db);
         });
     }
@@ -693,6 +695,7 @@ export default class Cache {
             try {
                 let resultP = query.get(id);
                 let result = await resultP;
+                await result.fetch();
                 return await this.addItemToCache<K, T>(result, tableName);
             }
             catch (reason) {
@@ -714,6 +717,7 @@ export default class Cache {
         return this.getAllFromCache(tableName).catch(async reason => {
             let query = await this.newParseQuery(tableName);
             return query.map(async parse => {
+                await parse.fetch();
                 return await this.addItemToCache<K, T>(parse, tableName);
             }).catch(reason => {
                 this.logger.warn("Fetch from database of all cached items failed", {

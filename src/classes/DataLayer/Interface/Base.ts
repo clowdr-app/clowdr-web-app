@@ -105,7 +105,7 @@ export abstract class StaticBaseImpl {
         }
         else {
             let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
-            return query.get(id).then(async parse => {
+            return (await query.get(id)).fetch().then(async parse => {
                 if (CachedStoreNames.includes(tableName as CachedSchemaKeys)) {
                     const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
                     conferenceId = _parse.get("conference" as any).id as string;
@@ -130,6 +130,42 @@ export abstract class StaticBaseImpl {
         }
     }
 
+    static async getByField<
+        K extends WholeSchemaKeys,
+        S extends KnownKeys<FieldDataT[K]>,
+        T extends IBase<K>
+    >(
+        tableName: K,
+        fieldName: S,
+        searchFor: FieldDataT[K][S],
+        conferenceId?: string,
+    ): Promise<T | null> {
+        let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
+        return (await query.equalTo(fieldName as any, searchFor as any).first())?.fetch().then(async parse => {
+            if (CachedStoreNames.includes(tableName as CachedSchemaKeys)) {
+                const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
+                conferenceId = _parse.get("conference" as any).id as string;
+                let _tableName = tableName as CachedSchemaKeys;
+                let cache = await Caches.get(conferenceId);
+                return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
+            }
+            else {
+                const constr = Cache.Constructors[tableName as UncachedSchemaKeys] as UncachedConstructor<any>;
+                const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
+                return new constr(_parse) as T;
+            }
+        }).catch(reason => {
+            console.warn("Fetch by field from database failed", {
+                tableName: tableName,
+                fieldName: fieldName,
+                searchFor: searchFor,
+                reason: reason
+            });
+
+            return null;
+        }) || null;
+    }
+
     static async getAll<K extends WholeSchemaKeys, T extends IBase<K>>(
         tableName: K,
         conferenceId?: string): Promise<Array<T>> {
@@ -140,6 +176,7 @@ export abstract class StaticBaseImpl {
         else {
             let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
             return query.map(async parse => {
+                await parse.fetch();
                 if (CachedStoreNames.includes(tableName as any)) {
                     const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
                     if (tableName === "Conference") {
@@ -197,7 +234,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         }
         else {
             let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(this.tableName);
-            return query.get(this.id);
+            return (await query.get(this.id)).fetch();
         }
     }
 
@@ -228,7 +265,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         }
         else {
             let resultParse = new Parse.Query(targetTableName);
-            return resultParse.get(targetId).then(async parse => {
+            return (await resultParse.get(targetId)).fetch().then(async parse => {
                 const constr = Cache.Constructors[targetTableName as UncachedSchemaKeys];
                 const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
                 return new constr(_parse) as any;
@@ -252,6 +289,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         else {
             let resultParse = new Parse.Query(targetTableName);
             return resultParse.containedIn("id", targetIds).map(async parse => {
+                await parse.fetch();
                 const constr = Cache.Constructors[targetTableName as UncachedSchemaKeys];
                 const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
                 return new constr(_parse);

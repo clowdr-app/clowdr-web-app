@@ -162,7 +162,10 @@ export default class Cache {
     async initialise(): Promise<void> {
         this.conference
             = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference")
-            .get(this.conferenceId);
+            .get(this.conferenceId).then(async x => {
+                await x.fetch();
+                return x;
+            });
     }
 
     async addItemToCache<K extends CachedSchemaKeys, T extends CachedBase<K>>(
@@ -234,6 +237,7 @@ export default class Cache {
         try {
             let resultP = query.get(id);
             let result = await resultP;
+            await result.fetch();
             return await this.addItemToCache<K, T>(result, tableName);
         }
         catch (reason) {
@@ -246,6 +250,7 @@ export default class Cache {
     ): Promise<Array<T>> {
         let query = await this.newParseQuery(tableName);
         return query.map(async parse => {
+            await parse.fetch();
             return await this.addItemToCache<K, T>(parse, tableName);
         }).catch(_reason => {
             return [];
