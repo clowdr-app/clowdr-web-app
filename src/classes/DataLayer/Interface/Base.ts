@@ -2,7 +2,7 @@ import { keys } from "ts-transformer-keys";
 
 import Parse from "parse";
 import CachedSchema from "../CachedSchema";
-import { PromisedKeys, NotPromisedKeys, KnownKeys } from "../../Util";
+import { PromisedKeys, KnownKeys } from "../../Util";
 import * as Schema from "../Schema";
 import Caches, { Cache } from "../Cache";
 import UncachedSchema from "../UncachedSchema";
