@@ -9,6 +9,7 @@ import useDocTitle from '../../hooks/useDocTitle';
 import { Switch, Route } from 'react-router-dom';
 import ChatView from '../Pages/ChatView/ChatView';
 import BreakoutRoom from '../Pages/BreakoutRoom/BreakoutRoom';
+import NotFound from '../Pages/NotFound/NotFound';
 
 interface Props {
     doLogin: doLoginF;
@@ -35,6 +36,9 @@ function Page(props: Props) {
             </Route>
             <Route path="/breakout">
                 <BreakoutRoom />
+            </Route>
+            <Route path="/">
+                <NotFound />
             </Route>
         </Switch>;
     }
