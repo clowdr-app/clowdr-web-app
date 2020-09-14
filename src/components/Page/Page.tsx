@@ -6,6 +6,9 @@ import Login, { doLoginF } from '../Pages/Login/Login';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import LoggedInWelcome from '../Pages/LoggedInWelcome/LoggedInWelcome';
 import useDocTitle from '../../hooks/useDocTitle';
+import { Switch, Route } from 'react-router-dom';
+import ChatView from '../Pages/ChatView/ChatView';
+import BreakoutRoom from '../Pages/BreakoutRoom/BreakoutRoom';
 
 interface Props {
     doLogin: doLoginF;
@@ -23,7 +26,17 @@ function Page(props: Props) {
     let noHeading = false;
 
     if (mConf && mUser) {
-        contentsElem = <LoggedInWelcome />;
+        contentsElem = <Switch>
+            <Route exact path="/">
+                <LoggedInWelcome />
+            </Route>
+            <Route path="/chat">
+                <ChatView />
+            </Route>
+            <Route path="/breakout">
+                <BreakoutRoom />
+            </Route>
+        </Switch>;
     }
     else if (mConf) {
         contentsElem = <Login doLogin={props.doLogin} />;
