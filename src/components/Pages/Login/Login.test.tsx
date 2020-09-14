@@ -19,7 +19,7 @@ describe("Login", () => {
         (result: {
             email: string,
             password: string
-        }) => void) {
+        }) => void = () => { }) {
         mockDoLogin.mockImplementation((email: string, password: string) => {
             resolve({
                 email: email,
@@ -45,36 +45,36 @@ describe("Login", () => {
     });
 
     it("renders", () => {
-        let element = render(TestElement(() => { }));
+        let element = render(TestElement());
         expect(element.container).toBeDefined();
     });
 
     it("renders a header", () => {
-        let element = render(TestElement(() => { }));
+        let element = render(TestElement());
         element.getByRole("heading");
     });
 
     it("renders a form", () => {
-        let element = render(TestElement(() => { }));
+        let element = render(TestElement());
         element.getByRole("form");
     });
 
     it("renders the email input", () => {
-        let element = render(TestElement(() => { }));
+        let element = render(TestElement());
         let emailBox = element.getByLabelText(/email/i);
         expect(emailBox).toBeDefined();
         expect(emailBox.getAttribute("type")).toBe("email");
     });
 
     it("renders the password input", () => {
-        let element = render(TestElement(() => { }));
+        let element = render(TestElement());
         let passwordBox = element.getByLabelText(/password/i);
         expect(passwordBox).toBeDefined();
         expect(passwordBox.getAttribute("type")).toBe("password");
     });
 
     it("renders the login button", () => {
-        let element = render(TestElement(() => { }));
+        let element = render(TestElement());
         let loginButton = element.getByLabelText(/sign in/i);
         expect(loginButton).toBeDefined();
         expect(loginButton.tagName.toLowerCase()).toBe("input");
@@ -129,7 +129,7 @@ describe("Login", () => {
     });
 
     it("has bottom links", () => {
-        const element = render(TestElement(() => { }));
+        const element = render(TestElement());
         const links = element.getAllByRole("link") as HTMLAnchorElement[];
         expect(links[0].textContent).toBe("About");
         expect(links[1].textContent).toBe("Legal");
@@ -140,7 +140,23 @@ describe("Login", () => {
         fail();
     });
 
-    it("clears the password field on submit", () => {
-        fail();
+    it("clears the password field on submit", async () => {
+        const element = render(TestElement());
+        const form = element.getByRole("form");
+        const passwordBox = element.getByLabelText(/password/i) as HTMLInputElement;
+
+        act(() => Simulate.submit(form));
+
+        expect(passwordBox.value).toBe("");
+    });
+
+    it("clears the email field on submit", async () => {
+        const element = render(TestElement());
+        const form = element.getByRole("form");
+        const emailBox = element.getByLabelText(/email/i) as HTMLInputElement;
+
+        act(() => Simulate.submit(form));
+
+        expect(emailBox.value).toBe("");
     });
 });
