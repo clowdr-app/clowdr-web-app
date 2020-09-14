@@ -306,14 +306,13 @@ export default class Cache {
                 if (rels.includes(key as string)) {
                     let uniqRels = this.UniqueRelations[tableName] as Array<string>;
                     try {
+                        if (uniqRels.includes(key as string)) {
                         let xs = parse.get(key as any);
-                        if (xs) {
-                            if (uniqRels.includes(key as string)) {
                                 schema[key] = xs.id;
                             }
                             else {
-                                schema[key] = parse.get(key as any).map((x: any) => x.id);
-                            }
+                            let r = parse.relation(key as any);
+                            schema[key] = await r.query().map(x => x.id);
                         }
                     }
                     catch (e) {
