@@ -6,10 +6,11 @@ import Login, { doLoginF } from '../Pages/Login/Login';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import LoggedInWelcome from '../Pages/LoggedInWelcome/LoggedInWelcome';
 import useDocTitle from '../../hooks/useDocTitle';
-import { Switch, Route } from 'react-router-dom';
+import { Switch, Route, RouteComponentProps } from 'react-router-dom';
 import ChatView from '../Pages/ChatView/ChatView';
 import BreakoutRoom from '../Pages/BreakoutRoom/BreakoutRoom';
 import NotFound from '../Pages/NotFound/NotFound';
+import AllChats from '../Pages/AllChats/AllChats';
 
 interface Props {
     doLogin: doLoginF;
@@ -28,18 +29,13 @@ function Page(props: Props) {
 
     if (mConf && mUser) {
         contentsElem = <Switch>
-            <Route exact path="/">
-                <LoggedInWelcome />
-            </Route>
-            <Route path="/chat">
-                <ChatView />
-            </Route>
-            <Route path="/breakout">
-                <BreakoutRoom />
-            </Route>
-            <Route path="/">
-                <NotFound />
-            </Route>
+            <Route exact path="/" component={LoggedInWelcome} />
+            <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>
+                <ChatView chatId={props.match.params.chatId} />}
+            />
+            <Route path="/chat" component={AllChats} />
+            <Route path="/breakout" component={BreakoutRoom} />
+            <Route path="/" component={NotFound} />
         </Switch>;
     }
     else if (mConf) {
