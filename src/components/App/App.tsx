@@ -10,6 +10,7 @@ import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
 import { Conference, UserProfile, _User } from "../../classes/DataLayer";
 import assert from "assert";
+import { useHistory } from "react-router-dom";
 
 interface Props {
 }
@@ -34,6 +35,7 @@ export default function App(props: Props) {
     const [conference, setConference] = useState<DataLayer.Conference | null>(null);
     const [userProfile, setUserProfile] = useState<DataLayer.UserProfile | null>(null);
     const logger = useLogger("App");
+    const history = useHistory();
 
     // State updates go inside a `useEffect`
     useEffect(() => {
@@ -162,6 +164,9 @@ export default function App(props: Props) {
                 for (let key of keys) {
                     localStorage.removeItem(key);
                 }
+
+                // Refresh the page so that Parse reloads
+                history.go(0);
             }
         }
 
