@@ -1,6 +1,6 @@
 const fs = require('fs');
 const fsExtra = require('fs-extra')
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const dotenv = require('dotenv');
 const { generateTestData } = require("../src/tests/initTestDB.js");
 const BSON = require('bson');
@@ -80,28 +80,69 @@ for (let tableName in testData) {
 let db = process.env.MONGODB_DB;
 let host = process.env.MONGODB_HOST;
 
-let cmd = "";
+let cmd = { cmd: "", args: [] };
 if (process.env.MONGODB_PASSWORD) {
-    cmd = `mongorestore --host ${host} --username admin --password ${process.env.MONGODB_PASSWORD} --db ${db} ${testDirPath}/`;
+    cmd = {
+        cmd: `mongorestore`,
+        args: [
+            "--host", host,
+            "--username", "admin",
+            "--password", process.env.MONGODB_PASSWORD,
+            "--db", db,
+            `${testDirPath} /`
+        ]
+    }
 }
 else {
-    cmd = `mongorestore --host ${host} --db ${db} ${testDirPath}/`;
+    cmd = {
+        cmd: `mongorestore`,
+        args: [
+            "--host", host,
+            "--db", db,
+            `${testDirPath}/`
+        ]
+    }
 }
 
-exec(`mongo --host ${host} ${db} --eval "db.dropDatabase()"`, (err, stdout, stderr) => {
-    if (err) {
-        console.error(`DB drop failed! ${err}`);
+let dropDBProcess = spawn(
+    `mongo`,
+    [
+        `--host`, host,
+        db,
+        `--eval`, "db.dropDatabase()"],
+    { stdio: 'inherit', stderr: 'inherit' });
+
+dropDBProcess.on("error", (err) => {
+    console.error(`DB drop error! ${err.toString()}`);
+});
+
+dropDBProcess.on("exit", (code) => {
+    if (code) {
+        console.error("===============================");
+        console.error(`DB drop failed! Error code: ${code}`);
+        console.error("===============================");
     }
     else {
+        console.log("===============================");
         console.log('DB drop succeeded.');
-
+        console.log("===============================");
         console.log('> ' + cmd);
-        exec(cmd, (err, stdout, stderr) => {
-            if (err) {
-                console.error(`DB import failed! ${err}`);
+        let dbRestoreProcess = spawn(cmd.cmd, cmd.args, { stdio: 'inherit', stderr: 'inherit' });
+
+        dbRestoreProcess.on("error", (err) => {
+            console.error(`DB drop error! ${err.toString()}`);
+        });
+
+        dbRestoreProcess.on("exit", (code) => {
+            if (code) {
+                console.error("===============================");
+                console.error(`DB restore failed! Error code: ${code}`);
+                console.error("===============================");
             }
             else {
-                console.log('DB import succeeded.');
+                console.log("===============================");
+                console.log('DB restore succeeded.');
+                console.log("===============================");
             }
         });
     }
