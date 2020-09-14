@@ -1,9 +1,12 @@
-import { mocked } from 'ts-jest/utils';
-
 import Caches from "../Caches";
-import Cache from "../Cache";
 
-jest.mock("../Cache");
+jest.mock("../Cache", () => {
+    return function () {
+        return {
+            initialise: () => { }
+        };
+    };
+});
 
 const testId = "test_conference_id";
 
