@@ -7,7 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import assert from 'assert';
 import dotenv from 'dotenv';
 import './index.scss';
-import 'normalize.css';
+import "normalize.css";
 
 dotenv.config();
 
