@@ -98,7 +98,9 @@ describe("ConferenceSelection", () => {
             }
         ) as HTMLButtonElement;
 
-        fireEvent.click(button);
+        act(() => {
+            fireEvent.click(button);
+        });
 
         expect(selectMock).toBeCalled();
     });
@@ -106,7 +108,7 @@ describe("ConferenceSelection", () => {
     it("calls failedToLoadConferences", async () => {
         let failMock = jest.fn();
 
-        await new Promise((resolve) => {
+        await act(() => new Promise((resolve) => {
             failMock.mockImplementation(resolve);
 
             spyConference_getAll.mockImplementationOnce(async () => {
@@ -114,7 +116,7 @@ describe("ConferenceSelection", () => {
             });
 
             render(TestElement(failMock));
-        });
+        }));
 
         expect(failMock).toBeCalled();
     });
