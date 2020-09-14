@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import DocumentTitle from "react-document-title";
+import useDocTitle from "../../../hooks/useDocTitle";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 
 export type doLoginF = (username: string, password: string) => Promise<boolean>;
@@ -13,6 +13,9 @@ export default function Login(props: LoginProps) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState(null as string | null);
+
+    const docTitle = useDocTitle();
+    docTitle.set("Sign in");
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -42,8 +45,6 @@ export default function Login(props: LoginProps) {
                 break;
         }
     }
-
-    const heading = <h1 id="page-title" aria-level={1}>Sign in</h1>;
 
     const emailBox = <input
         type="email"
@@ -80,11 +81,8 @@ export default function Login(props: LoginProps) {
         {loginButton}
     </form>;
 
-    return <DocumentTitle title="Clowdr Login">
-        <section aria-labelledby="page-title" tabIndex={0}>
-            {heading}
-            {form}
-            <FooterLinks />
-        </section>
-    </DocumentTitle>;
+    return <section aria-labelledby="page-title" tabIndex={0}>
+        {form}
+        <FooterLinks />
+    </section>;
 }

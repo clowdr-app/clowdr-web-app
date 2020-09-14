@@ -8,7 +8,22 @@
   font-family: "Lato", sans-serif;
 }
 
+button {
+    border: 1px solid $gray-3;
+    background: none;
+
+    color: $gray-3;
+    padding: 10%;
+    margin: 10%;
+    box-sizing: border-box;
+}
+
+button:focus {
+    outline: solid 2px $color-3;
+    outline-offset: 0;
+}
+
 *:focus {
     outline: solid 2px $color-3;
-    outline-offset: 2px;
+    outline-offset: 0;
 }

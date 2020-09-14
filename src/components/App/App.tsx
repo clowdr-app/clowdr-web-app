@@ -1,16 +1,18 @@
 import Parse from "parse";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
 import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
 import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
+import DocTitleContext from '../../contexts/DocTitleContext';
 import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
 import { Conference, UserProfile, _User } from "../../classes/DataLayer";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
+import { DocTitleState } from "../../contexts/DocTitleContext";
 
 interface Props {
 }
@@ -37,6 +39,11 @@ export default function App(props: Props) {
     const logger = useLogger("App");
     const history = useHistory();
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+    const [docTitle, setDocTitle] = useState("");
+    const docTitleCtx: DocTitleState = {
+        get: () => docTitle,
+        set: async (val) => { setDocTitle(val) }
+    };
 
     // State updates go inside a `useEffect`
     useEffect(() => {
@@ -144,6 +151,17 @@ export default function App(props: Props) {
         }
     }
 
+    async function doLogout() {
+        try {
+            await Parse.User.logOut();
+        }
+        finally {
+            LocalStorage_Conference.currentConferenceId = null;
+            setConference(null);
+            setUserProfile(null);
+        }
+    }
+
     async function failedToLoadConferences(reason: any): Promise<void> {
         // This is most likely to occur during testing when the session token
         // is invalidated by regeneration of the test database.
@@ -161,7 +179,7 @@ export default function App(props: Props) {
                     if (key?.match(/parse/ig)?.length) {
                         keys.push(key);
                     }
-                }                
+                }
                 for (let key of keys) {
                     localStorage.removeItem(key);
                 }
@@ -203,7 +221,7 @@ export default function App(props: Props) {
     //  or welcome page) but reduces our work as we don't have to design an
     //  'empty' sidebar for when no conference is selected.
     if (conference) {
-        sidebar = <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />;
+        sidebar = <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} doLogout={doLogout} />;
         appClassNames.push(sidebarOpen ? "sidebar-open" : "sidebar-closed");
     }
 
@@ -215,8 +233,10 @@ export default function App(props: Props) {
     return <div className={appClassName}>
         <ConferenceContext.Provider value={conference}>
             <UserProfileContext.Provider value={userProfile}>
-                {sidebar}
-                {page}
+                <DocTitleContext.Provider value={docTitleCtx}>
+                    {sidebar}
+                    {page}
+                </DocTitleContext.Provider>
             </UserProfileContext.Provider>
         </ConferenceContext.Provider>
     </div>;

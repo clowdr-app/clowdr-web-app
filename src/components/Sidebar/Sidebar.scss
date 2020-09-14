@@ -3,12 +3,16 @@
 .sidebar-button {
     display: inline-block;
 
+    margin    : 0;
+    padding   : 0;
+    margin-top: 2px;
+
     button {
-        display: block;
-        width  : 80%;
-        height : 80%;
-        margin : 10% 10% 10% -5px;
-        padding: 10%;
+        display     : block;
+        width       : 45px;
+        height      : 45px;
+        margin      : 10% 10% 10% -5px;
+        padding     : 10%;
         padding-left: calc(10% + 5px);
 
         border       : 1px solid $gray-2;
@@ -33,8 +37,8 @@
         }
 
         &.change .bar1 {
-            -webkit-transform: rotate(-45deg) translate(-5px, 7px);
-            transform        : rotate(-45deg) translate(-5px, 7px);
+            -webkit-transform: rotate(-45deg) translate(-3px, 7px);
+            transform        : rotate(-45deg) translate(-3px, 7px);
         }
 
         &.change .bar2 {
@@ -42,52 +46,90 @@
         }
 
         &.change .bar3 {
-            -webkit-transform: rotate(45deg) translate(-4px, -7px);
-            transform        : rotate(45deg) translate(-4px, -7px);
+            -webkit-transform: rotate(45deg) translate(-3px, -7px);
+            transform        : rotate(45deg) translate(-3px, -7px);
         }
     }
 }
 
 .sidebar {
-    width: 100%;
+    width : 100%;
     height: 100%;
 
     background-color: $dark-primary;
 
-    display: grid;
-    grid-template-columns: 50px auto auto;
-    grid-template-rows: 60px auto auto auto 50px;
-    grid-template-areas: 
-        "header header header"
-        "menu menu menu";
+    display           : grid;
+    grid-template-rows: 3em auto auto auto 3em;
+    grid-template-areas:
+        "header"
+        "menu";
+
+    color: $gray-6;
 
     .sidebar-header {
+        display              : grid;
+        grid-template-columns: 40px auto auto;
+        grid-template-areas  : "button-l heading button-r";
+
         grid-area: header;
 
-        color: $gray-6;
+        /* 
+         * We reset the font size just for the heading so that the burger button
+         * sign out and heading all lines up horizontally.
+         */
+        font-size: 15px;
 
         .sidebar-button {
-            width: 50px;
-            height: 50px;
+            grid-area: button-l;
+
+            height: 40px;
+            width : 40px;
 
             vertical-align: middle;
 
             button {
-                border-color: $gray-6;
+                vertical-align: middle;
 
-                & .bar1, & .bar2, & .bar3 {
+                border     : none;
+                margin-left: 0px;
+                width      : 30px;
+                height     : 30px;
+
+                & .bar1,
+                & .bar2,
+                & .bar3 {
                     background-color: $gray-6;
+                    width           : 18px;
+                    height          : 2px;
                 }
             }
         }
 
         h1 {
+            grid-area: heading;
+
             display: inline-block;
 
-            font-size: $menu-heading-font-size;
-            margin: 0;
-            padding: 0;
+            font-size     : $font-lg;
+            margin        : 0.65em 0 0 0;
+            padding       : 0;
             vertical-align: middle;
+        }
+
+        .signout {
+            grid-area      : button-r;
+            display        : flex;
+            align-items    : flex-start;
+            justify-content: flex-end;
+
+            button {
+                font-size: $font-sm;
+                border   : none;
+                color    : inherit;
+                margin   : 1em 1em 0 1em;
+                padding  : 0;
+                line-height: 140%;
+            }
         }
     }
 

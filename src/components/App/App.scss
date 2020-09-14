@@ -14,36 +14,69 @@
     width   : 100%;
     height  : 100%;
 
-    display: grid;
+    display              : grid;
+    grid-template-columns: auto;
+    grid-template-areas  : "page";
 
     &.sidebar-open {
-        grid-template-areas: "sidebar . page";
-        grid-template-columns: minmax(350px, 20%) 20px auto;
+        grid-template-areas:
+            "sidebar . page-header"
+            "sidebar . ."
+            "sidebar . page";
+        grid-template-rows: minmax(3em, min-content) 10px auto;
+        grid-template-columns: minmax(350px, 20%) 1em auto;
     }
 
     &.sidebar-closed {
-        grid-template-areas: 
-            "sidebar page"
-            ". page";
-        grid-template-columns: 50px auto;
-        grid-template-rows: 50px auto;
+        grid-template-columns: 20px 50px auto 20px;
+        grid-template-rows   : minmax(3em, min-content) 1em auto;
     }
 
     @media only screen and (max-width: $break-md) {
         &.sidebar-open {
-            grid-template-columns: auto 0%;
+            grid-template-columns: 100% 0%;
+
+            .page {
+                // display: none;
+            }
         }
     }
 
-    .page {
-        grid-area: page;
+    &.sidebar-open {
+        .page-header {
+            grid-area: page-header;
+        }
+
+        .page {
+            grid-area: page;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+        }
     }
 
-    .sidebar {
-        grid-area: sidebar;
-    }
 
-    .sidebar-button {
-        grid-area: sidebar;
+    &.sidebar-closed {
+        .page {
+            grid-row-start   : 3;
+            grid-row-end     : 4;
+            grid-column-start: 2;
+            grid-column-end  : 4;
+        }
+
+        .page-header {
+            grid-row-start   : 1;
+            grid-row-end     : 2;
+            grid-column-start: 3;
+            grid-column-end  : 4;
+        }
+
+        .sidebar-button {
+            grid-row-start   : 1;
+            grid-row-end     : 2;
+            grid-column-start: 1;
+            grid-column-end  : 3;
+        }
     }
 }

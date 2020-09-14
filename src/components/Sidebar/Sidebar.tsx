@@ -1,14 +1,17 @@
 import React from 'react';
 import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
+import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 
 interface Props {
     open: boolean,
     toggleSidebar?: () => void
+    doLogout?: () => void
 }
 
 function Sidebar(props: Props) {
     let conf = useConference();
+    let mUser = useMaybeUserProfile();
 
     let sideBarButton = <div className="sidebar-button">
         <button aria-label="Open Menu" onClick={props.toggleSidebar} className={props.open ? " change" : ""}>
@@ -20,10 +23,19 @@ function Sidebar(props: Props) {
 
     if (props.open) {
         let sideBarHeading = <h1 aria-level={1}>{conf.conferenceName}</h1>;
+        // Note: The wrapping div around the logout button is necessary for the
+        // grid layout to work.
+        let logoutButton
+            = mUser
+                ? <div className="signout">
+                    <button onClick={props.doLogout} aria-label="Sign out">Sign out</button>
+                  </div>
+                : <></>;
 
         let headerBar = <div className="sidebar-header">
             {sideBarButton}
             {sideBarHeading}
+            {logoutButton}
         </div>
         return <div className="sidebar">
             {headerBar}

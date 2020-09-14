@@ -5,6 +5,7 @@ import ConferenceSelection, { failedToLoadConferencesF, selectConferenceF } from
 import Login, { doLoginF } from '../Pages/Login/Login';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import LoggedInWelcome from '../Pages/LoggedInWelcome/LoggedInWelcome';
+import useDocTitle from '../../hooks/useDocTitle';
 
 interface Props {
     doLogin: doLoginF;
@@ -15,8 +16,12 @@ interface Props {
 function Page(props: Props) {
     const mConf = useMaybeConference();
     const mUser = useMaybeUserProfile();
+    const docTitle = useDocTitle();
 
     let contentsElem: JSX.Element;
+    let actionButtonsWrapper: JSX.Element | null = null;
+    let noHeading = false;
+
     if (mConf && mUser) {
         contentsElem = <LoggedInWelcome />;
     }
@@ -24,15 +29,22 @@ function Page(props: Props) {
         contentsElem = <Login doLogin={props.doLogin} />;
     }
     else {
+        noHeading = true;
         contentsElem = <ConferenceSelection
             failedToLoadConferences={props.failedToLoadConferences}
             selectConference={props.selectConference}
         />;
     }
 
-    return <main className="page">
-        {contentsElem}
-    </main>;
+    return <>
+        {noHeading ? <></> : <header className={"page-header" + (actionButtonsWrapper ? " actions" : " no-actions")}>
+            <h1 id="page-title" className="banner" aria-level={1}>{docTitle.get()}</h1>
+            {actionButtonsWrapper}
+        </header>}
+        <main className="page">
+            {contentsElem}
+        </main>
+    </>;
 }
 
 export default Page;
