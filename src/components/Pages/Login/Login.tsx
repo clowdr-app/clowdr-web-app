@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import useDocTitle from "../../../hooks/useDocTitle";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 
@@ -15,7 +15,9 @@ export default function Login(props: LoginProps) {
     const [errorMsg, setErrorMsg] = useState(null as string | null);
 
     const docTitle = useDocTitle();
-    docTitle.set("Sign in");
+    useEffect(() => {
+        docTitle.set("Sign in");
+    }, [docTitle]);
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();

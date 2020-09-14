@@ -17,7 +17,9 @@ export default function ConferenceSelection(props: Props) {
     const [selected, setSelected] = useState<string | null>(null);
 
     const docTitle = useDocTitle();
-    docTitle.set("Clowdr");
+    useEffect(() => {
+        docTitle.set("Clowdr");
+    }, [docTitle]);
 
     useEffect(() => {
         let isMounted = true;
