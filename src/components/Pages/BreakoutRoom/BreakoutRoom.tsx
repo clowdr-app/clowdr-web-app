@@ -12,20 +12,21 @@ export default function BreakoutRoom() {
     useEffect(() => {
         docTitle.set("Breakout Room Y");
     }, [docTitle]);
+
     return <div className="breakout-room">
         <SplitPane split="horizontal" size={split} onChange={(size: Size) => setSplit(size)}>
-            <div className="top-split">
+            <div className="split top-split">
                 <VideoGrid />
                 <button
-                    className="maximize-button"
+                    className="split-button maximize-button"
                     onClick={() => setSplit(0)}
                 >
                     &#9650;
                 </button>
             </div>
-            <div className="bottom-split">
+            <div className="split bottom-split">
                 <button
-                    className="minimize-button"
+                    className="split-button minimize-button"
                     onClick={() => setSplit("100%")}
                 >
                     &#9660;
