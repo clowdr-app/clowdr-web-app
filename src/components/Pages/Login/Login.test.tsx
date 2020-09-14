@@ -81,12 +81,11 @@ describe("Login", () => {
         expect(loginButton.getAttribute("type")).toBe("submit");
     });
 
-    it("calls setUser when the form is submitted and the user exists", async () => {
+    it("calls setUser when the form is submitted and the user exists", (done) => {
         const testUser = testData._User[0];
         const pwd = generateMockPassword(testUser.id);
 
-        let element: RenderResult;
-        let doLogin = (resolve: () => void) => {
+        const doLogin = (resolve: () => void) => {
             return ({ email, password }: { email: string, password: string }) => {
                 expect(email).toBe(testUser.email);
                 expect(password).toBe(pwd);
@@ -97,35 +96,28 @@ describe("Login", () => {
             }
         };
 
-        let renderP = new Promise<void>((resolve) => {
-            element = render(TestElement(doLogin(resolve)));
-        });
-
-        // @ts-ignore - Dangerous but seems to work..eh, JavaScript.
-        assert(element);
-
-        let form = element.getByRole("form");
-        let emailBox = element.getByLabelText(/email/i);
-        let passwordBox = element.getByLabelText(/password/i);
+        const element = render(TestElement(doLogin(done)));
+        const form = element.getByRole("form");
+        const emailBox = element.getByLabelText(/email/i);
+        const passwordBox = element.getByLabelText(/password/i);
 
         act(() => {
             Simulate.change(emailBox, {
                 // @ts-ignore
                 target: { value: testUser.email }
             });
-        });
 
-        act(() => {
             Simulate.change(passwordBox, {
                 // @ts-ignore
                 target: { value: pwd }
             });
         });
 
-        await act(async () => {
+        act(() => {
             Simulate.submit(form);
-            await renderP;
         });
+
+        return null;
     });
 
     it("has bottom links", () => {
