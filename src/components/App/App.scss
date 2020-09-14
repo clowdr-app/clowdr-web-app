@@ -1,1 +1,49 @@
-.app {}
+@import "../../styles/util";
+
+#root {
+    position: absolute;
+    width   : 100%;
+    height  : 100%;
+    top     : 0;
+    left    : 0;
+    overflow: hidden;
+}
+
+.app {
+    position: relative;
+    width   : 100%;
+    height  : 100%;
+
+    display: grid;
+
+    &.sidebar-open {
+        grid-template-areas: "sidebar . page";
+        grid-template-columns: minmax(350px, 20%) 20px auto;
+    }
+
+    &.sidebar-closed {
+        grid-template-areas: 
+            "sidebar page"
+            ". page";
+        grid-template-columns: 50px auto;
+        grid-template-rows: 50px auto;
+    }
+
+    @media only screen and (max-width: $break-md) {
+        &.sidebar-open {
+            grid-template-columns: auto 0%;
+        }
+    }
+
+    .page {
+        grid-area: page;
+    }
+
+    .sidebar {
+        grid-area: sidebar;
+    }
+
+    .sidebar-button {
+        grid-area: sidebar;
+    }
+}

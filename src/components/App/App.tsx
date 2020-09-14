@@ -36,6 +36,7 @@ export default function App(props: Props) {
     const [userProfile, setUserProfile] = useState<DataLayer.UserProfile | null>(null);
     const logger = useLogger("App");
     const history = useHistory();
+    const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
     // State updates go inside a `useEffect`
     useEffect(() => {
@@ -181,8 +182,14 @@ export default function App(props: Props) {
         setConference(conference);
     }
 
+    async function toggleSidebar(): Promise<void> {
+        setSidebarOpen(!sidebarOpen);
+    }
+
+    const appClassNames = ["app"];
+
     // The main page element - this is where the bulk of content goes
-    let page = <Page
+    const page = <Page
         doLogin={doLogin}
         failedToLoadConferences={failedToLoadConferences}
         selectConference={selectConference}
@@ -196,13 +203,16 @@ export default function App(props: Props) {
     //  or welcome page) but reduces our work as we don't have to design an
     //  'empty' sidebar for when no conference is selected.
     if (conference) {
-        sidebar = <Sidebar />;
+        sidebar = <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />;
+        appClassNames.push(sidebarOpen ? "sidebar-open" : "sidebar-closed");
     }
+
 
     // TODO: Wrap this in an error boundary to handle null cache/conference/user
 
+    const appClassName = appClassNames.reduce((x, y) => `${x} ${y}`);
     // Hint: `user` could be null - see also, `useUser` and `useMaybeUser` hooks
-    return <div className="app">
+    return <div className={appClassName}>
         <ConferenceContext.Provider value={conference}>
             <UserProfileContext.Provider value={userProfile}>
                 {sidebar}

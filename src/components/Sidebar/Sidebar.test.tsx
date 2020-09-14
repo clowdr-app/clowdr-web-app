@@ -20,7 +20,7 @@ describe("Sidebar", () => {
         let error = jest.spyOn(console, 'error');
         error.mockImplementation(() => { });
 
-        expect(() => render(<Sidebar />))
+        expect(() => render(<Sidebar open={false} />))
             .toThrow("Conference should be defined.");
 
         error.mockRestore();
@@ -29,10 +29,12 @@ describe("Sidebar", () => {
     it("renders with class name 'sidebar'", () => {
         let element = render(<MemoryRouter>
             <ConferenceContext.Provider value={testConference}>
-                <Sidebar />
+                <Sidebar open={false} />
             </ConferenceContext.Provider>
         </MemoryRouter>);
 
         expect(element.container.children[0].className).toBe("sidebar");
     });
+
+    
 });

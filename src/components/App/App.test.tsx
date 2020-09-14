@@ -2,18 +2,19 @@ import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { render, waitForElement } from "@testing-library/react";
 import App from "./App";
+import "./App.scss";
 import { testData } from "../../tests/setupTests";
 
 jest.mock("../../classes/DataLayer/Cache/Cache");
 
 describe("App", () => {
 
-    it("renders with class name 'app'", () => {
+    it("renders with class name 'app'", async () => {
         let element = render(<MemoryRouter>
             <App />
         </MemoryRouter>);
 
-        expect(element.container.children[0].className).toBe("app");
+        expect(element.container.getElementsByClassName("app").length).toBe(1);
     });
 
     it("renders a page", () => {
@@ -33,19 +34,32 @@ describe("App", () => {
     });
 
     it("renders a sidebar when a conference is selected", async () => {
-        sessionStorage.setItem("currentConferenceId", testData.Conference[0].id);
+        localStorage.setItem("currentConferenceId", testData.Conference[0].id);
 
         let element = render(<MemoryRouter>
             <App />
         </MemoryRouter>);
 
-        let sideBarElements;
-        let startedAt = Date.now();
-        do {
-            sideBarElements = await waitForElement(() => element.container.getElementsByClassName("sidebar"));
-        }
-        while (!sideBarElements.length && (Date.now() - startedAt) < 3500);
+        let sideBarElement = await waitForElement(() => {
+            let els = element.container.getElementsByClassName("sidebar");
+            return els.length ? els[0] : undefined;
+        });
 
-        expect(sideBarElements.length).toBe(1);
+        expect(sideBarElement).toBeDefined();
+    });
+
+    it("renders the sidebar closed by default", async () => {
+        localStorage.setItem("currentConferenceId", testData.Conference[0].id);
+
+        let element = render(<MemoryRouter>
+            <App />
+        </MemoryRouter>);
+
+        let sideBarElement = await waitForElement(() => {
+            let els = element.container.getElementsByClassName("sidebar-closed");
+            return els.length ? els[0] : undefined;
+        });
+
+        expect(sideBarElement).toBeDefined();
     });
 });

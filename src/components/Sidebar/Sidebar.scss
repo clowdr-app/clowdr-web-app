@@ -1,1 +1,94 @@
-.sidebar {}
+@import "../../styles/util";
+
+.sidebar-button {
+    display: inline-block;
+
+    button {
+        display: block;
+        width  : 80%;
+        height : 80%;
+        margin : 10% 10% 10% -5px;
+        padding: 10%;
+        padding-left: calc(10% + 5px);
+
+        border       : 1px solid $gray-2;
+        border-radius: 5px;
+        border-left  : none;
+        background   : none;
+
+        cursor: pointer;
+
+        &.change {
+            padding-left: calc(10% + 3px);
+        }
+
+        & .bar1,
+        & .bar2,
+        & .bar3 {
+            width           : 22px;
+            height          : 3px;
+            background-color: $gray-2;
+            margin          : 5px 0;
+            transition      : 0.4s;
+        }
+
+        &.change .bar1 {
+            -webkit-transform: rotate(-45deg) translate(-5px, 7px);
+            transform        : rotate(-45deg) translate(-5px, 7px);
+        }
+
+        &.change .bar2 {
+            opacity: 0;
+        }
+
+        &.change .bar3 {
+            -webkit-transform: rotate(45deg) translate(-4px, -7px);
+            transform        : rotate(45deg) translate(-4px, -7px);
+        }
+    }
+}
+
+.sidebar {
+    width: 100%;
+    height: 100%;
+
+    background-color: $dark-primary;
+
+    display: grid;
+    grid-template-columns: 50px auto auto;
+    grid-template-rows: 60px auto auto auto 50px;
+    grid-template-areas: 
+        "header header header"
+        "menu menu menu";
+
+    .sidebar-header {
+        grid-area: header;
+
+        color: $gray-6;
+
+        .sidebar-button {
+            width: 50px;
+            height: 50px;
+
+            vertical-align: middle;
+
+            button {
+                border-color: $gray-6;
+
+                & .bar1, & .bar2, & .bar3 {
+                    background-color: $gray-6;
+                }
+            }
+        }
+
+        h1 {
+            display: inline-block;
+
+            font-size: $menu-heading-font-size;
+            margin: 0;
+            padding: 0;
+            vertical-align: middle;
+        }
+    }
+
+}

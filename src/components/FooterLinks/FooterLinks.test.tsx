@@ -15,22 +15,19 @@ describe("Footer Links", () => {
 
     it("renders an 'about' link", () => {
         const element = render(TestElement());
-        const aboutEl = element.getByTitle(/about/i);
+        const aboutEl = element.getByText(/about/i);
         expect(aboutEl).toBeDefined();
-        expect(aboutEl.textContent).toMatch(/about/i);
     });
 
     it("renders a 'legal' link", () => {
         const element = render(TestElement());
-        const legalEl = element.getByTitle(/legal/i);
+        const legalEl = element.getByText(/legal/i);
         expect(legalEl).toBeDefined();
-        expect(legalEl.textContent).toMatch(/legal/i);
     });
 
     it("renders a 'help' link", () => {
         const element = render(TestElement());
-        const helpEl = element.getByTitle(/help/i);
+        const helpEl = element.getByText(/help/i);
         expect(helpEl).toBeDefined();
-        expect(helpEl.textContent).toMatch(/help/i);
     });
 });
