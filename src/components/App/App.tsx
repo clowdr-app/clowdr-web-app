@@ -2,7 +2,7 @@ import Parse from "parse";
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
-import Session_Conference from '../../classes/Session/Conference';
+import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
 import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
@@ -26,8 +26,8 @@ interface Props {
  */
 export default function App(props: Props) {
 
-    // Hint: Do not use `Session_*` interfaces anywhere else - rely on contexts.
-    const currentConferenceId = Session_Conference.currentConferenceId;
+    // Hint: Do not use `LocalStorage_*` interfaces anywhere else - rely on contexts.
+    const currentConferenceId = LocalStorage_Conference.currentConferenceId;
 
     // Get all relevant state information for this component
     // Note: These can't be used inside `useEffect` or other asynchronous
@@ -54,7 +54,7 @@ export default function App(props: Props) {
                     // Did the conference actually exist?
                     if (!_conference) {
                         // No? Darn...mustv'e been a fake id. Clear out the state.
-                        Session_Conference.currentConferenceId = null;
+                        LocalStorage_Conference.currentConferenceId = null;
                     }
                     else {
                         // Yes! Great, store the result in the state.
@@ -177,7 +177,7 @@ export default function App(props: Props) {
 
     async function selectConference(id: string): Promise<void> {
         const conference = await Conference.get(id);
-        Session_Conference.currentConferenceId = id;
+        LocalStorage_Conference.currentConferenceId = id;
         setConference(conference);
     }
 
@@ -205,8 +205,8 @@ export default function App(props: Props) {
     return <div className="app">
         <ConferenceContext.Provider value={conference}>
             <UserProfileContext.Provider value={userProfile}>
-                {page}
                 {sidebar}
+                {page}
             </UserProfileContext.Provider>
         </ConferenceContext.Provider>
     </div>;

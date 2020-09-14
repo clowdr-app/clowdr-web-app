@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import DocumentTitle from "react-document-title";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 
 export type doLoginF = (username: string, password: string) => Promise<boolean>;
@@ -42,7 +43,7 @@ export default function Login(props: LoginProps) {
         }
     }
 
-    const heading = <h1>Sign in</h1>;
+    const heading = <h1 id="page-title" aria-level={1}>Sign in</h1>;
 
     const emailBox = <input
         type="email"
@@ -79,9 +80,11 @@ export default function Login(props: LoginProps) {
         {loginButton}
     </form>;
 
-    return <>
-        {heading}
-        {form}
-        <FooterLinks />
-    </>;
+    return <DocumentTitle title="Clowdr Login">
+        <section aria-labelledby="page-title" tabIndex={0}>
+            {heading}
+            {form}
+            <FooterLinks />
+        </section>
+    </DocumentTitle>;
 }

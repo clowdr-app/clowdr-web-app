@@ -30,9 +30,9 @@ function Page(props: Props) {
         />;
     }
 
-    return <div className="page">
+    return <main className="page">
         {contentsElem}
-    </div>;
+    </main>;
 }
 
 export default Page;
