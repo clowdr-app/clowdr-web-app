@@ -160,13 +160,31 @@ export abstract class StaticBaseImpl {
         conferenceId?: string
     ): Promise<T | null> {
         // TODO: Can we put this through the cache?
+        // Only if we can define relevant indexes on the cache (within indexeddb)
         let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
-        query = query.equalTo(fieldName as any, searchFor as any);
-        if (conferenceId) {
-            query.equalTo("conference" as any, conferenceId as any);
+        if (fieldName in RelationsToTableNames[tableName]) {
+            if (searchFor instanceof Array) {
+                let _searchFor: Array<string> = searchFor;
+                query.containedIn(fieldName as any, _searchFor.map(x => {
+                    return new Parse.Object(RelationsToTableNames[tableName][fieldName as any], {
+                        id: x
+                    }) as any;
+                }));
+            }
+            else {
+                query.equalTo(fieldName as any, new Parse.Object(RelationsToTableNames[tableName][fieldName as any], {
+                    id: searchFor
+                }) as any);
+            }
         }
-        let itemP = query.first();
+        else {
+            query.equalTo(fieldName as any, searchFor as any);
+        }
+        if (conferenceId) {
+            query.equalTo("conference" as any, new Parse.Object("Conference", { id: conferenceId }) as any);
+        }
 
+        let itemP = query.first();
         return itemP.then(async parse => {
             if (parse) {
                 return StaticBaseImpl.wrapItem<K, T>(tableName, parse);
@@ -196,7 +214,7 @@ export abstract class StaticBaseImpl {
             return query.map(async parse => {
                 return StaticBaseImpl.wrapItem<K, T>(tableName, parse);
             }).catch(reason => {
-                return Promise.reject("Fetch all from database of uncached table failed");
+                return Promise.reject(`Fetch all from database of uncached table failed\n${reason}`);
             });
         }
     }
