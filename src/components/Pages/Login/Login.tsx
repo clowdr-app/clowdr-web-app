@@ -9,21 +9,28 @@ interface LoginProps {
 
 export default function Login(props: LoginProps) {
     const doLogin = props.doLogin;
-    const [email, setEmail] = useState("Email");
-    const [password, setPassword] = useState("Password");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [errorMsg, setErrorMsg] = useState(null as string | null);
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setEmail("");
         setPassword("");
-        let _ok = await doLogin(email, password);
-        // TODO: If not ok, display error
+        setErrorMsg(null);
+
+        let ok = await doLogin(email, password);
+        if (!ok) {
+            setErrorMsg("We were unable to log you in, please try again.");
+        }
     }
 
     function onChange(
         element: "email" | "password",
         event: React.ChangeEvent<HTMLInputElement>
     ) {
+        setErrorMsg(null);
+
         let value = event.target.value;
         switch (element) {
             case "email":
@@ -42,6 +49,8 @@ export default function Login(props: LoginProps) {
         name="email"
         aria-label="Email"
         value={email}
+        placeholder={"Email"}
+        required={true}
         onChange={(e) => onChange("email", e)}
     />;
     const passwordBox = <input
@@ -49,6 +58,8 @@ export default function Login(props: LoginProps) {
         name="password"
         aria-label="Password"
         value={password}
+        placeholder={"Password"}
+        required={true}
         onChange={(e) => onChange("password", e)}
     />;
     const loginButton = <input
@@ -56,8 +67,13 @@ export default function Login(props: LoginProps) {
         aria-label="Sign in"
         value="Sign in"
     />;
+    let errorMessage = <></>;
+    if (errorMsg) {
+        errorMessage = <div className="errorMessage">{errorMsg}</div>;
+    }
 
     const form = <form name="Sign in form" onSubmit={onSubmit}>
+        {errorMessage}
         {emailBox}
         {passwordBox}
         {loginButton}

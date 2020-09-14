@@ -1,6 +1,6 @@
 import React from "react";
 import { MemoryRouter } from "react-router-dom";
-import { render, RenderResult } from "@testing-library/react";
+import { render, RenderResult, waitForElement } from "@testing-library/react";
 import ConferenceContext from "../../../contexts/ConferenceContext";
 import Login from "./Login";
 import { Conference } from "../../../classes/DataLayer";
@@ -66,11 +66,53 @@ describe("Login", () => {
         expect(emailBox.getAttribute("type")).toBe("email");
     });
 
+    it("renders the email input without a value", () => {
+        let element = render(TestElement());
+        let emailBox = element.getByLabelText(/email/i) as HTMLInputElement;
+        expect(emailBox.value).toBeDefined();
+        expect(emailBox.value.length).toBe(0);
+    });
+
+    it("renders the email input with a placeholder", () => {
+        let element = render(TestElement());
+        let emailBox = element.getByLabelText(/email/i);
+        expect(emailBox.getAttribute("placeholder")).toBeDefined();
+        expect(emailBox.getAttribute("placeholder")?.length).toBeGreaterThan(0);
+    });
+
+    it("renders the email input with the 'required' attribute", () => {
+        let element = render(TestElement());
+        let emailBox = element.getByLabelText(/email/i);
+        expect(emailBox.getAttribute("required")).toBeDefined();
+        expect(emailBox.getAttribute("required")).toBe("");
+    });
+
     it("renders the password input", () => {
         let element = render(TestElement());
         let passwordBox = element.getByLabelText(/password/i);
         expect(passwordBox).toBeDefined();
         expect(passwordBox.getAttribute("type")).toBe("password");
+    });
+
+    it("renders the password input without a value", () => {
+        let element = render(TestElement());
+        let passwordBox = element.getByLabelText(/password/i) as HTMLInputElement;
+        expect(passwordBox.value).toBeDefined();
+        expect(passwordBox.value.length).toBe(0);
+    });
+
+    it("renders the password input with a placeholder", () => {
+        let element = render(TestElement());
+        let passwordBox = element.getByLabelText(/password/i);
+        expect(passwordBox.getAttribute("placeholder")).toBeDefined();
+        expect(passwordBox.getAttribute("placeholder")?.length).toBeGreaterThan(0);
+    });
+
+    it("renders the password input with the 'required' attribute", () => {
+        let element = render(TestElement());
+        let passwordBox = element.getByLabelText(/password/i);
+        expect(passwordBox.getAttribute("required")).toBeDefined();
+        expect(passwordBox.getAttribute("required")).toBe("");
     });
 
     it("renders the login button", () => {
@@ -128,8 +170,17 @@ describe("Login", () => {
         expect(links[2].textContent).toBe("Help");
     });
 
-    it("displays an error message when login fails", () => {
-        fail();
+    it("displays an error message when login fails", async () => {
+        const element = render(TestElement());
+        const form = element.getByRole("form");
+
+        act(() => Simulate.submit(form));
+
+        const errorMsg = await waitForElement(() => {
+            return element.getByText(/unable/i);
+        });
+
+        expect(errorMsg).toBeDefined();
     });
 
     it("clears the password field on submit", async () => {
