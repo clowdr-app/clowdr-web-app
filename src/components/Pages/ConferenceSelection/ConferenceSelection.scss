@@ -49,26 +49,6 @@
     }
   }
 
-  .bottom-links {
-    display: flex;
-    justify-content: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin-bottom: mm(10);
-    color: $gray-3;
-
-    .bottom-link {
-      color: inherit;
-    }
-
-    .dot {
-      display: inline-block;
-      margin: 0 mm(6);
-    }
-  }
-
   @media (min-width: $break-sm) and (max-width: $break-lg - 1) {
     justify-content: start;
     padding-top: mm(10);

@@ -162,7 +162,7 @@ describe("Login", () => {
         return null;
     });
 
-    it("has bottom links", () => {
+    it("has footer links", () => {
         const element = render(TestElement());
         const links = element.getAllByRole("link") as HTMLAnchorElement[];
         expect(links[0].textContent).toBe("About");
