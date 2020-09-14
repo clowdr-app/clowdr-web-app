@@ -14,13 +14,21 @@ export default function BreakoutRoom() {
     }, [docTitle]);
     return <div className="breakout-room">
         <SplitPane split="horizontal" size={split} onChange={(size: Size) => setSplit(size)}>
-            <VideoGrid />
+            <div className="top-split">
+                <VideoGrid />
+                <button
+                    className="maximize-button"
+                    onClick={() => setSplit(0)}
+                >
+                    &#9650;
+                </button>
+            </div>
             <div className="bottom-split">
                 <button
                     className="minimize-button"
                     onClick={() => setSplit("100%")}
                 >
-                    -
+                    &#9660;
                 </button>
                 <ChatFrame chatId="TODO" />
             </div>
