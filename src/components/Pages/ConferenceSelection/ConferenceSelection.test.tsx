@@ -20,7 +20,7 @@ describe("ConferenceSelection", () => {
 
     const TestElement = (
         failedToLoadConferences: (reason: any) => Promise<void> = async () => { },
-        selectConference: (id: string) => Promise<void> = async () => { }
+        selectConference: (id: string | null) => Promise<boolean> = async () => { return true; }
     ) => {
         return <MemoryRouter>
             <ConferenceSelection

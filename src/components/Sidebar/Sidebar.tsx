@@ -2,6 +2,7 @@ import React from 'react';
 import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
+import FooterLinks from '../FooterLinks/FooterLinks';
 
 interface Props {
     open: boolean,
@@ -39,6 +40,7 @@ function Sidebar(props: Props) {
         </div>
         return <div className="sidebar">
             {headerBar}
+            <FooterLinks />
         </div>;
     }
     else {

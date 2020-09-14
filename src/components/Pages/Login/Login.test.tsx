@@ -28,7 +28,7 @@ describe("Login", () => {
 
         return <MemoryRouter>
             <ConferenceContext.Provider value={testConference}>
-                <Login doLogin={mockDoLogin} />
+                <Login doLogin={mockDoLogin} clearSelectedConference={jest.fn()} />
             </ConferenceContext.Provider>
         </MemoryRouter>
     };

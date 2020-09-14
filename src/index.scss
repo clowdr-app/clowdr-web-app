@@ -9,11 +9,12 @@
 }
 
 button {
+    display: inline-block;
     border: 1px solid $gray-3;
     background: none;
 
     color: $gray-3;
-    padding: 10%;
+    padding: 0.3em;
     margin: 10%;
     box-sizing: border-box;
 }
@@ -26,4 +27,8 @@ button:focus {
 *:focus {
     outline: solid 2px $color-3;
     outline-offset: 0;
+}
+
+section.main:focus {
+    outline: none;
 }

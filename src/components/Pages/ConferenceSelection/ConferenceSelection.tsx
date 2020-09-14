@@ -5,7 +5,7 @@ import FooterLinks from "../../FooterLinks/FooterLinks";
 import useDocTitle from "../../../hooks/useDocTitle";
 
 export type failedToLoadConferencesF = (reason: any) => Promise<void>;
-export type selectConferenceF = (conferenceId: string) => Promise<void>;
+export type selectConferenceF = (conferenceId: string | null) => Promise<boolean>;
 
 interface Props {
     failedToLoadConferences: failedToLoadConferencesF;
@@ -39,8 +39,11 @@ export default function ConferenceSelection(props: Props) {
         return () => { isMounted = false };
     }, [props]);
 
-    const submitSelection = () => {
-        props.selectConference(selected as string)
+    const submitSelection = async () => {
+        if (!(await props.selectConference(selected as string))) {
+            // TODO: Display an error to the user
+            console.error(`Could not select conference: ${selected}`);
+        }
     };
 
     return <div className="conference-selection-container">

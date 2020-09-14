@@ -1,5 +1,5 @@
 import Parse from "parse";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
 import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
@@ -42,8 +42,12 @@ export default function App(props: Props) {
     const [docTitle, setDocTitle] = useState("");
     const docTitleCtx: DocTitleState = {
         get: () => docTitle,
-        set: async (val) => { setDocTitle(val) }
+        set: async (val) => {
+            setDocTitle(val);
+        }
     };
+
+    document.title = docTitle;
 
     // State updates go inside a `useEffect`
     useEffect(() => {
@@ -194,10 +198,30 @@ export default function App(props: Props) {
         }
     }
 
-    async function selectConference(id: string): Promise<void> {
-        const conference = await Conference.get(id);
-        LocalStorage_Conference.currentConferenceId = id;
-        setConference(conference);
+    async function selectConference(id: string | null): Promise<boolean> {
+        let clearSelected = false;
+        let ok = true;
+        try {
+            if (id) {
+                const conference = await Conference.get(id);
+                LocalStorage_Conference.currentConferenceId = id;
+                setConference(conference);
+            }
+            else {
+                clearSelected = true;
+            }
+        }
+        catch {
+            clearSelected = true;
+            ok = false;
+        }
+
+        if (clearSelected) {
+            LocalStorage_Conference.currentConferenceId = null;
+            setConference(null);
+        }
+
+        return ok;
     }
 
     async function toggleSidebar(): Promise<void> {

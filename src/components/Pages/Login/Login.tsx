@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import useDocTitle from "../../../hooks/useDocTitle";
-import FooterLinks from "../../FooterLinks/FooterLinks";
 
 export type doLoginF = (username: string, password: string) => Promise<boolean>;
+export type clearSelectedConferenceF = () => Promise<void>;
 
 interface LoginProps {
     doLogin: doLoginF;
+    clearSelectedConference: clearSelectedConferenceF;
 }
 
 export default function Login(props: LoginProps) {
@@ -71,6 +72,11 @@ export default function Login(props: LoginProps) {
         aria-label="Sign in"
         value="Sign in"
     />;
+    const selectOtherButton = <button
+        onClick={props.clearSelectedConference}
+        aria-label="Select another conference">
+        Select another conference
+    </button>;
     let errorMessage = <></>;
     if (errorMsg) {
         errorMessage = <div className="errorMessage">{errorMsg}</div>;
@@ -81,10 +87,10 @@ export default function Login(props: LoginProps) {
         {emailBox}
         {passwordBox}
         {loginButton}
+        {selectOtherButton}
     </form>;
 
     return <section aria-labelledby="page-title" tabIndex={0}>
         {form}
-        <FooterLinks />
     </section>;
 }

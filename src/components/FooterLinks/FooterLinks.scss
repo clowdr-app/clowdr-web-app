@@ -1,12 +1,6 @@
 @import "../../styles/util";
 
-.page .footer-links {
-    display        : flex;
-    justify-content: center;
-    position       : fixed;
-    bottom         : 0;
-    left           : 0;
-    right          : 0;
+.footer-links {
     margin-bottom  : mm(10);
     color          : $gray-3;
     font-size      : $font-xsm;
@@ -19,4 +13,18 @@
         display: inline-block;
         margin : 0 mm(6);
     }
+}
+
+.page .footer-links {
+    position : fixed;
+    display        : flex;
+    justify-content: center;
+    bottom         : 0;
+    left           : 0;
+    right          : 0;
+}
+
+.sidebar .footer-links {
+    color: inherit;
+    text-align: center;
 }

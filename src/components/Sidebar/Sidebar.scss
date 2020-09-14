@@ -59,10 +59,11 @@
     background-color: $dark-primary;
 
     display           : grid;
-    grid-template-rows: 3em auto auto auto 3em;
+    grid-template-rows: 3em auto min-content;
     grid-template-areas:
         "header"
-        "menu";
+        "menu"
+        "footer";
 
     color: $gray-6;
 
@@ -133,4 +134,9 @@
         }
     }
 
+    .footer-links {
+        grid-area: footer;
+        margin: 0;
+        padding: 1em;
+    }
 }

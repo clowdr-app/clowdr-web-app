@@ -39,7 +39,12 @@ function Page(props: Props) {
         </Switch>;
     }
     else if (mConf) {
-        contentsElem = <Login doLogin={props.doLogin} />;
+        contentsElem = <Login
+            doLogin={props.doLogin}
+            clearSelectedConference={async () => {
+                props.selectConference(null)
+            }}
+        />;
     }
     else {
         noHeading = true;
