@@ -6,6 +6,8 @@ export default async function getUserProfile() {
         testData.UserProfile[0].id,
         testData.UserProfile[0].conference
     );
-    expect(profile).toBeDefined();
+    if (!profile) {
+        throw new Error("Could not get user profile!");
+    }
     return profile as UserProfile;
 };
