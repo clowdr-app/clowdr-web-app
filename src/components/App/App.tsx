@@ -141,6 +141,35 @@ export default function App(props: Props) {
         }
     }
 
+    async function failedToLoadConferences(reason: any): Promise<void> {
+        // This is most likely to occur during testing when the session token
+        // is invalidated by regeneration of the test database.
+        let handled = false;
+        if (typeof reason === "string") {
+            if (reason.match(/ParseError: 209 Invalid session token/ig)?.length) {
+                handled = true;
+
+                // We have to iterate by index, which means removal has to be
+                // done in two stages (otherwise the length of the store would
+                // change while we're iterating over it).
+                let keys: Array<string> = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    let key = localStorage.key(i);
+                    if (key?.match(/parse/ig)?.length) {
+                        keys.push(key);
+                    }
+                }                
+                for (let key of keys) {
+                    localStorage.removeItem(key);
+                }
+            }
+        }
+
+        if (!handled) {
+            logger.error(`Failed to load conferences! ${reason}`);
+        }
+    }
+
     async function selectConference(id: string): Promise<void> {
         const conference = await Conference.get(id);
         Session_Conference.currentConferenceId = id;
@@ -148,7 +177,11 @@ export default function App(props: Props) {
     }
 
     // The main page element - this is where the bulk of content goes
-    let page = <Page doLogin={doLogin} selectConference={selectConference} />;
+    let page = <Page
+        doLogin={doLogin}
+        failedToLoadConferences={failedToLoadConferences}
+        selectConference={selectConference}
+    />;
     // The sidebar element - only rendered if a conference is selected (user may
     // still be logged out though).
     let sidebar = <></>;

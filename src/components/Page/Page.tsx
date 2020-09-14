@@ -1,13 +1,14 @@
 import React from 'react';
 import './Page.scss';
 import useMaybeConference from '../../hooks/useMaybeConference';
-import ConferenceSelection, { selectConferenceF } from '../Pages/ConferenceSelection/ConferenceSelection';
+import ConferenceSelection, { failedToLoadConferencesF, selectConferenceF } from '../Pages/ConferenceSelection/ConferenceSelection';
 import Login, { doLoginF } from '../Pages/Login/Login';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import LoggedInWelcome from '../Pages/LoggedInWelcome/LoggedInWelcome';
 
 interface Props {
     doLogin: doLoginF;
+    failedToLoadConferences: failedToLoadConferencesF;
     selectConference: selectConferenceF;
 }
 
@@ -23,7 +24,10 @@ function Page(props: Props) {
         contentsElem = <Login doLogin={props.doLogin} />;
     }
     else {
-        contentsElem = <ConferenceSelection selectConference={props.selectConference} />;
+        contentsElem = <ConferenceSelection
+            failedToLoadConferences={props.failedToLoadConferences}
+            selectConference={props.selectConference}
+        />;
     }
 
     return <div className="page">

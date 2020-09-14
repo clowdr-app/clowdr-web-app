@@ -3,9 +3,11 @@ import { Conference } from "../../../classes/DataLayer";
 import "./ConferenceSelection.scss";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 
+export type failedToLoadConferencesF = (reason: any) => Promise<void>;
 export type selectConferenceF = (conferenceId: string) => Promise<void>;
 
 interface Props {
+    failedToLoadConferences: failedToLoadConferencesF;
     selectConference: selectConferenceF;
 }
 
@@ -16,7 +18,10 @@ export default function ConferenceSelection(props: Props) {
     useEffect(() => {
         let isMounted = true;
         (async () => {
-            const conferences = await Conference.getAll();
+            const conferences = await Conference.getAll().catch(async (reason) => {
+                await props.failedToLoadConferences(reason);
+                return [];
+            });
             conferences.sort((x, y) => x.conferenceName.localeCompare(y.conferenceName));
             if (isMounted) {
                 setConferences(conferences);
@@ -26,7 +31,7 @@ export default function ConferenceSelection(props: Props) {
             }
         })();
         return () => { isMounted = false };
-    }, []);
+    }, [props]);
 
     const submitSelection = () => {
         props.selectConference(selected as string)
@@ -44,8 +49,8 @@ export default function ConferenceSelection(props: Props) {
                 </select>
                 <div>
                     <button
-                        className={"join-button" + (selected == null ? " join-button-disabled" : "")}
-                        disabled={selected == null}
+                        className={"join-button" + (selected === null ? " join-button-disabled" : "")}
+                        disabled={selected === null}
                         onClick={submitSelection}
                     >
                         Join
