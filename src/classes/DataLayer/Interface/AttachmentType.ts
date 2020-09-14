@@ -1,5 +1,5 @@
 import * as Schema from "../Schema";
-import { CachedBase, StaticCachedBase, StaticBaseImpl, FieldDataT } from "./Base";
+import { CachedBase, StaticCachedBase, StaticBaseImpl, LocalDataT } from "./Base";
 import { Conference } from ".";
 import { PromisesRemapped } from "../WholeSchema";
 
@@ -10,7 +10,7 @@ const K_str: K = "AttachmentType";
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
         conferenceId: string,
-        data: FieldDataT[K],
+        data: LocalDataT[K],
         parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
         super(conferenceId, K_str, data, parse);
     }

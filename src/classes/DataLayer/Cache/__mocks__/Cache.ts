@@ -4,7 +4,7 @@ import CachedSchema from "../../CachedSchema";
 import { CachedSchemaKeys, PromisesRemapped, RelationsToTableNames, WholeSchemaKeys } from "../../WholeSchema";
 import * as Interface from "../../Interface";
 import * as Schema from "../../Schema";
-import { CachedBase, RelatedDataT, FieldDataT, Constructor } from "../../Interface/Base";
+import { CachedBase, LocalDataT, Constructor } from "../../Interface/Base";
 import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields, KnownKeys } from "../../../Util";
 import { OperationResult } from "..";
 import assert from "assert";
@@ -163,7 +163,6 @@ export default class Cache {
         this.conference
             = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference")
             .get(this.conferenceId).then(async x => {
-                await x.fetch();
                 return x;
             });
     }
@@ -176,7 +175,7 @@ export default class Cache {
             id: parse.id
         };
         for (let _key of this.Fields[tableName]) {
-            let key = _key as KnownKeys<(FieldDataT[K] | RelatedDataT[K])>;
+            let key = _key as KnownKeys<LocalDataT[K]>;
             if (key !== "id") {
                 // Yes these casts are safe
 
@@ -185,10 +184,10 @@ export default class Cache {
                     let uniqRels = this.UniqueRelations[tableName] as Array<string>;
                     try {
                         if (uniqRels.includes(key as string)) {
-                        let xs = parse.get(key as any);
-                                schema[key] = xs.id;
-                            }
-                            else {
+                            let xs = parse.get(key as any);
+                            schema[key] = xs.id;
+                        }
+                        else {
                             let r = parse.relation(key as any);
                             schema[key] = await r.query().map(x => x.id);
                         }
@@ -236,7 +235,6 @@ export default class Cache {
         try {
             let resultP = query.get(id);
             let result = await resultP;
-            await result.fetch();
             return await this.addItemToCache<K, T>(result, tableName);
         }
         catch (reason) {
@@ -249,7 +247,6 @@ export default class Cache {
     ): Promise<Array<T>> {
         let query = await this.newParseQuery(tableName);
         return query.map(async parse => {
-            await parse.fetch();
             return await this.addItemToCache<K, T>(parse, tableName);
         }).catch(_reason => {
             return [];

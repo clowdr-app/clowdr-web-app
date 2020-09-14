@@ -1,5 +1,5 @@
 import * as Schema from "../Schema";
-import { StaticCachedBase, StaticBaseImpl, CachedBase, FieldDataT } from "./Base";
+import { StaticCachedBase, StaticBaseImpl, CachedBase, LocalDataT } from "./Base";
 import { PrivilegedConferenceDetails } from ".";
 import { PromisesRemapped } from "../WholeSchema";
 
@@ -10,7 +10,7 @@ const K_str: K = "Conference";
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
         conferenceId: string,
-        data: FieldDataT[K],
+        data: LocalDataT[K],
         parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
         super(conferenceId, K_str, data, parse);
     }

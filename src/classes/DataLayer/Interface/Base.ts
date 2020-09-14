@@ -23,21 +23,6 @@ import { CachedSchemaKeys, IBase, PromisesRemapped, RelationsToTableNames, Uncac
 
 export const CachedStoreNames = keys<CachedSchema>() as Array<CachedSchemaKeys>;
 
-export type FieldDataT
-    = {
-        [K in CachedSchemaKeys]: {
-            [K2 in NotPromisedKeys<CachedSchema[K]["value"]>]: CachedSchema[K]["value"][K2]
-        } & {
-            [K in NotPromisedKeys<Schema.Base>]: Schema.Base[K]
-        }
-    } & {
-        [K in UncachedSchemaKeys]: {
-            [K2 in NotPromisedKeys<UncachedSchema[K]["value"]>]: UncachedSchema[K]["value"][K2]
-        } & {
-            [K in NotPromisedKeys<Schema.Base>]: Schema.Base[K]
-        }
-    };
-
 export type RelatedDataT
     = {
         [K in CachedSchemaKeys]: {
@@ -49,10 +34,31 @@ export type RelatedDataT
         }
     };
 
+export type LocalDataT
+    = {
+        [K in CachedSchemaKeys]: {
+            [K2 in KnownKeys<CachedSchema[K]["value"]>]:
+            CachedSchema[K]["value"][K2] extends Promise<Array<any>> ? Array<string> :
+            CachedSchema[K]["value"][K2] extends Promise<any> ? string :
+            CachedSchema[K]["value"][K2]
+        } & {
+            [K in KnownKeys<Schema.Base>]: Schema.Base[K]
+        }
+    } & {
+        [K in UncachedSchemaKeys]: {
+            [K2 in KnownKeys<UncachedSchema[K]["value"]>]:
+            UncachedSchema[K]["value"][K2] extends Promise<Array<any>> ? Array<string> :
+            UncachedSchema[K]["value"][K2] extends Promise<any> ? string :
+            UncachedSchema[K]["value"][K2]
+        } & {
+            [K in KnownKeys<Schema.Base>]: Schema.Base[K]
+        }
+    };
+
 export interface StaticCachedBase<K extends CachedSchemaKeys> {
     // Must match the type of `CachedConstructor` below
     new(conferenceId: string,
-        data: FieldDataT[K],
+        data: LocalDataT[K],
         parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null): IBase<K>;
 
     get(id: string, conferenceId: string): Promise<IBase<K> | null>;
@@ -62,7 +68,7 @@ export interface StaticCachedBase<K extends CachedSchemaKeys> {
 export type CachedConstructor<K extends CachedSchemaKeys>
     = new (
         conferenceId: string,
-        data: FieldDataT[K],
+        data: LocalDataT[K],
         parse?: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null) => IBase<K>;
 
 export type UncachedConstructor<K extends UncachedSchemaKeys>
@@ -92,6 +98,30 @@ export abstract class StaticBaseImpl {
         return CachedStoreNames.includes(tableName as any) && !!conferenceId;
     }
 
+    static async wrapItem<K extends WholeSchemaKeys, T extends IBase<K>>(
+        tableName: K,
+        parse: Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>
+    ): Promise<T> {
+        if (CachedStoreNames.includes(tableName as CachedSchemaKeys)) {
+            const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
+            let conferenceId;
+            if (tableName === "Conference") {
+                conferenceId = _parse.id;
+            }
+            else {
+                conferenceId = _parse.get("conference" as any).id as string;
+            }
+            let _tableName = tableName as CachedSchemaKeys;
+            let cache = await Caches.get(conferenceId);
+            return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
+        }
+        else {
+            const constr = Cache.Constructors[tableName as UncachedSchemaKeys] as UncachedConstructor<any>;
+            const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
+            return new constr(_parse) as T;
+        }
+    }
+
     static async get<K extends WholeSchemaKeys, T extends IBase<K>>(
         tableName: K,
         id: string,
@@ -105,19 +135,8 @@ export abstract class StaticBaseImpl {
         }
         else {
             let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
-            return (await query.get(id)).fetch().then(async parse => {
-                if (CachedStoreNames.includes(tableName as CachedSchemaKeys)) {
-                    const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
-                    conferenceId = _parse.get("conference" as any).id as string;
-                    let _tableName = tableName as CachedSchemaKeys;
-                    let cache = await Caches.get(conferenceId);
-                    return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
-                }
-                else {
-                    const constr = Cache.Constructors[tableName as UncachedSchemaKeys] as UncachedConstructor<any>;
-                    const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
-                    return new constr(_parse) as T;
-                }
+            return await query.get(id).then(async parse => {
+                return StaticBaseImpl.wrapItem<K, T>(tableName, parse);
             }).catch(reason => {
                 console.warn("Fetch from database of uncached item failed", {
                     tableName: tableName,
@@ -132,28 +151,27 @@ export abstract class StaticBaseImpl {
 
     static async getByField<
         K extends WholeSchemaKeys,
-        S extends KnownKeys<FieldDataT[K]>,
+        S extends KnownKeys<LocalDataT[K]>,
         T extends IBase<K>
     >(
         tableName: K,
         fieldName: S,
-        searchFor: FieldDataT[K][S],
-        conferenceId?: string,
+        searchFor: LocalDataT[K][S],
+        conferenceId?: string
     ): Promise<T | null> {
+        // TODO: Can we put this through the cache?
         let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
-        return (await query.equalTo(fieldName as any, searchFor as any).first())?.fetch().then(async parse => {
-            if (CachedStoreNames.includes(tableName as CachedSchemaKeys)) {
-                const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
-                conferenceId = _parse.get("conference" as any).id as string;
-                let _tableName = tableName as CachedSchemaKeys;
-                let cache = await Caches.get(conferenceId);
-                return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
+        query = query.equalTo(fieldName as any, searchFor as any);
+        if (conferenceId) {
+            query.equalTo("conference" as any, conferenceId as any);
+        }
+        let itemP = query.first();
+
+        return itemP.then(async parse => {
+            if (parse) {
+                return StaticBaseImpl.wrapItem<K, T>(tableName, parse);
             }
-            else {
-                const constr = Cache.Constructors[tableName as UncachedSchemaKeys] as UncachedConstructor<any>;
-                const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
-                return new constr(_parse) as T;
-            }
+            return null;
         }).catch(reason => {
             console.warn("Fetch by field from database failed", {
                 tableName: tableName,
@@ -163,7 +181,7 @@ export abstract class StaticBaseImpl {
             });
 
             return null;
-        }) || null;
+        });
     }
 
     static async getAll<K extends WholeSchemaKeys, T extends IBase<K>>(
@@ -176,25 +194,7 @@ export abstract class StaticBaseImpl {
         else {
             let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
             return query.map(async parse => {
-                await parse.fetch();
-                if (CachedStoreNames.includes(tableName as any)) {
-                    const _parse = parse as Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>;
-                    if (tableName === "Conference") {
-                        conferenceId = _parse.id;
-                    }
-                    else {
-                        conferenceId = _parse.get("conference" as any).id as string;
-                    }
-
-                    let _tableName = tableName as CachedSchemaKeys;
-                    let cache = await Caches.get(conferenceId);
-                    return cache.addItemToCache(_parse as any, _tableName) as unknown as T;
-                }
-                else {
-                    const constr = Cache.Constructors[tableName as UncachedSchemaKeys] as UncachedConstructor<any>;
-                    const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
-                    return new constr(_parse) as T;
-                }
+                return StaticBaseImpl.wrapItem<K, T>(tableName, parse);
             }).catch(reason => {
                 return Promise.reject("Fetch all from database of uncached table failed");
             });
@@ -209,7 +209,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
     constructor(
         protected conferenceId: string,
         protected tableName: K,
-        protected data: FieldDataT[K],
+        protected data: LocalDataT[K],
         protected parse: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>> | null = null) {
     }
 
@@ -229,7 +229,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         }
         else {
             let query = new Parse.Query<Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>>(this.tableName);
-            return (await query.get(this.id)).fetch();
+            return query.get(this.id);
         }
     }
 
@@ -249,7 +249,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         let cache = await Caches.get(this.conferenceId);
         let r2t: Record<string, string> = RelationsToTableNames[this.tableName];
         let targetTableName = r2t[field as any];
-        let targetId = this.data[field as unknown as keyof FieldDataT[K]] as any as string;
+        let targetId = this.data[field as unknown as keyof LocalDataT[K]] as any as string;
         if (CachedStoreNames.includes(targetTableName as any)) {
             return cache.get(targetTableName as any, targetId).then(result => {
                 if (!result) {
@@ -260,7 +260,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         }
         else {
             let resultParse = new Parse.Query(targetTableName);
-            return (await resultParse.get(targetId)).fetch().then(async parse => {
+            return resultParse.get(targetId).then(async parse => {
                 const constr = Cache.Constructors[targetTableName as UncachedSchemaKeys];
                 const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
                 return new constr(_parse) as any;
@@ -272,7 +272,7 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         let cache = await Caches.get(this.conferenceId);
         let r2t: Record<string, string> = RelationsToTableNames[this.tableName];
         let targetTableName = r2t[field as any];
-        let targetIds = this.data[field as unknown as keyof FieldDataT[K]] as any as Array<string>;
+        let targetIds = this.data[field as unknown as keyof LocalDataT[K]] as any as Array<string>;
         if (CachedStoreNames.includes(targetTableName as any)) {
             return Promise.all(targetIds.map(targetId => cache.get(targetTableName as any, targetId).then(result => {
                 if (!result) {
@@ -284,7 +284,6 @@ export abstract class CachedBase<K extends CachedSchemaKeys> implements IBase<K>
         else {
             let resultParse = new Parse.Query(targetTableName);
             return resultParse.containedIn("id", targetIds).map(async parse => {
-                await parse.fetch();
                 const constr = Cache.Constructors[targetTableName as UncachedSchemaKeys];
                 const _parse = parse as Parse.Object<PromisesRemapped<UncachedSchema[K]["value"]>>;
                 return new constr(_parse);

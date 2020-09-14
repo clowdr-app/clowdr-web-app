@@ -1,6 +1,6 @@
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
-import { StaticCachedBase, StaticBaseImpl, FieldDataT, CachedBase } from "./Base";
+import { StaticCachedBase, StaticBaseImpl, LocalDataT, CachedBase } from "./Base";
 import { Conference, Flair, UserPresence, ProgramPerson, _User, BreakoutRoom } from ".";
 
 type SchemaT = Schema.UserProfile;
@@ -10,7 +10,7 @@ const K_str: K = "UserProfile";
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
         conferenceId: string,
-        data: FieldDataT[K],
+        data: LocalDataT[K],
         parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
         super(conferenceId, K_str, data, parse);
     }
@@ -84,14 +84,7 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     static getByUserId(userId: string, conferenceId: string): Promise<Class | null> {
-        return StaticBaseImpl
-            .get("_User", userId)
-            .then(_user => {
-                const user = _user as _User;
-                return user?.profiles.then(profiles => {
-                    return profiles.find(x => x.conferenceId === conferenceId) || null;
-                }) || null;
-            });
+        return StaticBaseImpl.getByField("UserProfile", "user", userId, conferenceId);
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

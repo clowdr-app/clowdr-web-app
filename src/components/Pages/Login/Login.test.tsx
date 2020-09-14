@@ -135,4 +135,12 @@ describe("Login", () => {
         expect(links[1].textContent).toBe("Legal");
         expect(links[2].textContent).toBe("Help");
     });
+
+    it("displays an error message when login fails", () => {
+        fail();
+    });
+
+    it("clears the password field on submit", () => {
+        fail();
+    });
 });

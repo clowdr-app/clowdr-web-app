@@ -5,7 +5,7 @@ import CachedSchema, { SchemaVersion } from "../CachedSchema";
 import { CachedSchemaKeys, PromisesRemapped, RelationsToTableNames, WholeSchemaKeys } from "../WholeSchema";
 import * as Interface from "../Interface";
 import * as Schema from "../Schema";
-import { CachedBase, CachedStoreNames, RelatedDataT, FieldDataT, Constructor } from "../Interface/Base";
+import { CachedBase, CachedStoreNames, LocalDataT, Constructor } from "../Interface/Base";
 import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields, KnownKeys } from "../../Util";
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
@@ -237,7 +237,6 @@ export default class Cache {
                             this.dbPromise.then(async db => {
                                 let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
                                 let conf = await confP;
-                                conf = await conf.fetch();
                                 if (!conf) {
                                     reject(`Conference ${this.conferenceId} could not be loaded.`);
                                     return;
@@ -284,7 +283,6 @@ export default class Cache {
 
         let itemsQ = await this.newParseQuery(tableName);
         return itemsQ.map(async parse => {
-            await parse.fetch();
             return this.addItemToCache<K, T>(parse, tableName, db);
         });
     }
@@ -298,7 +296,7 @@ export default class Cache {
             id: parse.id
         };
         for (let _key of this.Fields[tableName]) {
-            let key = _key as KnownKeys<(FieldDataT[K] | RelatedDataT[K])>;
+            let key = _key as KnownKeys<LocalDataT[K]>;
             if (key !== "id") {
                 // Yes these casts are safe
 
@@ -307,10 +305,10 @@ export default class Cache {
                     let uniqRels = this.UniqueRelations[tableName] as Array<string>;
                     try {
                         if (uniqRels.includes(key as string)) {
-                        let xs = parse.get(key as any);
-                                schema[key] = xs.id;
-                            }
-                            else {
+                            let xs = parse.get(key as any);
+                            schema[key] = xs.id;
+                        }
+                        else {
                             let r = parse.relation(key as any);
                             schema[key] = await r.query().map(x => x.id);
                         }
@@ -694,7 +692,6 @@ export default class Cache {
             try {
                 let resultP = query.get(id);
                 let result = await resultP;
-                await result.fetch();
                 return await this.addItemToCache<K, T>(result, tableName);
             }
             catch (reason) {
@@ -716,7 +713,6 @@ export default class Cache {
         return this.getAllFromCache(tableName).catch(async () => {
             let query = await this.newParseQuery(tableName);
             return query.map(async parse => {
-                await parse.fetch();
                 return await this.addItemToCache<K, T>(parse, tableName);
             }).catch(reason => {
                 this.logger.warn("Fetch from database of all cached items failed", {
