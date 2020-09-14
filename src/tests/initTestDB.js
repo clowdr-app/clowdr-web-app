@@ -381,8 +381,8 @@ function convertObjectToMongoJSON(tableName, item, result) {
                 let relatedTableName = RelationFields[fieldName];
                 if (Array.isArray(fieldValue)) {
                     let ids = fieldValue;
+                    let relationName = `_Join:${fieldName}:${tableName}`;
                     if (ids.length > 0) {
-                        let relationName = `_Join:${fieldName}:${tableName}`;
                         if (!result[relationName]) {
                             result[relationName] = [];
                         }
@@ -393,6 +393,9 @@ function convertObjectToMongoJSON(tableName, item, result) {
                         }));
 
                         result[relationName] = result[relationName].concat(finalValue);
+                    }
+                    else {
+                        result[relationName] = [];
                     }
                 }
                 else if (fieldValue) {
