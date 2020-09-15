@@ -51,22 +51,22 @@ export default function ConferenceSelection(props: Props) {
     return <div className="conference-selection-container">
         <section className="main" aria-labelledby="page-title" tabIndex={0}>
             <h1 id="page-title" className="banner" aria-level={1}>Welcome to Clowdr</h1>
-            <p>Please select your conference to begin</p>
-            <form className="input-wrapper" onSubmit={submitSelection}>
-                <select disabled={conferences.length === 0} onChange={e => setSelected(e.target.value)}
-                    title="Conference">
-                    {conferences.map((conf, i) =>
-                        <option key={i} value={conf.id}>{conf.name}</option>
-                    )}
-                </select>
-                <button
-                    className={"join-button" + (selected === null ? " join-button-disabled" : "")}
-                    disabled={selected === null}
-                    title="Join"
-                >
-                    Join
+            <div className={"after-load-content" +
+                (conferences.length === 0 || selected == null ? " after-load-hidden" : "")}
+            >
+                <p>Please select your conference to begin</p>
+                <form className="input-wrapper" onSubmit={submitSelection}>
+                    <select onChange={e => setSelected(e.target.value)}
+                        title="Conference">
+                        {conferences.map((conf, i) =>
+                            <option key={i} value={conf.id}>{conf.name}</option>
+                        )}
+                    </select>
+                    <button className="join-button" title="Join">
+                        Join
                     </button>
-            </form>
+                </form>
+            </div>
         </section>
         <FooterLinks />
     </div>;
