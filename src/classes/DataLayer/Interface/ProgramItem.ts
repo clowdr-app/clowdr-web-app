@@ -1,6 +1,6 @@
 import * as Schema from "../Schema";
 import { CachedBase, StaticCachedBase, StaticBaseImpl, LocalDataT } from "./Base";
-import { Conference, ProgramPerson, ProgramTrack, ProgramItemAttachment, BreakoutRoom, ProgramSessionEvent, ProgramSession } from ".";
+import { Conference, ProgramPerson, ProgramTrack, ProgramItemAttachment, ProgramSessionEvent, ProgramSession } from ".";
 import { PromisesRemapped } from "../WholeSchema";
 
 type SchemaT = Schema.ProgramItem;
@@ -49,10 +49,6 @@ export default class Class extends CachedBase<K> implements SchemaT {
 
     get attachments(): Promise<ProgramItemAttachment[]> {
         return this.nonUniqueRelated("attachments");
-    }
-
-    get breakoutRoom(): Promise<BreakoutRoom> {
-        return this.uniqueRelated("breakoutRoom");
     }
 
     get events(): Promise<ProgramSessionEvent[]> {

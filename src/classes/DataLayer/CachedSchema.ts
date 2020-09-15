@@ -33,20 +33,10 @@ export default interface CachedSchema extends CachableDBSchema {
         value: Schema.AttachmentType;
         indexes: Indexes<Schema.AttachmentType>;
     };
-    BreakoutRoom: {
-        key: string;
-        value: Schema.BreakoutRoom;
-        indexes: Indexes<Schema.BreakoutRoom>;
-    };
     Conference: {
         key: string;
         value: Schema.Conference;
         indexes: Indexes<Schema.Conference>;
-    };
-    Conversation: {
-        key: string;
-        value: Schema.Conversation;
-        indexes: Indexes<Schema.Conversation>;
     };
     LiveActivity: {
         key: string;

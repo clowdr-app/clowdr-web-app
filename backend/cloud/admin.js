@@ -94,21 +94,7 @@ async function createSocialSpaces(conf){
 
 }
 
-var privilegeRoles = {
-    "createVideoRoom": null,
-    "chat": null,
-    "createVideoRoom-persistent": null,
-    "createVideoRoom-group": null,
-    "createVideoRoom-smallgroup": null,
-    "createVideoRoom-peer-to-peer": null,
-    'createVideoRoom-private': null,
-    "moderator": null,
-    'announcement-global': null
-};
-
-let PrivilegedAction = Parse.Object.extend("PrivilegedAction");
 let PrivilegedConferenceDetails = Parse.Object.extend("PrivilegedConferenceDetails");
-let ConferencePermission = Parse.Object.extend("ConferencePermission");
 
 var adminRole;
 
@@ -119,22 +105,6 @@ async function getClowdrAdminRole() {
     roleQ.equalTo("name", "ClowdrSysAdmin");
     adminRole = await roleQ.first({useMasterKey: true});
     return adminRole;
-}
-
-async function createPrivileges() {
-    return Promise.all(Object.keys(privilegeRoles).map(async (action) => {
-            let actionsQ = new Parse.Query(PrivilegedAction);
-            actionsQ.equalTo("action", action)
-            actionsQ.include("role");
-            let res = await actionsQ.first({useMasterKey: true});
-            if (!res) {
-                let pa = new PrivilegedAction();
-                pa.set("action", action);
-                res = await pa.save({}, {useMasterKey: true});
-            }
-            privilegeRoles[action] = res;
-        }
-    ));
 }
 
 // Is the given user in any of the given roles?
@@ -358,31 +328,6 @@ Parse.Cloud.define("init-conference-2", async (request) => {
         }
 
         createSocialSpaces(conf);
-
-        createPrivileges().then(async (res) => {
-            let toSave = [];
-
-            let acl = new Parse.ACL();
-            acl.setPublicReadAccess(false);
-            acl.setRoleReadAccess(conf.id + "-conference", true);
-
-            let permissionQ = new Parse.Query(ConferencePermission);
-            permissionQ.equalTo("conference", conf);
-            let privs = await permissionQ.find({useMasterKey: true});
-            for (let action of Object.values(privilegeRoles)) {
-                if (!privs.find(p => p.get('action').get('action') === action)) {
-                    console.log("Creating instance permission for " + action)
-                    let priv = new ConferencePermission();
-                    priv.set("conference", conf);
-                    priv.set("action", action);
-                    priv.setACL(acl);
-                    toSave.push(priv);
-                }
-            }
-            Parse.Object.saveAll(toSave, {useMasterKey: true})
-
-            console.log("[init]: Done creating privileges") ;
-        })      
     }
 })
 

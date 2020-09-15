@@ -1,7 +1,7 @@
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticCachedBase, StaticBaseImpl, LocalDataT, CachedBase } from "./Base";
-import { Conference, Flair, UserPresence, ProgramPerson, _User, BreakoutRoom } from ".";
+import { Conference, Flair, UserPresence, ProgramPerson, _User } from ".";
 
 type SchemaT = Schema.UserProfile;
 type K = "UserProfile";
@@ -77,10 +77,6 @@ export default class Class extends CachedBase<K> implements SchemaT {
 
     get user(): Promise<_User> {
         return this.uniqueRelated("user");
-    }
-
-    get watchedRooms(): Promise<BreakoutRoom[]> {
-        return this.nonUniqueRelated("watchedRooms");
     }
 
     static getByUserId(userId: string, conferenceId: string): Promise<Class | null> {

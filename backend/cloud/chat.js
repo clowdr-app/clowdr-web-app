@@ -540,11 +540,6 @@ Parse.Cloud.define("join-announcements-channel", async (request) => {
         let config = await getConfig(conf);
 
         //Now find out if we are a moderator or not...
-        const accesToConf = new Parse.Query('ConferencePermission');
-        accesToConf.equalTo("conference", conf);
-        let actionQ = new Parse.Query("PrivilegedAction");
-        actionQ.equalTo("action","announcement-global");
-        accesToConf.matchesQuery("action", actionQ);
         const hasAccess = await userInRoles(request.user, [confID+ "-admin", confID+ "-manager"]);
         console.log('--> hasAccess: ' + hasAccess);
 

@@ -3,24 +3,10 @@ const RelationsToTableNames = {
     AttachmentType: {
         conference: "Conference"
     },
-    BondedChannel: {
-        children: "TwilioChannelMirror"
-    },
-    BreakoutRoom: {
-        conference: "Conference",
-        conversation: "Conversation",
-        members: "UserProfile",
-        programItem: "ProgramItem",
-        watchers: "UserProfile"
-    },
     Conference: {
         loggedInText: "PrivilegedConferenceDetails",
     },
     ConferenceConfiguration: {
-        conference: "Conference"
-    },
-    ConferencePermission: {
-        action: "PrivilegedAction",
         conference: "Conference"
     },
     Conversation: {
@@ -31,11 +17,6 @@ const RelationsToTableNames = {
     Flair: {
     },
     LiveActivity: {
-    },
-    MeetingRegistration: {
-        conference: "Conference"
-    },
-    PrivilegedAction: {
     },
     PrivilegedConferenceDetails: {
         conference: "Conference"
@@ -82,8 +63,6 @@ const RelationsToTableNames = {
     },
     SocialSpace: {
         conference: "Conference"
-    },
-    TwilioChannelMirror: {
     },
     _User: {
         profiles: "UserProfile",
@@ -450,16 +429,11 @@ module.exports = {
     generateTestData: () => {
         let result = {
             AttachmentType: [],
-            BondedChannel: [],
-            BreakoutRoom: [],
             Conference: [],
             ConferenceConfiguration: [],
-            ConferencePermission: [],
             Conversation: [],
             Flair: [],
             LiveActivity: [],
-            MeetingRegistration: [],
-            PrivilegedAction: [],
             PrivilegedConferenceDetails: [],
             ProgramItem: [],
             ProgramItemAttachment: [],
@@ -470,7 +444,6 @@ module.exports = {
             ProgramTrack: [],
             Registration: [],
             SocialSpace: [],
-            TwilioChannelMirror: [],
             _User: [],
             UserPresence: [],
             UserProfile: [],

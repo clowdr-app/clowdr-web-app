@@ -1,5 +1,5 @@
 import { Base } from ".";
-import { Conference, Flair, UserPresence, ProgramPerson, BreakoutRoom, _User } from "../Interface";
+import { Conference, Flair, UserPresence, ProgramPerson, _User } from "../Interface";
 
 // This is embedded in UserProfile and is not itself a table in the DB
 export interface UserProfileTag {
@@ -27,5 +27,4 @@ export default interface Schema extends Base {
     presence: Promise<UserPresence>;
     programPersons: Promise<Array<ProgramPerson>>;
     user: Promise<_User>;
-    watchedRooms: Promise<Array<BreakoutRoom>>;
 }

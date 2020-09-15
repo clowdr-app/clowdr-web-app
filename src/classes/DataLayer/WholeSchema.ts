@@ -41,39 +41,15 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
     AttachmentType: {
         conference: "Conference"
     },
-    BondedChannel: {
-        children: "TwilioChannelMirror"
-    },
-    BreakoutRoom: {
-        conference: "Conference",
-        conversation: "Conversation",
-        members: "UserProfile",
-        programItem: "ProgramItem",
-        watchers: "UserProfile"
-    },
     Conference: {
         loggedInText: "PrivilegedConferenceDetails",
     },
     ConferenceConfiguration: {
         conference: "Conference"
     },
-    ConferencePermission: {
-        action: "PrivilegedAction",
-        conference: "Conference"
-    },
-    Conversation: {
-        conference: "Conference",
-        member1: "UserProfile",
-        member2: "UserProfile",
-    },
     Flair: {
     },
     LiveActivity: {
-    },
-    MeetingRegistration: {
-        conference: "Conference"
-    },
-    PrivilegedAction: {
     },
     PrivilegedConferenceDetails: {
         conference: "Conference"
@@ -83,7 +59,6 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         authors: "ProgramPerson",
         track: "ProgramTrack",
         attachments: "ProgramItemAttachment",
-        breakoutRoom: "BreakoutRoom",
         events: "ProgramSessionEvent",
         programSession: "ProgramSession"
     },
@@ -121,8 +96,6 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
     SocialSpace: {
         conference: "Conference"
     },
-    TwilioChannelMirror: {
-    },
     _User: {
         profiles: "UserProfile"
     },
@@ -135,8 +108,7 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         presence: "UserPresence",
         primaryFlair: "Flair",
         programPersons: "ProgramPerson",
-        user: "_User",
-        watchedRooms: "ProgramRoom"
+        user: "_User"
     },
     ZoomHostAccount: {
     },

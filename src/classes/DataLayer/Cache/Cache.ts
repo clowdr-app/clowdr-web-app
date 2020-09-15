@@ -31,16 +31,10 @@ export default class Cache {
         if (!Cache.constructors) {
             Cache.constructors = {
                 AttachmentType: Interface.AttachmentType,
-                BondedChannel: Interface.BondedChannel,
-                BreakoutRoom: Interface.BreakoutRoom,
                 ConferenceConfiguration: Interface.ConferenceConfiguration,
-                ConferencePermission: Interface.ConferencePermission,
                 Conference: Interface.Conference,
-                Conversation: Interface.Conversation,
                 Flair: Interface.Flair,
                 LiveActivity: Interface.LiveActivity,
-                MeetingRegistration: Interface.MeetingRegistration,
-                PrivilegedAction: Interface.PrivilegedAction,
                 PrivilegedConferenceDetails: Interface.PrivilegedConferenceDetails,
                 ProgramItem: Interface.ProgramItem,
                 ProgramItemAttachment: Interface.ProgramItemAttachment,
@@ -51,7 +45,6 @@ export default class Cache {
                 ProgramTrack: Interface.ProgramTrack,
                 Registration: Interface.Registration,
                 SocialSpace: Interface.SocialSpace,
-                TwilioChannelMirror: Interface.TwilioChannelMirror,
                 _User: Interface._User,
                 UserPresence: Interface.UserPresence,
                 UserProfile: Interface.UserProfile,
@@ -69,8 +62,6 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["value"]>>;
     } = {
             AttachmentType: keys<Schema.AttachmentType>(),
-            BreakoutRoom: keys<Schema.BreakoutRoom>(),
-            Conversation: keys<Schema.Conversation>(),
             LiveActivity: keys<Schema.LiveActivity>(),
             ProgramItemAttachment: keys<Schema.ProgramItemAttachment>(),
             ProgramRoom: keys<Schema.ProgramRoom>(),
@@ -92,8 +83,6 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedFields<Schema.AttachmentType>>(),
-            BreakoutRoom: keys<PromisedFields<Schema.BreakoutRoom>>(),
-            Conversation: keys<PromisedFields<Schema.Conversation>>(),
             LiveActivity: keys<PromisedFields<Schema.LiveActivity>>(),
             ProgramItemAttachment: keys<PromisedFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedFields<Schema.ProgramRoom>>(),
@@ -115,8 +104,6 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>(),
-            BreakoutRoom: keys<PromisedNonArrayFields<Schema.BreakoutRoom>>(),
-            Conversation: keys<PromisedNonArrayFields<Schema.Conversation>>(),
             LiveActivity: keys<PromisedNonArrayFields<Schema.LiveActivity>>(),
             ProgramItemAttachment: keys<PromisedNonArrayFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedNonArrayFields<Schema.ProgramRoom>>(),
@@ -138,8 +125,6 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>(),
-            BreakoutRoom: keys<PromisedArrayFields<Schema.BreakoutRoom>>(),
-            Conversation: keys<PromisedArrayFields<Schema.Conversation>>(),
             LiveActivity: keys<PromisedArrayFields<Schema.LiveActivity>>(),
             ProgramItemAttachment: keys<PromisedArrayFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedArrayFields<Schema.ProgramRoom>>(),
