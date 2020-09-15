@@ -3,6 +3,7 @@ import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import FooterLinks from '../FooterLinks/FooterLinks';
+import { Link } from 'react-router-dom';
 
 interface Props {
     open: boolean,
@@ -23,7 +24,7 @@ function Sidebar(props: Props) {
     </div>;
 
     if (props.open) {
-        let sideBarHeading = <h1 aria-level={1}>{conf.conferenceName}</h1>;
+        let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.conferenceName}</Link></h1>;
         // Note: The wrapping div around the logout button is necessary for the
         // grid layout to work.
         let logoutButton
