@@ -1,1 +1,1 @@
-{"options":{},"indexes":[{"v":1,"key":{"_id":1},"name":"_id_","ns":"PrivilegedConferenceDetails"}]}
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"fbf21f4c1c324288813efbd7df36356c","collectionName":"PrivilegedConferenceDetails"}

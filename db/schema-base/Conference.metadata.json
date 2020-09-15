@@ -1,1 +1,1 @@
-{"options":{},"indexes":[{"v":1,"key":{"_id":1},"name":"_id_","ns":"Conference"},{"v":1,"unique":true,"key":{"conferenceName":1},"name":"byname","weights":{},"background":true,"ns":"Conference","sparse":false}]}
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"unique":true,"key":{"name":{"$numberInt":"1"}},"name":"byname","sparse":false,"weights":{},"background":true}],"uuid":"588133e84e304bfcb1dc2e2e6a0c1a94","collectionName":"Conference"}

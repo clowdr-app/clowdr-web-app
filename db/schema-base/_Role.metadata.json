@@ -1,1 +1,1 @@
-{"options":{},"indexes":[{"v":1,"key":{"_id":1},"name":"_id_","ns":"_Role"},{"v":1,"unique":true,"key":{"name":1},"name":"name_1","ns":"_Role","background":true,"sparse":true}]}
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"unique":true,"key":{"name":{"$numberInt":"1"}},"name":"name_1","background":true,"sparse":true}],"uuid":"83ead7cf2a2a4c168d2875ef60b5147a","collectionName":"_Role"}
