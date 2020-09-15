@@ -25,23 +25,21 @@ function Sidebar(props: Props) {
 
     if (props.open) {
         let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.name}</Link></h1>;
-        // Note: The wrapping div around the logout button is necessary for the
-        // grid layout to work.
-        let logoutButton
-            = mUser
-                ? <div className="signout">
-                    <button onClick={props.doLogout} aria-label="Sign out">Sign out</button>
-                  </div>
-                : <></>;
-
         let headerBar = <div className="sidebar-header">
             {sideBarButton}
             {sideBarHeading}
-            {logoutButton}
         </div>
         return <div className="sidebar">
             {headerBar}
-            <FooterLinks />
+            <div className="sidebar-scrollable">
+                <div className="menu">
+                        fsasdfaslkjh sa fhjkaslfdhljsakjlfkshlafk jlsaflkjashflk sjakjasl fkjlsadfkljasdf kljsdaflkjhsfl
+                        lkasj asdkfhasdkjf ksjlafkljhsafkjhlsadkjlsadkjfsadklj sadklj sadklsdk ajs kalddsk lf
+                        sf lkhjadfhljksadhfljksd lhj lkjshf alk jhf sdjklh sdaflkj sda fklj h
+                </div>
+                    
+                <FooterLinks doLogout={mUser ? props.doLogout : undefined} />
+            </div>
         </div>;
     }
     else {

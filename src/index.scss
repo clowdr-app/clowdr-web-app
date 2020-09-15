@@ -4,31 +4,43 @@
 // TODO Actually download a font
 @import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap");
 
-* {
-  font-family: "Lato", sans-serif;
-}
+$fa-font-path: "../webfonts";
 
-button {
-    display: inline-block;
-    border: 1px solid $gray-3;
-    background: none;
+@import "./styles/fontawesome/scss/fontawesome.scss";
+@import "./styles/fontawesome/scss/solid.scss";
 
-    color: $gray-3;
-    padding: 0.3em;
-    margin: 10%;
-    box-sizing: border-box;
-}
+/* Override bourbon when styles build in a different order
+ * for development vs. production 
+ */
+body {
+    * {
+        font-family: "Lato", sans-serif;
+    }
 
-button:focus {
-    outline: solid 2px $color-3;
-    outline-offset: 0;
-}
+    button {
+        display   : inline-block;
+        border    : 1px solid $gray-3;
+        background: none;
 
-*:focus {
-    outline: solid 2px $color-3;
-    outline-offset: 0;
-}
+        color     : $gray-3;
+        padding   : 0.3em;
+        margin    : 0%;
+        box-sizing: border-box;
 
-section.main:focus {
-    outline: none;
+        cursor: pointer;
+    }
+
+    button:focus {
+        outline       : solid 2px $color-3;
+        outline-offset: 0;
+    }
+
+    *:focus {
+        outline       : solid 2px $color-3;
+        outline-offset: 0;
+    }
+
+    section.main:focus {
+        outline: none;
+    }
 }

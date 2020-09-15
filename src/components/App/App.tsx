@@ -45,7 +45,7 @@ export default function App(props: Props) {
     }>({ profile: null, loading: true });
     const logger = useLogger("App");
     const history = useHistory();
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+    const [sidebarOpen, setSidebarOpen] = useState<boolean>(true /*TODO: Don't commit this - revert to false.*/);
     const [loadingSpinnerCount, setLoadingSpinnerCount] = useState<number>(1);
     const [loadingSpinnerTimeoutId, setLoadingSpinnerTimeoutId] = useState<number | undefined>();
 
