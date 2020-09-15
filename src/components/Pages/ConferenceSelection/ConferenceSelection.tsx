@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { Conference } from "../../../classes/DataLayer";
 import "./ConferenceSelection.scss";
 import FooterLinks from "../../FooterLinks/FooterLinks";
@@ -39,7 +39,9 @@ export default function ConferenceSelection(props: Props) {
         return () => { isMounted = false };
     }, [props]);
 
-    const submitSelection = async () => {
+    const submitSelection = async (ev: FormEvent<HTMLElement>) => {
+        ev.preventDefault();
+
         if (!(await props.selectConference(selected as string))) {
             // TODO: Display an error to the user
             console.error(`Could not select conference: ${selected}`);
@@ -50,7 +52,7 @@ export default function ConferenceSelection(props: Props) {
         <section className="main" aria-labelledby="page-title" tabIndex={0}>
             <h1 id="page-title" className="banner" aria-level={1}>Welcome to Clowdr</h1>
             <p>Please select your conference to begin</p>
-            <form className="input-wrapper">
+            <form className="input-wrapper" onSubmit={submitSelection}>
                 <select disabled={conferences.length === 0} onChange={e => setSelected(e.target.value)}
                     title="Conference">
                     {conferences.map((conf, i) =>
@@ -60,7 +62,6 @@ export default function ConferenceSelection(props: Props) {
                 <button
                     className={"join-button" + (selected === null ? " join-button-disabled" : "")}
                     disabled={selected === null}
-                    onClick={submitSelection}
                     title="Join"
                 >
                     Join
