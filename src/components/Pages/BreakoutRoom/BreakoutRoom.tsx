@@ -5,7 +5,11 @@ import VideoGrid from "../../Video/VideoGrid/VideoGrid";
 import "./BreakoutRoom.scss";
 import SplitPane, { Size } from "react-split-pane";
 
-export default function BreakoutRoom() {
+interface Props {
+    roomId: string;
+}
+
+export default function BreakoutRoom(props: Props) {
     const [split, setSplit] = useState<Size>("70%");
 
     const docTitle = useDocTitle();
@@ -16,7 +20,7 @@ export default function BreakoutRoom() {
     return <div className="breakout-room">
         <SplitPane split="horizontal" size={split} onChange={(size: Size) => setSplit(size)}>
             <div className="split top-split">
-                <VideoGrid />
+                <VideoGrid roomId={props.roomId} />
                 <button
                     className="split-button maximize-button"
                     onClick={() => setSplit(0)}
