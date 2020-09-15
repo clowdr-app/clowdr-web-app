@@ -1,77 +1,89 @@
 @import "../../../styles/util";
 
 .conference-selection-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 100vh;
+    display        : flex;
+    flex-direction : column;
+    justify-content: center;
+    height         : 100vh;
 
-  h1 {
-    font-size: $font-4xl;
-  }
-
-  .main {
-    margin: 0 auto;
-    width: mm(120);
-    text-align: center;
-  }
-
-  p {
-    margin-top: mm(4);
-    color: $gray-2;
-  }
-
-  .input-wrapper {
-    display: flex;
-    flex-direction: column;
-
-    select {
-      width: 75%;
-      background-color: white;
-      border: 2px solid $gray-3;
-      border-radius: radius(2);
-      padding: mm(2) mm(5);
-      margin: 0 auto;
+    h1 {
+        font-size: $font-4xl;
     }
-
-    .join-button {
-      display: block;
-      margin: mm(10) auto 0 auto;
-      padding: mm(2) mm(5);
-      color: white;
-      background-color: $primary;
-      border: none;
-      border-radius: radius(2);
-    }
-
-    .join-button-disabled {
-      background-color: $gray-2;
-    }
-  }
-
-  @media (min-width: $break-sm) and (max-width: $break-lg - 1) {
-    justify-content: start;
-    padding-top: mm(10);
 
     .main {
-      width: 100%;
+        margin    : 0 auto;
+        width     : mm(120);
+        text-align: center;
+
+        .after-load-content {
+            &.after-load-hidden {
+                opacity  : 0;
+                transform: translateY(mm(8));
+            }
+
+            opacity  : 1;
+            transform: translateY(0);
+            transition : opacity 0.5s ease-in-out,
+            transform 0.7s ease-in-out;
+        }
+    }
+
+    p {
+        margin-top: mm(4);
+        color     : $gray-2;
     }
 
     .input-wrapper {
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
+        display       : flex;
+        flex-direction: column;
 
-      select {
-        width: 50%;
-        height: mm(10);
-        margin: 0;
-      }
+        select {
+            width           : 75%;
+            background-color: white;
+            border          : 2px solid $gray-3;
+            border-radius   : radius(2);
+            padding         : mm(2) mm(5);
+            margin          : 0 auto;
+        }
 
-      .join-button {
-        margin: 0 0 0 mm(5);
-        height: mm(10);
-      }
+        .join-button {
+            display         : block;
+            margin          : mm(10) auto 0 auto;
+            padding         : mm(2) mm(5);
+            color           : white;
+            background-color: $primary;
+            border          : none;
+            border-radius   : radius(2);
+        }
+
+        .join-button-disabled {
+            background-color: $gray-2;
+        }
     }
-  }
+
+    @media (min-width: $break-sm) and (max-width: $break-lg - 1) {
+        justify-content: start;
+        padding-top    : mm(10);
+
+        .main {
+            width: 100%;
+        }
+
+        .input-wrapper {
+            flex-direction : row;
+            justify-content: center;
+            align-items    : center;
+
+            select {
+                width : 50%;
+                height: mm(10);
+                margin: 0;
+            }
+
+            .join-button {
+                margin: 0 0 0 mm(5);
+                height: mm(10);
+            }
+        }
+    }
 }
