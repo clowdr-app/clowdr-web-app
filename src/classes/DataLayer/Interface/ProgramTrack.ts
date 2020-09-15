@@ -1,7 +1,6 @@
 import * as Schema from "../Schema";
 import { CachedBase, StaticCachedBase, StaticBaseImpl, LocalDataT } from "./Base";
-import { Conference } from ".";
-import { Exhibits } from "../Schema/ProgramTrack";
+import { Conference, ProgramItem, ProgramSession } from ".";
 import { PromisesRemapped } from "../WholeSchema";
 
 type SchemaT = Schema.ProgramTrack;
@@ -15,40 +14,37 @@ export default class Class extends CachedBase<K> implements SchemaT {
         parse: Parse.Object<PromisesRemapped<SchemaT>> | null = null) {
         super(conferenceId, K_str, data, parse);
     }
-    get badgeText(): string {
-        return this.data.badgeText;
-    }
-
-    get badgeColor(): string {
-        return this.data.badgeColor;
-    }
-
-    get displayName(): string {
-        return this.data.displayName;
-    }
-
-    get exhibit(): Exhibits {
-        return this.data.exhibit;
-    }
 
     get name(): string {
         return this.data.name;
     }
 
-    get perProgramItemChat(): boolean {
-        return this.data.perProgramItemChat;
+    get shortName(): string {
+        return this.data.shortName;
     }
 
-    get perProgramItemVideo(): boolean {
-        return this.data.perProgramItemVideo;
+    get colour(): string {
+        return this.data.colour;
     }
 
-    get showAsEvents(): boolean {
-        return this.data.showAsEvents;
+    get generateTextChatPerItem(): boolean {
+        return this.data.generateTextChatPerItem;
+    }
+
+    get generateVideoRoomPerItem(): boolean {
+        return this.data.generateVideoRoomPerItem;
     }
 
     get conference(): Promise<Conference> {
         return this.uniqueRelated("conference");
+    }
+
+    get sessions(): Promise<Array<ProgramSession>> {
+        return this.uniqueRelated("sessions");
+    }
+
+    get items(): Promise<Array<ProgramItem>> {
+        return this.uniqueRelated("items");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

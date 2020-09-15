@@ -1,13 +1,14 @@
-import { Conference, ProgramItem, ProgramSessionEvent, ProgramRoom, ProgramTrack } from "../Interface";
 import { Base } from ".";
+import { Conference, ProgramItem, ProgramRoom, ProgramSessionEvent, ProgramTrack } from "../Interface";
 
 export default interface Schema extends Base {
+    endTime: Date;
+    startTime: Date;
     title: string;
-    startTime: number;
-    endTime: number;
+
     conference: Promise<Conference>;
     events: Promise<Array<ProgramSessionEvent>>;
     items: Promise<Array<ProgramItem>>;
     room: Promise<ProgramRoom>;
-    programTrack: Promise<ProgramTrack>;
+    track: Promise<ProgramTrack>;
 }

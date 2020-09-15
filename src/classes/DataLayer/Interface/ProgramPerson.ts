@@ -19,16 +19,16 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.name;
     }
 
-    get programItems(): Promise<ProgramItem[]> {
-        return this.nonUniqueRelated("programItems");
+    get items(): Promise<ProgramItem[]> {
+        return this.nonUniqueRelated("items");
     }
 
     get conference(): Promise<Conference> {
         return this.uniqueRelated("conference");
     }
 
-    get userProfile(): Promise<UserProfile | null> {
-        return this.uniqueRelated("userProfile");
+    get profile(): Promise<UserProfile> {
+        return this.uniqueRelated("profile");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

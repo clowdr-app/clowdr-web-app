@@ -34,7 +34,6 @@ export default class Cache {
                 ConferenceConfiguration: Interface.ConferenceConfiguration,
                 Conference: Interface.Conference,
                 Flair: Interface.Flair,
-                LiveActivity: Interface.LiveActivity,
                 PrivilegedConferenceDetails: Interface.PrivilegedConferenceDetails,
                 ProgramItem: Interface.ProgramItem,
                 ProgramItemAttachment: Interface.ProgramItemAttachment,
@@ -44,7 +43,10 @@ export default class Cache {
                 ProgramSessionEvent: Interface.ProgramSessionEvent,
                 ProgramTrack: Interface.ProgramTrack,
                 Registration: Interface.Registration,
-                SocialSpace: Interface.SocialSpace,
+                _Role: Interface._Role,
+                TextChat: Interface.TextChat,
+                TextChatMessage: Interface.TextChatMessage,
+                VideoRoom: Interface.VideoRoom,
                 _User: Interface._User,
                 UserPresence: Interface.UserPresence,
                 UserProfile: Interface.UserProfile,
@@ -62,12 +64,13 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["value"]>>;
     } = {
             AttachmentType: keys<Schema.AttachmentType>(),
-            LiveActivity: keys<Schema.LiveActivity>(),
             ProgramItemAttachment: keys<Schema.ProgramItemAttachment>(),
             ProgramRoom: keys<Schema.ProgramRoom>(),
             ProgramSession: keys<Schema.ProgramSession>(),
             ProgramSessionEvent: keys<Schema.ProgramSessionEvent>(),
-            SocialSpace: keys<Schema.SocialSpace>(),
+            TextChat: keys<Schema.TextChat>(),
+            TextChatMessage: keys<Schema.TextChatMessage>(),
+            VideoRoom: keys<Schema.VideoRoom>(),
             UserProfile: keys<Schema.UserProfile>(),
             ProgramPerson: keys<Schema.ProgramPerson>(),
             ProgramItem: keys<Schema.ProgramItem>(),
@@ -83,12 +86,13 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedFields<Schema.AttachmentType>>(),
-            LiveActivity: keys<PromisedFields<Schema.LiveActivity>>(),
             ProgramItemAttachment: keys<PromisedFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedFields<Schema.ProgramSession>>(),
             ProgramSessionEvent: keys<PromisedFields<Schema.ProgramSessionEvent>>(),
-            SocialSpace: keys<PromisedFields<Schema.SocialSpace>>(),
+            TextChat: keys<PromisedFields<Schema.TextChat>>(),
+            TextChatMessage: keys<PromisedFields<Schema.TextChatMessage>>(),
+            VideoRoom: keys<PromisedFields<Schema.VideoRoom>>(),
             UserProfile: keys<PromisedFields<Schema.UserProfile>>(),
             ProgramPerson: keys<PromisedFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedFields<Schema.ProgramItem>>(),
@@ -104,12 +108,13 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>(),
-            LiveActivity: keys<PromisedNonArrayFields<Schema.LiveActivity>>(),
             ProgramItemAttachment: keys<PromisedNonArrayFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedNonArrayFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedNonArrayFields<Schema.ProgramSession>>(),
             ProgramSessionEvent: keys<PromisedNonArrayFields<Schema.ProgramSessionEvent>>(),
-            SocialSpace: keys<PromisedNonArrayFields<Schema.SocialSpace>>(),
+            TextChat: keys<PromisedNonArrayFields<Schema.TextChat>>(),
+            TextChatMessage: keys<PromisedNonArrayFields<Schema.TextChatMessage>>(),
+            VideoRoom: keys<PromisedNonArrayFields<Schema.VideoRoom>>(),
             UserProfile: keys<PromisedNonArrayFields<Schema.UserProfile>>(),
             ProgramPerson: keys<PromisedNonArrayFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedNonArrayFields<Schema.ProgramItem>>(),
@@ -125,12 +130,13 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>(),
-            LiveActivity: keys<PromisedArrayFields<Schema.LiveActivity>>(),
             ProgramItemAttachment: keys<PromisedArrayFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedArrayFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedArrayFields<Schema.ProgramSession>>(),
             ProgramSessionEvent: keys<PromisedArrayFields<Schema.ProgramSessionEvent>>(),
-            SocialSpace: keys<PromisedArrayFields<Schema.SocialSpace>>(),
+            TextChat: keys<PromisedArrayFields<Schema.TextChat>>(),
+            TextChatMessage: keys<PromisedArrayFields<Schema.TextChatMessage>>(),
+            VideoRoom: keys<PromisedArrayFields<Schema.VideoRoom>>(),
             UserProfile: keys<PromisedArrayFields<Schema.UserProfile>>(),
             ProgramPerson: keys<PromisedArrayFields<Schema.ProgramPerson>>(),
             ProgramItem: keys<PromisedArrayFields<Schema.ProgramItem>>(),
@@ -147,6 +153,8 @@ export default class Cache {
     private isInitialised: boolean = false;
 
     private logger: DebugLogger = new DebugLogger("Cache");
+
+    public IsUserAuthenticated: boolean = false;
 
     constructor(
         public readonly conferenceId: string,
@@ -207,7 +215,7 @@ export default class Cache {
         if (!this.isInitialised) {
             if (!this.dbPromise) {
                 this.logger.info("Opening database.");
-                this.conference = new Promise((resolve, reject) => {
+                this.conference = new Promise(async (resolve, reject) => {
                     try {
                         this.dbPromise = openDB<CachedSchema>(this.DatabaseName, SchemaVersion, {
                             upgrade: this.upgrade.bind(this),
@@ -216,35 +224,15 @@ export default class Cache {
                             terminated: this.terminated.bind(this)
                         });
 
-                        if (!this.isInitialised) {
-                            this.isInitialised = true;
+                        this.isInitialised = true;
 
-                            this.dbPromise.then(async db => {
-                                let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
-                                let conf = await confP;
-                                if (!conf) {
-                                    reject(`Conference ${this.conferenceId} could not be loaded.`);
-                                    return;
-                                }
-                                resolve(conf);
-
-                                // TODO: Decide whether to clear the cache or not
-                                // If clearing the cache, don't resolve until it's empty
-                                // Else resolve early and download new data in the background
-
-                                await Promise.all(CachedStoreNames.map(store => {
-                                    return this.fillCache(store, db);
-                                }));
-
-                                // TODO: Subscribe to live queries
-                            }).catch(reason => {
-                                this.logger.error(`Error initialising cache`, reason);
-                                reject(reason);
-                            });
+                        let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
+                        let conf = await confP;
+                        if (!conf) {
+                            return;
                         }
-                        else {
-                            resolve();
-                        }
+
+                        resolve();
                     }
                     catch (e) {
                         this.logger.error(`Error initialising cache.`, e);
@@ -256,6 +244,26 @@ export default class Cache {
         else {
             this.logger.info("Already initialised.");
         }
+    }
+
+    public async refresh(): Promise<void> {
+        if (!this.isInitialised || !this.dbPromise) {
+            throw new Error("You must call initialised first!");
+        }
+
+        this.dbPromise.then(async db => {
+            // TODO: Decide whether to clear the cache or not
+            // If clearing the cache, don't resolve until it's empty
+            // Else resolve early and download new data in the background
+
+            await Promise.all(CachedStoreNames.map(store => {
+                return this.fillCache(store, db);
+            }));
+
+            // TODO: Subscribe to live queries
+        }).catch(reason => {
+            this.logger.error(`Error refreshing cache`, reason);
+        });
     }
 
     private async fillCache<K extends CachedSchemaKeys, T extends CachedBase<K>>(
@@ -293,14 +301,23 @@ export default class Cache {
                             let xs = parse.get(key as any);
                             schema[key] = xs.id;
                         }
-                        else {
+                        // Avoid attempting to fetch data that we aren't allowed to access
+                        else if (this.IsUserAuthenticated) {
                             let r = parse.relation(key as any);
                             schema[key] = await r.query().map(x => x.id);
                         }
                     }
                     catch (e) {
-                        this.logger.error(e);
-                        throw e;
+                        try {
+                            if (!e.toString().includes("Permission denied")) {
+                                this.logger.error(e);
+                                throw e;
+                            }
+                        }
+                        catch {
+                            this.logger.error(e);
+                            throw e;
+                        }
                     }
                 }
                 else {

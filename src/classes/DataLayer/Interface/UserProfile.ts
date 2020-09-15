@@ -15,15 +15,15 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get affiliation(): string {
+    get affiliation(): string | undefined {
         return this.data.affiliation;
     }
 
-    get bio(): string {
+    get bio(): string | undefined {
         return this.data.bio;
     }
 
-    get country(): string {
+    get country(): string | undefined {
         return this.data.country;
     }
 
@@ -31,15 +31,15 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.displayName;
     }
 
-    get position(): string {
+    get position(): string | undefined {
         return this.data.position;
     }
 
-    get profilePhoto(): Parse.File | null {
+    get profilePhoto(): Parse.File | undefined {
         return this.data.profilePhoto;
     }
 
-    get pronouns(): string {
+    get pronouns(): Array<string> {
         return this.data.pronouns;
     }
 
@@ -47,11 +47,15 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.realName;
     }
 
+    get dataConsentGiven(): boolean {
+        return this.data.dataConsentGiven;
+    }
+
     get tags(): Schema.UserProfileTag[] {
         return this.data.tags;
     }
 
-    get webpage(): string {
+    get webpage(): string | undefined {
         return this.data.webpage;
     }
 
@@ -77,6 +81,10 @@ export default class Class extends CachedBase<K> implements SchemaT {
 
     get user(): Promise<_User> {
         return this.uniqueRelated("user");
+    }
+
+    get flairs(): Promise<Flair[]> {
+        return this.nonUniqueRelated("flairs");
     }
 
     static getByUserId(userId: string, conferenceId: string): Promise<Class | null> {

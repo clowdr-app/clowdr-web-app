@@ -1,7 +1,7 @@
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticCachedBase, StaticBaseImpl, LocalDataT, CachedBase } from "./Base";
-import { Conference, SocialSpace, ZoomRoom } from ".";
+import { Conference, ProgramSession, TextChat, VideoRoom, ZoomRoom } from ".";
 
 type SchemaT = Schema.ProgramRoom;
 type K = "ProgramRoom";
@@ -15,52 +15,56 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get isEventFocusedRoom(): boolean {
-        return this.data.isEventFocusedRoom;
-    }
-
     get name(): string {
         return this.data.name;
     }
 
-    get id1(): string {
-        return this.data.id1;
-    }
+    // get id1(): string {
+    //     return this.data.id1;
+    // }
 
-    get src1(): string {
-        return this.data.src1;
-    }
+    // get src1(): string {
+    //     return this.data.src1;
+    // }
 
-    get pwd1(): string {
-        return this.data.pwd1;
-    }
+    // get pwd1(): string {
+    //     return this.data.pwd1;
+    // }
 
-    get id2(): string {
-        return this.data.id2;
-    }
+    // get id2(): string {
+    //     return this.data.id2;
+    // }
 
-    get src2(): string {
-        return this.data.src2;
-    }
+    // get src2(): string {
+    //     return this.data.src2;
+    // }
 
-    get pwd2(): string {
-        return this.data.pwd2;
-    }
+    // get pwd2(): string {
+    //     return this.data.pwd2;
+    // }
 
-    get qa(): string {
-        return this.data.qa;
-    }
+    // get qa(): string {
+    //     return this.data.qa;
+    // }
 
     get conference(): Promise<Conference> {
         return this.uniqueRelated("conference");
     }
 
-    get socialSpace(): Promise<SocialSpace> {
-        return this.uniqueRelated("socialSpace");
+    get textChat(): Promise<TextChat | undefined> {
+        return this.uniqueRelated("textChat");
     }
 
-    get zoomRoom(): Promise<ZoomRoom> {
+    get videoRoom(): Promise<VideoRoom | undefined> {
+        return this.uniqueRelated("videoRoom");
+    }
+
+    get zoomRoom(): Promise<ZoomRoom | undefined> {
         return this.uniqueRelated("zoomRoom");
+    }
+
+    get sessions(): Promise<Array<ProgramSession>> {
+        return this.nonUniqueRelated("sessions");
     }
 
 

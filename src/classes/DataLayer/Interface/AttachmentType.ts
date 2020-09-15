@@ -19,6 +19,10 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.displayAsLink;
     }
 
+    get extra(): string | undefined {
+        return this.data.extra;
+    }
+
     get isCoverImage(): boolean {
         return this.data.isCoverImage;
     }
@@ -27,12 +31,16 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.name;
     }
 
-    get ordinal(): number {
+    get ordinal(): number | undefined {
         return this.data.ordinal;
     }
 
     get supportsFile(): boolean {
         return this.data.supportsFile;
+    }
+
+    get fileTypes(): string[] {
+        return this.data.fileTypes;
     }
 
     get conference(): Promise<Conference> {

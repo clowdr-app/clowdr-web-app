@@ -38,11 +38,6 @@ export default interface CachedSchema extends CachableDBSchema {
         value: Schema.Conference;
         indexes: Indexes<Schema.Conference>;
     };
-    LiveActivity: {
-        key: string;
-        value: Schema.LiveActivity;
-        indexes: Indexes<Schema.LiveActivity>;
-    };
     PrivilegedConferenceDetails: {
         key: string;
         value: Schema.PrivilegedConferenceDetails;
@@ -83,14 +78,24 @@ export default interface CachedSchema extends CachableDBSchema {
         value: Schema.ProgramTrack;
         indexes: Indexes<Schema.ProgramTrack>;
     };
-    SocialSpace: {
+    TextChat: {
         key: string;
-        value: Schema.SocialSpace;
-        indexes: Indexes<Schema.SocialSpace>;
+        value: Schema.TextChat;
+        indexes: Indexes<Schema.TextChat>;
+    };
+    TextChatMessage: {
+        key: string;
+        value: Schema.TextChatMessage;
+        indexes: Indexes<Schema.TextChatMessage>;
     };
     UserProfile: {
         key: string;
         value: Schema.UserProfile;
         indexes: Indexes<Schema.UserProfile>;
+    };
+    VideoRoom: {
+        key: string;
+        value: Schema.VideoRoom;
+        indexes: Indexes<Schema.VideoRoom>;
     };
 }

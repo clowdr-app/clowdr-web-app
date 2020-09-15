@@ -14,12 +14,16 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         super(K_str, parse);
     }
 
+    get authData(): object {
+        return this.parse.get("authData");
+    }
+
     get email(): string {
         return this.parse.get("email");
     }
 
-    get loginKey(): string | null {
-        return this.parse.get("loginKey");
+    get emailVerified(): boolean {
+        return this.parse.get("emailVerified");
     }
 
     get passwordSet(): boolean {
@@ -28,10 +32,6 @@ export default class Class extends UncachedBase<K> implements SchemaT {
 
     get username(): string {
         return this.parse.get("username");
-    }
-
-    get isBanned(): "Yes" | "No" {
-        return this.parse.get("isBanned");
     }
 
     get profiles(): Promise<UserProfile[]> {

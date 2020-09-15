@@ -28,7 +28,7 @@ export default function ConferenceSelection(props: Props) {
                 await props.failedToLoadConferences(reason);
                 return [];
             });
-            conferences.sort((x, y) => x.conferenceName.localeCompare(y.conferenceName));
+            conferences.sort((x, y) => x.name.localeCompare(y.name));
             if (isMounted) {
                 setConferences(conferences);
                 if (conferences.length > 0) {
@@ -56,7 +56,7 @@ export default function ConferenceSelection(props: Props) {
                 <select disabled={conferences.length === 0} onChange={e => setSelected(e.target.value)}
                     title="Conference">
                     {conferences.map((conf, i) =>
-                        <option key={i} value={conf.id}>{conf.conferenceName}</option>
+                        <option key={i} value={conf.id}>{conf.name}</option>
                     )}
                 </select>
                 <button

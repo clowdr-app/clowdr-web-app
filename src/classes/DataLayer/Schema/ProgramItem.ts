@@ -1,20 +1,17 @@
-import {
-    Conference, ProgramPerson, ProgramItemAttachment,
-    ProgramSession, ProgramSessionEvent, ProgramTrack
-} from "../Interface";
 import { Base } from ".";
+import { Conference, ProgramItemAttachment, ProgramPerson, ProgramSession, ProgramSessionEvent, ProgramTrack } from "../Interface";
+import Parse from "parse";
 
 export default interface Schema extends Base {
     abstract: string;
-    chatSID: string;
     isPrivate: boolean;
-    posterImage: Parse.File;
+    posterImage: Parse.File | undefined;
     title: string;
 
-    authors: Promise<Array<ProgramPerson>>;
     attachments: Promise<Array<ProgramItemAttachment>>;
+    authors: Promise<Array<ProgramPerson>>;
     conference: Promise<Conference>;
-    events: Promise<Array<ProgramSessionEvent>>
-    programSession: Promise<ProgramSession>
+    events: Promise<Array<ProgramSessionEvent>>;
+    session: Promise<ProgramSession>;
     track: Promise<ProgramTrack>;
 }

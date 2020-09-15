@@ -1,10 +1,11 @@
+import { Conference } from ".";
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticCachedBase, StaticBaseImpl, LocalDataT, CachedBase } from "./Base";
 
-type SchemaT = Schema.LiveActivity;
-type K = "LiveActivity";
-const K_str: K = "LiveActivity";
+type SchemaT = Schema.TextChat;
+type K = "TextChat";
+const K_str: K = "TextChat";
 
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
@@ -14,8 +15,20 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get topic(): Schema.Topic {
-        return this.data.topic;
+    get mirrored(): boolean {
+        return this.data.mirrored;
+    }
+
+    get name(): string {
+        return this.data.name;
+    }
+
+    get twilioID(): string {
+        return this.data.twilioID;
+    }
+
+    get conference(): Promise<Conference> {
+        return this.uniqueRelated("conference");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

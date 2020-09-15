@@ -1,15 +1,9 @@
 import { Base } from ".";
-import { SocialSpace, UserProfile } from "../Interface";
+import { UserProfile } from "../Interface";
 
 export default interface Schema extends Base {
-    isAvailable: boolean;
-    isDND: boolean;
     isDNT: boolean;
-    isLookingForConversation: boolean;
-    isOnline: boolean;
-    isOpenToConversation: boolean;
-    status: string;
+    lastSeen: Date;
 
-    socialSpace: Promise<SocialSpace | null>;
-    user: Promise<UserProfile>;
+    profile: Promise<UserProfile>;
 }

@@ -184,7 +184,7 @@ async function activate(instance) {
             roleACL.setPublicReadAccess(true);
             roleACL.setPublicWriteAccess(false);
             roleACL.setWriteAccess(instance.id+"-admin", true);
-            let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference', 'ClowdrSysAdmin']
+            let roleNames = [instance.id + '-admin', instance.id + '-manager', instance.id + '-conference']
             let roles = [];
 
             roleNames.forEach(r => {
@@ -210,7 +210,6 @@ async function activate(instance) {
             userACL.setWriteAccess(user.id, true);
             userACL.setReadAccess(user.id, true);
             userACL.setRoleReadAccess(instance.id + "-manager", true);
-            userACL.setRoleReadAccess("ClowdrSysAdmin", true);
             u2.setACL(userACL);
             await u2.save({}, {useMasterKey: true});
             console.log('User ACL saved successfully');

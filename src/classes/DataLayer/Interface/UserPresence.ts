@@ -1,7 +1,7 @@
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
-import { SocialSpace, UserProfile } from ".";
+import { UserProfile } from ".";
 
 type SchemaT = Schema.UserPresence;
 type K = "UserPresence";
@@ -12,40 +12,16 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         super(K_str, parse);
     }
 
-    get isAvailable(): boolean {
-        return this.parse.get("isAvailable");
-    }
-
-    get isDND(): boolean {
-        return this.parse.get("isDND");
-    }
-
     get isDNT(): boolean {
         return this.parse.get("isDNT");
     }
 
-    get isLookingForConversation(): boolean {
-        return this.parse.get("isLookingForConversation");
+    get lastSeen(): Date {
+        return this.parse.get("lastSeen");
     }
 
-    get isOnline(): boolean {
-        return this.parse.get("isOnline");
-    }
-
-    get isOpenToConversation(): boolean {
-        return this.parse.get("isOpenToConversation");
-    }
-
-    get status(): string {
-        return this.parse.get("status");
-    }
-
-    get socialSpace(): Promise<SocialSpace | null> {
-        return this.uniqueRelated("socialSpace");
-    }
-
-    get user(): Promise<UserProfile> {
-        return this.uniqueRelated("user");
+    get profile(): Promise<UserProfile> {
+        return this.uniqueRelated("profile");
     }
 
     static get(id: string, conferenceId?: string): Promise<Class | null> {

@@ -1,1 +1,1 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"_fts":"text","_ftsx":{"$numberInt":"1"}},"name":"$**_text","default_language":"english","weights":{"$**":{"$numberInt":"1"}},"background":true,"language_override":"language","textIndexVersion":{"$numberInt":"3"}}],"uuid":"8c60026a0d374587846147d54fbac6f7","collectionName":"Flair"}
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"5e9b80fc6b5d423881c04ad18457a8ce","collectionName":"Flair"}

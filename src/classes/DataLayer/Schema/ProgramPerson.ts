@@ -1,10 +1,10 @@
-import { Conference, ProgramItem, UserProfile } from "../Interface";
 import { Base } from ".";
+import { Conference, ProgramItem, UserProfile } from "../Interface";
 
 export default interface Schema extends Base {
     name: string;
 
     conference: Promise<Conference>;
-    programItems: Promise<Array<ProgramItem>>;
-    userProfile: Promise<UserProfile | null>;
+    items: Promise<Array<ProgramItem>>;
+    profile: Promise<UserProfile>;
 }

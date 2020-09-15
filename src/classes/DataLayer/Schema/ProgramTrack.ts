@@ -1,16 +1,14 @@
-import { Conference } from "../Interface";
 import { Base } from ".";
-
-export type Exhibits = "None" | "Grid" | "List";
+import { Conference, ProgramItem, ProgramSession } from "../Interface";
 
 export default interface Schema extends Base {
-    badgeText: string;
-    badgeColor: string;
-    displayName: string;
-    exhibit: Exhibits;
-    name: string
-    perProgramItemChat: boolean;
-    perProgramItemVideo: boolean;
-    showAsEvents: boolean;
+    colour: string;
+    generateTextChatPerItem: boolean;
+    generateVideoRoomPerItem: boolean;
+    name: string;
+    shortName: string;
+
     conference: Promise<Conference>;
+    items: Promise<Array<ProgramItem>>;
+    sessions: Promise<Array<ProgramSession>>;
 }

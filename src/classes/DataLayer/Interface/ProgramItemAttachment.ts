@@ -15,11 +15,11 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get file(): Parse.File {
+    get file(): Parse.File | undefined {
         return this.data.file;
     }
 
-    get url(): string {
+    get url(): string | undefined {
         return this.data.url;
     }
 

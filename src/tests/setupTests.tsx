@@ -31,7 +31,7 @@ jest.setTimeout(60000);
 
 beforeAll(async () => {
     jest.useRealTimers();
-    testData = generateTestData().data;
+    testData = generateTestData().data as any;
     initParse();
 });
 

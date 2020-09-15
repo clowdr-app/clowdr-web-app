@@ -19,11 +19,11 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.title;
     }
 
-    get startTime(): number {
+    get startTime(): Date {
         return this.data.startTime;
     }
 
-    get endTime(): number {
+    get endTime(): Date {
         return this.data.endTime;
     }
 
@@ -43,8 +43,8 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.uniqueRelated("room");
     }
 
-    get programTrack(): Promise<ProgramTrack> {
-        return this.uniqueRelated("programTrack");
+    get track(): Promise<ProgramTrack> {
+        return this.uniqueRelated("track");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

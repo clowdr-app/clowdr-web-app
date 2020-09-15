@@ -1,10 +1,11 @@
 import { Base } from ".";
-import { ProgramItem, AttachmentType } from "../Interface";
+import { AttachmentType, ProgramItem } from "../Interface";
+import Parse from "parse";
 
 export default interface Schema extends Base {
-    file: Parse.File;
-    url: string;
+    file: Parse.File | undefined;
+    url: string | undefined;
 
-    programItem: Promise<ProgramItem>;
     attachmentType: Promise<AttachmentType>;
+    programItem: Promise<ProgramItem>;
 }

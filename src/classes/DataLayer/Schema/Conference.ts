@@ -1,14 +1,14 @@
 import { Base } from ".";
-import { PrivilegedConferenceDetails } from "../Interface";
+import { _User, PrivilegedConferenceDetails, TextChat } from "../Interface";
+import Parse from "parse";
 
 export default interface Schema extends Base {
-    adminEmail: string;
-    adminName: string;
-    conferenceName: string;
-    headerImage: Parse.File | null;
-    isInitialized: boolean;
-    landingPage: string;
+    headerImage: Parse.File | undefined;
+    name: string;
+    shortName: string;
     welcomeText: string;
 
-    loggedInText: Promise<PrivilegedConferenceDetails>;
+    admin: Promise<_User>;
+    autoSubscribeToTextChats: Promise<Array<TextChat>>;
+    details: Promise<Array<PrivilegedConferenceDetails>>;
 }

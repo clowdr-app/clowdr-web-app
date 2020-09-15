@@ -1,4 +1,1 @@
-{"_id":{"$oid":"5f5efe49cce1af44f1320539"},"relatedId":"ClowdrSysAdmin","owningId":"mockSysAdminRole1"}
-{"_id":{"$oid":"5f5efe49cce1af44f132053a"},"relatedId":"mockUser1","owningId":"mockConference1-RoleAdmin"}
-{"_id":{"$oid":"5f5efe49cce1af44f132053b"},"relatedId":"mockUser1","owningId":"mockConference1-RoleManager"}
-{"_id":{"$oid":"5f5efe49cce1af44f132053c"},"relatedId":"mockUser1","owningId":"mockConference1-RoleConference"}
+{"_id":{"$oid":"5f61302595dba4ecfa55f774"},"relatedId":"mockUser1","owningId":"mockConference1-RoleAdmin"}

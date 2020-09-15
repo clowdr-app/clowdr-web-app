@@ -1,3 +1,4 @@
+import { Conference } from ".";
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
@@ -25,6 +26,10 @@ export default class Class extends UncachedBase<K> implements SchemaT {
 
     get priority(): number {
         return this.parse.get("priority");
+    }
+
+    get conference(): Promise<Conference> {
+        return this.uniqueRelated("conference");
     }
 
     static get(id: string, conferenceId?: string): Promise<Class | null> {

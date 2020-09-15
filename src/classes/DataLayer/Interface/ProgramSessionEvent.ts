@@ -1,7 +1,7 @@
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticCachedBase, StaticBaseImpl, LocalDataT, CachedBase } from "./Base";
-import { Conference, ProgramItem, ProgramSession } from ".";
+import { Conference, ProgramItem, ProgramSession, ProgramTrack } from ".";
 
 type SchemaT = Schema.ProgramSessionEvent;
 type K = "ProgramSessionEvent";
@@ -15,15 +15,15 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get directLink(): string {
+    get directLink(): string | undefined {
         return this.data.directLink;
     }
 
-    get endTime(): number {
+    get endTime(): Date {
         return this.data.endTime;
     }
 
-    get startTime(): number {
+    get startTime(): Date {
         return this.data.startTime;
     }
 
@@ -31,12 +31,16 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.uniqueRelated("conference");
     }
 
-    get programItem(): Promise<ProgramItem> {
-        return this.uniqueRelated("programItem");
+    get item(): Promise<ProgramItem> {
+        return this.uniqueRelated("item");
     }
 
-    get programSession(): Promise<ProgramSession> {
-        return this.uniqueRelated("programSession");
+    get session(): Promise<ProgramSession> {
+        return this.uniqueRelated("session");
+    }
+
+    get track(): Promise<ProgramTrack> {
+        return this.uniqueRelated("track");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

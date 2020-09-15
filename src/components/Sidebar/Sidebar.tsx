@@ -24,7 +24,7 @@ function Sidebar(props: Props) {
     </div>;
 
     if (props.open) {
-        let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.conferenceName}</Link></h1>;
+        let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.name}</Link></h1>;
         // Note: The wrapping div around the logout button is necessary for the
         // grid layout to work.
         let logoutButton

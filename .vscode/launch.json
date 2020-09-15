@@ -21,6 +21,19 @@
             "type": "pwa-node"
         },
         {
+            "name": "Launch init-test-data via NPM",
+            "request": "launch",
+            "runtimeArgs": [
+                "run",
+                "init-test-data"
+            ],
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
+        },
+        {
             "name": "Launch db.js via NPM",
             "request": "launch",
             "runtimeArgs": [

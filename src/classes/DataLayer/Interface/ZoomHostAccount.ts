@@ -1,3 +1,4 @@
+import { Conference, ZoomRoom } from ".";
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
@@ -15,8 +16,20 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return this.parse.get("email");
     }
 
+    get password(): string {
+        return this.parse.get("password");
+    }
+
     get name(): string {
         return this.parse.get("name");
+    }
+
+    get conference(): Promise<Conference> {
+        return this.uniqueRelated("conference");
+    }
+
+    get rooms(): Promise<Array<ZoomRoom>> {
+        return this.uniqueRelated("rooms");
     }
 
     static get(id: string, conferenceId?: string): Promise<Class | null> {

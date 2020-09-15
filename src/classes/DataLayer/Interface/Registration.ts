@@ -1,3 +1,4 @@
+import { Conference } from ".";
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
@@ -11,11 +12,11 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         super(K_str, parse);
     }
 
-    get affiliation(): string {
+    get affiliation(): string | undefined {
         return this.parse.get("affiliation");
     }
 
-    get country(): string {
+    get country(): string | undefined {
         return this.parse.get("country");
     }
 
@@ -23,12 +24,16 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return this.parse.get("email");
     }
 
-    get invitationSentDate(): number {
+    get invitationSentDate(): Date {
         return this.parse.get("invitationSentDate");
     }
 
     get name(): string {
         return this.parse.get("name");
+    }
+
+    get conference(): Promise<Conference> {
+        return this.uniqueRelated("conference");
     }
 
     static get(id: string, conferenceId?: string): Promise<Class | null> {

@@ -12,12 +12,20 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         super(K_str, parse);
     }
 
-    get endTime(): number {
+    get endTime(): Date {
         return this.parse.get("endTime");
     }
 
     get join_url(): string {
         return this.parse.get("join_url");
+    }
+
+    get registration_url(): string | undefined {
+        return this.parse.get("registration_url");
+    }
+
+    get start_url_expiration(): Date {
+        return this.parse.get("start_url_expiration");
     }
 
     get meetingID(): string {
@@ -32,7 +40,7 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return this.parse.get("requireRegistration");
     }
 
-    get startTime(): number {
+    get startTime(): Date {
         return this.parse.get("startTime");
     }
 

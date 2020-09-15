@@ -19,15 +19,11 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.abstract;
     }
 
-    get chatSID(): string {
-        return this.data.chatSID;
-    }
-
     get isPrivate(): boolean {
         return this.data.isPrivate;
     }
 
-    get posterImage(): Parse.File {
+    get posterImage(): Parse.File | undefined {
         return this.data.posterImage;
     }
 
@@ -55,8 +51,8 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.uniqueRelated("events");
     }
 
-    get programSession(): Promise<ProgramSession> {
-        return this.uniqueRelated("programSession");
+    get session(): Promise<ProgramSession> {
+        return this.uniqueRelated("session");
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

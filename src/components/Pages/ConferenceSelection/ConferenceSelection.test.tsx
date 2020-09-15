@@ -59,7 +59,7 @@ describe("ConferenceSelection", () => {
         const element = render(TestElement());
 
         const conferences = [...testConferences];
-        conferences.sort((x, y) => x.conferenceName.localeCompare(y.conferenceName));
+        conferences.sort((x, y) => x.name.localeCompare(y.name));
 
         const options = await waitForElement(
             () => element.getAllByRole("option"),
@@ -67,7 +67,7 @@ describe("ConferenceSelection", () => {
 
         for (let i = 0; i < options.length; i++) {
             expect(options[i].value).toBe(conferences[i].id);
-            expect(options[i].textContent).toBe(conferences[i].conferenceName);
+            expect(options[i].textContent).toBe(conferences[i].name);
         }
     });
 

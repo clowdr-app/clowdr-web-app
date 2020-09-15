@@ -13,6 +13,7 @@ import { Conference, UserProfile, _User } from "../../classes/DataLayer";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { DocTitleState } from "../../contexts/DocTitleContext";
+import Caches from "../../classes/DataLayer/Cache";
 
 interface Props {
 }
@@ -57,6 +58,29 @@ export default function App(props: Props) {
     };
     document.title = docTitle;
 
+    useEffect(() => {
+        async function updateCacheAuthenticatedStatus() {
+            if (!userProfile.profile) {
+                if (currentConferenceId) {
+                    let cache = await Caches.get(currentConferenceId);
+                    cache.IsUserAuthenticated = false;
+                }
+            }
+            else {
+                if (currentConferenceId) {
+                    let cache = await Caches.get(currentConferenceId);
+                    if (!cache.IsUserAuthenticated) {
+                        cache.IsUserAuthenticated = true;
+                        // TODO: Is this the best time/place to call refresh?
+                        cache.refresh();
+                    }
+                }
+            }
+        }
+
+        updateCacheAuthenticatedStatus();
+    });
+
     // logger.enable();
 
     // Update conference
@@ -73,13 +97,14 @@ export default function App(props: Props) {
                     // Now we can try to fetch the selected conference from the cache
                     // If the cache misses, it will go to the db for us.
                     let _conference = await DataLayer.Conference.get(currentConferenceId);
-                    setConference({ conf: _conference, loading: false });
 
                     // Did the conference actually exist?
                     if (!_conference) {
                         // No? Darn...mustv'e been a fake id. Clear out the state.
                         LocalStorage_Conference.currentConferenceId = null;
                     }
+
+                    setConference({ conf: _conference, loading: false });
                 }
                 else if (conference.loading) {
                     setConference({ conf: conference.conf, loading: false });
@@ -119,9 +144,11 @@ export default function App(props: Props) {
                             // Yes, good, let's store the user for later.
                             // This will also trigger a re-rendering.
                             let profile = await DataLayer.UserProfile.getByUserId(user.id, currentConferenceId);
-                            setUserProfile({ profile: profile, loading: false });
+                            if (profile || userProfile.loading) {
+                                setUserProfile({ profile: profile, loading: false });
+                            }
                         }
-                        else {
+                        else if (userProfile.loading) {
                             // No conference selected, better make sure our internal
                             // state matches that fact.
                             setUserProfile({ profile: null, loading: false });

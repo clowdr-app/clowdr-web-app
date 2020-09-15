@@ -1,1 +1,1 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"92401477c6e146219267a2c3627faa9f","collectionName":"ZoomRoom"}
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"0b2d8f7f1b354f2eadbc8f6d63570b4b","collectionName":"ZoomRoom"}

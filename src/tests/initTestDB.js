@@ -4,19 +4,15 @@ const RelationsToTableNames = {
         conference: "Conference"
     },
     Conference: {
-        loggedInText: "PrivilegedConferenceDetails",
+        details: "PrivilegedConferenceDetails",
+        admin: "_User",
+        autoSubscribeToTextChats: "TextChat"
     },
     ConferenceConfiguration: {
         conference: "Conference"
     },
-    Conversation: {
-        conference: "Conference",
-        member1: "UserProfile",
-        member2: "UserProfile",
-    },
     Flair: {
-    },
-    LiveActivity: {
+        conference: "Conference"
     },
     PrivilegedConferenceDetails: {
         conference: "Conference"
@@ -26,9 +22,8 @@ const RelationsToTableNames = {
         authors: "ProgramPerson",
         track: "ProgramTrack",
         attachments: "ProgramItemAttachment",
-        breakoutRoom: "BreakoutRoom",
         events: "ProgramSessionEvent",
-        programSession: "ProgramSession"
+        session: "ProgramSession"
     },
     ProgramItemAttachment: {
         attachmentType: "AttachmentType",
@@ -36,41 +31,47 @@ const RelationsToTableNames = {
     },
     ProgramPerson: {
         conference: "Conference",
-        programItems: "ProgramItem",
-        userProfile: "UserProfile",
+        items: "ProgramItem",
+        profile: "UserProfile",
     },
     ProgramRoom: {
         conference: "Conference",
-        socialSpace: "SocialSpace",
-        zoomRoom: "ZoomRoom"
+        zoomRoom: "ZoomRoom",
+        sessions: "ProgramSession",
+        textChat: "TextChat",
+        videoRoom: "VideoRoom",
     },
     ProgramSession: {
         conference: "Conference",
         events: "ProgramSessionEvent",
         items: "ProgramItem",
-        programTrack: "ProgramTrack",
+        track: "ProgramTrack",
         room: "ProgramRoom"
     },
     ProgramSessionEvent: {
         conference: "Conference",
-        programItem: "ProgramItem",
-        programSession: "ProgramSession"
+        item: "ProgramItem",
+        session: "ProgramSession",
+        track: "ProgramTrack"
     },
     ProgramTrack: {
-        conference: "Conference"
+        conference: "Conference",
+        items: "ProgramItem",
+        sessions: "ProgramSession"
     },
     Registration: {
+        conference: "Conference",
     },
-    SocialSpace: {
-        conference: "Conference"
-    },
-    _User: {
-        profiles: "UserProfile",
+    _Role: {
+        conference: "Conference",
+        users: "_User",
         roles: "_Role"
     },
+    _User: {
+        profiles: "UserProfile"
+    },
     UserPresence: {
-        socialSpace: "SocialSpace",
-        user: "UserProfile"
+        profile: "UserProfile",
     },
     UserProfile: {
         conference: "Conference",
@@ -78,17 +79,25 @@ const RelationsToTableNames = {
         primaryFlair: "Flair",
         programPersons: "ProgramPerson",
         user: "_User",
-        watchedRooms: "ProgramRoom"
+        flairs: "Flair"
     },
     ZoomHostAccount: {
+        conference: "Conference",
+        rooms: "ZoomRoom"
     },
     ZoomRoom: {
         conference: "Conference",
         hostAccount: "ZoomHostAccount",
         programRoom: "ProgramRoom"
     },
-    _Role: {
-        users: "_User"
+    TextChat: {
+        conference: "Conference"
+    },
+    TextChatMessage: {
+        chat: "TextChat"
+    },
+    VideoRoom: {
+        conference: "Conference"
     }
 };
 
@@ -100,6 +109,8 @@ function generateAttachmentTypes() {
     let result = [];
 
     result.push({
+        extra: undefined,
+        fileTypes: ["image/png"],
         conference: "mockConference1",
         id: "mockAttachmentType1",
         createdAt: new Date(1),
@@ -108,7 +119,20 @@ function generateAttachmentTypes() {
         name: "Mock AttachmentType",
         ordinal: 0,
         supportsFile: false,
-        updatedAt: new Date(1)
+        updatedAt: new Date(1),
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "mockUser1": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+            "mockUser1",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
     });
 
     return result;
@@ -118,31 +142,57 @@ function generateConferences() {
     let result = [];
 
     result.push({
-        adminEmail: "mockAdminEmail@mock.com",
-        adminName: "mockAdminName",
-        conferenceName: "Mock Conference Name",
+        admin: "mockUser1",
+        autoSubscribeToTextChats: [],
+        details: ["mockPrivilegedConferenceDetails1"],
+
+        name: "Mock Conference Name 1",
+        shortName: "CONFA 2020",
         createdAt: new Date(),
         headerImage: null,
         id: "mockConference1",
         isInitialized: false,
         landingPage: "A mock landing page",
-        loggedInText: "mockPrivilegedConferenceDetails1",
         updatedAt: new Date(),
-        welcomeText: "Welcome to this mock conference!"
+        welcomeText: "Welcome to this mock conference!",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "*": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager"
+        ],
+        _rperm: ["*"],
     });
 
     result.push({
-        adminEmail: "mockAdminEmail2@mock.com",
-        adminName: "mockAdminName2",
-        conferenceName: "A Second Mock Conference",
+        admin: "mockUser2",
+        autoSubscribeToTextChats: [],
+        details: ["mockPrivilegedConferenceDetails2"],
+
+        name: "Mock Conference Name 2",
+        shortName: "CONFB 2020",
         createdAt: new Date(),
         headerImage: null,
         id: "mockConference2",
         isInitialized: false,
-        landingPage: "A mock landing page",
-        loggedInText: "mockPrivilegedConferenceDetails2",
+        landingPage: "A second mock landing page",
         updatedAt: new Date(),
-        welcomeText: "Welcome to this second mock conference!"
+        welcomeText: "Welcome to this second mock conference!",
+
+        _acl: {
+            "role:mockConference2-admin": { w: true },
+            "role:mockConference2-manager": { w: true },
+            "*": { r: true }
+        },
+        _wperm: [
+            "role:mockConference2-admin",
+            "role:mockConference2-manager"
+        ],
+        _rperm: ["*"],
     });
 
     return result;
@@ -158,7 +208,21 @@ function generateFlairs() {
         color: "#FF00FF",
         label: "mock flair label",
         tooltip: "mock flair tooltip",
-        priority: 1
+        priority: 1,
+        conference: "mockConference1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "mockUser1": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+            "mockUser1",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
     });
 
     return result;
@@ -173,7 +237,18 @@ function generatePrivilegedConferenceDetails() {
         id: "mockPrivilegedConferenceDetails1",
         key: "LOGGED_IN_TEXT",
         updatedAt: new Date(),
-        value: "Welcome to this mock conference logged in text."
+        value: "Welcome to this mock conference logged in text.",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
     });
 
     result.push({
@@ -182,7 +257,11 @@ function generatePrivilegedConferenceDetails() {
         id: "mockPrivilegedConferenceDetails2",
         key: "LOGGED_IN_TEXT",
         updatedAt: new Date(),
-        value: "Welcome to this mock conference logged in text."
+        value: "Welcome to this mock conference logged in text.",
+
+        _acl: {},
+        _wperm: [],
+        _rperm: [],
     });
 
     return result;
@@ -192,59 +271,51 @@ function generateRoles() {
     let result = [];
 
     result.push({
-        id: "mockSysAdminRole1",
-        name: "ClowdrSysAdmin",
-        _wperm: ["mockConference1-admin"],
-        _rperm: ["*"],
-        _acl: {
-            "mockConference1-admin": { w: true },
-            "*": { r: true }
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        users: ["ClowdrSysAdmin"]
-    });
-
-    result.push({
         id: "mockConference1-RoleAdmin",
-        name: "mockConference1-admin",
-        _wperm: ["mockConference1-admin"],
+        name: "mockConference1-RoleAdmin",
+        conference: "mockConference1",
+        _wperm: ["mockConference1-RoleAdmin"],
         _rperm: ["*"],
         _acl: {
-            "mockConference1-admin": { w: true },
+            "mockConference1-RoleAdmin": { w: true },
             "*": { r: true }
         },
         createdAt: new Date(),
         updatedAt: new Date(),
-        users: ["mockUser1"]
+        users: ["mockUser1"],
+        roles: []
     });
 
     result.push({
         id: "mockConference1-RoleManager",
-        name: "mockConference1-manager",
-        _wperm: ["mockConference1-admin"],
+        name: "mockConference1-RoleManager",
+        conference: "mockConference1",
+        _wperm: ["mockConference1-RoleAdmin"],
         _rperm: ["*"],
         _acl: {
-            "mockConference1-admin": { w: true },
+            "mockConference1-RoleAdmin": { w: true },
             "*": { r: true }
         },
         createdAt: new Date(),
         updatedAt: new Date(),
-        users: ["mockUser1"]
+        users: [],
+        roles: ["mockConference1-RoleAdmin"]
     });
 
     result.push({
-        id: "mockConference1-RoleConference",
-        name: "mockConference1-conference",
-        _wperm: ["mockConference1-admin"],
+        id: "mockConference1-RoleAttendee",
+        name: "mockConference1-RoleAttendee",
+        conference: "mockConference1",
+        _wperm: ["mockConference1-RoleAdmin"],
         _rperm: ["*"],
         _acl: {
-            "mockConference1-admin": { w: true },
+            "mockConference1-RoleAdmin": { w: true },
             "*": { r: true }
         },
         createdAt: new Date(),
         updatedAt: new Date(),
-        users: ["mockUser1"]
+        users: [],
+        roles: ["mockConference1-RoleManager"]
     });
 
     return result;
@@ -255,30 +326,26 @@ function generateUsers() {
 
     result.push({
         email: "mock@mock.com",
+        emailVerified: true,
         createdAt: new Date(),
         id: "mockUser1",
-        isBanned: "No",
-        loginKey: null,
         passwordSet: true,
         updatedAt: new Date(),
         username: "mockUser1",
         profiles: ["mockUserProfile1"],
-        // admin
-        _hashed_password: "$2b$10$U1dOIN.fger7QO4sS9kwSelJdQgrr7D2hUCX5G4oMNR7uAPFQeXS2"
-    });
+        // Password is 'admin'
+        _hashed_password: "$2b$10$U1dOIN.fger7QO4sS9kwSelJdQgrr7D2hUCX5G4oMNR7uAPFQeXS2",
 
-    result.push({
-        email: "clowdr@sys.admin",
-        createdAt: new Date(),
-        id: "ClowdrSysAdmin",
-        isBanned: "No",
-        loginKey: null,
-        passwordSet: true,
-        updatedAt: new Date(),
-        username: "clowdr@localhost",
-        profiles: [],
-        // admin
-        _hashed_password: "$2b$10$U1dOIN.fger7QO4sS9kwSelJdQgrr7D2hUCX5G4oMNR7uAPFQeXS2"
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "mockUser1": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "mockUser1",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
     });
 
     return result;
@@ -291,15 +358,20 @@ function generateUserPresences() {
         createdAt: new Date(),
         id: "mockUserPresence1",
         updatedAt: new Date(),
-        isAvailable: false,
-        isDND: false,
         isDNT: false,
-        isLookingForConversation: false,
-        isOnline: false,
-        isOpenToConversation: false,
-        status: "mock user presence status",
-        socialSpace: null,
-        user: "mockUser1",
+        lastSeen: new Date(),
+        profile: "mockUserProfile1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "mockUser1": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "mockUser1",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
     });
 
     return result;
@@ -309,6 +381,9 @@ function generateUserProfiles() {
     let result = [];
 
     result.push({
+        dataConsentGiven: true,
+        flairs: ["mockFlair1"],
+
         id: "mockUserProfile1",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -318,7 +393,7 @@ function generateUserProfiles() {
         displayName: "mock display name",
         position: "mock position",
         profilePhoto: null, // TODO: Mock profile photo file
-        pronouns: "test pronouns",
+        pronouns: ["test", "pronouns"],
         realName: "mock real name",
         tags: [
             {
@@ -340,7 +415,17 @@ function generateUserProfiles() {
         presence: "mockUserPresence1",
         programPersons: [], // TODO: Mock program persons
         user: "mockUser1",
-        watchedRooms: [] // TODO: Mock watched rooms
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "mockUser1": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "mockUser1",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
     });
 
     return result;
@@ -374,7 +459,7 @@ function convertObjectToMongoJSON(tableName, item, result) {
                         result[relationName] = result[relationName].concat(finalValue);
                     }
                     else {
-                        result[relationName] = [];
+                        result[relationName] = result[relationName] || [];
                     }
                 }
                 else if (fieldValue) {
@@ -395,7 +480,7 @@ function convertObjectToMongoJSON(tableName, item, result) {
                         object[fieldName] = fieldValue;
                     }
                     else if (fieldValue instanceof Array) {
-                        object[fieldName] = fieldValue.map(x => convertObjectToMongoJSON(tableName, x, result));
+                        object[fieldName] = fieldValue;
                     }
                     else if (typeof fieldValue === "number") {
                         object[fieldName] = fieldValue.toString();
@@ -407,7 +492,7 @@ function convertObjectToMongoJSON(tableName, item, result) {
                         object[fieldName] = fieldValue;
                     }
                     else if (typeof fieldValue === "object") {
-                        object[fieldName] = convertObjectToMongoJSON(tableName, fieldValue, result);
+                        object[fieldName] = fieldValue;
                     }
                     else {
                         throw new Error(`Unhandled field type! ${typeof fieldValue}`);

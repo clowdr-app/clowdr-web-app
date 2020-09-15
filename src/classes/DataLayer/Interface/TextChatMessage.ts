@@ -1,11 +1,11 @@
+import { TextChat } from ".";
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticCachedBase, StaticBaseImpl, LocalDataT, CachedBase } from "./Base";
-import { Conference } from ".";
 
-type SchemaT = Schema.SocialSpace;
-type K = "SocialSpace";
-const K_str: K = "SocialSpace";
+type SchemaT = Schema.TextChatMessage;
+type K = "TextChatMessage";
+const K_str: K = "TextChatMessage";
 
 export default class Class extends CachedBase<K> implements SchemaT {
     constructor(
@@ -15,21 +15,22 @@ export default class Class extends CachedBase<K> implements SchemaT {
         super(conferenceId, K_str, data, parse);
     }
 
-    get chatChannel(): string {
-        return this.data.chatChannel;
+    get attributes(): any | undefined {
+        return this.data.attributes;
     }
 
-    get isGlobal(): boolean {
-        return this.data.isGlobal;
+    get sentAt(): Date {
+        return this.data.sentAt;
     }
 
-    get name(): string {
-        return this.data.name;
+    get text(): string {
+        return this.data.text;
     }
 
-    get conference(): Promise<Conference> {
-        return this.uniqueRelated("conference");
+    get chat(): Promise<TextChat> {
+        return this.uniqueRelated("chat");
     }
+
 
     static get(id: string, conferenceId: string): Promise<Class | null> {
         return StaticBaseImpl.get(K_str, id, conferenceId);

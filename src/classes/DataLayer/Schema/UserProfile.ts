@@ -1,5 +1,6 @@
 import { Base } from ".";
-import { Conference, Flair, UserPresence, ProgramPerson, _User } from "../Interface";
+import { _User, Conference, Flair, ProgramPerson, UserPresence } from "../Interface";
+import Parse from "parse";
 
 // This is embedded in UserProfile and is not itself a table in the DB
 export interface UserProfileTag {
@@ -10,21 +11,23 @@ export interface UserProfileTag {
 }
 
 export default interface Schema extends Base {
-    affiliation: string;
-    bio: string;
-    country: string;
+    affiliation: string | undefined;
+    bio: string | undefined;
+    country: string | undefined;
+    dataConsentGiven: boolean;
     displayName: string;
-    position: string;
-    profilePhoto: Parse.File | null;
-    pronouns: string;
+    position: string | undefined;
+    profilePhoto: Parse.File | undefined;
+    pronouns: Array<any>;
     realName: string;
     tags: Array<UserProfileTag>;
-    webpage: string
+    webpage: string | undefined;
     welcomeModalShown: boolean;
 
     conference: Promise<Conference>;
-    primaryFlair: Promise<Flair>;
+    flairs: Promise<Array<Flair>>;
     presence: Promise<UserPresence>;
+    primaryFlair: Promise<Flair>;
     programPersons: Promise<Array<ProgramPerson>>;
     user: Promise<_User>;
 }

@@ -42,14 +42,15 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         conference: "Conference"
     },
     Conference: {
-        loggedInText: "PrivilegedConferenceDetails",
+        details: "PrivilegedConferenceDetails",
+        admin: "_User",
+        autoSubscribeToTextChats: "TextChat"
     },
     ConferenceConfiguration: {
         conference: "Conference"
     },
     Flair: {
-    },
-    LiveActivity: {
+        conference: "Conference"
     },
     PrivilegedConferenceDetails: {
         conference: "Conference"
@@ -60,7 +61,7 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         track: "ProgramTrack",
         attachments: "ProgramItemAttachment",
         events: "ProgramSessionEvent",
-        programSession: "ProgramSession"
+        session: "ProgramSession"
     },
     ProgramItemAttachment: {
         attachmentType: "AttachmentType",
@@ -68,54 +69,73 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
     },
     ProgramPerson: {
         conference: "Conference",
-        programItems: "ProgramItem",
-        userProfile: "UserProfile",
+        items: "ProgramItem",
+        profile: "UserProfile",
     },
     ProgramRoom: {
         conference: "Conference",
-        socialSpace: "SocialSpace",
-        zoomRoom: "ZoomRoom"
+        zoomRoom: "ZoomRoom",
+        sessions: "ProgramSession",
+        textChat: "TextChat",
+        videoRoom: "VideoRoom",
     },
     ProgramSession: {
         conference: "Conference",
         events: "ProgramSessionEvent",
         items: "ProgramItem",
-        programTrack: "ProgramTrack",
+        track: "ProgramTrack",
         room: "ProgramRoom"
     },
     ProgramSessionEvent: {
         conference: "Conference",
-        programItem: "ProgramItem",
-        programSession: "ProgramSession"
+        item: "ProgramItem",
+        session: "ProgramSession",
+        track: "ProgramTrack"
     },
     ProgramTrack: {
-        conference: "Conference"
+        conference: "Conference",
+        items: "ProgramItem",
+        sessions: "ProgramSession"
     },
     Registration: {
+        conference: "Conference",
     },
-    SocialSpace: {
-        conference: "Conference"
+    _Role: {
+        conference: "Conference",
+        users: "_User",
+        roles: "_Role"
     },
     _User: {
         profiles: "UserProfile"
     },
     UserPresence: {
-        socialSpace: "SocialSpace",
-        user: "UserProfile"
+        profile: "UserProfile",
     },
     UserProfile: {
         conference: "Conference",
         presence: "UserPresence",
         primaryFlair: "Flair",
         programPersons: "ProgramPerson",
-        user: "_User"
+        user: "_User",
+        flairs: "Flair"
     },
     ZoomHostAccount: {
+        conference: "Conference",
+        rooms: "ZoomRoom"
     },
     ZoomRoom: {
         conference: "Conference",
         hostAccount: "ZoomHostAccount",
         programRoom: "ProgramRoom"
+    },
+    TextChat: {
+        conference: "Conference"
+    },
+    TextChatMessage: {
+        chat: "TextChat"
+    },
+    VideoRoom: {
+        conference: "Conference"
     }
 };
 

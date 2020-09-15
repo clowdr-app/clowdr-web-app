@@ -2,7 +2,7 @@ const yargs = require('yargs');
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
-const { pathExistsSync, mkdirSync, removeSync } = require('fs-extra');
+const { pathExistsSync, mkdirSync } = require('fs-extra');
 
 const argv = yargs
     .option("inDir", {
@@ -23,7 +23,6 @@ const argv = yargs
         type: "boolean",
         require: false
     })
-    .default("inDir")
     .help()
     .alias("help", "h")
     .argv;
@@ -32,13 +31,13 @@ const inDir = argv.inDir;
 const outDir = argv.outDir ? argv.outDir : inDir;
 const shouldRemove = !!argv.remove;
 
-if (!pathExistsSync(outDir)) {
-    mkdirSync(outDir);
-}
-
 console.log(`Input folder  : ${inDir}`);
 console.log(`Output folder : ${outDir}`);
 console.log("===============");
+
+if (!pathExistsSync(outDir)) {
+    mkdirSync(outDir);
+}
 
 function getRootName(filePath) {
     let fileName = path.basename(filePath);
@@ -47,53 +46,48 @@ function getRootName(filePath) {
 }
 
 function isBSON(filePath) {
-    return !!filePath.match(/.bson$/i);
+    return !!filePath.match(/\.bson$/i);
 }
 
 let inFileNames = fs.readdirSync(inDir);
-let maxInFileNameLength = 0;
-for (let inFileName of inFileNames) {
-    if (isBSON(inFileName)) {
-        maxInFileNameLength = Math.max(maxInFileNameLength, inFileName.length);
-    }
-}
+inFileNames = inFileNames.filter(isBSON);
+
+let maxInFileNameLength = inFileNames.reduce((acc, x) => Math.max(acc, x.length));
 
 for (let inFileName of inFileNames) {
-    if (isBSON(inFileName)) {
-        let outFileName = getRootName(inFileName) + ".json";
-        console.log(`Converting    : ${inFileName.padEnd(maxInFileNameLength, " ")} -> ${outFileName}`);
+    let outFileName = getRootName(inFileName) + ".json";
+    console.log(`Converting    : ${inFileName.padEnd(maxInFileNameLength, " ")} -> ${outFileName}`);
 
-        let inFilePath = path.join(inDir, inFileName);
-        let outFilePath = path.join(outDir, getRootName(inFileName) + ".json");
+    let inFilePath = path.join(inDir, inFileName);
+    let outFilePath = path.join(outDir, getRootName(inFileName) + ".json");
 
-        new Promise((resolve, reject) => {
-            let conversionProcess = spawn(
-                "bsondump",
-                [inFilePath, "--outFile", outFilePath],
-                { stderr: 'inherit' });
+    new Promise((resolve, reject) => {
+        let conversionProcess = spawn(
+            "bsondump",
+            [inFilePath, "--outFile", outFilePath],
+            { stderr: 'inherit' });
 
-            let errors = [];
-            conversionProcess.on("error", (err) => {
-                errors.push(err);
-            });
-
-            conversionProcess.on("exit", (code) => {
-                if (code) {
-                    reject({ inFileName: inFileName, code: code, errors: errors });
-                }
-                else {
-                    resolve({ inFileName: inFileName });
-                }
-            });
-        }).then(({ inFileName }) => {
-            console.log(`Converted    : ${inFileName}${shouldRemove ? " (Deleting input file)" : ""}`);
-
-            if (shouldRemove) {
-                fs.unlinkSync(inFilePath);
-            }
-        }).catch(reason => {
-            console.error(`!!! Failed to convert: ${inFileName}. Exit code: ${reason.code}`);
-            reason.errors.forEach(console.error);
+        let errors = [];
+        conversionProcess.on("error", (err) => {
+            errors.push(err);
         });
-    }
+
+        conversionProcess.on("exit", (code) => {
+            if (code) {
+                reject({ inFileName: inFileName, code: code, errors: errors });
+            }
+            else {
+                resolve({ inFileName: inFileName });
+            }
+        });
+    }).then(({ inFileName }) => {
+        console.log(`Converted    : ${inFileName}${shouldRemove ? " (Deleting input file)" : ""}`);
+
+        if (shouldRemove) {
+            fs.unlinkSync(inFilePath);
+        }
+    }).catch(reason => {
+        console.error(`!!! Failed to convert: ${inFileName}. Exit code: ${reason.code}`);
+        reason.errors.forEach(console.error);
+    });
 }

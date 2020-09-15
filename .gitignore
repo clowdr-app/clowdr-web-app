@@ -39,3 +39,5 @@ TAGS
 db/test/**/*.*
 db/dump/**/*.*
 *.bson
+
+db/test-ts-schema/

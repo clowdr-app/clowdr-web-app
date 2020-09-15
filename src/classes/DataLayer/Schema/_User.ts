@@ -2,10 +2,11 @@ import { Base } from ".";
 import { UserProfile } from "../Interface";
 
 export default interface Schema extends Base {
+    authData: object;
     email: string;
-    loginKey: string | null;
+    emailVerified: boolean;
     passwordSet: boolean;
     username: string;
-    isBanned: "Yes" | "No";
+
     profiles: Promise<Array<UserProfile>>;
 }
