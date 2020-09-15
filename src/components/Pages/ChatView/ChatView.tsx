@@ -1,11 +1,18 @@
 import React, { useEffect } from "react";
 import useDocTitle from "../../../hooks/useDocTitle";
-import { Link } from "react-router-dom";
+import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
+import "./ChatView.scss";
 
-export default function ChatView() {
+interface Props {
+    chatId: string;
+}
+
+export default function ChatView(props: Props) {
     const docTitle = useDocTitle();
     useEffect(() => {
         docTitle.set("Chat Room X");
     }, [docTitle]);
-    return <> <Link to="/breakout">To Room</Link></>;
+    return <div className="chat-view">
+        <ChatFrame chatId={props.chatId} />
+    </div>;
 }
