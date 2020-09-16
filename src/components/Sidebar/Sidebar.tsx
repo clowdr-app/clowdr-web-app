@@ -34,6 +34,10 @@ function Sidebar(props: Props) {
         burgerButtonRef.current?.focus();
     }, [burgerButtonRef, props.open]);
 
+    // TODO: Use 'M' key as a shortcut to open/close menu?
+    // TODO: Use 'C/R/P' to jump focus to menu expanders
+    // TODO: Document shortcut keys prominently on the /help page
+
     let sideBarButton = <div className="sidebar-button">
         <button
             aria-label="Open Menu"
