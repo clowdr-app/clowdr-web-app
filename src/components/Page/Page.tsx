@@ -40,6 +40,10 @@ function Page(props: Props) {
         // TODO: Route for /moderators (to contact the conference mods)
         // TODO: Route for /admin to access the top-level admin interface (admin/manager roles only)
 
+        // TODO: Route for /about
+        // TODO: Route for /legal
+        // TODO: Route for /help
+
         contentsElem = <Switch>
             <Route exact path="/" component={LoggedInWelcome} />
             <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>
