@@ -172,38 +172,43 @@
         display: flex;
         justify-content: flex-end;
 
-        button {
+        button, a {
             color : inherit;
             border: none;
             /* Enable the outline to show when focused. */
             margin: 2px;
+            padding: 2px;
+            margin-left: 0.2em;
+
+            .fas {
+                margin: 0;
+                padding: 0;
+            }
         }
 
         .expansion-control {
+            margin: 2px;
             margin-right: auto;
 
             .fas {
-                width : 20px;
+                width: 20px;
                 margin: 0 0.2em 0 0em;
             }
         }
 
-        .search {
-            display: inline-block;
+        button.search {
+            padding-top: 0.23em;
+        }
 
-            button {
-                font-size: $font-sm;
-            }
+        input.search {
+            margin: 4px;
+            height: 3ex;
         }
     }
 
     .expander-contents {
-        height    : auto;
-        max-height: 100%;
-        overflow  : hidden;
-
         &.closed {
-            max-height: 0;
+            display: none;
         }
     }
 }

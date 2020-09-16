@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
@@ -17,7 +17,10 @@ interface Props {
 function Sidebar(props: Props) {
     let conf = useConference();
     let mUser = useMaybeUserProfile();
-    const burgerButtonRef = useRef<HTMLButtonElement>(null)
+    const burgerButtonRef = useRef<HTMLButtonElement>(null);
+    let [chatsIsOpen, setChatsIsOpen] = useState<boolean>(true);
+    let [roomsIsOpen, setRoomsIsOpen] = useState<boolean>(true);
+    let [programIsOpen, setProgramIsOpen] = useState<boolean>(true);
 
     useEffect(() => {
         burgerButtonRef.current?.focus();
@@ -45,11 +48,19 @@ function Sidebar(props: Props) {
 
         let chatsButtons: Array<ButtonSpec> = [
             { type: "search", icon: "fa-search" },
-            { type: "link", text: "All", icon: "fa-globe-europe", url: "/chat/all" },
-            { type: "link", text: "New", icon: "fa-plus", url: "/chat/new" }
+            { type: "link", icon: "fa-globe-europe", url: "/chat" },
+            { type: "link", icon: "fa-plus", url: "/chat/new" }
         ];
-        let roomsButtons: Array<ButtonSpec> = [];
-        let programButtons: Array<ButtonSpec> = [];
+        let roomsButtons: Array<ButtonSpec> = [
+            { type: "search", icon: "fa-search" },
+            { type: "link", icon: "fa-globe-europe", url: "/room" },
+            { type: "link", icon: "fa-plus", url: "/chat/new" }
+        ];
+        let programButtons: Array<ButtonSpec> = [
+            { type: "search", icon: "fa-search" },
+            { type: "link", icon: "fa-globe-europe", url: "/program" },
+            // TODO: If admin: { type: "link", icon: "fa-plus", url: "/chat/new" }
+        ];
 
         return <div className="sidebar">
             {headerBar}
@@ -59,7 +70,12 @@ function Sidebar(props: Props) {
                         <></>
                     </MenuGroup>
 
-                    <MenuExpander title="Chats" defaultIsOpen={true} buttons={chatsButtons}>
+                    <MenuExpander
+                        title="Chats"
+                        isOpen={chatsIsOpen}
+                        buttons={chatsButtons}
+                        onOpenStateChange={() => setChatsIsOpen(!chatsIsOpen)}
+                    >
                         <MenuGroup>
                             <>sdfasf  afsdf asdfsda fasf sadf asdf safd asdf asd
                               asdfasd fsa fasf sa fdsa dffdas fsadf asdf sadf 
@@ -68,13 +84,23 @@ function Sidebar(props: Props) {
                         </MenuGroup>
                     </MenuExpander>
 
-                    <MenuExpander title="Rooms" defaultIsOpen={true} buttons={roomsButtons}>
+                    <MenuExpander
+                        title="Rooms"
+                        isOpen={roomsIsOpen}
+                        buttons={roomsButtons}
+                        onOpenStateChange={() => setRoomsIsOpen(!roomsIsOpen)}
+                    >
                         <MenuGroup>
                             <></>
                         </MenuGroup>
                     </MenuExpander>
 
-                    <MenuExpander title="Program" defaultIsOpen={true} buttons={programButtons}>
+                    <MenuExpander
+                        title="Program"
+                        isOpen={programIsOpen}
+                        buttons={programButtons}
+                        onOpenStateChange={() => setProgramIsOpen(!programIsOpen)}
+                    >
                         <Program />
                     </MenuExpander>
                 </div>

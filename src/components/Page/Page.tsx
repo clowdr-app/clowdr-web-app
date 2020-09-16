@@ -29,6 +29,12 @@ function Page(props: Props) {
     let noHeading = false;
 
     if (mConf && mUser) {
+        // TODO: Route for /program (to show the whole program)
+
+        // TODO: Route for /chat/new (to create a new text chat)
+        // TODO: Route for /room/new (to create a new video room)
+        // TODO: Route for /program/new (conference manager and admin roles only)
+
         contentsElem = <Switch>
             <Route exact path="/" component={LoggedInWelcome} />
             <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>
