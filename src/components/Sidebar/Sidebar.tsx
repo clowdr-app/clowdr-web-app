@@ -5,8 +5,9 @@ import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import FooterLinks from '../FooterLinks/FooterLinks';
 import { Link } from 'react-router-dom';
 import MenuExpander, { ButtonSpec } from "./Menu/MenuExpander";
-import MenuGroup from './Menu/MenuGroup';
+import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
+import MenuItem from './Menu/MenuItem';
 
 interface Props {
     open: boolean,
@@ -21,6 +22,12 @@ function Sidebar(props: Props) {
     let [chatsIsOpen, setChatsIsOpen] = useState<boolean>(true);
     let [roomsIsOpen, setRoomsIsOpen] = useState<boolean>(true);
     let [programIsOpen, setProgramIsOpen] = useState<boolean>(true);
+    let [chatSearch, setChatSearch] = useState<string | null>(null);
+    let [roomSearch, setRoomSearch] = useState<string | null>(null);
+    let [programSearch, setProgramSearch] = useState<string | null>(null);
+
+    // TODO: When sidebar is occupying full window (e.g. on mobile), close it
+    // when the user clicks a link.
 
     useEffect(() => {
         burgerButtonRef.current?.focus();
@@ -47,28 +54,128 @@ function Sidebar(props: Props) {
         </div>
 
         let chatsButtons: Array<ButtonSpec> = [
-            { type: "search", icon: "fa-search" },
-            { type: "link", icon: "fa-globe-europe", url: "/chat" },
-            { type: "link", icon: "fa-plus", url: "/chat/new" }
+            {
+                type: "search", label: "Search all chats", icon: "fa-search",
+                onSearch: (event) => {
+                    setChatSearch(event.target.value);
+                    return event.target.value;
+                },
+                onSearchClose: () => {
+                    setChatSearch(null);
+                }
+            },
+            { type: "link", label: "Show all chats", icon: "fa-globe-europe", url: "/chat" },
+            { type: "link", label: "Create new chat", icon: "fa-plus", url: "/chat/new" }
         ];
         let roomsButtons: Array<ButtonSpec> = [
-            { type: "search", icon: "fa-search" },
-            { type: "link", icon: "fa-globe-europe", url: "/room" },
-            { type: "link", icon: "fa-plus", url: "/chat/new" }
+            {
+                type: "search", label: "Search all rooms", icon: "fa-search",
+                onSearch: (event) => {
+                    setRoomSearch(event.target.value);
+                    return event.target.value;
+                },
+                onSearchClose: () => {
+                    setRoomSearch(null);
+                }
+            },
+            { type: "link", label: "Show all rooms", icon: "fa-globe-europe", url: "/room" },
+            { type: "link", label: "Create new room", icon: "fa-plus", url: "/chat/new" }
         ];
         let programButtons: Array<ButtonSpec> = [
-            { type: "search", icon: "fa-search" },
-            { type: "link", icon: "fa-globe-europe", url: "/program" },
-            // TODO: If admin: { type: "link", icon: "fa-plus", url: "/chat/new" }
+            {
+                type: "search", label: "Search whole program", icon: "fa-search",
+                onSearch: (event) => {
+                    setProgramSearch(event.target.value);
+                    return event.target.value;
+                },
+                onSearchClose: () => {
+                    setProgramSearch(null);
+                }
+            },
+            { type: "link", label: "Show whole program", icon: "fa-globe-europe", url: "/program" },
+            // TODO: If admin: { type: "link", label: "Create new program event", icon: "fa-plus", url: "/chat/new" }
         ];
+
+        let mainMenuItems: MenuGroupItems = [
+            { key: "watched-items", element: <MenuItem title="Watched items" label="Watched items" action="/watched" /> },
+            { key: "profile", element: <MenuItem title="Profile" label="Profile" action="/profile" /> },
+            { key: "contact-moderators", element: <MenuItem title="Contact moderators" label="Contact moderators" action="/moderators" /> },
+            // TODO: If admin: { key: "admin", element: <MenuItem title="Admin tools" label="Admin tools" action="/admin"><></></MenuItem> }
+        ];
+
+        // TODO: Generate chat items from database (inc. any current search)
+        // TODO: "New messages in this chat" boldification
+        // TODO: For DMs, user presence (hollow/solid-green dot)
+        let chatMenuItems: MenuGroupItems = [
+            {
+                key: "chat-1",
+                element:
+                    <MenuItem title="Lobby" label="Lobby chat" icon={<i className="fas fa-hashtag"></i>} action="/chat/1" bold={true} />
+            },
+            {
+                key: "chat-2",
+                element:
+                    <MenuItem title="Haskell Symposium" label="Haskell Symposium chat" icon={<i className="fas fa-hashtag"></i>} action="/chat/2" />
+            },
+            {
+                key: "chat-3",
+                element:
+                    <MenuItem title="Benjamin Pierce" label="Chat with Benjamin Pierce" icon={<i className="fas fa-circle" style={{ color: "green" }}></i>} action="/chat/3" />
+            },
+            {
+                key: "chat-4",
+                element:
+                    <MenuItem title="Crista Lopes" label="Chat with Crista Lopes" icon={<i className="far fa-circle"></i>} action="/chat/4" bold={true} />
+            },
+        ];
+
+        // TODO: Generate room items from database (inc. any current search)
+        let roomMenuItems: MenuGroupItems = [
+            {
+                key: "room-1",
+                element:
+                    <MenuItem title="Breakout room 1" label="Breakout room 1" icon={<i className="fas fa-video"></i>} action="/room/1">
+                        <ul>
+                            <li>Benjamin Pierce</li>
+                            <li>Crista Lopes</li>
+                            <li>Jonathan Bell</li>
+                        </ul>
+                    </MenuItem>
+            },
+            {
+                key: "room-2",
+                element:
+                    <MenuItem title="Breakout room 2" label="Breakout room 2" icon={<i className="fas fa-video"></i>} action="/room/2">
+                        <ul>
+                            <li>Ed Nutting</li>
+                            <li>Harry Goldstein</li>
+                            <li>Alan Turing</li>
+                            <li>The one and only SPJ</li>
+                            <li>Stephanie Weirich</li>
+                        </ul>
+                    </MenuItem>
+            },
+            {
+                key: "room-3",
+                element:
+                    <MenuItem title="Large room" label="Large room" icon={<i className="fas fa-video"></i>} action="/room/3">
+                        <ul>
+                            <li>Alonzo Church</li>
+                            <li>Ada Lovelace</li>
+                            <li className="plus-bullet">11 more people...</li>
+                        </ul>
+                    </MenuItem>
+            },
+        ];
+
+        // TODO: Send program the search value
+        let program = <Program />;
 
         return <div className="sidebar">
             {headerBar}
             <div className="sidebar-scrollable">
                 <div className="menu">
-                    <MenuGroup>
-                        <></>
-                    </MenuGroup>
+                    <MenuGroup items={mainMenuItems} />
 
                     <MenuExpander
                         title="Chats"
@@ -76,12 +183,7 @@ function Sidebar(props: Props) {
                         buttons={chatsButtons}
                         onOpenStateChange={() => setChatsIsOpen(!chatsIsOpen)}
                     >
-                        <MenuGroup>
-                            <>sdfasf  afsdf asdfsda fasf sadf asdf safd asdf asd
-                              asdfasd fsa fasf sa fdsa dffdas fsadf asdf sadf 
-                            as fsdf asdf asdf asdf sadfas dfsdfas fsdf asdfasdf
-                            asdfsdfasdfasdfasdfasdfwertrergetrwhge</>
-                        </MenuGroup>
+                        <MenuGroup items={chatMenuItems} />
                     </MenuExpander>
 
                     <MenuExpander
@@ -90,9 +192,7 @@ function Sidebar(props: Props) {
                         buttons={roomsButtons}
                         onOpenStateChange={() => setRoomsIsOpen(!roomsIsOpen)}
                     >
-                        <MenuGroup>
-                            <></>
-                        </MenuGroup>
+                        <MenuGroup items={roomMenuItems} />
                     </MenuExpander>
 
                     <MenuExpander
@@ -101,10 +201,10 @@ function Sidebar(props: Props) {
                         buttons={programButtons}
                         onOpenStateChange={() => setProgramIsOpen(!programIsOpen)}
                     >
-                        <Program />
+                        {program}
                     </MenuExpander>
                 </div>
-                    
+
                 <FooterLinks doLogout={mUser ? props.doLogout : undefined} />
             </div>
         </div>;

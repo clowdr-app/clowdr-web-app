@@ -8,6 +8,7 @@ $fa-font-path: "../webfonts";
 
 @import "./styles/fontawesome/scss/fontawesome.scss";
 @import "./styles/fontawesome/scss/solid.scss";
+@import "./styles/fontawesome/scss/regular.scss";
 
 /* Override bourbon when styles build in a different order
  * for development vs. production 

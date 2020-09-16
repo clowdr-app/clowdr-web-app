@@ -3,11 +3,14 @@ import { Link } from "react-router-dom";
 
 export type ButtonSpec = {
     type: "link";
-    text?: string;
+    label: string;
     icon: string;
+
+    text?: string;
     url: string;
 } | {
     type: "search";
+    label: string;
     icon: string;
 
     onSearch?: (event: ChangeEvent<HTMLInputElement>) => string;
@@ -39,6 +42,9 @@ export default function MenuExpander(props: Props) {
             searchBoxRef.current?.focus();
         }
     });
+
+    // TODO: 'X' button to close search
+    // <i class="fas fa-times-circle"></i>
 
     let buttonElems: Array<JSX.Element> = [];
     let foundSearchButton = false;
@@ -77,16 +83,16 @@ export default function MenuExpander(props: Props) {
                         = !isSearchOpen
                             ? <button
                                 className="search"
-                                onClick={openSearch}>
+                                onClick={openSearch}
+                                aria-label={button.label}>
                                 <i className={"fas " + button.icon}></i>
                             </button>
                             : <input
                                 ref={searchBoxRef}
                                 className="search"
                                 type="text"
-                                aria-label="Search all chats"
+                                aria-label={button.label}
                                 placeholder="Search..."
-                                onBlur={closeSearch}
                                 onChange={changeSearch}
                                 value={searchBoxValue}
                             />;
@@ -97,7 +103,10 @@ export default function MenuExpander(props: Props) {
                 break;
             case "link":
                 if (!isSearchOpen) {
-                    buttonElem = <Link className="action-link" to={button.url}>
+                    buttonElem = <Link
+                        className="action-link"
+                        to={button.url}
+                        aria-label={button.label}>
                         <i className={"fas " + button.icon}></i>
                         {button.text ? <span className="text">{button.text}</span> : <></>}
                     </Link>;
