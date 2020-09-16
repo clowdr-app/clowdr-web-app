@@ -8,6 +8,7 @@ import MenuExpander, { ButtonSpec } from "./Menu/MenuExpander";
 import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
 import MenuItem from './Menu/MenuItem';
+import { ProgramSession, ProgramSessionEvent } from '../../classes/DataLayer';
 
 interface Props {
     open: boolean,
@@ -168,8 +169,17 @@ function Sidebar(props: Props) {
             },
         ];
 
-        // TODO: Send program the search value
-        let program = <Program />;
+        // TODO: Fetch either ongoing and upcoming items or search whole program
+        // TODO: Include events from sessions, only include session if it has no events
+        let programSessions: Array<ProgramSession> = [];
+        let programEvents: Array<ProgramSessionEvent> = [];
+        const programTimeBoundaries: Array<number> = [
+            0, 30, 60
+        ];
+        let program = <Program
+            sessions={programSessions}
+            events={programEvents}
+            timeBoundaries={programTimeBoundaries} />;
 
         return <div className="sidebar">
             {headerBar}
