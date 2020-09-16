@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import useDocTitle from "../../../hooks/useDocTitle";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import VideoGrid from "../../Video/VideoGrid/VideoGrid";
-import "./BreakoutRoom.scss";
+import "./VideoRoom.scss";
 import SplitterLayout from "react-splitter-layout";
 import "react-splitter-layout/lib/index.css";
 
@@ -10,15 +10,15 @@ interface Props {
     roomId: string;
 }
 
-export default function BreakoutRoom(props: Props) {
+export default function VideoRoom(props: Props) {
     const [size, setSize] = useState(30);
 
     const docTitle = useDocTitle();
     useEffect(() => {
-        docTitle.set("Breakout Room Y");
+        docTitle.set("Video Room Y");
     }, [docTitle]);
 
-    return <div className="breakout-room">
+    return <div className="video-room">
         <SplitterLayout
             vertical={true}
             percentage={true}

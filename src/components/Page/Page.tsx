@@ -8,10 +8,10 @@ import LoggedInWelcome from '../Pages/LoggedInWelcome/LoggedInWelcome';
 import useDocTitle from '../../hooks/useDocTitle';
 import { Switch, Route, RouteComponentProps } from 'react-router-dom';
 import ChatView from '../Pages/ChatView/ChatView';
-import BreakoutRoom from '../Pages/BreakoutRoom/BreakoutRoom';
+import VideoRoom from '../Pages/VideoRoom/VideoRoom';
 import NotFound from '../Pages/NotFound/NotFound';
 import AllChats from '../Pages/AllChats/AllChats';
-import AllBreakoutRooms from '../Pages/AllBreakoutRooms/AllBreakoutRooms';
+import AllVideoRooms from '../Pages/AllVideoRooms/AllVideoRooms';
 
 interface Props {
     doLogin: doLoginF;
@@ -35,10 +35,10 @@ function Page(props: Props) {
                 <ChatView chatId={props.match.params.chatId} />}
             />
             <Route path="/chat" component={AllChats} />
-            <Route path="/breakout/:roomId" component={(props: RouteComponentProps<any>) =>
-                <BreakoutRoom roomId={props.match.params.roomId} />}
+            <Route path="/room/:roomId" component={(props: RouteComponentProps<any>) =>
+                <VideoRoom roomId={props.match.params.roomId} />}
             />
-            <Route path="/breakout" component={AllBreakoutRooms} />
+            <Route path="/room" component={AllVideoRooms} />
             <Route path="/" component={NotFound} />
         </Switch>;
     }

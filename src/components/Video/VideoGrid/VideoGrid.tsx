@@ -5,7 +5,7 @@ interface Props {
     roomId: string;
 }
 
-export default function BreakoutRoom(props: Props) {
+export default function VideoRoom(props: Props) {
     return <div className="video-grid">
         VIDEO GRID {props.roomId}
     </div>;

@@ -4,7 +4,7 @@ import useDocTitle from "../../../hooks/useDocTitle";
 export default function ChatView() {
     const docTitle = useDocTitle();
     useEffect(() => {
-        docTitle.set("All Breakout Rooms");
+        docTitle.set("All Video Rooms");
     }, [docTitle]);
-    return <>All Breakout Rooms</>;
+    return <>All Video Rooms</>;
 }
