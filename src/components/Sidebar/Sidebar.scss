@@ -196,7 +196,7 @@
 
                 h2 {
                     font-size: inherit;
-                    display: inline;
+                    display  : inline;
                 }
 
                 .fas {
@@ -241,15 +241,16 @@
         }
 
         .menu-item {
-            margin-top: 0.3ex;
-            padding   : 0 0.3em 0.1em 0.2em;
-            display   : inline-block;
-            color     : inherit;
-            border    : none;
-            width     : 100%;
+            margin-top     : 0.3ex;
+            padding        : 0 0.3em 0.1em 0.2em;
+            display        : inline-block;
+            color          : inherit;
+            border         : none;
+            width          : 100%;
             text-decoration: none;
 
-            &:hover, &:focus {
+            &:hover,
+            &:focus {
                 text-decoration: none;
             }
 
@@ -286,7 +287,7 @@
                 display: block;
 
                 ul {
-                    margin: 0.4ex 0 0.4ex 0;
+                    margin         : 0.4ex 0 0.4ex 0;
                     columns        : 2;
                     -webkit-columns: 2;
                     -moz-columns   : 2;
@@ -304,8 +305,8 @@
     }
 
     .program {
-        margin-top: 1ex;
-        margin-left: -18px;
+        margin-top  : 1ex;
+        margin-left : -18px;
         margin-right: 2px;
 
         .group {
@@ -317,39 +318,46 @@
             }
 
             .time {
-                text-align: right;
+                text-align    : right;
                 text-transform: uppercase;
-                font-style: italic;
-                font-size: 80%;
-                margin-bottom: 1ex;
+                font-style    : italic;
+                font-size     : 80%;
+                margin-bottom : 1ex;
             }
 
             ul {
                 list-style-type: none;
-                padding: 0;
-                margin: 0;
+                padding        : 0;
+                margin         : 0;
 
                 li {
-                    margin: 1ex 0 1ex 0;
+                    margin : 1ex 0 1ex 0;
                     display: flex;
 
                     a {
-                        display: inline-block;
-                        color: inherit;
+                        display     : inline-block;
+                        color       : inherit;
                         margin-right: auto;
 
                         h3 {
                             font-size: 90%;
-                            display: inline-block;
-                            margin: 0;
-                            padding: 0;
+                            display  : inline-block;
+                            margin   : 0;
+                            padding  : 0;
+                            width: auto;
+
+                            display: -webkit-box;
+                            -webkit-box-orient: vertical;
+                            -webkit-line-clamp: 2;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
                         }
                     }
 
                     .track {
-                        display: inline-block;
+                        display  : inline-block;
                         font-size: 75%;
-                        color: rgba(255, 255, 255, 0.75);
+                        color    : rgba(255, 255, 255, 0.75);
                     }
                 }
             }

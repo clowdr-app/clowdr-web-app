@@ -181,7 +181,10 @@ function Sidebar(props: Props) {
             { title: "Session 2", startTime: new Date(Date.now() + (1 * tenMins)), endTime: new Date(Date.now() + (2 * tenMins)) },
             { title: "Session 3", startTime: new Date(Date.now() + (1 * tenMins)), endTime: new Date(Date.now() + (3 * tenMins)) },
             { title: "Session 4", startTime: new Date(Date.now() + (3 * tenMins)), endTime: new Date(Date.now() + (4 * tenMins)) },
-            { title: "Session 5", startTime: new Date(Date.now() + (5 * tenMins)), endTime: new Date(Date.now() + (6 * tenMins)) },
+            {
+                title: "Session 5 with a really really long title just like authors love to use, it's so long I don't even know (this is the point it cuts off in normal browsers at the smallest menu width)",
+                startTime: new Date(Date.now() + (5 * tenMins)), endTime: new Date(Date.now() + (6 * tenMins))
+            },
             { title: "Session 6", startTime: new Date(Date.now() + (6 * tenMins)), endTime: new Date(Date.now() + (8 * tenMins)) },
             { title: "Session 7", startTime: new Date(Date.now() + (12 * tenMins)), endTime: new Date(Date.now() + (13 * tenMins)) },
         ] as unknown as Array<ProgramSession>;
