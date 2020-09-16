@@ -4,7 +4,6 @@ const RelationsToTableNames = {
         conference: "Conference"
     },
     Conference: {
-        details: "PrivilegedConferenceDetails",
         admin: "_User",
         autoSubscribeToTextChats: "TextChat"
     },
@@ -21,8 +20,6 @@ const RelationsToTableNames = {
         conference: "Conference",
         authors: "ProgramPerson",
         track: "ProgramTrack",
-        attachments: "ProgramItemAttachment",
-        events: "ProgramSessionEvent",
         session: "ProgramSession"
     },
     ProgramItemAttachment: {
@@ -31,20 +28,16 @@ const RelationsToTableNames = {
     },
     ProgramPerson: {
         conference: "Conference",
-        items: "ProgramItem",
         profile: "UserProfile",
     },
     ProgramRoom: {
         conference: "Conference",
         zoomRoom: "ZoomRoom",
-        sessions: "ProgramSession",
         textChat: "TextChat",
         videoRoom: "VideoRoom",
     },
     ProgramSession: {
         conference: "Conference",
-        events: "ProgramSessionEvent",
-        items: "ProgramItem",
         track: "ProgramTrack",
         room: "ProgramRoom"
     },
@@ -52,12 +45,9 @@ const RelationsToTableNames = {
         conference: "Conference",
         item: "ProgramItem",
         session: "ProgramSession",
-        track: "ProgramTrack"
     },
     ProgramTrack: {
         conference: "Conference",
-        items: "ProgramItem",
-        sessions: "ProgramSession"
     },
     Registration: {
         conference: "Conference",
@@ -77,18 +67,15 @@ const RelationsToTableNames = {
         conference: "Conference",
         presence: "UserPresence",
         primaryFlair: "Flair",
-        programPersons: "ProgramPerson",
         user: "_User",
         flairs: "Flair"
     },
     ZoomHostAccount: {
         conference: "Conference",
-        rooms: "ZoomRoom"
     },
     ZoomRoom: {
         conference: "Conference",
         hostAccount: "ZoomHostAccount",
-        programRoom: "ProgramRoom"
     },
     TextChat: {
         conference: "Conference"
@@ -431,6 +418,47 @@ function generateUserProfiles() {
     return result;
 }
 
+
+
+function generateProgramItem() {
+    let result = [];
+
+    return result;
+}
+
+function generateProgramPerson() {
+    let result = [];
+
+    return result;
+}
+
+function generateProgramRoom() {
+    let result = [];
+
+    return result;
+}
+
+function generateProgramSession() {
+    let result = [];
+
+    return result;
+}
+
+function generateProgramSessionEvent() {
+    let result = [];
+
+    return result;
+}
+
+function generateProgramTrack() {
+    let result = [];
+
+    return result;
+}
+
+
+
+
 function convertObjectToMongoJSON(tableName, item, result) {
     let RelationFields = RelationsToTableNames[tableName];
     let object = {
@@ -561,6 +589,24 @@ module.exports = {
 
         result.UserProfile = generateUserProfiles();
         convertToMongoJSON("UserProfile", result.UserProfile, allItems);
+
+        result.ProgramItem = generateProgramItem();
+        convertToMongoJSON("ProgramItem", result.ProgramItem, allItems);
+
+        result.ProgramPerson = generateProgramPerson();
+        convertToMongoJSON("ProgramPerson", result.ProgramPerson, allItems);
+
+        result.ProgramRoom = generateProgramRoom();
+        convertToMongoJSON("ProgramRoom", result.ProgramRoom, allItems);
+
+        result.ProgramSession = generateProgramSession();
+        convertToMongoJSON("ProgramSession", result.ProgramSession, allItems);
+
+        result.ProgramSessionEvent = generateProgramSessionEvent();
+        convertToMongoJSON("ProgramSessionEvent", result.ProgramSessionEvent, allItems);
+
+        result.ProgramTrack = generateProgramTrack();
+        convertToMongoJSON("ProgramTrack", result.ProgramTrack, allItems);
 
         return {
             data: result,

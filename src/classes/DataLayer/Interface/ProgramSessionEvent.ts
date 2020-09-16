@@ -40,7 +40,7 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get track(): Promise<ProgramTrack> {
-        return this.uniqueRelated("track");
+        return this.uniqueRelated("session").then(x => x.track);
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

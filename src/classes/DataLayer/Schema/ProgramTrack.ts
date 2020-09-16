@@ -1,5 +1,5 @@
 import { Base } from ".";
-import { Conference, ProgramItem, ProgramSession } from "../Interface";
+import { Conference } from "../Interface";
 
 export default interface Schema extends Base {
     colour: string;
@@ -9,6 +9,4 @@ export default interface Schema extends Base {
     shortName: string;
 
     conference: Promise<Conference>;
-    items: Promise<Array<ProgramItem>>;
-    sessions: Promise<Array<ProgramSession>>;
 }

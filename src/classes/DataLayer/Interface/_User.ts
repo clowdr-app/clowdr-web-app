@@ -35,7 +35,7 @@ export default class Class extends UncachedBase<K> implements SchemaT {
     }
 
     get profiles(): Promise<UserProfile[]> {
-        return this.nonUniqueRelated("profiles");
+        return StaticBaseImpl.getAllByField("UserProfile", "user", this.id);
     }
 
     static async logIn(email: string, password: string, options: RequestOptions = {}): Promise<Class> {

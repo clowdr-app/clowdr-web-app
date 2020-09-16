@@ -1,5 +1,5 @@
 import { Base } from ".";
-import { Conference, ProgramRoom, ZoomHostAccount } from "../Interface";
+import { Conference, ZoomHostAccount } from "../Interface";
 
 export default interface Schema extends Base {
     endTime: Date;
@@ -14,5 +14,4 @@ export default interface Schema extends Base {
 
     conference: Promise<Conference>;
     hostAccount: Promise<ZoomHostAccount>;
-    programRoom: Promise<ProgramRoom>;
 }

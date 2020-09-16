@@ -2,6 +2,7 @@ import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
 import { UserProfile } from ".";
+import assert from "assert";
 
 type SchemaT = Schema.UserPresence;
 type K = "UserPresence";
@@ -21,7 +22,12 @@ export default class Class extends UncachedBase<K> implements SchemaT {
     }
 
     get profile(): Promise<UserProfile> {
-        return this.uniqueRelated("profile");
+        return StaticBaseImpl
+            .getByField<"UserProfile", "presence", UserProfile>("UserProfile", "presence", this.id)
+            .then(result => {
+                assert(result);
+                return result;
+            });
     }
 
     static get(id: string, conferenceId?: string): Promise<Class | null> {

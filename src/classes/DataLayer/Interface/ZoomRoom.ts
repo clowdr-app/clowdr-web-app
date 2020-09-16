@@ -1,7 +1,7 @@
 import * as Schema from "../Schema";
 import { PromisesRemapped } from "../WholeSchema";
 import { StaticUncachedBase, StaticBaseImpl, UncachedBase } from "./Base";
-import { Conference, ZoomHostAccount, ProgramRoom } from ".";
+import { Conference, ZoomHostAccount } from ".";
 
 type SchemaT = Schema.ZoomRoom;
 type K = "ZoomRoom";
@@ -54,10 +54,6 @@ export default class Class extends UncachedBase<K> implements SchemaT {
 
     get hostAccount(): Promise<ZoomHostAccount> {
         return this.uniqueRelated("hostAccount");
-    }
-
-    get programRoom(): Promise<ProgramRoom> {
-        return this.uniqueRelated("programRoom");
     }
 
     static get(id: string, conferenceId?: string): Promise<Class | null> {

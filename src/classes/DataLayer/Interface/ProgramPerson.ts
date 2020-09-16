@@ -20,7 +20,8 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get items(): Promise<ProgramItem[]> {
-        return this.nonUniqueRelated("items");
+        // TODO: Test this - really, test this
+        return StaticBaseImpl.getAllByField("ProgramItem", "authors", [this.id], this.conferenceId);
     }
 
     get conference(): Promise<Conference> {

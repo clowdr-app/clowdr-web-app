@@ -40,11 +40,11 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get sessions(): Promise<Array<ProgramSession>> {
-        return this.uniqueRelated("sessions");
+        return StaticBaseImpl.getAllByField("ProgramSession", "track", this.id, this.conferenceId);
     }
 
     get items(): Promise<Array<ProgramItem>> {
-        return this.uniqueRelated("items");
+        return StaticBaseImpl.getAllByField("ProgramItem", "track", this.id, this.conferenceId);
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

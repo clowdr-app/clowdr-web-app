@@ -44,11 +44,11 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get attachments(): Promise<ProgramItemAttachment[]> {
-        return this.nonUniqueRelated("attachments");
+        return StaticBaseImpl.getAllByField("ProgramItemAttachment", "programItem", this.id, this.conferenceId);
     }
 
     get events(): Promise<ProgramSessionEvent[]> {
-        return this.uniqueRelated("events");
+        return StaticBaseImpl.getAllByField("ProgramSessionEvent", "session", this.id, this.conferenceId);
     }
 
     get session(): Promise<ProgramSession> {

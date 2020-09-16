@@ -37,12 +37,15 @@ export type PromisesRemapped<T>
         : T[K]
     };
 
+/**
+ * Remember to update the copy in initTestDB.js when modifying this.
+ * This copy is type-checked, so should be treated as the root of truth.
+ */
 export const RelationsToTableNames: RelationsToTableNamesT = {
     AttachmentType: {
         conference: "Conference"
     },
     Conference: {
-        details: "PrivilegedConferenceDetails",
         admin: "_User",
         autoSubscribeToTextChats: "TextChat"
     },
@@ -59,8 +62,6 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         conference: "Conference",
         authors: "ProgramPerson",
         track: "ProgramTrack",
-        attachments: "ProgramItemAttachment",
-        events: "ProgramSessionEvent",
         session: "ProgramSession"
     },
     ProgramItemAttachment: {
@@ -69,20 +70,16 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
     },
     ProgramPerson: {
         conference: "Conference",
-        items: "ProgramItem",
         profile: "UserProfile",
     },
     ProgramRoom: {
         conference: "Conference",
         zoomRoom: "ZoomRoom",
-        sessions: "ProgramSession",
         textChat: "TextChat",
         videoRoom: "VideoRoom",
     },
     ProgramSession: {
         conference: "Conference",
-        events: "ProgramSessionEvent",
-        items: "ProgramItem",
         track: "ProgramTrack",
         room: "ProgramRoom"
     },
@@ -90,12 +87,9 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         conference: "Conference",
         item: "ProgramItem",
         session: "ProgramSession",
-        track: "ProgramTrack"
     },
     ProgramTrack: {
         conference: "Conference",
-        items: "ProgramItem",
-        sessions: "ProgramSession"
     },
     Registration: {
         conference: "Conference",
@@ -115,18 +109,15 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
         conference: "Conference",
         presence: "UserPresence",
         primaryFlair: "Flair",
-        programPersons: "ProgramPerson",
         user: "_User",
         flairs: "Flair"
     },
     ZoomHostAccount: {
         conference: "Conference",
-        rooms: "ZoomRoom"
     },
     ZoomRoom: {
         conference: "Conference",
         hostAccount: "ZoomHostAccount",
-        programRoom: "ProgramRoom"
     },
     TextChat: {
         conference: "Conference"

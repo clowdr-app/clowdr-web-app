@@ -32,11 +32,11 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get events(): Promise<ProgramSessionEvent[]> {
-        return this.nonUniqueRelated("events");
+        return StaticBaseImpl.getAllByField("ProgramSessionEvent", "session", this.id, this.conferenceId);
     }
 
     get items(): Promise<ProgramItem[]> {
-        return this.nonUniqueRelated("items");
+        return StaticBaseImpl.getAllByField("ProgramItem", "session", this.id, this.conferenceId);
     }
 
     get room(): Promise<ProgramRoom> {

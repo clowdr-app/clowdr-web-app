@@ -76,7 +76,7 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get programPersons(): Promise<ProgramPerson[]> {
-        return this.nonUniqueRelated("programPersons");
+        return StaticBaseImpl.getAllByField("ProgramPerson", "profile", this.id, this.conferenceId);
     }
 
     get user(): Promise<_User> {

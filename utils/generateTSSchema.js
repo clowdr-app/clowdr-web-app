@@ -80,7 +80,7 @@ function determineFieldType(schema, fieldName) {
         // Relation
         tsType = `Promise<Array<${tsType}>${optional ? " | undefined" : ""}>`;
     }
-    
+
     return {
         type: tsType,
         importType: tsImportType
@@ -112,22 +112,26 @@ function generateTSSchema(jsonSchemaText) {
     ordinaryFields = ordinaryFields.sort((x, y) => x.name.localeCompare(y.name));
     relatedFields = relatedFields.sort((x, y) => x.name.localeCompare(y.name));
 
-    let result = 
-`import { Base } from ".";
-import { ${Array.from(importTypes)
+    let intfImportLine
+        = importTypes.size > 0
+            ? `\nimport { ${Array.from(importTypes)
             .filter(x => x !== "Parse.File")
             .sort((x, y) => x.localeCompare(y))
-            .reduce((acc, x) => `${acc}, ${x}`)} } from "../Interface";
+                .reduce((acc, x) => `${acc}, ${x}`)} } from "../Interface";`
+        : "";
+
+    let result =
+        `import { Base } from ".";${intfImportLine}
 ${importTypes.has("Parse.File") ? `import Parse from "parse";\n` : ""}
 export default interface Schema extends Base {
 ${ordinaryFields.reduce((acc, x) => {
-    let line = `${x.name}: ${x.type};`;
-    return `${acc}\n    ${line}`;
-}, "").substr(1)}
+                let line = `${x.name}: ${x.type};`;
+                return `${acc}\n    ${line}`;
+            }, "").substr(1)}
 ${relatedFields.reduce((acc, x) => {
-    let line = `${x.name}: ${x.type};`;
-    return `${acc}\n    ${line}`;
-}, "")}
+                let line = `${x.name}: ${x.type};`;
+                return `${acc}\n    ${line}`;
+            }, "")}
 `;
     result = result.trim() + "\n}\n";
 
@@ -153,7 +157,8 @@ function main() {
     jsonSchemaLines = jsonSchemaLines.map(x => x.trim()).filter(x => x.length > 0);
     let tsSchemas = jsonSchemaLines
         .map(generateTSSchema)
-        .sort((x, y) => x.tableName.localeCompare(y.tableName));
+        .sort((x, y) => x.tableName.localeCompare(y.tableName))
+        .filter(x => x.tableName !== "_Session");
     tsSchemas.forEach(x => {
         let outFilePath = path.join(outDir, `${x.tableName}.ts`);
         fs.writeFileSync(outFilePath, x.tsSchema);
@@ -163,7 +168,7 @@ function main() {
         tsSchemas.reduce((acc, x) => {
             let line = `export type { default as ${x.tableName} } from "./${x.tableName}";`;
             return `${acc}\n${line}`;
-        }, ""));
+        }, "") + "\n");
 }
 
 main();

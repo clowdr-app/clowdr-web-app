@@ -29,7 +29,7 @@ export default class Class extends UncachedBase<K> implements SchemaT {
     }
 
     get rooms(): Promise<Array<ZoomRoom>> {
-        return this.uniqueRelated("rooms");
+        return StaticBaseImpl.getAllByField("ZoomRoom", "hostAccount", this.id);
     }
 
     static get(id: string, conferenceId?: string): Promise<Class | null> {

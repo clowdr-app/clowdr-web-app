@@ -1,5 +1,5 @@
 import { Base } from ".";
-import { Conference, ZoomRoom } from "../Interface";
+import { Conference } from "../Interface";
 
 export default interface Schema extends Base {
     email: string;
@@ -7,5 +7,4 @@ export default interface Schema extends Base {
     password: string;
 
     conference: Promise<Conference>;
-    rooms: Promise<Array<ZoomRoom>>;
 }

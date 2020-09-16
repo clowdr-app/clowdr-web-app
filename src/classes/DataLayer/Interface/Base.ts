@@ -218,6 +218,57 @@ export abstract class StaticBaseImpl {
             });
         }
     }
+
+    static async getAllByField<
+        K extends WholeSchemaKeys,
+        S extends KnownKeys<LocalDataT[K]>,
+        T extends IBase<K>
+    >(
+        tableName: K,
+        fieldName: S,
+        searchFor: LocalDataT[K][S],
+        conferenceId?: string
+    ): Promise<Array<T>> {
+        // TODO: Can we put this through the cache?
+        // Only if we can define relevant indexes on the cache (within indexeddb)
+        let query = new Parse.Query<Parse.Object<PromisesRemapped<WholeSchema[K]["value"]>>>(tableName);
+        if (fieldName in RelationsToTableNames[tableName]) {
+            if (searchFor instanceof Array) {
+                // TODO: Test this - really, test this, and if it doesn't work - fix it in getByField too
+
+                let _searchFor: Array<string> = searchFor;
+                query.containedIn(fieldName as any, _searchFor.map(x => {
+                    return new Parse.Object(RelationsToTableNames[tableName][fieldName as any], {
+                        id: x
+                    }) as any;
+                }));
+            }
+            else {
+                query.equalTo(fieldName as any, new Parse.Object(RelationsToTableNames[tableName][fieldName as any], {
+                    id: searchFor
+                }) as any);
+            }
+        }
+        else {
+            query.equalTo(fieldName as any, searchFor as any);
+        }
+        if (conferenceId) {
+            query.equalTo("conference" as any, new Parse.Object("Conference", { id: conferenceId }) as any);
+        }
+
+        return await query.map(async parse => {
+            return StaticBaseImpl.wrapItem<K, T>(tableName, parse);
+        }).catch(reason => {
+            console.warn("Fetch by field from database failed", {
+                tableName: tableName,
+                fieldName: fieldName,
+                searchFor: searchFor,
+                reason: reason
+            });
+
+            return [];
+        });
+    }
 }
 
 /**
