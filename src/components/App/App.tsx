@@ -216,6 +216,11 @@ export default function App(props: Props) {
 
     async function doLogout() {
         try {
+            if (currentConferenceId) {
+                let cache = await Caches.get(currentConferenceId);
+                cache.IsUserAuthenticated = false;
+            }
+
             await Parse.User.logOut();
         }
         finally {
