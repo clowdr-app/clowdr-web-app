@@ -175,10 +175,19 @@ function Sidebar(props: Props) {
 
         // TODO: Fetch either ongoing and upcoming items or search whole program
         // TODO: Include events from sessions, only include session if it has no events
-        let programSessions: Array<ProgramSession> = [];
-        let programEvents: Array<ProgramSessionEvent> = [];
+        const tenMins = 1000 * 60 * 10;
+        let programSessions: Array<ProgramSession> = [
+            { title: "Session 1", startTime: new Date(Date.now() + (-1 * tenMins)), endTime: new Date(Date.now() + (1 * tenMins)) },
+            { title: "Session 2", startTime: new Date(Date.now() + (1 * tenMins)), endTime: new Date(Date.now() + (2 * tenMins)) },
+            { title: "Session 3", startTime: new Date(Date.now() + (1 * tenMins)), endTime: new Date(Date.now() + (3 * tenMins)) },
+            { title: "Session 4", startTime: new Date(Date.now() + (3 * tenMins)), endTime: new Date(Date.now() + (4 * tenMins)) },
+            { title: "Session 5", startTime: new Date(Date.now() + (5 * tenMins)), endTime: new Date(Date.now() + (6 * tenMins)) },
+            { title: "Session 6", startTime: new Date(Date.now() + (6 * tenMins)), endTime: new Date(Date.now() + (8 * tenMins)) },
+            { title: "Session 7", startTime: new Date(Date.now() + (12 * tenMins)), endTime: new Date(Date.now() + (13 * tenMins)) },
+        ] as unknown as Array<ProgramSession>;
+        let programEvents: Array<ProgramSessionEvent> = [] as Array<ProgramSessionEvent>;
         const programTimeBoundaries: Array<number> = [
-            0, 30, 60
+            0, 15, 30, 60, 120
         ];
         let program = <Program
             sessions={programSessions}

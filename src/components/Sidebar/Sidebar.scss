@@ -192,7 +192,12 @@
                 margin-right : auto;
                 padding-right: 0.4em;
 
-                font-size: 110%;
+                font-size: 100%;
+
+                h2 {
+                    font-size: inherit;
+                    display: inline;
+                }
 
                 .fas {
                     width : 20px;
@@ -292,6 +297,59 @@
                             list-style-type: '+';
                             padding-left   : 0.5em;
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    .program {
+        margin-top: 1ex;
+        margin-left: -18px;
+        margin-right: 2px;
+
+        .group {
+            margin-bottom: 1ex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            .time {
+                text-align: right;
+                text-transform: uppercase;
+                font-style: italic;
+                font-size: 80%;
+                margin-bottom: 1ex;
+            }
+
+            ul {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+
+                li {
+                    margin: 1ex 0 1ex 0;
+                    display: flex;
+
+                    a {
+                        display: inline-block;
+                        color: inherit;
+                        margin-right: auto;
+
+                        h3 {
+                            font-size: 90%;
+                            display: inline-block;
+                            margin: 0;
+                            padding: 0;
+                        }
+                    }
+
+                    .track {
+                        display: inline-block;
+                        font-size: 75%;
+                        color: rgba(255, 255, 255, 0.75);
                     }
                 }
             }

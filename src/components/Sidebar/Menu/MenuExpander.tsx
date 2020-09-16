@@ -120,7 +120,7 @@ export default function MenuExpander(props: Props) {
         <div className={"expander-controls"}>
             <button className="expansion-control" onClick={toggleExpansion}>
                 {props.isOpen ? <i className="fas fa-caret-down"></i> : <i className="fas fa-caret-right"></i>}
-                <span>{props.title}</span>
+                <h2>{props.title}</h2>
             </button>
             {buttonElems.reduceRight((acc, x) => <>{acc}{x}</>, <></>)}
         </div>
