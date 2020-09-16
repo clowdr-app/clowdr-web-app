@@ -121,10 +121,10 @@
     .sidebar-scrollable {
         grid-area: menu;
 
-        display           : grid;
-        grid-template-rows: auto min-content;
+        display              : grid;
+        grid-template-rows   : auto min-content;
         grid-template-columns: 0.5em auto 0.5em;
-        grid-template-areas:
+        grid-template-areas  :
             ". menu ."
             "footer footer footer";
 
@@ -153,6 +153,42 @@
 
                 margin-right: auto;
             }
+        }
+    }
+}
+
+.menu-expander {
+    display: inline-block;
+    width  : 100%;
+    margin : 0;
+    padding: 0;
+
+    height    : auto;
+    overflow  : hidden;
+    min-height: 0;
+    max-height: auto;
+
+    .expander-controls {
+        .expansion-control {
+            border: none;
+            color: inherit;
+            /* Enable the outline to show when focus in FF */
+            margin: 1px;
+
+            .fas {
+                width: 20px;
+                margin: 0 0.2em 0 0em;
+            }
+        }
+    }
+
+    .expander-contents {
+        height    : auto;
+        max-height: 100%;
+        overflow  : hidden;
+
+        &.closed {
+            max-height: 0;
         }
     }
 }

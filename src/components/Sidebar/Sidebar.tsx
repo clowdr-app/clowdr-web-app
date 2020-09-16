@@ -4,6 +4,9 @@ import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import FooterLinks from '../FooterLinks/FooterLinks';
 import { Link } from 'react-router-dom';
+import MenuExpander from "./Menu/MenuExpander";
+import MenuGroup from './Menu/MenuGroup';
+import Program from './Program';
 
 interface Props {
     open: boolean,
@@ -24,18 +27,38 @@ function Sidebar(props: Props) {
     </div>;
 
     if (props.open) {
-        let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.name}</Link></h1>;
+        let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.shortName}</Link></h1>;
         let headerBar = <div className="sidebar-header">
             {sideBarButton}
             {sideBarHeading}
         </div>
+
         return <div className="sidebar">
             {headerBar}
             <div className="sidebar-scrollable">
                 <div className="menu">
-                        fsasdfaslkjh sa fhjkaslfdhljsakjlfkshlafk jlsaflkjashflk sjakjasl fkjlsadfkljasdf kljsdaflkjhsfl
-                        lkasj asdkfhasdkjf ksjlafkljhsafkjhlsadkjlsadkjfsadklj sadklj sadklsdk ajs kalddsk lf
-                        sf lkhjadfhljksadhfljksd lhj lkjshf alk jhf sdjklh sdaflkj sda fklj h
+                    <MenuGroup>
+                        <></>
+                    </MenuGroup>
+
+                    <MenuExpander title="Chats" defaultIsOpen={true} buttons={[]}>
+                        <MenuGroup>
+                            <>sdfasf  afsdf asdfsda fasf sadf asdf safd asdf asd
+                              asdfasd fsa fasf sa fdsa dffdas fsadf asdf sadf 
+                            as fsdf asdf asdf asdf sadfas dfsdfas fsdf asdfasdf
+                            asdfsdfasdfasdfasdfasdfwertrergetrwhge</>
+                        </MenuGroup>
+                    </MenuExpander>
+
+                    <MenuExpander title="Rooms" defaultIsOpen={true} buttons={[]}>
+                        <MenuGroup>
+                            <></>
+                        </MenuGroup>
+                    </MenuExpander>
+
+                    <MenuExpander title="Program" defaultIsOpen={true} buttons={[]}>
+                        <Program />
+                    </MenuExpander>
                 </div>
                     
                 <FooterLinks doLogout={mUser ? props.doLogout : undefined} />
