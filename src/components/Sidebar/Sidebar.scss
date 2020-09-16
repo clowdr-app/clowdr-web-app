@@ -169,15 +169,30 @@
     max-height: auto;
 
     .expander-controls {
-        .expansion-control {
+        display: flex;
+        justify-content: flex-end;
+
+        button {
+            color : inherit;
             border: none;
-            color: inherit;
-            /* Enable the outline to show when focus in FF */
-            margin: 1px;
+            /* Enable the outline to show when focused. */
+            margin: 2px;
+        }
+
+        .expansion-control {
+            margin-right: auto;
 
             .fas {
-                width: 20px;
+                width : 20px;
                 margin: 0 0.2em 0 0em;
+            }
+        }
+
+        .search {
+            display: inline-block;
+
+            button {
+                font-size: $font-sm;
             }
         }
     }
