@@ -3,14 +3,15 @@ import useDocTitle from "../../../hooks/useDocTitle";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import VideoGrid from "../../Video/VideoGrid/VideoGrid";
 import "./BreakoutRoom.scss";
-import SplitPane, { Size } from "react-split-pane";
+import SplitterLayout from "react-splitter-layout";
+import "react-splitter-layout/lib/index.css";
 
 interface Props {
     roomId: string;
 }
 
 export default function BreakoutRoom(props: Props) {
-    const [split, setSplit] = useState<Size>("70%");
+    const [size, setSize] = useState(30);
 
     const docTitle = useDocTitle();
     useEffect(() => {
@@ -18,25 +19,24 @@ export default function BreakoutRoom(props: Props) {
     }, [docTitle]);
 
     return <div className="breakout-room">
-        <SplitPane split="horizontal" size={split} onChange={(size: Size) => setSplit(size)}>
+        <SplitterLayout
+            vertical={true}
+            percentage={true}
+            ref={component => { component?.setState({ secondaryPaneSize: size }) }}
+            onSecondaryPaneSizeChange={newSize => setSize(newSize)}
+        >
             <div className="split top-split">
                 <VideoGrid roomId={props.roomId} />
-                <button
-                    className="split-button maximize-button"
-                    onClick={() => setSplit(0)}
-                >
+                <button onClick={() => setSize(100)}>
                     &#9650;
                 </button>
             </div>
             <div className="split bottom-split">
-                <button
-                    className="split-button minimize-button"
-                    onClick={() => setSplit("100%")}
-                >
+                <button onClick={() => setSize(0)}>
                     &#9660;
                 </button>
                 <ChatFrame chatId="TODO" />
             </div>
-        </SplitPane>
+        </SplitterLayout>
     </div>;
 }
