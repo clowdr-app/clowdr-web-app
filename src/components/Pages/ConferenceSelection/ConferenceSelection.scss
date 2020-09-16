@@ -16,14 +16,13 @@
 
         .after-load-content {
             &.after-load-hidden {
-                opacity  : 0;
-                transform: translateY(mm(8));
+                opacity       : 0;
+                transform     : translateY(mm(8));
             }
 
-            opacity  : 1;
-            transform: translateY(0);
-            transition : opacity 0.5s ease-in-out,
-            transform 0.7s ease-in-out;
+            opacity        : 1;
+            transform      : translateY(0);
+            transition     : opacity 0.5s ease-in-out transform 0.7s ease-in-out;
         }
     }
 
