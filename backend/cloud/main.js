@@ -1,3 +1,5 @@
+require("./cacheStatus")
+
 require("./registrations")
 require("./presence")
 require("./program")
