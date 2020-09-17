@@ -100,6 +100,9 @@ function Sidebar(props: Props) {
                     setChatSearch(event.target.value);
                     return event.target.value;
                 },
+                onSearchOpen: () => {
+                    setChatsIsOpen(true);
+                },
                 onSearchClose: () => {
                     setChatSearch(null);
                 }
@@ -114,6 +117,9 @@ function Sidebar(props: Props) {
                     setRoomSearch(event.target.value);
                     return event.target.value;
                 },
+                onSearchOpen: () => {
+                    setRoomsIsOpen(true);
+                },
                 onSearchClose: () => {
                     setRoomSearch(null);
                 }
@@ -127,6 +133,9 @@ function Sidebar(props: Props) {
                 onSearch: (event) => {
                     setProgramSearch(event.target.value);
                     return event.target.value;
+                },
+                onSearchOpen: () => {
+                    setProgramIsOpen(true);
                 },
                 onSearchClose: () => {
                     setProgramSearch(null);

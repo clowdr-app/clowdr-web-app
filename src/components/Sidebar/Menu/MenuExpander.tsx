@@ -41,7 +41,7 @@ export default function MenuExpander(props: Props) {
         if (isSearchOpen) {
             searchBoxRef.current?.focus();
         }
-    });
+    }, [isSearchOpen]);
 
     // TODO: 'X' button to close search
     // <i class="fas fa-times-circle"></i>
