@@ -1,0 +1,72 @@
+@import "../../../styles/util";
+
+.login {
+    margin-top    : mm(20);
+    display       : flex;
+    flex-direction: column;
+    text-align    : center;
+
+    h1 {
+        font-size: $font-3xl;
+    }
+
+    p {
+        margin-top: mm(4);
+        color     : $gray-2;
+    }
+
+    form {
+        display       : flex;
+        flex-direction: column;
+        width         : 50%;
+        margin        : 0 auto;
+
+        .email-box,
+        .password-box {
+            padding      : mm(2) mm(2);
+            border-radius: radius(2);
+            border       : 2px solid $gray-3;
+        }
+
+        .password-box {
+            margin-top: mm(2);
+        }
+
+        .form-buttons {
+            display              : grid;
+            grid-template-columns: auto 50px auto;
+            grid-template-areas  : "sign-in . sign-up"
+                "reselect reselect reselect";
+            width : 70%;
+            margin: mm(4) auto 0 auto;
+
+            .sign-in {
+                grid-area: sign-in;
+            }
+
+            .sign-up {
+                grid-area: sign-up;
+            }
+
+            .sign-in,
+            .sign-up {
+                padding         : mm(2) mm(5);
+                color           : white;
+                background-color: $primary;
+                border          : none;
+                border-radius   : radius(2);
+            }
+
+            .select-another {
+                margin-top: mm(4);
+                grid-area : reselect;
+                width     : 100%;
+            }
+        }
+
+        .select-another {
+            margin : 0 auto;
+            padding: mm(2) mm(5);
+        }
+    }
+}

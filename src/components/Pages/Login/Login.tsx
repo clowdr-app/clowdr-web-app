@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import useDocTitle from "../../../hooks/useDocTitle";
+import "./Login.scss";
+import useConference from "../../../hooks/useConference";
 
 export type doLoginF = (username: string, password: string) => Promise<boolean>;
 export type clearSelectedConferenceF = () => Promise<void>;
@@ -14,6 +16,7 @@ export default function Login(props: LoginProps) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState(null as string | null);
+    const conference = useConference();
 
     const docTitle = useDocTitle();
     useEffect(() => {
@@ -57,6 +60,7 @@ export default function Login(props: LoginProps) {
         placeholder={"Email"}
         required={true}
         onChange={(e) => onChange("email", e)}
+        className="email-box"
     />;
     const passwordBox = <input
         type="password"
@@ -66,13 +70,24 @@ export default function Login(props: LoginProps) {
         placeholder={"Password"}
         required={true}
         onChange={(e) => onChange("password", e)}
+        className="password-box"
     />;
-    const loginButton = <input
-        type="submit"
-        aria-label="Sign in"
-        value="Sign in"
-    />;
+    const formButtons = <>
+        <input
+            className="sign-in"
+            type="submit"
+            aria-label="Log in"
+            value="Log in"
+        />
+        <button
+            className="sign-up"
+            aria-label="Sign up"
+        >
+            Sign up
+        </button>
+    </>;
     const selectOtherButton = <button
+        className="select-another"
         onClick={props.clearSelectedConference}
         aria-label="Select another conference">
         Select another conference
@@ -86,11 +101,15 @@ export default function Login(props: LoginProps) {
         {errorMessage}
         {emailBox}
         {passwordBox}
-        {loginButton}
-        {selectOtherButton}
+        <div className="form-buttons">
+            {formButtons}
+            {selectOtherButton}
+        </div>
     </form>;
 
-    return <section aria-labelledby="page-title" tabIndex={0}>
+    return <section aria-labelledby="page-title" tabIndex={0} className="login">
+        <h1>{conference.name}</h1>
+        <p>Please log in or sign up to join the conference</p>
         {form}
     </section>;
 }
