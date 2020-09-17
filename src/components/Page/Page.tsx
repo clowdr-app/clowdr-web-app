@@ -44,6 +44,9 @@ function Page(props: Props) {
         // TODO: Route for /legal
         // TODO: Route for /help
 
+        // TODO: Route for /session/:programSessionId (to view a session - this should work out which room to render)
+        // TODO: Route for /event/:programSessionEventId (to view an event - this should work out which room to render)
+
         contentsElem = <Switch>
             <Route exact path="/" component={LoggedInWelcome} />
             <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>

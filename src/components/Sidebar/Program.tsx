@@ -165,9 +165,8 @@ export default function Program(props: Props) {
                 items = await Promise.all(group.sessions.map(async session => {
                     let result: ItemRenderData = {
                         title: session.title,
-                        // TODO: Session url and track
-                        url: "/TODO",
-                        track: "TODO",
+                        url: `/session/${session.id}`,
+                        track: (await session.track).name,
                         isWatched: false,
                         item: { type: "session", data: session }
                     };
@@ -176,9 +175,8 @@ export default function Program(props: Props) {
                 items = items.concat(await Promise.all(group.events.map(async event => {
                     let result: ItemRenderData = {
                         title: (await event.item).title,
-                        // TODO: Event url and track
-                        url: "/TODO",
-                        track: "TODO",
+                        url: `/event/${event.id}`,
+                        track: (await event.track).shortName,
                         isWatched: false,
                         item: { type: "event", data: event }
                     };
