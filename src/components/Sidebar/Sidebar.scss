@@ -231,8 +231,8 @@
     ul.menu-group {
         display   : inline-block;
         list-style: none;
-        margin    : 0;
         padding   : 0 0 0 calc(2px + 0.25em);
+        width     : 100%;
 
         margin-bottom: 2ex;
 
@@ -240,63 +240,67 @@
             content: none;
         }
 
-        .menu-item {
-            margin-top     : 0.3ex;
-            padding        : 0 0.3em 0.1em 0.2em;
-            display        : inline-block;
-            color          : inherit;
-            border         : none;
-            width          : 100%;
-            text-decoration: none;
+        li {
+            margin-right   : 2px;
 
-            &:hover,
-            &:focus {
+            .menu-item {
+                margin-top     : 0.3ex;
+                padding        : 0 0.3em 0.1em 0.2em;
+                display        : inline-block;
+                color          : inherit;
+                border         : none;
+                width          : 100%;
                 text-decoration: none;
-            }
 
-            .head-row {
-                display: block;
+                &:hover,
+                &:focus {
+                    text-decoration: none;
+                }
 
-                .fas,
-                .far {
-                    display: inline-block;
+                .head-row {
+                    display: block;
 
-                    font-size   : 60%;
-                    width       : 10px;
-                    margin-right: 0.5em;
+                    .fas,
+                    .far {
+                        display: inline-block;
 
-                    vertical-align: middle;
+                        font-size   : 60%;
+                        width       : 10px;
+                        margin-right: 0.5em;
 
-                    &.fa-hashtag {
-                        font-size: 80%;
+                        vertical-align: middle;
+
+                        &.fa-hashtag {
+                            font-size: 80%;
+                        }
+                    }
+
+                    .title {
+                        display       : inline;
+                        vertical-align: middle;
+                        font-size     : 90%;
+
+                        &.bolded {
+                            font-weight: 900;
+                        }
                     }
                 }
 
-                .title {
-                    display       : inline;
-                    vertical-align: middle;
-                    font-size     : 90%;
+                .child-content {
+                    display: block;
 
-                    &.bolded {
-                        font-weight: 900;
-                    }
-                }
-            }
+                    ul {
+                        margin         : 0.4ex 0 0.4ex 0;
+                        columns        : 2;
+                        -webkit-columns: 2;
+                        -moz-columns   : 2;
+                        font-size      : 80%;
 
-            .child-content {
-                display: block;
-
-                ul {
-                    margin         : 0.4ex 0 0.4ex 0;
-                    columns        : 2;
-                    -webkit-columns: 2;
-                    -moz-columns   : 2;
-                    font-size      : 80%;
-
-                    li {
-                        &.plus-bullet {
-                            list-style-type: '+';
-                            padding-left   : 0.5em;
+                        li {
+                            &.plus-bullet {
+                                list-style-type: '+';
+                                padding-left   : 0.5em;
+                            }
                         }
                     }
                 }
@@ -344,20 +348,20 @@
                             display  : inline-block;
                             margin   : 0;
                             padding  : 0;
-                            width: auto;
+                            width    : auto;
 
-                            display: -webkit-box;
+                            display           : -webkit-box;
                             -webkit-box-orient: vertical;
                             -webkit-line-clamp: 2;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
+                            overflow          : hidden;
+                            text-overflow     : ellipsis;
                         }
                     }
 
                     .track {
-                        display  : inline-block;
-                        font-size: 75%;
-                        color    : rgba(255, 255, 255, 0.75);
+                        display    : inline-block;
+                        font-size  : 75%;
+                        color      : rgba(255, 255, 255, 0.75);
                         margin-left: 0.25em;
                     }
                 }
