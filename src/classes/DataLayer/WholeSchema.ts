@@ -61,8 +61,7 @@ export const RelationsToTableNames: RelationsToTableNamesT = {
     ProgramItem: {
         conference: "Conference",
         authors: "ProgramPerson",
-        track: "ProgramTrack",
-        session: "ProgramSession"
+        track: "ProgramTrack"
     },
     ProgramItemAttachment: {
         attachmentType: "AttachmentType",

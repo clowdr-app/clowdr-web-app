@@ -52,15 +52,15 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get textChat(): Promise<TextChat | undefined> {
-        return this.uniqueRelated("textChat");
+        return this.uniqueRelated("textChat").catch(() => undefined);
     }
 
     get videoRoom(): Promise<VideoRoom | undefined> {
-        return this.uniqueRelated("videoRoom");
+        return this.uniqueRelated("videoRoom").catch(() => undefined);
     }
 
     get zoomRoom(): Promise<ZoomRoom | undefined> {
-        return this.uniqueRelated("zoomRoom");
+        return this.uniqueRelated("zoomRoom").catch(() => undefined);
     }
 
     get sessions(): Promise<Array<ProgramSession>> {

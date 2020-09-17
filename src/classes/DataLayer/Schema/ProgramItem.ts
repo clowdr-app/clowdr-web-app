@@ -1,5 +1,5 @@
 import { Base } from ".";
-import { Conference, ProgramPerson, ProgramSession, ProgramTrack } from "../Interface";
+import { Conference, ProgramPerson, ProgramTrack } from "../Interface";
 import Parse from "parse";
 
 export default interface Schema extends Base {
@@ -10,6 +10,5 @@ export default interface Schema extends Base {
 
     authors: Promise<Array<ProgramPerson>>;
     conference: Promise<Conference>;
-    session: Promise<ProgramSession>;
     track: Promise<ProgramTrack>;
 }

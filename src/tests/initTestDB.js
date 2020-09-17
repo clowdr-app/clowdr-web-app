@@ -19,8 +19,7 @@ const RelationsToTableNames = {
     ProgramItem: {
         conference: "Conference",
         authors: "ProgramPerson",
-        track: "ProgramTrack",
-        session: "ProgramSession"
+        track: "ProgramTrack"
     },
     ProgramItemAttachment: {
         attachmentType: "AttachmentType",
@@ -90,6 +89,10 @@ const RelationsToTableNames = {
 
 function generateMockPassword(userId) {
     return "admin";
+}
+
+function loremIpsum() {
+    return "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.";
 }
 
 function generateAttachmentTypes() {
@@ -246,9 +249,16 @@ function generatePrivilegedConferenceDetails() {
         updatedAt: new Date(),
         value: "Welcome to this mock conference logged in text.",
 
-        _acl: {},
-        _wperm: [],
-        _rperm: [],
+        _acl: {
+            "role:mockConference2-RoleAdmin": { w: true },
+            "role:mockConference2-RoleManager": { w: true },
+            "role:mockConference2-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference2-RoleAdmin",
+            "role:mockConference2-RoleManager",
+        ],
+        _rperm: ["role:mockConference2-RoleAttendee"],
     });
 
     return result;
@@ -419,21 +429,83 @@ function generateUserProfiles() {
 }
 
 
+/********* AUTO GENERATED using utils/programCSV2TestDataGen.js ************/
 
-function generateProgramItem() {
+function generateProgramTrack() {
     let result = [];
 
-    return result;
-}
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-track-0",
+        createdAt: new Date(),
+        updatedAt: new Date(),
 
-function generateProgramPerson() {
-    let result = [];
+        colour: "#000000",
+        generateTextChatPerItem: true,
+        generateVideoRoomPerItem: true,
+        name: "Research Papers",
+        shortName: "RP",
 
-    return result;
-}
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
 
-function generateProgramRoom() {
-    let result = [];
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-track-1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+
+        colour: "#000000",
+        generateTextChatPerItem: true,
+        generateVideoRoomPerItem: true,
+        name: "Q&A",
+        shortName: "Q&A",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-track-2",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+
+        colour: "#000000",
+        generateTextChatPerItem: true,
+        generateVideoRoomPerItem: true,
+        name: "Posters",
+        shortName: "Posters",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
 
     return result;
 }
@@ -441,21 +513,1935 @@ function generateProgramRoom() {
 function generateProgramSession() {
     let result = [];
 
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-session-0",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Demo Session - NY 1",
+        endTime: "Thu Sep 17 2020 02:18:35 GMT+0100",
+        startTime: "Thu Sep 17 2020 01:33:35 GMT+0100",
+        room: "mockConference1-room-0",
+        track: "mockConference1-track-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-session-1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Demo Q&A - NY1",
+        endTime: "Thu Sep 17 2020 02:33:35 GMT+0100",
+        startTime: "Thu Sep 17 2020 01:48:35 GMT+0100",
+        room: "mockConference1-room-1",
+        track: "mockConference1-track-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-session-2",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Demo Session - NY 2",
+        endTime: "Thu Sep 17 2020 03:48:35 GMT+0100",
+        startTime: "Thu Sep 17 2020 03:03:35 GMT+0100",
+        room: "mockConference1-room-2",
+        track: "mockConference1-track-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-session-3",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Demo Q&A - NY2",
+        endTime: "Thu Sep 17 2020 04:03:35 GMT+0100",
+        startTime: "Thu Sep 17 2020 03:18:35 GMT+0100",
+        room: "mockConference1-room-3",
+        track: "mockConference1-track-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-session-4",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Demo Session - Beijing 1",
+        endTime: "Fri Sep 25 2020 11:18:35 GMT+0100",
+        startTime: "Fri Sep 25 2020 10:33:35 GMT+0100",
+        room: "mockConference1-room-4",
+        track: "mockConference1-track-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-session-5",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Demo Q&A - Beijing 1",
+        endTime: "Fri Sep 25 2020 11:33:35 GMT+0100",
+        startTime: "Fri Sep 25 2020 10:48:35 GMT+0100",
+        room: "mockConference1-room-5",
+        track: "mockConference1-track-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-session-6",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Demo Session - Beijing 2",
+        endTime: "Fri Sep 25 2020 12:48:35 GMT+0100",
+        startTime: "Fri Sep 25 2020 12:03:35 GMT+0100",
+        room: "mockConference1-room-6",
+        track: "mockConference1-track-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-session-7",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Demo Q&A - Beijing 2",
+        endTime: "Fri Sep 25 2020 13:03:35 GMT+0100",
+        startTime: "Fri Sep 25 2020 12:18:35 GMT+0100",
+        room: "mockConference1-room-7",
+        track: "mockConference1-track-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+
+    return result;
+}
+
+function generateProgramRoom() {
+    let result = [];
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-room-0",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "YT Room - NY 1",
+        textChat: undefined,
+        videoRoom: undefined,
+        zoomRoom: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-room-1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Zoom - Q&A NY 1",
+        textChat: undefined,
+        videoRoom: undefined,
+        zoomRoom: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-room-2",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "YT Room - NY 2",
+        textChat: undefined,
+        videoRoom: undefined,
+        zoomRoom: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-room-3",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Zoom - Q&A NY 2",
+        textChat: undefined,
+        videoRoom: undefined,
+        zoomRoom: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-room-4",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "YT Room - Beijing 1",
+        textChat: undefined,
+        videoRoom: undefined,
+        zoomRoom: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-room-5",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Zoom - Q&A Beijing 1",
+        textChat: undefined,
+        videoRoom: undefined,
+        zoomRoom: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-room-6",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "YT Room - Beijing 2",
+        textChat: undefined,
+        videoRoom: undefined,
+        zoomRoom: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-room-7",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Zoom - Q&A Beijing 2",
+        textChat: undefined,
+        videoRoom: undefined,
+        zoomRoom: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+
+    return result;
+}
+
+function generateProgramItem() {
+    let result = [];
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-0",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A balanced proxy technology applied to a balanced secure algorithm",
+        authors: ["mockConference1-person-0", "mockConference1-person-1", "mockConference1-person-2"],
+        track: "mockConference1-person-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "An interactive binary hypervisor applied to a conceptual big data system",
+        authors: ["mockConference1-person-3", "mockConference1-person-4"],
+        track: "mockConference1-person-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-2",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A conceptual secure agent derived from an integrated high-speed solution",
+        authors: ["mockConference1-person-5"],
+        track: "mockConference1-person-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-3",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "An integrated functional technology applied to a responsive programmable architecture",
+        authors: ["mockConference1-person-6", "mockConference1-person-7", "mockConference1-person-8", "mockConference1-person-9", "mockConference1-person-10"],
+        track: "mockConference1-person-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-4",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A conceptual proxy cache for a scalable functional algorithm",
+        authors: ["mockConference1-person-11", "mockConference1-person-12"],
+        track: "mockConference1-person-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-5",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A virtual knowledge-based interface for an open programmable data center",
+        authors: ["mockConference1-person-13", "mockConference1-person-14", "mockConference1-person-15"],
+        track: "mockConference1-person-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-6",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A virtual logical network applied to a synchronized logical algorithm",
+        authors: ["mockConference1-person-6", "mockConference1-person-7", "mockConference1-person-8", "mockConference1-person-9", "mockConference1-person-10"],
+        track: "mockConference1-person-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-7",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A parallel secure architecture for a collaborative big data network",
+        authors: ["mockConference1-person-11", "mockConference1-person-12"],
+        track: "mockConference1-person-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-8",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "An optimized digital compiler related to a meta-level watermarking preprocessor",
+        authors: ["mockConference1-person-13", "mockConference1-person-14", "mockConference1-person-15"],
+        track: "mockConference1-person-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-9",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A meta-level distributed architecture derived from a collaborative functional data center",
+        authors: ["mockConference1-person-16", "mockConference1-person-17"],
+        track: "mockConference1-person-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-10",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "An active functional toolkit related to a virtual programmable protocol",
+        authors: ["mockConference1-person-18", "mockConference1-person-19"],
+        track: "mockConference1-person-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-11",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A scalable concurrent interface embedded in a coordinated proxy compiler",
+        authors: ["mockConference1-person-20", "mockConference1-person-21", "mockConference1-person-22"],
+        track: "mockConference1-person-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-12",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "An active object-oriented system derived from an interactive parallelizing language",
+        authors: ["mockConference1-person-23", "mockConference1-person-24", "mockConference1-person-25", "mockConference1-person-26"],
+        track: "mockConference1-person-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-13",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A reliable parallelizing preprocessor embedded in a coordinated binary system",
+        authors: ["mockConference1-person-27"],
+        track: "mockConference1-person-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-14",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A virtual big data solution related to a high-level knowledge-based language",
+        authors: ["mockConference1-person-28"],
+        track: "mockConference1-person-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-item-15",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
+        isPrivate: false,
+        posterImage: undefined,
+        title: "A high-level real-time system related to a reliable cloud-based architecture",
+        authors: ["mockConference1-person-29"],
+        track: "mockConference1-person-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+
+    return result;
+}
+
+function generateProgramPerson() {
+    let result = [];
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-0",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Drucilla Euell",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Sophie Tinker",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-2",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Elfreda Mchargue",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-3",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Letty Tuch",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-4",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Antonette Bassham",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-5",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Katrice Russel",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-6",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Max Colby",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-7",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Shante Moeller",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-8",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Jerry Eves",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-9",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Adrianna Bolton",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-10",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Augustus Colombo",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-11",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Rene Papageorge",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-12",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Chia Lenart",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-13",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Gwyneth Kresge",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-14",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Elin Fahnestock",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-15",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Lasonya Zapien",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-16",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Stephanie Finnie",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-17",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Melissa Demoura",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-18",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Luetta Waugh",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-19",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Cathleen Dupras",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-20",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Ione Shannon",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-21",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Tonya Due",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-22",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Wilber Zelinski",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-23",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Priscila Godsey",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-24",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Mechelle Mcpeters",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-25",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Leontine Balis",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-26",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Danette Sunderman",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-27",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Sena Raabe",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-28",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Mac Blanks",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-person-29",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Dorene Warshaw",
+        profile: undefined,
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+
     return result;
 }
 
 function generateProgramSessionEvent() {
     let result = [];
 
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-0",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Sep 17 2020 01:48:35 GMT+0100",
+        startTime: "Thu Oct 01 2020 15:07:10 GMT+0100",
+        item: "mockConference1-item-0",
+        session: "mockConference1-session-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Sep 17 2020 02:03:35 GMT+0100",
+        startTime: "Thu Sep 17 2020 01:48:35 GMT+0100",
+        item: "mockConference1-item-1",
+        session: "mockConference1-session-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-2",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Oct 01 2020 15:52:10 GMT+0100",
+        startTime: "Thu Sep 17 2020 02:03:35 GMT+0100",
+        item: "mockConference1-item-2",
+        session: "mockConference1-session-0",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-3",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Sep 17 2020 02:03:35 GMT+0100",
+        startTime: "Thu Oct 01 2020 15:22:10 GMT+0100",
+        item: "mockConference1-item-0",
+        session: "mockConference1-session-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-4",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Sep 17 2020 02:18:35 GMT+0100",
+        startTime: "Thu Sep 17 2020 02:03:35 GMT+0100",
+        item: "mockConference1-item-1",
+        session: "mockConference1-session-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-5",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Oct 01 2020 16:07:10 GMT+0100",
+        startTime: "Thu Sep 17 2020 02:18:35 GMT+0100",
+        item: "mockConference1-item-2",
+        session: "mockConference1-session-1",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-6",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Sep 17 2020 03:18:35 GMT+0100",
+        startTime: "Thu Oct 01 2020 16:37:10 GMT+0100",
+        item: "mockConference1-item-3",
+        session: "mockConference1-session-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-7",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Sep 17 2020 03:33:35 GMT+0100",
+        startTime: "Thu Sep 17 2020 03:18:35 GMT+0100",
+        item: "mockConference1-item-4",
+        session: "mockConference1-session-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-8",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Oct 01 2020 17:22:10 GMT+0100",
+        startTime: "Thu Sep 17 2020 03:33:35 GMT+0100",
+        item: "mockConference1-item-5",
+        session: "mockConference1-session-2",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-9",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Sep 17 2020 03:33:35 GMT+0100",
+        startTime: "Thu Oct 01 2020 16:52:10 GMT+0100",
+        item: "mockConference1-item-6",
+        session: "mockConference1-session-3",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-10",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Sep 17 2020 03:48:35 GMT+0100",
+        startTime: "Thu Sep 17 2020 03:33:35 GMT+0100",
+        item: "mockConference1-item-7",
+        session: "mockConference1-session-3",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-11",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Thu Oct 01 2020 17:37:10 GMT+0100",
+        startTime: "Thu Sep 17 2020 03:48:35 GMT+0100",
+        item: "mockConference1-item-8",
+        session: "mockConference1-session-3",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-12",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Fri Sep 25 2020 10:48:35 GMT+0100",
+        startTime: "Sat Oct 10 2020 00:07:10 GMT+0100",
+        item: "mockConference1-item-0",
+        session: "mockConference1-session-4",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-13",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Fri Sep 25 2020 11:03:35 GMT+0100",
+        startTime: "Fri Sep 25 2020 10:48:35 GMT+0100",
+        item: "mockConference1-item-1",
+        session: "mockConference1-session-4",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-14",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Sat Oct 10 2020 00:52:10 GMT+0100",
+        startTime: "Fri Sep 25 2020 11:03:35 GMT+0100",
+        item: "mockConference1-item-2",
+        session: "mockConference1-session-4",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-15",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Fri Sep 25 2020 11:03:35 GMT+0100",
+        startTime: "Sat Oct 10 2020 00:22:10 GMT+0100",
+        item: "mockConference1-item-0",
+        session: "mockConference1-session-5",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-16",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Fri Sep 25 2020 11:18:35 GMT+0100",
+        startTime: "Fri Sep 25 2020 11:03:35 GMT+0100",
+        item: "mockConference1-item-1",
+        session: "mockConference1-session-5",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-17",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Sat Oct 10 2020 01:07:10 GMT+0100",
+        startTime: "Fri Sep 25 2020 11:18:35 GMT+0100",
+        item: "mockConference1-item-2",
+        session: "mockConference1-session-5",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-18",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Fri Sep 25 2020 12:18:35 GMT+0100",
+        startTime: "Sat Oct 10 2020 01:37:10 GMT+0100",
+        item: "mockConference1-item-3",
+        session: "mockConference1-session-6",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-19",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Fri Sep 25 2020 12:33:35 GMT+0100",
+        startTime: "Fri Sep 25 2020 12:18:35 GMT+0100",
+        item: "mockConference1-item-4",
+        session: "mockConference1-session-6",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-20",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Sat Oct 10 2020 02:22:10 GMT+0100",
+        startTime: "Fri Sep 25 2020 12:33:35 GMT+0100",
+        item: "mockConference1-item-5",
+        session: "mockConference1-session-6",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-21",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Fri Sep 25 2020 12:33:35 GMT+0100",
+        startTime: "Sat Oct 10 2020 01:52:10 GMT+0100",
+        item: "mockConference1-item-6",
+        session: "mockConference1-session-7",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-22",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Fri Sep 25 2020 12:48:35 GMT+0100",
+        startTime: "Fri Sep 25 2020 12:33:35 GMT+0100",
+        item: "mockConference1-item-7",
+        session: "mockConference1-session-7",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+    result.push({
+        conference: "mockConference1",
+        id: "mockConference1-event-23",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        directLink: undefined,
+        endTime: "Sat Oct 10 2020 02:37:10 GMT+0100",
+        startTime: "Fri Sep 25 2020 12:48:35 GMT+0100",
+        item: "mockConference1-item-8",
+        session: "mockConference1-session-7",
+
+        _acl: {
+            "role:mockConference1-RoleAdmin": { w: true },
+            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-RoleAttendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-RoleAdmin",
+            "role:mockConference1-RoleManager",
+        ],
+        _rperm: ["role:mockConference1-RoleAttendee"],
+    });
+
+
     return result;
 }
 
-function generateProgramTrack() {
-    let result = [];
-
-    return result;
-}
-
+/********* END AUTO GENERATED ************/
 
 
 

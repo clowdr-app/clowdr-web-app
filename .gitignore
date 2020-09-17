@@ -41,3 +41,5 @@ db/dump/**/*.*
 *.bson
 
 db/test-ts-schema/
+
+sample-program-data.js

@@ -5,5 +5,5 @@ export default interface Schema extends Base {
     name: string;
 
     conference: Promise<Conference>;
-    profile: Promise<UserProfile>;
+    profile: Promise<UserProfile | undefined>;
 }

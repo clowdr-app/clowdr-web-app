@@ -28,8 +28,8 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.uniqueRelated("conference");
     }
 
-    get profile(): Promise<UserProfile> {
-        return this.uniqueRelated("profile");
+    get profile(): Promise<UserProfile | undefined> {
+        return this.uniqueRelated("profile").catch(() => undefined);
     }
 
     static get(id: string, conferenceId: string): Promise<Class | null> {

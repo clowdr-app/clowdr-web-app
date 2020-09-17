@@ -36,7 +36,10 @@ export default class Class extends CachedBase<K> implements SchemaT {
     }
 
     get items(): Promise<ProgramItem[]> {
-        return StaticBaseImpl.getAllByField("ProgramItem", "session", this.id, this.conferenceId);
+        return this.events.then(async evs => {
+            let items = await Promise.all(evs.map(x => x.item));
+            return items.reduce((acc, x) => acc.map(y => y.id).includes(x.id) ? acc : [...acc, x], [] as Array<ProgramItem>);
+        });
     }
 
     get room(): Promise<ProgramRoom> {
