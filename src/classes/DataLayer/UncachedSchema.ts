@@ -9,11 +9,6 @@ export default interface UncachedSchema extends IDB.DBSchema {
         value: Schema.ConferenceConfiguration;
         indexes: Indexes<Schema.ConferenceConfiguration>;
     };
-    Flair: {
-        key: string;
-        value: Schema.Flair;
-        indexes: Indexes<Schema.Flair>;
-    };
     Registration: {
         key: string;
         value: Schema.Registration;

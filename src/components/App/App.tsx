@@ -1,5 +1,5 @@
 import Parse from "parse";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
 import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
@@ -58,6 +58,8 @@ export default function App(props: Props) {
     };
     document.title = docTitle;
 
+    // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
+
     useEffect(() => {
         async function updateCacheAuthenticatedStatus() {
             if (!userProfile.profile) {
@@ -66,20 +68,16 @@ export default function App(props: Props) {
                     cache.IsUserAuthenticated = false;
                 }
             }
-            else {
-                if (currentConferenceId) {
-                    let cache = await Caches.get(currentConferenceId);
-                    if (!cache.IsUserAuthenticated) {
-                        cache.IsUserAuthenticated = true;
-                        // TODO: Is this the best time/place to call refresh?
-                        cache.refresh();
-                    }
+            else if (currentConferenceId) {
+                let cache = await Caches.get(currentConferenceId);
+                if (!cache.IsUserAuthenticated) {
+                    cache.IsUserAuthenticated = true;
                 }
             }
         }
 
         updateCacheAuthenticatedStatus();
-    });
+    }, [userProfile.profile, currentConferenceId]);
 
     // logger.enable();
 
@@ -197,7 +195,7 @@ export default function App(props: Props) {
         }
     }, [loadingSpinnerCount, conference, userProfile, loadingSpinnerTimeoutId]);
 
-    async function doLogin(email: string, password: string): Promise<boolean> {
+    const doLogin = useCallback(async function _doLogin(email: string, password: string): Promise<boolean> {
         try {
             assert(conference.conf);
 
@@ -210,9 +208,9 @@ export default function App(props: Props) {
             setUserProfile({ profile: null, loading: false });
             return false;
         }
-    }
+    }, [conference.conf]);
 
-    async function doLogout() {
+    const doLogout = useCallback(async function _doLogout() {
         try {
             if (currentConferenceId) {
                 let cache = await Caches.get(currentConferenceId);
@@ -226,9 +224,9 @@ export default function App(props: Props) {
             setConference({ conf: null, loading: false });
             setUserProfile({ profile: null, loading: false });
         }
-    }
+    }, [currentConferenceId]);
 
-    async function failedToLoadConferences(reason: any): Promise<void> {
+    const failedToLoadConferences = useCallback(async function _failedToLoadConferences(reason: any): Promise<void> {
         // This is most likely to occur during testing when the session token
         // is invalidated by regeneration of the test database.
         let handled = false;
@@ -258,9 +256,9 @@ export default function App(props: Props) {
         if (!handled) {
             logger.error(`Failed to load conferences! ${reason}`);
         }
-    }
+    }, [history, logger]);
 
-    async function selectConference(id: string | null): Promise<boolean> {
+    const selectConference = useCallback(async function _selectConference(id: string | null): Promise<boolean> {
         let clearSelected = false;
         let ok = true;
         try {
@@ -294,11 +292,11 @@ export default function App(props: Props) {
         }
 
         return ok;
-    }
+    }, [conference]);
 
-    async function toggleSidebar(): Promise<void> {
+    const toggleSidebar = useCallback(async function _toggleSidebar(): Promise<void> {
         setSidebarOpen(!sidebarOpen);
-    }
+    }, [sidebarOpen]);
 
     const appClassNames = ["app"];
 
@@ -331,7 +329,7 @@ export default function App(props: Props) {
         }
 
 
-        // TODO: Wrap this in an error boundary to handle null cache/conference/user
+        // TODO: Wrap this in an error boundary to handle null cache/conference/user and unexpected errors
 
         const appClassName = appClassNames.reduce((x, y) => `${x} ${y}`);
         // Hint: `user` could be null - see also, `useUser` and `useMaybeUser` hooks

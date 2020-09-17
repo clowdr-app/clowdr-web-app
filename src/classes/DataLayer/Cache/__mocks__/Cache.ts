@@ -50,6 +50,7 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["value"]>>;
     } = {
             AttachmentType: keys<Schema.AttachmentType>(),
+            Flair: keys<Schema.Flair>(),
             ProgramItemAttachment: keys<Schema.ProgramItemAttachment>(),
             ProgramRoom: keys<Schema.ProgramRoom>(),
             ProgramSession: keys<Schema.ProgramSession>(),
@@ -69,6 +70,7 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedFields<Schema.AttachmentType>>(),
+            Flair: keys<PromisedFields<Schema.Flair>>(),
             ProgramItemAttachment: keys<PromisedFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedFields<Schema.ProgramSession>>(),
@@ -88,6 +90,7 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>(),
+            Flair: keys<PromisedNonArrayFields<Schema.Flair>>(),
             ProgramItemAttachment: keys<PromisedNonArrayFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedNonArrayFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedNonArrayFields<Schema.ProgramSession>>(),
@@ -107,6 +110,7 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>(),
+            Flair: keys<PromisedArrayFields<Schema.Flair>>(),
             ProgramItemAttachment: keys<PromisedArrayFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedArrayFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedArrayFields<Schema.ProgramSession>>(),

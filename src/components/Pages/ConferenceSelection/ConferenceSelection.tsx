@@ -3,6 +3,7 @@ import { Conference } from "../../../classes/DataLayer";
 import "./ConferenceSelection.scss";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 import useDocTitle from "../../../hooks/useDocTitle";
+import { makeCancelable } from "../../../classes/Util";
 
 export type failedToLoadConferencesF = (reason: any) => Promise<void>;
 export type selectConferenceF = (conferenceId: string | null) => Promise<boolean>;
@@ -15,6 +16,7 @@ interface Props {
 export default function ConferenceSelection(props: Props) {
     const [conferences, setConferences] = useState<Conference[]>([]);
     const [selected, setSelected] = useState<string | null>(null);
+    const [conferencesPromise, setConferencesPromise] = useState<Promise<Conference[]> | null>(null);
 
     const docTitle = useDocTitle();
     useEffect(() => {
@@ -22,22 +24,48 @@ export default function ConferenceSelection(props: Props) {
     }, [docTitle]);
 
     useEffect(() => {
-        let isMounted = true;
-        (async () => {
-            const conferences = await Conference.getAll().catch(async (reason) => {
-                await props.failedToLoadConferences(reason);
-                return [];
-            });
-            conferences.sort((x, y) => x.name.localeCompare(y.name));
-            if (isMounted) {
-                setConferences(conferences);
-                if (conferences.length > 0) {
-                    setSelected(conferences[0].id);
+        let cancelConferencesPromise: () => void = () => { };
+
+        async function getConferences() {
+            if (!conferencesPromise) {
+                try {
+                    let { promise, cancel } = makeCancelable(Conference.getAll().catch(async (reason) => {
+                        await props.failedToLoadConferences(reason);
+                        return [];
+                    }));
+                    setConferencesPromise(promise);
+                    cancelConferencesPromise = cancel;
+
+                    const _conferences = await promise;
+                    _conferences.sort((x, y) => x.name.localeCompare(y.name));
+
+                    setConferences(_conferences);
+                    if (_conferences.length > 0) {
+                        setSelected(_conferences[0].id);
+                    }
+
+                    cancelConferencesPromise = () => { };
+                }
+                catch (e) {
+                    if (!e || !e.isCanceled) {
+                        throw e;
+                    }
                 }
             }
-        })();
-        return () => { isMounted = false };
-    }, [props]);
+        }
+
+        getConferences();
+
+        return function cleanupGetConferences() {
+            // So, despite the type-based guarantees, it turns out the effect
+            // can get cleaned up before it was even initialised, resulting in
+            // things being undefined which oughn't be.
+            if (cancelConferencesPromise && conferencesPromise) {
+                cancelConferencesPromise();
+                setConferencesPromise(null);
+            }
+        };
+    }, [props, conferencesPromise]);
 
     const submitSelection = async (ev: FormEvent<HTMLElement>) => {
         ev.preventDefault();

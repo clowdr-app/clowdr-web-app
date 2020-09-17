@@ -93,10 +93,6 @@ function generateMockPassword(userId) {
     return "admin";
 }
 
-function loremIpsum() {
-    return "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.";
-}
-
 function generateAttachmentTypes() {
     let result = [];
 

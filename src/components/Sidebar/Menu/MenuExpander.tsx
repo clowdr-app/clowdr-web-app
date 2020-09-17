@@ -43,9 +43,6 @@ export default function MenuExpander(props: Props) {
         }
     }, [isSearchOpen]);
 
-    // TODO: 'X' button to close search
-    // <i class="fas fa-times-circle"></i>
-
     let buttonElems: Array<JSX.Element> = [];
     let foundSearchButton = false;
     for (let button of props.buttons) {
@@ -58,16 +55,14 @@ export default function MenuExpander(props: Props) {
 
                     function openSearch() {
                         setIsSearchOpen(true);
-                        if (searchButtonSpec.onSearchOpen) {
-                            searchButtonSpec.onSearchOpen();
-                        }
+                        searchButtonSpec.onSearchOpen?.();
                     }
 
+                    // TODO: 'X' button to close search
+                    // <i class="fas fa-times-circle"></i>
                     function closeSearch() {
                         setIsSearchOpen(false);
-                        if (searchButtonSpec.onSearchClose) {
-                            searchButtonSpec.onSearchClose();
-                        }
+                        searchButtonSpec.onSearchClose?.();
                     }
 
                     function changeSearch(event: ChangeEvent<HTMLInputElement>) {

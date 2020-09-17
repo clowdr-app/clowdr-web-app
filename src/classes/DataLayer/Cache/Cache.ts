@@ -11,6 +11,22 @@ import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
 import assert from "assert";
 
+type ExtendedCachedSchema
+    = CachedSchema
+    & {
+        LocalRefillTimes: {
+            key: string;
+            value: {
+                // Must be called `id` to work with the current implementation
+                // of createStore
+                id: CachedSchemaKeys,
+                lastRefillAt: Date
+            }
+        }
+    };
+
+type ExtendedCachedSchemaKeys = KnownKeys<ExtendedCachedSchema>;
+
 export default class Cache {
     // The 'any' can't be replaced here - it would require dependent types.
     /**
@@ -64,6 +80,7 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["value"]>>;
     } = {
             AttachmentType: keys<Schema.AttachmentType>(),
+            Flair: keys<Schema.Flair>(),
             ProgramItemAttachment: keys<Schema.ProgramItemAttachment>(),
             ProgramRoom: keys<Schema.ProgramRoom>(),
             ProgramSession: keys<Schema.ProgramSession>(),
@@ -86,6 +103,7 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedFields<Schema.AttachmentType>>(),
+            Flair: keys<PromisedFields<Schema.Flair>>(),
             ProgramItemAttachment: keys<PromisedFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedFields<Schema.ProgramSession>>(),
@@ -108,6 +126,7 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedNonArrayFields<Schema.AttachmentType>>(),
+            Flair: keys<PromisedNonArrayFields<Schema.Flair>>(),
             ProgramItemAttachment: keys<PromisedNonArrayFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedNonArrayFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedNonArrayFields<Schema.ProgramSession>>(),
@@ -130,6 +149,7 @@ export default class Cache {
         [K in CachedSchemaKeys]: Array<KnownKeys<CachedSchema[K]["indexes"]>>;
     } = {
             AttachmentType: keys<PromisedArrayFields<Schema.AttachmentType>>(),
+            Flair: keys<PromisedArrayFields<Schema.Flair>>(),
             ProgramItemAttachment: keys<PromisedArrayFields<Schema.ProgramItemAttachment>>(),
             ProgramRoom: keys<PromisedArrayFields<Schema.ProgramRoom>>(),
             ProgramSession: keys<PromisedArrayFields<Schema.ProgramSession>>(),
@@ -145,16 +165,31 @@ export default class Cache {
             PrivilegedConferenceDetails: keys<PromisedArrayFields<Schema.PrivilegedConferenceDetails>>(),
         };
 
+    // If changing this list, remember to update the `afterSave` callbacks in
+    // `backend/cloud/cacheStatus.js`
+    readonly ProgramTableNames: Array<CachedSchemaKeys> = [
+        "ProgramItem",
+        "ProgramItemAttachment",
+        "ProgramPerson",
+        "ProgramRoom",
+        "ProgramSession",
+        "ProgramSessionEvent",
+        "ProgramTrack",
+        "Flair"
+    ];
+
     readonly KEY_PATH: "id" = "id";
 
-    private dbPromise: Promise<IDBPDatabase<CachedSchema>> | null = null;
+    private dbPromise: Promise<IDBPDatabase<ExtendedCachedSchema>> | null = null;
     private conference: Promise<Parse.Object<PromisesRemapped<Schema.Conference>>> | null = null;
 
     private isInitialised: boolean = false;
+    private isUserAuthenticated: boolean = false;
+    private isRefreshRunning: boolean = false;
 
     private logger: DebugLogger = new DebugLogger("Cache");
-
-    public IsUserAuthenticated: boolean = false;
+    private readonly cacheStaleTime = 1000 * 60 * 5; // 5 minutes
+    private readonly cacheInactiveTime = 1000 * 60 * 1; // 1 minutes
 
     constructor(
         public readonly conferenceId: string,
@@ -204,6 +239,19 @@ export default class Cache {
         }
     }
 
+    get IsUserAuthenticated(): boolean {
+        return this.isUserAuthenticated;
+    }
+
+    set IsUserAuthenticated(value: boolean) {
+        const wasUserAuthed = this.isUserAuthenticated;
+        this.isUserAuthenticated = value;
+
+        if (!wasUserAuthed && value) {
+            this.refresh();
+        }
+    }
+
     get DatabaseName(): string {
         return `clowdr-${this.conferenceId}`;
     }
@@ -217,7 +265,7 @@ export default class Cache {
                 this.logger.info("Opening database.");
                 this.conference = new Promise(async (resolve, reject) => {
                     try {
-                        this.dbPromise = openDB<CachedSchema>(this.DatabaseName, SchemaVersion, {
+                        this.dbPromise = openDB<ExtendedCachedSchema>(this.DatabaseName, SchemaVersion, {
                             upgrade: this.upgrade.bind(this),
                             blocked: this.blocked.bind(this),
                             blocking: this.blocking.bind(this),
@@ -246,44 +294,119 @@ export default class Cache {
         }
     }
 
+    private async getLocalRefillTimes(db: IDBPDatabase<ExtendedCachedSchema>): Promise<{
+        [K in CachedSchemaKeys]: Date | undefined
+    }> {
+        let localRefillTimes = await db.getAll("LocalRefillTimes");
+        let result: any = {};
+        localRefillTimes.forEach(x => {
+            result[x.id] = x.lastRefillAt;
+        });
+        return result;
+    }
+
     public async refresh(): Promise<void> {
         if (!this.isInitialised || !this.dbPromise) {
             throw new Error("You must call initialised first!");
         }
 
-        this.dbPromise.then(async db => {
-            // TODO: Decide whether to clear the cache or not
-            // If clearing the cache, don't resolve until it's empty
-            // Else resolve early and download new data in the background
+        if (this.IsUserAuthenticated && !this.isRefreshRunning) {
+            this.isRefreshRunning = true;
 
-            await Promise.all(CachedStoreNames.map(store => {
-                return this.fillCache(store, db);
-            }));
+            this.isRefreshRunning = await this.dbPromise.then(async db => {
+                let freshConference = await this.conference;
+                if (freshConference) {
+                    // TODO: Subscribe to live queries
 
-            // TODO: Subscribe to live queries
-        }).catch(reason => {
-            this.logger.error(`Error refreshing cache`, reason);
-        });
+                    let remoteLastProgramUpdateTime = freshConference.get("lastProgramUpdateTime") ?? new Date(0);
+                    try {
+                        let localRefillTimes = await this.getLocalRefillTimes(db);
+                        const now = Date.now();
+                    
+                        await Promise.all(CachedStoreNames.map(async store => {
+                            try {
+                                let localRefillTime = localRefillTimes[store] ?? new Date(0);
+                                let shouldUpdate =
+                                    this.ProgramTableNames.includes(store)
+                                        ? remoteLastProgramUpdateTime > localRefillTime
+                                        : localRefillTime.getTime() + this.cacheInactiveTime < now;
+
+                                if (shouldUpdate) {
+                                    let shouldClear = localRefillTime.getTime() + this.cacheStaleTime < now;
+                                    let fillFrom = localRefillTimes[store];
+                                    if (shouldClear) {
+                                        await db.clear(store);
+                                        fillFrom = new Date(0);
+                                    }
+
+                                    return this.fillCache(store, db, fillFrom);
+                                }
+
+                                db.put("LocalRefillTimes", { id: store, lastRefillAt: new Date(now) });
+                            }
+                            catch (e) {
+                                this.logger.error(`Could not update cache table ${store} for conference ${this.conferenceId}`, e);
+                            }
+                            return void 0;
+                        }));
+                    }
+                    catch (e) {
+                        if (e.toString().includes("'LocalRefillTimes' is not a known object store name")) {
+                            this.deleteDatabase(true);
+                        }
+                        else {
+                            throw e;
+                        }
+                    }
+                }
+
+                return false;
+            }).catch(reason => {
+                this.logger.error(`Error refreshing cache`, reason);
+
+                return false;
+            });
+        }
     }
 
     private async fillCache<K extends CachedSchemaKeys, T extends CachedBase<K>>(
         tableName: K,
-        db: IDBPDatabase<CachedSchema> | null = null
+        db: IDBPDatabase<ExtendedCachedSchema> | null = null,
+        fillFrom?: Date
     ): Promise<Array<T>> {
         if (!this.IsInitialised || !this.dbPromise) {
             return Promise.reject("Not initialised");
         }
 
+        if (!this.IsUserAuthenticated) {
+            throw new Error("Cannot refresh cache when not authenticated");
+        }
+
+        if (!db && this.dbPromise) {
+            db = await this.dbPromise;
+        }
+
         let itemsQ = await this.newParseQuery(tableName);
-        return itemsQ.map(async parse => {
+        if (fillFrom) {
+            itemsQ.greaterThanOrEqualTo("updatedAt", fillFrom as any);
+        }
+
+        let results = itemsQ.map(async parse => {
             return this.addItemToCache<K, T>(parse, tableName, db);
         });
+
+        if (db && fillFrom) {
+            db.put("LocalRefillTimes", { id: tableName, lastRefillAt: new Date() });
+        }
+
+        return results;
     }
 
     async addItemToCache<K extends CachedSchemaKeys, T extends CachedBase<K>>(
         parse: Parse.Object<PromisesRemapped<CachedSchema[K]["value"]>>,
         tableName: K,
-        _db: IDBPDatabase<CachedSchema> | null = null
+        _db: IDBPDatabase<ExtendedCachedSchema> | null = null,
+        conferenceLastProgramUpdateTimeOverride?: Date
     ): Promise<T> {
         let schema: any = {
             id: parse.id
@@ -330,25 +453,35 @@ export default class Cache {
             }
         }
 
-        if (_db) {
-            this.logger.info("Filling item", {
-                conferenceId: this.conferenceId,
-                tableName: tableName,
-                id: parse.id,
-                value: schema
-            });
-            await _db.put(tableName, schema);
-        }
-        else if (this.dbPromise) {
-            this.logger.info("Filling item", {
-                conferenceId: this.conferenceId,
-                tableName: tableName,
-                id: parse.id,
-                value: schema
-            });
+        try {
+            if (_db) {
+                this.logger.info("Filling item", {
+                    conferenceId: this.conferenceId,
+                    tableName: tableName,
+                    id: parse.id,
+                    value: schema
+                });
+                await _db.put(tableName, schema);
+            }
+            else if (this.dbPromise) {
+                this.logger.info("Filling item", {
+                    conferenceId: this.conferenceId,
+                    tableName: tableName,
+                    id: parse.id,
+                    value: schema
+                });
 
-            let db = await this.dbPromise;
-            await db.put(tableName, schema);
+                let db = await this.dbPromise;
+                await db.put(tableName, schema);
+            }
+        }
+        catch (e) {
+            // Occurs when we get back data (like Conference) before the cache
+            // has been initialised (likely on first unauthenticated load of a
+            // conference).
+            if (!e.toString().includes("not a known object store name")) {
+                throw e;
+            }
         }
 
         const constr = Cache.Constructors[tableName];
@@ -442,38 +575,17 @@ export default class Cache {
         return result;
     }
 
-    private async createStore<K extends CachedSchemaKeys>(t: IDBPTransaction<CachedSchema>, name: K) {
+    private async createStore<K extends ExtendedCachedSchemaKeys>(t: IDBPTransaction<ExtendedCachedSchema>, name: K) {
         this.logger.info(`Creating store: ${name}`);
 
-        /*let store =*/
         t.db.createObjectStore<K>(name, {
             keyPath: this.KEY_PATH
         });
-
-        // let uniqueRels = this.UniqueRelations[name] as Array<KnownKeys<CachedSchema[K]["indexes"]>>;
-        // for (let rel of uniqueRels) {
-        //     let r2t: Record<string, string> = RelationsToTableNames[name];
-        //     if (CachedStoreNames.includes(r2t[rel as string] as any)) {
-        //         store.createIndex(rel, this.KEY_PATH, {
-        //             unique: true,
-        //             multiEntry: false
-        //         });
-        //     }
-        // }
-
-        // let nonUniqueRels = this.NonUniqueRelations[name] as Array<KnownKeys<CachedSchema[K]["indexes"]>>;
-        // for (let rel of nonUniqueRels) {
-        //     let r2t: Record<string, string> = RelationsToTableNames[name];
-        //     if (CachedStoreNames.includes(r2t[rel as string] as any)) {
-        //         store.createIndex(rel, this.KEY_PATH, {
-        //             unique: false,
-        //             multiEntry: false
-        //         });
-        //     }
-        // }
+        
+        // TODO: For 'find' (getByField / getAllByField) we will need to create indexes
     }
 
-    private async upgradeStore(t: IDBPTransaction<CachedSchema>, name: CachedSchemaKeys) {
+    private async upgradeStore(t: IDBPTransaction<ExtendedCachedSchema>, name: CachedSchemaKeys) {
         this.logger.info(`Upgrading store: ${name}`);
 
         let items = await t.objectStore(name).getAll();
@@ -482,13 +594,13 @@ export default class Cache {
         }
     }
 
-    private async deleteStore(t: IDBPTransaction<CachedSchema>, name: string) {
+    private async deleteStore(t: IDBPTransaction<ExtendedCachedSchema>, name: string) {
         this.logger.info(`Deleting store: ${name}`);
         t.db.deleteObjectStore(name as any);
     }
 
     private async upgradeItem<K extends CachedSchemaKeys>(
-        t: IDBPTransaction<CachedSchema>,
+        t: IDBPTransaction<ExtendedCachedSchema>,
         name: K,
         item: CachedSchema[K]["value"]): Promise<void> {
         let StoreFieldNames = this.Fields[name] as Array<string>;
@@ -516,10 +628,10 @@ export default class Cache {
      * you need to get data from other stores as part of a migration.
      */
     private async upgrade(
-        db: IDBPDatabase<CachedSchema>,
+        db: IDBPDatabase<ExtendedCachedSchema>,
         oldVersion: number,
         newVersion: number,
-        transaction: IDBPTransaction<CachedSchema>
+        transaction: IDBPTransaction<ExtendedCachedSchema>
     ): Promise<void> {
         if (oldVersion === 0) {
             this.logger.info(`Creating cache database at version ${newVersion}.`);
@@ -535,12 +647,16 @@ export default class Cache {
         let toUpgrade: Array<CachedSchemaKeys> = [];
         let toCreate: Array<CachedSchemaKeys> = [];
         let toDelete: Array<string> = [];
-        let existingStoreNames: Array<CachedSchemaKeys> = [...db.objectStoreNames];
+        let existingStoreNames: Array<ExtendedCachedSchemaKeys> = [...db.objectStoreNames];
+
+        if (!existingStoreNames.includes("LocalRefillTimes")) {
+            this.createStore(transaction, "LocalRefillTimes");
+        }
 
         // Gather stores to upgrade or delete
         for (let storeName of existingStoreNames) {
-            if (CachedStoreNames.includes(storeName)) {
-                toUpgrade.push(storeName);
+            if (CachedStoreNames.includes(storeName as CachedSchemaKeys)) {
+                toUpgrade.push(storeName as CachedSchemaKeys);
             }
             else {
                 toDelete.push(storeName);
@@ -591,10 +707,11 @@ export default class Cache {
     private async blocking(): Promise<void> {
         // TODO: blocking
         this.logger.error("Database blocking alert - not implemented.");
-        if (this.IsDebugEnabled) {
-            this.logger.warn("Debug enabled. Closing cache connection.");
-            this.closeConnection();
-        }
+        //TODO: Reenable this condition?
+        //if (this.IsDebugEnabled) {
+        this.logger.warn("Debug enabled. Closing cache connection.");
+        this.closeConnection();
+        //}
     }
 
     /**
@@ -663,7 +780,12 @@ export default class Cache {
                 tableName: tableName
             });
 
-            return this.fillCache(tableName);
+            if (this.isUserAuthenticated) {
+                return this.fillCache(tableName);
+            }
+            else {
+                return [];
+            }
         }
     }
 

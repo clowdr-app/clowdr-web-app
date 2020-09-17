@@ -38,6 +38,11 @@ export default interface CachedSchema extends CachableDBSchema {
         value: Schema.Conference;
         indexes: Indexes<Schema.Conference>;
     };
+    Flair: {
+        key: string;
+        value: Schema.Flair;
+        indexes: Indexes<Schema.Flair>;
+    };
     PrivilegedConferenceDetails: {
         key: string;
         value: Schema.PrivilegedConferenceDetails;

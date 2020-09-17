@@ -1,5 +1,9 @@
 import Cache from "./Cache";
 
+export var clowdr: {
+    caches: Caches
+};
+
 export default class Caches {
     private static caches: Map<string, Cache> = new Map();
 
@@ -12,6 +16,12 @@ export default class Caches {
     }
 
     static async get(conferenceId: string): Promise<Cache> {
+        if (!clowdr) {
+            clowdr = {
+                caches: this
+            };
+        }
+
         let cache = this.caches.get(conferenceId);
 
         if (!cache) {
