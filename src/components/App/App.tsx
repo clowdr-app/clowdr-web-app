@@ -113,9 +113,7 @@ export default function App(props: Props) {
             else if (conference.conf || conference.loading) {
                 // No conference selected - let's make sure our state reflects
                 // that fact.
-                if (conference) {
-                    setConference({ conf: null, loading: false });
-                }
+                setConference({ conf: null, loading: false });
             }
         }
 
