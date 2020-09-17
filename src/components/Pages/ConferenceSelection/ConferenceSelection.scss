@@ -53,10 +53,6 @@
             border          : none;
             border-radius   : radius(2);
         }
-
-        .join-button-disabled {
-            background-color: $gray-2;
-        }
     }
 
     @media (min-width: $break-sm) and (max-width: $break-lg - 1) {

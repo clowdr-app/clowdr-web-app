@@ -61,6 +61,7 @@ function Page(props: Props) {
         </Switch>;
     }
     else if (mConf) {
+        noHeading = true;
         contentsElem = <Login
             doLogin={props.doLogin}
             clearSelectedConference={async () => {
