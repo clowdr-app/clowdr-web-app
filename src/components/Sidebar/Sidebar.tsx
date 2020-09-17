@@ -17,15 +17,17 @@ interface Props {
 }
 
 function Sidebar(props: Props) {
-    let conf = useConference();
-    let mUser = useMaybeUserProfile();
+    const conf = useConference();
+    const mUser = useMaybeUserProfile();
     const burgerButtonRef = useRef<HTMLButtonElement>(null);
-    let [chatsIsOpen, setChatsIsOpen] = useState<boolean>(true);
-    let [roomsIsOpen, setRoomsIsOpen] = useState<boolean>(true);
-    let [programIsOpen, setProgramIsOpen] = useState<boolean>(true);
-    let [chatSearch, setChatSearch] = useState<string | null>(null);
-    let [roomSearch, setRoomSearch] = useState<string | null>(null);
-    let [programSearch, setProgramSearch] = useState<string | null>(null);
+    const [chatsIsOpen, setChatsIsOpen] = useState<boolean>(true);
+    const [roomsIsOpen, setRoomsIsOpen] = useState<boolean>(true);
+    const [programIsOpen, setProgramIsOpen] = useState<boolean>(true);
+    const [chatSearch, setChatSearch] = useState<string | null>(null);
+    const [roomSearch, setRoomSearch] = useState<string | null>(null);
+    const [programSearch, setProgramSearch] = useState<string | null>(null);
+    const [programSessions, setProgramSessions] = useState<Array<ProgramSession>>([]);
+    const [programEvents, setProgramEvents] = useState<Array<ProgramSessionEvent>>([]);
 
     // TODO: When sidebar is occupying full window (e.g. on mobile), close it
     // when the user clicks a link.
@@ -50,6 +52,39 @@ function Sidebar(props: Props) {
             <div className="bar3"></div>
         </button>
     </div>;
+
+    // TODO: Introduce a setInterval which refreshes the program view every minute or so
+    useEffect(() => {
+        async function updateSessionsAndEvents() {
+            const now = Date.now();
+            const sixtySecs = 60 * 1000;
+            const twoHours = 2 * 60 * 60 * 1000;
+            const endLimit = now;// - sixtySecs;
+            const startLimit = now + twoHours;
+
+            const sessionsP = ProgramSession.getAll(conf.id);
+            const eventsP = ProgramSessionEvent.getAll(conf.id);
+            const allSessions = await sessionsP;
+            const allEvents = await eventsP;
+
+            let sessions = allSessions
+                .filter(x => x.endTime.getTime() >= endLimit
+                    && x.startTime.getTime() <= startLimit);
+
+            let events = allEvents
+                .filter(x => x.endTime.getTime() >= endLimit
+                    && x.startTime.getTime() <= startLimit);
+            
+            let eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
+            
+            sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
+            
+            setProgramSessions(sessions);
+            setProgramEvents(events);
+        }
+
+        updateSessionsAndEvents();
+    }, [programSearch, conf.id]);
 
     if (props.open) {
         let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.shortName}</Link></h1>;
@@ -175,20 +210,7 @@ function Sidebar(props: Props) {
 
         // TODO: Fetch either ongoing and upcoming items or search whole program
         // TODO: Include events from sessions, only include session if it has no events
-        const tenMins = 1000 * 60 * 10;
-        let programSessions: Array<ProgramSession> = [
-            { title: "Session 1", startTime: new Date(Date.now() + (-1 * tenMins)), endTime: new Date(Date.now() + (1 * tenMins)) },
-            { title: "Session 2", startTime: new Date(Date.now() + (1 * tenMins)), endTime: new Date(Date.now() + (2 * tenMins)) },
-            { title: "Session 3", startTime: new Date(Date.now() + (1 * tenMins)), endTime: new Date(Date.now() + (3 * tenMins)) },
-            { title: "Session 4", startTime: new Date(Date.now() + (3 * tenMins)), endTime: new Date(Date.now() + (4 * tenMins)) },
-            {
-                title: "Session 5 with a really really long title just like authors love to use, it's so long I don't even know (this is the point it cuts off in normal browsers at the smallest menu width)",
-                startTime: new Date(Date.now() + (5 * tenMins)), endTime: new Date(Date.now() + (6 * tenMins))
-            },
-            { title: "Session 6", startTime: new Date(Date.now() + (6 * tenMins)), endTime: new Date(Date.now() + (8 * tenMins)) },
-            { title: "Session 7", startTime: new Date(Date.now() + (12 * tenMins)), endTime: new Date(Date.now() + (13 * tenMins)) },
-        ] as unknown as Array<ProgramSession>;
-        let programEvents: Array<ProgramSessionEvent> = [] as Array<ProgramSessionEvent>;
+
         const programTimeBoundaries: Array<number> = [
             0, 15, 30, 60, 120
         ];
