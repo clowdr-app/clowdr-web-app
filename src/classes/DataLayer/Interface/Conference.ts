@@ -31,6 +31,10 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.data.shortName;
     }
 
+    get lastProgramUpdateTime(): Date {
+        return this.data.lastProgramUpdateTime;
+    }
+
     get admin(): Promise<_User> {
         return this.nonUniqueRelated("admin");
     }

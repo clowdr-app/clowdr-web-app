@@ -147,6 +147,7 @@ function generateConferences() {
         landingPage: "A mock landing page",
         updatedAt: new Date(),
         welcomeText: "Welcome to this mock conference!",
+        lastProgramUpdateTime: new Date(),
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -174,6 +175,7 @@ function generateConferences() {
         landingPage: "A second mock landing page",
         updatedAt: new Date(),
         welcomeText: "Welcome to this second mock conference!",
+        lastProgramUpdateTime: new Date(),
 
         _acl: {
             "role:mockConference2-admin": { w: true },
