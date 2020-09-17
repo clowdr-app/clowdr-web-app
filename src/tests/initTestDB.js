@@ -1,3 +1,5 @@
+const moment = require("moment");
+
 // Copied from WholeSchema.ts
 const RelationsToTableNames = {
     AttachmentType: {
@@ -519,8 +521,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - NY 1",
-        endTime: "Thu Sep 17 2020 02:18:35 GMT+0100",
-        startTime: "Thu Sep 17 2020 01:33:35 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 03:14:30 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 02:29:30 GMT+0100").toDate(),
         room: "mockConference1-room-0",
         track: "mockConference1-track-0",
 
@@ -542,8 +544,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - NY1",
-        endTime: "Thu Sep 17 2020 02:33:35 GMT+0100",
-        startTime: "Thu Sep 17 2020 01:48:35 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 03:29:30 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 02:44:30 GMT+0100").toDate(),
         room: "mockConference1-room-1",
         track: "mockConference1-track-1",
 
@@ -565,8 +567,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - NY 2",
-        endTime: "Thu Sep 17 2020 03:48:35 GMT+0100",
-        startTime: "Thu Sep 17 2020 03:03:35 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 04:44:30 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 03:59:30 GMT+0100").toDate(),
         room: "mockConference1-room-2",
         track: "mockConference1-track-0",
 
@@ -588,8 +590,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - NY2",
-        endTime: "Thu Sep 17 2020 04:03:35 GMT+0100",
-        startTime: "Thu Sep 17 2020 03:18:35 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 04:59:30 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 04:14:30 GMT+0100").toDate(),
         room: "mockConference1-room-3",
         track: "mockConference1-track-1",
 
@@ -611,8 +613,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - Beijing 1",
-        endTime: "Fri Sep 25 2020 11:18:35 GMT+0100",
-        startTime: "Fri Sep 25 2020 10:33:35 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 12:14:30 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 11:29:30 GMT+0100").toDate(),
         room: "mockConference1-room-4",
         track: "mockConference1-track-0",
 
@@ -634,8 +636,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - Beijing 1",
-        endTime: "Fri Sep 25 2020 11:33:35 GMT+0100",
-        startTime: "Fri Sep 25 2020 10:48:35 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 12:29:30 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 11:44:30 GMT+0100").toDate(),
         room: "mockConference1-room-5",
         track: "mockConference1-track-1",
 
@@ -657,8 +659,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - Beijing 2",
-        endTime: "Fri Sep 25 2020 12:48:35 GMT+0100",
-        startTime: "Fri Sep 25 2020 12:03:35 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 13:44:30 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 12:59:30 GMT+0100").toDate(),
         room: "mockConference1-room-6",
         track: "mockConference1-track-0",
 
@@ -680,8 +682,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - Beijing 2",
-        endTime: "Fri Sep 25 2020 13:03:35 GMT+0100",
-        startTime: "Fri Sep 25 2020 12:18:35 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 13:59:30 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 13:14:30 GMT+0100").toDate(),
         room: "mockConference1-room-7",
         track: "mockConference1-track-1",
 
@@ -1891,8 +1893,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Sep 17 2020 01:48:35 GMT+0100",
-        startTime: "Thu Oct 01 2020 15:07:10 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 02:44:30 GMT+0100").toDate(),
+        startTime: moment("Thu Oct 01 2020 16:59:00 GMT+0100").toDate(),
         item: "mockConference1-item-0",
         session: "mockConference1-session-0",
 
@@ -1914,8 +1916,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Sep 17 2020 02:03:35 GMT+0100",
-        startTime: "Thu Sep 17 2020 01:48:35 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 02:59:30 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 02:44:30 GMT+0100").toDate(),
         item: "mockConference1-item-1",
         session: "mockConference1-session-0",
 
@@ -1937,8 +1939,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Oct 01 2020 15:52:10 GMT+0100",
-        startTime: "Thu Sep 17 2020 02:03:35 GMT+0100",
+        endTime: moment("Thu Oct 01 2020 17:44:00 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 02:59:30 GMT+0100").toDate(),
         item: "mockConference1-item-2",
         session: "mockConference1-session-0",
 
@@ -1960,8 +1962,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Sep 17 2020 02:03:35 GMT+0100",
-        startTime: "Thu Oct 01 2020 15:22:10 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 02:59:30 GMT+0100").toDate(),
+        startTime: moment("Thu Oct 01 2020 17:14:00 GMT+0100").toDate(),
         item: "mockConference1-item-0",
         session: "mockConference1-session-1",
 
@@ -1983,8 +1985,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Sep 17 2020 02:18:35 GMT+0100",
-        startTime: "Thu Sep 17 2020 02:03:35 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 03:14:30 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 02:59:30 GMT+0100").toDate(),
         item: "mockConference1-item-1",
         session: "mockConference1-session-1",
 
@@ -2006,8 +2008,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Oct 01 2020 16:07:10 GMT+0100",
-        startTime: "Thu Sep 17 2020 02:18:35 GMT+0100",
+        endTime: moment("Thu Oct 01 2020 17:59:00 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 03:14:30 GMT+0100").toDate(),
         item: "mockConference1-item-2",
         session: "mockConference1-session-1",
 
@@ -2029,8 +2031,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Sep 17 2020 03:18:35 GMT+0100",
-        startTime: "Thu Oct 01 2020 16:37:10 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 04:14:30 GMT+0100").toDate(),
+        startTime: moment("Thu Oct 01 2020 18:29:00 GMT+0100").toDate(),
         item: "mockConference1-item-3",
         session: "mockConference1-session-2",
 
@@ -2052,8 +2054,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Sep 17 2020 03:33:35 GMT+0100",
-        startTime: "Thu Sep 17 2020 03:18:35 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 04:29:30 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 04:14:30 GMT+0100").toDate(),
         item: "mockConference1-item-4",
         session: "mockConference1-session-2",
 
@@ -2075,8 +2077,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Oct 01 2020 17:22:10 GMT+0100",
-        startTime: "Thu Sep 17 2020 03:33:35 GMT+0100",
+        endTime: moment("Thu Oct 01 2020 19:14:00 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 04:29:30 GMT+0100").toDate(),
         item: "mockConference1-item-5",
         session: "mockConference1-session-2",
 
@@ -2098,8 +2100,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Sep 17 2020 03:33:35 GMT+0100",
-        startTime: "Thu Oct 01 2020 16:52:10 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 04:29:30 GMT+0100").toDate(),
+        startTime: moment("Thu Oct 01 2020 18:44:00 GMT+0100").toDate(),
         item: "mockConference1-item-6",
         session: "mockConference1-session-3",
 
@@ -2121,8 +2123,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Sep 17 2020 03:48:35 GMT+0100",
-        startTime: "Thu Sep 17 2020 03:33:35 GMT+0100",
+        endTime: moment("Thu Sep 17 2020 04:44:30 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 04:29:30 GMT+0100").toDate(),
         item: "mockConference1-item-7",
         session: "mockConference1-session-3",
 
@@ -2144,8 +2146,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Thu Oct 01 2020 17:37:10 GMT+0100",
-        startTime: "Thu Sep 17 2020 03:48:35 GMT+0100",
+        endTime: moment("Thu Oct 01 2020 19:29:00 GMT+0100").toDate(),
+        startTime: moment("Thu Sep 17 2020 04:44:30 GMT+0100").toDate(),
         item: "mockConference1-item-8",
         session: "mockConference1-session-3",
 
@@ -2167,8 +2169,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Fri Sep 25 2020 10:48:35 GMT+0100",
-        startTime: "Sat Oct 10 2020 00:07:10 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 11:44:30 GMT+0100").toDate(),
+        startTime: moment("Sat Oct 10 2020 01:59:00 GMT+0100").toDate(),
         item: "mockConference1-item-0",
         session: "mockConference1-session-4",
 
@@ -2190,8 +2192,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Fri Sep 25 2020 11:03:35 GMT+0100",
-        startTime: "Fri Sep 25 2020 10:48:35 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 11:59:30 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 11:44:30 GMT+0100").toDate(),
         item: "mockConference1-item-1",
         session: "mockConference1-session-4",
 
@@ -2213,8 +2215,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Sat Oct 10 2020 00:52:10 GMT+0100",
-        startTime: "Fri Sep 25 2020 11:03:35 GMT+0100",
+        endTime: moment("Sat Oct 10 2020 02:44:00 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 11:59:30 GMT+0100").toDate(),
         item: "mockConference1-item-2",
         session: "mockConference1-session-4",
 
@@ -2236,8 +2238,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Fri Sep 25 2020 11:03:35 GMT+0100",
-        startTime: "Sat Oct 10 2020 00:22:10 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 11:59:30 GMT+0100").toDate(),
+        startTime: moment("Sat Oct 10 2020 02:14:00 GMT+0100").toDate(),
         item: "mockConference1-item-0",
         session: "mockConference1-session-5",
 
@@ -2259,8 +2261,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Fri Sep 25 2020 11:18:35 GMT+0100",
-        startTime: "Fri Sep 25 2020 11:03:35 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 12:14:30 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 11:59:30 GMT+0100").toDate(),
         item: "mockConference1-item-1",
         session: "mockConference1-session-5",
 
@@ -2282,8 +2284,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Sat Oct 10 2020 01:07:10 GMT+0100",
-        startTime: "Fri Sep 25 2020 11:18:35 GMT+0100",
+        endTime: moment("Sat Oct 10 2020 02:59:00 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 12:14:30 GMT+0100").toDate(),
         item: "mockConference1-item-2",
         session: "mockConference1-session-5",
 
@@ -2305,8 +2307,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Fri Sep 25 2020 12:18:35 GMT+0100",
-        startTime: "Sat Oct 10 2020 01:37:10 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 13:14:30 GMT+0100").toDate(),
+        startTime: moment("Sat Oct 10 2020 03:29:00 GMT+0100").toDate(),
         item: "mockConference1-item-3",
         session: "mockConference1-session-6",
 
@@ -2328,8 +2330,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Fri Sep 25 2020 12:33:35 GMT+0100",
-        startTime: "Fri Sep 25 2020 12:18:35 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 13:29:30 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 13:14:30 GMT+0100").toDate(),
         item: "mockConference1-item-4",
         session: "mockConference1-session-6",
 
@@ -2351,8 +2353,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Sat Oct 10 2020 02:22:10 GMT+0100",
-        startTime: "Fri Sep 25 2020 12:33:35 GMT+0100",
+        endTime: moment("Sat Oct 10 2020 04:14:00 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 13:29:30 GMT+0100").toDate(),
         item: "mockConference1-item-5",
         session: "mockConference1-session-6",
 
@@ -2374,8 +2376,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Fri Sep 25 2020 12:33:35 GMT+0100",
-        startTime: "Sat Oct 10 2020 01:52:10 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 13:29:30 GMT+0100").toDate(),
+        startTime: moment("Sat Oct 10 2020 03:44:00 GMT+0100").toDate(),
         item: "mockConference1-item-6",
         session: "mockConference1-session-7",
 
@@ -2397,8 +2399,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Fri Sep 25 2020 12:48:35 GMT+0100",
-        startTime: "Fri Sep 25 2020 12:33:35 GMT+0100",
+        endTime: moment("Fri Sep 25 2020 13:44:30 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 13:29:30 GMT+0100").toDate(),
         item: "mockConference1-item-7",
         session: "mockConference1-session-7",
 
@@ -2420,8 +2422,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: "Sat Oct 10 2020 02:37:10 GMT+0100",
-        startTime: "Fri Sep 25 2020 12:48:35 GMT+0100",
+        endTime: moment("Sat Oct 10 2020 04:29:00 GMT+0100").toDate(),
+        startTime: moment("Fri Sep 25 2020 13:44:30 GMT+0100").toDate(),
         item: "mockConference1-item-8",
         session: "mockConference1-session-7",
 
@@ -2440,6 +2442,7 @@ function generateProgramSessionEvent() {
 
     return result;
 }
+
 
 /********* END AUTO GENERATED ************/
 
