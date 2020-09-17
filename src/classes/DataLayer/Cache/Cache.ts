@@ -232,7 +232,7 @@ export default class Cache {
                             return;
                         }
 
-                        resolve();
+                        resolve(conf);
                     }
                     catch (e) {
                         this.logger.error(`Error initialising cache.`, e);
@@ -299,7 +299,11 @@ export default class Cache {
                     try {
                         if (uniqRels.includes(key as string)) {
                             let xs = parse.get(key as any);
-                            schema[key] = xs.id;
+                            // It is possible for the pointer to be optional 
+                            // e.g. `ProgramPerson.profile: UserProfile | undefined`
+                            if (xs) {
+                                schema[key] = xs.id;
+                            }
                         }
                         // Avoid attempting to fetch data that we aren't allowed to access
                         else if (this.IsUserAuthenticated) {
