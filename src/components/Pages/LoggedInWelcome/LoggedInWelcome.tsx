@@ -6,10 +6,7 @@ export default function LoggedInWelcome() {
     const conference = useConference();
     const [contents, setContents] = useState<string>("You are logged in. Loading conference information...");
 
-    const docTitle = useDocTitle();
-    useEffect(() => {
-        docTitle.set(conference.name);
-    }, [docTitle, conference]);
+    useDocTitle(conference.name);
 
     useEffect(() => {
         conference.details.then(details => {

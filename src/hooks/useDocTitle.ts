@@ -1,9 +1,13 @@
-import { useContext } from 'react';
-import DocTitleContext, { DocTitleState } from '../contexts/DocTitleContext';
+import { useContext, useEffect } from 'react';
+import DocTitleContext from '../contexts/DocTitleContext';
 import assert from 'assert';
 
-export default function useDocTitle(): DocTitleState {
-    let ctx = useContext(DocTitleContext);
-    assert(ctx, "Document title control should be defined.");
-    return ctx;
+export default function useDocTitle(title: string): void {
+    const _ctx = useContext(DocTitleContext);
+    assert(_ctx, "Setter for document title should be defined.");
+    const ctx = _ctx;
+
+    useEffect(() => {
+        ctx(title);
+    }, [ctx, title]);
 }

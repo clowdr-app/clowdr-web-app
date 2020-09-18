@@ -15,7 +15,8 @@ export default function Profile(props: Props) {
     const conference = useConference();
     const [profile, setProfile] = useState<UserProfile | null>(null);
 
-    const docTitle = useDocTitle();
+    useDocTitle("Profile");
+
     useEffect(() => {
         docTitle.set("Profile");
 

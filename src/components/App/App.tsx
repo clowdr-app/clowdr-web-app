@@ -6,13 +6,11 @@ import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
 import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
-import DocTitleContext from '../../contexts/DocTitleContext';
 import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
 import { Conference, UserProfile, _User } from "../../classes/DataLayer";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
-import { DocTitleState } from "../../contexts/DocTitleContext";
 import Caches from "../../classes/DataLayer/Cache";
 
 interface Props {
@@ -49,15 +47,6 @@ export default function App(props: Props) {
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true /*TODO: Revert to false.*/);
     const [loadingSpinnerCount, setLoadingSpinnerCount] = useState<number>(1);
     const [loadingSpinnerTimeoutId, setLoadingSpinnerTimeoutId] = useState<number | undefined>();
-
-    const [docTitle, setDocTitle] = useState("");
-    const docTitleCtx: DocTitleState = {
-        get: () => docTitle,
-        set: async (val) => {
-            setDocTitle(val);
-        }
-    };
-    document.title = docTitle;
 
     // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
 
@@ -340,10 +329,8 @@ export default function App(props: Props) {
         return <div className={appClassName}>
             <ConferenceContext.Provider value={conference.conf}>
                 <UserProfileContext.Provider value={userProfile.profile}>
-                    <DocTitleContext.Provider value={docTitleCtx}>
-                        {sidebar}
-                        {page}
-                    </DocTitleContext.Provider>
+                    {sidebar}
+                    {page}
                 </UserProfileContext.Provider>
             </ConferenceContext.Provider>
         </div>;

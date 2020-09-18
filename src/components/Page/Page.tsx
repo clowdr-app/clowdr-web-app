@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Page.scss';
 import useMaybeConference from '../../hooks/useMaybeConference';
 import ConferenceSelection, { failedToLoadConferencesF, selectConferenceF } from '../Pages/ConferenceSelection/ConferenceSelection';
 import Login, { doLoginF } from '../Pages/Login/Login';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import LoggedInWelcome from '../Pages/LoggedInWelcome/LoggedInWelcome';
-import useDocTitle from '../../hooks/useDocTitle';
+import DocTitleContext from '../../contexts/DocTitleContext';
 import { Switch, Route, RouteComponentProps, Redirect } from 'react-router-dom';
 import ChatView from '../Pages/ChatView/ChatView';
 import VideoRoom from '../Pages/VideoRoom/VideoRoom';
@@ -23,7 +23,9 @@ interface Props {
 function Page(props: Props) {
     const mConf = useMaybeConference();
     const mUser = useMaybeUserProfile();
-    const docTitle = useDocTitle();
+
+    const [docTitle, setDocTitle] = useState("Clowdr");
+    document.title = docTitle;
 
     let contentsElem: JSX.Element;
     let actionButtonsWrapper: JSX.Element | null = null;
@@ -85,11 +87,13 @@ function Page(props: Props) {
 
     return <>
         {noHeading ? <></> : <header className={"page-header" + (actionButtonsWrapper ? " actions" : " no-actions")}>
-            <h1 id="page-title" className="banner" aria-level={1}>{docTitle.get()}</h1>
+            <h1 id="page-title" className="banner" aria-level={1}>{docTitle}</h1>
             {actionButtonsWrapper}
         </header>}
         <main className="page">
-            {contentsElem}
+            <DocTitleContext.Provider value={setDocTitle}>
+                {contentsElem}
+            </DocTitleContext.Provider>
         </main>
     </>;
 }

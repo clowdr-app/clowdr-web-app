@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import useDocTitle from "../../../hooks/useDocTitle";
 import "./Login.scss";
 import useConference from "../../../hooks/useConference";
@@ -18,10 +18,7 @@ export default function Login(props: LoginProps) {
     const [errorMsg, setErrorMsg] = useState(null as string | null);
     const conference = useConference();
 
-    const docTitle = useDocTitle();
-    useEffect(() => {
-        docTitle.set("Sign in");
-    }, [docTitle]);
+    useDocTitle("Sign in");
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();

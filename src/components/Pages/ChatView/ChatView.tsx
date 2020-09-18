@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import useDocTitle from "../../../hooks/useDocTitle";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import "./ChatView.scss";
@@ -8,10 +8,7 @@ interface Props {
 }
 
 export default function ChatView(props: Props) {
-    const docTitle = useDocTitle();
-    useEffect(() => {
-        docTitle.set("Chat Room X");
-    }, [docTitle]);
+    useDocTitle("Chat Room X");
     return <div className="chat-view">
         <ChatFrame chatId={props.chatId} />
     </div>;

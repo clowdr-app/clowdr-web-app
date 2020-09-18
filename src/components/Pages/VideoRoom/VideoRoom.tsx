@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import useDocTitle from "../../../hooks/useDocTitle";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import VideoGrid from "../../Video/VideoGrid/VideoGrid";
@@ -13,10 +13,7 @@ interface Props {
 export default function VideoRoom(props: Props) {
     const [size, setSize] = useState(30);
 
-    const docTitle = useDocTitle();
-    useEffect(() => {
-        docTitle.set("Video Room Y");
-    }, [docTitle]);
+    useDocTitle("Video Room Y");
 
     return <div className="video-room">
         <SplitterLayout

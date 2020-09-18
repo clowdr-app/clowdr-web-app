@@ -18,10 +18,7 @@ export default function ConferenceSelection(props: Props) {
     const [selected, setSelected] = useState<string | null>(null);
     const [conferencesPromise, setConferencesPromise] = useState<Promise<Conference[]> | null>(null);
 
-    const docTitle = useDocTitle();
-    useEffect(() => {
-        docTitle.set("Clowdr");
-    }, [docTitle]);
+    useDocTitle("Clowdr");
 
     useEffect(() => {
         let cancelConferencesPromise: () => void = () => { };
