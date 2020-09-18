@@ -7,6 +7,8 @@ import * as Schema from "../Schema";
 import Caches, { Cache } from "../Cache";
 import UncachedSchema from "../UncachedSchema";
 import { CachedSchemaKeys, IBase, PromisesRemapped, RelationsToTableNames, UncachedSchemaKeys, WholeSchema, WholeSchemaKeys } from "../WholeSchema";
+import { ISimpleEvent } from "strongly-typed-events";
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from "../Cache/Cache";
 
 /*
  * 2020-09-09 A note to future developers on constructors
@@ -63,6 +65,9 @@ export interface StaticCachedBase<K extends CachedSchemaKeys> {
 
     get(id: string, conferenceId: string): Promise<IBase<K> | null>;
     getAll(conferenceId: string): Promise<Array<IBase<K>>>;
+
+    onDataUpdated(conferenceId: string): Promise<ISimpleEvent<DataUpdatedEventDetails<K>>>;
+    onDataDeleted(conferenceId: string): Promise<ISimpleEvent<DataDeletedEventDetails<K>>>;
 }
 
 export type CachedConstructor<K extends CachedSchemaKeys>
@@ -269,6 +274,23 @@ export abstract class StaticBaseImpl {
             return [];
         });
     }
+
+    static async onDataUpdated<K extends CachedSchemaKeys>(
+        tableName: K,
+        conferenceId: string
+    ): Promise<ISimpleEvent<DataUpdatedEventDetails<K>>> {
+        let cache = await Caches.get(conferenceId);
+        return cache.onDataUpdated<K>(tableName);
+    }
+
+    static async onDataDeleted<K extends CachedSchemaKeys>(
+        tableName: K,
+        conferenceId: string
+    ): Promise<ISimpleEvent<DataDeletedEventDetails<K>>> {
+        let cache = await Caches.get(conferenceId);
+        return cache.onDataDeleted<K>(tableName);
+    }
+
 }
 
 /**

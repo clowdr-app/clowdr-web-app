@@ -86,6 +86,9 @@ export default function Program(props: Props) {
     /* For debugging */
     logger.disable();
 
+    // TODO: Subscribe for ProgramTrack changes
+    // TODO: Subscribe for ProgramItem changes
+
     useEffect(() => {
         async function buildRenderData() {
             let groupedItems: {
@@ -110,9 +113,17 @@ export default function Program(props: Props) {
             // Place sessions into groups
             for (let session of props.sessions) {
                 for (let boundary of boundaries) {
-                    if (session.endTime.getTime() <= boundary.end) {
-                        groupedItems[boundary.start].sessions.push(session);
-                        break;
+                    if (boundary.end <= now) {
+                        if (session.endTime.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].sessions.push(session);
+                            break;
+                        }
+                    }
+                    else {
+                        if (session.startTime.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].sessions.push(session);
+                            break;
+                        }
                     }
                 }
             }
@@ -120,9 +131,17 @@ export default function Program(props: Props) {
             // Place events into groups
             for (let event of props.events) {
                 for (let boundary of boundaries) {
-                    if (event.endTime.getTime() <= boundary.end) {
-                        groupedItems[boundary.start].events.push(event);
-                        break;
+                    if (boundary.end <= now) {
+                        if (event.endTime.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].events.push(event);
+                            break;
+                        }
+                    }
+                    else {
+                        if (event.startTime.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].events.push(event);
+                            break;
+                        }
                     }
                 }
             }

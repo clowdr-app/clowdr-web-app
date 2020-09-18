@@ -10,7 +10,7 @@ import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields, KnownKeys 
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
 import assert from "assert";
-import { SimpleEventDispatcher } from "strongly-typed-events";
+import { ISimpleEvent, SimpleEventDispatcher } from "strongly-typed-events";
 
 type ExtendedCachedSchema
     = CachedSchema
@@ -28,12 +28,12 @@ type ExtendedCachedSchema
 
 type ExtendedCachedSchemaKeys = KnownKeys<ExtendedCachedSchema>;
 
-type DataUpdateEventDetails<K extends CachedSchemaKeys> = {
+export type DataUpdatedEventDetails<K extends CachedSchemaKeys> = {
     table: K;
     object: CachedBase<K>;
 };
 
-type DataDeletedEventDetails<K extends CachedSchemaKeys> = {
+export type DataDeletedEventDetails<K extends CachedSchemaKeys> = {
     table: K;
     objectId: string;
 };
@@ -209,19 +209,19 @@ export default class Cache {
     } = {};
 
     public _onDataUpdated: {
-        [K in CachedSchemaKeys]: SimpleEventDispatcher<DataUpdateEventDetails<K>>
+        [K in CachedSchemaKeys]: SimpleEventDispatcher<DataUpdatedEventDetails<K>>
     };
 
     public _onDataDeleted: {
         [K in CachedSchemaKeys]: SimpleEventDispatcher<DataDeletedEventDetails<K>>
     };
 
-    public onDataUpdated<K extends CachedSchemaKeys>(tableName: K): SimpleEventDispatcher<DataUpdateEventDetails<K>> {
-        return this._onDataUpdated[tableName] as SimpleEventDispatcher<DataUpdateEventDetails<K>>;
+    public onDataUpdated<K extends CachedSchemaKeys>(tableName: K): ISimpleEvent<DataUpdatedEventDetails<K>> {
+        return (this._onDataUpdated[tableName] as SimpleEventDispatcher<DataUpdatedEventDetails<K>>).asEvent();
     }
 
-    public onDataDeleted<K extends CachedSchemaKeys>(tableName: K): SimpleEventDispatcher<DataDeletedEventDetails<K>> {
-        return this._onDataDeleted[tableName] as SimpleEventDispatcher<DataDeletedEventDetails<K>>;
+    public onDataDeleted<K extends CachedSchemaKeys>(tableName: K): ISimpleEvent<DataDeletedEventDetails<K>> {
+        return (this._onDataDeleted[tableName] as SimpleEventDispatcher<DataDeletedEventDetails<K>>).asEvent();
     }
 
     constructor(
@@ -235,13 +235,13 @@ export default class Cache {
         }
 
         this._onDataUpdated = {} as any;
-        for (let key in CachedStoreNames) {
-            this._onDataUpdated[key] = new SimpleEventDispatcher();
+        for (let key of CachedStoreNames) {
+            this._onDataUpdated[key as CachedSchemaKeys] = new SimpleEventDispatcher() as any;
         }
 
         this._onDataDeleted = {} as any;
-        for (let key in CachedStoreNames) {
-            this._onDataDeleted[key] = new SimpleEventDispatcher();
+        for (let key of CachedStoreNames) {
+            this._onDataDeleted[key as CachedSchemaKeys] = new SimpleEventDispatcher() as any;
         }
     }
 
@@ -617,7 +617,7 @@ export default class Cache {
         const constr = Cache.Constructors[tableName];
         let result = new constr(this.conferenceId, schema, parse as any) as unknown as T;
 
-        let ev = this._onDataUpdated[tableName] as SimpleEventDispatcher<DataUpdateEventDetails<K>>;
+        let ev = this._onDataUpdated[tableName] as SimpleEventDispatcher<DataUpdatedEventDetails<K>>;
         ev.dispatchAsync({
             table: tableName,
             object: result

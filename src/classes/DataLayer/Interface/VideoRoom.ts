@@ -42,6 +42,14 @@ export default class Class extends CachedBase<K> implements SchemaT {
     static getAll(conferenceId: string): Promise<Array<Class>> {
         return StaticBaseImpl.getAll(K_str, conferenceId);
     }
+
+    static onDataUpdated(conferenceId: string) {
+        return StaticBaseImpl.onDataUpdated(K_str, conferenceId);
+    }
+
+    static onDataDeleted(conferenceId: string) {
+        return StaticBaseImpl.onDataDeleted(K_str, conferenceId);
+    }
 }
 
 // The line of code below triggers type-checking of Class for static members

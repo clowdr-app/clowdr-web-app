@@ -136,6 +136,8 @@ ${eventsCode.reduce((acc, x) => acc + x + "\n\n", "")}
     console.log("Done");
 }
 
+// TODO: Something isn't handling dates properly...
+
 function processInputData(data, timezone) {
     const records = csvParse(data, {
         columns: true, trim: true, skip_empty_lines: true
@@ -198,8 +200,10 @@ function processInputData(data, timezone) {
             }
             if (eTime < sTime)
                 throw new Error("Invalid start/end time specified: start must be before end (found " + sTime + ", " + eTime + ")");
-            if (!session.eTime || !session.sTime) {
+            if (!session.eTime) {
                 session.eTime = eTime;
+            }
+            if (!session.sTime) {
                 session.sTime = sTime;
             }
             if (sTime < session.sTime)
