@@ -83,6 +83,10 @@ export default class Class extends CachedBase<K> implements SchemaT {
         return this.uniqueRelated("user");
     }
 
+    get userId(): string {
+        return this.data.user;
+    }
+
     get flairs(): Promise<Flair[]> {
         return this.nonUniqueRelated("flairs");
     }

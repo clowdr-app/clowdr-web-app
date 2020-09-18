@@ -67,11 +67,11 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         };
         return RESTController.request(
             'GET', 'login', auth, loginOptions
-        ).then((response: any) => {
+        ).then(async (response: any) => {
             let user = new Parse.User();
             // @ts-ignore
-            user._finishFetch(response);
-            return { user: userController.setCurrentUser(user), sessionToken: user.getSessionToken() };
+            await user._finishFetch(response);
+            return { user: await userController.setCurrentUser(user), sessionToken: user.getSessionToken() };
         });
     }
 

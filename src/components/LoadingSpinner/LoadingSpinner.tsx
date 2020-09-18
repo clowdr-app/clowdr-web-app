@@ -3,6 +3,7 @@ import "./LoadingSpinner.scss";
 
 interface Props {
     interval?: number;
+    message?: string;
 }
 
 export function LoadingSpinner(props: Props) {
@@ -21,5 +22,9 @@ export function LoadingSpinner(props: Props) {
         }
     }, [props.interval]);
 
-    return <div className="loading-spinner"><span>Loading{".".repeat(loadingSpinnerCount)}</span></div>;
+    return <div className="loading-spinner">
+        <span>
+            {props.message ? props.message : "Loading"}{".".repeat(loadingSpinnerCount)}
+        </span>
+    </div>;
 }

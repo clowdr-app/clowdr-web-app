@@ -6,7 +6,6 @@ import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
 import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
-import * as DataLayer from "../../classes/DataLayer";
 import useLogger from '../../hooks/useLogger';
 import { Conference, UserProfile, _User } from "../../classes/DataLayer";
 import assert from "assert";
@@ -15,6 +14,73 @@ import Caches from "../../classes/DataLayer/Cache";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 
 interface Props {
+}
+
+type AppTasks
+    = "beginLoadConference"
+    | "beginLoadCurrentUser"
+    | "loadingConference"
+    | "loadingCurrentUser";
+
+interface AppState {
+    tasks: Set<AppTasks>;
+    conferenceId: string | null;
+    conference: Conference | null;
+    profile: UserProfile | null,
+    sessionToken: string | null
+}
+
+type AppUpdate
+    = { action: "beginningLoadCurrentUser" }
+    | { action: "beginningLoadConference" }
+    | { action: "setConference", conference: Conference | null }
+    | { action: "setUserProfile", data: { profile: UserProfile, sessionToken: string } | null; }
+    ;
+
+function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpdate>): AppState {
+    let nextState = {
+        tasks: new Set(currentState.tasks),
+        conferenceId: currentState.conference?.id ?? null,
+        conference: currentState.conference,
+        profile: currentState.profile,
+        sessionToken: currentState.sessionToken
+    };
+
+    function doUpdate(update: AppUpdate) {
+        switch (update.action) {
+            case "beginningLoadConference":
+                nextState.tasks.delete("beginLoadConference");
+                nextState.tasks.add("loadingConference");
+                break;
+            case "beginningLoadCurrentUser":
+                nextState.tasks.delete("beginLoadCurrentUser");
+                nextState.tasks.add("loadingCurrentUser");
+                break;
+            case "setConference":
+                nextState.tasks.delete("beginLoadConference");
+                nextState.tasks.delete("loadingConference");
+                nextState.conferenceId = update.conference?.id ?? null;
+                nextState.conference = update.conference;
+                break;
+            case "setUserProfile":
+                nextState.tasks.delete("beginLoadCurrentUser");
+                nextState.tasks.delete("loadingCurrentUser");
+                nextState.profile = update.data?.profile ?? null;
+                nextState.sessionToken = update.data?.sessionToken ?? null;
+                break;
+        }
+    }
+
+    if (updates instanceof Array) {
+        updates.forEach(doUpdate);
+    }
+    else {
+        doUpdate(updates);
+    }
+
+    LocalStorage_Conference.currentConferenceId = nextState.conferenceId;
+
+    return nextState;
 }
 
 /**
@@ -27,185 +93,159 @@ interface Props {
  * Underlying components can rely entirely on the respective hooks.
  */
 export default function App(props: Props) {
-
-    // Hint: Do not use `LocalStorage_*` interfaces anywhere else - rely on contexts.
-    const currentConferenceId = LocalStorage_Conference.currentConferenceId;
-
-    // Get all relevant state information for this component
-    // Note: These can't be used inside `useEffect` or other asynchronous
-    //       functions.
-    const [conference, setConference] = useState<{
-        conf: DataLayer.Conference | null,
-        loading: boolean
-    }>({ conf: null, loading: true });
-    const [userProfile, setUserProfile] = useState<{
-        profile: DataLayer.UserProfile | null,
-        sessionToken: string | null,
-        loading: boolean
-    }>({ profile: null, sessionToken: null, loading: true });
     const logger = useLogger("App");
     const history = useHistory();
+
+    const [appState, dispatchAppUpdate] = useReducer(nextAppState, {
+        tasks: new Set(["beginLoadConference", "beginLoadCurrentUser"] as Array<AppTasks>),
+        conferenceId: LocalStorage_Conference.currentConferenceId,
+        conference: null,
+        profile: null,
+        sessionToken: null
+    });
+
+    // logger.enable();
+
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true /*TODO: Revert to false.*/);
 
     // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
 
+    // Update cache authentication status
     useEffect(() => {
         async function updateCacheAuthenticatedStatus() {
-            try {
-                if (!userProfile.profile) {
-                    if (currentConferenceId) {
-                        let cache = await Caches.get(currentConferenceId);
-                        cache.updateUserAuthenticated({ authed: false });
+            if (!appState.tasks.has("beginLoadConference")
+                && !appState.tasks.has("beginLoadCurrentUser")
+                && !appState.tasks.has("loadingConference")
+                && !appState.tasks.has("loadingCurrentUser")) {
+                try {
+                    if (!appState.profile) {
+                        if (appState.conferenceId) {
+                            let cache = await Caches.get(appState.conferenceId);
+                            cache.updateUserAuthenticated({ authed: false });
+                        }
+                    }
+                    else if (appState.conferenceId) {
+                        let cache = await Caches.get(appState.conferenceId);
+                        if (!cache.IsUserAuthenticated && appState.sessionToken) {
+                            cache.updateUserAuthenticated({ authed: true, sessionToken: appState.sessionToken });
+                        }
+                        else if (!appState.sessionToken) {
+                            logger.error("Could not initialise cache - user does not have a session token?!");
+                        }
                     }
                 }
-                else if (currentConferenceId) {
-                    let cache = await Caches.get(currentConferenceId);
-                    if (!cache.IsUserAuthenticated && userProfile.sessionToken) {
-                        cache.updateUserAuthenticated({ authed: true, sessionToken: userProfile.sessionToken });
-                    }
-                    else if (!userProfile.sessionToken) {
-                        logger.error("Could not initialise cache - user does not have a session token?!");
-                    }
+                catch (e) {
+                    console.error(e);
                 }
-            }
-            catch (e) {
-                console.error(e);
             }
         }
 
         updateCacheAuthenticatedStatus();
-    }, [userProfile.profile, userProfile.sessionToken, logger, currentConferenceId]);
+    }, [appState.conferenceId, appState.profile, appState.sessionToken, appState.tasks, logger]);
 
-    // logger.enable();
-
-    // Update conference
+    // Initial update of conference
     useEffect(() => {
-        /**
-         * Maintains the stored conference object in state and the conference id
-         * in the session.
-         */
         async function updateConference() {
-            // Has a conference has been selected?
-            if (currentConferenceId) {
-                // Have we already loaded the right conference from the cache?
-                if (!conference.conf || conference.conf.id !== currentConferenceId) {
-                    // Now we can try to fetch the selected conference from the cache
-                    // If the cache misses, it will go to the db for us.
-                    let _conference = await DataLayer.Conference.get(currentConferenceId);
+            if (appState.tasks.has("beginLoadConference")) {
+                dispatchAppUpdate({ action: "beginningLoadConference" });
 
-                    // Did the conference actually exist?
-                    if (!_conference) {
-                        // No? Darn...mustv'e been a fake id. Clear out the state.
-                        LocalStorage_Conference.currentConferenceId = null;
+                let _conference: Conference | null = null;
+
+                if (appState.conferenceId) {
+                    try {
+                        _conference = await Conference.get(appState.conferenceId);
                     }
+                    catch (e) {
+                        _conference = null;
+                        logger.error(e);
+                    }
+                }
 
-                    setConference({ conf: _conference, loading: false });
-                }
-                else if (conference.loading) {
-                    setConference({ conf: conference.conf, loading: false });
-                }
-            }
-            else if (conference.conf || conference.loading) {
-                // No conference selected - let's make sure our state reflects
-                // that fact.
-                setConference({ conf: null, loading: false });
+                dispatchAppUpdate({ action: "setConference", conference: _conference });
             }
         }
 
-        // Apply the update functions asynchronously - no waiting around
         updateConference();
-    }, [
-        currentConferenceId,
-        conference
-    ]);
+    }, [appState.conferenceId, appState.tasks, logger]);
 
-    // Update user profile
+    // Initial update of (current) user profile
     useEffect(() => {
-        /**
-         * Maintains the stored user object in state and the user id in the
-         * session.
-         */
         async function updateUser() {
-            Parse.User.currentAsync().then(async user => {
-                // It turns out the `user.id` can come back `undefined` when the
-                // Parse API thinks you're logged in but the user has been
-                // deleted in the database.
-                if (user && user.id) {
-                    if (!userProfile.profile || (await userProfile.profile.user).id !== user.id) {
-                        // Has a conference been selected?
-                        if (currentConferenceId) {
-                            // Yes, good, let's store the user for later.
-                            // This will also trigger a re-rendering.
-                            let profile = await DataLayer.UserProfile.getByUserId(user.id, currentConferenceId);
-                            if (profile || userProfile.loading) {
-                                setUserProfile({ profile: profile, sessionToken: user.getSessionToken(), loading: false });
+            if (appState.tasks.has("beginLoadCurrentUser")) {
+                dispatchAppUpdate({ action: "beginningLoadCurrentUser" });
+
+                Parse.User.currentAsync().then(async user => {
+                    // It turns out the `user.id` can come back `undefined` when the
+                    // Parse API thinks you're logged in but the user has been
+                    // deleted in the database.
+                    let profile = null;
+                    let sessionToken = null;
+
+                    if (appState.conferenceId) {
+                        if (user && user.id) {
+                            profile = await UserProfile.getByUserId(user.id, appState.conferenceId);
+                            if (profile) {
+                                sessionToken = user.getSessionToken();
                             }
                         }
-                        else if (userProfile.loading) {
-                            // No conference selected, better make sure our internal
-                            // state matches that fact.
-                            setUserProfile({ profile: null, sessionToken: null, loading: false });
-
-                            // Note: We don't actually log the user out here, we
-                            // just create a consistent state such that our app only
-                            // sees the logged in state when there is a conference
-                            // selected.
-                        }
                     }
-                    else if (userProfile.loading) {
-                        setUserProfile({ profile: userProfile.profile, sessionToken: user.getSessionToken(), loading: false });
-                    }
-                }
-                else if (userProfile.profile || userProfile.loading) {
-                    setUserProfile({ profile: null, sessionToken: null, loading: false });
-                }
-            }).catch(reason => {
-                logger.error("Failed to get current user from Parse.", reason);
 
-                if (userProfile.profile || userProfile.loading) {
-                    setUserProfile({ profile: null, sessionToken: null, loading: false });
-                }
-            });;
+                    dispatchAppUpdate({
+                        action: "setUserProfile",
+                        data: profile && sessionToken
+                            ? { profile: profile, sessionToken: sessionToken }
+                            : null
+                    });
+                }).catch(reason => {
+                    logger.error("Failed to get current user from Parse.", reason);
+
+                    dispatchAppUpdate({ action: "setUserProfile", data: null });
+                });;
+            }
         }
 
-        // Apply the update functions asynchronously
         updateUser();
-    }, [
-        currentConferenceId,
-        logger,
-        userProfile
-    ]);
+    }, [appState.conferenceId, appState.tasks, logger]);
 
     const doLogin = useCallback(async function _doLogin(email: string, password: string): Promise<boolean> {
         try {
-            assert(conference.conf);
+            assert(appState.conference);
 
             let parseUser = await _User.logIn(email, password);
-            let profile = await UserProfile.getByUserId(parseUser.user.id, conference.conf.id);
-            setUserProfile({ profile: profile, sessionToken: parseUser.sessionToken, loading: false });
+            let profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
+
+            dispatchAppUpdate({
+                action: "setUserProfile",
+                data: profile
+                    ? { profile: profile, sessionToken: parseUser.sessionToken }
+                    : null
+            });
+
             return !!profile;
         }
-        catch {
-            setUserProfile({ profile: null, sessionToken: null, loading: false });
+        catch (e) {
+            logger.error(e);
+            dispatchAppUpdate({ action: "setUserProfile", data: null });
             return false;
         }
-    }, [conference.conf]);
+    }, [appState.conference, logger]);
 
     const doLogout = useCallback(async function _doLogout() {
         try {
-            if (currentConferenceId) {
-                let cache = await Caches.get(currentConferenceId);
+            if (appState.conference) {
+                let cache = await Caches.get(appState.conference.id);
                 cache.updateUserAuthenticated({ authed: false });
             }
+        }
+        finally {
+            dispatchAppUpdate([
+                { action: "setConference", conference: null },
+                { action: "setUserProfile", data: null }
+            ]);
 
             await Parse.User.logOut();
         }
-        finally {
-            LocalStorage_Conference.currentConferenceId = null;
-            setConference({ conf: null, loading: false });
-            setUserProfile({ profile: null, sessionToken: null, loading: false });
-        }
-    }, [currentConferenceId]);
+    }, [appState.conference]);
 
     const failedToLoadConferences = useCallback(async function _failedToLoadConferences(reason: any): Promise<void> {
         // This is most likely to occur during testing when the session token
@@ -240,40 +280,20 @@ export default function App(props: Props) {
     }, [history, logger]);
 
     const selectConference = useCallback(async function _selectConference(id: string | null): Promise<boolean> {
-        let clearSelected = false;
-        let ok = true;
+        let conference: Conference | null = null;
         try {
             if (id) {
-                const _conference = await Conference.get(id);
-                if (_conference) {
-                    LocalStorage_Conference.currentConferenceId = id;
-                    setConference(conference);
-                    setConference({ conf: _conference, loading: false });
-                }
-                else {
-                    ok = false;
-                    LocalStorage_Conference.currentConferenceId = null;
-                    if (conference.conf) {
-                        setConference({ conf: _conference, loading: false });
-                    }
-                }
-            }
-            else {
-                clearSelected = true;
+                conference = await Conference.get(id);
             }
         }
-        catch {
-            clearSelected = true;
-            ok = false;
+        catch (e) {
+            logger.error(e);
         }
 
-        if (clearSelected) {
-            LocalStorage_Conference.currentConferenceId = null;
-            setConference({ conf: null, loading: false });
-        }
+        dispatchAppUpdate({ action: "setConference", conference: conference });
 
-        return ok;
-    }, [conference]);
+        return conference !== null;
+    }, [logger]);
 
     const toggleSidebar = useCallback(async function _toggleSidebar(): Promise<void> {
         setSidebarOpen(!sidebarOpen);
@@ -281,9 +301,7 @@ export default function App(props: Props) {
 
     const appClassNames = ["app"];
 
-    if (conference.loading || userProfile.loading) {
-        appClassNames.push("loading");
-
+    if (appState.tasks.size > 0) {
         const appClassName = appClassNames.reduce((x, y) => `${x} ${y}`);
         return <div className={appClassName}>
             <LoadingSpinner />
@@ -304,19 +322,18 @@ export default function App(props: Props) {
         //  not-logged-in access to some conference elements (e.g.a public program
         //  or welcome page) but reduces our work as we don't have to design an
         //  'empty' sidebar for when no conference is selected.
-        if (conference.conf) {
+        if (appState.conference) {
             sidebar = <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} doLogout={doLogout} />;
             appClassNames.push(sidebarOpen ? "sidebar-open" : "sidebar-closed");
         }
-
 
         // TODO: Wrap this in an error boundary to handle null cache/conference/user and unexpected errors
 
         const appClassName = appClassNames.reduce((x, y) => `${x} ${y}`);
         // Hint: `user` could be null - see also, `useUser` and `useMaybeUser` hooks
         return <div className={appClassName}>
-            <ConferenceContext.Provider value={conference.conf}>
-                <UserProfileContext.Provider value={userProfile.profile}>
+            <ConferenceContext.Provider value={appState.conference}>
+                <UserProfileContext.Provider value={appState.profile}>
                     {sidebar}
                     {page}
                 </UserProfileContext.Provider>

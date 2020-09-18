@@ -21,6 +21,11 @@
         width         : 50%;
         margin        : 0 auto;
 
+        .error-message {
+            margin-bottom: 2ex;
+            color: $primary;
+        }
+
         .email-box,
         .password-box {
             padding      : mm(2) mm(2);
