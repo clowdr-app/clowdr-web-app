@@ -355,13 +355,20 @@ export default class Cache {
 
                         this.isInitialised = true;
 
-                        let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
-                        let conf = await confP;
-                        if (!conf) {
-                            return;
-                        }
+                        try {
+                            let confP = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference").get(this.conferenceId) || null;
+                            let conf = await confP;
+                            if (!conf) {
+                                resolve(undefined);
+                                return;
+                            }
 
-                        resolve(conf);
+                            resolve(conf);
+                        }
+                        catch (e) {
+                            this.logger.error("Error getting conference instance", e);
+                            resolve(undefined);
+                        }
                     }
                     catch (e) {
                         this.logger.error(`Error initialising cache.`, e);
