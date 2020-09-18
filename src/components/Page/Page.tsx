@@ -6,12 +6,13 @@ import Login, { doLoginF } from '../Pages/Login/Login';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import LoggedInWelcome from '../Pages/LoggedInWelcome/LoggedInWelcome';
 import useDocTitle from '../../hooks/useDocTitle';
-import { Switch, Route, RouteComponentProps } from 'react-router-dom';
+import { Switch, Route, RouteComponentProps, Redirect } from 'react-router-dom';
 import ChatView from '../Pages/ChatView/ChatView';
 import VideoRoom from '../Pages/VideoRoom/VideoRoom';
 import NotFound from '../Pages/NotFound/NotFound';
 import AllChats from '../Pages/AllChats/AllChats';
 import AllVideoRooms from '../Pages/AllVideoRooms/AllVideoRooms';
+import Profile from '../Pages/Profile/Profile';
 
 interface Props {
     doLogin: doLoginF;
@@ -36,7 +37,6 @@ function Page(props: Props) {
         // TODO: Route for /program/new (conference manager and admin roles only)
 
         // TODO: Route for /watched (to see/edit watched items)
-        // TODO: Route for /profile (to see/edit current user profile)
         // TODO: Route for /moderators (to contact the conference mods)
         // TODO: Route for /admin to access the top-level admin interface (admin/manager roles only)
 
@@ -57,6 +57,12 @@ function Page(props: Props) {
                 <VideoRoom roomId={props.match.params.roomId} />}
             />
             <Route path="/room" component={AllVideoRooms} />
+            <Route path="/profile/:userProfileId" component={(props: RouteComponentProps<any>) =>
+                <Profile userProfileId={props.match.params.userProfileId} />}
+            />
+            <Route path="/profile" component={(props: RouteComponentProps<any>) =>
+                <Redirect to={"/profile/" + mUser.id} />
+            } />
             <Route path="/" component={NotFound} />
         </Switch>;
     }
