@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef } from 'react';
+import React, { useCallback, useEffect, useReducer, useRef } from 'react';
 import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
@@ -10,6 +10,8 @@ import Program from './Program';
 import MenuItem from './Menu/MenuItem';
 import { ProgramSession, ProgramSessionEvent } from '../../classes/DataLayer';
 import { makeCancelable } from '../../classes/Util';
+import { ISimpleEvent } from 'strongly-typed-events';
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from '../../classes/DataLayer/Cache/Cache';
 
 interface Props {
     open: boolean,
@@ -41,6 +43,9 @@ interface SidebarState {
 type SidebarUpdate
     = { action: "updateSessions"; sessions: Array<ProgramSession> }
     | { action: "updateEvents"; events: Array<ProgramSessionEvent> }
+    
+    | { action: "deleteSessions"; sessions: Array<string> }
+    | { action: "deleteEvents"; events: Array<string> }
 
     | { action: "searchChats"; search: string | null }
     | { action: "searchRooms"; search: string | null }
@@ -97,7 +102,6 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
     let sessionsOrEventsUpdated = false;
 
     function doUpdate(update: SidebarUpdate) {
-        // TODO: Apply update
         switch (update.action) {
             case "searchChats":
                 nextState.chatSearch = update.search;
@@ -118,11 +122,45 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 nextState.roomsIsOpen = update.isOpen;
                 break;
             case "updateEvents":
-                nextState.events = update.events;
-                sessionsOrEventsUpdated = true;
+                {
+                    let updatedIds = update.events.map(x => x.id);
+                    nextState.events = nextState.events?.map(x => {
+                        let idx = updatedIds.indexOf(x.id);
+                        if (idx > -1) {
+                            updatedIds.splice(idx, 1);
+                            return update.events[idx];
+                        }
+                        else {
+                            return x;
+                        }
+                    }) ?? null;
+                    nextState.events = nextState.events?.concat(update.events.filter(x => updatedIds.includes(x.id))) ?? update.events;
+                    sessionsOrEventsUpdated = true;
+                }
                 break;
             case "updateSessions":
-                nextState.sessions = update.sessions;
+                {
+                    let updatedIds = update.sessions.map(x => x.id);
+                    nextState.sessions = nextState.sessions?.map(x => {
+                        let idx = updatedIds.indexOf(x.id);
+                        if (idx > -1) {
+                            updatedIds.splice(idx, 1);
+                            return update.sessions[idx];
+                        }
+                        else {
+                            return x;
+                        }
+                    }) ?? null;
+                    nextState.sessions = nextState.sessions?.concat(update.sessions.filter(x => updatedIds.includes(x.id))) ?? update.sessions;
+                    sessionsOrEventsUpdated = true;
+                }
+                break;
+            case "deleteEvents":
+                nextState.events = nextState.events?.filter(x => !update.events.includes(x.id)) ?? null;
+                sessionsOrEventsUpdated = true;
+                break;
+            case "deleteSessions":
+                nextState.sessions = nextState.sessions?.filter(x => !update.sessions.includes(x.id)) ?? null;
                 sessionsOrEventsUpdated = true;
                 break;
         }
@@ -190,7 +228,7 @@ function Sidebar(props: Props) {
     // TODO: Use 'C/R/P' to jump focus to menu expanders
     // TODO: Document shortcut keys prominently on the /help page
 
-    // TODO: Introduce a setInterval which refreshes the program view every minute or so
+    // Initial fetch of complete program
     useEffect(() => {
         let cancel: () => void = () => { };
 
@@ -238,18 +276,89 @@ function Sidebar(props: Props) {
         return cancel;
     }, [conf.id]);
 
+    // Refresh the filtered view every few mins
     useEffect(() => {
-        const intervalId = window.setInterval(() => {
-            dispatchUpdate({
-                action: "searchProgram",
-                search: state.programSearch
-            });
+        const intervalId = setInterval(() => {
+            if (!state.programSearch) {
+                dispatchUpdate({
+                    action: "searchProgram",
+                    search: null
+                });
+            }
         }, 1000 * 60 * 3 /* 3 mins */);
 
         return () => {
             clearInterval(intervalId);
         }
     }, [state.programSearch]);
+
+    const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
+        dispatchUpdate({ action: "updateSessions", sessions: [ev.object as ProgramSession] });
+    }, []);
+
+    const onEventUpdated = useCallback(function _onEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
+        dispatchUpdate({ action: "updateEvents", events: [ev.object as ProgramSessionEvent] });
+    }, []);
+
+    const onSessionDeleted = useCallback(function _onSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
+        dispatchUpdate({ action: "deleteSessions", sessions: [ev.objectId] });
+    }, []);
+
+    const onEventDeleted = useCallback(function _onEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {
+        dispatchUpdate({ action: "deleteEvents", events: [ev.objectId] });
+    }, []);
+
+    // Subscribe to data events
+    useEffect(() => {
+        if (!state.tasks.has("loadingSessionsAndEvents")) {
+            let cancel: () => void = () => { };
+            let unsubscribe: () => void = () => { };
+            async function subscribeToUpdates() {
+                try {
+                    const promises: [
+                        Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramSession">>>,
+                        Promise<ISimpleEvent<DataDeletedEventDetails<"ProgramSession">>>,
+                        Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramSessionEvent">>>,
+                        Promise<ISimpleEvent<DataDeletedEventDetails<"ProgramSessionEvent">>>
+                    ] = [
+                            ProgramSession.onDataUpdated(conf.id),
+                            ProgramSession.onDataDeleted(conf.id),
+                            ProgramSessionEvent.onDataUpdated(conf.id),
+                            ProgramSessionEvent.onDataDeleted(conf.id)
+                        ];
+                    const promise = makeCancelable(Promise.all(promises));
+                    cancel = promise.cancel;
+                    const [ev1, ev2, ev3, ev4] = await promise.promise;
+                    const unsubscribe1 = ev1.subscribe(onSessionUpdated);
+                    const unsubscribe2 = ev2.subscribe(onSessionDeleted);
+                    const unsubscribe3 = ev3.subscribe(onEventUpdated);
+                    const unsubscribe4 = ev4.subscribe(onEventDeleted);
+                    unsubscribe = () => {
+                        unsubscribe1();
+                        unsubscribe2();
+                        unsubscribe3();
+                        unsubscribe4();
+                    };
+                }
+                catch (e) {
+                    if (!e.isCanceled) {
+                        throw e;
+                    }
+                }
+                finally {
+                    cancel = () => { };
+                }
+            }
+
+            subscribeToUpdates();
+
+            return () => {
+                unsubscribe();
+                cancel();
+            }
+        }
+        return () => { };
+    }, [conf.id, onSessionUpdated, onEventUpdated, onSessionDeleted, onEventDeleted, state.tasks]);
 
     let sideBarButton = <div className="sidebar-button">
         <button
