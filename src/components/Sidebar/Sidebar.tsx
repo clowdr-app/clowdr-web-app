@@ -9,7 +9,7 @@ import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
 import MenuItem from './Menu/MenuItem';
 import { ProgramSession, ProgramSessionEvent } from '../../classes/DataLayer';
-import { makeCancelable } from '../../classes/Util';
+import { makeCancelable, removeNull } from '../../classes/Util';
 import { ISimpleEvent } from 'strongly-typed-events';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from '../../classes/DataLayer/Cache/Cache';
 
@@ -44,6 +44,9 @@ type SidebarUpdate
     = { action: "updateSessions"; sessions: Array<ProgramSession> }
     | { action: "updateEvents"; events: Array<ProgramSessionEvent> }
     
+    | { action: "updateFilteredSessions"; sessions: Array<ProgramSession> }
+    | { action: "updateFilteredEvents"; events: Array<ProgramSessionEvent> }
+    
     | { action: "deleteSessions"; sessions: Array<string> }
     | { action: "deleteEvents"; events: Array<string> }
 
@@ -56,28 +59,58 @@ type SidebarUpdate
     | { action: "setProgramIsOpen"; isOpen: boolean }
     ;
 
-function filteredSessionsAndEvents(
+async function filteredSessionsAndEvents(
     allSessions: Array<ProgramSession>,
     allEvents: Array<ProgramSessionEvent>,
-    search: string | null): [Array<ProgramSession>, Array<ProgramSessionEvent>] {
-    const now = Date.now();
-    const twoHours = 2 * 60 * 60 * 1000;
-    const endLimit = now;
-    const startLimit = now + twoHours;
+    _search: string | null): Promise<[Array<ProgramSession>, Array<ProgramSessionEvent>]> {
+    if (_search && _search.length >= 3) {
+        let search = _search.toLowerCase();
 
-    let sessions = allSessions
-        .filter(x => x.endTime.getTime() >= endLimit
-            && x.startTime.getTime() <= startLimit);
+        let sessions = removeNull<ProgramSession>(await Promise.all(allSessions.map(async x => {
+            let trackName = (await x.track).name;
+            let sessionTitle = x.title;
 
-    let events = allEvents
-        .filter(x => x.endTime.getTime() >= endLimit
-            && x.startTime.getTime() <= startLimit);
+            return !!trackName.toLowerCase().match(search)?.length
+                || !!sessionTitle.toLowerCase().match(search)?.length
+                ? x : null;
+        })));
 
-    let eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
+        let events = removeNull(await Promise.all(allEvents.map(async x => {
+            let item = await x.item;
+            let itemTitle = item.title;
+            let authorNames = (await item.authors).map(x => x.name);
+            let trackName = (await x.track).name;
+            let sessionTitle = (await x.session).title;
 
-    sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
+            return !!itemTitle.toLowerCase().match(search)?.length
+                || !!trackName.toLowerCase().match(search)?.length
+                || !!sessionTitle.toLowerCase().match(search)?.length
+                || authorNames.reduce<boolean>((acc, x) => acc || (!!x.toLowerCase().match(search)?.length), false)
+                ? x : null;
+        })));
 
-    return [sessions, events];
+        return [sessions, events];
+    }
+    else {
+        const now = Date.now();
+        const twoHours = 2 * 60 * 60 * 1000;
+        const endLimit = now;
+        const startLimit = now + twoHours;
+
+        let sessions = allSessions
+            .filter(x => x.endTime.getTime() >= endLimit
+                && x.startTime.getTime() <= startLimit);
+
+        let events = allEvents
+            .filter(x => x.endTime.getTime() >= endLimit
+                && x.startTime.getTime() <= startLimit);
+
+        let eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
+
+        sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
+
+        return [sessions, events];
+    }
 }
 
 function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | Array<SidebarUpdate>): SidebarState {
@@ -104,13 +137,13 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
     function doUpdate(update: SidebarUpdate) {
         switch (update.action) {
             case "searchChats":
-                nextState.chatSearch = update.search;
+                nextState.chatSearch = update.search?.length ? update.search : null;
                 break;
             case "searchProgram":
-                nextState.programSearch = update.search;
+                nextState.programSearch = update.search?.length ? update.search : null;
                 break;
             case "searchRooms":
-                nextState.roomSearch = update.search;
+                nextState.roomSearch = update.search?.length ? update.search : null;
                 break;
             case "setChatsIsOpen":
                 nextState.chatsIsOpen = update.isOpen;
@@ -163,6 +196,13 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 nextState.sessions = nextState.sessions?.filter(x => !update.sessions.includes(x.id)) ?? null;
                 sessionsOrEventsUpdated = true;
                 break;
+            
+            case "updateFilteredSessions":
+                nextState.filteredSessions = update.sessions;
+                break;
+            case "updateFilteredEvents":
+                nextState.filteredEvents = update.events;
+                break;
         }
     }
 
@@ -176,15 +216,6 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
     if (sessionsOrEventsUpdated) {
         if (nextState.sessions && nextState.events) {
             nextState.tasks.delete("loadingSessionsAndEvents");
-
-            const [filteredSessions, filteredEvents]
-                = filteredSessionsAndEvents(
-                    nextState.sessions,
-                    nextState.events,
-                    nextState.programSearch
-                );
-            nextState.filteredSessions = filteredSessions;
-            nextState.filteredEvents = filteredEvents;
         }
         else {
             nextState.filteredEvents = [];
@@ -276,7 +307,7 @@ function Sidebar(props: Props) {
         return cancel;
     }, [conf.id]);
 
-    // Refresh the filtered view every few mins
+    // Refresh the view every few mins
     useEffect(() => {
         const intervalId = setInterval(() => {
             if (!state.programSearch) {
@@ -291,6 +322,40 @@ function Sidebar(props: Props) {
             clearInterval(intervalId);
         }
     }, [state.programSearch]);
+
+    // Update filtered results
+    useEffect(() => {
+        let cancel: () => void = () => { };
+
+        async function updateFiltered() {
+            try {
+                let promise = makeCancelable(filteredSessionsAndEvents(
+                    state.sessions ?? [],
+                    state.events ?? [],
+                    state.programSearch
+                ));
+                cancel = promise.cancel;
+                const [filteredSessions, filteredEvents]
+                    = await promise.promise;
+                dispatchUpdate([
+                    { action: "updateFilteredSessions", sessions: filteredSessions },
+                    { action: "updateFilteredEvents", events: filteredEvents }
+                ]);
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+                    throw e;
+                }
+            }
+            finally {
+                cancel = () => { };
+            }
+        }
+
+        updateFiltered();
+
+        return cancel;
+    }, [state.events, state.programSearch, state.sessions]);
 
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
         dispatchUpdate({ action: "updateSessions", sessions: [ev.object as ProgramSession] });
@@ -374,9 +439,6 @@ function Sidebar(props: Props) {
     </div>;
 
     if (props.open) {
-        // TODO: How much repeat work can we avoid by useEffect where they're
-        //       not sensitive to the open - state of each expander
-
         let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.shortName}</Link></h1>;
         let headerBar = <div className="sidebar-header">
             {sideBarButton}
@@ -388,7 +450,6 @@ function Sidebar(props: Props) {
         let roomsExpander: JSX.Element = <></>;
         let programExpander: JSX.Element = <></>;
 
-        // TODO: Utilise useCallback for onSearch, onSearchOpen, onSearchClose to reduce rendering
         let chatsButtons: Array<ButtonSpec> = [
             {
                 type: "search", label: "Search all chats", icon: "fa-search",
@@ -534,12 +595,14 @@ function Sidebar(props: Props) {
                 </MenuExpander>;
         }
 
-        // TODO: Search whole program
         let program: JSX.Element;
         if (state.sessions && state.events) {
             const programTimeBoundaries: Array<number> = [
                 0, 15, 30, 60, 120
             ];
+
+            console.log("filtered events", state.filteredEvents);
+
             program = <Program
                 sessions={state.filteredSessions}
                 events={state.filteredEvents}

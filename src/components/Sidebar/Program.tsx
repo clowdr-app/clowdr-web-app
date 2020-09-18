@@ -92,139 +92,159 @@ export default function Program(props: Props) {
     /* For debugging */
     logger.disable();
 
-    // TODO: Subscribe for ProgramTrack changes
-    // TODO: Subscribe for ProgramItem changes
-
     // Compute render data
     useEffect(() => {
-        async function buildRenderData() {
+        async function buildRenderData(): Promise<RenderData> {
             if (refreshRequired) {
                 setRefreshRequired(false);
+            }
 
-                let groupedItems: {
-                    [timeBoundary: number]: {
-                        startTime: Date,
-                        endTime: Date,
-                        sessions: Array<ProgramSession>,
-                        events: Array<ProgramSessionEvent>
-                    }
-                } = {};
-                let [boundaries, now] = arrangeBoundaries(props.timeBoundaries);
-                // Initialise empty groups
-                for (let boundary of boundaries) {
-                    groupedItems[boundary.start] = {
-                        startTime: new Date(boundary.start),
-                        endTime: new Date(boundary.end),
-                        sessions: [],
-                        events: []
-                    };
+            let groupedItems: {
+                [timeBoundary: number]: {
+                    startTime: Date,
+                    endTime: Date,
+                    sessions: Array<ProgramSession>,
+                    events: Array<ProgramSessionEvent>
                 }
-
-                // Place sessions into groups
-                for (let session of props.sessions) {
-                    for (let boundary of boundaries) {
-                        if (boundary.end <= now) {
-                            if (session.endTime.getTime() <= boundary.end) {
-                                groupedItems[boundary.start].sessions.push(session);
-                                break;
-                            }
-                        }
-                        else {
-                            if (session.startTime.getTime() <= boundary.end) {
-                                groupedItems[boundary.start].sessions.push(session);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Place events into groups
-                for (let event of props.events) {
-                    for (let boundary of boundaries) {
-                        if (boundary.end <= now) {
-                            if (event.endTime.getTime() <= boundary.end) {
-                                groupedItems[boundary.start].events.push(event);
-                                break;
-                            }
-                        }
-                        else {
-                            if (event.startTime.getTime() <= boundary.end) {
-                                groupedItems[boundary.start].events.push(event);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Filter out empty groups
-                for (let groupKey in groupedItems) {
-                    let group = groupedItems[groupKey];
-                    if (group.events.length === 0 && group.sessions.length === 0) {
-                        delete groupedItems[groupKey];
-                        logger.info(`Deleting empty group: ${groupKey}`);
-                    }
-                }
-
-                // Build render data
-                let newRenderData: RenderData = {
-                    groups: []
+            } = {};
+            let [boundaries, now] = arrangeBoundaries(props.timeBoundaries);
+            // Initialise empty groups
+            for (let boundary of boundaries) {
+                groupedItems[boundary.start] = {
+                    startTime: new Date(boundary.start),
+                    endTime: new Date(boundary.end),
+                    sessions: [],
+                    events: []
                 };
-                for (let groupKey in groupedItems) {
-                    let group = groupedItems[groupKey];
-                    let timeText: string;
-                    if (group.endTime.getTime() <= now) {
-                        timeText = "Past";
-                    }
-                    else if (group.startTime.getTime() <= now) {
-                        timeText = "Happening now";
+            }
+
+            // Place sessions into groups
+            for (let session of props.sessions) {
+                for (let boundary of boundaries) {
+                    if (boundary.end <= now) {
+                        if (session.endTime.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].sessions.push(session);
+                            break;
+                        }
                     }
                     else {
-                        let distance = group.startTime.getTime() - now;
-                        let units = "minutes";
-                        distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
-                        if (distance >= 60) {
-                            distance = Math.floor(distance / 60);
-                            units = "hour" + (distance > 1 ? "s" : "");
+                        if (session.startTime.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].sessions.push(session);
+                            break;
                         }
-                        timeText = `In ${distance} ${units}`;
                     }
+                }
+            }
 
-                    logger.info(timeText, group);
-                    let items: Array<ItemRenderData>;
-                    items = await Promise.all(group.sessions.map(async session => {
-                        let result: ItemRenderData = {
-                            title: session.title,
-                            url: `/session/${session.id}`,
-                            track: (await session.track).name,
-                            isWatched: false,
-                            item: { type: "session", data: session }
-                        };
-                        return result;
-                    }));
-                    items = items.concat(await Promise.all(group.events.map(async event => {
-                        let result: ItemRenderData = {
-                            title: (await event.item).title,
-                            url: `/event/${event.id}`,
-                            track: (await event.track).shortName,
-                            isWatched: false,
-                            item: { type: "event", data: event }
-                        };
-                        return result;
-                    })));
+            // Place events into groups
+            for (let event of props.events) {
+                for (let boundary of boundaries) {
+                    if (boundary.end <= now) {
+                        if (event.endTime.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].events.push(event);
+                            break;
+                        }
+                    }
+                    else {
+                        if (event.startTime.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].events.push(event);
+                            break;
+                        }
+                    }
+                }
+            }
 
-                    let groupRenderData: GroupRenderData = {
-                        timeText: timeText,
-                        items: items
-                    };
-                    newRenderData.groups.push(groupRenderData);
+            // Filter out empty groups
+            for (let groupKey in groupedItems) {
+                let group = groupedItems[groupKey];
+                if (group.events.length === 0 && group.sessions.length === 0) {
+                    delete groupedItems[groupKey];
+                    logger.info(`Deleting empty group: ${groupKey}`);
+                }
+            }
+
+            // Build render data
+            let newRenderData: RenderData = {
+                groups: []
+            };
+            for (let groupKey in groupedItems) {
+                let group = groupedItems[groupKey];
+                let timeText: string;
+                if (group.endTime.getTime() <= now) {
+                    timeText = "Past";
+                }
+                else if (group.startTime.getTime() <= now) {
+                    timeText = "Happening now";
+                }
+                else {
+                    let distance = group.startTime.getTime() - now;
+                    let units = "minutes";
+                    distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
+                    if (distance >= 60) {
+                        distance = Math.floor(distance / 60);
+                        units = "hour" + (distance > 1 ? "s" : "");
+                    }
+                    timeText = `In ${distance} ${units}`;
                 }
 
-                setRenderData(newRenderData);
+                logger.info(timeText, group);
+                let items: Array<ItemRenderData>;
+                items = await Promise.all(group.sessions.map(async session => {
+                    let result: ItemRenderData = {
+                        title: session.title,
+                        url: `/session/${session.id}`,
+                        track: (await session.track).name,
+                        isWatched: false,
+                        item: { type: "session", data: session }
+                    };
+                    return result;
+                }));
+                items = items.concat(await Promise.all(group.events.map(async event => {
+                    let result: ItemRenderData = {
+                        title: (await event.item).title,
+                        url: `/event/${event.id}`,
+                        track: (await event.track).shortName,
+                        isWatched: false,
+                        item: { type: "event", data: event }
+                    };
+                    return result;
+                })));
+
+                let groupRenderData: GroupRenderData = {
+                    timeText: timeText,
+                    items: items
+                };
+                newRenderData.groups.push(groupRenderData);
+            }
+
+            logger.info("Props.events (inner)", props.events);
+            logger.info("Render data (inner)", newRenderData);
+
+            return newRenderData;
+        }
+
+        let cancel: () => void = () => { };
+        async function doBuildRenderData() {
+            try {
+                let p = makeCancelable(buildRenderData());
+                cancel = p.cancel;
+                let d = await p.promise;
+                setRenderData(d);
+            }
+            catch (e) { 
+                if (!e.isCanceled) {
+                    throw e;
+                }
+            }
+            finally {
+                cancel = () => { };
             }
         }
 
-        buildRenderData();
-    }, [props, logger, refreshRequired]);
+        doBuildRenderData();
+
+        return cancel;
+    }, [logger, props.events, props.sessions, props.timeBoundaries, refreshRequired]);
 
 
     const onTrackUpdated = useCallback(function _onTrackUpdated() {
@@ -237,46 +257,47 @@ export default function Program(props: Props) {
 
     // Subscribe to data events
     useEffect(() => {
-            let cancel: () => void = () => { };
-            let unsubscribe: () => void = () => { };
-            async function subscribeToUpdates() {
-                try {
-                    const promises: [
-                        Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramItem">>>,
-                        Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramTrack">>>
-                    ] = [
-                            ProgramItem.onDataUpdated(conf.id),
-                            ProgramTrack.onDataUpdated(conf.id)
-                        ];
-                    const promise = makeCancelable(Promise.all(promises));
-                    cancel = promise.cancel;
-                    const [ev1, ev2] = await promise.promise;
-                    const unsubscribe1 = ev1.subscribe(onTrackUpdated);
-                    const unsubscribe2 = ev2.subscribe(onItemUpdated);
-                    unsubscribe = () => {
-                        unsubscribe1();
-                        unsubscribe2();
-                    };
-                }
-                catch (e) {
-                    if (!e.isCanceled) {
-                        throw e;
-                    }
-                }
-                finally {
-                    cancel = () => { };
+        let cancel: () => void = () => { };
+        let unsubscribe: () => void = () => { };
+        async function subscribeToUpdates() {
+            try {
+                const promises: [
+                    Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramItem">>>,
+                    Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramTrack">>>
+                ] = [
+                        ProgramItem.onDataUpdated(conf.id),
+                        ProgramTrack.onDataUpdated(conf.id)
+                    ];
+                const promise = makeCancelable(Promise.all(promises));
+                cancel = promise.cancel;
+                const [ev1, ev2] = await promise.promise;
+                const unsubscribe1 = ev1.subscribe(onTrackUpdated);
+                const unsubscribe2 = ev2.subscribe(onItemUpdated);
+                unsubscribe = () => {
+                    unsubscribe1();
+                    unsubscribe2();
+                };
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+                    throw e;
                 }
             }
-
-            subscribeToUpdates();
-
-            return () => {
-                unsubscribe();
-                cancel();
+            finally {
+                cancel = () => { };
             }
+        }
+
+        subscribeToUpdates();
+
+        return () => {
+            unsubscribe();
+            cancel();
+        }
     }, [conf.id, onTrackUpdated, onItemUpdated]);
 
 
+    logger.info("Props.events", props.events);
     logger.info("Render data", renderData);
 
     let groupElems: Array<JSX.Element> = [];
