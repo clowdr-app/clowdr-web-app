@@ -111,7 +111,10 @@ export default function Login(props: LoginProps) {
     </>;
     const selectOtherButton = <button
         className="select-another"
-        onClick={props.clearSelectedConference}
+        onClick={(ev) => {
+            ev.preventDefault();
+            props.clearSelectedConference();
+        }}
         aria-label="Select another conference">
         Select another conference
     </button>;
