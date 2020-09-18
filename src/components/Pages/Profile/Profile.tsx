@@ -19,12 +19,13 @@ export default function Profile(props: Props) {
     useDocTitle("Profile");
 
     useEffect(() => {
-        let cancel: () => void;
+        let cancel: () => void = () => { };
 
         async function updateProfile() {
             let profileCancelablePromise = makeCancelable(UserProfile.get(props.userProfileId, conference.id));
             cancel = profileCancelablePromise.cancel;
             setProfile(await profileCancelablePromise.promise);
+            cancel = () => { };
         }
 
         // Catch the cancel error
@@ -35,9 +36,7 @@ export default function Profile(props: Props) {
         });
 
         return () => {
-            if (cancel) {
-                cancel();
-            }
+            cancel();
         };
     }, [conference.id, props.userProfileId]);
 
