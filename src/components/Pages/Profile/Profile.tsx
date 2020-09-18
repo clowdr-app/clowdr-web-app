@@ -5,6 +5,7 @@ import ProfileEditor from "../../Profile/ProfileEditor/ProfileEditor";
 import ProfileView from "../../Profile/ProfileView/ProfileView";
 import useConference from "../../../hooks/useConference";
 import { UserProfile } from "../../../classes/DataLayer";
+import { makeCancelable } from "../../../classes/Util";
 
 interface Props {
     userProfileId: string;
@@ -18,14 +19,27 @@ export default function Profile(props: Props) {
     useDocTitle("Profile");
 
     useEffect(() => {
-        docTitle.set("Profile");
+        let cancel: () => void;
 
-        (async () => {
-            const _profile = await UserProfile.get(props.userProfileId, conference.id);
-            setProfile(_profile);
-        })();
+        async function updateProfile() {
+            let profileCancelablePromise = makeCancelable(UserProfile.get(props.userProfileId, conference.id));
+            cancel = profileCancelablePromise.cancel;
+            setProfile(await profileCancelablePromise.promise);
+        }
 
-    }, [docTitle, conference, props, profile]);
+        // Catch the cancel error
+        updateProfile().catch((e) => {
+            if (!e.isCanceled) {
+                throw e;
+            }
+        });
+
+        return () => {
+            if (cancel) {
+                cancel();
+            }
+        };
+    }, [conference.id, props.userProfileId]);
 
     let element;
     if (props.userProfileId === loggedInUserProfile.id) {
