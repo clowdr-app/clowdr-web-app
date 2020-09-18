@@ -38,7 +38,7 @@ type AppUpdate
     ;
 
 function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpdate>): AppState {
-    let nextState = {
+    const nextState = {
         tasks: new Set(currentState.tasks),
         conferenceId: currentState.conference?.id ?? null,
         conference: currentState.conference,

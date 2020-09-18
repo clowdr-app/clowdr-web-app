@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useReducer, useRef } from 'react';
 import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
@@ -9,6 +9,7 @@ import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
 import MenuItem from './Menu/MenuItem';
 import { ProgramSession, ProgramSessionEvent } from '../../classes/DataLayer';
+import { makeCancelable } from '../../classes/Util';
 
 interface Props {
     open: boolean,
@@ -16,18 +17,167 @@ interface Props {
     doLogout?: () => void
 }
 
+type SidebarTasks
+    = "loadingSessionsAndEvents";
+
+interface SidebarState {
+    tasks: Set<SidebarTasks>;
+
+    chatsIsOpen: boolean;
+    roomsIsOpen: boolean;
+    programIsOpen: boolean;
+
+    chatSearch: string | null;
+    roomSearch: string | null;
+    programSearch: string | null;
+
+    sessions: Array<ProgramSession> | null;
+    events: Array<ProgramSessionEvent> | null;
+
+    filteredSessions: Array<ProgramSession>;
+    filteredEvents: Array<ProgramSessionEvent>;
+}
+
+type SidebarUpdate
+    = { action: "updateSessions"; sessions: Array<ProgramSession> }
+    | { action: "updateEvents"; events: Array<ProgramSessionEvent> }
+
+    | { action: "searchChats"; search: string | null }
+    | { action: "searchRooms"; search: string | null }
+    | { action: "searchProgram"; search: string | null }
+
+    | { action: "setChatsIsOpen"; isOpen: boolean }
+    | { action: "setRoomsIsOpen"; isOpen: boolean }
+    | { action: "setProgramIsOpen"; isOpen: boolean }
+    ;
+
+function filteredSessionsAndEvents(
+    allSessions: Array<ProgramSession>,
+    allEvents: Array<ProgramSessionEvent>,
+    search: string | null): [Array<ProgramSession>, Array<ProgramSessionEvent>] {
+    const now = Date.now();
+    const twoHours = 2 * 60 * 60 * 1000;
+    const endLimit = now;
+    const startLimit = now + twoHours;
+
+    let sessions = allSessions
+        .filter(x => x.endTime.getTime() >= endLimit
+            && x.startTime.getTime() <= startLimit);
+
+    let events = allEvents
+        .filter(x => x.endTime.getTime() >= endLimit
+            && x.startTime.getTime() <= startLimit);
+
+    let eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
+
+    sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
+
+    return [sessions, events];
+}
+
+function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | Array<SidebarUpdate>): SidebarState {
+    const nextState = {
+        tasks: new Set(currentState.tasks),
+
+        chatsIsOpen: currentState.chatsIsOpen,
+        roomsIsOpen: currentState.roomsIsOpen,
+        programIsOpen: currentState.programIsOpen,
+
+        chatSearch: currentState.chatSearch,
+        roomSearch: currentState.roomSearch,
+        programSearch: currentState.programSearch,
+
+        sessions: currentState.sessions,
+        events: currentState.events,
+
+        filteredSessions: currentState.filteredSessions,
+        filteredEvents: currentState.filteredEvents
+    };
+
+    let sessionsOrEventsUpdated = false;
+
+    function doUpdate(update: SidebarUpdate) {
+        // TODO: Apply update
+        switch (update.action) {
+            case "searchChats":
+                nextState.chatSearch = update.search;
+                break;
+            case "searchProgram":
+                nextState.programSearch = update.search;
+                break;
+            case "searchRooms":
+                nextState.roomSearch = update.search;
+                break;
+            case "setChatsIsOpen":
+                nextState.chatsIsOpen = update.isOpen;
+                break;
+            case "setProgramIsOpen":
+                nextState.programIsOpen = update.isOpen;
+                break;
+            case "setRoomsIsOpen":
+                nextState.roomsIsOpen = update.isOpen;
+                break;
+            case "updateEvents":
+                nextState.events = update.events;
+                sessionsOrEventsUpdated = true;
+                break;
+            case "updateSessions":
+                nextState.sessions = update.sessions;
+                sessionsOrEventsUpdated = true;
+                break;
+        }
+    }
+
+    if (updates instanceof Array) {
+        updates.forEach(doUpdate);
+    }
+    else {
+        doUpdate(updates);
+    }
+
+    if (sessionsOrEventsUpdated) {
+        if (nextState.sessions && nextState.events) {
+            nextState.tasks.delete("loadingSessionsAndEvents");
+
+            const [filteredSessions, filteredEvents]
+                = filteredSessionsAndEvents(
+                    nextState.sessions,
+                    nextState.events,
+                    nextState.programSearch
+                );
+            nextState.filteredSessions = filteredSessions;
+            nextState.filteredEvents = filteredEvents;
+        }
+        else {
+            nextState.filteredEvents = [];
+            nextState.filteredSessions = [];
+        }
+    }
+
+    return nextState;
+}
+
 function Sidebar(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
     const burgerButtonRef = useRef<HTMLButtonElement>(null);
-    const [chatsIsOpen, setChatsIsOpen] = useState<boolean>(true);
-    const [roomsIsOpen, setRoomsIsOpen] = useState<boolean>(true);
-    const [programIsOpen, setProgramIsOpen] = useState<boolean>(true);
-    const [chatSearch, setChatSearch] = useState<string | null>(null);
-    const [roomSearch, setRoomSearch] = useState<string | null>(null);
-    const [programSearch, setProgramSearch] = useState<string | null>(null);
-    const [programSessions, setProgramSessions] = useState<Array<ProgramSession>>([]);
-    const [programEvents, setProgramEvents] = useState<Array<ProgramSessionEvent>>([]);
+    const [state, dispatchUpdate] = useReducer(nextSidebarState, {
+        tasks: new Set(["loadingSessionsAndEvents"] as SidebarTasks[]),
+
+        chatsIsOpen: true,
+        roomsIsOpen: true,
+        programIsOpen: true,
+
+        chatSearch: null,
+        roomSearch: null,
+        programSearch: null,
+
+        sessions: null,
+        events: null,
+
+        filteredSessions: [],
+        filteredEvents: []
+    });
 
     // TODO: When sidebar is occupying full window (e.g. on mobile), close it
     // when the user clicks a link.
@@ -39,6 +189,67 @@ function Sidebar(props: Props) {
     // TODO: Use 'M' key as a shortcut to open/close menu?
     // TODO: Use 'C/R/P' to jump focus to menu expanders
     // TODO: Document shortcut keys prominently on the /help page
+
+    // TODO: Introduce a setInterval which refreshes the program view every minute or so
+    useEffect(() => {
+        let cancel: () => void = () => { };
+
+        async function updateSessionsAndEvents() {
+            try {
+                const promises: [Promise<Array<ProgramSession>>, Promise<Array<ProgramSessionEvent>>]
+                    = [ProgramSession.getAll(conf.id), ProgramSessionEvent.getAll(conf.id)];
+                const allPromise = Promise.all(promises);
+                const wrappedPromise = makeCancelable(allPromise);
+                cancel = wrappedPromise.cancel;
+
+                const [allSessions, allEvents] = await wrappedPromise.promise;
+
+                dispatchUpdate([
+                    {
+                        action: "updateSessions",
+                        sessions: allSessions
+                    }, {
+                        action: "updateEvents",
+                        events: allEvents
+                    }]);
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+
+                    dispatchUpdate([
+                        {
+                            action: "updateSessions",
+                            sessions: []
+                        }, {
+                            action: "updateEvents",
+                            events: []
+                        }]);
+
+                    throw e;
+                }
+            }
+            finally {
+                cancel = () => { };
+            }
+        }
+
+        updateSessionsAndEvents();
+
+        return cancel;
+    }, [conf.id]);
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            dispatchUpdate({
+                action: "searchProgram",
+                search: state.programSearch
+            });
+        }, 1000 * 60 * 3 /* 3 mins */);
+
+        return () => {
+            clearInterval(intervalId);
+        }
+    }, [state.programSearch]);
 
     let sideBarButton = <div className="sidebar-button">
         <button
@@ -52,38 +263,6 @@ function Sidebar(props: Props) {
             <div className="bar3"></div>
         </button>
     </div>;
-
-    // TODO: Introduce a setInterval which refreshes the program view every minute or so
-    useEffect(() => {
-        async function updateSessionsAndEvents() {
-            const now = Date.now();
-            const twoHours = 2 * 60 * 60 * 1000;
-            const endLimit = now;
-            const startLimit = now + twoHours;
-
-            const sessionsP = ProgramSession.getAll(conf.id);
-            const eventsP = ProgramSessionEvent.getAll(conf.id);
-            const allSessions = await sessionsP;
-            const allEvents = await eventsP;
-
-            let sessions = allSessions
-                .filter(x => x.endTime.getTime() >= endLimit
-                    && x.startTime.getTime() <= startLimit);
-
-            let events = allEvents
-                .filter(x => x.endTime.getTime() >= endLimit
-                    && x.startTime.getTime() <= startLimit);
-
-            let eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
-
-            sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
-
-            setProgramSessions(sessions);
-            setProgramEvents(events);
-        }
-
-        updateSessionsAndEvents();
-    }, [conf.id]);
 
     if (props.open) {
         // TODO: How much repeat work can we avoid by useEffect where they're
@@ -105,14 +284,14 @@ function Sidebar(props: Props) {
             {
                 type: "search", label: "Search all chats", icon: "fa-search",
                 onSearch: (event) => {
-                    setChatSearch(event.target.value);
+                    dispatchUpdate({ action: "searchChats", search: event.target.value });
                     return event.target.value;
                 },
                 onSearchOpen: () => {
-                    setChatsIsOpen(true);
+                    dispatchUpdate({ action: "setChatsIsOpen", isOpen: true });
                 },
                 onSearchClose: () => {
-                    setChatSearch(null);
+                    dispatchUpdate({ action: "searchChats", search: null });
                 }
             },
             { type: "link", label: "Show all chats", icon: "fa-globe-europe", url: "/chat" },
@@ -122,14 +301,14 @@ function Sidebar(props: Props) {
             {
                 type: "search", label: "Search all rooms", icon: "fa-search",
                 onSearch: (event) => {
-                    setRoomSearch(event.target.value);
+                    dispatchUpdate({ action: "searchRooms", search: event.target.value });
                     return event.target.value;
                 },
                 onSearchOpen: () => {
-                    setRoomsIsOpen(true);
+                    dispatchUpdate({ action: "setRoomsIsOpen", isOpen: true });
                 },
                 onSearchClose: () => {
-                    setRoomSearch(null);
+                    dispatchUpdate({ action: "searchRooms", search: null });
                 }
             },
             { type: "link", label: "Show all rooms", icon: "fa-globe-europe", url: "/room" },
@@ -139,14 +318,14 @@ function Sidebar(props: Props) {
             {
                 type: "search", label: "Search whole program", icon: "fa-search",
                 onSearch: (event) => {
-                    setProgramSearch(event.target.value);
+                    dispatchUpdate({ action: "searchProgram", search: event.target.value });
                     return event.target.value;
                 },
                 onSearchOpen: () => {
-                    setProgramIsOpen(true);
+                    dispatchUpdate({ action: "setProgramIsOpen", isOpen: true });
                 },
                 onSearchClose: () => {
-                    setProgramSearch(null);
+                    dispatchUpdate({ action: "searchProgram", search: null });
                 }
             },
             { type: "link", label: "Show whole program", icon: "fa-globe-europe", url: "/program" },
@@ -190,9 +369,9 @@ function Sidebar(props: Props) {
             chatsExpander
                 = <MenuExpander
                     title="Chats"
-                    isOpen={chatsIsOpen}
+                    isOpen={state.chatsIsOpen}
                     buttons={chatsButtons}
-                    onOpenStateChange={() => setChatsIsOpen(!chatsIsOpen)}
+                    onOpenStateChange={() => dispatchUpdate({ action: "setChatsIsOpen", isOpen: !state.chatsIsOpen })}
                 >
                     <MenuGroup items={chatMenuItems} />
                 </MenuExpander>;
@@ -238,9 +417,9 @@ function Sidebar(props: Props) {
             roomsExpander
                 = <MenuExpander
                     title="Rooms"
-                    isOpen={roomsIsOpen}
+                    isOpen={state.roomsIsOpen}
                     buttons={roomsButtons}
-                    onOpenStateChange={() => setRoomsIsOpen(!roomsIsOpen)}
+                    onOpenStateChange={() => dispatchUpdate({ action: "setRoomsIsOpen", isOpen: !state.roomsIsOpen })}
                 >
                     <MenuGroup items={roomMenuItems} />
                 </MenuExpander>;
@@ -248,13 +427,13 @@ function Sidebar(props: Props) {
 
         // TODO: Search whole program
         let program: JSX.Element;
-        if (programSessions.length > 0 || programEvents.length > 0) {
+        if (state.sessions && state.events) {
             const programTimeBoundaries: Array<number> = [
                 0, 15, 30, 60, 120
             ];
             program = <Program
-                sessions={programSessions}
-                events={programEvents}
+                sessions={state.filteredSessions}
+                events={state.filteredEvents}
                 timeBoundaries={programTimeBoundaries} />;
         }
         else {
@@ -267,9 +446,9 @@ function Sidebar(props: Props) {
         programExpander
             = <MenuExpander
                 title="Program"
-                isOpen={programIsOpen}
+                isOpen={state.programIsOpen}
                 buttons={programButtons}
-                onOpenStateChange={() => setProgramIsOpen(!programIsOpen)}
+                onOpenStateChange={() => dispatchUpdate({ action: "setProgramIsOpen", isOpen: !state.programIsOpen })}
             >
                 {program}
             </MenuExpander>;

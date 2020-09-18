@@ -31,10 +31,10 @@ export default function Login(props: LoginProps) {
             setPassword("");
             setErrorMsg(null);
 
-            let p = makeCancelable(doLogin(email, password));
-            setAttemptingLogin(p);
-
             try {
+                let p = makeCancelable(doLogin(email, password));
+                setAttemptingLogin(p);
+
                 let ok = await p.promise;
                 if (!ok) {
                     setErrorMsg("We were unable to log you in, please try again.");

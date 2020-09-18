@@ -22,22 +22,24 @@ export default function Profile(props: Props) {
         let cancel: () => void = () => { };
 
         async function updateProfile() {
-            let profileCancelablePromise = makeCancelable(UserProfile.get(props.userProfileId, conference.id));
-            cancel = profileCancelablePromise.cancel;
-            setProfile(await profileCancelablePromise.promise);
-            cancel = () => { };
+            try {
+                let profileCancelablePromise = makeCancelable(UserProfile.get(props.userProfileId, conference.id));
+                cancel = profileCancelablePromise.cancel;
+                setProfile(await profileCancelablePromise.promise);
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+                    throw e;
+                }
+            }
+            finally {
+                cancel = () => { };
+            }
         }
 
-        // Catch the cancel error
-        updateProfile().catch((e) => {
-            if (!e.isCanceled) {
-                throw e;
-            }
-        });
+        updateProfile();
 
-        return () => {
-            cancel();
-        };
+        return cancel;
     }, [conference.id, props.userProfileId]);
 
     let element;
