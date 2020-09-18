@@ -1,4 +1,4 @@
-import Parse from "parse";
+import Parse, { LiveQueryClient, LiveQuerySubscription } from "parse";
 import { keys } from "ts-transformer-keys";
 import DebugLogger from "../../DebugLogger";
 import CachedSchema, { SchemaVersion } from "../CachedSchema";
@@ -10,6 +10,7 @@ import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields, KnownKeys 
 import { IDBPDatabase, openDB, deleteDB, IDBPTransaction } from "idb";
 import { OperationResult } from ".";
 import assert from "assert";
+import { SimpleEventDispatcher } from "strongly-typed-events";
 
 type ExtendedCachedSchema
     = CachedSchema
@@ -26,6 +27,16 @@ type ExtendedCachedSchema
     };
 
 type ExtendedCachedSchemaKeys = KnownKeys<ExtendedCachedSchema>;
+
+type DataUpdateEventDetails<K extends CachedSchemaKeys> = {
+    table: K;
+    object: CachedBase<K>;
+};
+
+type DataDeletedEventDetails<K extends CachedSchemaKeys> = {
+    table: K;
+    objectId: string;
+};
 
 export default class Cache {
     // The 'any' can't be replaced here - it would require dependent types.
@@ -185,21 +196,70 @@ export default class Cache {
 
     private isInitialised: boolean = false;
     private isUserAuthenticated: boolean = false;
+    private userSessionToken: string | null = null;
     private isRefreshRunning: boolean = false;
 
     private logger: DebugLogger = new DebugLogger("Cache");
     private readonly cacheStaleTime = 1000 * 60 * 5; // 5 minutes
     private readonly cacheInactiveTime = 1000 * 60 * 1; // 1 minutes
 
+    private static parseLive: Parse.LiveQueryClient | null = null;
+    private liveQuerySubscriptions: {
+        [K in CachedSchemaKeys]?: LiveQuerySubscription;
+    } = {};
+
+    public _onDataUpdated: {
+        [K in CachedSchemaKeys]: SimpleEventDispatcher<DataUpdateEventDetails<K>>
+    };
+
+    public _onDataDeleted: {
+        [K in CachedSchemaKeys]: SimpleEventDispatcher<DataDeletedEventDetails<K>>
+    };
+
+    public onDataUpdated<K extends CachedSchemaKeys>(tableName: K): SimpleEventDispatcher<DataUpdateEventDetails<K>> {
+        return this._onDataUpdated[tableName] as SimpleEventDispatcher<DataUpdateEventDetails<K>>;
+    }
+
+    public onDataDeleted<K extends CachedSchemaKeys>(tableName: K): SimpleEventDispatcher<DataDeletedEventDetails<K>> {
+        return this._onDataDeleted[tableName] as SimpleEventDispatcher<DataDeletedEventDetails<K>>;
+    }
+
     constructor(
         public readonly conferenceId: string,
-        enableDebug: boolean = false) {
+        enableDebug: boolean = true) {
         if (enableDebug) {
             this.logger.enable();
         }
         else {
             this.logger.disable();
         }
+
+        this._onDataUpdated = {} as any;
+        for (let key in CachedStoreNames) {
+            this._onDataUpdated[key] = new SimpleEventDispatcher();
+        }
+
+        this._onDataDeleted = {} as any;
+        for (let key in CachedStoreNames) {
+            this._onDataDeleted[key] = new SimpleEventDispatcher();
+        }
+    }
+
+    public async createTestAttachmentType() {
+        let x = new Parse.Object<PromisesRemapped<Schema.AttachmentType>>("AttachmentType", {
+            conference: await this.conference,
+            createdAt: undefined,
+            displayAsLink: true,
+            extra: undefined,
+            fileTypes: [],
+            id: undefined,
+            isCoverImage: false,
+            name: "Test type",
+            ordinal: 0,
+            supportsFile: false,
+            updatedAt: undefined
+        } as any);
+        x.save();
     }
 
     get IsDebugEnabled(): boolean {
@@ -243,12 +303,15 @@ export default class Cache {
         return this.isUserAuthenticated;
     }
 
-    set IsUserAuthenticated(value: boolean) {
-        const wasUserAuthed = this.isUserAuthenticated;
-        this.isUserAuthenticated = value;
-
-        if (!wasUserAuthed && value) {
+    public async updateUserAuthenticated(value: { authed: false } | { authed: true; sessionToken: string }) {
+        this.isUserAuthenticated = value.authed;
+        if (value.authed) {
+            this.userSessionToken = value.sessionToken;
             this.refresh();
+        }
+        else {
+            await this.unsubscribeFromUpdates();
+            this.userSessionToken = null;
         }
     }
 
@@ -271,6 +334,24 @@ export default class Cache {
                             blocking: this.blocking.bind(this),
                             terminated: this.terminated.bind(this)
                         });
+
+                        // These should have already been asserted in index.ts
+                        // but we do so again here to make TypeScript happy.
+                        assert(process.env.REACT_APP_PARSE_APP_ID, "REACT_APP_PARSE_APP_ID not provided.");
+                        assert(process.env.REACT_APP_PARSE_DOMAIN, "REACT_APP_PARSE_DOMAIN not provided.");
+                        assert(process.env.REACT_APP_PARSE_JS_KEY, "REACT_APP_PARSE_JS_KEY not provided.");
+
+                        if (!Cache.parseLive) {
+                            // @ts-ignore
+                            Cache.parseLive = new LiveQueryClient({
+                                applicationId: process.env.REACT_APP_PARSE_APP_ID,
+                                serverURL: process.env.REACT_APP_PARSE_DOMAIN,
+                                javascriptKey: process.env.REACT_APP_PARSE_JS_KEY
+                            });
+                            // @ts-ignore
+                            Cache.parseLive.on('error', (error) => { this.logger.error('Parse LiveQuery Error', error); });
+                            Cache.parseLive.open();
+                        }
 
                         this.isInitialised = true;
 
@@ -316,8 +397,6 @@ export default class Cache {
             this.isRefreshRunning = await this.dbPromise.then(async db => {
                 let freshConference = await this.conference;
                 if (freshConference) {
-                    // TODO: Subscribe to live queries
-
                     let remoteLastProgramUpdateTime = freshConference.get("lastProgramUpdateTime") ?? new Date(0);
                     try {
                         let localRefillTimes = await this.getLocalRefillTimes(db);
@@ -325,14 +404,17 @@ export default class Cache {
                     
                         await Promise.all(CachedStoreNames.map(async store => {
                             try {
+                                await this.subscribeToUpdates(store, db);
+
                                 let localRefillTime = localRefillTimes[store] ?? new Date(0);
+                                let isProgramTable = this.ProgramTableNames.includes(store);
                                 let shouldUpdate =
-                                    this.ProgramTableNames.includes(store)
+                                        isProgramTable
                                         ? remoteLastProgramUpdateTime > localRefillTime
                                         : localRefillTime.getTime() + this.cacheInactiveTime < now;
 
                                 if (shouldUpdate) {
-                                    let shouldClear = localRefillTime.getTime() + this.cacheStaleTime < now;
+                                    let shouldClear = isProgramTable || localRefillTime.getTime() + this.cacheStaleTime < now;
                                     let fillFrom = localRefillTimes[store];
                                     if (shouldClear) {
                                         await db.clear(store);
@@ -366,6 +448,54 @@ export default class Cache {
 
                 return false;
             });
+        }
+    }
+
+    private async subscribeToUpdates<K extends CachedSchemaKeys>(
+        tableName: K,
+        db: IDBPDatabase<ExtendedCachedSchema>): Promise<void> {
+        if (!Cache.parseLive) {
+            throw new Error("Cannot subscribe to Live Query when client is not initialised.");
+        }
+
+        if (!this.userSessionToken) {
+            throw new Error("Cannot subscribe to Live Query when user is not authorized.");
+        }
+
+        if (!this.liveQuerySubscriptions[tableName]) {
+            let query = await this.newParseQuery(tableName);
+            let subscription = Cache.parseLive.subscribe(query, this.userSessionToken);
+            this.liveQuerySubscriptions[tableName] = subscription;
+
+            subscription.on("create", (parseObj) => {
+                this.logger.info(`Parse Live Query: ${tableName} created in conference ${this.conferenceId}`, parseObj);
+                this.addItemToCache(parseObj as any, tableName);
+            });
+
+            subscription.on("update", (parseObj) => {
+                this.logger.info(`Parse Live Query: ${tableName} updated in conference ${this.conferenceId}`, parseObj);
+                this.addItemToCache(parseObj as any, tableName);
+            });
+
+            subscription.on("delete", (parseObj) => {
+                this.logger.info(`Parse Live Query: ${tableName} deleted from conference ${this.conferenceId}`, parseObj);
+                this.removeItemFromCache(tableName, parseObj.id);
+            });
+
+            // This isn't in the TypeScript types, but it is in the docs & API.
+            // https://docs.parseplatform.org/js/guide/#error-event-1
+            subscription.on("error" as any, (error) => {
+                this.logger.error(`Parse Live Query: Error encountered for ${tableName} and conference ${this.conferenceId}`, error);
+            });
+
+            await (subscription as any).subscribePromise;
+        }
+    }
+
+    private async unsubscribeFromUpdates() {
+        for (let key in this.liveQuerySubscriptions) {
+            this.liveQuerySubscriptions[key]?.unsubscribe?.();
+            delete this.liveQuerySubscriptions[key];
         }
     }
 
@@ -485,7 +615,28 @@ export default class Cache {
         }
 
         const constr = Cache.Constructors[tableName];
-        return new constr(this.conferenceId, schema, parse as any) as unknown as T;
+        let result = new constr(this.conferenceId, schema, parse as any) as unknown as T;
+
+        let ev = this._onDataUpdated[tableName] as SimpleEventDispatcher<DataUpdateEventDetails<K>>;
+        ev.dispatchAsync({
+            table: tableName,
+            object: result
+        });
+
+        return result;
+    }
+
+    private async removeItemFromCache<K extends CachedSchemaKeys, T extends CachedBase<K>>(
+        tableName: K,
+        id: string): Promise<void> {
+        let db = await this.dbPromise;
+        await db?.delete(tableName, id);
+
+        let ev = this._onDataDeleted[tableName] as SimpleEventDispatcher<DataDeletedEventDetails<K>>;
+        ev.dispatchAsync({
+            table: tableName,
+            objectId: id
+        });
     }
 
     /**
@@ -493,10 +644,9 @@ export default class Cache {
      */
     private async closeConnection() {
         if (this.dbPromise) {
-            this.conference = null;
+            await this.unsubscribeFromUpdates();
 
-            this.logger.warn("Shutting down providers not implemented.");
-            // TODO: Shutdown live queries
+            this.conference = null;
 
             this.logger.info("Closing connection to database.");
             const db = await this.dbPromise;
@@ -721,7 +871,11 @@ export default class Cache {
     private async terminated(): Promise<void> {
         // TODO: terminated
         this.logger.error("Database terminated alert - not implemented.");
-        // TODO: Terminate live queries
+        //TODO: Reenable this condition?
+        //if (this.IsDebugEnabled) {
+        this.logger.warn("Debug enabled. Closing cache connection.");
+        this.closeConnection();
+        //}
         // TODO: Alert user to termination?
     }
 
@@ -788,10 +942,6 @@ export default class Cache {
             }
         }
     }
-
-    // TODO: create
-    // TODO: put / set
-    // TODO: invalidate
 
     private async newParseQuery<K extends CachedSchemaKeys>(tableName: K) {
         assert(this.isInitialised);

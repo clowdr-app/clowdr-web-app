@@ -38,7 +38,8 @@ export default class Class extends UncachedBase<K> implements SchemaT {
         return StaticBaseImpl.getAllByField("UserProfile", "user", this.id);
     }
 
-    static async logIn(email: string, password: string, options: RequestOptions = {}): Promise<Class> {
+    static async logIn(email: string, password: string, options: RequestOptions = {})
+        : Promise<{ user: Class, sessionToken: string }> {
         /* We're going to tap into the innards of the Parse JS SDK because for
          * some reason, the backend supports email login but their frontend SDK
          * doesn't!
@@ -70,7 +71,7 @@ export default class Class extends UncachedBase<K> implements SchemaT {
             let user = new Parse.User();
             // @ts-ignore
             user._finishFetch(response);
-            return userController.setCurrentUser(user);
+            return { user: userController.setCurrentUser(user), sessionToken: user.getSessionToken() };
         });
     }
 

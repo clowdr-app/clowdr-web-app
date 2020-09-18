@@ -41,8 +41,9 @@ export default function App(props: Props) {
     }>({ conf: null, loading: true });
     const [userProfile, setUserProfile] = useState<{
         profile: DataLayer.UserProfile | null,
+        sessionToken: string | null,
         loading: boolean
-    }>({ profile: null, loading: true });
+    }>({ profile: null, sessionToken: null, loading: true });
     const logger = useLogger("App");
     const history = useHistory();
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true /*TODO: Revert to false.*/);
@@ -65,19 +66,22 @@ export default function App(props: Props) {
             if (!userProfile.profile) {
                 if (currentConferenceId) {
                     let cache = await Caches.get(currentConferenceId);
-                    cache.IsUserAuthenticated = false;
+                    cache.updateUserAuthenticated({ authed: false });
                 }
             }
             else if (currentConferenceId) {
                 let cache = await Caches.get(currentConferenceId);
-                if (!cache.IsUserAuthenticated) {
-                    cache.IsUserAuthenticated = true;
+                if (!cache.IsUserAuthenticated && userProfile.sessionToken) {
+                    cache.updateUserAuthenticated({ authed: true, sessionToken: userProfile.sessionToken });
+                }
+                else if (!userProfile.sessionToken) {
+                    logger.error("Could not initialise cache - user does not have a session token?!");
                 }
             }
         }
 
         updateCacheAuthenticatedStatus();
-    }, [userProfile.profile, currentConferenceId]);
+    }, [userProfile.profile, userProfile.sessionToken, logger, currentConferenceId]);
 
     // logger.enable();
 
@@ -141,13 +145,13 @@ export default function App(props: Props) {
                             // This will also trigger a re-rendering.
                             let profile = await DataLayer.UserProfile.getByUserId(user.id, currentConferenceId);
                             if (profile || userProfile.loading) {
-                                setUserProfile({ profile: profile, loading: false });
+                                setUserProfile({ profile: profile, sessionToken: user.getSessionToken(), loading: false });
                             }
                         }
                         else if (userProfile.loading) {
                             // No conference selected, better make sure our internal
                             // state matches that fact.
-                            setUserProfile({ profile: null, loading: false });
+                            setUserProfile({ profile: null, sessionToken: null, loading: false });
 
                             // Note: We don't actually log the user out here, we
                             // just create a consistent state such that our app only
@@ -156,17 +160,17 @@ export default function App(props: Props) {
                         }
                     }
                     else if (userProfile.loading) {
-                        setUserProfile({ profile: userProfile.profile, loading: false });
+                        setUserProfile({ profile: userProfile.profile, sessionToken: user.getSessionToken(), loading: false });
                     }
                 }
                 else if (userProfile.profile || userProfile.loading) {
-                    setUserProfile({ profile: null, loading: false });
+                    setUserProfile({ profile: null, sessionToken: null, loading: false });
                 }
             }).catch(reason => {
                 logger.error("Failed to get current user from Parse.", reason);
 
                 if (userProfile.profile || userProfile.loading) {
-                    setUserProfile({ profile: null, loading: false });
+                    setUserProfile({ profile: null, sessionToken: null, loading: false });
                 }
             });;
         }
@@ -200,12 +204,12 @@ export default function App(props: Props) {
             assert(conference.conf);
 
             let parseUser = await _User.logIn(email, password);
-            let profile = await UserProfile.getByUserId(parseUser.id, conference.conf.id);
-            setUserProfile({ profile: profile, loading: false });
+            let profile = await UserProfile.getByUserId(parseUser.user.id, conference.conf.id);
+            setUserProfile({ profile: profile, sessionToken: parseUser.sessionToken, loading: false });
             return !!profile;
         }
         catch {
-            setUserProfile({ profile: null, loading: false });
+            setUserProfile({ profile: null, sessionToken: null, loading: false });
             return false;
         }
     }, [conference.conf]);
@@ -214,7 +218,7 @@ export default function App(props: Props) {
         try {
             if (currentConferenceId) {
                 let cache = await Caches.get(currentConferenceId);
-                cache.IsUserAuthenticated = false;
+                cache.updateUserAuthenticated({ authed: false });
             }
 
             await Parse.User.logOut();
@@ -222,7 +226,7 @@ export default function App(props: Props) {
         finally {
             LocalStorage_Conference.currentConferenceId = null;
             setConference({ conf: null, loading: false });
-            setUserProfile({ profile: null, loading: false });
+            setUserProfile({ profile: null, sessionToken: null, loading: false });
         }
     }, [currentConferenceId]);
 

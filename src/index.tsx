@@ -11,9 +11,11 @@ import "normalize.css";
 
 dotenv.config();
 
-assert(process.env.REACT_APP_PARSE_APP_ID);
-assert(process.env.REACT_APP_PARSE_JS_KEY);
-assert(process.env.REACT_APP_PARSE_DATABASE_URL);
+assert(process.env.REACT_APP_PARSE_APP_ID, "REACT_APP_PARSE_APP_ID not provided.");
+assert(process.env.REACT_APP_PARSE_JS_KEY, "REACT_APP_PARSE_JS_KEY not provided.");
+assert(process.env.REACT_APP_PARSE_DATABASE_URL, "REACT_APP_PARSE_DATABASE_URL not provided.");
+// For LiveQuery
+assert(process.env.REACT_APP_PARSE_DOMAIN, "REACT_APP_PARSE_DOMAIN not provided.");
 
 Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY);
 Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;

@@ -94,7 +94,8 @@ up.
       --javascriptKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
       --restAPIKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
       --databaseURI mongodb://localhost/clowdr \
-      --liveQueryServerOptions "{ \"classNames\": [\"BondedChannel\",\"BreakoutRoom\",\"Conference\",\"Flair\",\"LiveActivity\",\"ProgramItem\",\"ProgramRoom\",\"ProgramSession\",\"ProgramTrack\",\"TwilioChannelMirror\",\"UserPresence\",\"UserProfile\"] }" \
+      --liveQuery "{ \"classNames\": [\"AttachmentType\",\"Conference\",\"Flair\",\"PrivilegedConferenceDetails\",\"ProgramPerson\",\"ProgramItem\",\"ProgramItemAttachment\",\"ProgramRoom\",\"ProgramSession\",\"ProgramSessionEvent\",\"ProgramTrack\",\"TextChat\",\"TextChatMessage\",\"UserProfile\",\"VideoRoom\"] }" \
+      --startLiveQueryServer \
       --allowCustomObjectId \
       --cloud ./backend/cloud/main.js
    ```

@@ -8,31 +8,31 @@ async function updateConferenceLastProgramUpdateTime(conference) {
 }
 
 Parse.Cloud.afterSave("ProgramItem", async (request) => {
-    await updateConferenceLastProgramUpdateTime(request.object("conference"));
+    await updateConferenceLastProgramUpdateTime(request.object.get("conference"));
 });
 
 Parse.Cloud.afterSave("ProgramItemAttachment", async (request) => {
-    await updateConferenceLastProgramUpdateTime(request.object("conference"));
+    await updateConferenceLastProgramUpdateTime(request.object.get("conference"));
 });
 
 Parse.Cloud.afterSave("ProgramPerson", async (request) => {
-    await updateConferenceLastProgramUpdateTime(request.object("conference"));
+    await updateConferenceLastProgramUpdateTime(request.object.get("conference"));
 });
 
 Parse.Cloud.afterSave("ProgramRoom", async (request) => {
-    await updateConferenceLastProgramUpdateTime(request.object("conference"));
+    await updateConferenceLastProgramUpdateTime(request.object.get("conference"));
 });
 
 Parse.Cloud.afterSave("ProgramSession", async (request) => {
-    await updateConferenceLastProgramUpdateTime(request.object("conference"));
+    await updateConferenceLastProgramUpdateTime(request.object.get("conference"));
 });
 
 Parse.Cloud.afterSave("ProgramSessionEvent", async (request) => {
-    await updateConferenceLastProgramUpdateTime(request.object("conference"));
+    await updateConferenceLastProgramUpdateTime(request.object.get("conference"));
 });
 
 Parse.Cloud.afterSave("ProgramTrack", async (request) => {
-    await updateConferenceLastProgramUpdateTime(request.object("conference"));
+    await updateConferenceLastProgramUpdateTime(request.object.get("conference"));
 });
 
 Parse.Cloud.afterSave("Flair", async (request) => {

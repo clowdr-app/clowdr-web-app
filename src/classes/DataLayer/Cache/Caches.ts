@@ -20,6 +20,8 @@ export default class Caches {
             clowdr = {
                 caches: this
             };
+            // @ts-ignore
+            window.clowdr = clowdr;
         }
 
         let cache = this.caches.get(conferenceId);
