@@ -1,5 +1,5 @@
 import Parse from "parse";
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useReducer } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
 import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
@@ -12,6 +12,7 @@ import { Conference, UserProfile, _User } from "../../classes/DataLayer";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
 import Caches from "../../classes/DataLayer/Cache";
+import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 
 interface Props {
 }
@@ -45,27 +46,30 @@ export default function App(props: Props) {
     const logger = useLogger("App");
     const history = useHistory();
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true /*TODO: Revert to false.*/);
-    const [loadingSpinnerCount, setLoadingSpinnerCount] = useState<number>(1);
-    const [loadingSpinnerTimeoutId, setLoadingSpinnerTimeoutId] = useState<number | undefined>();
 
     // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
 
     useEffect(() => {
         async function updateCacheAuthenticatedStatus() {
-            if (!userProfile.profile) {
-                if (currentConferenceId) {
+            try {
+                if (!userProfile.profile) {
+                    if (currentConferenceId) {
+                        let cache = await Caches.get(currentConferenceId);
+                        cache.updateUserAuthenticated({ authed: false });
+                    }
+                }
+                else if (currentConferenceId) {
                     let cache = await Caches.get(currentConferenceId);
-                    cache.updateUserAuthenticated({ authed: false });
+                    if (!cache.IsUserAuthenticated && userProfile.sessionToken) {
+                        cache.updateUserAuthenticated({ authed: true, sessionToken: userProfile.sessionToken });
+                    }
+                    else if (!userProfile.sessionToken) {
+                        logger.error("Could not initialise cache - user does not have a session token?!");
+                    }
                 }
             }
-            else if (currentConferenceId) {
-                let cache = await Caches.get(currentConferenceId);
-                if (!cache.IsUserAuthenticated && userProfile.sessionToken) {
-                    cache.updateUserAuthenticated({ authed: true, sessionToken: userProfile.sessionToken });
-                }
-                else if (!userProfile.sessionToken) {
-                    logger.error("Could not initialise cache - user does not have a session token?!");
-                }
+            catch (e) {
+                console.error(e);
             }
         }
 
@@ -171,22 +175,6 @@ export default function App(props: Props) {
         logger,
         userProfile
     ]);
-
-    // Update loading spinner
-    useEffect(() => {
-        if (conference.loading || userProfile.loading) {
-            if (!loadingSpinnerTimeoutId) {
-                setLoadingSpinnerTimeoutId(window.setTimeout(() => {
-                    setLoadingSpinnerCount(loadingSpinnerCount < 3 ? loadingSpinnerCount + 1 : 0);
-                    setLoadingSpinnerTimeoutId(undefined);
-                }, 1000));
-            }
-        }
-        else if (loadingSpinnerTimeoutId) {
-            setLoadingSpinnerCount(1);
-            clearTimeout(loadingSpinnerTimeoutId);
-        }
-    }, [loadingSpinnerCount, conference, userProfile, loadingSpinnerTimeoutId]);
 
     const doLogin = useCallback(async function _doLogin(email: string, password: string): Promise<boolean> {
         try {
@@ -298,7 +286,7 @@ export default function App(props: Props) {
 
         const appClassName = appClassNames.reduce((x, y) => `${x} ${y}`);
         return <div className={appClassName}>
-            <span>Loading{".".repeat(loadingSpinnerCount)}</span>
+            <LoadingSpinner />
         </div>;
     }
     else {
