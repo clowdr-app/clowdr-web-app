@@ -226,7 +226,7 @@ export default class Cache {
 
     constructor(
         public readonly conferenceId: string,
-        enableDebug: boolean = true) {
+        enableDebug: boolean = false) {
         if (enableDebug) {
             this.logger.enable();
         }
