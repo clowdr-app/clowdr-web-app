@@ -67,6 +67,7 @@ interface ItemRenderData {
     track: string;
     isWatched: boolean;
     url: string;
+    sortValue: number;
 
     item: {
         type: "event";
@@ -199,7 +200,8 @@ export default function Program(props: Props) {
                         url: `/session/${session.id}`,
                         track: (await session.track).name,
                         isWatched: false,
-                        item: { type: "session", data: session }
+                        item: { type: "session", data: session },
+                        sortValue: session.startTime.getTime()
                     };
                     return result;
                 }));
@@ -209,14 +211,15 @@ export default function Program(props: Props) {
                         url: `/event/${event.id}`,
                         track: (await event.track).shortName,
                         isWatched: false,
-                        item: { type: "event", data: event }
+                        item: { type: "event", data: event },
+                        sortValue: event.startTime.getTime()
                     };
                     return result;
                 })));
 
                 let groupRenderData: GroupRenderData = {
                     timeText: timeText,
-                    items: items
+                    items: items.sort((x, y) => x.sortValue < y.sortValue ? -1 : x.sortValue > y.sortValue ? 1 : 0)
                 };
                 newRenderData.groups.push(groupRenderData);
             }
