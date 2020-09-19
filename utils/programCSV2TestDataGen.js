@@ -381,7 +381,7 @@ function generateProgramItemsCode(datas, conference, origStartTime, personKeys, 
     posterImage: undefined,
     title: "${title}",
     authors: ${JSON.stringify(authorIdxs.map(x => `${conference}-person-${x}`))},
-    track: "${conference}-person-${trackIdx}",
+    track: "${conference}-track-${trackIdx}",
     
     _acl: {
         "role:${conference}-RoleAdmin": { w: true },

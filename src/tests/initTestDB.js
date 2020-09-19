@@ -519,8 +519,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - NY 1",
-        endTime: new Date(1600386300000),
-        startTime: new Date(1600383600000),
+        endTime: new Date(1600472700000),
+        startTime: new Date(1600470000000),
         room: "mockConference1-room-0",
         track: "mockConference1-track-0",
 
@@ -542,8 +542,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - NY1",
-        endTime: new Date(1600387200000),
-        startTime: new Date(1600384500000),
+        endTime: new Date(1600473600000),
+        startTime: new Date(1600470900000),
         room: "mockConference1-room-1",
         track: "mockConference1-track-1",
 
@@ -565,8 +565,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - NY 2",
-        endTime: new Date(1600391700000),
-        startTime: new Date(1600389000000),
+        endTime: new Date(1600478100000),
+        startTime: new Date(1600475400000),
         room: "mockConference1-room-2",
         track: "mockConference1-track-0",
 
@@ -588,8 +588,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - NY2",
-        endTime: new Date(1600392600000),
-        startTime: new Date(1600389900000),
+        endTime: new Date(1600479000000),
+        startTime: new Date(1600476300000),
         room: "mockConference1-room-3",
         track: "mockConference1-track-1",
 
@@ -611,8 +611,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - Beijing 1",
-        endTime: new Date(1601109900000),
-        startTime: new Date(1601107200000),
+        endTime: new Date(1601196300000),
+        startTime: new Date(1601193600000),
         room: "mockConference1-room-4",
         track: "mockConference1-track-0",
 
@@ -634,8 +634,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - Beijing 1",
-        endTime: new Date(1601110800000),
-        startTime: new Date(1601108100000),
+        endTime: new Date(1601197200000),
+        startTime: new Date(1601194500000),
         room: "mockConference1-room-5",
         track: "mockConference1-track-1",
 
@@ -657,8 +657,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - Beijing 2",
-        endTime: new Date(1601115300000),
-        startTime: new Date(1601112600000),
+        endTime: new Date(1601201700000),
+        startTime: new Date(1601199000000),
         room: "mockConference1-room-6",
         track: "mockConference1-track-0",
 
@@ -680,8 +680,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - Beijing 2",
-        endTime: new Date(1601116200000),
-        startTime: new Date(1601113500000),
+        endTime: new Date(1601202600000),
+        startTime: new Date(1601199900000),
         room: "mockConference1-room-7",
         track: "mockConference1-track-1",
 
@@ -897,7 +897,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A balanced proxy technology applied to a balanced secure algorithm",
         authors: ["mockConference1-person-0", "mockConference1-person-1", "mockConference1-person-2"],
-        track: "mockConference1-person-0",
+        track: "mockConference1-track-0",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -921,7 +921,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "An interactive binary hypervisor applied to a conceptual big data system",
         authors: ["mockConference1-person-3", "mockConference1-person-4"],
-        track: "mockConference1-person-0",
+        track: "mockConference1-track-0",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -945,7 +945,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A conceptual secure agent derived from an integrated high-speed solution",
         authors: ["mockConference1-person-5"],
-        track: "mockConference1-person-0",
+        track: "mockConference1-track-0",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -969,7 +969,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "An integrated functional technology applied to a responsive programmable architecture",
         authors: ["mockConference1-person-6", "mockConference1-person-7", "mockConference1-person-8", "mockConference1-person-9", "mockConference1-person-10"],
-        track: "mockConference1-person-0",
+        track: "mockConference1-track-0",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -993,7 +993,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A conceptual proxy cache for a scalable functional algorithm",
         authors: ["mockConference1-person-11", "mockConference1-person-12"],
-        track: "mockConference1-person-0",
+        track: "mockConference1-track-0",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1017,7 +1017,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A virtual knowledge-based interface for an open programmable data center",
         authors: ["mockConference1-person-13", "mockConference1-person-14", "mockConference1-person-15"],
-        track: "mockConference1-person-0",
+        track: "mockConference1-track-0",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1041,7 +1041,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A virtual logical network applied to a synchronized logical algorithm",
         authors: ["mockConference1-person-6", "mockConference1-person-7", "mockConference1-person-8", "mockConference1-person-9", "mockConference1-person-10"],
-        track: "mockConference1-person-1",
+        track: "mockConference1-track-1",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1065,7 +1065,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A parallel secure architecture for a collaborative big data network",
         authors: ["mockConference1-person-11", "mockConference1-person-12"],
-        track: "mockConference1-person-1",
+        track: "mockConference1-track-1",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1089,7 +1089,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "An optimized digital compiler related to a meta-level watermarking preprocessor",
         authors: ["mockConference1-person-13", "mockConference1-person-14", "mockConference1-person-15"],
-        track: "mockConference1-person-1",
+        track: "mockConference1-track-1",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1113,7 +1113,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A meta-level distributed architecture derived from a collaborative functional data center",
         authors: ["mockConference1-person-16", "mockConference1-person-17"],
-        track: "mockConference1-person-2",
+        track: "mockConference1-track-2",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1137,7 +1137,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "An active functional toolkit related to a virtual programmable protocol",
         authors: ["mockConference1-person-18", "mockConference1-person-19"],
-        track: "mockConference1-person-2",
+        track: "mockConference1-track-2",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1161,7 +1161,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A scalable concurrent interface embedded in a coordinated proxy compiler",
         authors: ["mockConference1-person-20", "mockConference1-person-21", "mockConference1-person-22"],
-        track: "mockConference1-person-2",
+        track: "mockConference1-track-2",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1185,7 +1185,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "An active object-oriented system derived from an interactive parallelizing language",
         authors: ["mockConference1-person-23", "mockConference1-person-24", "mockConference1-person-25", "mockConference1-person-26"],
-        track: "mockConference1-person-2",
+        track: "mockConference1-track-2",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1209,7 +1209,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A reliable parallelizing preprocessor embedded in a coordinated binary system",
         authors: ["mockConference1-person-27"],
-        track: "mockConference1-person-2",
+        track: "mockConference1-track-2",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1233,7 +1233,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A virtual big data solution related to a high-level knowledge-based language",
         authors: ["mockConference1-person-28"],
-        track: "mockConference1-person-2",
+        track: "mockConference1-track-2",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1257,7 +1257,7 @@ function generateProgramItem() {
         posterImage: undefined,
         title: "A high-level real-time system related to a reliable cloud-based architecture",
         authors: ["mockConference1-person-29"],
-        track: "mockConference1-person-2",
+        track: "mockConference1-track-2",
 
         _acl: {
             "role:mockConference1-RoleAdmin": { w: true },
@@ -1891,8 +1891,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600384500000),
-        startTime: new Date(1600383600000),
+        endTime: new Date(1600470900000),
+        startTime: new Date(1600470000000),
         item: "mockConference1-item-0",
         session: "mockConference1-session-0",
 
@@ -1914,8 +1914,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600385400000),
-        startTime: new Date(1600384500000),
+        endTime: new Date(1600471800000),
+        startTime: new Date(1600470900000),
         item: "mockConference1-item-1",
         session: "mockConference1-session-0",
 
@@ -1937,8 +1937,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600386300000),
-        startTime: new Date(1600385400000),
+        endTime: new Date(1600472700000),
+        startTime: new Date(1600471800000),
         item: "mockConference1-item-2",
         session: "mockConference1-session-0",
 
@@ -1960,8 +1960,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600385400000),
-        startTime: new Date(1600384500000),
+        endTime: new Date(1600471800000),
+        startTime: new Date(1600470900000),
         item: "mockConference1-item-0",
         session: "mockConference1-session-1",
 
@@ -1983,8 +1983,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600386300000),
-        startTime: new Date(1600385400000),
+        endTime: new Date(1600472700000),
+        startTime: new Date(1600471800000),
         item: "mockConference1-item-1",
         session: "mockConference1-session-1",
 
@@ -2006,8 +2006,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600387200000),
-        startTime: new Date(1600386300000),
+        endTime: new Date(1600473600000),
+        startTime: new Date(1600472700000),
         item: "mockConference1-item-2",
         session: "mockConference1-session-1",
 
@@ -2029,8 +2029,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600389900000),
-        startTime: new Date(1600389000000),
+        endTime: new Date(1600476300000),
+        startTime: new Date(1600475400000),
         item: "mockConference1-item-3",
         session: "mockConference1-session-2",
 
@@ -2052,8 +2052,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600390800000),
-        startTime: new Date(1600389900000),
+        endTime: new Date(1600477200000),
+        startTime: new Date(1600476300000),
         item: "mockConference1-item-4",
         session: "mockConference1-session-2",
 
@@ -2075,8 +2075,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600391700000),
-        startTime: new Date(1600390800000),
+        endTime: new Date(1600478100000),
+        startTime: new Date(1600477200000),
         item: "mockConference1-item-5",
         session: "mockConference1-session-2",
 
@@ -2098,8 +2098,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600390800000),
-        startTime: new Date(1600389900000),
+        endTime: new Date(1600477200000),
+        startTime: new Date(1600476300000),
         item: "mockConference1-item-6",
         session: "mockConference1-session-3",
 
@@ -2121,8 +2121,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600391700000),
-        startTime: new Date(1600390800000),
+        endTime: new Date(1600478100000),
+        startTime: new Date(1600477200000),
         item: "mockConference1-item-7",
         session: "mockConference1-session-3",
 
@@ -2144,8 +2144,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600392600000),
-        startTime: new Date(1600391700000),
+        endTime: new Date(1600479000000),
+        startTime: new Date(1600478100000),
         item: "mockConference1-item-8",
         session: "mockConference1-session-3",
 
@@ -2167,8 +2167,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601108100000),
-        startTime: new Date(1601107200000),
+        endTime: new Date(1601194500000),
+        startTime: new Date(1601193600000),
         item: "mockConference1-item-0",
         session: "mockConference1-session-4",
 
@@ -2190,8 +2190,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601109000000),
-        startTime: new Date(1601108100000),
+        endTime: new Date(1601195400000),
+        startTime: new Date(1601194500000),
         item: "mockConference1-item-1",
         session: "mockConference1-session-4",
 
@@ -2213,8 +2213,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601109900000),
-        startTime: new Date(1601109000000),
+        endTime: new Date(1601196300000),
+        startTime: new Date(1601195400000),
         item: "mockConference1-item-2",
         session: "mockConference1-session-4",
 
@@ -2236,8 +2236,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601109000000),
-        startTime: new Date(1601108100000),
+        endTime: new Date(1601195400000),
+        startTime: new Date(1601194500000),
         item: "mockConference1-item-0",
         session: "mockConference1-session-5",
 
@@ -2259,8 +2259,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601109900000),
-        startTime: new Date(1601109000000),
+        endTime: new Date(1601196300000),
+        startTime: new Date(1601195400000),
         item: "mockConference1-item-1",
         session: "mockConference1-session-5",
 
@@ -2282,8 +2282,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601110800000),
-        startTime: new Date(1601109900000),
+        endTime: new Date(1601197200000),
+        startTime: new Date(1601196300000),
         item: "mockConference1-item-2",
         session: "mockConference1-session-5",
 
@@ -2305,8 +2305,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601113500000),
-        startTime: new Date(1601112600000),
+        endTime: new Date(1601199900000),
+        startTime: new Date(1601199000000),
         item: "mockConference1-item-3",
         session: "mockConference1-session-6",
 
@@ -2328,8 +2328,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601114400000),
-        startTime: new Date(1601113500000),
+        endTime: new Date(1601200800000),
+        startTime: new Date(1601199900000),
         item: "mockConference1-item-4",
         session: "mockConference1-session-6",
 
@@ -2351,8 +2351,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601115300000),
-        startTime: new Date(1601114400000),
+        endTime: new Date(1601201700000),
+        startTime: new Date(1601200800000),
         item: "mockConference1-item-5",
         session: "mockConference1-session-6",
 
@@ -2374,8 +2374,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601114400000),
-        startTime: new Date(1601113500000),
+        endTime: new Date(1601200800000),
+        startTime: new Date(1601199900000),
         item: "mockConference1-item-6",
         session: "mockConference1-session-7",
 
@@ -2397,8 +2397,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601115300000),
-        startTime: new Date(1601114400000),
+        endTime: new Date(1601201700000),
+        startTime: new Date(1601200800000),
         item: "mockConference1-item-7",
         session: "mockConference1-session-7",
 
@@ -2420,8 +2420,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601116200000),
-        startTime: new Date(1601115300000),
+        endTime: new Date(1601202600000),
+        startTime: new Date(1601201700000),
         item: "mockConference1-item-8",
         session: "mockConference1-session-7",
 
