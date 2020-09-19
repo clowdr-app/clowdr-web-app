@@ -4,10 +4,12 @@ import CachedSchema from "../../CachedSchema";
 import { CachedSchemaKeys, PromisesRemapped, RelationsToTableNames, WholeSchemaKeys } from "../../WholeSchema";
 import * as Interface from "../../Interface";
 import * as Schema from "../../Schema";
-import { CachedBase, LocalDataT, Constructor } from "../../Interface/Base";
+import { CachedBase, LocalDataT, Constructor, CachedStoreNames } from "../../Interface/Base";
 import { PromisedNonArrayFields, PromisedArrayFields, PromisedFields, KnownKeys } from "../../../Util";
 import { OperationResult } from "..";
 import assert from "assert";
+import { ISimpleEvent, SimpleEventDispatcher } from "strongly-typed-events";
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from "../Cache";
 
 export default class Cache {
 
@@ -133,6 +135,15 @@ export default class Cache {
     constructor(
         public readonly conferenceId: string
     ) {
+        this._onDataUpdated = {} as any;
+        for (let key of CachedStoreNames) {
+            this._onDataUpdated[key as CachedSchemaKeys] = new SimpleEventDispatcher() as any;
+        }
+
+        this._onDataDeleted = {} as any;
+        for (let key of CachedStoreNames) {
+            this._onDataDeleted[key as CachedSchemaKeys] = new SimpleEventDispatcher() as any;
+        }
     }
 
     get IsDebugEnabled(): boolean {
@@ -152,6 +163,22 @@ export default class Cache {
 
     get DatabaseName(): string {
         return `clowdr-${this.conferenceId}`;
+    }
+
+    public _onDataUpdated: {
+        [K in CachedSchemaKeys]: SimpleEventDispatcher<DataUpdatedEventDetails<K>>
+    };
+
+    public _onDataDeleted: {
+        [K in CachedSchemaKeys]: SimpleEventDispatcher<DataDeletedEventDetails<K>>
+    };
+
+    public onDataUpdated<K extends CachedSchemaKeys>(tableName: K): ISimpleEvent<DataUpdatedEventDetails<K>> {
+        return (this._onDataUpdated[tableName] as SimpleEventDispatcher<DataUpdatedEventDetails<K>>).asEvent();
+    }
+
+    public onDataDeleted<K extends CachedSchemaKeys>(tableName: K): ISimpleEvent<DataDeletedEventDetails<K>> {
+        return (this._onDataDeleted[tableName] as SimpleEventDispatcher<DataDeletedEventDetails<K>>).asEvent();
     }
 
     async initialise(): Promise<void> {
