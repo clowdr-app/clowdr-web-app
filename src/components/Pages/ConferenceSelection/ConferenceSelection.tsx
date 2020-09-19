@@ -1,9 +1,9 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { Conference } from "../../../classes/DataLayer";
+import { Conference } from "clowdr-db-schema/src/classes/DataLayer";
 import "./ConferenceSelection.scss";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 import useDocTitle from "../../../hooks/useDocTitle";
-import { makeCancelable } from "../../../classes/Util";
+import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 
 export type failedToLoadConferencesF = (reason: any) => Promise<void>;

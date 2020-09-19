@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import ConferenceContext from '../contexts/ConferenceContext';
-import { Conference } from '../classes/DataLayer';
+import { Conference } from 'clowdr-db-schema/src/classes/DataLayer';
 
 /**
  * Use this hook to access the current conference.

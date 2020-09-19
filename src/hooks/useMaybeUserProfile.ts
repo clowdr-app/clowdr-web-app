@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import UserContext from '../contexts/UserProfileContext';
-import { UserProfile } from '../classes/DataLayer';
+import { UserProfile } from 'clowdr-db-schema/src/classes/DataLayer';
 
 /**
  * Use this hook to access the current user profile (if any).

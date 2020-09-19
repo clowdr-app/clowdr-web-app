@@ -1,5 +1,5 @@
 import React from 'react';
-import { Conference } from '../classes/DataLayer';
+import { Conference } from 'clowdr-db-schema/src/classes/DataLayer';
 
 /**
  * Hint: You will never need to use this directly. Instead, use the

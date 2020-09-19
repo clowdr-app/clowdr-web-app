@@ -3,7 +3,7 @@ import useDocTitle from "../../../hooks/useDocTitle";
 import "./Login.scss";
 import useConference from "../../../hooks/useConference";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-import { CancelablePromise, makeCancelable } from "../../../classes/Util";
+import { CancelablePromise, makeCancelable } from "clowdr-db-schema/src/classes/Util";
 
 export type doLoginF = (username: string, password: string) => Promise<boolean>;
 export type clearSelectedConferenceF = () => Promise<void>;

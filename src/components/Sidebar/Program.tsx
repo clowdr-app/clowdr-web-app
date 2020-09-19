@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ISimpleEvent } from "strongly-typed-events";
-import { ProgramItem, ProgramSession, ProgramSessionEvent, ProgramTrack } from "../../classes/DataLayer";
-import { DataUpdatedEventDetails } from "../../classes/DataLayer/Cache/Cache";
-import { makeCancelable } from "../../classes/Util";
+import { ProgramItem, ProgramSession, ProgramSessionEvent, ProgramTrack } from "clowdr-db-schema/src/classes/DataLayer";
+import { DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
+import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
 import useConference from "../../hooks/useConference";
 import useLogger from "../../hooks/useLogger";
 

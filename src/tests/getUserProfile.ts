@@ -1,4 +1,4 @@
-import { UserProfile } from "../classes/DataLayer";
+import { UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import { testData } from "./setupTests";
 
 export default async function getUserProfile() {

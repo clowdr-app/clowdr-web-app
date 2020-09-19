@@ -1,5 +1,5 @@
 import React from "react";
-import { UserProfile } from "../../../classes/DataLayer";
+import { UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 
 interface Props {
     profile: UserProfile;

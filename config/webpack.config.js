@@ -362,11 +362,11 @@ module.exports = function (webpackEnv) {
                         },
                         {
                             test: /\.(ts|tsx)$/,
-                            exclude: /node_modules/,
                             use: [
                                 {
                                     loader: 'ts-loader', // or 'awesome-typescript-loader'
                                     options: {
+                                        allowTsInNodeModules: true,
                                         // make sure not to set `transpileOnly: true` here, otherwise it will not work
                                         getCustomTransformers: program => ({
                                             before: [

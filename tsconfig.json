@@ -25,11 +25,14 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "suppressImplicitAnyIndexErrors": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
     // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
+    // "noUnusedParameters": true
   },
-  "include": ["src"],
-  "typeRoots": ["./src/types", "./node_modules/@types"],
+  "include": ["./src"],
+  "typeRoots": [
+        "./src/types", 
+        "./node_modules/@types"
+    ],
   "exclude": ["**/test/**/*","**/tests/**/*"]
 }

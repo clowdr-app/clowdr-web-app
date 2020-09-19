@@ -10,12 +10,12 @@ import ConferenceSelection from "../Pages/ConferenceSelection/ConferenceSelectio
 import Login from "../Pages/Login/Login";
 import LoggedInWelcome from "../Pages/LoggedInWelcome/LoggedInWelcome";
 
-import { Conference, UserProfile } from "../../classes/DataLayer";
+import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import { mocked } from "ts-jest/utils";
 import getConference from "../../tests/getConference";
 import getUserProfile from "../../tests/getUserProfile";
 
-jest.mock("../../classes/DataLayer/Cache/Cache");
+jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
 
 // Note: We tried to improve this but functions don't execute at module load
 // time so there doesn't seem to be a way to avoid the (minor) bloat.

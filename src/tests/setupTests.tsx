@@ -3,7 +3,7 @@ import { cleanup } from '@testing-library/react-hooks';
 import initParse from './initParse';
 import { generateTestData } from './initTestDB';
 import dotenv from 'dotenv';
-import { IBase, WholeSchema, WholeSchemaKeys } from '../classes/DataLayer/WholeSchema';
+import { IBase, WholeSchema, WholeSchemaKeys } from 'clowdr-db-schema/src/classes/DataLayer/WholeSchema';
 
 type SchemaRemapped<T> = {
     [K in keyof T]:

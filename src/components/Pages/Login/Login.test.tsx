@@ -3,13 +3,13 @@ import { MemoryRouter } from "react-router-dom";
 import { act, render, waitForElement } from "@testing-library/react";
 import ConferenceContext from "../../../contexts/ConferenceContext";
 import Login from "./Login";
-import { Conference } from "../../../classes/DataLayer";
+import { Conference } from "clowdr-db-schema/src/classes/DataLayer";
 import getConference from "../../../tests/getConference";
 import { Simulate } from "react-dom/test-utils";
 import { generateMockPassword } from "../../../tests/initTestDB";
 import { testData } from "../../../tests/setupTests";
 
-jest.mock("../../../classes/DataLayer/Cache/Cache");
+jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
 
 describe("Login", () => {
     const mockDoLogin = jest.fn();

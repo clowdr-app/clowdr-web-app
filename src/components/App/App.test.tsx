@@ -5,7 +5,7 @@ import App from "./App";
 import "./App.scss";
 import { testData } from "../../tests/setupTests";
 
-jest.mock("../../classes/DataLayer/Cache/Cache");
+jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
 
 describe("App", () => {
 

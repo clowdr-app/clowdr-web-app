@@ -1,16 +1,18 @@
 import Chat from "twilio-chat";
-import { Channel } from "twilio-chat/lib/channel"
-import { Client } from "twilio-chat/lib/client"
+import { Channel } from "twilio-chat/lib/channel";
+import { Client } from "twilio-chat/lib/client";
+import { Message } from "twilio-chat/lib/message";
+
+import { backOff } from "exponential-backoff";
+
 import { UserProfile, Conference, Conversation } from "../classes/ParseObjects";
 import Parse from "parse";
-import { backOff } from "exponential-backoff";
 import { message } from "antd"
 import { BottomChat } from "../components/SocialTab/BottomChat";
 import { MultiChatWindow } from "../components/Chat/MultiChatWindow";
 import { SidebarChat } from "../components/SocialTab/SidebarChat";
 import { ContextualActiveUsers } from "../components/Lobby/ContextualActiveusers";
 import { ChatFrame } from "../components/Chat/ChatFrame";
-import { Message } from "twilio-chat/lib/message";
 import assert from "assert";
 
 interface ChannelInfoAttrs {

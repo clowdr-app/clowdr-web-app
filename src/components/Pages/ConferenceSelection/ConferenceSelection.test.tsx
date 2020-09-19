@@ -3,12 +3,12 @@ import { MemoryRouter } from "react-router-dom";
 import { act, fireEvent, render, waitForElement } from "@testing-library/react";
 import ConferenceSelection from "./ConferenceSelection";
 import { testData } from "../../../tests/setupTests";
-import Conference from "../../../classes/DataLayer/Interface/Conference";
+import Conference from "clowdr-db-schema/src/classes/DataLayer/Interface/Conference";
 import "@testing-library/jest-dom/extend-expect";
 import assert from "assert";
-import { StaticBaseImpl } from "../../../classes/DataLayer/Interface/Base";
+import { StaticBaseImpl } from "clowdr-db-schema/src/classes/DataLayer/Interface/Base";
 
-jest.mock("../../../classes/DataLayer/Cache/Cache");
+jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
 
 const spyConference_getAll = jest.spyOn(Conference, "getAll");
 

@@ -8,10 +8,10 @@ import MenuExpander, { ButtonSpec } from "./Menu/MenuExpander";
 import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
 import MenuItem from './Menu/MenuItem';
-import { ProgramSession, ProgramSessionEvent } from '../../classes/DataLayer';
-import { makeCancelable, removeNull } from '../../classes/Util';
+import { ProgramSession, ProgramSessionEvent } from 'clowdr-db-schema/src/classes/DataLayer';
+import { makeCancelable } from 'clowdr-db-schema/src/classes/Util';
 import { ISimpleEvent } from 'strongly-typed-events';
-import { DataDeletedEventDetails, DataUpdatedEventDetails } from '../../classes/DataLayer/Cache/Cache';
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from 'clowdr-db-schema/src/classes/DataLayer/Cache/Cache';
 
 interface Props {
     open: boolean,

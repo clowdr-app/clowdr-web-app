@@ -7,10 +7,10 @@ import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
 import useLogger from '../../hooks/useLogger';
-import { Conference, UserProfile, _User } from "../../classes/DataLayer";
+import Caches from "clowdr-db-schema/src/classes/DataLayer/Cache";
+import { Conference, UserProfile, _User } from "clowdr-db-schema/src/classes/DataLayer";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
-import Caches from "../../classes/DataLayer/Cache";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 
 interface Props {
