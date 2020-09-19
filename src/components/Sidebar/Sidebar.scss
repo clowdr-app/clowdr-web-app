@@ -241,10 +241,10 @@
 
                     .fas {
                         position : relative;
-                        display: inline-block;
+                        display  : inline-block;
                         font-size: inherit;
-                        margin: 0;
-                        padding: 0;
+                        margin   : 0;
+                        padding  : 0;
                     }
                 }
             }
@@ -258,6 +258,12 @@
                 display: none;
             }
         }
+    }
+
+    span.menu-group {
+        display: inline-block;
+        padding: 0 0 0 calc(4px + 0.25em);
+        width  : 100%;
     }
 
     ul.menu-group {

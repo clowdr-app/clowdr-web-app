@@ -43,10 +43,10 @@ interface SidebarState {
 type SidebarUpdate
     = { action: "updateSessions"; sessions: Array<ProgramSession> }
     | { action: "updateEvents"; events: Array<ProgramSessionEvent> }
-    
+
     | { action: "updateFilteredSessions"; sessions: Array<ProgramSession> }
     | { action: "updateFilteredEvents"; events: Array<ProgramSessionEvent> }
-    
+
     | { action: "deleteSessions"; sessions: Array<string> }
     | { action: "deleteEvents"; events: Array<string> }
 
@@ -196,7 +196,7 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 nextState.sessions = nextState.sessions?.filter(x => !update.sessions.includes(x.id)) ?? null;
                 sessionsOrEventsUpdated = true;
                 break;
-            
+
             case "updateFilteredSessions":
                 nextState.filteredSessions = update.sessions;
                 break;
@@ -596,7 +596,8 @@ function Sidebar(props: Props) {
         }
 
         let program: JSX.Element;
-        if (state.sessions && state.events) {
+        if (state.sessions && state.events &&
+            (state.filteredSessions.length > 0 || state.filteredEvents.length > 0)) {
             const programTimeBoundaries: Array<number> = [
                 0, 15, 30, 60, 120
             ];
@@ -607,10 +608,13 @@ function Sidebar(props: Props) {
                 timeBoundaries={programTimeBoundaries} />;
         }
         else {
-            program = <MenuGroup items={[{
-                key: "whole-program",
-                element: <MenuItem title="View whole program" label="Whole program" icon={<i className="fas fa-globe-europe"></i>} action="/program" bold={true} />
-            }]} />;
+            program = <>
+                {state.sessions && state.events ? <span className="menu-group">No events to show.</span> : <></>}
+                <MenuGroup items={[{
+                    key: "whole-program",
+                    element: <MenuItem title="View whole program" label="Whole program" icon={<i className="fas fa-globe-europe"></i>} action="/program" bold={true} />
+                }]} />
+            </>;
         }
 
         programExpander
