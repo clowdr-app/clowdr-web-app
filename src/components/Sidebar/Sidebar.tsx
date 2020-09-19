@@ -66,28 +66,32 @@ async function filteredSessionsAndEvents(
     if (_search && _search.length >= 3) {
         let search = _search.toLowerCase();
 
-        let sessions = removeNull<ProgramSession>(await Promise.all(allSessions.map(async x => {
+        let sessions: Array<ProgramSession> = [];
+        for (let x of allSessions) {
             let trackName = (await x.track).name;
             let sessionTitle = x.title;
 
-            return !!trackName.toLowerCase().match(search)?.length
-                || !!sessionTitle.toLowerCase().match(search)?.length
-                ? x : null;
-        })));
-
-        let events = removeNull(await Promise.all(allEvents.map(async x => {
+            if (!!trackName.toLowerCase().match(search)?.length
+                || !!sessionTitle.toLowerCase().match(search)?.length) {
+                sessions.push(x);
+            }
+        }
+        
+        let events: Array<ProgramSessionEvent> = [];
+        for (let x of allEvents) {
             let item = await x.item;
             let itemTitle = item.title;
             let authorNames = (await item.authors).map(x => x.name);
             let trackName = (await x.track).name;
             let sessionTitle = (await x.session).title;
 
-            return !!itemTitle.toLowerCase().match(search)?.length
+            if (!!itemTitle.toLowerCase().match(search)?.length
                 || !!trackName.toLowerCase().match(search)?.length
                 || !!sessionTitle.toLowerCase().match(search)?.length
-                || authorNames.reduce<boolean>((acc, x) => acc || (!!x.toLowerCase().match(search)?.length), false)
-                ? x : null;
-        })));
+                || authorNames.reduce<boolean>((acc, x) => acc || (!!x.toLowerCase().match(search)?.length), false)) {
+                events.push(x);
+            }
+        }
 
         return [sessions, events];
     }

@@ -376,6 +376,14 @@
                     margin : 1ex 0 1ex 0;
                     display: flex;
 
+                    &.session {
+                        a {
+                            font-style: italic;
+                        }
+                    }
+
+                    &.event {}
+
                     a {
                         display     : inline-block;
                         color       : inherit;

@@ -66,6 +66,7 @@ interface ItemRenderData {
     title: string;
     track: string;
     isWatched: boolean;
+    additionalClasses: string;
     url: string;
     sortValue: number;
 
@@ -201,7 +202,8 @@ export default function Program(props: Props) {
                         track: (await session.track).name,
                         isWatched: false,
                         item: { type: "session", data: session },
-                        sortValue: session.startTime.getTime()
+                        sortValue: session.startTime.getTime(),
+                        additionalClasses: "session"
                     };
                     return result;
                 }));
@@ -212,7 +214,8 @@ export default function Program(props: Props) {
                         track: (await event.track).shortName,
                         isWatched: false,
                         item: { type: "event", data: event },
-                        sortValue: event.startTime.getTime()
+                        sortValue: event.startTime.getTime(),
+                        additionalClasses: "event"
                     };
                     return result;
                 })));
@@ -315,7 +318,7 @@ export default function Program(props: Props) {
             // TODO: Insert the "watch star" button
             // TODO: Enable the watch/unwatch
             itemElems.push(
-                <li key={item.item.data.id} className={item.isWatched ? "watched" : ""}>
+                <li key={item.item.data.id} className={item.additionalClasses + (item.isWatched ? " watched" : "")}>
                     <Link to={item.url}>
                         <h3>{item.title}</h3>
                     </Link>
