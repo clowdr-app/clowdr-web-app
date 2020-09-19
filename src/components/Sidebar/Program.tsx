@@ -20,7 +20,7 @@ interface Props {
 }
 
 function arrangeBoundaries(timeBoundaries: Array<number>)
-    : [Array<{ start: number, end: number }>, number] {
+    : [Array<{ start: number, end: number, isLast: boolean }>, number] {
     let now = Date.now();
     let boundaries = timeBoundaries
         .sort((x, y) => x < y ? -1 : x === y ? 0 : 1) // Order them
@@ -32,14 +32,15 @@ function arrangeBoundaries(timeBoundaries: Array<number>)
                     : acc
             , [] as number[]) // Remove gaps of zero
         .map(x => x * 60 * 1000); // Convert to milliseconds
-    let boundaryPairs: Array<{ start: number, end: number }> = [];
+    let boundaryPairs: Array<{ start: number, end: number, isLast: boolean }> = [];
     const insaneLengthOfTime = 1000 * 60 * 60 * 24 * 365 * 10; // Ten years in ms
     if (boundaries.length > 0) {
         let boundaryStart = now - insaneLengthOfTime;
         let boundaryEnd = now + boundaries[0];
         boundaryPairs.push({
             start: boundaryStart,
-            end: boundaryEnd
+            end: boundaryEnd,
+            isLast: boundaries.length === 1
         });
     }
     for (let i = 0; i < boundaries.length; i++) {
@@ -54,7 +55,8 @@ function arrangeBoundaries(timeBoundaries: Array<number>)
 
         boundaryPairs.push({
             start: boundaryStart,
-            end: boundaryEnd
+            end: boundaryEnd,
+            isLast: i === boundaries.length - 1
         });
     }
     return [boundaryPairs, now];
@@ -104,7 +106,8 @@ export default function Program(props: Props) {
                     startTime: Date,
                     endTime: Date,
                     sessions: Array<ProgramSession>,
-                    events: Array<ProgramSessionEvent>
+                    events: Array<ProgramSessionEvent>,
+                    isLast: boolean
                 }
             } = {};
             let [boundaries, now] = arrangeBoundaries(props.timeBoundaries);
@@ -114,7 +117,8 @@ export default function Program(props: Props) {
                     startTime: new Date(boundary.start),
                     endTime: new Date(boundary.end),
                     sessions: [],
-                    events: []
+                    events: [],
+                    isLast: boundary.isLast
                 };
             }
 
@@ -184,7 +188,7 @@ export default function Program(props: Props) {
                         distance = Math.floor(distance / 60);
                         units = "hour" + (distance > 1 ? "s" : "");
                     }
-                    timeText = `In ${distance} ${units}`;
+                    timeText = `${group.isLast ? "Beyond" : "In"} ${distance} ${units}`;
                 }
 
                 logger.info(timeText, group);
