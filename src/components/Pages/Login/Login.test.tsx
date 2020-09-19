@@ -8,6 +8,7 @@ import getConference from "../../../tests/getConference";
 import { Simulate } from "react-dom/test-utils";
 import { generateMockPassword } from "../../../tests/initTestDB";
 import { testData } from "../../../tests/setupTests";
+import DocTitleContext from "../../../contexts/DocTitleContext";
 
 jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
 
@@ -19,7 +20,7 @@ describe("Login", () => {
             email: string,
             password: string
         }) => void = () => { }) {
-        mockDoLogin.mockImplementation((email: string, password: string) => {
+        mockDoLogin.mockImplementation(async (email: string, password: string) => {
             resolve({
                 email: email,
                 password: password
@@ -27,9 +28,11 @@ describe("Login", () => {
         });
 
         return <MemoryRouter>
-            <ConferenceContext.Provider value={testConference}>
-                <Login doLogin={mockDoLogin} clearSelectedConference={jest.fn()} />
-            </ConferenceContext.Provider>
+            <DocTitleContext.Provider value={jest.fn()}>
+                <ConferenceContext.Provider value={testConference}>
+                    <Login doLogin={mockDoLogin} clearSelectedConference={jest.fn()} />
+                </ConferenceContext.Provider>
+            </DocTitleContext.Provider>
         </MemoryRouter>
     };
 
@@ -159,14 +162,6 @@ describe("Login", () => {
         });
 
         return null;
-    });
-
-    it("has footer links", () => {
-        const element = render(TestElement());
-        const links = element.getAllByRole("link") as HTMLAnchorElement[];
-        expect(links[0].textContent).toBe("About");
-        expect(links[1].textContent).toBe("Legal");
-        expect(links[2].textContent).toBe("Help");
     });
 
     it("displays an error message when login fails", async () => {

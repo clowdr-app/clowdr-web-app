@@ -23,7 +23,8 @@ export default function Profile(props: Props) {
 
         async function updateProfile() {
             try {
-                let profileCancelablePromise = makeCancelable(UserProfile.get(props.userProfileId, conference.id));
+                let profileCancelablePromise =
+                    makeCancelable(UserProfile.get(props.userProfileId, conference.id));
                 cancel = profileCancelablePromise.cancel;
                 setProfile(await profileCancelablePromise.promise);
             }

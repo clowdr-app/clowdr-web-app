@@ -29,12 +29,10 @@ describe("Sidebar", () => {
     it("renders with class name 'sidebar'", () => {
         let element = render(<MemoryRouter>
             <ConferenceContext.Provider value={testConference}>
-                <Sidebar open={false} />
+                <Sidebar open={true} />
             </ConferenceContext.Provider>
         </MemoryRouter>);
 
         expect(element.container.children[0].className).toBe("sidebar");
     });
-
-    
 });

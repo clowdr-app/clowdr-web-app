@@ -7,6 +7,7 @@ import Conference from "clowdr-db-schema/src/classes/DataLayer/Interface/Confere
 import "@testing-library/jest-dom/extend-expect";
 import assert from "assert";
 import { StaticBaseImpl } from "clowdr-db-schema/src/classes/DataLayer/Interface/Base";
+import DocTitleContext from "../../../contexts/DocTitleContext";
 
 jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
 
@@ -23,10 +24,12 @@ describe("ConferenceSelection", () => {
         selectConference: (id: string | null) => Promise<boolean> = async () => { return true; }
     ) => {
         return <MemoryRouter>
-            <ConferenceSelection
-                failedToLoadConferences={failedToLoadConferences}
-                selectConference={selectConference}
-            />
+            <DocTitleContext.Provider value={jest.fn()}>
+                <ConferenceSelection
+                    failedToLoadConferences={failedToLoadConferences}
+                    selectConference={selectConference}
+                />
+            </DocTitleContext.Provider>
         </MemoryRouter>;
     }
 
