@@ -157,9 +157,9 @@ export default class Cache {
     async initialise(): Promise<void> {
         this.conference
             = new Parse.Query<Parse.Object<PromisesRemapped<Schema.Conference>>>("Conference")
-            .get(this.conferenceId).then(async x => {
-                return x;
-            });
+                .get(this.conferenceId).then(async x => {
+                    return x;
+                });
     }
 
     async addItemToCache<K extends CachedSchemaKeys, T extends CachedBase<K>>(
@@ -188,7 +188,14 @@ export default class Cache {
                         }
                     }
                     catch (e) {
-                        throw e;
+                        try {
+                            if (!e.toString().includes("Permission denied")) {
+                                throw e;
+                            }
+                        }
+                        catch {
+                            throw e;
+                        }
                     }
                 }
                 else {

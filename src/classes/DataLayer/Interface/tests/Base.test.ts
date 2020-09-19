@@ -23,9 +23,9 @@ import { AttachmentType } from "..";
 class CustomAttachmentType extends AttachmentType {
 }
 
-const testConferenceId = "test_conference_id";
+const testConferenceId = "mockConference1";
 const testAttachmentTypeData = {
-    id: "test_attachment_id",
+    id: "mockAttachmentType1",
     createdAt: new Date(),
     updatedAt: new Date(),
 
@@ -33,7 +33,10 @@ const testAttachmentTypeData = {
     isCoverImage: false,
     name: "test name",
     ordinal: 0,
-    supportsFile: false
+    supportsFile: false,
+    extra: null,
+    fileTypes: [],
+    conference: testConferenceId
 };
 const testObject
     = new CustomAttachmentType(testConferenceId, testAttachmentTypeData);

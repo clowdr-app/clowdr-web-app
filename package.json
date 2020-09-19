@@ -134,6 +134,7 @@
         "build": "node scripts/build.js",
         "test": "npm run init-test-data && npm run run-test",
         "run-test": "node scripts/test.js",
+        "debug-test": "node scripts/test.js --runInBand --maxConcurrency=1 --no-cache",
         "init-test-data": "node-env-run -E .env scripts/test-db.js",
         "deploy": "deployator",
         "export-schema": "node-env-run -E .env-main scripts/export-schema.js",
