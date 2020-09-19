@@ -1,10 +1,10 @@
 import { UserProfile } from "../classes/DataLayer";
 import { testData } from "./setupTests";
 
-export default async function getUserProfile() {
+export default async function getUserProfile(idx: number = 0) {
     const profile = await UserProfile.get(
-        testData.UserProfile[0].id,
-        testData.UserProfile[0].conference
+        testData.UserProfile[idx].id,
+        testData.UserProfile[idx].conference
     );
     if (!profile) {
         throw new Error("Could not get user profile!");
