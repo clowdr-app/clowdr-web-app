@@ -158,7 +158,7 @@ function generateConferences() {
     });
 
     result.push({
-        admin: "mockUser2",
+        admin: "mockUser3",
         autoSubscribeToTextChats: [],
         details: ["mockPrivilegedConferenceDetails2"],
 
@@ -191,29 +191,31 @@ function generateConferences() {
 function generateFlairs() {
     let result = [];
 
-    result.push({
-        createdAt: new Date(),
-        id: "mockFlair1",
-        updatedAt: new Date(),
-        color: "#FF00FF",
-        label: "mock flair label",
-        tooltip: "mock flair tooltip",
-        priority: 1,
-        conference: "mockConference1",
+    for (let i = 1; i <= 3; i++) {
+        result.push({
+            createdAt: new Date(),
+            id: "mockFlair" + i,
+            updatedAt: new Date(),
+            color: "#FF00FF",
+            label: "mock flair label",
+            tooltip: "mock flair tooltip",
+            priority: 1,
+            conference: "mockConference1",
 
-        _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "mockUser1": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
-        },
-        _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
-            "mockUser1",
-        ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
-    });
+            _acl: {
+                "role:mockConference1-RoleAdmin": { w: true },
+                "role:mockConference1-RoleManager": { w: true },
+                "mockUser1": { w: true },
+                "role:mockConference1-RoleAttendee": { r: true }
+            },
+            _wperm: [
+                "role:mockConference1-RoleAdmin",
+                "role:mockConference1-RoleManager",
+                "mockUser1",
+            ],
+            _rperm: ["role:mockConference1-RoleAttendee"],
+        });
+    }
 
     return result;
 }
@@ -311,7 +313,7 @@ function generateRoles() {
         },
         createdAt: new Date(),
         updatedAt: new Date(),
-        users: [],
+        users: ["mockUser2", "mockUser3"],
         roles: ["mockConference1-RoleManager"]
     });
 
@@ -321,29 +323,33 @@ function generateRoles() {
 function generateUsers() {
     let result = [];
 
-    result.push({
-        email: "mock@mock.com",
-        emailVerified: true,
-        createdAt: new Date(),
-        id: "mockUser1",
-        passwordSet: true,
-        updatedAt: new Date(),
-        username: "mockUser1",
-        profiles: ["mockUserProfile1"],
-        // Password is 'admin'
-        _hashed_password: "$2b$10$U1dOIN.fger7QO4sS9kwSelJdQgrr7D2hUCX5G4oMNR7uAPFQeXS2",
-
-        _acl: {
+    for (let i = 1; i <= 3; i++) {
+        const acl = {
             "role:mockConference1-RoleAdmin": { w: true },
-            "mockUser1": { w: true },
             "role:mockConference1-RoleAttendee": { r: true }
-        },
-        _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "mockUser1",
-        ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
-    });
+        };
+        acl["mockUser" + i] = { w: true };
+
+        result.push({
+            email: i === 1 ? "mock@mock.com" : "mock" + i + "@mock.com",
+            emailVerified: true,
+            createdAt: new Date(),
+            id: "mockUser" + i,
+            passwordSet: true,
+            updatedAt: new Date(),
+            username: "mockUser" + i,
+            profiles: ["mockUserProfile" + i],
+            // Password is 'admin'
+            _hashed_password: "$2b$10$U1dOIN.fger7QO4sS9kwSelJdQgrr7D2hUCX5G4oMNR7uAPFQeXS2",
+
+            _acl: acl,
+            _wperm: [
+                "role:mockConference1-RoleAdmin",
+                "mockUser" + i,
+            ],
+            _rperm: ["role:mockConference1-RoleAttendee"],
+        });
+    }
 
     return result;
 }
@@ -351,25 +357,29 @@ function generateUsers() {
 function generateUserPresences() {
     let result = [];
 
-    result.push({
-        createdAt: new Date(),
-        id: "mockUserPresence1",
-        updatedAt: new Date(),
-        isDNT: false,
-        lastSeen: new Date(),
-        profile: "mockUserProfile1",
-
-        _acl: {
+    for (let i = 1; i <= 3; i++) {
+        const acl = {
             "role:mockConference1-RoleAdmin": { w: true },
-            "mockUser1": { w: true },
             "role:mockConference1-RoleAttendee": { r: true }
-        },
-        _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "mockUser1",
-        ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
-    });
+        };
+        acl["mockUser" + i] = { w: true };
+
+        result.push({
+            createdAt: new Date(),
+            id: "mockUserPresence" + i,
+            updatedAt: new Date(),
+            isDNT: false,
+            lastSeen: new Date(),
+            profile: "mockUserProfile" + i,
+
+            _acl: acl,
+            _wperm: [
+                "role:mockConference1-RoleAdmin",
+                "mockUser" + i,
+            ],
+            _rperm: ["role:mockConference1-RoleAttendee"],
+        });
+    }
 
     return result;
 }
@@ -377,53 +387,57 @@ function generateUserPresences() {
 function generateUserProfiles() {
     let result = [];
 
-    result.push({
-        dataConsentGiven: true,
-        flairs: ["mockFlair1"],
-
-        id: "mockUserProfile1",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        affiliation: "mock affiliation",
-        bio: "mock bio",
-        country: "mock country",
-        displayName: "mock display name",
-        position: "mock position",
-        profilePhoto: null, // TODO: Mock profile photo file
-        pronouns: ["test", "pronouns"],
-        realName: "mock real name",
-        tags: [
-            {
-                alwaysShow: true,
-                label: "mock tag label 1",
-                priority: 1,
-                tooltip: "mock tag tooltip 1"
-            }, {
-                alwaysShow: false,
-                label: "mock tag label 2",
-                priority: 2,
-                tooltip: "mock tag tooltip 2"
-            }
-        ],
-        webpage: "http://mock.webpage.com/someurl?queryparams=somequery!",
-        welcomeModalShown: false,
-        conference: "mockConference1",
-        primaryFlair: "mockFlair1",
-        presence: "mockUserPresence1",
-        programPersons: [], // TODO: Mock program persons
-        user: "mockUser1",
-
-        _acl: {
+    for (let i = 1; i <= 3; i++) {
+        const acl = {
             "role:mockConference1-RoleAdmin": { w: true },
-            "mockUser1": { w: true },
             "role:mockConference1-RoleAttendee": { r: true }
-        },
-        _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "mockUser1",
-        ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
-    });
+        };
+        acl["mockUser" + i] = { w: true };
+
+        result.push({
+            dataConsentGiven: true,
+            flairs: ["mockFlair" + i],
+
+            id: "mockUserProfile" + i,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            affiliation: "mock affiliation",
+            bio: "mock bio",
+            country: "mock country",
+            displayName: "mock display name " + i,
+            position: "mock position",
+            profilePhoto: null, // TODO: Mock profile photo file
+            pronouns: ["test", "pronouns"],
+            realName: "mock real name",
+            tags: [
+                {
+                    alwaysShow: true,
+                    label: "mock tag label 1",
+                    priority: 1,
+                    tooltip: "mock tag tooltip 1"
+                }, {
+                    alwaysShow: false,
+                    label: "mock tag label 2",
+                    priority: 2,
+                    tooltip: "mock tag tooltip 2"
+                }
+            ],
+            webpage: "http://mock.webpage.com/someurl?queryparams=somequery!",
+            welcomeModalShown: false,
+            conference: "mockConference1",
+            primaryFlair: "mockFlair" + i,
+            presence: "mockUserPresence" + i,
+            programPersons: [], // TODO: Mock program persons
+            user: "mockUser" + i,
+
+            _acl: acl,
+            _wperm: [
+                "role:mockConference1-RoleAdmin",
+                "mockUser" + i,
+            ],
+            _rperm: ["role:mockConference1-RoleAttendee"],
+        });
+    }
 
     return result;
 }
