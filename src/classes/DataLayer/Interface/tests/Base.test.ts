@@ -34,7 +34,7 @@ const testAttachmentTypeData = {
     name: "test name",
     ordinal: 0,
     supportsFile: false,
-    extra: null,
+    extra: "",
     fileTypes: [],
     conference: testConferenceId
 };

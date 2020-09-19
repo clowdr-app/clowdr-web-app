@@ -10,10 +10,11 @@ import ConferenceSelection from "../Pages/ConferenceSelection/ConferenceSelectio
 import Login from "../Pages/Login/Login";
 import LoggedInWelcome from "../Pages/LoggedInWelcome/LoggedInWelcome";
 
-import { Conference, UserProfile } from "../../classes/DataLayer";
+import { Conference, UserProfile, _User } from "../../classes/DataLayer";
 import { mocked } from "ts-jest/utils";
 import getConference from "../../tests/getConference";
 import getUserProfile from "../../tests/getUserProfile";
+import { generateMockPassword } from "../../tests/initTestDB";
 
 jest.mock("../../classes/DataLayer/Cache/Cache");
 
@@ -53,6 +54,7 @@ describe("Page", () => {
     let testUserProfile: UserProfile;
 
     beforeAll(async () => {
+        await _User.logIn("mock@mock.com", generateMockPassword("TODO"));
         testConference = await getConference();
         testUserProfile = await getUserProfile();
     });
