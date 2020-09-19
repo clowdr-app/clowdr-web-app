@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch convert-program-csv via NPM",
+            "request": "launch",
+            "runtimeArgs": [
+                "run",
+                "convert-program-csv"
+            ],
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
+        },
+        {
             "name": "Launch tests via NPM",
             "request": "launch",
             "runtimeArgs": [

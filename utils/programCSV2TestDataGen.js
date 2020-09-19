@@ -190,11 +190,11 @@ function processInputData(data, timezone) {
             if (!session)
                 throw new Error("All scheduled events must be in a session, but found one that wasn't. Either put it in a session or remove the start/end times. Item: " + iName);
             // console.log("--> " + record['Event Start Time'] + " " + timezone);
-            let sTime = moment.tz(record['Event Start Time'], timezone);
+            let sTime = moment.tz(record['Event Start Time'], "YYYY-MM-DD hh:mm", timezone);
             if (!sTime) {
                 throw new Error("Invalid start time specified '" + sTime + "' in record" + JSON.stringify(record) + ". Please use the format YYYY-MM-DD HH:mm");
             }
-            let eTime = moment.tz(record['Event End Time'], timezone);
+            let eTime = moment.tz(record['Event End Time'], "YYYY-MM-DD hh:mm", timezone);
             if (!eTime) {
                 throw new Error("Invalid end time specified '" + eTime + "' in record" + JSON.stringify(record) + ". Please use the format YYYY-MM-DD HH:mm");
             }
@@ -233,7 +233,7 @@ function processInputData(data, timezone) {
 }
 
 function transformTime(time, origStartTime) {
-    return time.subtract(origStartTime).add(moment());
+    return moment(time).subtract(origStartTime).add(moment().startOf('day'));
 }
 
 function generateProgramTracksCode(datas, conference, origStartTime) {
@@ -292,8 +292,8 @@ function generateProgramSessionsCode(datas, conference, origStartTime, roomKeys,
         const roomIdx = roomKeys.indexOf(roomName);
         const trackIdx = trackKeys.indexOf(trackName);
         
-        const endTime = transformTime(data.eTime, origStartTime);
-        const startTime = transformTime(data.sTime, origStartTime);
+        const endTime = transformTime(data.eTime, origStartTime).valueOf();
+        const startTime = transformTime(data.sTime, origStartTime).valueOf();
 
         code.push(
             `result.push({
@@ -302,8 +302,8 @@ function generateProgramSessionsCode(datas, conference, origStartTime, roomKeys,
     createdAt: new Date(),
     updatedAt: new Date(),
     title: "${title}",
-    endTime: moment("${endTime}").toDate(),
-    startTime: moment("${startTime}").toDate(),
+    endTime: new Date(${endTime}),
+    startTime: new Date(${startTime}),
     room: "${conference}-room-${roomIdx}",
     track: "${conference}-track-${trackIdx}",
     
@@ -439,8 +439,8 @@ function generateProgramEventsCode(datas, conference, origStartTime, itemKeys, s
         const itemIdx = itemKeys.indexOf(itemName);
         const sessionIdx = sessionKeys.indexOf(sessionName);
 
-        const endTime = transformTime(data.eTime, origStartTime);
-        const startTime = transformTime(data.sTime, origStartTime);
+        const endTime = transformTime(data.eTime, origStartTime).valueOf();
+        const startTime = transformTime(data.sTime, origStartTime).valueOf();
 
         code.push(
             `result.push({
@@ -449,8 +449,8 @@ function generateProgramEventsCode(datas, conference, origStartTime, itemKeys, s
     createdAt: new Date(),
     updatedAt: new Date(),
     directLink: undefined,
-    endTime: moment("${endTime}").toDate(),
-    startTime: moment("${startTime}").toDate(),
+    endTime: new Date(${endTime}),
+    startTime: new Date(${startTime}),
     item: "${conference}-item-${itemIdx}",
     session: "${conference}-session-${sessionIdx}",
     
