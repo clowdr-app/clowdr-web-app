@@ -601,8 +601,6 @@ function Sidebar(props: Props) {
                 0, 15, 30, 60, 120
             ];
 
-            console.log("filtered events", state.filteredEvents);
-
             program = <Program
                 sessions={state.filteredSessions}
                 events={state.filteredEvents}

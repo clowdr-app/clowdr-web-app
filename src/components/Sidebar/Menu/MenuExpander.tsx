@@ -29,6 +29,7 @@ interface Props {
 export default function MenuExpander(props: Props) {
     const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
     const searchBoxRef = useRef<HTMLInputElement>(null);
+    const searchButtonRef = useRef<HTMLButtonElement>(null);
     const [searchBoxValue, setSearchBoxValue] = useState("");
 
     function toggleExpansion() {
@@ -40,6 +41,9 @@ export default function MenuExpander(props: Props) {
     useEffect(() => {
         if (isSearchOpen) {
             searchBoxRef.current?.focus();
+        }
+        else {
+            searchButtonRef.current?.focus();
         }
     }, [isSearchOpen]);
 
@@ -58,8 +62,6 @@ export default function MenuExpander(props: Props) {
                         searchButtonSpec.onSearchOpen?.();
                     }
 
-                    // TODO: 'X' button to close search
-                    // <i class="fas fa-times-circle"></i>
                     function closeSearch() {
                         setIsSearchOpen(false);
                         searchButtonSpec.onSearchClose?.();
@@ -79,18 +81,26 @@ export default function MenuExpander(props: Props) {
                             ? <button
                                 className="search"
                                 onClick={openSearch}
+                                ref={searchButtonRef}
                                 aria-label={button.label}>
                                 <i className={"fas " + button.icon}></i>
                             </button>
-                            : <input
-                                ref={searchBoxRef}
-                                className="search"
-                                type="text"
-                                aria-label={button.label}
-                                placeholder="Search..."
-                                onChange={changeSearch}
-                                value={searchBoxValue}
-                            />;
+                            : <div className="search-wrapper">
+                                <input
+                                    ref={searchBoxRef}
+                                    className="search"
+                                    type="text"
+                                    aria-label={button.label}
+                                    placeholder="Search..."
+                                    onChange={changeSearch}
+                                    value={searchBoxValue}
+                                />
+                                <button onClick={() => {
+                                    closeSearch();
+                                }} className="search-close-button">
+                                    <i className="fas fa-times-circle"></i>
+                                </button>
+                            </div>;
                 }
                 else {
                     throw new Error("At most one search button per expander group.");
