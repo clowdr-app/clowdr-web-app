@@ -208,11 +208,11 @@ export default class Cache {
         [K in CachedSchemaKeys]?: LiveQuerySubscription;
     } = {};
 
-    public _onDataUpdated: {
+    private _onDataUpdated: {
         [K in CachedSchemaKeys]: SimpleEventDispatcher<DataUpdatedEventDetails<K>>
     };
 
-    public _onDataDeleted: {
+    private _onDataDeleted: {
         [K in CachedSchemaKeys]: SimpleEventDispatcher<DataDeletedEventDetails<K>>
     };
 

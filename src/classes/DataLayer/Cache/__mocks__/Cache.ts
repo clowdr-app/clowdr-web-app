@@ -165,11 +165,11 @@ export default class Cache {
         return `clowdr-${this.conferenceId}`;
     }
 
-    public _onDataUpdated: {
+    private _onDataUpdated: {
         [K in CachedSchemaKeys]: SimpleEventDispatcher<DataUpdatedEventDetails<K>>
     };
 
-    public _onDataDeleted: {
+    private _onDataDeleted: {
         [K in CachedSchemaKeys]: SimpleEventDispatcher<DataDeletedEventDetails<K>>
     };
 
