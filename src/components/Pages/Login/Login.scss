@@ -1,7 +1,7 @@
 @import "../../../styles/util";
 
 .login {
-    margin-top    : mm(20);
+    margin-top    : 10vh;
     display       : flex;
     flex-direction: column;
     text-align    : center;
@@ -20,6 +20,11 @@
         flex-direction: column;
         width         : 50%;
         margin        : 0 auto;
+
+        @media only screen and (max-width: $break-sm) {
+            width: 90%;
+            font-size: 80%;
+        }
 
         .error-message {
             margin-bottom: 2ex;
@@ -42,8 +47,12 @@
             grid-template-columns: auto 50px auto;
             grid-template-areas  : "sign-in . sign-up"
                 "reselect reselect reselect";
-            width : 70%;
             margin: mm(4) auto 0 auto;
+            
+            @media only screen and (max-width: $break-sm) {
+                width: 100%;
+                grid-template-columns: auto 20px auto;
+            }
 
             .sign-in {
                 grid-area: sign-in;
