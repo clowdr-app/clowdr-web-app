@@ -6,7 +6,6 @@ const RelationsToTableNames = {
         conference: "Conference"
     },
     Conference: {
-        admin: "_User",
         autoSubscribeToTextChats: "TextChat"
     },
     ConferenceConfiguration: {
@@ -130,7 +129,6 @@ function generateConferences() {
     let result = [];
 
     result.push({
-        admin: "mockUser1",
         autoSubscribeToTextChats: [],
         details: ["mockPrivilegedConferenceDetails1"],
 
@@ -158,7 +156,6 @@ function generateConferences() {
     });
 
     result.push({
-        admin: "mockUser3",
         autoSubscribeToTextChats: [],
         details: ["mockPrivilegedConferenceDetails2"],
 
