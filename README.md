@@ -129,6 +129,7 @@ up.
     1. Make a copy `.env.dev` within `clowdr-web-app` 
     1. Rename the copy to `.env`
     1. That's it, no further customisation is required for local development.
+1. Ensure `mongo`, `mongodump` and `mongorestore` are on your PATH.
 1. From within `clowdr-web-app`, run `npm run init-test-data`
 1. From within `clowdr-web-app`, run `npm start`. This may take a while.
 1. If all went well, you will (eventually - it can take minutes!) end up
