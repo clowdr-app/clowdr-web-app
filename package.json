@@ -39,7 +39,7 @@
         "bourbon": "^7.0.0",
         "camelcase": "^5.3.1",
         "case-sensitive-paths-webpack-plugin": "2.3.0",
-        "clowdr-db-schema": "git+ssh://git@github.com/clowdr-app/clowdr-db-schema.git#stable",
+        "clowdr-db-schema": "git+https://github.com/clowdr-app/clowdr-db-schema.git#stable",
         "concurrently": "^5.3.0",
         "cors": "^2.8.5",
         "cross-env": "^7.0.2",
