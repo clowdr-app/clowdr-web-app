@@ -22,7 +22,7 @@ function validateRequest(schema, request) {
 }
 
 function validateObjectType(keyPrefix, schema, request) {
-    let typeKeys = Object.keys(request);
+    let typeKeys = Object.keys(schema);
     let requestKeys = Object.keys(request);
     for (let key of typeKeys) {
         let schemaType = schema[key];
@@ -40,7 +40,7 @@ function validateObjectType(keyPrefix, schema, request) {
             result = validateBasicType(keyPrefix + "." + key, schemaType, actualValue);
         }
         else {
-            result = validateRequest(keyPrefix + "." + key, schemaType, actualValue);
+            result = validateObjectType(keyPrefix + "." + key, schemaType, actualValue);
         }
 
         if (!result.ok) {
@@ -63,14 +63,14 @@ function validateBasicType(key, schemaType, actualValue) {
         }
     }
     else if (schemaType.startsWith("[") && schemaType.endsWith("]")) {
-        if (!(actualType instanceof Array)) {
+        if (!(actualValue instanceof Array)) {
             return {
                 ok: false,
-                error: `Schema mismatch @${key}. Expected '${schemaType}', received '${actualType}'.`
+                error: `Schema mismatch @${key}. Expected '${schemaType}', received '${actualType}':${JSON.stringify(actualValue)}.`
             };
         }
 
-        let innerSchemaType = schemaType.substr(1, schemaType.length - 1);
+        let innerSchemaType = schemaType.substr(1, schemaType.length - 2);
         for (let idx = 0; idx < actualValue.length; idx++) {
             let item = actualValue[idx];
             let result = validateBasicType(idx.toString(), innerSchemaType, item);
