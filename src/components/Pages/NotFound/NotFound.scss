@@ -1,19 +1,23 @@
 @import "../../../styles/util.scss";
 
 .page {
-    display: flex;
+    .not-found-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
 
-    .not-found {
-        margin: auto;
-        text-align: center;
+        .not-found {
+            margin    : auto;
+            text-align: center;
 
-        .icon {
-            color: $dark-primary;
-            margin-bottom: 0.7em;
-        }
+            .icon {
+                color        : $dark-primary;
+                margin-bottom: 0.7em;
+            }
 
-        h2 {
-            font-size: $font-xl;
+            h2 {
+                font-size: $font-xl;
+            }
         }
     }
 }
