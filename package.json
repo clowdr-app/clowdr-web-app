@@ -103,6 +103,7 @@
         "react-resizable": "^1.11.0",
         "react-router-dom": "^5.2.0",
         "react-splitter-layout": "^4.0.0",
+        "react-toastify": "^6.0.8",
         "resolve": "1.15.0",
         "resolve-url-loader": "3.1.1",
         "sass-loader": "8.0.2",
