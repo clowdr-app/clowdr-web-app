@@ -132,16 +132,18 @@
         ]
     },
     "scripts": {
+        
         "start": "node scripts/start.js",
         "build": "node scripts/build.js",
+
         "test": "npm run init-test-data && npm run run-test",
         "run-test": "node scripts/test.js",
         "debug-test": "node scripts/test.js --runInBand --maxConcurrency=1 --no-cache",
         "init-test-data": "node-env-run -E .env scripts/test-db.js",
+
         "deploy": "deployator",
-        "export-schema": "node-env-run -E .env-main scripts/export-schema.js",
-        "init-app": "node-env-run -E .env scripts/db.js",
-        "convert-program-csv": "node utils/programCSV2TestDataGen.js -i sample-program-upload.csv -o sample-program-data.js --ost \"2020-09-02 12:00\""
+
+        "create-sample-conference": "node-env-run -E .env scripts/create-sample-conference.js"
     },
     "eslintConfig": {
         "extends": "react-app"
