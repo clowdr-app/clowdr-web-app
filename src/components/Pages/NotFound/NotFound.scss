@@ -1,0 +1,19 @@
+@import "../../../styles/util.scss";
+
+.page {
+    display: flex;
+
+    .not-found {
+        margin: auto;
+        text-align: center;
+
+        .icon {
+            color: $dark-primary;
+            margin-bottom: 0.7em;
+        }
+
+        h2 {
+            font-size: $font-xl;
+        }
+    }
+}
