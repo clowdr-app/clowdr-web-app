@@ -40,6 +40,10 @@ db/test/**/*.*
 db/dump/**/*.*
 *.bson
 
+db
 db/test-ts-schema/
 
 sample-program-data.js
+
+.vscode/tasks.json
+.vscode/settings.json

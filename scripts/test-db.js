@@ -4,6 +4,7 @@ const { spawn } = require('child_process');
 const dotenv = require('dotenv');
 const { generateTestData } = require("../src/tests/initTestDB.js");
 const BSON = require('bson');
+const path = require('path');
 
 dotenv.config();
 
@@ -11,8 +12,12 @@ if (!process.env.MONGODB_HOST.includes("localhost")) {
     throw new Error("Don't run this against a production database - it obliterates everything!");
 }
 
+let dbSchemaPackagePath = path.dirname(require.resolve("clowdr-db-schema/package.json"));
 let schemaDirPath = "./db/schema-base";
 let testDirPath = "./db/test";
+
+fsExtra.removeSync(schemaDirPath);
+fsExtra.copySync(path.join(dbSchemaPackagePath, schemaDirPath), schemaDirPath, { overwrite: false, errorOnExist: true });
 
 if (!fs.existsSync(testDirPath)) {
     fs.mkdirSync(testDirPath);
