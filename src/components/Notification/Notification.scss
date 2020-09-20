@@ -1,0 +1,46 @@
+@import "../../styles/util.scss";
+
+div.clowdr-notification {
+    background: rgba($color: $gray-1, $alpha: 0.8);
+    border-bottom: 1px $gray-1 solid;
+    border-left: 1px $gray-1 solid;
+    color: white;
+    margin: 0;
+    padding: 1em;
+
+    p {
+        margin: 0;
+    }
+
+    .notification-action {
+        color: $color-4;
+        text-align: right;
+        margin-right: -14px;
+
+        a {
+            color: $color-4;
+            font-weight: bold;
+
+            &:hover {
+                color: $color-3;
+                text-decoration: none;
+                transition: ease 0.5s;
+            }
+        }
+
+        .icon {
+            margin-left: 0.5em;
+        }
+    }
+
+    .Toastify__close-button {
+        color: $gray-6;
+        opacity: 0.8;
+    }
+}
+
+.Toastify__toast-container--top-right {
+    top: 0 !important;
+    right: 0 !important;
+    padding: 0 !important;
+}

@@ -11,7 +11,7 @@ export default function NotFound() {
             <h2>Sorry, we couldn't find that page.</h2>
             <p>
                 If you keep seeing this error, please <Link to="/moderators">contact your conference organizers</Link>.
-        </p>
+            </p>
         </div>
     </div>;
 }

@@ -6,6 +6,8 @@ import App from './components/App/App';
 import { BrowserRouter } from 'react-router-dom';
 import assert from 'assert';
 import dotenv from 'dotenv';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './index.scss';
 import "normalize.css";
 
@@ -23,6 +25,7 @@ Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 ReactDOM.render(
     <React.StrictMode>
         <BrowserRouter basename={process.env.PUBLIC_URL}>
+            <ToastContainer limit={3} />
             <App />
         </BrowserRouter>
     </React.StrictMode>,
