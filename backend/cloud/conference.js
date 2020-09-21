@@ -1,7 +1,6 @@
 /* global Parse */
 // ^ for eslint
 
-const assert = require("assert");
 const Twilio = require("twilio");
 
 const { validateRequest } = require("./utils");
@@ -34,16 +33,30 @@ const createConferenceRequestSchema = {
     twilio: {
         MASTER_SID: "string",
         MASTER_AUTH_TOKEN: "string",
+        CHAT_PRE_WEBHOOK_URL: "string",
         CHAT_POST_WEBHOOK_URL: "string"
     },
     react: {
         TWILIO_CALLBACK_URL: "string",
         FRONTEND_URL: "string"
+    },
+    sendgrid: {
+        API_KEY: "string",
+        SENDER: "string"
     }
 };
 
 const TWILIO_WEBHOOK_METHOD = 'POST';
-const TWILIO_WEBHOOK_EVENTS = ['onUserUpdated'];
+const TWILIO_WEBHOOK_EVENTS = [
+    "onMemberAdd",
+    "onMemberAdded",
+    "onMessageSent",
+    "onMessageUpdated",
+    "onMessageRemoved",
+    "onMediaMessageSent",
+    "onChannelUpdated",
+    "onChannelDestroyed",
+];
 const TWILIO_REACHABILITY_ENABLED = true;
 const TWILIO_READ_STATUS_ENABLED = true;
 const TWILIO_MEMBERS_PER_CHANNEL_LIMIT = 1000;
@@ -63,6 +76,92 @@ const defaultFlairs = [
     { label: "Admin", color: "rgba(200, 32, 0, 1)", tooltip: "Conference administrator", priority: 100 },
     { label: "Moderator", color: "rgba(32, 200, 0, 1)", tooltip: "Conference moderator", priority: 90 }
 ];
+
+const defaultTwilioChatRoles = [
+    {
+        name: "service admin",
+        type: "deployment",
+        permissions: [
+            "createChannel",
+            "joinChannel",
+            "editAnyUserInfo",
+            "destroyChannel",
+            "inviteMember",
+            "removeMember",
+            "editChannelName",
+            "editChannelAttributes",
+            "addMember",
+            "editAnyMemberAttributes",
+            "editAnyMessage",
+            "editAnyMessageAttributes",
+            "deleteAnyMessage"
+        ]
+    },
+    {
+        name: "service user",
+        type: "deployment",
+        permissions: [
+            "createChannel",
+            "joinChannel",
+            "editAnyUserInfo"
+        ]
+    },
+    {
+        name: "channel admin",
+        type: "channel",
+        permissions: [
+            "sendMessage",
+            "sendMediaMessage",
+            "leaveChannel",
+            "editNotificationLevel",
+            "destroyChannel",
+            "inviteMember",
+            "removeMember",
+            "editChannelName",
+            "editChannelAttributes",
+            "addMember",
+            "editAnyMemberAttributes",
+            "editAnyMessage",
+            "editAnyMessageAttributes",
+            "deleteAnyMessage",
+        ]
+    },
+    {
+        name: "channel user",
+        type: "channel",
+        permissions: [
+            "sendMessage",
+            "sendMediaMessage",
+            "leaveChannel",
+            "editNotificationLevel",
+            "editOwnMemberAttributes",
+            "editOwnMessage",
+            "editOwnMessageAttributes",
+            "deleteOwnMessage"
+        ]
+    },
+    {
+        name: "announcements admin",
+        type: "channel",
+        permissions: [
+            "sendMessage",
+            "sendMediaMessage",
+            "editNotificationLevel",
+            "addMember"
+        ]
+    },
+    {
+        name: "announcements user",
+        type: "channel",
+        // We have to give at least one permission
+        // If they can't send any messages, the edit permission is a safe irrelevancy
+        permissions: [
+            'editOwnMessage'
+        ]
+    }
+];
+
+const TWILIO_ANNOUNCEMENTS_CHANNEL_NAME = "Announcements";
 
 Parse.Cloud.job("conference-create", async (request) => {
     const { params, headers, log, message } = request;
@@ -452,7 +551,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 await reactivateTwilioSubaccount();
                 message(`Got and reactivated existing subaccount: ${twilioSubaccount.sid}`);
             }
-            
+
             // Configure Twilio subaccount
             message(`Configuring Twilio subaccount (${twilioSubaccount.sid})...`);
             async function setConfiguration(key, value, attendeeAccessible) {
@@ -509,7 +608,6 @@ Parse.Cloud.job("conference-create", async (request) => {
             await setConfiguration("REACT_APP_FRONTEND_URL", params.react.FRONTEND_URL, false);
 
             // Initialise Twilio Programmable Chat Service
-
             message(`Configuring Twilio chat service...`);
             async function getTwilioChatService() {
                 let services = await twilioSubaccountClient.chat.services.list();
@@ -530,6 +628,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                     readStatusEnabled: TWILIO_READ_STATUS_ENABLED,
                     webhookMethod: TWILIO_WEBHOOK_METHOD,
                     webhookFilters: TWILIO_WEBHOOK_EVENTS,
+                    preWebhookUrl: params.twilio.CHAT_PRE_WEBHOOK_URL !== "<unknown>" ? params.twilio.CHAT_PRE_WEBHOOK_URL : "",
                     postWebhookUrl: params.twilio.CHAT_POST_WEBHOOK_URL !== "<unknown>" ? params.twilio.CHAT_POST_WEBHOOK_URL : "",
                     limits: {
                         channelMembers: TWILIO_MEMBERS_PER_CHANNEL_LIMIT,
@@ -545,25 +644,78 @@ Parse.Cloud.job("conference-create", async (request) => {
             }
             await configureTwilioChatService();
 
-            // TODO: Initialise Twilio Chat roles
             // Existing roles to adapt (as per docs recommendation): Friendly Name: channel user
             // Existing roles to adapt (as per docs recommendation): Friendly Name: service admin
             // Existing roles to adapt (as per docs recommendation): Friendly Name: service user
             // Existing roles to adapt (as per docs recommendation): Friendly Name: channel admin
-
+            // Roles we need: Service admin, service user, channel admin, channel user, announcements channel admin, announcements channel user
+            const twilioChatRoles = new Map();
+            async function getChatRoles() {
+                const roles = await twilioChatService.roles().list();
+                for (let role of roles) {
+                    twilioChatRoles.set(role.friendlyName, role);
+                }
+            }
+            function addPermissionsToDescriptor(obj, permissions) {
+                obj.permission = permissions;
+            }
+            async function createChatRole(friendlyName, type, permissions) {
+                let roleDescriptor = {
+                    friendlyName: friendlyName,
+                    type: type
+                };
+                addPermissionsToDescriptor(roleDescriptor, permissions);
+                let role = await twilioChatService.roles().create(roleDescriptor);
+                twilioChatRoles.set(friendlyName, role);
+            }
+            async function configureChatRole(friendlyName, permissions) {
+                let obj = {};
+                addPermissionsToDescriptor(obj, permissions);
+                await twilioChatRoles.get(friendlyName).update(obj);
+            }
+            await getChatRoles();
+            for (let role of defaultTwilioChatRoles) {
+                if (!twilioChatRoles.get(role.name)) {
+                    await createChatRole(role.name, role.type, role.permissions);
+                }
+                else {
+                    await configureChatRole(role.name, role.permissions);
+                }
+            }
             message(`Configured Twilio chat service.`);
 
-            // TODO: Initialise Twilio Programmable Video Service (callback urls)
+            // Create the announcements channel
+            message(`Configuring announcements channel...`);
+            let twilioAccouncementsChannel = null;
+            async function getAnnouncementsChannel() {
+                let channels = await twilioChatService.channels().list();
+                for (let channel of channels) {
+                    if (channel.friendlyName === TWILIO_ANNOUNCEMENTS_CHANNEL_NAME) {
+                        twilioAccouncementsChannel = channel;
+                    }
+                }
+            }
+            async function createAnnouncementsChannel() {
+                twilioAccouncementsChannel = await twilioChatService.channels().create({
+                    friendlyName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
+                    uniqueName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
+                    attributes: {},
+                    type: "public"
+                })
+            }
+            await getAnnouncementsChannel();
+            if (!twilioAccouncementsChannel) {
+                await createAnnouncementsChannel();
+            }
+            message(`Configured announcements channel.`);
 
-            // TODO: Initialise announcements channel (as auto-subscribe)
-
-            // TODO: Now: Set SendGrid config variables
-            // TODO Later: Can we initialise SendGrid?
+            // Configure SendGrid
+            message(`Configuring SendGrid...`);
+            await setConfiguration("SENDGRID_API_KEY", params.sendgrid.API_KEY);
+            await setConfiguration("SENDGRID_SENDER", params.sendgrid.SENDER);
+            message(`Configured SendGrid.`);
 
             message(`Conference created: '${conference.id}'.`);
-
-            // TODO: Delete this line
-            await cleanupOnFailure();
         }
         else {
             console.error("ERROR: " + requestValidation.error);
