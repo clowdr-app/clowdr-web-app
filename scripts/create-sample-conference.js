@@ -23,7 +23,7 @@ Parse.Cloud.startJob("conference-create", data)
             let jobStatus = jobStatusR.get("status");
             let message = jobStatusR.get("message");
             if (jobStatus === "failed") {
-                console.error(`Job failed: ${message}`);
+                console.error(`Job failed! Last message before failure: ${message}`);
                 break;
             }
             else if (jobStatus === "succeeded") {

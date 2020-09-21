@@ -1,3 +1,17 @@
 {
-    "name": "Sample Conference 1"
+    "conference": {
+        "name": "Sample Conference 1",
+        "shortName": "SC1",
+        "welcomeText": "# Welcome\nThis is some opening welcome text.",
+        "loggedInText": "# Welcome\nThis is some logged-in welcome text."
+    },
+    "admin": {
+        "username": "sc1-admin",
+        "password": "admin",
+        "email": "mock@mock.com",
+        "realName": "Sample Admin 1",
+        "pronouns": ["they", "them"],
+        "displayName": "Admin",
+        "country": "Middle Earth"
+    }
 }
