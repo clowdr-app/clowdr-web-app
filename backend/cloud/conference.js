@@ -46,6 +46,10 @@ const TWILIO_WEBHOOK_METHOD = 'POST';
 const TWILIO_WEBHOOK_EVENTS = ['onUserUpdated'];
 const TWILIO_REACHABILITY_ENABLED = true;
 const TWILIO_READ_STATUS_ENABLED = true;
+const TWILIO_MEMBERS_PER_CHANNEL_LIMIT = 1000;
+const TWILIO_CHANNELS_PER_USER_LIMIT = 250;
+const TWILIO_CHAT_PRE_WEBHOOK_RETRY_COUNT = 1;
+const TWILIO_CHAT_POST_WEBHOOK_RETRY_COUNT = 1;
 
 // Order matters - sort on inheritedBy, circular relationships not allowed.
 const defaultRoles = [
@@ -526,7 +530,13 @@ Parse.Cloud.job("conference-create", async (request) => {
                     readStatusEnabled: TWILIO_READ_STATUS_ENABLED,
                     webhookMethod: TWILIO_WEBHOOK_METHOD,
                     webhookFilters: TWILIO_WEBHOOK_EVENTS,
-                    postWebhookUrl: params.twilio.CHAT_POST_WEBHOOK_URL !== "<unknown>" ? params.twilio.CHAT_POST_WEBHOOK_URL : ""
+                    postWebhookUrl: params.twilio.CHAT_POST_WEBHOOK_URL !== "<unknown>" ? params.twilio.CHAT_POST_WEBHOOK_URL : "",
+                    limits: {
+                        channelMembers: TWILIO_MEMBERS_PER_CHANNEL_LIMIT,
+                        userChannels: TWILIO_CHANNELS_PER_USER_LIMIT
+                    },
+                    preWebhookRetryCount: TWILIO_CHAT_PRE_WEBHOOK_RETRY_COUNT,
+                    postWebhookRetryCount: TWILIO_CHAT_POST_WEBHOOK_RETRY_COUNT
                 }).then(service => console.log(`Updated Twilio Chat Service: ${service.friendlyName}`));
             }
             await getTwilioChatService();
@@ -540,16 +550,14 @@ Parse.Cloud.job("conference-create", async (request) => {
             // Existing roles to adapt (as per docs recommendation): Friendly Name: service admin
             // Existing roles to adapt (as per docs recommendation): Friendly Name: service user
             // Existing roles to adapt (as per docs recommendation): Friendly Name: channel admin
-            
+
             message(`Configured Twilio chat service.`);
 
-
-
-            // TODO: Initialise Twilio Programmable Video Service
-            // TODO: Initialise Twilio Video roles
+            // TODO: Initialise Twilio Programmable Video Service (callback urls)
 
             // TODO: Initialise announcements channel (as auto-subscribe)
 
+            // TODO: Now: Set SendGrid config variables
             // TODO Later: Can we initialise SendGrid?
 
             message(`Conference created: '${conference.id}'.`);
