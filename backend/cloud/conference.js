@@ -524,13 +524,28 @@ Parse.Cloud.job("conference-create", async (request) => {
                 }
             }
             async function getTwilioSubaccount() {
-                let accounts = await twilioMasterClient.api.accounts.list({ friendlyName: generateTwilioSubaccountFriendlyName() });
+                let accounts = await twilioMasterClient.api.accounts.list({ friendlyName: generateTwilioSubaccountFriendlyName(), status: "suspended" });
+                accounts = accounts.concat(await twilioMasterClient.api.accounts.list({ friendlyName: generateTwilioSubaccountFriendlyName(), status: "active" }));
                 if (accounts.length === 1) {
-                    return accounts[0];
+                    if (params.twilio.removeExisting) {
+                        await twilioMasterClient.api.accounts(accounts[0].sid).update({ status: "closed" });
+                        return null;
+                    }
+                    else {
+                        return accounts[0];
+                    }
                 }
                 else if (accounts.length > 0) {
-                    console.warn(`Multiple matching Twilio subaccounts!`);
-                    return accounts[0];
+                    if (params.twilio.removeExisting) {
+                        for (let account of accounts) {
+                            await twilioMasterClient.api.accounts(account.sid).update({ status: "closed" });
+                        }
+                        return null;
+                    }
+                    else {
+                        console.warn(`Multiple matching Twilio subaccounts!`);
+                        return accounts[0];
+                    }
                 }
                 else {
                     return null;
