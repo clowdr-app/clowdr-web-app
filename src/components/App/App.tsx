@@ -12,6 +12,7 @@ import { Conference, UserProfile, _User } from "clowdr-db-schema/src/classes/Dat
 import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
+import Chat from "../../classes/Chat/Chat";
 
 interface Props {
 }
@@ -110,7 +111,7 @@ export default function App(props: Props) {
 
     // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
 
-    // Update cache authentication status
+    // Update authentication status of various classes
     useEffect(() => {
         async function updateCacheAuthenticatedStatus() {
             if (!appState.tasks.has("beginLoadConference")
@@ -123,9 +124,24 @@ export default function App(props: Props) {
                             let cache = await Caches.get(appState.conferenceId);
                             cache.updateUserAuthenticated({ authed: false });
                         }
+
+                        await Chat.teardown();
                     }
                     else if (appState.conferenceId) {
                         let cache = await Caches.get(appState.conferenceId);
+
+                        if (appState.conference && appState.profile && appState.sessionToken) {
+                            try {
+                                await Chat.initialise(appState.conference, appState.profile, appState.sessionToken);
+                            }
+                            catch (e) {
+                                logger.error("Could not initialise Twilio", e);
+                            }
+                        }
+                        else {
+                            await Chat.teardown();
+                        }
+
                         if (!cache.IsUserAuthenticated && appState.sessionToken) {
                             cache.updateUserAuthenticated({ authed: true, sessionToken: appState.sessionToken });
                         }
@@ -141,7 +157,7 @@ export default function App(props: Props) {
         }
 
         updateCacheAuthenticatedStatus();
-    }, [appState.conferenceId, appState.profile, appState.sessionToken, appState.tasks, logger]);
+    }, [appState.conference, appState.conferenceId, appState.profile, appState.sessionToken, appState.tasks, logger]);
 
     // Initial update of conference
     useEffect(() => {

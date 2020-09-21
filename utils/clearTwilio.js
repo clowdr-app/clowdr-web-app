@@ -38,7 +38,7 @@ async function getConfig(conference) {
     }
 
     if (!config.TWILIO_CALLBACK_URL) {
-        config.TWILIO_CALLBACK_URL = "https://clowdr.herokuapp.com/twilio/event"
+        config.TWILIO_CALLBACK_URL = "https://clowdr.herokuapp.com/twilio/chat/event"
     }
     if (!config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE) {
         let role = await config.twilioChat.roles.create({

@@ -47,6 +47,7 @@ const createConferenceRequestSchema = {
 };
 
 const TWILIO_WEBHOOK_METHOD = 'POST';
+// Copied to clowdr-backend/Twilio.ts - also update there when modifying.
 const TWILIO_WEBHOOK_EVENTS = [
     "onMemberAdd",
     "onMemberAdded",
@@ -164,7 +165,7 @@ const defaultTwilioChatRoles = [
 const TWILIO_ANNOUNCEMENTS_CHANNEL_NAME = "Announcements";
 
 Parse.Cloud.job("conference-create", async (request) => {
-    const { params, headers, log, message } = request;
+    const { params, message } = request;
 
     // Stuff we re-use but doesn't directly need cleaning up
     let twilioMasterClient = null;
@@ -201,7 +202,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         try {
             if (twilioSubaccount) {
                 console.log(`Suspending Twilio subaccount. ${twilioSubaccount.sid}`);
-                let res = await twilioMasterClient.api.accounts(twilioSubaccount.sid).update({ status: 'suspended' });
+                await twilioMasterClient.api.accounts(twilioSubaccount.sid).update({ status: 'suspended' });
                 console.log(`Suspended Twilio subaccount. ${twilioSubaccount.sid}`);
             }
         }

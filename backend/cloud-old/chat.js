@@ -38,7 +38,7 @@
 //     config.twilioChat = config.twilio.chat.services(config.TWILIO_CHAT_SERVICE_SID);
 
 //     if (!config.TWILIO_CALLBACK_URL) {
-//         config.TWILIO_CALLBACK_URL = "http://localhost:3000/twilio/event"
+//         config.TWILIO_CALLBACK_URL = "http://localhost:3000/twilio/chat/event"
 //     }
 //     if(!config.TWILIO_CHAT_CHANNEL_MANAGER_ROLE){
 //         let role = await config.twilioChat.roles.create({
