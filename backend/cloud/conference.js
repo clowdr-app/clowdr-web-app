@@ -50,10 +50,50 @@ Parse.Cloud.job("conference-create", async (request) => {
     const roleMap = new Map();
     const flairMap = new Map();
     let loggedInText = null;
+    let adminUser = null;
+    let adminUserPresence = null;
+    let adminUserProfile = null;
 
     async function cleanupOnFailure() {
         message("Cleaning up...");
         let cleanupSuccess = true;
+
+        try {
+            if (adminUserProfile) {
+                console.log(`Destroying admin user profile: '${adminUserProfile.id}'`);
+                await adminUserProfile.destroy({ useMasterKey: true });
+                console.log(`Destroyed admin user profile: '${adminUserProfile.id}'`);
+            }
+        }
+        catch (e2) {
+            console.error(`Failed to clean up admin user profile. ${e2}`);
+            cleanupSuccess = false;
+        }
+
+        try {
+            if (adminUserPresence) {
+                console.log(`Destroying admin user presence: '${adminUserPresence.id}'`);
+                await adminUserPresence.destroy({ useMasterKey: true });
+                console.log(`Destroyed admin user presence: '${adminUserPresence.id}'`);
+            }
+        }
+        catch (e2) {
+            console.error(`Failed to clean up admin user presence. ${e2}`);
+            cleanupSuccess = false;
+        }
+
+        try {
+            if (adminUser) {
+                console.log(`Destroying admin user: '${adminUser.id}'`);
+                await adminUser.destroy({ useMasterKey: true });
+                console.log(`Destroyed admin user: '${adminUser.id}'`);
+            }
+        }
+        catch (e2) {
+            console.error(`Failed to clean up admin user. ${e2}`);
+            cleanupSuccess = false;
+        }
+
         try {
             if (loggedInText) {
                 console.log(`Destroying logged in text: '${loggedInText.id}'`);
@@ -176,8 +216,8 @@ Parse.Cloud.job("conference-create", async (request) => {
                 const acl = new Parse.ACL();
                 acl.setPublicReadAccess(false);
                 acl.setPublicWriteAccess(false);
-                acl.setReadAccess(attendeeRole, true);
-                acl.setWriteAccess(adminRole, true);
+                acl.setRoleReadAccess(attendeeRole, true);
+                acl.setRoleWriteAccess(adminRole, true);
 
                 const flairO = new Parse.Object("Flair");
                 flairO.setACL(acl);
@@ -208,8 +248,8 @@ Parse.Cloud.job("conference-create", async (request) => {
                 const loggedInACL = new Parse.ACL();
                 loggedInACL.setPublicReadAccess(false);
                 loggedInACL.setPublicWriteAccess(false);
-                loggedInACL.setReadAccess(attendeeRole, true);
-                loggedInACL.setWriteAccess(managerRole, true);
+                loggedInACL.setRoleReadAccess(attendeeRole, true);
+                loggedInACL.setRoleWriteAccess(managerRole, true);
                 const loggedInTextO = new Parse.Object("PrivilegedConferenceDetails");
                 loggedInTextO.setACL(loggedInACL);
                 loggedInText = await loggedInTextO.save({
@@ -222,8 +262,89 @@ Parse.Cloud.job("conference-create", async (request) => {
             }
             message("Created logged in text.");
 
-            // TODO: Initialise admin user (and add to admin role)
-            // TODO: Initialise admin user profile
+            // Create admin user
+            message("Creating admin user...");
+            {
+                const adminUserACL = new Parse.ACL();
+                adminUserACL.setPublicReadAccess(false);
+                adminUserACL.setPublicWriteAccess(false);
+                adminUserACL.setRoleReadAccess(adminRole, true);
+                const adminUserO = new Parse.User();
+                adminUserO.setACL(adminUserACL);
+                adminUserO.setPassword(params.admin.password);
+                adminUser = await adminUserO.save({
+                    emailVerified: true,
+                    passwordSet: false,
+                    username: params.admin.username,
+                    email: params.admin.email
+                }, {
+                    useMasterKey: true
+                });
+                adminUserACL.setReadAccess(adminUser, true);
+                adminUserACL.setWriteAccess(adminUser, true);
+                await adminUser.save(null, { useMasterKey: true });
+
+                const adminRoleUsersRel = adminRole.relation("users");
+                adminRoleUsersRel.add(adminUser);
+                await adminRole.save(null, { useMasterKey: true });
+            }
+            message("Created admin user.");
+
+            // Create admin user presence
+            message("Creating admin user presence...");
+            {
+                const adminUserPresenceACL = new Parse.ACL();
+                adminUserPresenceACL.setPublicReadAccess(false);
+                adminUserPresenceACL.setPublicWriteAccess(false);
+                adminUserPresenceACL.setRoleReadAccess(attendeeRole, true);
+                adminUserPresenceACL.setReadAccess(adminUser, true);
+                adminUserPresenceACL.setWriteAccess(adminUser, true);
+                const adminUserPresenceO = new Parse.Object("UserPresence");
+                adminUserPresenceO.setACL(adminUserPresenceACL);
+                adminUserPresence = await adminUserPresenceO.save({
+                    isDNT: false,
+                    lastSeen: new Date()
+                }, {
+                    useMasterKey: true
+                });
+            }
+            message("Created admin user presence.");
+
+            // Create admin user profile
+            message("Creating admin user profile...");
+            {
+                const adminUserProfileACL = new Parse.ACL();
+                adminUserProfileACL.setPublicReadAccess(false);
+                adminUserProfileACL.setPublicWriteAccess(false);
+                adminUserProfileACL.setRoleReadAccess(attendeeRole, true);
+                adminUserProfileACL.setReadAccess(adminUser, true);
+                adminUserProfileACL.setWriteAccess(adminUser, true);
+                const adminUserProfileO = new Parse.Object("UserProfile");
+                adminUserProfileO.setACL(adminUserProfileACL);
+                const flairsRel = adminUserProfileO.relation("flairs");
+                flairsRel.add(flairMap.get("<empty>"));
+                flairsRel.add(flairMap.get("Admin"));
+                adminUserProfile = await adminUserProfileO.save({
+                    conference: conference,
+                    primaryFlair: flairMap.get("Admin"),
+                    welcomeModalShown: false,
+                    realName: params.admin.realName,
+                    user: adminUser,
+                    displayName: params.admin.displayName,
+                    dataConsentGiven: true,
+                    affiliation: params.admin.affiliation,
+                    bio: params.admin.bio,
+                    country: params.admin.country,
+                    position: params.admin.position,
+                    pronouns: params.admin.pronouns,
+                    tags: params.admin.tags,
+                    webpage: params.admin.webpage,
+                    presence: adminUserPresence,
+                }, {
+                    useMasterKey: true
+                });
+            }
+            message("Created admin user profile.");
 
             // TODO: Initialise Twilio sub account
             // TODO: Initialise Twilio Programmable Chat Service

@@ -60,7 +60,6 @@ const RelationsToTableNames = {
         profiles: "UserProfile"
     },
     UserPresence: {
-        profile: "UserProfile",
     },
     UserProfile: {
         conference: "Conference",
@@ -364,7 +363,6 @@ function generateUserPresences() {
             updatedAt: new Date(),
             isDNT: false,
             lastSeen: new Date(),
-            profile: "mockUserProfile" + i,
 
             _acl: acl,
             _wperm: [

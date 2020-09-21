@@ -8,7 +8,7 @@
     "admin": {
         "username": "sc1-admin",
         "password": "admin",
-        "email": "mock@mock.com",
+        "email": "admin@sample-conference-1.com",
         "realName": "Sample Admin 1",
         "pronouns": ["they", "them"],
         "displayName": "Admin",
