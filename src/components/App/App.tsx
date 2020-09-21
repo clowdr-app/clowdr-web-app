@@ -13,6 +13,9 @@ import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import Chat from "../../classes/Chat/Chat";
+import { ISimpleEvent } from "strongly-typed-events";
+import { DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
+import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
 
 interface Props {
 }
@@ -81,6 +84,13 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
 
     LocalStorage_Conference.currentConferenceId = nextState.conferenceId;
 
+    if (nextState.conference && nextState.sessionToken && nextState.profile) {
+        Chat.initialise(nextState.conference, nextState.profile, nextState.sessionToken);
+    }
+    else {
+        Chat.teardown();
+    }
+
     return nextState;
 }
 
@@ -110,54 +120,6 @@ export default function App(props: Props) {
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true /*TODO: Revert to false.*/);
 
     // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
-
-    // Update authentication status of various classes
-    useEffect(() => {
-        async function updateCacheAuthenticatedStatus() {
-            if (!appState.tasks.has("beginLoadConference")
-                && !appState.tasks.has("beginLoadCurrentUser")
-                && !appState.tasks.has("loadingConference")
-                && !appState.tasks.has("loadingCurrentUser")) {
-                try {
-                    if (!appState.profile) {
-                        if (appState.conferenceId) {
-                            let cache = await Caches.get(appState.conferenceId);
-                            cache.updateUserAuthenticated({ authed: false });
-                        }
-
-                        await Chat.teardown();
-                    }
-                    else if (appState.conferenceId) {
-                        let cache = await Caches.get(appState.conferenceId);
-
-                        if (appState.conference && appState.profile && appState.sessionToken) {
-                            try {
-                                await Chat.initialise(appState.conference, appState.profile, appState.sessionToken);
-                            }
-                            catch (e) {
-                                logger.error("Could not initialise Twilio", e);
-                            }
-                        }
-                        else {
-                            await Chat.teardown();
-                        }
-
-                        if (!cache.IsUserAuthenticated && appState.sessionToken) {
-                            cache.updateUserAuthenticated({ authed: true, sessionToken: appState.sessionToken });
-                        }
-                        else if (!appState.sessionToken) {
-                            logger.error("Could not initialise cache - user does not have a session token?!");
-                        }
-                    }
-                }
-                catch (e) {
-                    console.error(e);
-                }
-            }
-        }
-
-        updateCacheAuthenticatedStatus();
-    }, [appState.conference, appState.conferenceId, appState.profile, appState.sessionToken, appState.tasks, logger]);
 
     // Initial update of conference
     useEffect(() => {
@@ -199,6 +161,9 @@ export default function App(props: Props) {
 
                     if (appState.conferenceId) {
                         if (user && user.id) {
+                            let cache = await Caches.get(appState.conferenceId);
+                            await cache.updateUserAuthenticated({ authed: true, sessionToken: user.getSessionToken() });
+
                             profile = await UserProfile.getByUserId(user.id, appState.conferenceId);
                             if (profile) {
                                 sessionToken = user.getSessionToken();
@@ -223,11 +188,71 @@ export default function App(props: Props) {
         updateUser();
     }, [appState.conferenceId, appState.tasks, logger]);
 
+    // Subscribe to data updates for conference and profile
+    const onConferenceUpdated = useCallback(function _onConferenceUpdated(value: DataUpdatedEventDetails<"Conference">) {
+        dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
+    }, []);
+    const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(sessionToken: string, value: DataUpdatedEventDetails<"UserProfile">) {
+        dispatchAppUpdate({
+            action: "setUserProfile",
+            data: {
+                profile: value.object as UserProfile,
+                sessionToken: sessionToken
+            }
+        });
+    }, []);
+
+    useEffect(() => {
+        let cancel: () => void = () => { };
+        let unsubscribe: () => void = () => { };
+        async function subscribeToUpdates() {
+            if (appState.conference && appState.profile && appState.sessionToken) {
+                let sessionToken = appState.sessionToken;
+                try {
+                    const promises: [
+                        Promise<ISimpleEvent<DataUpdatedEventDetails<"Conference">>>,
+                        Promise<ISimpleEvent<DataUpdatedEventDetails<"UserProfile">>>
+                    ] = [
+                            Conference.onDataUpdated(appState.conference.id),
+                            UserProfile.onDataUpdated(appState.conference.id)
+                        ];
+                    const promise = makeCancelable(Promise.all(promises));
+                    cancel = promise.cancel;
+                    const [ev1, ev2] = await promise.promise;
+                    const unsubscribe1 = ev1.subscribe(onConferenceUpdated);
+                    const unsubscribe2 = ev2.subscribe(
+                        (ev) => onUserProfileUpdated(sessionToken, ev));
+                    unsubscribe = () => {
+                        unsubscribe1();
+                        unsubscribe2();
+                    };
+                }
+                catch (e) {
+                    if (!e.isCanceled) {
+                        throw e;
+                    }
+                }
+                finally {
+                    cancel = () => { };
+                }
+            }
+        }
+
+        subscribeToUpdates();
+
+        return () => {
+            unsubscribe();
+            cancel();
+        }
+    }, [appState.conference, appState.profile, appState.sessionToken, onConferenceUpdated, onUserProfileUpdated]);
+
     const doLogin = useCallback(async function _doLogin(email: string, password: string): Promise<boolean> {
         try {
             assert(appState.conference);
 
             let parseUser = await _User.logIn(email, password);
+            let cache = await Caches.get(appState.conference.id);
+            await cache.updateUserAuthenticated({ authed: true, sessionToken: parseUser.sessionToken });
             let profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
 
             dispatchAppUpdate({
