@@ -1,6 +1,9 @@
 /* global Parse */
 // ^ for eslint
 
+const assert = require("assert");
+const Twilio = require("twilio");
+
 const { validateRequest } = require("./utils");
 
 /**
@@ -27,8 +30,22 @@ const createConferenceRequestSchema = {
         pronouns: "[string]",
         displayName: "string",
         country: "string",
+    },
+    twilio: {
+        MASTER_SID: "string",
+        MASTER_AUTH_TOKEN: "string",
+        CHAT_POST_WEBHOOK_URL: "string"
+    },
+    react: {
+        TWILIO_CALLBACK_URL: "string",
+        FRONTEND_URL: "string"
     }
 };
+
+const TWILIO_WEBHOOK_METHOD = 'POST';
+const TWILIO_WEBHOOK_EVENTS = ['onUserUpdated'];
+const TWILIO_REACHABILITY_ENABLED = true;
+const TWILIO_READ_STATUS_ENABLED = true;
 
 // Order matters - sort on inheritedBy, circular relationships not allowed.
 const defaultRoles = [
@@ -46,6 +63,12 @@ const defaultFlairs = [
 Parse.Cloud.job("conference-create", async (request) => {
     const { params, headers, log, message } = request;
 
+    // Stuff we re-use but doesn't directly need cleaning up
+    let twilioMasterClient = null;
+    let twilioSubaccountClient = null;
+    let twilioChatService = null;
+
+    // Stuff to be cleaned up if creation fails
     let conference = null;
     const roleMap = new Map();
     const flairMap = new Map();
@@ -53,10 +76,36 @@ Parse.Cloud.job("conference-create", async (request) => {
     let adminUser = null;
     let adminUserPresence = null;
     let adminUserProfile = null;
+    let twilioSubaccount = null;
+    const configurationMap = new Map();
 
     async function cleanupOnFailure() {
         message("Cleaning up...");
         let cleanupSuccess = true;
+
+        try {
+            for (let configItem of configurationMap.values()) {
+                console.log(`Destroying configuration: '${configItem.get("key")}'`);
+                await configItem.destroy({ useMasterKey: true });
+                console.log(`Destroyed configuration: '${configItem.get("key")}'`);
+            }
+        }
+        catch (e2) {
+            console.error(`Failed to clean up configuration items. ${e2}`);
+            cleanupSuccess = false;
+        }
+
+        try {
+            if (twilioSubaccount) {
+                console.log(`Suspending Twilio subaccount. ${twilioSubaccount.sid}`);
+                let res = await twilioMasterClient.api.accounts(twilioSubaccount.sid).update({ status: 'suspended' });
+                console.log(`Suspended Twilio subaccount. ${twilioSubaccount.sid}`);
+            }
+        }
+        catch (e2) {
+            console.error(`Failed to suspend Twilio subaccount. ${e2}`);
+            cleanupSuccess = false;
+        }
 
         try {
             if (adminUserProfile) {
@@ -153,6 +202,9 @@ Parse.Cloud.job("conference-create", async (request) => {
 
         let requestValidation = validateRequest(createConferenceRequestSchema, params);
         if (requestValidation.ok) {
+            twilioMasterClient = Twilio(params.twilio.MASTER_SID, params.twilio.MASTER_AUTH_TOKEN);
+            twilioSubaccountClient = null;
+
             message("Creating conference");
 
             // Create the conference
@@ -346,14 +398,157 @@ Parse.Cloud.job("conference-create", async (request) => {
             }
             message("Created admin user profile.");
 
-            // TODO: Initialise Twilio sub account
-            // TODO: Initialise Twilio Programmable Chat Service
-            // TODO: Initialise Twilio Programmable Video Service
+            // Get existing or create new Twilio subaccount
+            message("Getting or creating Twilio subaccount...");
+            function generateTwilioSubaccountFriendlyName() {
+                // Something consistent between calls and that is unique - conference names are unique.
+                return conference.get("name");
+            }
+            async function clearOutDeadSubaccounts() {
+                let accounts = await twilioMasterClient.api.accounts.list({ status: 'active' });
+                for (let account of accounts) {
+                    if (account.friendlyName.includes("<<$$##DEAD>>")) {
+                        await account.update({ status: "closed" });
+                    }
+                }
+
+                accounts = await twilioMasterClient.api.accounts.list({ status: 'suspended' });
+                for (let account of accounts) {
+                    if (account.friendlyName.includes("<<$$##DEAD>>")) {
+                        await account.update({ status: "closed" });
+                    }
+                }
+            }
+            async function getTwilioSubaccount() {
+                let accounts = await twilioMasterClient.api.accounts.list({ friendlyName: generateTwilioSubaccountFriendlyName() });
+                if (accounts.length === 1) {
+                    return accounts[0];
+                }
+                else if (accounts.length > 0) {
+                    console.warn(`Multiple matching Twilio subaccounts!`);
+                    return accounts[0];
+                }
+                else {
+                    return null;
+                }
+            }
+            async function reactivateTwilioSubaccount() {
+                await twilioMasterClient.api.accounts(twilioSubaccount.sid).update({ status: 'active' });
+            }
+            async function createTwilioSubaccount() {
+                twilioSubaccount = await twilioMasterClient.api.accounts.create({ friendlyName: generateTwilioSubaccountFriendlyName() });
+            }
+            await clearOutDeadSubaccounts();
+            twilioSubaccount = await getTwilioSubaccount();
+            if (!twilioSubaccount) {
+                await createTwilioSubaccount();
+                message(`Created subaccount: ${twilioSubaccount.sid}`);
+            }
+            else {
+                await reactivateTwilioSubaccount();
+                message(`Got and reactivated existing subaccount: ${twilioSubaccount.sid}`);
+            }
+            
+            // Configure Twilio subaccount
+            message(`Configuring Twilio subaccount (${twilioSubaccount.sid})...`);
+            async function setConfiguration(key, value, attendeeAccessible) {
+                message(`Creating configuration: ${key}`);
+                const acl = new Parse.ACL();
+                acl.setPublicReadAccess(false);
+                acl.setPublicWriteAccess(false);
+                if (attendeeAccessible) {
+                    acl.setRoleReadAccess(attendeeRole, true);
+                }
+                else {
+                    acl.setRoleReadAccess(adminRole, true);
+                }
+                acl.setRoleWriteAccess(adminRole, true);
+
+                const configurationO = new Parse.Object("ConferenceConfiguration");
+                configurationO.setACL(acl);
+                const configuration = await configurationO.save({
+                    key: key,
+                    value: value,
+                    conference: conference
+                }, {
+                    useMasterKey: true
+                });
+
+                configurationMap.set(key, configuration);
+
+                message(`Created configuration: ${key}`);
+                return configuration;
+            }
+            async function configureTwilioSubaccount() {
+                let subaccountSID = twilioSubaccount.sid;
+                let subaccountAuthToken = twilioSubaccount.authToken;
+
+                twilioSubaccountClient = Twilio(subaccountSID, subaccountAuthToken);
+                let existingKeys = await twilioSubaccountClient.api.keys.list();
+                for (let existingKey of existingKeys) {
+                    await existingKey.remove();
+                }
+
+                let newKey = await twilioSubaccountClient.newKeys.create();
+                await setConfiguration("TWILIO_API_KEY", newKey.sid, false);
+                await setConfiguration("TWILIO_API_SECRET", newKey.secret, false);
+                await setConfiguration("TWILIO_ACCOUNT_SID", subaccountSID, false);
+                await setConfiguration("TWILIO_AUTH_TOKEN", subaccountAuthToken, false);
+            }
+            await configureTwilioSubaccount();
+            message(`Configured Twilio subaccount (${twilioSubaccount.sid}).`);
+
+            message(`Setting TWILIO_CALLBACK_URL ${params.react.TWILIO_CALLBACK_URL}`);
+            await setConfiguration("REACT_APP_TWILIO_CALLBACK_URL", params.react.TWILIO_CALLBACK_URL, true);
+
+            message(`Setting REACT_APP_FRONTEND_URL ${params.react.FRONTEND_URL}`);
+            await setConfiguration("REACT_APP_FRONTEND_URL", params.react.FRONTEND_URL, false);
+
+            // Initialise Twilio Programmable Chat Service
+
+            message(`Configuring Twilio chat service...`);
+            async function getTwilioChatService() {
+                let services = await twilioSubaccountClient.chat.services.list();
+                for (let service of services) {
+                    if (service.friendlyName === "main") {
+                        twilioChatService = service;
+                    }
+                }
+            }
+            async function createTwilioChatService() {
+                twilioChatService = await twilioSubaccountClient.chat.services.create({ friendlyName: 'main' });
+            }
+            async function configureTwilioChatService() {
+                await setConfiguration("TWILIO_CHAT_SERVICE_SID", twilioChatService.sid, false);
+
+                await twilioSubaccountClient.chat.services(twilioChatService.sid).update({
+                    reachabilityEnabled: TWILIO_REACHABILITY_ENABLED,
+                    readStatusEnabled: TWILIO_READ_STATUS_ENABLED,
+                    webhookMethod: TWILIO_WEBHOOK_METHOD,
+                    webhookFilters: TWILIO_WEBHOOK_EVENTS,
+                    postWebhookUrl: params.twilio.CHAT_POST_WEBHOOK_URL !== "<unknown>" ? params.twilio.CHAT_POST_WEBHOOK_URL : ""
+                }).then(service => console.log(`Updated Twilio Chat Service: ${service.friendlyName}`));
+            }
+            await getTwilioChatService();
+            if (!twilioChatService) {
+                await createTwilioChatService();
+            }
+            await configureTwilioChatService();
+
             // TODO: Initialise Twilio Chat roles
+            // Existing roles to adapt (as per docs recommendation): Friendly Name: channel user
+            // Existing roles to adapt (as per docs recommendation): Friendly Name: service admin
+            // Existing roles to adapt (as per docs recommendation): Friendly Name: service user
+            // Existing roles to adapt (as per docs recommendation): Friendly Name: channel admin
+            
+            message(`Configured Twilio chat service.`);
+
+
+
+            // TODO: Initialise Twilio Programmable Video Service
             // TODO: Initialise Twilio Video roles
 
-            // TODO: Initialise announcements channel
-            // TODO: Initialise auto-subscribe to text chats
+            // TODO: Initialise announcements channel (as auto-subscribe)
 
             // TODO Later: Can we initialise SendGrid?
 

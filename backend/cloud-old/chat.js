@@ -255,7 +255,6 @@
 //                             let twilioRoom = await config.twilio.video.rooms.create({
 //                                 type: mode,
 //                                 uniqueName: sid,
-//                                 // type: conf.config.TWILIO_ROOM_TYPE,
 //                                 maxParticipants: maxParticipants,
 //                                 statusCallback: config.TWILIO_CALLBACK_URL
 //                             });
@@ -325,7 +324,6 @@
 //                 let twilioRoom = await config.twilio.video.rooms.create({
 //                     type: mode,
 //                     uniqueName: roomName,
-//                     // type: conf.config.TWILIO_ROOM_TYPE,
 //                     maxParticipants: maxParticipants,
 //                     statusCallback: config.TWILIO_CALLBACK_URL
 //                 });

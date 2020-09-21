@@ -157,13 +157,13 @@ Clowdr uses Twilio as the text and video chat service.
 1. Set these configuration values accordingly.
 
 | Config Value              | Description                                                                             |
-| ------------------------- | --------------------------------------------------------------------------------------- |
+|---------------------------|-----------------------------------------------------------------------------------------|
 | `TWILIO_ACCOUNT_SID`      | Visible on the account dashboard.                                                       |
 | `TWILIO_API_KEY`          | The SID of the new API key you created.                                                 |
 | `TWILIO_API_SECRET`       | The secret for the API key you created.                                                 |
 | `TWILIO_AUTH_TOKEN`       | Visible on the account dashboard.                                                       |
 | `TWILIO_CHAT_SERVICE_SID` | Under "..." on the left, go to "Programmable Chat". Create a chat service. Use its SID. |
-| `FRONTEND_URL`            | For development, this is just `http://localhost:3000`.                                  |
+| `REACT_APP_FRONTEND_URL`  | For development, this is just `http://localhost:3000`.                                  |
 
 ### Sendgrid
 
@@ -178,7 +178,7 @@ Clowdr uses Sendgrid to deliver emails to conference participants.
 1. Fill in the appropriate configuration values.
 
 | Config Value       | Description                   |
-| ------------------ | ----------------------------- |
+|--------------------|-------------------------------|
 | `SENDGRID_API_KEY` | Your sendgrid API key.        |
 | `SENDGRID_SENDER`  | Your verified sender address. |
 

@@ -86,7 +86,7 @@
 //         keyQuery.equalTo("key", "SENDGRID_API_KEY");
 //         let frontendURLQuery = new Parse.Query(ConferenceConfig);
 //         frontendURLQuery.equalTo("conference", conf);
-//         frontendURLQuery.equalTo("key", "FRONTEND_URL");
+//         frontendURLQuery.equalTo("key", "REACT_APP_FRONTEND_URL");
 //         let senderQuery = new Parse.Query(ConferenceConfig);
 //         senderQuery.equalTo("conference", conf);
 //         senderQuery.equalTo("key", "SENDGRID_SENDER");
@@ -102,7 +102,7 @@
 //             if (res.get("key") === "SENDGRID_API_KEY") {
 //                 sgKey = res.get("value");
 //                 confObj = res.get("conference");
-//             } else if (res.get("key") === "FRONTEND_URL") {
+//             } else if (res.get("key") === "REACT_APP_FRONTEND_URL") {
 //                 frontendURL = res.get("value");
 //             } else if (res.get("key") === "SENDGRID_SENDER") {
 //                 sender = res.get("value");
