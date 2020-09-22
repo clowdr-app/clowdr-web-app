@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import useConference from "../../../hooks/useConference";
 import useDocTitle from "../../../hooks/useDocTitle";
+import useSafeAsync from "../../../hooks/useSafeAsync";
 
 /* We use the react-markdown[1] package to render user-supplied Markdown.
  * Note that `escapeHtml` must be turned on for this to be safe. By default, react-markdown will sanitize hrefs to remove
@@ -18,13 +19,12 @@ export default function LoggedInWelcome() {
 
     useDocTitle(conference.name);
 
-    useEffect(() => {
-        conference.details.then(details => {
-            let text = details.find(x => x.key === "LOGGED_IN_TEXT")?.value;
-            if (text) {
-                setContents(text);
-            }
-        });
+    useSafeAsync(async () => {
+        let details = await conference.details;
+        let text = details.find(x => x.key === "LOGGED_IN_TEXT")?.value;
+        if (text) {
+            setContents(text);
+        }
     }, [conference]);
 
     return <section aria-labelledby="page-title" tabIndex={0}>
