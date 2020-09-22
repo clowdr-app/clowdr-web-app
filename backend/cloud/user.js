@@ -117,6 +117,10 @@ Parse.Cloud.define("user-create", async (request) => {
                 newProfileACl.setWriteAccess(newUser, true);
                 newProfile.save(null, { useMasterKey: true });
 
+                let attendeeUsersRel = attendeeRole.relation("users");
+                attendeeUsersRel.add(newUser);
+                attendeeRole.save(null, { useMasterKey: true });
+
                 return true;
             }
         }
