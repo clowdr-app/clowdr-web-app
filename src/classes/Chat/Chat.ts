@@ -15,6 +15,11 @@ export default class Chat {
     ) {
     }
 
+    // TODO: Initialise/teardown services (TwilioChatService, ParseMirrorService)
+    // TODO: Direct requests to the correct service
+    // TODO: Handle + emit events for upgrade of service from Twilio to Mirrored
+    // TODO: Notifications
+
     public async initialise(): Promise<boolean> {
         if (!this.initialisePromise) {
             this.initialisePromise = new Promise((resolve, reject) => {
