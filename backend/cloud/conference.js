@@ -167,6 +167,23 @@ const defaultTwilioChatRoles = [
 
 const TWILIO_ANNOUNCEMENTS_CHANNEL_NAME = "Announcements";
 
+async function getConferenceById(id) {
+    let query = new Parse.Query("Conference");
+    return query.get(id, { useMasterKey: true });
+}
+
+async function getConferenceConfigurationByKey(conference, key) {
+    let query = new Parse.Query("ConferenceConfiguration");
+    query.equalTo("conference", conference);
+    query.equalTo("key", key);
+    try {
+        return query.first({ useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
+}
+
 function generateRoleDBName(conference, name) {
     return `${conference.id}-${name}`;
 }
@@ -773,3 +790,9 @@ Parse.Cloud.job("conference-create", async (request) => {
         throw e;
     }
 });
+
+module.exports = {
+    getConferenceById: getConferenceById,
+    getConferenceConfigurationByKey: getConferenceConfigurationByKey,
+    generateRoleDBName: generateRoleDBName
+};
