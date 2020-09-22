@@ -167,6 +167,10 @@ const defaultTwilioChatRoles = [
 
 const TWILIO_ANNOUNCEMENTS_CHANNEL_NAME = "Announcements";
 
+function generateRoleDBName(conference, name) {
+    return `${conference.id}-${name}`;
+}
+
 Parse.Cloud.job("conference-create", async (request) => {
     const { params, message } = request;
 
@@ -333,7 +337,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 acl.setPublicReadAccess(true);
                 acl.setPublicWriteAccess(false);
 
-                const roleO = new Parse.Role(`${conference.id}-${name}`, acl);
+                const roleO = new Parse.Role(generateRoleDBName(conference, name), acl);
                 roleO.set("conference", conference);
 
                 if (name === "admin") {
@@ -367,6 +371,16 @@ Parse.Cloud.job("conference-create", async (request) => {
             const adminRole = roleMap.get("admin");
             const managerRole = roleMap.get("manager");
             const attendeeRole = roleMap.get("attendee");
+
+            message(`Setting conference roles...`);
+            let conferenceACL = new Parse.ACL();
+            conferenceACL.setPublicReadAccess(true);
+            conferenceACL.setPublicWriteAccess(false);
+            conferenceACL.setRoleWriteAccess(adminRole, true);
+            conferenceACL.setRoleWriteAccess(managerRole, true);
+            conferenceO.setACL(conferenceACL);
+            await conferenceO.save(null, { useMasterKey: true });
+            message(`Set conference roles.`);
 
             // Helper function re-used throughout
             async function setConfiguration(key, value, attendeeRead, publicRead) {
@@ -462,7 +476,6 @@ Parse.Cloud.job("conference-create", async (request) => {
                 const adminUserACL = new Parse.ACL();
                 adminUserACL.setPublicReadAccess(false);
                 adminUserACL.setPublicWriteAccess(false);
-                adminUserACL.setRoleReadAccess(adminRole, true);
                 const adminUserO = new Parse.User();
                 adminUserO.setACL(adminUserACL);
                 adminUserO.setPassword(params.admin.password);
@@ -491,6 +504,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 adminUserPresenceACL.setPublicReadAccess(false);
                 adminUserPresenceACL.setPublicWriteAccess(false);
                 adminUserPresenceACL.setRoleReadAccess(attendeeRole, true);
+                adminUserPresenceACL.setRoleWriteAccess(adminRole, true);
                 adminUserPresenceACL.setReadAccess(adminUser, true);
                 adminUserPresenceACL.setWriteAccess(adminUser, true);
                 const adminUserPresenceO = new Parse.Object("UserPresence");
@@ -511,6 +525,8 @@ Parse.Cloud.job("conference-create", async (request) => {
                 adminUserProfileACL.setPublicReadAccess(false);
                 adminUserProfileACL.setPublicWriteAccess(false);
                 adminUserProfileACL.setRoleReadAccess(attendeeRole, true);
+                adminUserProfileACL.setRoleReadAccess(adminRole, true);
+                adminUserProfileACL.setRoleWriteAccess(adminRole, true);
                 adminUserProfileACL.setReadAccess(adminUser, true);
                 adminUserProfileACL.setWriteAccess(adminUser, true);
                 const adminUserProfileO = new Parse.Object("UserProfile");
