@@ -386,6 +386,12 @@ function generateUserProfiles() {
         };
         acl["mockUser" + i] = { w: true };
 
+        const bio =
+            `Commodo sint nostrud sunt magna laboris adipisicing tempor aute eiusmod non et sint
+            aliqua nisi. Culpa magna pariatur ea et adipisicing magna nulla laboris labore irure
+            tempor officia veniam id. Dolore reprehenderit mollit elit cupidatat culpa dolore aliqua
+            magna quis non commodo.`;
+
         result.push({
             dataConsentGiven: true,
             flairs: ["mockFlair" + i],
@@ -394,7 +400,7 @@ function generateUserProfiles() {
             createdAt: new Date(),
             updatedAt: new Date(),
             affiliation: "mock affiliation",
-            bio: "mock bio",
+            bio: bio,
             country: "mock country",
             displayName: "mock display name " + i,
             position: "mock position",
