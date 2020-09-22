@@ -498,7 +498,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 adminUserO.setPassword(params.admin.password);
                 adminUser = await adminUserO.save({
                     emailVerified: true,
-                    passwordSet: false,
+                    passwordSet: true,
                     username: params.admin.username,
                     email: params.admin.email
                 }, {
