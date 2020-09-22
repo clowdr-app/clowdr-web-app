@@ -85,7 +85,7 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
     LocalStorage_Conference.currentConferenceId = nextState.conferenceId;
 
     if (nextState.conference && nextState.sessionToken && nextState.profile) {
-        Chat.initialise(nextState.conference, nextState.profile, nextState.sessionToken)
+        Chat.setup(nextState.conference, nextState.profile, nextState.sessionToken)
             .catch(err => {
                 // TODO: Upgrade to console.error once chat is implemented
                 console.warn("Error during chat initialisation.", err);

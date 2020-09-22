@@ -1,8 +1,12 @@
 import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import IChatManager from "../../IChatManager";
 import IChatService from "../../IChatService";
 import Channel from "./Channel";
 
-export default class ChatService implements IChatService {
+export default class ParseMirrorChatService implements IChatService {
+    constructor(private manager: IChatManager) {
+    }
+
     setup(conference: Conference, userProfile: UserProfile, sessionToken: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
