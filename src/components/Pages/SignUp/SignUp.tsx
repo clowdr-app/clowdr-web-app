@@ -19,12 +19,11 @@ export default function SignUp(props: SignUpProps) {
     const [fullName, setFullName] = useState("");
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState(null as string | null);
+    const [signedUp, setSignedUp] = useState(false);
     const [attemptingSignUp, setAttemptingSignUp] = useState<CancelablePromise<boolean> | null>(null);
     const conference = useConference();
 
     async function doSignUp() {
-        // TODO: Does Parse hash the password client side in its login/signup functions?
-
         // Note: Parse.User.signUp is disabled (on purpose) by the _User table ACLs
         let ok = await Parse.Cloud.run("user-create", {
             fullName: fullName,
@@ -32,6 +31,7 @@ export default function SignUp(props: SignUpProps) {
             password: password,
             conference: conference.id
         }) as boolean;
+        setSignedUp(ok);
         return ok;
     }
 
@@ -134,6 +134,13 @@ export default function SignUp(props: SignUpProps) {
         required={true}
         onChange={(e) => onChange("password", e)}
     />;
+    const goToSignInButton =
+        <Link
+            className="button sign-in"
+            aria-label="Go to sign in"
+            to="/">
+            Go to sign in
+        </Link>;
     const formButtons = <>
         <input
             className="sign-up"
@@ -141,12 +148,7 @@ export default function SignUp(props: SignUpProps) {
             aria-label="Sign up"
             value="Sign up"
         />
-        <Link
-            className="button sign-in"
-            aria-label="Go to sign in"
-            to="/">
-            Go to sign in
-        </Link>
+        {goToSignInButton}
     </>;
     const selectOtherButton = <button
         className="select-another"
@@ -173,14 +175,25 @@ export default function SignUp(props: SignUpProps) {
 
         {attemptingSignUp
             ? <LoadingSpinner message="Signing up, please wait" />
-            : <>
-                <p>Please enter the details below to sign up for this conference.</p>
-                <p className="info">If you have previously used the same email address for another
-                conference, please enter your same password. We will link your
-                account but you will be able to enter separate profile information
-                for this conference.</p>
-                {form}
-            </>
+            : signedUp
+                ? <>
+                    <p>
+                        You have successfully signed up. Please return to the login
+                        page to continue. If you are a new user, please first check
+                        your inbox for the account verification email.
+                    </p>
+                    {goToSignInButton}
+                    </>
+                : <>
+                    <p>Please enter the details below to sign up for this conference.</p>
+                    <p className="info">
+                        If you have previously used the same email address for another
+                        conference, please enter your same password. We will link your
+                        account but you will be able to enter separate profile information
+                        for this conference.
+                    </p>
+                    {form}
+                </>
         }
     </section>;
 }
