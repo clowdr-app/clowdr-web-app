@@ -1,0 +1,61 @@
+@import "../../../styles/util.scss";
+
+$photo-width: mm(60);
+$gutter     : mm(10);
+$main-width : mm(150);
+
+.profile-view {
+    .content {
+        display: flex;
+        width  : calc(#{$photo-width} + #{$gutter} + #{$main-width});
+        margin : mm(20) auto 0 auto;
+
+        .photo {
+            background-color: black;
+            width           : $photo-width;
+            height          : $photo-width;
+
+            img {
+                width          : $photo-width;
+                height         : $photo-width;
+                object-fit     : cover;
+                object-position: center;
+            }
+        }
+
+        .main-info {
+            display       : flex;
+            flex-direction: column;
+            margin-left   : $gutter;
+            width         : $main-width;
+
+            .display-name {
+                font-size: $font-xl;
+            }
+
+            .pronouns {
+                font-size  : $font-lg;
+                display    : inline-block;
+                margin-left: mm(3);
+            }
+
+            .real-name {
+                margin-top: mm(-2);
+                color     : $gray-3;
+            }
+
+            .affiliation {
+                margin-top: mm(2);
+
+                span {
+                    font-style: italic;
+                }
+            }
+
+            .bio {
+                display   : inline-block;
+                margin-top: mm(4);
+            }
+        }
+    }
+}
