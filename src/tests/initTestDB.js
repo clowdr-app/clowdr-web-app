@@ -107,17 +107,17 @@ function generateAttachmentTypes() {
         updatedAt: new Date(1),
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
             "mockUser1": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
             "mockUser1",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     return result;
@@ -141,13 +141,13 @@ function generateConferences() {
         lastProgramUpdateTime: new Date(),
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
             "*": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager"
+            "role:mockConference1-admin",
+            "role:mockConference1-manager"
         ],
         _rperm: ["*"],
     });
@@ -196,17 +196,13 @@ function generateFlairs() {
             conference: "mockConference1",
 
             _acl: {
-                "role:mockConference1-RoleAdmin": { w: true },
-                "role:mockConference1-RoleManager": { w: true },
-                "mockUser1": { w: true },
-                "role:mockConference1-RoleAttendee": { r: true }
+                "role:mockConference1-admin": { w: true },
+                "role:mockConference1-attendee": { r: true }
             },
             _wperm: [
-                "role:mockConference1-RoleAdmin",
-                "role:mockConference1-RoleManager",
-                "mockUser1",
+                "role:mockConference1-admin",
             ],
-            _rperm: ["role:mockConference1-RoleAttendee"],
+            _rperm: ["role:mockConference1-attendee"],
         });
     }
 
@@ -225,15 +221,15 @@ function generatePrivilegedConferenceDetails() {
         value: "Welcome to this mock conference logged in text.",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -245,15 +241,15 @@ function generatePrivilegedConferenceDetails() {
         value: "Welcome to this mock conference logged in text.",
 
         _acl: {
-            "role:mockConference2-RoleAdmin": { w: true },
-            "role:mockConference2-RoleManager": { w: true },
-            "role:mockConference2-RoleAttendee": { r: true }
+            "role:mockConference2-admin": { w: true },
+            "role:mockConference2-manager": { w: true },
+            "role:mockConference2-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference2-RoleAdmin",
-            "role:mockConference2-RoleManager",
+            "role:mockConference2-admin",
+            "role:mockConference2-manager",
         ],
-        _rperm: ["role:mockConference2-RoleAttendee"],
+        _rperm: ["role:mockConference2-attendee"],
     });
 
     return result;
@@ -263,13 +259,13 @@ function generateRoles() {
     let result = [];
 
     result.push({
-        id: "mockConference1-RoleAdmin",
-        name: "mockConference1-RoleAdmin",
+        id: "mockConference1-admin",
+        name: "mockConference1-admin",
         conference: "mockConference1",
-        _wperm: ["mockConference1-RoleAdmin"],
+        _wperm: ["mockConference1-admin"],
         _rperm: ["*"],
         _acl: {
-            "mockConference1-RoleAdmin": { w: true },
+            "mockConference1-admin": { w: true },
             "*": { r: true }
         },
         createdAt: new Date(),
@@ -279,35 +275,35 @@ function generateRoles() {
     });
 
     result.push({
-        id: "mockConference1-RoleManager",
-        name: "mockConference1-RoleManager",
+        id: "mockConference1-manager",
+        name: "mockConference1-manager",
         conference: "mockConference1",
-        _wperm: ["mockConference1-RoleAdmin"],
+        _wperm: ["mockConference1-admin"],
         _rperm: ["*"],
         _acl: {
-            "mockConference1-RoleAdmin": { w: true },
+            "mockConference1-admin": { w: true },
             "*": { r: true }
         },
         createdAt: new Date(),
         updatedAt: new Date(),
         users: [],
-        roles: ["mockConference1-RoleAdmin"]
+        roles: ["mockConference1-admin"]
     });
 
     result.push({
-        id: "mockConference1-RoleAttendee",
-        name: "mockConference1-RoleAttendee",
+        id: "mockConference1-attendee",
+        name: "mockConference1-attendee",
         conference: "mockConference1",
-        _wperm: ["mockConference1-RoleAdmin"],
+        _wperm: ["mockConference1-admin"],
         _rperm: ["*"],
         _acl: {
-            "mockConference1-RoleAdmin": { w: true },
+            "mockConference1-admin": { w: true },
             "*": { r: true }
         },
         createdAt: new Date(),
         updatedAt: new Date(),
         users: ["mockUser2", "mockUser3"],
-        roles: ["mockConference1-RoleManager"]
+        roles: ["mockConference1-manager"]
     });
 
     return result;
@@ -317,11 +313,8 @@ function generateUsers() {
     let result = [];
 
     for (let i = 1; i <= 3; i++) {
-        const acl = {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
-        };
-        acl["mockUser" + i] = { w: true };
+        const acl = {};
+        acl["mockUser" + i] = { w: true, r: true };
 
         result.push({
             email: i === 1 ? "mock@mock.com" : "mock" + i + "@mock.com",
@@ -336,11 +329,8 @@ function generateUsers() {
             _hashed_password: "$2b$10$U1dOIN.fger7QO4sS9kwSelJdQgrr7D2hUCX5G4oMNR7uAPFQeXS2",
 
             _acl: acl,
-            _wperm: [
-                "role:mockConference1-RoleAdmin",
-                "mockUser" + i,
-            ],
-            _rperm: ["role:mockConference1-RoleAttendee"],
+            _wperm: ["mockUser" + i],
+            _rperm: ["mockUser" + i],
         });
     }
 
@@ -352,8 +342,8 @@ function generateUserPresences() {
 
     for (let i = 1; i <= 3; i++) {
         const acl = {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-attendee": { r: true }
         };
         acl["mockUser" + i] = { w: true };
 
@@ -366,10 +356,10 @@ function generateUserPresences() {
 
             _acl: acl,
             _wperm: [
-                "role:mockConference1-RoleAdmin",
+                "role:mockConference1-admin",
                 "mockUser" + i,
             ],
-            _rperm: ["role:mockConference1-RoleAttendee"],
+            _rperm: ["role:mockConference1-attendee"],
         });
     }
 
@@ -381,10 +371,10 @@ function generateUserProfiles() {
 
     for (let i = 1; i <= 3; i++) {
         const acl = {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-attendee": { r: true }
         };
-        acl["mockUser" + i] = { w: true };
+        acl["mockUser" + i] = { r: true, w: true };
 
         const bio =
             `Commodo sint nostrud sunt magna laboris adipisicing tempor aute eiusmod non et sint
@@ -430,10 +420,13 @@ function generateUserProfiles() {
 
             _acl: acl,
             _wperm: [
-                "role:mockConference1-RoleAdmin",
+                "role:mockConference1-admin",
                 "mockUser" + i,
             ],
-            _rperm: ["role:mockConference1-RoleAttendee"],
+            _rperm: [
+                "role:mockConference1-attendee",
+                "mockUser" + i,
+            ],
         });
     }
 
@@ -459,15 +452,15 @@ function generateProgramTrack() {
         shortName: "RP",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -483,15 +476,15 @@ function generateProgramTrack() {
         shortName: "Q&A",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -507,15 +500,15 @@ function generateProgramTrack() {
         shortName: "Posters",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
 
@@ -537,15 +530,15 @@ function generateProgramSession() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -560,15 +553,15 @@ function generateProgramSession() {
         track: "mockConference1-track-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -583,15 +576,15 @@ function generateProgramSession() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -606,15 +599,15 @@ function generateProgramSession() {
         track: "mockConference1-track-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -629,15 +622,15 @@ function generateProgramSession() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -652,15 +645,15 @@ function generateProgramSession() {
         track: "mockConference1-track-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -675,15 +668,15 @@ function generateProgramSession() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -698,15 +691,15 @@ function generateProgramSession() {
         track: "mockConference1-track-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
 
@@ -727,15 +720,15 @@ function generateProgramRoom() {
         zoomRoom: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -749,15 +742,15 @@ function generateProgramRoom() {
         zoomRoom: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -771,15 +764,15 @@ function generateProgramRoom() {
         zoomRoom: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -793,15 +786,15 @@ function generateProgramRoom() {
         zoomRoom: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -815,15 +808,15 @@ function generateProgramRoom() {
         zoomRoom: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -837,15 +830,15 @@ function generateProgramRoom() {
         zoomRoom: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -859,15 +852,15 @@ function generateProgramRoom() {
         zoomRoom: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -881,15 +874,15 @@ function generateProgramRoom() {
         zoomRoom: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
 
@@ -912,15 +905,15 @@ function generateProgramItem() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -936,15 +929,15 @@ function generateProgramItem() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -960,15 +953,15 @@ function generateProgramItem() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -984,15 +977,15 @@ function generateProgramItem() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1008,15 +1001,15 @@ function generateProgramItem() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1032,15 +1025,15 @@ function generateProgramItem() {
         track: "mockConference1-track-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1056,15 +1049,15 @@ function generateProgramItem() {
         track: "mockConference1-track-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1080,15 +1073,15 @@ function generateProgramItem() {
         track: "mockConference1-track-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1104,15 +1097,15 @@ function generateProgramItem() {
         track: "mockConference1-track-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1128,15 +1121,15 @@ function generateProgramItem() {
         track: "mockConference1-track-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1152,15 +1145,15 @@ function generateProgramItem() {
         track: "mockConference1-track-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1176,15 +1169,15 @@ function generateProgramItem() {
         track: "mockConference1-track-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1200,15 +1193,15 @@ function generateProgramItem() {
         track: "mockConference1-track-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1224,15 +1217,15 @@ function generateProgramItem() {
         track: "mockConference1-track-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1248,15 +1241,15 @@ function generateProgramItem() {
         track: "mockConference1-track-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1272,15 +1265,15 @@ function generateProgramItem() {
         track: "mockConference1-track-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
 
@@ -1299,15 +1292,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1319,15 +1312,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1339,15 +1332,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1359,15 +1352,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1379,15 +1372,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1399,15 +1392,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1419,15 +1412,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1439,15 +1432,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1459,15 +1452,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1479,15 +1472,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1499,15 +1492,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1519,15 +1512,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1539,15 +1532,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1559,15 +1552,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1579,15 +1572,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1599,15 +1592,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1619,15 +1612,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1639,15 +1632,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1659,15 +1652,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1679,15 +1672,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1699,15 +1692,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1719,15 +1712,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1739,15 +1732,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1759,15 +1752,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1779,15 +1772,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1799,15 +1792,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1819,15 +1812,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1839,15 +1832,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1859,15 +1852,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1879,15 +1872,15 @@ function generateProgramPerson() {
         profile: undefined,
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
 
@@ -1909,15 +1902,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1932,15 +1925,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1955,15 +1948,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-0",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -1978,15 +1971,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2001,15 +1994,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2024,15 +2017,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-1",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2047,15 +2040,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2070,15 +2063,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2093,15 +2086,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-2",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2116,15 +2109,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-3",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2139,15 +2132,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-3",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2162,15 +2155,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-3",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2185,15 +2178,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-4",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2208,15 +2201,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-4",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2231,15 +2224,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-4",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2254,15 +2247,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-5",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2277,15 +2270,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-5",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2300,15 +2293,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-5",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2323,15 +2316,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-6",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2346,15 +2339,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-6",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2369,15 +2362,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-6",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2392,15 +2385,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-7",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2415,15 +2408,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-7",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
     result.push({
@@ -2438,15 +2431,15 @@ function generateProgramSessionEvent() {
         session: "mockConference1-session-7",
 
         _acl: {
-            "role:mockConference1-RoleAdmin": { w: true },
-            "role:mockConference1-RoleManager": { w: true },
-            "role:mockConference1-RoleAttendee": { r: true }
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-manager": { w: true },
+            "role:mockConference1-attendee": { r: true }
         },
         _wperm: [
-            "role:mockConference1-RoleAdmin",
-            "role:mockConference1-RoleManager",
+            "role:mockConference1-admin",
+            "role:mockConference1-manager",
         ],
-        _rperm: ["role:mockConference1-RoleAttendee"],
+        _rperm: ["role:mockConference1-attendee"],
     });
 
 
