@@ -15,8 +15,11 @@ const createConferenceRequestSchema = {
         shortName: "string",
         welcomeText: "string",
 
+        // Conference Configuration
+        signUpEnabled: "boolean",
+
         // Privileged Conference Details
-        loggedInText: "string",
+        loggedInText: "string"
     },
     admin: {
         // User
@@ -321,7 +324,6 @@ Parse.Cloud.job("conference-create", async (request) => {
             }, {
                 useMasterKey: true
             });
-
             message(`Created conference object (initialisation ongoing): '${conference.id}'.`);
 
             // Create the roles
@@ -365,6 +367,42 @@ Parse.Cloud.job("conference-create", async (request) => {
             const adminRole = roleMap.get("admin");
             const managerRole = roleMap.get("manager");
             const attendeeRole = roleMap.get("attendee");
+
+            // Helper function re-used throughout
+            async function setConfiguration(key, value, attendeeRead, publicRead) {
+                message(`Creating configuration: ${key}`);
+                const acl = new Parse.ACL();
+                acl.setPublicReadAccess(false);
+                acl.setPublicWriteAccess(false);
+                if (publicRead) {
+                    acl.setPublicReadAccess(true);
+                }
+                else if (attendeeRead) {
+                    acl.setRoleReadAccess(attendeeRole, true);
+                }
+                else {
+                    acl.setRoleReadAccess(adminRole, true);
+                }
+                acl.setRoleWriteAccess(adminRole, true);
+
+                const configurationO = new Parse.Object("ConferenceConfiguration");
+                configurationO.setACL(acl);
+                const configuration = await configurationO.save({
+                    key: key,
+                    value: value,
+                    conference: conference
+                }, {
+                    useMasterKey: true
+                });
+
+                configurationMap.set(key, configuration);
+
+                message(`Created configuration: ${key}`);
+                return configuration;
+            }
+
+            // Set Sign-up enabled
+            await setConfiguration("SignUpEnabled", params.conference.signUpEnabled.toString(), undefined, true);
 
             // Create the flairs
             async function createFlair(label, color, tooltip, priortiy) {
@@ -570,34 +608,6 @@ Parse.Cloud.job("conference-create", async (request) => {
 
             // Configure Twilio subaccount
             message(`Configuring Twilio subaccount (${twilioSubaccount.sid})...`);
-            async function setConfiguration(key, value, attendeeAccessible) {
-                message(`Creating configuration: ${key}`);
-                const acl = new Parse.ACL();
-                acl.setPublicReadAccess(false);
-                acl.setPublicWriteAccess(false);
-                if (attendeeAccessible) {
-                    acl.setRoleReadAccess(attendeeRole, true);
-                }
-                else {
-                    acl.setRoleReadAccess(adminRole, true);
-                }
-                acl.setRoleWriteAccess(adminRole, true);
-
-                const configurationO = new Parse.Object("ConferenceConfiguration");
-                configurationO.setACL(acl);
-                const configuration = await configurationO.save({
-                    key: key,
-                    value: value,
-                    conference: conference
-                }, {
-                    useMasterKey: true
-                });
-
-                configurationMap.set(key, configuration);
-
-                message(`Created configuration: ${key}`);
-                return configuration;
-            }
             async function configureTwilioSubaccount() {
                 let subaccountSID = twilioSubaccount.sid;
                 let subaccountAuthToken = twilioSubaccount.authToken;

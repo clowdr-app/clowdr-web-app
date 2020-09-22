@@ -4,6 +4,7 @@ import "./Login.scss";
 import useConference from "../../../hooks/useConference";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import { CancelablePromise, makeCancelable } from "clowdr-db-schema/src/classes/Util";
+import { Link } from "react-router-dom";
 
 export type doLoginF = (username: string, password: string) => Promise<boolean>;
 export type clearSelectedConferenceF = () => Promise<void>;
@@ -11,6 +12,7 @@ export type clearSelectedConferenceF = () => Promise<void>;
 interface LoginProps {
     doLogin: doLoginF;
     clearSelectedConference: clearSelectedConferenceF;
+    showSignUp: boolean;
 }
 
 export default function Login(props: LoginProps) {
@@ -83,7 +85,6 @@ export default function Login(props: LoginProps) {
         placeholder={"Email"}
         required={true}
         onChange={(e) => onChange("email", e)}
-        className="email-box"
     />;
     const passwordBox = <input
         type="password"
@@ -93,7 +94,6 @@ export default function Login(props: LoginProps) {
         placeholder={"Password"}
         required={true}
         onChange={(e) => onChange("password", e)}
-        className="password-box"
     />;
     const formButtons = <>
         <input
@@ -102,12 +102,15 @@ export default function Login(props: LoginProps) {
             aria-label="Log in"
             value="Log in"
         />
-        <button
-            className="sign-up"
-            aria-label="Sign up"
-        >
-            Sign up
-        </button>
+        {props.showSignUp
+            ? <Link className="sign-up"
+                aria-label="Sign up"
+                to="/signup"
+            >
+                Sign up
+            </Link>
+            : <></>
+        }
     </>;
     const selectOtherButton = <button
         className="select-another"
@@ -127,7 +130,7 @@ export default function Login(props: LoginProps) {
         {errorMessage}
         {emailBox}
         {passwordBox}
-        <div className="form-buttons">
+        <div className={"form-buttons" + (props.showSignUp ? "" : " no-signup")}>
             {formButtons}
             {selectOtherButton}
         </div>

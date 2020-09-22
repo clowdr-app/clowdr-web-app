@@ -13,6 +13,9 @@ import NotFound from '../Pages/NotFound/NotFound';
 import AllChats from '../Pages/AllChats/AllChats';
 import AllVideoRooms from '../Pages/AllVideoRooms/AllVideoRooms';
 import Profile from '../Pages/Profile/Profile';
+import SignUp from '../Pages/SignUp/SignUp';
+import useSafeAsync from '../../hooks/useSafeAsync';
+import { ConferenceConfiguration } from 'clowdr-db-schema/src/classes/DataLayer';
 
 interface Props {
     doLogin: doLoginF;
@@ -26,6 +29,25 @@ function Page(props: Props) {
 
     const [docTitle, setDocTitle] = useState("Clowdr");
     document.title = docTitle;
+
+    const [showSignUp, setShowSignUp] = useState<boolean>(false);
+
+    // TODO: Welcome notification/modal with link to a tour (video?) of how to use Clowdr
+
+    useSafeAsync(async () => {
+        if (mConf) {
+            const signUpEnabled = await ConferenceConfiguration.getByKey("SignUpEnabled", mConf.id);
+            if (signUpEnabled.length > 0) {
+                setShowSignUp(signUpEnabled[0].value === "true");
+            }
+            else {
+                setShowSignUp(false);
+            }
+        }
+        else {
+            setShowSignUp(false);
+        }
+    }, [mConf?.id]);
 
     let contentsElem: JSX.Element;
     let actionButtonsWrapper: JSX.Element | null = null;
@@ -51,6 +73,10 @@ function Page(props: Props) {
 
         contentsElem = <Switch>
             <Route exact path="/" component={LoggedInWelcome} />
+            <Route path="/signup" component={(props: RouteComponentProps<any>) =>
+                <Redirect to="/" />
+            } />
+
             <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>
                 <ChatView chatId={props.match.params.chatId} />}
             />
@@ -70,12 +96,24 @@ function Page(props: Props) {
     }
     else if (mConf) {
         noHeading = true;
-        contentsElem = <Login
+        let loginComponent = <Login
+            showSignUp={showSignUp}
             doLogin={props.doLogin}
             clearSelectedConference={async () => {
                 props.selectConference(null)
             }}
         />;
+        let signUpComponent
+            = showSignUp
+                ? <SignUp clearSelectedConference={async () => {
+                    props.selectConference(null)
+                }} />
+                : <Redirect to="/" />;
+
+        contentsElem = <Switch>
+            <Route path="/signup" component={() => signUpComponent} />
+            <Route path="/" component={() => loginComponent} />
+        </Switch>;
     }
     else {
         noHeading = true;

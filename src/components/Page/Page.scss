@@ -5,6 +5,8 @@
     width : 100%;
 
     overflow: hidden auto;
+    /* For focusable section-level elements to display outline properly */
+    padding: 0 2px;
 }
 
 .page-header {

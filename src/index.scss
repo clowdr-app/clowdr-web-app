@@ -18,7 +18,7 @@ body {
         font-family: "Lato", sans-serif;
     }
 
-    button {
+    button, input[type=submit], .button {
         display   : inline-block;
         border    : 1px solid $gray-3;
         background: none;
@@ -31,7 +31,7 @@ body {
         cursor: pointer;
     }
 
-    button:focus {
+    button:focus, input[type=submit]:focus, .button:focus {
         outline       : solid 2px $color-3;
         outline-offset: 0;
     }

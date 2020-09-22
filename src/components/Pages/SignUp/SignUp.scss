@@ -1,6 +1,6 @@
 @import "../../../styles/util";
 
-.login {
+.signup {
     margin-top    : 10vh;
     display       : flex;
     flex-direction: column;
@@ -13,6 +13,18 @@
     p {
         margin-top: mm(4);
         color     : $gray-2;
+    }
+    
+    .info {
+        text-align: left;
+        width: 50%;
+        margin-left: auto;
+        margin-right: auto;
+
+        @media only screen and (max-width: $break-sm) {
+            width: 100%;
+            text-align: justify;
+        }
     }
 
     form {
@@ -49,45 +61,36 @@
             display              : grid;
             grid-template-columns: auto 50px auto;
             grid-template-areas  :
-                "sign-in . sign-up"
+                "sign-up . sign-in"
                 "reselect reselect reselect";
             margin: mm(4) auto 0 auto;
-
-            &.no-signup {
-                grid-template-columns: auto auto auto;
-                grid-template-areas  :
-                    ". sign-in ."
-                    "reselect reselect reselect";
-            }
 
             @media only screen and (max-width: $break-sm) {
                 width                : 100%;
                 grid-template-columns: auto 20px auto;
             }
 
-            .sign-in {
-                grid-area: sign-in;
-            }
-
             .sign-up {
                 grid-area: sign-up;
-            }
 
-            .sign-in,
-            .sign-up {
-                padding         : mm(2) mm(5);
+                padding : mm(2) mm(5);
                 color           : white;
                 background-color: $primary;
                 border          : none;
                 border-radius   : radius(2);
             }
 
+            .sign-in {
+                grid-area: sign-in;
+                padding : mm(2) mm(5);
+            }
+
             .select-another {
-                margin : mm(4) auto 0 auto;
+                margin    : mm(4) auto 0 auto;
                 margin-top: mm(4);
                 grid-area : reselect;
                 width     : 100%;
-                padding: mm(2) mm(5);
+                padding   : mm(2) mm(5);
             }
         }
     }

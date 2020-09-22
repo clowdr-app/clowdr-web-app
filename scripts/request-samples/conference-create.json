@@ -3,7 +3,8 @@
         "name": "Sample Conference 1",
         "shortName": "SC1",
         "welcomeText": "# Welcome\nThis is some opening welcome text.",
-        "loggedInText": "# Welcome\nThis is some logged-in welcome text."
+        "loggedInText": "# Welcome\nThis is some logged-in welcome text.",
+        "signUpEnabled": true
     },
     "admin": {
         "username": "sc1-admin",
