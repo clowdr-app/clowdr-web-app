@@ -88,6 +88,8 @@ Parse.Cloud.define("user-create", async (request) => {
                 newPresenceACL.setPublicReadAccess(false);
                 newPresenceACL.setPublicWriteAccess(false);
                 newPresenceACL.setRoleReadAccess(attendeeRole, true);
+                newPresenceACL.setRoleReadAccess(adminRole, true);
+                newPresenceACL.setRoleWriteAccess(adminRole, true);
                 newPresenceACL.setReadAccess(newUser, true);
                 newPresenceACL.setWriteAccess(newUser, true);
                 newPresence.setACL(newPresenceACL);
