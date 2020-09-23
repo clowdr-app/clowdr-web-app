@@ -131,7 +131,10 @@ export default class Chat implements IChatManager {
         finally {
             Chat.chat = null;
             // @ts-ignore
-            window.clowdr.chat = null;
+            if (window.clowdr && window.clowdr.chat) {
+                // @ts-ignore
+                window.clowdr.chat = null;
+            }
         }
     }
 

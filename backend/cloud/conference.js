@@ -86,7 +86,6 @@ const defaultTwilioChatRoles = [
         name: "service admin",
         type: "deployment",
         permissions: [
-            "createChannel",
             "joinChannel",
             "editAnyUserInfo",
             "destroyChannel",
@@ -105,9 +104,8 @@ const defaultTwilioChatRoles = [
         name: "service user",
         type: "deployment",
         permissions: [
-            "createChannel",
             "joinChannel",
-            "editAnyUserInfo"
+            "editOwnUserInfo"
         ]
     },
     {
