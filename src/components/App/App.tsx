@@ -198,10 +198,15 @@ export default function App(props: Props) {
 
     // Subscribe to data updates for conference and profile
     const onConferenceUpdated = useCallback(function _onConferenceUpdated(value: DataUpdatedEventDetails<"Conference">) {
-        dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
-    }, []);
+        if (appState.conference && value.object.id === appState.conference.id) {
+            dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
+        }
+        else if (appState.conferenceId === value.object.id) {
+            dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
+        }
+    }, [appState.conference, appState.conferenceId]);
     const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(value: DataUpdatedEventDetails<"UserProfile">) {
-        if (appState.sessionToken) {
+        if (appState.sessionToken && appState.profile && value.object.id === appState.profile.id) {
             dispatchAppUpdate({
                 action: "setUserProfile",
                 data: {
@@ -210,7 +215,7 @@ export default function App(props: Props) {
                 }
             });
         }
-    }, [appState.sessionToken]);
+    }, [appState.profile, appState.sessionToken]);
 
     useEffect(() => {
         let cancel: () => void = () => { };
