@@ -16,6 +16,7 @@ import Profile from '../Pages/Profile/Profile';
 import SignUp from '../Pages/SignUp/SignUp';
 import useSafeAsync from '../../hooks/useSafeAsync';
 import { ConferenceConfiguration } from 'clowdr-db-schema/src/classes/DataLayer';
+import NewChat from '../Pages/NewChat/NewChat';
 
 interface Props {
     doLogin: doLoginF;
@@ -75,6 +76,13 @@ function Page(props: Props) {
             <Route exact path="/" component={LoggedInWelcome} />
             <Route path="/signup" component={(props: RouteComponentProps<any>) =>
                 <Redirect to="/" />
+            } />
+
+            <Route path="/chat/new/:userId" component={(props: RouteComponentProps<any>) =>
+                <NewChat dmUserId={props.match.params.userId} />
+            } />
+            <Route path="/chat/new" component={(props: RouteComponentProps<any>) =>
+                <NewChat dmUserId={undefined} />
             } />
 
             <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>
