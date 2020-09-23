@@ -5,12 +5,15 @@ import Channel from "./Channel";
 import { default as LocalStorage_TwilioChatToken } from "../../../LocalStorage/TwilioChatToken";
 import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
 import assert from "assert";
+import * as Twilio from "twilio-chat";
 
 export default class TwilioChatService implements IChatService {
     private twilioToken: string | null = null;
     private conference: Conference | null = null;
     private profile: UserProfile | null = null;
     private sessionToken: string | null = null;
+
+    private twilioClient: Twilio.Client | null = null;
 
     private _REACT_APP_TWILIO_CALLBACK_URL: string | null = null;
 
@@ -30,27 +33,30 @@ export default class TwilioChatService implements IChatService {
             if (LocalStorage_TwilioChatToken.twilioChatToken) {
                 let token = LocalStorage_TwilioChatToken.twilioChatToken;
                 let expiry = LocalStorage_TwilioChatToken.twilioChatTokenExpiry;
+                let confId = LocalStorage_TwilioChatToken.twilioChatTokenConferenceId;
                 this.twilioToken = null;
 
-                if (token && expiry) {
-                    if (expiry.getTime() >= Date.now()) {
+                if (confId && token && expiry) {
+                    if (confId === conference.id &&
+                        expiry.getTime() >= Date.now()) {
                         this.twilioToken = token;
                         this.logger.info("Twilio token found in local storage (considered valid).");
                     }
                 }
 
                 if (!this.twilioToken) {
-                    this.logger.info("Twilio token found in local storage has expired (considered invalid).");
+                    this.logger.info("Twilio token found in local storage considered invalid (expired, different conference, or some other issue).");
                 }
             }
         }
 
         if (!this.twilioToken) {
-            let { token, expiry } = await this.getToken();
+            let { token, expiry } = await this.fetchFreshToken();
             if (token) {
                 this.twilioToken = token;
                 LocalStorage_TwilioChatToken.twilioChatToken = token;
                 LocalStorage_TwilioChatToken.twilioChatTokenExpiry = expiry;
+                LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = conference.id;
 
                 this.logger.info("Twilio token obtained.");
             }
@@ -58,14 +64,34 @@ export default class TwilioChatService implements IChatService {
                 this.twilioToken = null;
                 LocalStorage_TwilioChatToken.twilioChatToken = null;
                 LocalStorage_TwilioChatToken.twilioChatTokenExpiry = null;
+                LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = null;
 
                 this.logger.warn("Twilio token not obtained.");
                 throw new Error("Twilio token not obtained.");
             }
         }
+
+        assert(this.twilioToken);
+
+        try {
+            // TODO: Increase log level if debugger enabled?
+            this.twilioClient = await Twilio.Client.create(this.twilioToken);
+            this.logger.info("Created Twilio client.");
+
+            // TODO: Attach to events
+        }
+        catch (e) {
+            this.twilioClient = null;
+            this.logger.error("Could not create Twilio client!", e);
+            throw e;
+        }
     }
+
     async teardown() {
-        throw new Error("Method not implemented.");
+        if (this.twilioClient) {
+            await this.twilioClient.shutdown();
+            this.twilioClient = null;
+        }
     }
 
 
@@ -73,13 +99,18 @@ export default class TwilioChatService implements IChatService {
         if (!this._REACT_APP_TWILIO_CALLBACK_URL) {
             assert(this.conference);
             let results = await ConferenceConfiguration.getByKey("REACT_APP_TWILIO_CALLBACK_URL", this.conference.id);
-            assert(results.length, "Conference Twilio not configured.");
-            this._REACT_APP_TWILIO_CALLBACK_URL = results[0].value;
+            if (results.length > 0) {
+                this._REACT_APP_TWILIO_CALLBACK_URL = results[0].value;
+            }
+            else {
+                this.logger.warn("Twilio not configured for this conference.");
+                throw new Error("Twilio not configured for this conference.");
+            }
         }
         return this._REACT_APP_TWILIO_CALLBACK_URL;
     }
 
-    private async getToken(): Promise<{
+    private async fetchFreshToken(): Promise<{
         token: string | null,
         expiry: Date | null
     }> {

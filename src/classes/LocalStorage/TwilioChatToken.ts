@@ -4,6 +4,8 @@
  */
 export default class LocalStorage {
     private static readonly twilioChatTokenKey = "twilioChatToken";
+    private static readonly twilioChatTokenExpiryKey = "twilioChatTokenExpiry";
+    private static readonly twilioChatTokenConferenceIdKey = "twilioChatTokenConferenceId";
 
     static get twilioChatToken(): string | null {
         return localStorage.getItem(LocalStorage.twilioChatTokenKey);
@@ -17,8 +19,6 @@ export default class LocalStorage {
         }
     }
 
-    private static readonly twilioChatTokenExpiryKey = "twilioChatTokenExpiry";
-
     static get twilioChatTokenExpiry(): Date | null {
         let str = localStorage.getItem(LocalStorage.twilioChatTokenExpiryKey);
         return str ? new Date(parseInt(str)) : null;
@@ -29,6 +29,18 @@ export default class LocalStorage {
         }
         else {
             localStorage.removeItem(LocalStorage.twilioChatTokenExpiryKey);
+        }
+    }
+
+    static get twilioChatTokenConferenceId(): string | null {
+        return localStorage.getItem(LocalStorage.twilioChatTokenConferenceIdKey);
+    }
+    static set twilioChatTokenConferenceId(value: string | null) {
+        if (value) {
+            localStorage.setItem(LocalStorage.twilioChatTokenConferenceIdKey, value);
+        }
+        else {
+            localStorage.removeItem(LocalStorage.twilioChatTokenConferenceIdKey);
         }
     }
 }
