@@ -21,11 +21,8 @@ export default function LoggedInWelcome() {
 
     useSafeAsync(async () => {
         let details = await conference.details;
-        let text = details.find(x => x.key === "LOGGED_IN_TEXT")?.value;
-        if (text) {
-            setContents(text);
-        }
-    }, [conference]);
+        return details.find(x => x.key === "LOGGED_IN_TEXT")?.value;
+    }, setContents, [conference]);
 
     return <section aria-labelledby="page-title" tabIndex={0}>
         <ReactMarkdown source={contents} escapeHtml={true} />

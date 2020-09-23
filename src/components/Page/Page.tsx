@@ -38,16 +38,16 @@ function Page(props: Props) {
         if (mConf) {
             const signUpEnabled = await ConferenceConfiguration.getByKey("SignUpEnabled", mConf.id);
             if (signUpEnabled.length > 0) {
-                setShowSignUp(signUpEnabled[0].value === "true");
+                return signUpEnabled[0].value === "true";
             }
             else {
-                setShowSignUp(false);
+                return false;
             }
         }
         else {
-            setShowSignUp(false);
+            return false;
         }
-    }, [mConf?.id]);
+    }, setShowSignUp, [mConf?.id]);
 
     let contentsElem: JSX.Element;
     let actionButtonsWrapper: JSX.Element | null = null;
