@@ -4,6 +4,8 @@ import IMember from "./IMember";
 import IMessage from "./IMessage";
 
 export default interface IChannel {
+    sid: string;
+
     members(filter?: string): Promise<IMember>;
 
     getLastReadIndex(): Promise<number | null>;

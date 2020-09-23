@@ -3,8 +3,19 @@ import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "../../IChannel";
 import Member from "./Member";
 import Message from "./Message";
+import ChatService from "./ChatService";
 
 export default class Channel implements IChannel {
+    constructor(
+        private service: ChatService,
+        private _sid: string
+    ) {
+    }
+
+    public get sid(): string {
+        return this._sid;
+    }
+
     members(filter?: string): Promise<Member> {
         throw new Error("Method not implemented.");
     }

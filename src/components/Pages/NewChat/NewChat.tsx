@@ -4,6 +4,7 @@ import useConference from "../../../hooks/useConference";
 import useDocTitle from "../../../hooks/useDocTitle";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import useUserProfile from "../../../hooks/useUserProfile";
+import Chat from "../../../classes/Chat/Chat";
 
 interface Props {
     dmUserId?: string;
@@ -33,18 +34,18 @@ export default function NewChat(props: Props) {
      *    * Who to invite to the chat (+ auto-fill for DM scenario)
      *    * Public vs private selector
      *    * Chat title (unless DM'ing)
-     * 
-     *    * Perhaps we need to put channel creation through parse to enforce the
-     *      rules of DMs? This requires turning off the createChannel permission
-     *      for service users/admins.
-     * 
-     *    * DM only if private selected, otherwise treat as a public group with
-     *      2 participants
-     *    * Generate a unique name: Perhaps `creatorUserId-${randomGUID}`
-     *      unless it's a DM, in which case `userId1-userId2`
-     *        (where userId1/2 are creator/target sorted alpha-numerically)
-     *    * For DMs, verify whether a channel already exists
      */
+
+    async function doCreateChannel() {
+        if (dmUserProfile) {
+            let newChannelSID = await Chat.instance()?.createChannel(
+                [dmUserProfile],
+                true,
+                (currentUserProfile.displayName + " <-> " + dmUserProfile.id)
+            )
+            console.log(`New channel SID ${newChannelSID}`);
+        }
+    }
 
     return <>{dmUserProfile
         ? <>You, {currentUserProfile.displayName}, wish to DM {dmUserProfile.displayName}?</>

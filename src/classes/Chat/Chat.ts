@@ -1,5 +1,6 @@
 import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
+import IChannel from "./IChannel";
 import IChatManager from "./IChatManager";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
 import TwilioChatService from "./Services/Twilio/ChatService";
@@ -25,7 +26,9 @@ export default class Chat implements IChatManager {
     }
 
     // TODO: Direct requests to the correct service
+
     // TODO: Handle + emit events for upgrade of service from Twilio to Mirrored
+
     // TODO: Notifications
 
     private async setup(): Promise<boolean> {
@@ -99,6 +102,10 @@ export default class Chat implements IChatManager {
         }
 
         return this.teardownPromise ?? Promise.resolve();
+    }
+
+    public async createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<string | undefined> {
+        return (await this.twilioService?.createChannel(invite, isPrivate, title))?.sid;
     }
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string) {

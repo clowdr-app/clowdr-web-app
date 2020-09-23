@@ -167,8 +167,31 @@ export default class TwilioChatService implements IChatService {
     userChannels(filter?: string): Promise<Channel> {
         throw new Error("Method not implemented.");
     }
-    createChannel(name: string, isPrivate: boolean): Promise<Channel> {
-        throw new Error("Method not implemented.");
+    async createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {
+        assert(this.conference);
+        assert(this.profile);
+        assert(this.sessionToken);
+        assert(this.twilioClient);
+        assert(invite.length > 0);
+
+        let callbackUrl = await this.get_REACT_APP_TWILIO_CALLBACK_URL();
+        const res = await fetch(
+            `${callbackUrl}/chat/create`,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    identity: this.sessionToken,
+                    conference: this.conference.id,
+                    invite: invite.map(x => x.id),
+                    mode: isPrivate ? "private" : "public",
+                    title: title
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        let data = await res.json();
+        return new Channel(this, data.channelSID);
     }
     enableAutoRenewConnection(): Promise<void> {
         throw new Error("Method not implemented.");

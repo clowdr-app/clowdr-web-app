@@ -22,7 +22,7 @@ export default class ParseMirrorChatService implements IChatService {
     userChannels(filter?: string): Promise<Channel> {
         throw new Error("Method not implemented.");
     }
-    createChannel(name: string, isPrivate: boolean): Promise<Channel> {
+    createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {
         throw new Error("Method not implemented.");
     }
     enableAutoRenewConnection(): Promise<void> {
