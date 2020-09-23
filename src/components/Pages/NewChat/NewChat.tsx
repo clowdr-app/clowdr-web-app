@@ -7,7 +7,7 @@ import useUserProfile from "../../../hooks/useUserProfile";
 import Chat from "../../../classes/Chat/Chat";
 
 interface Props {
-    dmUserId?: string;
+    dmUserProfileId?: string;
 }
 
 export default function NewChat(props: Props) {
@@ -19,14 +19,14 @@ export default function NewChat(props: Props) {
 
     // Fetch DM user profile if it exists
     useSafeAsync(async () => {
-        if (props.dmUserId) {
-            let profile = await UserProfile.getByUserId(props.dmUserId, conference.id);
+        if (props.dmUserProfileId) {
+            let profile = await UserProfile.get(props.dmUserProfileId, conference.id);
             if (profile) {
                 return profile;
             }
         }
         return undefined;
-    }, setDMUserProfile, [props.dmUserId]);
+    }, setDMUserProfile, [props.dmUserProfileId]);
 
     /**
      * Elements that need to be on this page (as a MVP):
@@ -41,14 +41,16 @@ export default function NewChat(props: Props) {
             let newChannelSID = await Chat.instance()?.createChannel(
                 [dmUserProfile],
                 true,
-                (currentUserProfile.displayName + " <-> " + dmUserProfile.id)
+                (currentUserProfile.displayName + " <-> " + dmUserProfile.displayName)
             )
             console.log(`New channel SID ${newChannelSID}`);
         }
     }
 
+    let testButton = <button onClick={() => doCreateChannel()}>(Test) Create channel</button>;
+
     return <>{dmUserProfile
-        ? <>You, {currentUserProfile.displayName}, wish to DM {dmUserProfile.displayName}?</>
+        ? <>You, {currentUserProfile.displayName}, wish to DM {dmUserProfile.displayName}?<br/>{testButton}</>
         : <>You, {currentUserProfile.displayName}, shall DM no-one!</>
     }</>;
 }

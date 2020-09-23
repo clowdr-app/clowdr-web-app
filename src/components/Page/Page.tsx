@@ -78,11 +78,11 @@ function Page(props: Props) {
                 <Redirect to="/" />
             } />
 
-            <Route path="/chat/new/:userId" component={(props: RouteComponentProps<any>) =>
-                <NewChat dmUserId={props.match.params.userId} />
+            <Route path="/chat/new/:userProfileId" component={(props: RouteComponentProps<any>) =>
+                <NewChat dmUserProfileId={props.match.params.userProfileId} />
             } />
             <Route path="/chat/new" component={(props: RouteComponentProps<any>) =>
-                <NewChat dmUserId={undefined} />
+                <NewChat dmUserProfileId={undefined} />
             } />
 
             <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>

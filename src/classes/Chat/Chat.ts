@@ -1,6 +1,5 @@
 import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
-import IChannel from "./IChannel";
 import IChatManager from "./IChatManager";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
 import TwilioChatService from "./Services/Twilio/ChatService";
