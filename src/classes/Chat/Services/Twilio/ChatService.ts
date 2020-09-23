@@ -50,41 +50,62 @@ export default class TwilioChatService implements IChatService {
             }
         }
 
-        if (!this.twilioToken) {
-            let { token, expiry } = await this.fetchFreshToken();
-            if (token) {
-                this.twilioToken = token;
-                LocalStorage_TwilioChatToken.twilioChatToken = token;
-                LocalStorage_TwilioChatToken.twilioChatTokenExpiry = expiry;
-                LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = conference.id;
+        let retry: boolean;
+        let attempCount = 0;
 
-                this.logger.info("Twilio token obtained.");
+        do {
+            retry = false;
+            attempCount++;
+
+            if (!this.twilioToken) {
+                let { token, expiry } = await this.fetchFreshToken();
+                if (token) {
+                    this.twilioToken = token;
+                    LocalStorage_TwilioChatToken.twilioChatToken = token;
+                    LocalStorage_TwilioChatToken.twilioChatTokenExpiry = expiry;
+                    LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = conference.id;
+
+                    this.logger.info("Twilio token obtained.");
+                }
+                else {
+                    this.twilioToken = null;
+                    LocalStorage_TwilioChatToken.twilioChatToken = null;
+                    LocalStorage_TwilioChatToken.twilioChatTokenExpiry = null;
+                    LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = null;
+
+                    this.logger.warn("Twilio token not obtained.");
+                    throw new Error("Twilio token not obtained.");
+                }
             }
-            else {
-                this.twilioToken = null;
-                LocalStorage_TwilioChatToken.twilioChatToken = null;
-                LocalStorage_TwilioChatToken.twilioChatTokenExpiry = null;
-                LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = null;
 
-                this.logger.warn("Twilio token not obtained.");
-                throw new Error("Twilio token not obtained.");
+            assert(this.twilioToken);
+
+            try {
+                // TODO: Increase log level if debugger enabled?
+                this.twilioClient = await Twilio.Client.create(this.twilioToken);
+                this.logger.info("Created Twilio client.");
+
+                // TODO: Attach to events
+            }
+            catch (e) {
+                this.twilioClient = null;
+                if (e.toString().includes("expired")) {
+                    this.logger.info("Twilio token (probably) expired.");
+
+                    this.twilioToken = null;
+
+                    if (attempCount < 2) {
+                        retry = true;
+                    }
+                }
+
+                if (!retry) {
+                    this.logger.error("Could not create Twilio client!", e);
+                    throw e;
+                }
             }
         }
-
-        assert(this.twilioToken);
-
-        try {
-            // TODO: Increase log level if debugger enabled?
-            this.twilioClient = await Twilio.Client.create(this.twilioToken);
-            this.logger.info("Created Twilio client.");
-
-            // TODO: Attach to events
-        }
-        catch (e) {
-            this.twilioClient = null;
-            this.logger.error("Could not create Twilio client!", e);
-            throw e;
-        }
+        while (retry);
     }
 
     async teardown() {
@@ -118,7 +139,7 @@ export default class TwilioChatService implements IChatService {
         assert(this.profile);
         assert(this.sessionToken);
 
-        this.logger.info(`Fetching chat token for ${this.profile.displayName} (${this.profile.id}), ${this.conference.name} (${this.conference.id})`);
+        this.logger.info(`Fetching fresh chat token for ${this.profile.displayName} (${this.profile.id}), ${this.conference.name} (${this.conference.id})`);
 
         let callbackUrl = await this.get_REACT_APP_TWILIO_CALLBACK_URL();
         const res = await fetch(
