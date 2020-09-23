@@ -680,7 +680,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             async function configureTwilioChatService() {
                 await setConfiguration("TWILIO_CHAT_SERVICE_SID", twilioChatService.sid, false);
 
-                await twilioSubaccountClient.chat.services(twilioChatService.sid).update({
+                await twilioChatService.update({
                     reachabilityEnabled: TWILIO_REACHABILITY_ENABLED,
                     readStatusEnabled: TWILIO_READ_STATUS_ENABLED,
                     webhookMethod: TWILIO_WEBHOOK_METHOD,
@@ -698,6 +698,19 @@ Parse.Cloud.job("conference-create", async (request) => {
             await getTwilioChatService();
             if (!twilioChatService) {
                 await createTwilioChatService();
+            }
+            else {
+                // Clear out existing: channels, users and roles
+                await Promise.all((await twilioChatService.channels().list()).map(x => x.remove()));
+                await Promise.all((await twilioChatService.users().list()).map(x => x.remove()));
+                await Promise.all((await twilioChatService.roles().list()).map(async x => {
+                    // Don't bother deleting roles we are about to recreate
+                    // BUT ALSO: We can't (& shouldn't according to Twilio's docs)
+                    // delete the service's default roles
+                    if (!defaultTwilioChatRoles.map(y => y.name).includes(x.friendlyName)) {
+                        await x.remove();
+                    }
+                }));
             }
             await configureTwilioChatService();
 
