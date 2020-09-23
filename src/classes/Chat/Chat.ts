@@ -125,6 +125,13 @@ export default class Chat implements IChatManager {
     }
 
     public static async teardown() {
-        Chat.chat?.teardown();
+        try {
+            await Chat.chat?.teardown();
+        }
+        finally {
+            Chat.chat = null;
+            // @ts-ignore
+            window.clowdr.chat = null;
+        }
     }
 }
