@@ -200,22 +200,23 @@ export default function App(props: Props) {
     const onConferenceUpdated = useCallback(function _onConferenceUpdated(value: DataUpdatedEventDetails<"Conference">) {
         dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
     }, []);
-    const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(sessionToken: string, value: DataUpdatedEventDetails<"UserProfile">) {
-        dispatchAppUpdate({
-            action: "setUserProfile",
-            data: {
-                profile: value.object as UserProfile,
-                sessionToken: sessionToken
-            }
-        });
-    }, []);
+    const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(value: DataUpdatedEventDetails<"UserProfile">) {
+        if (appState.sessionToken) {
+            dispatchAppUpdate({
+                action: "setUserProfile",
+                data: {
+                    profile: value.object as UserProfile,
+                    sessionToken: appState.sessionToken
+                }
+            });
+        }
+    }, [appState.sessionToken]);
 
     useEffect(() => {
         let cancel: () => void = () => { };
         let unsubscribe: () => void = () => { };
         async function subscribeToUpdates() {
-            if (appState.conference && appState.profile && appState.sessionToken) {
-                let sessionToken = appState.sessionToken;
+            if (appState.conference) {
                 try {
                     const promises: [
                         Promise<ISimpleEvent<DataUpdatedEventDetails<"Conference">>>,
@@ -228,8 +229,7 @@ export default function App(props: Props) {
                     cancel = promise.cancel;
                     const [ev1, ev2] = await promise.promise;
                     const unsubscribe1 = ev1.subscribe(onConferenceUpdated);
-                    const unsubscribe2 = ev2.subscribe(
-                        (ev) => onUserProfileUpdated(sessionToken, ev));
+                    const unsubscribe2 = ev2.subscribe(onUserProfileUpdated);
                     unsubscribe = () => {
                         unsubscribe1();
                         unsubscribe2();
@@ -252,7 +252,7 @@ export default function App(props: Props) {
             unsubscribe();
             cancel();
         }
-    }, [appState.conference, appState.profile, appState.sessionToken, onConferenceUpdated, onUserProfileUpdated]);
+    }, [appState.conference, onConferenceUpdated, onUserProfileUpdated]);
 
     const doLogin = useCallback(async function _doLogin(email: string, password: string): Promise<boolean> {
         try {

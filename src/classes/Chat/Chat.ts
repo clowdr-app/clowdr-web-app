@@ -28,7 +28,7 @@ export default class Chat implements IChatManager {
     // TODO: Handle + emit events for upgrade of service from Twilio to Mirrored
     // TODO: Notifications
 
-    public async setup(): Promise<boolean> {
+    private async setup(): Promise<boolean> {
         if (!this.initialisePromise) {
             this.initialisePromise = new Promise(async (resolve, reject) => {
                 try {
@@ -56,7 +56,7 @@ export default class Chat implements IChatManager {
         return this.initialisePromise;
     }
 
-    public async teardown(): Promise<void> {
+    private async teardown(): Promise<void> {
         if (!this.teardownPromise) {
             if (this.initialisePromise) {
                 const doTeardown = async () => {
@@ -133,5 +133,9 @@ export default class Chat implements IChatManager {
             // @ts-ignore
             window.clowdr.chat = null;
         }
+    }
+
+    public static instance() {
+        return Chat.chat;
     }
 }
