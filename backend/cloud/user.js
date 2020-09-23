@@ -90,6 +90,7 @@ Parse.Cloud.define("user-create", async (request) => {
                 newPresenceACL.setRoleReadAccess(attendeeRole, true);
                 newPresenceACL.setReadAccess(newUser, true);
                 newPresenceACL.setWriteAccess(newUser, true);
+                newPresence.setACL(newPresenceACL);
                 newPresence = await newPresence.save(null, { useMasterKey: true });
 
                 let emptyFlair = await getFlairByLabel("<empty>", conference);
@@ -110,11 +111,12 @@ Parse.Cloud.define("user-create", async (request) => {
                 let newProfileACl = new Parse.ACL();
                 newProfileACl.setPublicReadAccess(false);
                 newProfileACl.setPublicWriteAccess(false);
-                newPresenceACL.setRoleReadAccess(attendeeRole, true);
-                newPresenceACL.setRoleReadAccess(adminRole, true);
-                newPresenceACL.setRoleWriteAccess(adminRole, true);
+                newProfileACl.setRoleReadAccess(attendeeRole, true);
+                newProfileACl.setRoleReadAccess(adminRole, true);
+                newProfileACl.setRoleWriteAccess(adminRole, true);
                 newProfileACl.setReadAccess(newUser, true);
                 newProfileACl.setWriteAccess(newUser, true);
+                newProfile.setACL(newProfileACl);
                 newProfile.save(null, { useMasterKey: true });
 
                 let attendeeUsersRel = attendeeRole.relation("users");
