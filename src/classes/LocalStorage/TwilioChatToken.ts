@@ -6,6 +6,7 @@ export default class LocalStorage {
     private static readonly twilioChatTokenKey = "twilioChatToken";
     private static readonly twilioChatTokenExpiryKey = "twilioChatTokenExpiry";
     private static readonly twilioChatTokenConferenceIdKey = "twilioChatTokenConferenceId";
+    private static readonly twilioChatUserProfileIdKey = "twilioChatUserProfileId";
 
     static get twilioChatToken(): string | null {
         return localStorage.getItem(LocalStorage.twilioChatTokenKey);
@@ -41,6 +42,18 @@ export default class LocalStorage {
         }
         else {
             localStorage.removeItem(LocalStorage.twilioChatTokenConferenceIdKey);
+        }
+    }
+
+    static get twilioChatUserProfileId(): string | null {
+        return localStorage.getItem(LocalStorage.twilioChatUserProfileIdKey);
+    }
+    static set twilioChatUserProfileId(value: string | null) {
+        if (value) {
+            localStorage.setItem(LocalStorage.twilioChatUserProfileIdKey, value);
+        }
+        else {
+            localStorage.removeItem(LocalStorage.twilioChatUserProfileIdKey);
         }
     }
 }

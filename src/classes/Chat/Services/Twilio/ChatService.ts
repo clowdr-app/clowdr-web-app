@@ -35,10 +35,12 @@ export default class TwilioChatService implements IChatService {
                 let token = LocalStorage_TwilioChatToken.twilioChatToken;
                 let expiry = LocalStorage_TwilioChatToken.twilioChatTokenExpiry;
                 let confId = LocalStorage_TwilioChatToken.twilioChatTokenConferenceId;
+                let profileId = LocalStorage_TwilioChatToken.twilioChatUserProfileId;
                 this.twilioToken = null;
 
                 if (confId && token && expiry) {
                     if (confId === conference.id &&
+                        profileId === profile.id &&
                         expiry.getTime() >= Date.now()) {
                         this.twilioToken = token;
                         this.logger.info("Twilio token found in local storage (considered valid).");
@@ -65,6 +67,7 @@ export default class TwilioChatService implements IChatService {
                     LocalStorage_TwilioChatToken.twilioChatToken = token;
                     LocalStorage_TwilioChatToken.twilioChatTokenExpiry = expiry;
                     LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = conference.id;
+                    LocalStorage_TwilioChatToken.twilioChatUserProfileId = profile.id;
 
                     this.logger.info("Twilio token obtained.");
                 }
@@ -73,6 +76,7 @@ export default class TwilioChatService implements IChatService {
                     LocalStorage_TwilioChatToken.twilioChatToken = null;
                     LocalStorage_TwilioChatToken.twilioChatTokenExpiry = null;
                     LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = null;
+                    LocalStorage_TwilioChatToken.twilioChatUserProfileId = null;
 
                     this.logger.warn("Twilio token not obtained.");
                     throw new Error("Twilio token not obtained.");
@@ -85,6 +89,9 @@ export default class TwilioChatService implements IChatService {
                 // TODO: Increase log level if debugger enabled?
                 this.twilioClient = await Twilio.Client.create(this.twilioToken);
                 this.logger.info("Created Twilio client.");
+
+                this.enableAutoRenewConnection();
+                this.enableAutoJoinOnInvite();
 
                 // TODO: Attach to events
             }
@@ -212,11 +219,43 @@ export default class TwilioChatService implements IChatService {
         return new Channel(await this.twilioClient.getChannelBySid(data.channelSID));
     }
 
-    enableAutoRenewConnection(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async enableAutoRenewConnection(): Promise<void> {
+        this.logger.info("Enabling auto-renew connection.");
+        this.twilioClient?.on("tokenAboutToExpire", async () => {
+            assert(this.conference);
+            assert(this.profile);
+
+            this.logger.info("Token about to expire");
+
+            let { token, expiry } = await this.fetchFreshToken();
+            if (token) {
+                this.twilioToken = token;
+                LocalStorage_TwilioChatToken.twilioChatToken = token;
+                LocalStorage_TwilioChatToken.twilioChatTokenExpiry = expiry;
+                LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = this.conference.id;
+                LocalStorage_TwilioChatToken.twilioChatUserProfileId = this.profile.id;
+
+                this.logger.info("Twilio token for renewal obtained.");
+
+                await this.twilioClient?.updateToken(token);
+            }
+            else {
+                this.twilioToken = null;
+                LocalStorage_TwilioChatToken.twilioChatToken = null;
+                LocalStorage_TwilioChatToken.twilioChatTokenExpiry = null;
+                LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = null;
+                LocalStorage_TwilioChatToken.twilioChatUserProfileId = null;
+
+                this.logger.warn("Twilio token for renewal not obtained.");
+                throw new Error("Twilio token for renewal not obtained.");
+            }
+        });
     }
 
-    enableAutoJoinOnInvite(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async enableAutoJoinOnInvite(): Promise<void> {
+        this.logger.info("Enabling auto-join on invited.");
+        this.twilioClient?.on("channelInvited", async (channel) => {
+            channel.join();
+        });
     }
 }
