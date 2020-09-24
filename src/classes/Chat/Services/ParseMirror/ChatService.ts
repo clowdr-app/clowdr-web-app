@@ -13,16 +13,16 @@ export default class ParseMirrorChatService implements IChatService {
     teardown(): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    allChannels(filter?: string): Promise<Array<Channel>> {
+    allChannels(): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
-    publicChannels(filter?: string): Promise<Array<Channel>> {
+    publicChannels(): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
-    userChannels(filter?: string): Promise<Array<Channel>> {
+    userChannels(): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
-    activeChannels(filter?: string): Promise<Array<Channel>> {
+    activeChannels(): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
     createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {

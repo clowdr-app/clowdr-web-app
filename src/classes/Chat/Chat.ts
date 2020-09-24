@@ -1,3 +1,4 @@
+import assert from "assert";
 import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
 import IChannel from "./IChannel";
@@ -5,12 +6,17 @@ import IChatManager from "./IChatManager";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
 import TwilioChatService from "./Services/Twilio/ChatService";
 
-export interface ChatDescriptor {
+export type ChatDescriptor = {
     sid: string;
     friendlyName: string;
-    isDM: boolean;
     status: 'invited' | 'joined' | undefined
-}
+} & ({
+    isDM: false;
+} | {
+    isDM: true;
+    member1: { profileId: string; displayName: string };
+    member2: { profileId: string; displayName: string };
+});
 
 export default class Chat implements IChatManager {
     private static chat: Chat | null = null;
@@ -115,13 +121,36 @@ export default class Chat implements IChatManager {
         return this.teardownPromise ?? Promise.resolve();
     }
 
-    private convertToDescriptor(chan: IChannel): ChatDescriptor {
-        return {
-            sid: chan.sid,
-            friendlyName: chan.getName(),
-            isDM: chan.getIsDM(),
-            status: chan.getStatus()
-        };
+    private async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor> {
+        let isDM = chan.getIsDM();
+        if (isDM) {
+            let profile1 = await UserProfile.get(isDM.member1, this.conference.id);
+            let profile2 = await UserProfile.get(isDM.member2, this.conference.id);
+            assert(profile1);
+            assert(profile2);
+            return {
+                sid: chan.sid,
+                friendlyName: chan.getName(),
+                status: chan.getStatus(),
+                isDM: true,
+                member1: {
+                    profileId: isDM.member1,
+                    displayName: profile1.displayName
+                },
+                member2: {
+                    profileId: isDM.member2,
+                    displayName: profile2.displayName
+                }
+            };
+        }
+        else {
+            return {
+                sid: chan.sid,
+                friendlyName: chan.getName(),
+                status: chan.getStatus(),
+                isDM: false
+            };
+        }
     }
 
     public async createChat(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
@@ -131,12 +160,12 @@ export default class Chat implements IChatManager {
 
     public async listAllChats(): Promise<Array<ChatDescriptor>> {
         let channels = await this.twilioService?.allChannels();
-        return channels?.map(this.convertToDescriptor) ?? [];
+        return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
     }
 
     public async listActiveChats(): Promise<Array<ChatDescriptor>> {
         let channels = await this.twilioService?.activeChannels();
-        return channels?.map(this.convertToDescriptor) ?? [];
+        return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
     }
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string): Promise<boolean> {

@@ -5,10 +5,10 @@ export default interface IChatService {
     setup(conference: Conference, userProfile: UserProfile, sessionToken: string): Promise<void>;
     teardown(): Promise<void>;
 
-    allChannels(filter?: string): Promise<Array<IChannel>>;
-    publicChannels(filter?: string): Promise<Array<IChannel>>;
-    userChannels(filter?: string): Promise<Array<IChannel>>;
-    activeChannels(filter?: string): Promise<Array<IChannel>>;
+    allChannels(): Promise<Array<IChannel>>;
+    publicChannels(): Promise<Array<IChannel>>;
+    userChannels(): Promise<Array<IChannel>>;
+    activeChannels(): Promise<Array<IChannel>>;
 
     createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<IChannel>;
 

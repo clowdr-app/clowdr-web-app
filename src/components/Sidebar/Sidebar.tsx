@@ -683,8 +683,9 @@ function Sidebar(props: Props) {
             mainMenuGroup = <MenuGroup items={mainMenuItems} />;
 
             let chatEl: JSX.Element;
+            let chatSearchValid = state.chatSearch && state.chatSearch.length >= minSearchLength;
             if ((state.activeChats && state.activeChats.length > 0)
-                || (state.allChats && state.filteredChats.length > 0)) {
+                || (chatSearchValid && state.allChats && state.filteredChats.length > 0)) {
 
                 let chats;
                 if (state.chatSearch && state.chatSearch.length >= minSearchLength) {
@@ -701,12 +702,16 @@ function Sidebar(props: Props) {
                 for (let chat of chats) {
                     let friendlyName;
                     if (chat.isDM) {
-                        // TODO: Get members
-                        // TODO: Filter to the 'other' member
                         // TODO: Set friendly name to 'other' member's displayName
+                        let member1 = chat.member1;
+                        let member2 = chat.member2;
 
-                        // Testing value
-                        friendlyName = chat.friendlyName;
+                        if (member1.profileId !== mUser.id) {
+                            friendlyName = member1.displayName;
+                        }
+                        else {
+                            friendlyName = member2.displayName;
+                        }
                     }
                     else {
                         // Group chat - use chat friendly name from Twilio

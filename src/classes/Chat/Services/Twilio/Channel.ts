@@ -49,8 +49,16 @@ export default class Channel implements IChannel {
     setName(value: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    getIsDM(): boolean {
-        return !!(this.channel.attributes as any).isDM;
+    getIsDM(): false | { member1: string; member2: string } {
+        if (!!(this.channel.attributes as any).isDM) {
+            return {
+                member1: this.channel.attributes["member1"],
+                member2: this.channel.attributes["member2"]
+            };
+        }
+        else {
+            return false;
+        }
     }
     getStatus(): 'invited' | 'joined' | undefined {
         if (this.channel.status === "invited") {

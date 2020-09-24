@@ -22,7 +22,7 @@ export default interface IChannel {
 
     getName(): string;
     setName(value: string): Promise<void>;
-    getIsDM(): boolean;
+    getIsDM(): false | { member1: string; member2: string };
     getStatus(): 'invited' | 'joined' | undefined;
     delete(): Promise<void>;
 
