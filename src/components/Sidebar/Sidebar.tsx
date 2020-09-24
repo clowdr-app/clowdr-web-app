@@ -13,6 +13,7 @@ import { makeCancelable } from 'clowdr-db-schema/src/classes/Util';
 import { ISimpleEvent } from 'strongly-typed-events';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from 'clowdr-db-schema/src/classes/DataLayer/Cache/Cache';
 import useMaybeChat from '../../hooks/useMaybeChat';
+import { ChatDescriptor } from '../../classes/Chat';
 
 interface Props {
     open: boolean,
@@ -21,7 +22,9 @@ interface Props {
 }
 
 type SidebarTasks
-    = "loadingSessionsAndEvents";
+    = "loadingSessionsAndEvents"
+    | "loadingActiveChats"
+    | "loadingAllChats";
 
 interface SidebarState {
     tasks: Set<SidebarTasks>;
@@ -34,9 +37,12 @@ interface SidebarState {
     roomSearch: string | null;
     programSearch: string | null;
 
+    activeChats: Array<ChatDescriptor> | null;
+    allChats: Array<ChatDescriptor> | null;
     sessions: Array<ProgramSession> | null;
     events: Array<ProgramSessionEvent> | null;
 
+    filteredChats: Array<ChatDescriptor>;
     filteredSessions: Array<ProgramSession>;
     filteredEvents: Array<ProgramSessionEvent>;
 }
@@ -47,6 +53,10 @@ type SidebarUpdate
 
     | { action: "updateFilteredSessions"; sessions: Array<ProgramSession> }
     | { action: "updateFilteredEvents"; events: Array<ProgramSessionEvent> }
+
+    | { action: "updateAllChats"; chats: Array<ChatDescriptor> }
+    | { action: "updateActiveChats"; chats: Array<ChatDescriptor> }
+    | { action: "updateFilteredChats"; chats: Array<ChatDescriptor> }
 
     | { action: "deleteSessions"; sessions: Array<string> }
     | { action: "deleteEvents"; events: Array<string> }
@@ -60,11 +70,13 @@ type SidebarUpdate
     | { action: "setProgramIsOpen"; isOpen: boolean }
     ;
 
-async function filteredSessionsAndEvents(
+const minSearchLength = 3;
+
+async function filterSessionsAndEvents(
     allSessions: Array<ProgramSession>,
     allEvents: Array<ProgramSessionEvent>,
     _search: string | null): Promise<[Array<ProgramSession>, Array<ProgramSessionEvent>]> {
-    if (_search && _search.length >= 3) {
+    if (_search && _search.length >= minSearchLength) {
         let search = _search.toLowerCase();
 
         let sessions: Array<ProgramSession> = [];
@@ -77,7 +89,7 @@ async function filteredSessionsAndEvents(
                 sessions.push(x);
             }
         }
-        
+
         let events: Array<ProgramSessionEvent> = [];
         for (let x of allEvents) {
             let item = await x.item;
@@ -118,8 +130,20 @@ async function filteredSessionsAndEvents(
     }
 }
 
+async function filterChats(
+    allChats: Array<ChatDescriptor>,
+    _search: string | null): Promise<Array<ChatDescriptor>> {
+    if (_search && _search.length >= minSearchLength) {
+        let search = _search.toLowerCase();
+        return allChats.filter(x => x.friendlyName.toLowerCase().includes(search));
+    }
+    else {
+        return allChats;
+    }
+}
+
 function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | Array<SidebarUpdate>): SidebarState {
-    const nextState = {
+    const nextState: SidebarState = {
         tasks: new Set(currentState.tasks),
 
         chatsIsOpen: currentState.chatsIsOpen,
@@ -130,14 +154,19 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
         roomSearch: currentState.roomSearch,
         programSearch: currentState.programSearch,
 
+        allChats: currentState.allChats,
+        activeChats: currentState.activeChats,
         sessions: currentState.sessions,
         events: currentState.events,
 
+        filteredChats: currentState.filteredChats,
         filteredSessions: currentState.filteredSessions,
         filteredEvents: currentState.filteredEvents
     };
 
     let sessionsOrEventsUpdated = false;
+    let allChatsUpdated = false;
+    let activeChatsUpdated = false;
 
     function doUpdate(update: SidebarUpdate) {
         switch (update.action) {
@@ -193,6 +222,40 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                     sessionsOrEventsUpdated = true;
                 }
                 break;
+            case "updateAllChats":
+                {
+                    let updatedIds = update.chats.map(x => x.sid);
+                    nextState.allChats = nextState.allChats?.map(x => {
+                        let idx = updatedIds.indexOf(x.sid);
+                        if (idx > -1) {
+                            updatedIds.splice(idx, 1);
+                            return update.chats[idx];
+                        }
+                        else {
+                            return x;
+                        }
+                    }) ?? null;
+                    nextState.allChats = nextState.allChats?.concat(update.chats.filter(x => updatedIds.includes(x.sid))) ?? update.chats;
+                    allChatsUpdated = true;
+                }
+                break;
+            case "updateActiveChats":
+                {
+                    let updatedIds = update.chats.map(x => x.sid);
+                    nextState.activeChats = nextState.activeChats?.map(x => {
+                        let idx = updatedIds.indexOf(x.sid);
+                        if (idx > -1) {
+                            updatedIds.splice(idx, 1);
+                            return update.chats[idx];
+                        }
+                        else {
+                            return x;
+                        }
+                    }) ?? null;
+                    nextState.activeChats = nextState.activeChats?.concat(update.chats.filter(x => updatedIds.includes(x.sid))) ?? update.chats;
+                    activeChatsUpdated = true;
+                }
+                break;
             case "deleteEvents":
                 nextState.events = nextState.events?.filter(x => !update.events.includes(x.id)) ?? null;
                 sessionsOrEventsUpdated = true;
@@ -207,6 +270,9 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 break;
             case "updateFilteredEvents":
                 nextState.filteredEvents = update.events;
+                break;
+            case "updateFilteredChats":
+                nextState.filteredChats = update.chats;
                 break;
         }
     }
@@ -228,6 +294,19 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
         }
     }
 
+    if (allChatsUpdated) {
+        if (nextState.allChats) {
+            nextState.tasks.delete("loadingAllChats");
+        }
+        else {
+            nextState.filteredChats = [];
+        }
+    }
+
+    if (activeChatsUpdated) {
+        nextState.tasks.delete("loadingActiveChats");
+    }
+
     return nextState;
 }
 
@@ -237,7 +316,11 @@ function Sidebar(props: Props) {
     const mChat = useMaybeChat();
     const burgerButtonRef = useRef<HTMLButtonElement>(null);
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
-        tasks: new Set(["loadingSessionsAndEvents"] as SidebarTasks[]),
+        tasks: new Set([
+            "loadingSessionsAndEvents",
+            "loadingChats",
+            "loadingActiveChats"
+        ] as SidebarTasks[]),
 
         chatsIsOpen: true,
         roomsIsOpen: true,
@@ -247,9 +330,12 @@ function Sidebar(props: Props) {
         roomSearch: null,
         programSearch: null,
 
+        allChats: null,
+        activeChats: null,
         sessions: null,
         events: null,
 
+        filteredChats: [],
         filteredSessions: [],
         filteredEvents: []
     });
@@ -270,9 +356,49 @@ function Sidebar(props: Props) {
         let cancel: () => void = () => { };
 
         async function updateChats() {
-            if (mChat) {
-                let channels = await mChat.listActiveChannels();
-                console.log(channels);
+            try {
+                if (mChat) {
+                    let chatsP = makeCancelable(mChat.listActiveChats());
+                    cancel = chatsP.cancel;
+                    let chats = await chatsP.promise;
+                    dispatchUpdate({
+                        action: "updateActiveChats",
+                        chats: chats
+                    });
+                }
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+                    throw e;
+                }
+            }
+        }
+
+        updateChats();
+
+        return cancel;
+    }, [mChat]);
+
+    // Initial fetch of all chats
+    useEffect(() => {
+        let cancel: () => void = () => { };
+
+        async function updateChats() {
+            try {
+                if (mChat) {
+                    let chatsP = makeCancelable(mChat.listAllChats());
+                    cancel = chatsP.cancel;
+                    let chats = await chatsP.promise;
+                    dispatchUpdate({
+                        action: "updateAllChats",
+                        chats: chats
+                    });
+                }
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+                    throw e;
+                }
             }
         }
 
@@ -319,9 +445,6 @@ function Sidebar(props: Props) {
                     throw e;
                 }
             }
-            finally {
-                cancel = () => { };
-            }
         }
 
         updateSessionsAndEvents();
@@ -345,13 +468,13 @@ function Sidebar(props: Props) {
         }
     }, [state.programSearch]);
 
-    // Update filtered results
+    // Update filtered program results
     useEffect(() => {
         let cancel: () => void = () => { };
 
         async function updateFiltered() {
             try {
-                let promise = makeCancelable(filteredSessionsAndEvents(
+                let promise = makeCancelable(filterSessionsAndEvents(
                     state.sessions ?? [],
                     state.events ?? [],
                     state.programSearch
@@ -369,15 +492,40 @@ function Sidebar(props: Props) {
                     throw e;
                 }
             }
-            finally {
-                cancel = () => { };
-            }
         }
 
         updateFiltered();
 
         return cancel;
     }, [state.events, state.programSearch, state.sessions]);
+
+    // Update filtered chat results
+    useEffect(() => {
+        let cancel: () => void = () => { };
+
+        async function updateFiltered() {
+            try {
+                let promise = makeCancelable(filterChats(
+                    state.allChats ?? [],
+                    state.chatSearch
+                ));
+                cancel = promise.cancel;
+                const filteredChats = await promise.promise;
+                dispatchUpdate({ action: "updateFilteredChats", chats: filteredChats });
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+                    throw e;
+                }
+            }
+        }
+
+        updateFiltered();
+
+        return cancel;
+    }, [state.allChats, state.chatSearch]);
+
+    // Subscribe to data events
 
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
         dispatchUpdate({ action: "updateSessions", sessions: [ev.object as ProgramSession] });
@@ -395,7 +543,6 @@ function Sidebar(props: Props) {
         dispatchUpdate({ action: "deleteEvents", events: [ev.objectId] });
     }, []);
 
-    // Subscribe to data events
     useEffect(() => {
         if (!state.tasks.has("loadingSessionsAndEvents")) {
             let cancel: () => void = () => { };
@@ -446,6 +593,8 @@ function Sidebar(props: Props) {
         }
         return () => { };
     }, [conf.id, onSessionUpdated, onEventUpdated, onSessionDeleted, onEventDeleted, state.tasks]);
+
+    // TODO: Subscribe to chat events
 
     let sideBarButton = <div className="sidebar-button">
         <button
@@ -533,31 +682,63 @@ function Sidebar(props: Props) {
             ];
             mainMenuGroup = <MenuGroup items={mainMenuItems} />;
 
-            // TODO: Generate chat items from database (inc. any current search)
-            // TODO: "New messages in this chat" boldification
-            // TODO: For DMs, user presence (hollow/solid-green dot)
-            let chatMenuItems: MenuGroupItems = [
-                {
-                    key: "chat-1",
-                    element:
-                        <MenuItem title="Lobby" label="Lobby chat" icon={<i className="fas fa-hashtag"></i>} action="/chat/1" bold={true} />
-                },
-                {
-                    key: "chat-2",
-                    element:
-                        <MenuItem title="Haskell Symposium" label="Haskell Symposium chat" icon={<i className="fas fa-hashtag"></i>} action="/chat/2" />
-                },
-                {
-                    key: "chat-3",
-                    element:
-                        <MenuItem title="Benjamin Pierce" label="Chat with Benjamin Pierce" icon={<i className="fas fa-circle" style={{ color: "green" }}></i>} action="/chat/3" />
-                },
-                {
-                    key: "chat-4",
-                    element:
-                        <MenuItem title="Crista Lopes" label="Chat with Crista Lopes" icon={<i className="far fa-circle"></i>} action="/chat/4" bold={true} />
-                },
-            ];
+            let chatEl: JSX.Element;
+            if ((state.activeChats && state.activeChats.length > 0)
+                || (state.allChats && state.filteredChats.length > 0)) {
+
+                let chats;
+                if (state.chatSearch && state.chatSearch.length >= minSearchLength) {
+                    chats = state.filteredChats;
+                }
+                else {
+                    // We know this can't be null, but TS can't quite figure that out
+                    chats = state.activeChats as Array<ChatDescriptor>;
+                }
+
+                chats = chats.sort((x, y) => x.friendlyName.localeCompare(y.friendlyName));
+
+                let chatMenuItems: MenuGroupItems = [];
+                for (let chat of chats) {
+                    let friendlyName;
+                    if (chat.isDM) {
+                        // TODO: Get members
+                        // TODO: Filter to the 'other' member
+                        // TODO: Set friendly name to 'other' member's displayName
+
+                        // Testing value
+                        friendlyName = chat.friendlyName;
+                    }
+                    else {
+                        // Group chat - use chat friendly name from Twilio
+                        friendlyName = chat.friendlyName;
+                    }
+
+                    // TODO: "New messages in this chat" boldification
+                    // TODO: For DMs, user presence (hollow/solid-green dot)
+                    chatMenuItems.push({
+                        key: chat.sid,
+                        element:
+                            <MenuItem
+                                title={friendlyName}
+                                label={friendlyName}
+                                icon={<i className="fas fa-hashtag"></i>}
+                                action={`/chat/${chat.sid}`}
+                                bold={false} />
+                    });
+                }
+
+                chatEl = <MenuGroup items={chatMenuItems} />;
+            }
+            else {
+                chatEl = <>
+                    {state.allChats ? <span className="menu-group">No chats to show.</span> : <></>}
+                    <MenuGroup items={[{
+                        key: "whole-chat",
+                        element: <MenuItem title="View all chats" label="All chats" icon={<i className="fas fa-globe-europe"></i>} action="/chat" bold={true} />
+                    }]} />
+                </>;
+            }
+
             chatsExpander
                 = <MenuExpander
                     title="Chats"
@@ -565,7 +746,7 @@ function Sidebar(props: Props) {
                     buttons={chatsButtons}
                     onOpenStateChange={() => dispatchUpdate({ action: "setChatsIsOpen", isOpen: !state.chatsIsOpen })}
                 >
-                    <MenuGroup items={chatMenuItems} />
+                    {chatEl}
                 </MenuExpander>;
 
             // TODO: Generate room items from database (inc. any current search)

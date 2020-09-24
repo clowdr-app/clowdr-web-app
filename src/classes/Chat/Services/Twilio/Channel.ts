@@ -4,10 +4,11 @@ import IChannel from "../../IChannel";
 import Member from "./Member";
 import Message from "./Message";
 import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
+import { ChannelDescriptor as TwilioChannelDescriptor } from "twilio-chat/lib/channeldescriptor";
 
 export default class Channel implements IChannel {
     constructor(
-        private channel: TwilioChannel,
+        private channel: TwilioChannel | TwilioChannelDescriptor
     ) {
     }
 

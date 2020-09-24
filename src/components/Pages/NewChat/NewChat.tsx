@@ -39,12 +39,12 @@ export default function NewChat(props: Props) {
 
     async function doCreateChannel() {
         if (dmUserProfile) {
-            let newChannelSID = await mChat?.createChannel(
+            let newChannel = await mChat?.createChat(
                 [dmUserProfile],
                 true,
                 (currentUserProfile.displayName + " <-> " + dmUserProfile.displayName)
             )
-            console.log(`New channel SID ${newChannelSID}`);
+            console.log(`New channel SID ${JSON.stringify(newChannel)}`);
         }
     }
 

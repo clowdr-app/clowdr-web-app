@@ -1,10 +1,11 @@
 import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
+import IChannel from "./IChannel";
 import IChatManager from "./IChatManager";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
 import TwilioChatService from "./Services/Twilio/ChatService";
 
-export interface ChannelDescriptor {
+export interface ChatDescriptor {
     sid: string;
     friendlyName: string;
     isDM: boolean;
@@ -36,6 +37,8 @@ export default class Chat implements IChatManager {
     // TODO: Handle + emit events for upgrade of service from Twilio to Mirrored
 
     // TODO: Notifications
+
+    // TODO: A way to query which service owns a given chat SID
 
     private async setup(): Promise<boolean> {
         if (!this.initialisePromise) {
@@ -112,24 +115,28 @@ export default class Chat implements IChatManager {
         return this.teardownPromise ?? Promise.resolve();
     }
 
-    public async createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<ChannelDescriptor | undefined> {
-        let newChannel = await this.twilioService?.createChannel(invite, isPrivate, title);
-        return newChannel ? {
-            sid: newChannel.sid,
-            friendlyName: newChannel.getName(),
-            isDM: newChannel.getIsDM(),
-            status: newChannel.getStatus()
-        } : undefined;
-    }
-
-    public async listActiveChannels(filter?: string): Promise<Array<ChannelDescriptor>> {
-        let channels = await this.twilioService?.activeChannels(filter);
-        return channels?.map(chan => ({
+    private convertToDescriptor(chan: IChannel): ChatDescriptor {
+        return {
             sid: chan.sid,
             friendlyName: chan.getName(),
             isDM: chan.getIsDM(),
             status: chan.getStatus()
-        })) ?? [];
+        };
+    }
+
+    public async createChat(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
+        let newChannel = await this.twilioService?.createChannel(invite, isPrivate, title);
+        return newChannel ? this.convertToDescriptor(newChannel) : undefined;
+    }
+
+    public async listAllChats(): Promise<Array<ChatDescriptor>> {
+        let channels = await this.twilioService?.allChannels();
+        return channels?.map(this.convertToDescriptor) ?? [];
+    }
+
+    public async listActiveChats(): Promise<Array<ChatDescriptor>> {
+        let channels = await this.twilioService?.activeChannels();
+        return channels?.map(this.convertToDescriptor) ?? [];
     }
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string): Promise<boolean> {

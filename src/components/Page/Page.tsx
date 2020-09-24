@@ -57,7 +57,6 @@ function Page(props: Props) {
     if (mConf && mUser) {
         // TODO: Route for /program (to show the whole program)
 
-        // TODO: Route for /chat/new (to create a new text chat)
         // TODO: Route for /room/new (to create a new video room)
         // TODO: Route for /program/new (conference manager and admin roles only)
 
@@ -84,15 +83,16 @@ function Page(props: Props) {
             <Route path="/chat/new" component={(props: RouteComponentProps<any>) =>
                 <NewChat dmUserProfileId={undefined} />
             } />
-
             <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>
                 <ChatView chatId={props.match.params.chatId} />}
             />
             <Route path="/chat" component={AllChats} />
+
             <Route path="/room/:roomId" component={(props: RouteComponentProps<any>) =>
                 <VideoRoom roomId={props.match.params.roomId} />}
             />
             <Route path="/room" component={AllVideoRooms} />
+
             <Route path="/profile/:userProfileId" component={(props: RouteComponentProps<any>) =>
                 <Profile userProfileId={props.match.params.userProfileId} />}
             />

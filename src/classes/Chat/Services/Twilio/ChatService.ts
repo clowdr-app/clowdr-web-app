@@ -7,6 +7,8 @@ import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
 import assert from "assert";
 import * as Twilio from "twilio-chat";
 import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
+import { ChannelDescriptor as TwilioChannelDescriptor } from "twilio-chat/lib/channeldescriptor";
+import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 
 export default class TwilioChatService implements IChatService {
     private twilioToken: string | null = null;
@@ -166,30 +168,49 @@ export default class TwilioChatService implements IChatService {
         return { token: data.token, expiry: new Date(data.expiry) };
     }
 
-    allChannels(filter?: string): Promise<Array<Channel>> {
-        throw new Error("Method not implemented.");
+    private convertChannels(chans: Array<TwilioChannel> | undefined): Array<Channel> {
+        return chans?.map(chan => {
+            return new Channel(chan);
+        }) ?? [];
     }
-    publicChannels(filter?: string): Promise<Array<Channel>> {
-        throw new Error("Method not implemented.");
-    }
-    userChannels(filter?: string): Promise<Array<Channel>> {
-        throw new Error("Method not implemented.");
-    }
-    async activeChannels(filter?: string): Promise<Array<Channel>> {
-        function convertChannels(chans: Array<TwilioChannel> | undefined) {
-            return chans?.map(chan => {
-                return new Channel(chan);
-            }) ?? [];
+    private async acquireAllChannels(pages: Paginator<TwilioChannel> | undefined): Promise<Array<Channel>> {
+        let channels: Array<Channel> = this.convertChannels(pages?.items);
+        while (pages?.hasNextPage) {
+            pages = await pages.nextPage();
+            channels = channels.concat(this.convertChannels(pages?.items));
         }
-
-        let channelPages = await this.twilioClient?.getSubscribedChannels();
-        let channels: Array<Channel> = convertChannels(channelPages?.items);
-        while (channelPages?.hasNextPage) {
-            channelPages = await channelPages.nextPage();
-            channels = channels.concat(convertChannels(channelPages?.items));
-        }
-
         return channels;
+    }
+
+    private convertChannelDescriptors(chans: Array<TwilioChannelDescriptor> | undefined): Array<Channel> {
+        return chans?.map(chan => {
+            return new Channel(chan);
+        }) ?? [];
+    }
+    private async acquireAllChannelsFromDescriptors(pages: Paginator<TwilioChannelDescriptor> | undefined): Promise<Array<Channel>> {
+        let channels: Array<Channel> = this.convertChannelDescriptors(pages?.items);
+        while (pages?.hasNextPage) {
+            pages = await pages.nextPage();
+            channels = channels.concat(this.convertChannelDescriptors(pages?.items));
+        }
+        return channels;
+    }
+
+    async allChannels(): Promise<Array<Channel>> {
+        let publicChannels = await this.publicChannels();
+        let userChannels = await this.userChannels();
+        let publicChannelIds = publicChannels.map(x => x.sid);
+        userChannels = userChannels.filter(x => !publicChannelIds.includes(x.sid));
+        return publicChannels.concat(userChannels);
+    }
+    async publicChannels(): Promise<Array<Channel>> {
+        return this.acquireAllChannelsFromDescriptors(await this.twilioClient?.getPublicChannelDescriptors());
+    }
+    async userChannels(): Promise<Array<Channel>> {
+        return this.acquireAllChannelsFromDescriptors(await this.twilioClient?.getUserChannelDescriptors());
+    }
+    async activeChannels(): Promise<Array<Channel>> {
+        return this.acquireAllChannels(await this.twilioClient?.getSubscribedChannels());
     }
 
     async createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {
