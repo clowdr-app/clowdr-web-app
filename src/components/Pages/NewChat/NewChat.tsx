@@ -4,7 +4,7 @@ import useConference from "../../../hooks/useConference";
 import useDocTitle from "../../../hooks/useDocTitle";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import useUserProfile from "../../../hooks/useUserProfile";
-import Chat from "../../../classes/Chat/Chat";
+import useMaybeChat from "../../../hooks/useMaybeChat";
 
 interface Props {
     dmUserProfileId?: string;
@@ -13,6 +13,7 @@ interface Props {
 export default function NewChat(props: Props) {
     const conference = useConference();
     const currentUserProfile = useUserProfile();
+    const mChat = useMaybeChat();
     const [dmUserProfile, setDMUserProfile] = useState<UserProfile | null>(null);
 
     useDocTitle("New chat");
@@ -38,7 +39,7 @@ export default function NewChat(props: Props) {
 
     async function doCreateChannel() {
         if (dmUserProfile) {
-            let newChannelSID = await Chat.instance()?.createChannel(
+            let newChannelSID = await mChat?.createChannel(
                 [dmUserProfile],
                 true,
                 (currentUserProfile.displayName + " <-> " + dmUserProfile.displayName)

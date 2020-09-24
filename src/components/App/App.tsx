@@ -6,6 +6,7 @@ import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
 import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
+import ChatContext from '../../contexts/ChatContext';
 import useLogger from '../../hooks/useLogger';
 import Caches from "clowdr-db-schema/src/classes/DataLayer/Cache";
 import { Conference, UserProfile, _User } from "clowdr-db-schema/src/classes/DataLayer";
@@ -30,8 +31,8 @@ interface AppState {
     tasks: Set<AppTasks>;
     conferenceId: string | null;
     conference: Conference | null;
-    profile: UserProfile | null,
-    sessionToken: string | null
+    profile: UserProfile | null;
+    sessionToken: string | null;
 }
 
 type AppUpdate
@@ -39,6 +40,7 @@ type AppUpdate
     | { action: "beginningLoadConference" }
     | { action: "setConference", conference: Conference | null }
     | { action: "setUserProfile", data: { profile: UserProfile, sessionToken: string } | null; }
+    | { action: "chatUpdated" }
     ;
 
 function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpdate>): AppState {
@@ -84,21 +86,6 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
 
     LocalStorage_Conference.currentConferenceId = nextState.conferenceId;
 
-    if (nextState.conference && nextState.sessionToken && nextState.profile) {
-        Chat.setup(nextState.conference, nextState.profile, nextState.sessionToken)
-            .catch(err => {
-                // TODO: Upgrade to console.error once chat is implemented
-                console.warn("Error during chat initialisation.", err);
-            });
-    }
-    else {
-        Chat.teardown()
-            .catch(err => {
-                // TODO: Upgrade to console.error once chat is implemented
-                console.warn("Error during chat teardown.", err);
-            });
-    }
-
     return nextState;
 }
 
@@ -122,6 +109,7 @@ export default function App(props: Props) {
         profile: null,
         sessionToken: null
     });
+    const [chatReady, setChatReady] = useState(false);
 
     // logger.enable();
 
@@ -195,6 +183,36 @@ export default function App(props: Props) {
 
         updateUser();
     }, [appState.conferenceId, appState.tasks, logger]);
+
+    // Update chat
+    useEffect(() => {
+        async function updateChat() {
+            if (appState.conference && appState.sessionToken && appState.profile) {
+                Chat.setup(appState.conference, appState.profile, appState.sessionToken)
+                    .then(ok => {
+                        setChatReady(ok);
+                    })
+                    .catch(err => {
+                        // TODO: Upgrade to console.error once chat is implemented
+                        console.warn("Error during chat initialisation.", err);
+                        setChatReady(false);
+                    });
+            }
+            else {
+                Chat.teardown()
+                    .then(() => {
+                        setChatReady(false);
+                    })
+                    .catch(err => {
+                        // TODO: Upgrade to console.error once chat is implemented
+                        console.warn("Error during chat teardown.", err);
+                        setChatReady(false);
+                    });
+            }
+        }
+
+        updateChat();
+    }, [appState.conference, appState.profile, appState.sessionToken]);
 
     // Subscribe to data updates for conference and profile
     const onConferenceUpdated = useCallback(function _onConferenceUpdated(value: DataUpdatedEventDetails<"Conference">) {
@@ -388,8 +406,10 @@ export default function App(props: Props) {
         return <div className={appClassName}>
             <ConferenceContext.Provider value={appState.conference}>
                 <UserProfileContext.Provider value={appState.profile}>
-                    {sidebar}
-                    {page}
+                    <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
+                        {sidebar}
+                        {page}
+                    </ChatContext.Provider>
                 </UserProfileContext.Provider>
             </ConferenceContext.Provider>
         </div>;

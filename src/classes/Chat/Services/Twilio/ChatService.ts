@@ -6,6 +6,7 @@ import { default as LocalStorage_TwilioChatToken } from "../../../LocalStorage/T
 import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
 import assert from "assert";
 import * as Twilio from "twilio-chat";
+import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
 
 export default class TwilioChatService implements IChatService {
     private twilioToken: string | null = null;
@@ -158,15 +159,32 @@ export default class TwilioChatService implements IChatService {
         return { token: data.token, expiry: new Date(data.expiry) };
     }
 
-    allChannels(filter?: string): Promise<Channel> {
+    allChannels(filter?: string): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
-    publicChannels(filter?: string): Promise<Channel> {
+    publicChannels(filter?: string): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
-    userChannels(filter?: string): Promise<Channel> {
+    userChannels(filter?: string): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
+    async activeChannels(filter?: string): Promise<Array<Channel>> {
+        function convertChannels(chans: Array<TwilioChannel> | undefined) {
+            return chans?.map(chan => {
+                return new Channel(chan);
+            }) ?? [];
+        }
+
+        let channelPages = await this.twilioClient?.getSubscribedChannels();
+        let channels: Array<Channel> = convertChannels(channelPages?.items);
+        while (channelPages?.hasNextPage) {
+            channelPages = await channelPages.nextPage();
+            channels = channels.concat(convertChannels(channelPages?.items));
+        }
+
+        return channels;
+    }
+
     async createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {
         assert(this.conference);
         assert(this.profile);
@@ -191,13 +209,14 @@ export default class TwilioChatService implements IChatService {
                 }
             });
         let data = await res.json();
-        return new Channel(this, data.channelSID);
+        return new Channel(await this.twilioClient.getChannelBySid(data.channelSID));
     }
+
     enableAutoRenewConnection(): Promise<void> {
         throw new Error("Method not implemented.");
     }
+
     enableAutoJoinOnInvite(): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    
 }

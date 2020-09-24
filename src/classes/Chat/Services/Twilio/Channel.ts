@@ -3,17 +3,16 @@ import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "../../IChannel";
 import Member from "./Member";
 import Message from "./Message";
-import ChatService from "./ChatService";
+import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
 
 export default class Channel implements IChannel {
     constructor(
-        private service: ChatService,
-        private _sid: string
+        private channel: TwilioChannel,
     ) {
     }
 
     public get sid(): string {
-        return this._sid;
+        return this.channel.sid;
     }
 
     members(filter?: string): Promise<Member> {
@@ -43,11 +42,25 @@ export default class Channel implements IChannel {
     removeMember(member: Member): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    getName(): Promise<string> {
-        throw new Error("Method not implemented.");
+    getName(): string {
+        return this.channel.friendlyName;
     }
     setName(value: string): Promise<void> {
         throw new Error("Method not implemented.");
+    }
+    getIsDM(): boolean {
+        return !!(this.channel.attributes as any).isDM;
+    }
+    getStatus(): 'invited' | 'joined' | undefined {
+        if (this.channel.status === "invited") {
+            return "invited";
+        }
+        else if (this.channel.status === "joined") {
+            return "joined";
+        }
+        else {
+            return undefined;
+        }
     }
     delete(): Promise<void> {
         throw new Error("Method not implemented.");

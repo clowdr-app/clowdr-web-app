@@ -20,8 +20,10 @@ export default interface IChannel {
     addMember(userProfile: UserProfile): Promise<IMember>;
     removeMember(member: IMember): Promise<void>;
 
-    getName(): Promise<string>;
+    getName(): string;
     setName(value: string): Promise<void>;
+    getIsDM(): boolean;
+    getStatus(): 'invited' | 'joined' | undefined;
     delete(): Promise<void>;
 
     getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<IMessage>>

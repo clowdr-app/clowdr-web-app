@@ -12,6 +12,7 @@ import { ProgramSession, ProgramSessionEvent } from 'clowdr-db-schema/src/classe
 import { makeCancelable } from 'clowdr-db-schema/src/classes/Util';
 import { ISimpleEvent } from 'strongly-typed-events';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from 'clowdr-db-schema/src/classes/DataLayer/Cache/Cache';
+import useMaybeChat from '../../hooks/useMaybeChat';
 
 interface Props {
     open: boolean,
@@ -233,6 +234,7 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
 function Sidebar(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
+    const mChat = useMaybeChat();
     const burgerButtonRef = useRef<HTMLButtonElement>(null);
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
         tasks: new Set(["loadingSessionsAndEvents"] as SidebarTasks[]),
@@ -262,6 +264,22 @@ function Sidebar(props: Props) {
     // TODO: Use 'M' key as a shortcut to open/close menu?
     // TODO: Use 'C/R/P' to jump focus to menu expanders
     // TODO: Document shortcut keys prominently on the /help page
+
+    // Initial fetch of active chats
+    useEffect(() => {
+        let cancel: () => void = () => { };
+
+        async function updateChats() {
+            if (mChat) {
+                let channels = await mChat.listActiveChannels();
+                console.log(channels);
+            }
+        }
+
+        updateChats();
+
+        return cancel;
+    }, [mChat]);
 
     // Initial fetch of complete program
     useEffect(() => {

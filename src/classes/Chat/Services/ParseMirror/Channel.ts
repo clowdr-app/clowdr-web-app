@@ -43,10 +43,16 @@ export default class Channel implements IChannel {
     removeMember(member: Member): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    getName(): Promise<string> {
+    getName(): string {
         throw new Error("Method not implemented.");
     }
     setName(value: string): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    getIsDM(): boolean {
+        throw new Error("Method not implemented.");
+    }
+    getStatus(): 'invited' | 'joined' | undefined {
         throw new Error("Method not implemented.");
     }
     delete(): Promise<void> {
