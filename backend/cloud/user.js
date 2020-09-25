@@ -1,6 +1,7 @@
 /* global Parse */
 // ^ for eslint
 
+const Twilio = require("twilio");
 const {
     getConferenceById,
     getConferenceConfigurationByKey,
@@ -45,7 +46,7 @@ Parse.Cloud.define("user-create", async (request) => {
 
         let conference = await getConferenceById(params.conference);
         let signUpEnabledConfig = await getConferenceConfigurationByKey(conference, "SignUpEnabled");
-        let signUpEnabled = signUpEnabledConfig && signUpEnabledConfig.get("value") === "true";
+        let signUpEnabled = signUpEnabledConfig.get("value") === "true";
 
         if (signUpEnabled) {
             let user = await getUserByEmail(params.email);
@@ -59,6 +60,7 @@ Parse.Cloud.define("user-create", async (request) => {
                 throw new Error("Sign up: creating new profile for existing account not implemented.");
             }
             else {
+                // TODO: Recover gracefully from failure
                 // TODO: Verification email
 
                 let newUser = new Parse.User({
@@ -119,11 +121,23 @@ Parse.Cloud.define("user-create", async (request) => {
                 newProfileACl.setReadAccess(newUser, true);
                 newProfileACl.setWriteAccess(newUser, true);
                 newProfile.setACL(newProfileACl);
-                newProfile.save(null, { useMasterKey: true });
+                newProfile = await newProfile.save(null, { useMasterKey: true });
 
                 let attendeeUsersRel = attendeeRole.relation("users");
                 attendeeUsersRel.add(newUser);
                 attendeeRole.save(null, { useMasterKey: true });
+
+                const twilioAccountSID = (await getConferenceConfigurationByKey(conference, "TWILIO_ACCOUNT_SID")).get("value");
+                const twilioAuthToken = (await getConferenceConfigurationByKey(conference, "TWILIO_AUTH_TOKEN")).get("value");
+                const twilioChatServiceSID = (await getConferenceConfigurationByKey(conference, "TWILIO_CHAT_SERVICE_SID")).get("value");
+                const twilioClient = Twilio(twilioAccountSID, twilioAuthToken);
+                const twilioChatService = twilioClient.chat.services(twilioChatServiceSID);
+                // Adding the user will trigger our Twilio backend to add them to the announcements channel
+                await twilioChatService.users.create({
+                    identity: newProfile.id,
+                    friendlyName: newProfile.get("displayName"),
+                    xTwilioWebhookEnabled: true
+                });
 
                 return true;
             }
@@ -135,3 +149,6 @@ Parse.Cloud.define("user-create", async (request) => {
 
     return false;
 });
+
+// TODO: When upgrading a user to an admin, iterate over all their twilio channels
+//       and update their role SID. Also, update their service-level role SID.
