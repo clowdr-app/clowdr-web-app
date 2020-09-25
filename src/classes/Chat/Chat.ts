@@ -14,6 +14,8 @@ export type ChatDescriptor = {
     isDM: false;
 } | {
     isDM: true;
+    // TODO: Extract to general 'MemberDescriptor' type
+    // TODO: Add isOnline status to MemberDescriptor
     member1: { profileId: string; displayName: string };
     member2: { profileId: string; displayName: string };
 });
@@ -167,6 +169,23 @@ export default class Chat implements IChatManager {
         let channels = await this.twilioService?.activeChannels();
         return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
     }
+
+    // TODO: Get messages (with reactions attached, paginated)
+    // TODO: Send message
+    // TODO: Send reaction
+    // TODO: Get members
+    // TODO: Get whether member is reachable
+    // TODO: Get/set last read message key
+    // TODO: Invite member
+    // TODO: Remove member
+    // TODO: Join channel
+    // TODO: Edit channel
+    // TODO: Delete channel
+    // TODO: Events
+
+    // TODO: Admin controls - list all chats inc. hidden private ones, join/edit/delete (otherwise private ones)
+
+    // TODO: Mirrored channels
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string): Promise<boolean> {
         let result = false;
