@@ -1,4 +1,3 @@
-import assert from "assert";
 import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
 import IChannel from "./IChannel";
@@ -14,11 +13,15 @@ export type ChatDescriptor = {
     isDM: false;
 } | {
     isDM: true;
-    // TODO: Extract to general 'MemberDescriptor' type
-    // TODO: Add isOnline status to MemberDescriptor
-    member1: { profileId: string; displayName: string };
-    member2: { profileId: string; displayName: string };
+    member1: MemberDescriptor;
+    member2: MemberDescriptor;
 });
+
+export type MemberDescriptor = {
+    profileId: string;
+    displayName: string;
+    isOnline: boolean;
+};
 
 export default class Chat implements IChatManager {
     private static chat: Chat | null = null;
@@ -42,11 +45,15 @@ export default class Chat implements IChatManager {
 
     // TODO: Direct requests to the correct service
 
-    // TODO: Handle + emit events for upgrade of service from Twilio to Mirrored
+    // TODO: Handle upgrade of a chat from Twilio Service to Mirrored Service
+    //       By not leaking the underlying objects - i.e. providing only
+    //       descriptors - we can ensure all requests come back through this
+    //       Chat interface and thus can be directed to the relevant service
+    //       even in the presence of real-time upgrading.
 
     // TODO: Notifications
 
-    // TODO: A way to query which service owns a given chat SID
+    // TODO: Internal: A way to query which service owns a given chat SID
 
     private async setup(): Promise<boolean> {
         if (!this.initialisePromise) {
@@ -124,25 +131,15 @@ export default class Chat implements IChatManager {
     }
 
     private async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor> {
-        let isDM = chan.getIsDM();
+        let isDM = await chan.getIsDM();
         if (isDM) {
-            let profile1 = await UserProfile.get(isDM.member1, this.conference.id);
-            let profile2 = await UserProfile.get(isDM.member2, this.conference.id);
-            assert(profile1);
-            assert(profile2);
             return {
                 sid: chan.sid,
                 friendlyName: chan.getName(),
                 status: chan.getStatus(),
                 isDM: true,
-                member1: {
-                    profileId: isDM.member1,
-                    displayName: profile1.displayName
-                },
-                member2: {
-                    profileId: isDM.member2,
-                    displayName: profile2.displayName
-                }
+                member1: isDM.member1,
+                member2: isDM.member2
             };
         }
         else {
@@ -170,21 +167,26 @@ export default class Chat implements IChatManager {
         return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
     }
 
+    // These can be done directly against the Twilio API
     // TODO: Get messages (with reactions attached, paginated)
     // TODO: Send message
     // TODO: Send reaction
     // TODO: Get members
     // TODO: Get whether member is reachable
     // TODO: Get/set last read message key
+    // TODO: Edit channel
+    // TODO: Delete channel
+
+    // These have to be done via our Twilio Backend for permissions control
     // TODO: Invite member
     // TODO: Remove member
     // TODO: Join channel
-    // TODO: Edit channel
-    // TODO: Delete channel
+    // TODO: Admin controls - list all chats inc. hidden private ones, 
+    //                      - join/edit/delete (for chats that would otherwise be private)
+
+    // Other stuff:
+
     // TODO: Events
-
-    // TODO: Admin controls - list all chats inc. hidden private ones, join/edit/delete (otherwise private ones)
-
     // TODO: Mirrored channels
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string): Promise<boolean> {

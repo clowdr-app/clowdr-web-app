@@ -12,7 +12,7 @@ import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 
 export default class TwilioChatService implements IChatService {
     private twilioToken: string | null = null;
-    private conference: Conference | null = null;
+    conference: Conference | null = null;
     private profile: UserProfile | null = null;
     private sessionToken: string | null = null;
 
@@ -92,6 +92,10 @@ export default class TwilioChatService implements IChatService {
                 this.twilioClient = await Twilio.Client.create(this.twilioToken);
                 this.logger.info("Created Twilio client.");
 
+                // Ensure we fetched this before the service becomes available
+                await this.get_REACT_APP_TWILIO_CALLBACK_URL()
+
+                // Enable underlying service features
                 this.enableAutoRenewConnection();
                 this.enableAutoJoinOnInvite();
 
@@ -145,32 +149,45 @@ export default class TwilioChatService implements IChatService {
         token: string | null,
         expiry: Date | null
     }> {
-        assert(this.conference);
         assert(this.profile);
-        assert(this.sessionToken);
+        assert(this.conference);
 
         this.logger.info(`Fetching fresh chat token for ${this.profile.displayName} (${this.profile.id}), ${this.conference.name} (${this.conference.id})`);
 
+        const result = await this.requestClowdrTwilioBackend("token");
+        return { token: result.token, expiry: new Date(result.expiry) };
+    }
+
+    async requestClowdrTwilioBackend(
+        endpoint: "token" | "create" | "invite" | "addMember",
+        data: Object = {}
+    ) {
+        assert(this.sessionToken);
+        assert(this.conference);
+
+        data["identity"] = this.sessionToken;
+        data["conference"] = this.conference.id;
+
         let callbackUrl = await this.get_REACT_APP_TWILIO_CALLBACK_URL();
         const res = await fetch(
-            `${callbackUrl}/chat/token`,
+            `${callbackUrl}/chat/${endpoint}`,
             {
                 method: 'POST',
-                body: JSON.stringify({
-                    identity: this.sessionToken,
-                    conference: this.conference.id
-                }),
+                body: JSON.stringify(data),
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-        let data = await res.json();
-        return { token: data.token, expiry: new Date(data.expiry) };
+        const result = await res.json();
+        if (res.status !== 200) {
+            throw new Error(result.status);
+        }
+        return result;
     }
 
     private convertChannels(chans: Array<TwilioChannel> | undefined): Array<Channel> {
         return chans?.map(chan => {
-            return new Channel(chan);
+            return new Channel({ c: chan }, this);
         }) ?? [];
     }
     private async acquireAllChannels(pages: Paginator<TwilioChannel> | undefined): Promise<Array<Channel>> {
@@ -184,7 +201,7 @@ export default class TwilioChatService implements IChatService {
 
     private convertChannelDescriptors(chans: Array<TwilioChannelDescriptor> | undefined): Array<Channel> {
         return chans?.map(chan => {
-            return new Channel(chan);
+            return new Channel({ d: chan }, this);
         }) ?? [];
     }
     private async acquireAllChannelsFromDescriptors(pages: Paginator<TwilioChannelDescriptor> | undefined): Promise<Array<Channel>> {
@@ -214,30 +231,15 @@ export default class TwilioChatService implements IChatService {
     }
 
     async createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {
-        assert(this.conference);
-        assert(this.profile);
-        assert(this.sessionToken);
         assert(this.twilioClient);
         assert(invite.length > 0);
 
-        let callbackUrl = await this.get_REACT_APP_TWILIO_CALLBACK_URL();
-        const res = await fetch(
-            `${callbackUrl}/chat/create`,
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                    identity: this.sessionToken,
-                    conference: this.conference.id,
-                    invite: invite.map(x => x.id),
-                    mode: isPrivate ? "private" : "public",
-                    title: title
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        let data = await res.json();
-        return new Channel(await this.twilioClient.getChannelBySid(data.channelSID));
+        const result = await this.requestClowdrTwilioBackend("create", {
+            invite: invite.map(x => x.id),
+            mode: isPrivate ? "private" : "public",
+            title: title
+        });
+        return new Channel({ c: await this.twilioClient.getChannelBySid(result.channelSID) }, this);
     }
 
     async enableAutoRenewConnection(): Promise<void> {

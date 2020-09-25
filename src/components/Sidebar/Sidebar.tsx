@@ -701,21 +701,27 @@ function Sidebar(props: Props) {
                 let chatMenuItems: MenuGroupItems = [];
                 for (let chat of chats) {
                     let friendlyName;
+                    let icon;
                     if (chat.isDM) {
-                        // TODO: Set friendly name to 'other' member's displayName
                         let member1 = chat.member1;
                         let member2 = chat.member2;
+                        let otherOnline;
 
                         if (member1.profileId !== mUser.id) {
                             friendlyName = member1.displayName;
+                            otherOnline = member1.isOnline;
                         }
                         else {
                             friendlyName = member2.displayName;
+                            otherOnline = member2.isOnline;
                         }
+
+                        icon = <i className={`fa${otherOnline ? 's' : 'r'} fa-circle ${otherOnline ? 'online' : ''}`} ></i>;
                     }
                     else {
                         // Group chat - use chat friendly name from Twilio
                         friendlyName = chat.friendlyName;
+                        icon = <i className="fas fa-hashtag"></i>;
                     }
 
                     // TODO: "New messages in this chat" boldification
@@ -726,7 +732,7 @@ function Sidebar(props: Props) {
                             <MenuItem
                                 title={friendlyName}
                                 label={friendlyName}
-                                icon={<i className="fas fa-hashtag"></i>}
+                                icon={icon}
                                 action={`/chat/${chat.sid}`}
                                 bold={false} />
                     });

@@ -1,5 +1,4 @@
-import { _User } from "clowdr-db-schema/src/classes/DataLayer";
-
-export default interface IMember extends _User {
+export default interface IMember {
+    profileId: string;
     getOnlineStatus(): Promise<boolean>;
 }

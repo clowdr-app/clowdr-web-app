@@ -4,6 +4,7 @@ import IChannel from "../../IChannel";
 import Member from "./Member";
 import Message from "./Message";
 import ChatService from "./ChatService";
+import { MemberDescriptor } from "../../Chat";
 
 export default class Channel implements IChannel {
     constructor(
@@ -16,7 +17,10 @@ export default class Channel implements IChannel {
         return this._sid;
     }
 
-    members(filter?: string): Promise<Member> {
+    membersCount(): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
+    members(): Promise<Array<Member>> {
         throw new Error("Method not implemented.");
     }
     getLastReadIndex(): Promise<number | null> {
@@ -31,10 +35,7 @@ export default class Channel implements IChannel {
     declineInvitation(): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    hasJoined(): Promise<boolean> {
-        throw new Error("Method not implemented.");
-    }
-    join(): Promise<Member> {
+    join(): Promise<void> {
         throw new Error("Method not implemented.");
     }
     addMember(userProfile: UserProfile): Promise<Member> {
@@ -49,7 +50,7 @@ export default class Channel implements IChannel {
     setName(value: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    getIsDM(): false | { member1: string; member2: string } {
+    getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
         throw new Error("Method not implemented.");
     }
     getStatus(): 'invited' | 'joined' | undefined {
@@ -61,10 +62,10 @@ export default class Channel implements IChannel {
     getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {
         throw new Error("Method not implemented.");
     }
-    sendMessage(message: string): Promise<Message> {
+    sendMessage(message: string): Promise<number> {
         throw new Error("Method not implemented.");
     }
-    sendReaction(messageIndex: number, reaction: string): Promise<Message> {
+    sendReaction(messageIndex: number, reaction: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
     subscribe(): Promise<void> {

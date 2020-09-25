@@ -1,8 +1,20 @@
-import { _User } from "clowdr-db-schema/src/classes/DataLayer";
 import IMember from "../../IMember";
+import { Member as TwilioMember } from "twilio-chat/lib/member";
 
-export default class Member extends _User implements IMember {
-    getOnlineStatus(): Promise<boolean> {
-        throw new Error("Method not implemented.");
+export default class Member implements IMember {
+    constructor(private member: TwilioMember) {
+    }
+
+    get sid(): string {
+        return this.member.sid;
+    }
+
+    get profileId(): string {
+        return this.member.identity;
+    }
+
+    async getOnlineStatus(): Promise<boolean> {
+        let userD = await this.member.getUserDescriptor();
+        return userD.online;
     }
 }

@@ -5,55 +5,125 @@ import Member from "./Member";
 import Message from "./Message";
 import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
 import { ChannelDescriptor as TwilioChannelDescriptor } from "twilio-chat/lib/channeldescriptor";
+import TwilioChatService from "./ChatService";
+import MappedPaginator from "../../MappedPaginator";
+import { MemberDescriptor } from "../../Chat";
+import assert from "assert";
+
+type ChannelOrDescriptor = TwilioChannel | TwilioChannelDescriptor;
 
 export default class Channel implements IChannel {
     constructor(
-        private channel: TwilioChannel | TwilioChannelDescriptor
+        // We can't rely on `instanceof` to distinguish these types (argh!)
+        private channel: { c: TwilioChannel } | { d: TwilioChannelDescriptor },
+        private service: TwilioChatService
     ) {
     }
 
-    public get sid(): string {
-        return this.channel.sid;
+    private getCommonField<K extends keyof ChannelOrDescriptor>(s: K): ChannelOrDescriptor[K] {
+        return 'c' in this.channel ? this.channel.c[s] : this.channel.d[s];
     }
 
-    members(filter?: string): Promise<Member> {
-        throw new Error("Method not implemented.");
+    public get sid(): string {
+        return this.getCommonField('sid');
     }
-    getLastReadIndex(): Promise<number | null> {
-        throw new Error("Method not implemented.");
+
+    private async upgrade(): Promise<TwilioChannel> {
+        if ('d' in this.channel) {
+            this.channel = { c: await this.channel.d.getChannel() };
+        }
+        return this.channel.c;
     }
-    setLastReadIndex(value: number | null): Promise<void> {
-        throw new Error("Method not implemented.");
+
+    async membersCount(): Promise<number> {
+        if ('c' in this.channel) {
+            return this.channel.c.getMembersCount();
+        }
+        else {
+            return this.channel.d.membersCount;
+        }
     }
-    inviteUser(userProfile: UserProfile): Promise<void> {
-        throw new Error("Method not implemented.");
+    async members(): Promise<Array<Member>> {
+        let channel = await this.upgrade();
+        const twilioMembers = await channel.getMembers();
+        return twilioMembers.map(x => new Member(x));
     }
-    declineInvitation(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async getLastReadIndex(): Promise<number | null> {
+        return this.getCommonField('lastConsumedMessageIndex');
     }
-    hasJoined(): Promise<boolean> {
-        throw new Error("Method not implemented.");
+    async setLastReadIndex(value: number | null): Promise<void> {
+        let channel = await this.upgrade();
+
+        if (!value) {
+            await channel.setNoMessagesConsumed();
+        }
+        else {
+            await channel.updateLastConsumedMessageIndex(value);
+        }
     }
-    join(): Promise<Member> {
-        throw new Error("Method not implemented.");
+    async inviteUser(userProfile: UserProfile): Promise<void> {
+        await this.service.requestClowdrTwilioBackend("invite", {
+            channel: this.getCommonField('sid'),
+            targetIdentity: userProfile.id
+        });
     }
-    addMember(userProfile: UserProfile): Promise<Member> {
-        throw new Error("Method not implemented.");
+    async declineInvitation(): Promise<void> {
+        let channel = await this.upgrade();
+        await channel.decline();
     }
-    removeMember(member: Member): Promise<void> {
-        throw new Error("Method not implemented.");
+    async join(): Promise<void> {
+        let channel = await this.upgrade();
+        await channel.join();
+    }
+    async addMember(userProfile: UserProfile): Promise<Member> {
+        const resultP = this.service.requestClowdrTwilioBackend("addMember", {
+            channel: this.getCommonField('sid'),
+            targetIdentity: userProfile.id
+        });
+        const channelP = this.upgrade();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const [_, channel] = await Promise.all([resultP, channelP]);
+        const member = await channel.getMemberByIdentity(userProfile.id);
+        return new Member(member);
+    }
+    async removeMember(member: Member): Promise<void> {
+        let channel = await this.upgrade();
+        await channel.removeMember(member.sid);
     }
     getName(): string {
-        return this.channel.friendlyName;
+        return this.getCommonField('friendlyName');
     }
-    setName(value: string): Promise<void> {
-        throw new Error("Method not implemented.");
+    async setName(value: string): Promise<void> {
+        let channel = await this.upgrade();
+        await channel.updateFriendlyName(value);
     }
-    getIsDM(): false | { member1: string; member2: string } {
-        if (!!(this.channel.attributes as any).isDM) {
+    async getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
+        const attrs = this.getCommonField('attributes');
+        if (!!(attrs as any).isDM) {
+            assert(this.service.conference);
+            let channel = await this.upgrade();
+            let [member1, member2] = (await channel.getMembers()).map(x => new Member(x));
+
+            const [profile1, profile2, member1Online, member2Online] = await Promise.all([
+                UserProfile.get(member1.profileId, this.service.conference.id),
+                UserProfile.get(member2.profileId, this.service.conference.id),
+                member1.getOnlineStatus(),
+                member2.getOnlineStatus()
+            ]);
+            assert(profile1);
+            assert(profile2);
+
             return {
-                member1: this.channel.attributes["member1"],
-                member2: this.channel.attributes["member2"]
+                member1: {
+                    profileId: member1.profileId,
+                    displayName: profile1.displayName,
+                    isOnline: member1Online
+                },
+                member2: {
+                    profileId: member2.profileId,
+                    displayName: profile2.displayName,
+                    isOnline: member2Online
+                }
             };
         }
         else {
@@ -61,33 +131,45 @@ export default class Channel implements IChannel {
         }
     }
     getStatus(): 'invited' | 'joined' | undefined {
-        if (this.channel.status === "invited") {
+        const status = this.getCommonField('attributes');
+        if (status === "invited") {
             return "invited";
         }
-        else if (this.channel.status === "joined") {
+        else if (status === "joined") {
             return "joined";
         }
         else {
             return undefined;
         }
     }
-    delete(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async delete(): Promise<void> {
+        let channel = await this.upgrade();
+        await channel.delete();
     }
-    getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {
-        throw new Error("Method not implemented.");
+    async getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {
+        let channel = await this.upgrade();
+        let pages = await channel.getMessages(pageSize, anchor, direction);
+        return new MappedPaginator(pages, msg => new Message(msg));
     }
-    sendMessage(message: string): Promise<Message> {
-        throw new Error("Method not implemented.");
+    async sendMessage(message: string): Promise<number> {
+        let channel = await this.upgrade();
+        return channel.sendMessage(message);
     }
-    sendReaction(messageIndex: number, reaction: string): Promise<Message> {
-        throw new Error("Method not implemented.");
+    async sendReaction(messageIndex: number, reaction: string): Promise<void> {
+        let channel = await this.upgrade();
+        await channel.sendMessage(reaction, {
+            isReaction: true,
+            targetIndex: messageIndex
+        });
     }
-    subscribe(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async subscribe(): Promise<void> {
+        let channel = await this.upgrade();
+        await channel._subscribe();
     }
-    unsubscribe(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async unsubscribe(): Promise<void> {
+        let channel = await this.upgrade();
+        await channel._unsubscribe();
     }
 
+    // TODO: Events
 }
