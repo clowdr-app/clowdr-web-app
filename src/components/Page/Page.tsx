@@ -51,8 +51,8 @@ function Page(props: Props) {
     }, setShowSignUp, [mConf?.id]);
 
     let contentsElem: JSX.Element;
-    let actionButtonsWrapper: JSX.Element | null = null;
     let noHeading = false;
+    const actionButtonsWrapper: JSX.Element | null = null;
 
     if (mConf && mUser) {
         // TODO: Route for /program (to show the whole program)
@@ -73,30 +73,30 @@ function Page(props: Props) {
 
         contentsElem = <Switch>
             <Route exact path="/" component={LoggedInWelcome} />
-            <Route path="/signup" component={(props: RouteComponentProps<any>) =>
+            <Route path="/signup" component={() =>
                 <Redirect to="/" />
             } />
 
-            <Route path="/chat/new/:userProfileId" component={(props: RouteComponentProps<any>) =>
-                <NewChat dmUserProfileId={props.match.params.userProfileId} />
+            <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
+                <NewChat dmUserProfileId={p.match.params.userProfileId} />
             } />
-            <Route path="/chat/new" component={(props: RouteComponentProps<any>) =>
+            <Route path="/chat/new" component={() =>
                 <NewChat dmUserProfileId={undefined} />
             } />
-            <Route path="/chat/:chatId" component={(props: RouteComponentProps<any>) =>
-                <ChatView chatId={props.match.params.chatId} />}
+            <Route path="/chat/:chatId" component={(p: RouteComponentProps<any>) =>
+                <ChatView chatId={p.match.params.chatId} />}
             />
             <Route path="/chat" component={AllChats} />
 
-            <Route path="/room/:roomId" component={(props: RouteComponentProps<any>) =>
-                <VideoRoom roomId={props.match.params.roomId} />}
+            <Route path="/room/:roomId" component={(p: RouteComponentProps<any>) =>
+                <VideoRoom roomId={p.match.params.roomId} />}
             />
             <Route path="/room" component={AllVideoRooms} />
 
-            <Route path="/profile/:userProfileId" component={(props: RouteComponentProps<any>) =>
-                <Profile userProfileId={props.match.params.userProfileId} />}
+            <Route path="/profile/:userProfileId" component={(p: RouteComponentProps<any>) =>
+                <Profile userProfileId={p.match.params.userProfileId} />}
             />
-            <Route path="/profile" component={(props: RouteComponentProps<any>) =>
+            <Route path="/profile" component={() =>
                 <Redirect to={"/profile/" + mUser.id} />
             } />
             <Route path="/" component={NotFound} />
@@ -104,14 +104,14 @@ function Page(props: Props) {
     }
     else if (mConf) {
         noHeading = true;
-        let loginComponent = <Login
+        const loginComponent = <Login
             showSignUp={showSignUp}
             doLogin={props.doLogin}
             clearSelectedConference={async () => {
                 props.selectConference(null)
             }}
         />;
-        let signUpComponent
+        const signUpComponent
             = showSignUp
                 ? <SignUp clearSelectedConference={async () => {
                     props.selectConference(null)
