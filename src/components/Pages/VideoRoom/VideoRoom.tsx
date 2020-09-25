@@ -32,7 +32,7 @@ export default function VideoRoom(props: Props) {
                 <button onClick={() => setSize(0)}>
                     &#9660;
                 </button>
-                <ChatFrame chatId="TODO" />
+                <ChatFrame chatSid="TODO" />
             </div>
         </SplitterLayout>
     </div>;

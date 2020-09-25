@@ -10,6 +10,8 @@ export default interface IChatService {
     userChannels(): Promise<Array<IChannel>>;
     activeChannels(): Promise<Array<IChannel>>;
 
+    getChannel(channelSid: string): Promise<IChannel>;
+
     createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<IChannel>;
 
     enableAutoRenewConnection(): Promise<void>;

@@ -147,6 +147,7 @@ export default class Channel implements IChannel {
         await channel.delete();
     }
     async getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {
+        // TODO: Process and attach reactions
         const channel = await this.upgrade();
         const pages = await channel.getMessages(pageSize, anchor, direction);
         return new MappedPaginator(pages, msg => new Message(msg));

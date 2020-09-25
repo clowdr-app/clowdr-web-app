@@ -1,4 +1,5 @@
 import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import IChannel from "../../IChannel";
 import IChatManager from "../../IChatManager";
 import IChatService from "../../IChatService";
 import Channel from "./Channel";
@@ -26,6 +27,9 @@ export default class ParseMirrorChatService implements IChatService {
         throw new Error("Method not implemented.");
     }
     createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {
+        throw new Error("Method not implemented.");
+    }
+    getChannel(channelSid: string): Promise<IChannel> {
         throw new Error("Method not implemented.");
     }
     enableAutoRenewConnection(): Promise<void> {

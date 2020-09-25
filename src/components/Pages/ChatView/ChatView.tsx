@@ -10,6 +10,6 @@ interface Props {
 export default function ChatView(props: Props) {
     useDocTitle("Chat Room X");
     return <div className="chat-view">
-        <ChatFrame chatId={props.chatId} />
+        <ChatFrame chatSid={props.chatId} />
     </div>;
 }

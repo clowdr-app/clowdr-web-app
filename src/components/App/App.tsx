@@ -113,7 +113,7 @@ export default function App(props: Props) {
 
     // logger.enable();
 
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(true /*TODO: Revert to false.*/);
+    const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
     // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
 

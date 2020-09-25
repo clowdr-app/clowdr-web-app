@@ -242,6 +242,20 @@ export default class TwilioChatService implements IChatService {
         return new Channel({ c: await this.twilioClient.getChannelBySid(result.channelSID) }, this);
     }
 
+    private channelCache: Map<string, Channel> = new Map();
+    async getChannel(channelSid: string): Promise<Channel> {
+        const cachedChannel = this.channelCache.get(channelSid);
+        if (cachedChannel) {
+            return cachedChannel;
+        }
+
+        assert(this.twilioClient);
+        const channel = await this.twilioClient.getChannelBySid(channelSid);
+        const result = new Channel({ c: channel }, this);
+        this.channelCache.set(channelSid, result);
+        return result;
+    }
+
     async enableAutoRenewConnection(): Promise<void> {
         this.logger.info("Enabling auto-renew connection.");
         this.twilioClient?.on("tokenAboutToExpire", async () => {

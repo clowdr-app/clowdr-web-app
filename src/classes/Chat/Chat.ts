@@ -1,7 +1,10 @@
+import assert from "assert";
 import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
+import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "./IChannel";
 import IChatManager from "./IChatManager";
+import IMessage from "./IMessage";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
 import TwilioChatService from "./Services/Twilio/ChatService";
 
@@ -168,8 +171,19 @@ export default class Chat implements IChatManager {
     }
 
     // These can be done directly against the Twilio API
-    // TODO: Get messages (with reactions attached, paginated)
-    // TODO: Send message
+
+    // TODO: Process and attach reactions
+    async getMessages(chatSid: string): Promise<Paginator<IMessage>> {
+        // TODO: In channel implementations, process and attach reactions
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        return channel.getMessages(20);
+    }
+    async sendMessage(chatSid: string, message: string): Promise<number> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        return channel.sendMessage(message);
+    }
     // TODO: Send reaction
     // TODO: Get members
     // TODO: Get whether member is reachable

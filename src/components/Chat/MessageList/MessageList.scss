@@ -1,0 +1,19 @@
+.message-list {
+    width     : 100%;
+    height    : 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    display       : flex;
+    flex-direction: column-reverse;
+
+    .message {
+        width: 100%;
+    }
+
+    .start-of-chat {
+        text-align: center;
+        font-style: italic;
+        font-size : 90%;
+    }
+}

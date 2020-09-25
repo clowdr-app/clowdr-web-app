@@ -7,31 +7,31 @@ export default class Message implements IMessage {
     }
 
     get sid(): string {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.sid;
     }
     get author(): string {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.author;
     }
     get body(): string {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.body;
     }
     get dateUpdated(): Date {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.dateUpdated;
     }
     get index(): number {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.index;
     }
     get lastUpdatedBy(): string {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.lastUpdatedBy;
     }
     get timestamp(): Date {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.timestamp;
     }
     get attributes(): object {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.attributes;
     }
     get memberSid(): string {
-        throw new Error("Method not implemented.");
+        return this.twilioMessage.memberSid;
     }
     _update(data: any): void {
         throw new Error("Method not implemented.");
