@@ -52,14 +52,14 @@ const createConferenceRequestSchema = {
 const TWILIO_WEBHOOK_METHOD = 'POST';
 // Copied to clowdr-backend/Twilio.ts - also update there when modifying.
 const TWILIO_WEBHOOK_EVENTS = [
-    "onMemberAdd",
+    "onUserAdded",
     "onMemberAdded",
     // Per-channel webhooks: "onMessageSent",
     // Per-channel webhooks: "onMessageUpdated",
     // Per-channel webhooks: "onMessageRemoved",
     // Per-channel webhooks: "onMediaMessageSent",
-    "onChannelUpdated",
-    "onChannelDestroyed",
+    // Per-channel webhooks: "onChannelUpdated",
+    // Per-channel webhooks: "onChannelDestroyed",
 ];
 const TWILIO_REACHABILITY_ENABLED = true;
 const TWILIO_READ_STATUS_ENABLED = true;
@@ -89,11 +89,9 @@ const defaultTwilioChatRoles = [
             "joinChannel",
             "editAnyUserInfo",
             "destroyChannel",
-            "inviteMember",
             "removeMember",
             "editChannelName",
             "editChannelAttributes",
-            "addMember",
             "editAnyMemberAttributes",
             "editAnyMessage",
             "editAnyMessageAttributes",
@@ -117,11 +115,9 @@ const defaultTwilioChatRoles = [
             "leaveChannel",
             "editNotificationLevel",
             "destroyChannel",
-            "inviteMember",
             "removeMember",
             "editChannelName",
             "editChannelAttributes",
-            "addMember",
             "editAnyMemberAttributes",
             "editAnyMessage",
             "editAnyMessageAttributes",
@@ -148,8 +144,7 @@ const defaultTwilioChatRoles = [
         permissions: [
             "sendMessage",
             "sendMediaMessage",
-            "editNotificationLevel",
-            "addMember"
+            "editNotificationLevel"
         ]
     },
     {
@@ -777,6 +772,17 @@ Parse.Cloud.job("conference-create", async (request) => {
             if (!twilioAccouncementsChannel) {
                 await createAnnouncementsChannel();
             }
+            setConfiguration("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", twilioAccouncementsChannel.sid);
+            await twilioChatService.users().create({
+                identity: adminUserProfile.id,
+                friendlyName: adminUserProfile.get("displayName"),
+                roleSid: twilioChatRoles.get("service admin").sid
+            });
+            await twilioAccouncementsChannel.members().create({
+                identity: adminUserProfile.id,
+                roleSid: twilioChatRoles.get("announcements admin").sid
+            });
+
             message(`Configured announcements channel.`);
 
             // Configure SendGrid
