@@ -60,6 +60,10 @@ export default function MessageList(props: Props) {
         </div>;
     }
 
+    // TODO: Detect if loaded messages render shorter than the available space
+    //       if so, element won't present a scrollbar so we must manually load
+    //       in more messages until overflow occurs.
+
     return <div id={props.chatSid} className="message-list">
         <InfiniteScroll
             dataLength={messages.length}
