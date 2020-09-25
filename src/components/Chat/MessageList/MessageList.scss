@@ -9,6 +9,20 @@
 
     .message {
         width: 100%;
+
+        h1,
+        h2,
+        h3 {
+            font-size  : 105%;
+            font-weight: bold;
+        }
+
+        h4,
+        h5,
+        h6 {
+            font-size  : 90%;
+            font-weight: bold;
+        }
     }
 
     .start-of-chat {
