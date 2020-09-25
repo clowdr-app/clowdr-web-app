@@ -14,7 +14,7 @@ export default class Member implements IMember {
     }
 
     async getOnlineStatus(): Promise<boolean> {
-        let userD = await this.member.getUserDescriptor();
+        const userD = await this.member.getUserDescriptor();
         return userD.online;
     }
 }

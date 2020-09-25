@@ -77,12 +77,12 @@ async function filterSessionsAndEvents(
     allEvents: Array<ProgramSessionEvent>,
     _search: string | null): Promise<[Array<ProgramSession>, Array<ProgramSessionEvent>]> {
     if (_search && _search.length >= minSearchLength) {
-        let search = _search.toLowerCase();
+        const search = _search.toLowerCase();
 
-        let sessions: Array<ProgramSession> = [];
-        for (let x of allSessions) {
-            let trackName = (await x.track).name;
-            let sessionTitle = x.title;
+        const sessions: Array<ProgramSession> = [];
+        for (const x of allSessions) {
+            const trackName = (await x.track).name;
+            const sessionTitle = x.title;
 
             if (!!trackName.toLowerCase().match(search)?.length
                 || !!sessionTitle.toLowerCase().match(search)?.length) {
@@ -90,18 +90,18 @@ async function filterSessionsAndEvents(
             }
         }
 
-        let events: Array<ProgramSessionEvent> = [];
-        for (let x of allEvents) {
-            let item = await x.item;
-            let itemTitle = item.title;
-            let authorNames = (await item.authors).map(x => x.name);
-            let trackName = (await x.track).name;
-            let sessionTitle = (await x.session).title;
+        const events: Array<ProgramSessionEvent> = [];
+        for (const x of allEvents) {
+            const item = await x.item;
+            const itemTitle = item.title;
+            const authorNames = (await item.authors).map(y => y.name);
+            const trackName = (await x.track).name;
+            const sessionTitle = (await x.session).title;
 
             if (!!itemTitle.toLowerCase().match(search)?.length
                 || !!trackName.toLowerCase().match(search)?.length
                 || !!sessionTitle.toLowerCase().match(search)?.length
-                || authorNames.reduce<boolean>((acc, x) => acc || (!!x.toLowerCase().match(search)?.length), false)) {
+                || authorNames.reduce<boolean>((acc, y) => acc || (!!y.toLowerCase().match(search)?.length), false)) {
                 events.push(x);
             }
         }
@@ -118,11 +118,11 @@ async function filterSessionsAndEvents(
             .filter(x => x.endTime.getTime() >= endLimit
                 && x.startTime.getTime() <= startLimit);
 
-        let events = allEvents
+        const events = allEvents
             .filter(x => x.endTime.getTime() >= endLimit
                 && x.startTime.getTime() <= startLimit);
 
-        let eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
+        const eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
 
         sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
 
@@ -134,7 +134,7 @@ async function filterChats(
     allChats: Array<ChatDescriptor>,
     _search: string | null): Promise<Array<ChatDescriptor>> {
     if (_search && _search.length >= minSearchLength) {
-        let search = _search.toLowerCase();
+        const search = _search.toLowerCase();
         return allChats.filter(x => x.friendlyName.toLowerCase().includes(search));
     }
     else {
@@ -190,9 +190,9 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 break;
             case "updateEvents":
                 {
-                    let updatedIds = update.events.map(x => x.id);
+                    const updatedIds = update.events.map(x => x.id);
                     nextState.events = nextState.events?.map(x => {
-                        let idx = updatedIds.indexOf(x.id);
+                        const idx = updatedIds.indexOf(x.id);
                         if (idx > -1) {
                             updatedIds.splice(idx, 1);
                             return update.events[idx];
@@ -207,9 +207,9 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 break;
             case "updateSessions":
                 {
-                    let updatedIds = update.sessions.map(x => x.id);
+                    const updatedIds = update.sessions.map(x => x.id);
                     nextState.sessions = nextState.sessions?.map(x => {
-                        let idx = updatedIds.indexOf(x.id);
+                        const idx = updatedIds.indexOf(x.id);
                         if (idx > -1) {
                             updatedIds.splice(idx, 1);
                             return update.sessions[idx];
@@ -224,9 +224,9 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 break;
             case "updateAllChats":
                 {
-                    let updatedIds = update.chats.map(x => x.sid);
+                    const updatedIds = update.chats.map(x => x.sid);
                     nextState.allChats = nextState.allChats?.map(x => {
-                        let idx = updatedIds.indexOf(x.sid);
+                        const idx = updatedIds.indexOf(x.sid);
                         if (idx > -1) {
                             updatedIds.splice(idx, 1);
                             return update.chats[idx];
@@ -241,9 +241,9 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 break;
             case "updateActiveChats":
                 {
-                    let updatedIds = update.chats.map(x => x.sid);
+                    const updatedIds = update.chats.map(x => x.sid);
                     nextState.activeChats = nextState.activeChats?.map(x => {
-                        let idx = updatedIds.indexOf(x.sid);
+                        const idx = updatedIds.indexOf(x.sid);
                         if (idx > -1) {
                             updatedIds.splice(idx, 1);
                             return update.chats[idx];
@@ -358,12 +358,12 @@ function Sidebar(props: Props) {
         async function updateChats() {
             try {
                 if (mChat) {
-                    let chatsP = makeCancelable(mChat.listActiveChats());
+                    const chatsP = makeCancelable(mChat.listActiveChats());
                     cancel = chatsP.cancel;
-                    let chats = await chatsP.promise;
+                    const chats = await chatsP.promise;
                     dispatchUpdate({
                         action: "updateActiveChats",
-                        chats: chats
+                        chats
                     });
                 }
             }
@@ -386,12 +386,12 @@ function Sidebar(props: Props) {
         async function updateChats() {
             try {
                 if (mChat) {
-                    let chatsP = makeCancelable(mChat.listAllChats());
+                    const chatsP = makeCancelable(mChat.listAllChats());
                     cancel = chatsP.cancel;
-                    let chats = await chatsP.promise;
+                    const chats = await chatsP.promise;
                     dispatchUpdate({
                         action: "updateAllChats",
-                        chats: chats
+                        chats
                     });
                 }
             }
@@ -474,7 +474,7 @@ function Sidebar(props: Props) {
 
         async function updateFiltered() {
             try {
-                let promise = makeCancelable(filterSessionsAndEvents(
+                const promise = makeCancelable(filterSessionsAndEvents(
                     state.sessions ?? [],
                     state.events ?? [],
                     state.programSearch
@@ -505,7 +505,7 @@ function Sidebar(props: Props) {
 
         async function updateFiltered() {
             try {
-                let promise = makeCancelable(filterChats(
+                const promise = makeCancelable(filterChats(
                     state.allChats ?? [],
                     state.chatSearch
                 ));
@@ -596,7 +596,7 @@ function Sidebar(props: Props) {
 
     // TODO: Subscribe to chat events
 
-    let sideBarButton = <div className="sidebar-button">
+    const sideBarButton = <div className="sidebar-button">
         <button
             aria-label="Open Menu"
             onClick={props.toggleSidebar}
@@ -610,8 +610,8 @@ function Sidebar(props: Props) {
     </div>;
 
     if (props.open) {
-        let sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.shortName}</Link></h1>;
-        let headerBar = <div className="sidebar-header">
+        const sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.shortName}</Link></h1>;
+        const headerBar = <div className="sidebar-header">
             {sideBarButton}
             {sideBarHeading}
         </div>
@@ -621,7 +621,7 @@ function Sidebar(props: Props) {
         let roomsExpander: JSX.Element = <></>;
         let programExpander: JSX.Element = <></>;
 
-        let chatsButtons: Array<ButtonSpec> = [
+        const chatsButtons: Array<ButtonSpec> = [
             {
                 type: "search", label: "Search all chats", icon: "fa-search",
                 onSearch: (event) => {
@@ -638,7 +638,7 @@ function Sidebar(props: Props) {
             { type: "link", label: "Show all chats", icon: "fa-globe-europe", url: "/chat" },
             { type: "link", label: "Create new chat", icon: "fa-plus", url: "/chat/new" }
         ];
-        let roomsButtons: Array<ButtonSpec> = [
+        const roomsButtons: Array<ButtonSpec> = [
             {
                 type: "search", label: "Search all rooms", icon: "fa-search",
                 onSearch: (event) => {
@@ -655,7 +655,7 @@ function Sidebar(props: Props) {
             { type: "link", label: "Show all rooms", icon: "fa-globe-europe", url: "/room" },
             { type: "link", label: "Create new room", icon: "fa-plus", url: "/chat/new" }
         ];
-        let programButtons: Array<ButtonSpec> = [
+        const programButtons: Array<ButtonSpec> = [
             {
                 type: "search", label: "Search whole program", icon: "fa-search",
                 onSearch: (event) => {
@@ -674,7 +674,7 @@ function Sidebar(props: Props) {
         ];
 
         if (mUser) {
-            let mainMenuItems: MenuGroupItems = [
+            const mainMenuItems: MenuGroupItems = [
                 { key: "watched-items", element: <MenuItem title="Watched items" label="Watched items" action="/watched" /> },
                 { key: "profile", element: <MenuItem title="Profile" label="Profile" action="/profile" /> },
                 { key: "contact-moderators", element: <MenuItem title="Contact moderators" label="Contact moderators" action="/moderators" /> },
@@ -683,7 +683,7 @@ function Sidebar(props: Props) {
             mainMenuGroup = <MenuGroup items={mainMenuItems} />;
 
             let chatEl: JSX.Element;
-            let chatSearchValid = state.chatSearch && state.chatSearch.length >= minSearchLength;
+            const chatSearchValid = state.chatSearch && state.chatSearch.length >= minSearchLength;
             if ((state.activeChats && state.activeChats.length > 0)
                 || (chatSearchValid && state.allChats && state.filteredChats.length > 0)) {
 
@@ -698,13 +698,13 @@ function Sidebar(props: Props) {
 
                 chats = chats.sort((x, y) => x.friendlyName.localeCompare(y.friendlyName));
 
-                let chatMenuItems: MenuGroupItems = [];
-                for (let chat of chats) {
+                const chatMenuItems: MenuGroupItems = [];
+                for (const chat of chats) {
                     let friendlyName;
                     let icon;
                     if (chat.isDM) {
-                        let member1 = chat.member1;
-                        let member2 = chat.member2;
+                        const member1 = chat.member1;
+                        const member2 = chat.member2;
                         let otherOnline;
 
                         if (member1.profileId !== mUser.id) {
@@ -761,7 +761,7 @@ function Sidebar(props: Props) {
                 </MenuExpander>;
 
             // TODO: Generate room items from database (inc. any current search)
-            let roomMenuItems: MenuGroupItems = [
+            const roomMenuItems: MenuGroupItems = [
                 {
                     key: "room-1",
                     element:

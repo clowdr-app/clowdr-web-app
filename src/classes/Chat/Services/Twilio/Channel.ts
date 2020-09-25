@@ -44,7 +44,7 @@ export default class Channel implements IChannel {
         }
     }
     async members(): Promise<Array<Member>> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         const twilioMembers = await channel.getMembers();
         return twilioMembers.map(x => new Member(x));
     }
@@ -52,7 +52,7 @@ export default class Channel implements IChannel {
         return this.getCommonField('lastConsumedMessageIndex');
     }
     async setLastReadIndex(value: number | null): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
 
         if (!value) {
             await channel.setNoMessagesConsumed();
@@ -68,11 +68,11 @@ export default class Channel implements IChannel {
         });
     }
     async declineInvitation(): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         await channel.decline();
     }
     async join(): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         await channel.join();
     }
     async addMember(userProfile: UserProfile): Promise<Member> {
@@ -87,22 +87,22 @@ export default class Channel implements IChannel {
         return new Member(member);
     }
     async removeMember(member: Member): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         await channel.removeMember(member.sid);
     }
     getName(): string {
         return this.getCommonField('friendlyName');
     }
     async setName(value: string): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         await channel.updateFriendlyName(value);
     }
     async getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
         const attrs = this.getCommonField('attributes');
         if (!!(attrs as any).isDM) {
             assert(this.service.conference);
-            let channel = await this.upgrade();
-            let [member1, member2] = (await channel.getMembers()).map(x => new Member(x));
+            const channel = await this.upgrade();
+            const [member1, member2] = (await channel.getMembers()).map(x => new Member(x));
 
             const [profile1, profile2, member1Online, member2Online] = await Promise.all([
                 UserProfile.get(member1.profileId, this.service.conference.id),
@@ -143,31 +143,31 @@ export default class Channel implements IChannel {
         }
     }
     async delete(): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         await channel.delete();
     }
     async getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {
-        let channel = await this.upgrade();
-        let pages = await channel.getMessages(pageSize, anchor, direction);
+        const channel = await this.upgrade();
+        const pages = await channel.getMessages(pageSize, anchor, direction);
         return new MappedPaginator(pages, msg => new Message(msg));
     }
     async sendMessage(message: string): Promise<number> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         return channel.sendMessage(message);
     }
     async sendReaction(messageIndex: number, reaction: string): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         await channel.sendMessage(reaction, {
             isReaction: true,
             targetIndex: messageIndex
         });
     }
     async subscribe(): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         await channel._subscribe();
     }
     async unsubscribe(): Promise<void> {
-        let channel = await this.upgrade();
+        const channel = await this.upgrade();
         await channel._unsubscribe();
     }
 

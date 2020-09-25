@@ -27,7 +27,7 @@ export default class Message implements IMessage {
     get timestamp(): Date {
         throw new Error("Method not implemented.");
     }
-    get attributes(): Object {
+    get attributes(): object {
         throw new Error("Method not implemented.");
     }
     get memberSid(): string {
@@ -45,7 +45,7 @@ export default class Message implements IMessage {
     updateBody(body: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    updateAttributes(attributes: Object): Promise<this> {
+    updateAttributes(attributes: object): Promise<this> {
         throw new Error("Method not implemented.");
     }
     addListener(event: string | symbol, listener: (...args: any[]) => void): this {
@@ -72,9 +72,11 @@ export default class Message implements IMessage {
     getMaxListeners(): number {
         throw new Error("Method not implemented.");
     }
+    // tslint:disable-next-line:ban-types - Inherited from Twilio
     listeners(event: string | symbol): Function[] {
         throw new Error("Method not implemented.");
     }
+    // tslint:disable-next-line:ban-types - Inherited from Twilio
     rawListeners(event: string | symbol): Function[] {
         throw new Error("Method not implemented.");
     }

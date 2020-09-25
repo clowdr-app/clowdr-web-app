@@ -34,5 +34,4 @@ export default class ParseMirrorChatService implements IChatService {
     enableAutoJoinOnInvite(): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    
 }

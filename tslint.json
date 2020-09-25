@@ -2,6 +2,7 @@
     "extends": "tslint:recommended",
     "rules": {
         "no-empty": false,
-        "prefer-const": true
+        "prefer-const": true,
+        "array-type": false
     }
 }

@@ -131,7 +131,7 @@ export default class Chat implements IChatManager {
     }
 
     private async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor> {
-        let isDM = await chan.getIsDM();
+        const isDM = await chan.getIsDM();
         if (isDM) {
             return {
                 sid: chan.sid,
@@ -153,17 +153,17 @@ export default class Chat implements IChatManager {
     }
 
     public async createChat(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
-        let newChannel = await this.twilioService?.createChannel(invite, isPrivate, title);
+        const newChannel = await this.twilioService?.createChannel(invite, isPrivate, title);
         return newChannel ? this.convertToDescriptor(newChannel) : undefined;
     }
 
     public async listAllChats(): Promise<Array<ChatDescriptor>> {
-        let channels = await this.twilioService?.allChannels();
+        const channels = await this.twilioService?.allChannels();
         return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
     }
 
     public async listActiveChats(): Promise<Array<ChatDescriptor>> {
-        let channels = await this.twilioService?.activeChannels();
+        const channels = await this.twilioService?.activeChannels();
         return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
     }
 
@@ -181,7 +181,7 @@ export default class Chat implements IChatManager {
     // TODO: Invite member
     // TODO: Remove member
     // TODO: Join channel
-    // TODO: Admin controls - list all chats inc. hidden private ones, 
+    // TODO: Admin controls - list all chats inc. hidden private ones,
     //                      - join/edit/delete (for chats that would otherwise be private)
 
     // Other stuff:

@@ -34,10 +34,10 @@ export default class TwilioChatService implements IChatService {
 
         if (!this.twilioToken) {
             if (LocalStorage_TwilioChatToken.twilioChatToken) {
-                let token = LocalStorage_TwilioChatToken.twilioChatToken;
-                let expiry = LocalStorage_TwilioChatToken.twilioChatTokenExpiry;
-                let confId = LocalStorage_TwilioChatToken.twilioChatTokenConferenceId;
-                let profileId = LocalStorage_TwilioChatToken.twilioChatUserProfileId;
+                const token = LocalStorage_TwilioChatToken.twilioChatToken;
+                const expiry = LocalStorage_TwilioChatToken.twilioChatTokenExpiry;
+                const confId = LocalStorage_TwilioChatToken.twilioChatTokenConferenceId;
+                const profileId = LocalStorage_TwilioChatToken.twilioChatUserProfileId;
                 this.twilioToken = null;
 
                 if (confId && token && expiry) {
@@ -63,7 +63,7 @@ export default class TwilioChatService implements IChatService {
             attempCount++;
 
             if (!this.twilioToken) {
-                let { token, expiry } = await this.fetchFreshToken();
+                const { token, expiry } = await this.fetchFreshToken();
                 if (token) {
                     this.twilioToken = token;
                     LocalStorage_TwilioChatToken.twilioChatToken = token;
@@ -133,7 +133,7 @@ export default class TwilioChatService implements IChatService {
     private async get_REACT_APP_TWILIO_CALLBACK_URL(): Promise<string> {
         if (!this._REACT_APP_TWILIO_CALLBACK_URL) {
             assert(this.conference);
-            let results = await ConferenceConfiguration.getByKey("REACT_APP_TWILIO_CALLBACK_URL", this.conference.id);
+            const results = await ConferenceConfiguration.getByKey("REACT_APP_TWILIO_CALLBACK_URL", this.conference.id);
             if (results.length > 0) {
                 this._REACT_APP_TWILIO_CALLBACK_URL = results[0].value;
             }
@@ -160,15 +160,15 @@ export default class TwilioChatService implements IChatService {
 
     async requestClowdrTwilioBackend(
         endpoint: "token" | "create" | "invite" | "addMember",
-        data: Object = {}
+        data: any = {}
     ) {
         assert(this.sessionToken);
         assert(this.conference);
 
-        data["identity"] = this.sessionToken;
-        data["conference"] = this.conference.id;
+        data.identity = this.sessionToken;
+        data.conference = this.conference.id;
 
-        let callbackUrl = await this.get_REACT_APP_TWILIO_CALLBACK_URL();
+        const callbackUrl = await this.get_REACT_APP_TWILIO_CALLBACK_URL();
         const res = await fetch(
             `${callbackUrl}/chat/${endpoint}`,
             {
@@ -214,9 +214,9 @@ export default class TwilioChatService implements IChatService {
     }
 
     async allChannels(): Promise<Array<Channel>> {
-        let publicChannels = await this.publicChannels();
+        const publicChannels = await this.publicChannels();
         let userChannels = await this.userChannels();
-        let publicChannelIds = publicChannels.map(x => x.sid);
+        const publicChannelIds = publicChannels.map(x => x.sid);
         userChannels = userChannels.filter(x => !publicChannelIds.includes(x.sid));
         return publicChannels.concat(userChannels);
     }
@@ -237,7 +237,7 @@ export default class TwilioChatService implements IChatService {
         const result = await this.requestClowdrTwilioBackend("create", {
             invite: invite.map(x => x.id),
             mode: isPrivate ? "private" : "public",
-            title: title
+            title
         });
         return new Channel({ c: await this.twilioClient.getChannelBySid(result.channelSID) }, this);
     }
@@ -250,7 +250,7 @@ export default class TwilioChatService implements IChatService {
 
             this.logger.info("Token about to expire");
 
-            let { token, expiry } = await this.fetchFreshToken();
+            const { token, expiry } = await this.fetchFreshToken();
             if (token) {
                 this.twilioToken = token;
                 LocalStorage_TwilioChatToken.twilioChatToken = token;

@@ -47,13 +47,13 @@ export default function MenuExpander(props: Props) {
         }
     }, [isSearchOpen]);
 
-    let buttonElems: Array<JSX.Element> = [];
+    const buttonElems: Array<JSX.Element> = [];
     let foundSearchButton = false;
-    for (let button of props.buttons) {
+    for (const button of props.buttons) {
         let buttonElem = <></>;
         switch (button.type) {
             case "search":
-                let searchButtonSpec = button;
+                const searchButtonSpec = button;
                 if (!foundSearchButton) {
                     foundSearchButton = true;
 

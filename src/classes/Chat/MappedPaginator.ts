@@ -19,12 +19,12 @@ export default class MappedPaginator<S, T> implements Paginator<T> {
     }
 
     async nextPage() {
-        let innerPaginator = await this.paginator.nextPage();
+        const innerPaginator = await this.paginator.nextPage();
         return new MappedPaginator(innerPaginator, this.f);
     }
 
     async prevPage() {
-        let innerPaginator = await this.paginator.prevPage();
+        const innerPaginator = await this.paginator.prevPage();
         return new MappedPaginator(innerPaginator, this.f);
     }
 }

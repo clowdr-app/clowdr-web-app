@@ -8,10 +8,10 @@ export default interface IMessage {
     index: number;
     lastUpdatedBy: string;
     timestamp: Date;
-    attributes: Object;
+    attributes: object;
     memberSid: string;
     getMember(): Promise<IMember>;
     remove(): Promise<void>;
     updateBody(body: string): Promise<void>;
-    updateAttributes(attributes: Object): Promise<this>;
+    updateAttributes(attributes: object): Promise<this>;
 }

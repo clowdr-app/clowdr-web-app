@@ -12,7 +12,7 @@ interface Props {
     events: Array<ProgramSessionEvent>;
     /**
      * Time boundaries to group items into, in minutes.
-     * 
+     *
      * Groups are automatically created for items before and after the
      * boundaries specified, to include up to a distance of 10 years.
      */
@@ -21,8 +21,8 @@ interface Props {
 
 function arrangeBoundaries(timeBoundaries: Array<number>)
     : [Array<{ start: number, end: number, isLast: boolean }>, number] {
-    let now = Date.now();
-    let boundaries = timeBoundaries
+    const now = Date.now();
+    const boundaries = timeBoundaries
         .sort((x, y) => x < y ? -1 : x === y ? 0 : 1) // Order them
         .reduce((acc, x) =>
             acc.length === 0
@@ -32,11 +32,11 @@ function arrangeBoundaries(timeBoundaries: Array<number>)
                     : acc
             , [] as number[]) // Remove gaps of zero
         .map(x => x * 60 * 1000); // Convert to milliseconds
-    let boundaryPairs: Array<{ start: number, end: number, isLast: boolean }> = [];
+    const boundaryPairs: Array<{ start: number, end: number, isLast: boolean }> = [];
     const insaneLengthOfTime = 1000 * 60 * 60 * 24 * 365 * 10; // Ten years in ms
     if (boundaries.length > 0) {
-        let boundaryStart = now - insaneLengthOfTime;
-        let boundaryEnd = now + boundaries[0];
+        const boundaryStart = now - insaneLengthOfTime;
+        const boundaryEnd = now + boundaries[0];
         boundaryPairs.push({
             start: boundaryStart,
             end: boundaryEnd,
@@ -44,7 +44,7 @@ function arrangeBoundaries(timeBoundaries: Array<number>)
         });
     }
     for (let i = 0; i < boundaries.length; i++) {
-        let boundaryStart = now + boundaries[i];
+        const boundaryStart = now + boundaries[i];
         let boundaryEnd;
         if (i + 1 < boundaries.length) {
             boundaryEnd = now + boundaries[i + 1];
@@ -103,7 +103,7 @@ export default function Program(props: Props) {
                 setRefreshRequired(false);
             }
 
-            let groupedItems: {
+            const groupedItems: {
                 [timeBoundary: number]: {
                     startTime: Date,
                     endTime: Date,
@@ -112,9 +112,9 @@ export default function Program(props: Props) {
                     isLast: boolean
                 }
             } = {};
-            let [boundaries, now] = arrangeBoundaries(props.timeBoundaries);
+            const [boundaries, now] = arrangeBoundaries(props.timeBoundaries);
             // Initialise empty groups
-            for (let boundary of boundaries) {
+            for (const boundary of boundaries) {
                 groupedItems[boundary.start] = {
                     startTime: new Date(boundary.start),
                     endTime: new Date(boundary.end),
@@ -125,8 +125,8 @@ export default function Program(props: Props) {
             }
 
             // Place sessions into groups
-            for (let session of props.sessions) {
-                for (let boundary of boundaries) {
+            for (const session of props.sessions) {
+                for (const boundary of boundaries) {
                     if (boundary.end <= now) {
                         if (session.endTime.getTime() <= boundary.end) {
                             groupedItems[boundary.start].sessions.push(session);
@@ -143,8 +143,8 @@ export default function Program(props: Props) {
             }
 
             // Place events into groups
-            for (let event of props.events) {
-                for (let boundary of boundaries) {
+            for (const event of props.events) {
+                for (const boundary of boundaries) {
                     if (boundary.end <= now) {
                         if (event.endTime.getTime() <= boundary.end) {
                             groupedItems[boundary.start].events.push(event);
@@ -161,70 +161,74 @@ export default function Program(props: Props) {
             }
 
             // Filter out empty groups
-            for (let groupKey in groupedItems) {
-                let group = groupedItems[groupKey];
-                if (group.events.length === 0 && group.sessions.length === 0) {
-                    delete groupedItems[groupKey];
-                    logger.info(`Deleting empty group: ${groupKey}`);
+            for (const groupKey in groupedItems) {
+                if (groupKey in groupedItems) {
+                    const group = groupedItems[groupKey];
+                    if (group.events.length === 0 && group.sessions.length === 0) {
+                        delete groupedItems[groupKey];
+                        logger.info(`Deleting empty group: ${groupKey}`);
+                    }
                 }
             }
 
             // Build render data
-            let newRenderData: RenderData = {
+            const newRenderData: RenderData = {
                 groups: []
             };
-            for (let groupKey in groupedItems) {
-                let group = groupedItems[groupKey];
-                let timeText: string;
-                if (group.endTime.getTime() <= now) {
-                    timeText = "Past";
-                }
-                else if (group.startTime.getTime() <= now) {
-                    timeText = "Happening now";
-                }
-                else {
-                    let distance = group.startTime.getTime() - now;
-                    let units = "minutes";
-                    distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
-                    if (distance >= 60) {
-                        distance = Math.floor(distance / 60);
-                        units = "hour" + (distance > 1 ? "s" : "");
+            for (const groupKey in groupedItems) {
+                if (groupKey in groupedItems) {
+                    const group = groupedItems[groupKey];
+                    let timeText: string;
+                    if (group.endTime.getTime() <= now) {
+                        timeText = "Past";
                     }
-                    timeText = `${group.isLast ? "Beyond" : "In"} ${distance} ${units}`;
+                    else if (group.startTime.getTime() <= now) {
+                        timeText = "Happening now";
+                    }
+                    else {
+                        let distance = group.startTime.getTime() - now;
+                        let units = "minutes";
+                        distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
+                        if (distance >= 60) {
+                            distance = Math.floor(distance / 60);
+                            units = "hour" + (distance > 1 ? "s" : "");
+                        }
+                        timeText = `${group.isLast ? "Beyond" : "In"} ${distance} ${units}`;
+                    }
+
+                    logger.info(timeText, group);
+                    let items: Array<ItemRenderData>;
+                    items = await Promise.all(group.sessions.map(async session => {
+                        const result: ItemRenderData = {
+                            title: session.title,
+                            url: `/session/${session.id}`,
+                            track: (await session.track).name,
+                            isWatched: false,
+                            item: { type: "session", data: session },
+                            sortValue: session.startTime.getTime(),
+                            additionalClasses: "session"
+                        };
+                        return result;
+                    }));
+                    items = items.concat(await Promise.all(group.events.map(async event => {
+                        const result: ItemRenderData = {
+                            title: (await event.item).title,
+                            url: `/event/${event.id}`,
+                            track: (await event.track).shortName,
+                            isWatched: false,
+                            item: { type: "event", data: event },
+                            sortValue: event.startTime.getTime(),
+                            additionalClasses: "event"
+                        };
+                        return result;
+                    })));
+
+                    const groupRenderData: GroupRenderData = {
+                        timeText,
+                        items: items.sort((x, y) => x.sortValue < y.sortValue ? -1 : x.sortValue > y.sortValue ? 1 : 0)
+                    };
+                    newRenderData.groups.push(groupRenderData);
                 }
-
-                logger.info(timeText, group);
-                let items: Array<ItemRenderData>;
-                items = await Promise.all(group.sessions.map(async session => {
-                    let result: ItemRenderData = {
-                        title: session.title,
-                        url: `/session/${session.id}`,
-                        track: (await session.track).name,
-                        isWatched: false,
-                        item: { type: "session", data: session },
-                        sortValue: session.startTime.getTime(),
-                        additionalClasses: "session"
-                    };
-                    return result;
-                }));
-                items = items.concat(await Promise.all(group.events.map(async event => {
-                    let result: ItemRenderData = {
-                        title: (await event.item).title,
-                        url: `/event/${event.id}`,
-                        track: (await event.track).shortName,
-                        isWatched: false,
-                        item: { type: "event", data: event },
-                        sortValue: event.startTime.getTime(),
-                        additionalClasses: "event"
-                    };
-                    return result;
-                })));
-
-                let groupRenderData: GroupRenderData = {
-                    timeText: timeText,
-                    items: items.sort((x, y) => x.sortValue < y.sortValue ? -1 : x.sortValue > y.sortValue ? 1 : 0)
-                };
-                newRenderData.groups.push(groupRenderData);
             }
 
             logger.info("Props.events (inner)", props.events);
@@ -236,12 +240,12 @@ export default function Program(props: Props) {
         let cancel: () => void = () => { };
         async function doBuildRenderData() {
             try {
-                let p = makeCancelable(buildRenderData());
+                const p = makeCancelable(buildRenderData());
                 cancel = p.cancel;
-                let d = await p.promise;
+                const d = await p.promise;
                 setRenderData(d);
             }
-            catch (e) { 
+            catch (e) {
                 if (!e.isCanceled) {
                     throw e;
                 }
@@ -310,11 +314,11 @@ export default function Program(props: Props) {
     logger.info("Props.events", props.events);
     logger.info("Render data", renderData);
 
-    let groupElems: Array<JSX.Element> = [];
+    const groupElems: Array<JSX.Element> = [];
 
-    for (let group of renderData.groups) {
-        let itemElems: Array<JSX.Element> = [];
-        for (let item of group.items) {
+    for (const group of renderData.groups) {
+        const itemElems: Array<JSX.Element> = [];
+        for (const item of group.items) {
             // TODO: Insert the "watch star" button
             // TODO: Enable the watch/unwatch
             itemElems.push(
@@ -326,7 +330,7 @@ export default function Program(props: Props) {
                 </li>);
         }
 
-        let groupElem = <div className="group">
+        const groupElem = <div className="group">
             <div className="time">{group.timeText}</div>
             <ul className="items">
                 {itemElems}

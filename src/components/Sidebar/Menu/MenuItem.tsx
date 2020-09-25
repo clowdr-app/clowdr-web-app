@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function MenuItem(props: Props) {
-    let contents = <>
+    const contents = <>
         <div className="head-row">
             {props.icon ? props.icon : <></>}
             <span className={"title" + (props.bold ? " bolded" : "")}>{props.title}</span>

@@ -21,8 +21,8 @@ export default class LocalStorage {
     }
 
     static get twilioChatTokenExpiry(): Date | null {
-        let str = localStorage.getItem(LocalStorage.twilioChatTokenExpiryKey);
-        return str ? new Date(parseInt(str)) : null;
+        const str = localStorage.getItem(LocalStorage.twilioChatTokenExpiryKey);
+        return str ? new Date(parseInt(str, 10)) : null;
     }
     static set twilioChatTokenExpiry(value: Date | null) {
         if (value) {
