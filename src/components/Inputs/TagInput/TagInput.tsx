@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import "./TagInput.scss";
 
 interface Props {
     name: string;
@@ -10,12 +11,39 @@ interface Props {
  * React component for a simple toast notification with a link.
  */
 export default function TagInput(props: Props) {
-    return <>
+    const [currentTag, setCurrentTag] = useState("");
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        switch (e.key) {
+            case "Enter":
+            case "Tab":
+                if (currentTag !== "") {
+                    e.preventDefault();
+                    props.setTags([...props.tags, currentTag]);
+                    setCurrentTag("");
+                }
+                return;
+            case "Backspace":
+                if (e.key === "Backspace" && currentTag === "") {
+                    e.preventDefault();
+                    props.setTags(props.tags.slice(0, -1));
+                }
+                return;
+        }
+    };
+
+    return <div className="tag-input">
+        {props.tags.map((tag, i) =>
+            <div key={i} className="tag-container">
+                <span className="tag-chip">{tag}</span>
+            </div>
+        )}
         <input
             type="text"
             name={props.name}
-            onChange={e => props.setTags(e.target.value.split(",").map(s => s.trim()))}
-            value={props.tags.reduce((x, y) => `${x},${y}`)}
+            onChange={e => setCurrentTag(e.target.value)}
+            onKeyDown={handleKeyDown}
+            value={currentTag}
         />
-    </>;
+    </div >;
 }

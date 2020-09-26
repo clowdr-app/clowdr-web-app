@@ -1,0 +1,25 @@
+@import "../../../styles/util";
+
+.tag-input {
+    border : 1px solid black;
+    display: flex;
+
+    .tag-container {
+        .tag-chip {
+            background   : #ddd;
+            padding      : 0 mm(2);
+            margin       : 0 mm(1);
+            border-radius: 1em;
+        }
+    }
+
+    input {
+        &:focus {
+            outline     : none;
+            border-right: 2px solid orange;
+        }
+
+        width : 100%;
+        border: none;
+    }
+}

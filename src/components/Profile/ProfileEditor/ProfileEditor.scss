@@ -10,11 +10,6 @@ $main-width : mm(150);
         width  : calc(#{$photo-width} + #{$gutter} + #{$main-width});
         margin : mm(20) auto 0 auto;
 
-        form input[type="submit"] {
-            display   : block;
-            margin-top: mm(4);
-        }
-
         .photo {
             background-color: black;
             width           : $photo-width;
@@ -38,7 +33,13 @@ $main-width : mm(150);
                     background: rgba(255, 255, 255, 0.4)
                 }
 
+                .photo-input:disabled+label {
+                    cursor    : not-allowed;
+                    background: rgba(0, 0, 0, 0.4)
+                }
+
                 label {
+
                     color     : white;
                     border    : 1px solid white;
                     background: rgba(0, 0, 0, 0.4);
@@ -76,13 +77,28 @@ $main-width : mm(150);
             .submit-container {
                 display        : flex;
                 justify-content: flex-end;
+                margin-top     : mm(4);
 
+                button,
                 input {
-                    background   : $secondary;
                     padding      : mm(3) mm(5);
+                    color        : white;
                     border       : none;
                     border-radius: radius(2);
-                    color        : white;
+                }
+
+                button {
+                    background  : $color-3;
+                    margin-right: mm(5);
+
+                    &:disabled {
+                        background: $gray-4;
+                        cursor    : not-allowed;
+                    }
+                }
+
+                input {
+                    background: $secondary;
                 }
             }
         }

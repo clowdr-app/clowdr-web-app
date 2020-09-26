@@ -9,6 +9,7 @@ import defaultProfilePic from "../../../assets/default-profile-pic.png";
 
 interface Props {
     profile: UserProfile;
+    setViewing: () => void;
 }
 
 export default function ProfileEditor(props: Props) {
@@ -36,6 +37,15 @@ export default function ProfileEditor(props: Props) {
 
         await p.save();
     };
+
+    const isFormDirty =
+        p.realName !== realName ||
+        p.displayName !== displayName ||
+        p.pronouns !== pronouns ||
+        p.affiliation !== affiliation ||
+        p.position !== position ||
+        p.webpage !== webpage ||
+        p.bio !== bio;
 
     const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.item(0);
@@ -72,15 +82,19 @@ export default function ProfileEditor(props: Props) {
                 }
                 <div className="upload">
                     <input
+                        disabled={isFormDirty}
                         name="photo"
                         id="photo"
                         type="file"
                         className="photo-input"
                         onChange={uploadPhoto}
                     />
-                    <label htmlFor="photo">
+                    <label
+                        htmlFor="photo"
+                        title={isFormDirty ? "Please save your profile info." : undefined}
+                    >
                         Upload New Photo
-                        </label>
+                    </label>
                 </div>
             </div>
             <form onSubmit={submitForm}>
@@ -115,6 +129,12 @@ export default function ProfileEditor(props: Props) {
                     value={bio}
                 />
                 <div className="submit-container">
+                    <button
+                        type="button"
+                        disabled={isFormDirty}
+                        title={isFormDirty ? "Please save your profile info." : undefined}
+                        onClick={props.setViewing}
+                    >View</button>
                     <input type="submit" value="Save" />
                 </div>
             </form>
