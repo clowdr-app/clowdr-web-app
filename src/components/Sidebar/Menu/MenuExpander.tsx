@@ -76,6 +76,14 @@ export default function MenuExpander(props: Props) {
                         }
                     }
 
+                    function onSearchBoxKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+                        if (event.key === "Escape") {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            closeSearch();
+                        }
+                    }
+
                     buttonElem
                         = !isSearchOpen
                             ? <button
@@ -94,6 +102,7 @@ export default function MenuExpander(props: Props) {
                                     placeholder="Search..."
                                     onChange={changeSearch}
                                     value={searchBoxValue}
+                                    onKeyDown={(ev) => onSearchBoxKeyDown(ev)}
                                 />
                                 <button onClick={() => {
                                     closeSearch();

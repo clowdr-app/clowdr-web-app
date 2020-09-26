@@ -11,11 +11,11 @@ export default function ChatFrame(props: Props) {
     const mChat = useMaybeChat();
 
     function sendMessage(ev: React.KeyboardEvent<HTMLInputElement>) {
-        ev.preventDefault();
-        ev.stopPropagation();
-
         if (ev.key === "Enter") {
             if (mChat) {
+                ev.preventDefault();
+                ev.stopPropagation();
+
                 mChat.sendMessage(props.chatSid, ev.currentTarget.value);
             }
         }
