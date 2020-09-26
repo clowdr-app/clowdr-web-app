@@ -4,6 +4,7 @@ import { UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
+import ReactMarkdown from "react-markdown";
 
 interface Props {
     profile: UserProfile;
@@ -11,6 +12,15 @@ interface Props {
 
 export default function ProfileView(props: Props) {
     const p = props.profile;
+
+    let affiliation = null;
+    if (p.position && p.affiliation) {
+        affiliation = <>{p.position} <span>at</span> {p.affiliation}</>;
+    } else if (p.position) {
+        affiliation = p.position;
+    } else if (p.affiliation) {
+        affiliation = <><span>At</span> {p.affiliation}</>;
+    }
 
     return <div className="profile-view">
         <div className="content">
@@ -28,13 +38,13 @@ export default function ProfileView(props: Props) {
                         ? <div className="real-name">{p.realName}</div>
                         : <></>}
                 </div>
-                <div className="affiliation">
-                    {p.position} <span>at</span> {p.affiliation}
-                </div>
+                {affiliation
+                    ? <div className="affiliation">{affiliation}</div>
+                    : <></>}
                 <p className="bio">
-                    {p.bio}
+                    <ReactMarkdown source={p.bio} escapeHtml={true} />
                 </p>
-                <a className="webpage" href={p.webpage}>{p.webpage}</a>
+                {p.webpage ? <a className="webpage" href={p.webpage}>{p.webpage}</a> : <></>}
             </div>
         </div>
     </div>;

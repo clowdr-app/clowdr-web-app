@@ -14,7 +14,7 @@ export default function TagInput(props: Props) {
         <input
             type="text"
             name={props.name}
-            onChange={e => props.setTags(e.target.value.split(","))}
+            onChange={e => props.setTags(e.target.value.split(",").map(s => s.trim()))}
             value={props.tags.reduce((x, y) => `${x},${y}`)}
         />
     </>;

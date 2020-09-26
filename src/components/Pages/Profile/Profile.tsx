@@ -15,6 +15,7 @@ export default function Profile(props: Props) {
     const loggedInUserProfile = useUserProfile();
     const conference = useConference();
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [editing, setEditing] = useState(true);
 
     useDocTitle("Profile");
 
@@ -23,7 +24,7 @@ export default function Profile(props: Props) {
 
         async function updateProfile() {
             try {
-                let profileCancelablePromise =
+                const profileCancelablePromise =
                     makeCancelable(UserProfile.get(props.userProfileId, conference.id));
                 cancel = profileCancelablePromise.cancel;
                 setProfile(await profileCancelablePromise.promise);
@@ -45,7 +46,15 @@ export default function Profile(props: Props) {
 
     let element;
     if (props.userProfileId === loggedInUserProfile.id) {
-        element = <ProfileEditor profile={loggedInUserProfile} />;
+        element = <>
+            <button onClick={() => setEditing(!editing)} title={editing ? "Please save your changes before viewing." : ""}>
+                {editing ? "View" : "Edit"}
+            </button>
+            {editing
+                ? <ProfileEditor profile={loggedInUserProfile} />
+                : <ProfileView profile={loggedInUserProfile} />
+            }
+        </>;
     } else if (profile) {
         element = <ProfileView profile={profile} />;
     } else {
