@@ -120,7 +120,6 @@ const defaultTwilioChatRoles = [
             "editChannelAttributes",
             "editAnyMemberAttributes",
             "editAnyMessage",
-            "editAnyMessageAttributes",
             "deleteAnyMessage",
         ]
     },
@@ -134,7 +133,6 @@ const defaultTwilioChatRoles = [
             "editNotificationLevel",
             "editOwnMemberAttributes",
             "editOwnMessage",
-            "editOwnMessageAttributes",
             "deleteOwnMessage"
         ]
     },
@@ -355,9 +353,9 @@ Parse.Cloud.job("conference-create", async (request) => {
                     acl.setRoleWriteAccess(roleO, true);
                 }
                 else {
-                    const adminRole = roleMap.get("admin");
-                    acl.setRoleReadAccess(adminRole, true);
-                    acl.setRoleWriteAccess(adminRole, true);
+                    const _adminRole = roleMap.get("admin");
+                    acl.setRoleReadAccess(_adminRole, true);
+                    acl.setRoleWriteAccess(_adminRole, true);
                 }
 
                 let roleRel = roleO.relation("roles");

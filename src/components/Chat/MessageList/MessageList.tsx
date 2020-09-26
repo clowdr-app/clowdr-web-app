@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./MessageList.scss";
 
 import IMessage from "../../../classes/Chat/IMessage";
@@ -9,6 +9,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import ReactMarkdown from "react-markdown";
 import assert from "assert";
+import { ChannelEventNames } from "../../../classes/Chat/Services/Twilio/Channel";
 
 interface Props {
     chatSid: string;
@@ -22,6 +23,51 @@ export default function MessageList(props: Props) {
     function sortMessages(msgs: Array<IMessage>): Array<IMessage> {
         return msgs.sort((x, y) => x.index < y.index ? -1 : x.index === y.index ? 0 : 1);
     }
+
+    useEffect(() => {
+        const listeners: Map<ChannelEventNames, () => void> = new Map();
+        const chat = mChat;
+
+        async function attach() {
+            if (chat) {
+                listeners.set("messageRemoved", await chat.channelEventOn(props.chatSid, "messageRemoved", (msg) => {
+                    const newMessages = messages.filter(x => x.index !== msg.index);
+                    setMessages(newMessages);
+                }));
+
+                listeners.set("messageAdded", await chat.channelEventOn(props.chatSid, "messageAdded", (msg) => {
+                    const newMessages = [...messages, msg];
+                    setMessages(sortMessages(newMessages));
+                }));
+
+                listeners.set("messageUpdated", await chat.channelEventOn(props.chatSid, "messageUpdated", (msg) => {
+                    if (msg.updateReason === "body" || msg.updateReason === "author" || msg.updateReason === "attributes") {
+                        const newMessages = messages.map(x => {
+                            if (x.index === msg.message.index) {
+                                return msg.message;
+                            }
+                            else {
+                                return x;
+                            }
+                        });
+                        setMessages(newMessages);
+                    }
+                }));
+            }
+        }
+
+        attach();
+
+        return function detach() {
+            if (chat) {
+                const keys = listeners.keys();
+                for (const key of keys) {
+                    const listener = listeners.get(key) as () => void;
+                    chat.channelEventOff(props.chatSid, key, listener);
+                }
+            }
+        };
+    }, [mChat, messages, props.chatSid]);
 
     useSafeAsync(async () => {
         if (mChat) {

@@ -3,6 +3,7 @@ import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import { MemberDescriptor } from ".";
 import IMember from "./IMember";
 import IMessage from "./IMessage";
+import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
 
 export default interface IChannel {
     sid: string;
@@ -34,7 +35,6 @@ export default interface IChannel {
     subscribe(): Promise<void>;
     unsubscribe(): Promise<void>;
 
-    // TODO: Error event
-    // TODO: Member events (join/leave/updated)
-    // TODO: Message events (added/removed/updated)
+    on: <K extends ChannelEventNames>(event: K, listener: (arg: ChannelEventArgs<K>) => void) => Promise<() => void>;
+    off: (event: ChannelEventNames, listener: () => void) => void;
 }

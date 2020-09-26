@@ -5,6 +5,7 @@ import Member from "./Member";
 import Message from "./Message";
 import ChatService from "./ChatService";
 import { MemberDescriptor } from "../../Chat";
+import { ChannelEventNames, ChannelEventArgs } from "../Twilio/Channel";
 
 export default class Channel implements IChannel {
     constructor(
@@ -75,4 +76,10 @@ export default class Channel implements IChannel {
         throw new Error("Method not implemented.");
     }
 
+    on<K extends ChannelEventNames>(event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
+        throw new Error("Method not implemented.");
+    }
+    off(event: ChannelEventNames, listener: () => void): void {
+        throw new Error("Method not implemented.");
+    }
 }

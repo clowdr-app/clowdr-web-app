@@ -5,12 +5,46 @@ import Member from "./Member";
 import Message from "./Message";
 import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
 import { ChannelDescriptor as TwilioChannelDescriptor } from "twilio-chat/lib/channeldescriptor";
+import { Member as TwilioMember } from "twilio-chat/lib/member";
+import { Message as TwilioMessage } from "twilio-chat/lib/message";
 import TwilioChatService from "./ChatService";
 import MappedPaginator from "../../MappedPaginator";
 import { MemberDescriptor } from "../../Chat";
 import assert from "assert";
 
 type ChannelOrDescriptor = TwilioChannel | TwilioChannelDescriptor;
+
+export type ChannelEventNames
+    = "memberJoined"
+    | "memberLeft"
+    | "memberUpdated"
+    | "messageAdded"
+    | "messageRemoved"
+    | "messageUpdated"
+    ;
+
+export type MemberJoinedEventArgs = Member;
+export type MemberLeftEventArgs = Member;
+export type MemberUpdatedEventArgs = {
+    member: Member,
+    updateReason: TwilioMember.UpdateReason
+};
+
+export type MessageAddedEventArgs = Message;
+export type MessageRemovedEventArgs = Message;
+export type MessageUpdatedEventArgs = {
+    message: Message,
+    updateReason: TwilioMessage.UpdateReason
+};
+
+export type ChannelEventArgs<K> =
+      K extends "memberJoined"   ? MemberJoinedEventArgs
+    : K extends "memberLeft"     ? MemberLeftEventArgs
+    : K extends "memberUpdated"  ? MemberUpdatedEventArgs
+    : K extends "messageAdded"   ? MessageAddedEventArgs
+    : K extends "messageRemoved" ? MessageRemovedEventArgs
+    : K extends "messageUpdated" ? MessageUpdatedEventArgs
+    : never;
 
 export default class Channel implements IChannel {
     constructor(
@@ -172,5 +206,62 @@ export default class Channel implements IChannel {
         await channel._unsubscribe();
     }
 
-    // TODO: Events
+    async on<K extends ChannelEventNames>(event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
+        const channel = await this.upgrade();
+
+        function memberWrapper(arg: TwilioMember) {
+            listener(new Member(arg) as ChannelEventArgs<K>);
+        }
+
+        function memberUpdatedWrapper(arg: {
+            member: TwilioMember;
+            updateReason: TwilioMember.UpdateReason
+        }): void {
+            listener({
+                member: new Member(arg.member),
+                updateReason: arg.updateReason
+            } as ChannelEventArgs<K>);
+        }
+
+        function messageWrapper(arg: TwilioMessage): void {
+            listener(new Message(arg) as ChannelEventArgs<K>);
+        }
+
+        function messageUpdatedWrapper(arg: {
+            message: TwilioMessage;
+            updateReason: TwilioMessage.UpdateReason
+        }): void {
+            listener({
+                message: new Message(arg.message),
+                updateReason: arg.updateReason
+            } as ChannelEventArgs<K>);
+        }
+
+        let _listener: (arg: any) => void = () => { };
+        switch (event) {
+            case "memberJoined":
+            case "memberLeft":
+                _listener = memberWrapper;
+                break;
+            case "memberUpdated":
+                _listener = memberUpdatedWrapper;
+                break;
+            case "messageAdded":
+            case "messageRemoved":
+                _listener = messageWrapper;
+                break;
+            case "messageUpdated":
+                _listener = messageUpdatedWrapper;
+                break;
+        }
+        channel.on(event, _listener);
+
+        return _listener as any;
+    }
+
+    async off(event: ChannelEventNames, listener: () => void) {
+        if ("c" in this.channel) {
+            this.channel.c.off(event, listener);
+        }
+    }
 }

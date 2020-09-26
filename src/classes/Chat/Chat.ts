@@ -6,12 +6,13 @@ import IChannel from "./IChannel";
 import IChatManager from "./IChatManager";
 import IMessage from "./IMessage";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
+import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
 import TwilioChatService from "./Services/Twilio/ChatService";
 
 export type ChatDescriptor = {
     sid: string;
     friendlyName: string;
-    status: 'invited' | 'joined' | undefined
+    status: 'invited' | 'joined' | undefined;
 } & ({
     isDM: false;
 } | {
@@ -199,9 +200,20 @@ export default class Chat implements IChatManager {
     //                      - join/edit/delete (for chats that would otherwise be private)
 
     // Other stuff:
-
-    // TODO: Events
     // TODO: Mirrored channels
+    // TODO: Service-level events
+
+    async channelEventOn<K extends ChannelEventNames>(chatSid: string, event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        return channel.on(event, listener);
+    }
+
+    async channelEventOff(chatSid: string, event: ChannelEventNames, listener: () => void): Promise<void> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        channel.off(event, listener);
+    }
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string): Promise<boolean> {
         let result = false;

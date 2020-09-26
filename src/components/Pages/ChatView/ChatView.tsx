@@ -8,7 +8,15 @@ interface Props {
 }
 
 export default function ChatView(props: Props) {
+    // TODO: Chat room name
     useDocTitle("Chat Room X");
+
+    // TODO: Action buttons / members view / etc
+
+    // TODO: memberAdded
+    // TODO: memberRemoved
+    // TODO: memberUpdated
+
     return <div className="chat-view">
         <ChatFrame chatSid={props.chatId} />
     </div>;

@@ -295,4 +295,13 @@ export default class TwilioChatService implements IChatService {
             channel.join();
         });
     }
+
+    // TODO: Service-level events: connectionError
+    // TODO: Service-level events: connectionStateChanged
+    // TODO: Service-level events: channelAdded
+    // TODO: Service-level events: channelInvited
+    // TODO: Service-level events: channelJoined
+    // TODO: Service-level events: channelLeft
+    // TODO: Service-level events: channelRemoved
+    // TODO: Service-level events: channelUpdated
 }

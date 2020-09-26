@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import useLogger from "../../../hooks/useLogger";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import MessageList from "../MessageList/MessageList";
@@ -11,6 +11,8 @@ interface Props {
 export default function ChatFrame(props: Props) {
     const mChat = useMaybeChat();
     const logger = useLogger("Chat Frame");
+    const [newMsgText, setNewMsgText] = useState("");
+    const [newMsgEnabled, setNewMsgEnabled] = useState(true);
 
     async function sendMessage(ev: React.KeyboardEvent<HTMLInputElement>) {
         if (ev.key === "Enter") {
@@ -19,7 +21,9 @@ export default function ChatFrame(props: Props) {
                 ev.stopPropagation();
 
                 try {
+                    setNewMsgEnabled(false);
                     await mChat.sendMessage(props.chatSid, ev.currentTarget.value);
+                    setNewMsgText("");
                 }
                 catch (e) {
                     if (e.toString().toLowerCase().includes("unauthorized")) {
@@ -31,6 +35,8 @@ export default function ChatFrame(props: Props) {
                         logger.error(e);
                     }
                 }
+
+                setNewMsgEnabled(true);
             }
         }
     }
@@ -46,6 +52,9 @@ export default function ChatFrame(props: Props) {
                 type="text" name="message" id="message"
                 placeholder="Type a message, press enter to send"
                 onKeyUp={(ev) => sendMessage(ev)}
+                value={newMsgText}
+                onChange={(ev) => setNewMsgText(ev.target.value)}
+                disabled={!newMsgEnabled}
             />
         </div>
     </div>;
