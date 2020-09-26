@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import Parse from "parse";
-import { UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import { Flair, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import "./ProfileEditor.scss";
 import TagInput from "../../Inputs/TagInput/TagInput";
 
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
+import FlairInput from "../../Inputs/FlairInput/FlairInput";
+import useSafeAsync from "../../../hooks/useSafeAsync";
 
 interface Props {
     profile: UserProfile;
@@ -22,6 +24,16 @@ export default function ProfileEditor(props: Props) {
     const [position, setPosition] = useState(p.position);
     const [webpage, setWebpage] = useState(p.webpage);
     const [bio, setBio] = useState(p.bio);
+    const [flairs, setFlairs] = useState<Flair[]>([]);
+    const [_flairs, _setFlairs] = useState<Flair[]>([]);
+
+    useSafeAsync(async () => {
+        return await p.flairs;
+    }, setFlairs, []);
+
+    useSafeAsync(async () => {
+        return await p.flairs;
+    }, _setFlairs, []);
 
     const submitForm = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,10 +45,16 @@ export default function ProfileEditor(props: Props) {
         p.affiliation = affiliation;
         p.position = position;
         p.webpage = webpage;
+        p.flairs = Promise.resolve(flairs);
         p.bio = bio;
 
         await p.save();
     };
+
+    function sameObjects(xs: { id: string }[], ys: { id: string }[]) {
+        return JSON.stringify(xs.map(x => x.id).sort()) ===
+            JSON.stringify(ys.map(y => y.id).sort());
+    }
 
     const isFormDirty =
         p.realName !== realName ||
@@ -45,7 +63,8 @@ export default function ProfileEditor(props: Props) {
         p.affiliation !== affiliation ||
         p.position !== position ||
         p.webpage !== webpage ||
-        p.bio !== bio;
+        p.bio !== bio ||
+        !sameObjects(_flairs, flairs);
 
     const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.item(0);
@@ -121,6 +140,8 @@ export default function ProfileEditor(props: Props) {
                     webpage ?? "",
                     (s) => setWebpage(s === "" ? undefined : s)
                 )}
+                <label htmlFor="flairs">Flairs</label>
+                <FlairInput name="flairs" flairs={flairs} setFlairs={setFlairs} />
                 <label htmlFor="bio">Bio</label>
                 <textarea
                     name="bio"

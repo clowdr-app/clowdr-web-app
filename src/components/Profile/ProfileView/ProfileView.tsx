@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import "./ProfileView.scss";
-import { UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import { Flair, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import ReactMarkdown from "react-markdown";
+import useSafeAsync from "../../../hooks/useSafeAsync";
+import FlairChip from "../FlairChip/FlairChip";
 
 interface Props {
     profile: UserProfile;
@@ -13,6 +15,10 @@ interface Props {
 
 export default function ProfileView(props: Props) {
     const p = props.profile;
+
+    const [flairs, setFlairs] = useState<Flair[]>([]);
+
+    useSafeAsync(() => p.flairs, setFlairs, [])
 
     let affiliation = null;
     if (p.position && p.affiliation) {
@@ -38,13 +44,20 @@ export default function ProfileView(props: Props) {
                     {p.realName !== p.displayName
                         ? <div className="real-name">{p.realName}</div>
                         : <></>}
+                    <div className="flair-box">
+                        {flairs.map((flair, i) =>
+                            <div className="flair-container" key={i}>
+                                <FlairChip flair={flair} small />
+                            </div>
+                        )}
+                    </div>
                 </div>
                 {affiliation
                     ? <div className="affiliation">{affiliation}</div>
                     : <></>}
-                <p className="bio">
+                <div className="bio">
                     <ReactMarkdown source={p.bio} escapeHtml={true} />
-                </p>
+                </div>
                 {p.webpage ? <a className="webpage" href={p.webpage}>{p.webpage}</a> : <></>}
                 {props.setEditing
                     ? <div className="edit-button-container">
