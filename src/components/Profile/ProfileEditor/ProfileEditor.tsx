@@ -130,6 +130,7 @@ export default function ProfileEditor(props: Props) {
                 />
                 <div className="submit-container">
                     <button
+                        type="button"
                         disabled={isFormDirty}
                         title={isFormDirty ? "Please save your profile info." : undefined}
                         onClick={props.setViewing}

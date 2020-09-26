@@ -15,7 +15,7 @@ export default function Profile(props: Props) {
     const loggedInUserProfile = useUserProfile();
     const conference = useConference();
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [editing, setEditing] = useState(false);
+    const [editing, setEditing] = useState(true);
 
     useDocTitle("Profile");
 
