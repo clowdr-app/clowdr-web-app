@@ -30,7 +30,7 @@ export default function MessageList(props: Props) {
             setMessagesPager(pager);
         }
         return null;
-    }, setMessagesPager, [props.chatSid]);
+    }, setMessagesPager, [mChat, props.chatSid]);
 
     async function loadMoreMessages() {
         assert(messagePager);

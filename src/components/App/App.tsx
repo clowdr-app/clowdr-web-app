@@ -1,5 +1,5 @@
 import Parse from "parse";
-import React, { useState, useEffect, useCallback, useReducer } from 'react';
+import React, { useState, useEffect, useCallback, useReducer, useMemo } from 'react';
 import './App.scss';
 import Page from '../Page/Page';
 import LocalStorage_Conference from '../../classes/LocalStorage/Conference';
@@ -17,9 +17,6 @@ import Chat from "../../classes/Chat/Chat";
 import { ISimpleEvent } from "strongly-typed-events";
 import { DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
 import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
-
-interface Props {
-}
 
 type AppTasks
     = "beginLoadConference"
@@ -91,14 +88,14 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
 
 /**
  * The main application component.
- * 
+ *
  * Must be wrapped in either a <BrowserRouter> or <MemoryRouter> component (the
  * latter for testing).
- * 
+ *
  * The App level takes care of the cache, conference and user contexts (/state).
  * Underlying components can rely entirely on the respective hooks.
  */
-export default function App(props: Props) {
+export default function App() {
     const logger = useLogger("App");
     const history = useHistory();
 
@@ -157,7 +154,7 @@ export default function App(props: Props) {
 
                     if (appState.conferenceId) {
                         if (user && user.id) {
-                            let cache = await Caches.get(appState.conferenceId);
+                            const cache = await Caches.get(appState.conferenceId);
                             await cache.updateUserAuthenticated({ authed: true, sessionToken: user.getSessionToken() });
 
                             profile = await UserProfile.getByUserId(user.id, appState.conferenceId);
@@ -170,7 +167,7 @@ export default function App(props: Props) {
                     dispatchAppUpdate({
                         action: "setUserProfile",
                         data: profile && sessionToken
-                            ? { profile: profile, sessionToken: sessionToken }
+                            ? { profile, sessionToken }
                             : null
                     });
                 }).catch(reason => {
@@ -281,15 +278,15 @@ export default function App(props: Props) {
         try {
             assert(appState.conference);
 
-            let parseUser = await _User.logIn(email, password);
-            let cache = await Caches.get(appState.conference.id);
+            const parseUser = await _User.logIn(email, password);
+            const cache = await Caches.get(appState.conference.id);
             await cache.updateUserAuthenticated({ authed: true, sessionToken: parseUser.sessionToken });
-            let profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
+            const profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
 
             dispatchAppUpdate({
                 action: "setUserProfile",
                 data: profile
-                    ? { profile: profile, sessionToken: parseUser.sessionToken }
+                    ? { profile, sessionToken: parseUser.sessionToken }
                     : null
             });
 
@@ -305,7 +302,7 @@ export default function App(props: Props) {
     const doLogout = useCallback(async function _doLogout() {
         try {
             if (appState.conference) {
-                let cache = await Caches.get(appState.conference.id);
+                const cache = await Caches.get(appState.conference.id);
                 cache.updateUserAuthenticated({ authed: false });
             }
         }
@@ -330,14 +327,14 @@ export default function App(props: Props) {
                 // We have to iterate by index, which means removal has to be
                 // done in two stages (otherwise the length of the store would
                 // change while we're iterating over it).
-                let keys: Array<string> = [];
+                const keys: Array<string> = [];
                 for (let i = 0; i < localStorage.length; i++) {
-                    let key = localStorage.key(i);
+                    const key = localStorage.key(i);
                     if (key?.match(/parse/ig)?.length) {
                         keys.push(key);
                     }
                 }
-                for (let key of keys) {
+                for (const key of keys) {
                     localStorage.removeItem(key);
                 }
 
@@ -362,7 +359,7 @@ export default function App(props: Props) {
             logger.error(e);
         }
 
-        dispatchAppUpdate({ action: "setConference", conference: conference });
+        dispatchAppUpdate({ action: "setConference", conference });
 
         return conference !== null;
     }, [logger]);
@@ -373,6 +370,13 @@ export default function App(props: Props) {
 
     const appClassNames = ["app"];
 
+    // The main page element - this is where the bulk of content goes
+    const page = useMemo(() => <Page
+        doLogin={doLogin}
+        failedToLoadConferences={failedToLoadConferences}
+        selectConference={selectConference}
+    />, [doLogin, failedToLoadConferences, selectConference]);
+
     if (appState.tasks.size > 0) {
         const appClassName = appClassNames.reduce((x, y) => `${x} ${y}`);
         return <div className={appClassName}>
@@ -380,12 +384,6 @@ export default function App(props: Props) {
         </div>;
     }
     else {
-        // The main page element - this is where the bulk of content goes
-        const page = <Page
-            doLogin={doLogin}
-            failedToLoadConferences={failedToLoadConferences}
-            selectConference={selectConference}
-        />;
         // The sidebar element - only rendered if a conference is selected (user may
         // still be logged out though).
         let sidebar = <></>;
