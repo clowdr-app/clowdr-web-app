@@ -15,7 +15,7 @@ export default function Profile(props: Props) {
     const loggedInUserProfile = useUserProfile();
     const conference = useConference();
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [editing, setEditing] = useState(true);
+    const [editing, setEditing] = useState(false);
 
     useDocTitle("Profile");
 
@@ -47,12 +47,9 @@ export default function Profile(props: Props) {
     let element;
     if (props.userProfileId === loggedInUserProfile.id) {
         element = <>
-            <button onClick={() => setEditing(!editing)} title={editing ? "Please save your changes before viewing." : ""}>
-                {editing ? "View" : "Edit"}
-            </button>
             {editing
-                ? <ProfileEditor profile={loggedInUserProfile} />
-                : <ProfileView profile={loggedInUserProfile} />
+                ? <ProfileEditor profile={loggedInUserProfile} setViewing={() => setEditing(false)} />
+                : <ProfileView profile={loggedInUserProfile} setEditing={() => setEditing(true)} />
             }
         </>;
     } else if (profile) {

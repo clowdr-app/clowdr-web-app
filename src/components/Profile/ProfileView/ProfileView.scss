@@ -56,6 +56,20 @@ $main-width : mm(150);
                 display   : inline-block;
                 margin-top: mm(4);
             }
+
+            .edit-button-container {
+                margin-top     : mm(4);
+                display        : flex;
+                justify-content: flex-end;
+
+                .edit-button {
+                    color        : white;
+                    background   : $secondary;
+                    border       : none;
+                    border-radius: radius(2);
+                    padding      : mm(3) mm(5);
+                }
+            }
         }
     }
 }

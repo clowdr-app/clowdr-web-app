@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 
 interface Props {
     profile: UserProfile;
+    setEditing?: () => void;
 }
 
 export default function ProfileView(props: Props) {
@@ -45,6 +46,11 @@ export default function ProfileView(props: Props) {
                     <ReactMarkdown source={p.bio} escapeHtml={true} />
                 </p>
                 {p.webpage ? <a className="webpage" href={p.webpage}>{p.webpage}</a> : <></>}
+                {props.setEditing
+                    ? <div className="edit-button-container">
+                        <button className="edit-button" onClick={props.setEditing}>Edit</button>
+                    </div>
+                    : <></>}
             </div>
         </div>
     </div>;
