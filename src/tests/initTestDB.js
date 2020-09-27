@@ -195,7 +195,7 @@ function generateFlairs() {
             color: colors[i - 1],
             label: labels[i - 1],
             tooltip: "mock flair tooltip",
-            priority: 1,
+            priority: i,
             conference: "mockConference1",
 
             _acl: {
@@ -208,6 +208,26 @@ function generateFlairs() {
             _rperm: ["role:mockConference1-attendee"],
         });
     }
+
+    result.push({
+        createdAt: new Date(),
+        id: "<empty>",
+        updatedAt: new Date(),
+        color: "#000000",
+        label: "<empty>",
+        tooltip: "",
+        priority: 0,
+        conference: "mockConference1",
+
+        _acl: {
+            "role:mockConference1-admin": { w: true },
+            "role:mockConference1-attendee": { r: true }
+        },
+        _wperm: [
+            "role:mockConference1-admin",
+        ],
+        _rperm: ["role:mockConference1-attendee"],
+    });
 
     return result;
 }

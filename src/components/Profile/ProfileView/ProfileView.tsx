@@ -65,6 +65,9 @@ export default function ProfileView(props: Props) {
                 {affiliation
                     ? <div className="affiliation">{affiliation}</div>
                     : <></>}
+                {p.country
+                    ? <div className="country">{p.country}</div>
+                    : <></>}
                 <div className="bio">
                     <ReactMarkdown source={p.bio} escapeHtml={true} />
                 </div>
