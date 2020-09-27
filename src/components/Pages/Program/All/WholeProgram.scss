@@ -1,0 +1,98 @@
+@import "../../../../styles/util";
+
+.whole-program {
+    display              : grid;
+    grid-template-columns: repeat(auto-fit, minmax(18em, 1fr));
+    grid-auto-rows       : minmax(300px, min-content);
+    grid-gap             : 0.3em;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5 {
+        font-size: inherit;
+        padding  : 0;
+        margin   : 0;
+    }
+
+    a {
+        color: inherit;
+
+        &:hover {
+            text-decoration: none;
+        }
+    }
+
+    .track {
+        display: block;
+        width  : 100%;
+        border : 1px solid $gray-6;
+
+        @media only screen and (max-width: $break-sm) {
+            border-top-color: $primary;
+            border-top-width: 2px;
+        }
+
+        &>.title {
+            padding       : 0.5em;
+            font-weight   : bold;
+        }
+
+        &>.content {
+            display       : flex;
+            flex-direction: column;
+            max-height    : 50ex;
+            overflow-x    : auto;
+            overflow-y    : auto;
+
+            @media only screen and (max-width: $break-sm) {
+                max-height: 100%;
+            }
+        }
+    }
+
+    .session {
+        display      : block;
+        width        : auto;
+        padding-top  : 1em;
+
+        &:nth-child(odd) {
+            background-color: rgba($primary, 0.1);
+        }
+
+        &>.title {
+            text-align    : center;
+            font-style    : italic;
+            padding-bottom: 0.3em;
+            margin-bottom : 0.5em;
+
+            a:hover {
+                text-decoration: underline;
+            }
+        }
+
+        &>.content {}
+    }
+
+
+    .event {
+        display       : block;
+        width         : auto;
+        cursor        : pointer;
+        padding       : 0.3em;
+        padding-bottom: 0.5em;
+
+        &:hover {
+            background-color: rgba($color: #000000, $alpha: 0.05);
+        }
+
+        &>.title {
+            padding-bottom: 0.2em;
+        }
+
+        &>.content {
+            padding-left: 2em;
+        }
+    }
+}

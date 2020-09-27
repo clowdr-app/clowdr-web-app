@@ -17,6 +17,7 @@ import SignUp from '../Pages/SignUp/SignUp';
 import useSafeAsync from '../../hooks/useSafeAsync';
 import { ConferenceConfiguration } from 'clowdr-db-schema/src/classes/DataLayer';
 import NewChat from '../Pages/NewChat/NewChat';
+import WholeProgram from '../Pages/Program/All/WholeProgram';
 
 interface Props {
     doLogin: doLoginF;
@@ -57,8 +58,6 @@ function Page(props: Props) {
 
     const { noHeading, contents } = useMemo(() => {
         if (mConf && mUser) {
-            // TODO: Route for /program (to show the whole program)
-
             // TODO: Route for /room/new (to create a new video room)
             // TODO: Route for /program/new (conference manager and admin roles only)
 
@@ -70,6 +69,7 @@ function Page(props: Props) {
             // TODO: Route for /legal
             // TODO: Route for /help
 
+            // TODO: Route for /track/:trackId (to view a track - this should work out which chat to render)
             // TODO: Route for /session/:programSessionId (to view a session - this should work out which room to render)
             // TODO: Route for /event/:programSessionEventId (to view an event - this should work out which room to render)
 
@@ -92,10 +92,17 @@ function Page(props: Props) {
                     />
                     <Route path="/chat" component={AllChats} />
 
+
                     <Route path="/room/:roomId" component={(p: RouteComponentProps<any>) =>
                         <VideoRoom roomId={p.match.params.roomId} />}
                     />
                     <Route path="/room" component={AllVideoRooms} />
+
+
+                    <Route path="/program" component={(p: RouteComponentProps<any>) =>
+                        <WholeProgram />
+                    } />
+
 
                     <Route path="/profile/:userProfileId" component={(p: RouteComponentProps<any>) =>
                         <Profile userProfileId={p.match.params.userProfileId} />}
