@@ -232,12 +232,12 @@ export default class TwilioChatService implements IChatService {
         return this.acquireAllChannels(await this.twilioClient?.getSubscribedChannels());
     }
 
-    async createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {
+    async createChannel(invite: Array<string>, isPrivate: boolean, title: string): Promise<Channel> {
         assert(this.twilioClient);
         assert(invite.length > 0);
 
         const result = await this.requestClowdrTwilioBackend("create", {
-            invite: invite.map(x => x.id),
+            invite: invite,
             mode: isPrivate ? "private" : "public",
             title
         });

@@ -12,7 +12,7 @@ export default interface IChatService {
 
     getChannel(channelSid: string): Promise<IChannel>;
 
-    createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<IChannel>;
+    createChannel(invite: Array<string>, isPrivate: boolean, title: string): Promise<IChannel>;
 
     enableAutoRenewConnection(): Promise<void>;
     enableAutoJoinOnInvite(): Promise<void>;

@@ -26,7 +26,7 @@ export default class ParseMirrorChatService implements IChatService {
     activeChannels(): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
-    createChannel(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<Channel> {
+    createChannel(invite: Array<string>, isPrivate: boolean, title: string): Promise<Channel> {
         throw new Error("Method not implemented.");
     }
     getChannel(channelSid: string): Promise<IChannel> {

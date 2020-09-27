@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import useConference from "../../../hooks/useConference";
 import useDocTitle from "../../../hooks/useDocTitle";
 import useMaybeChat from "../../../hooks/useMaybeChat";

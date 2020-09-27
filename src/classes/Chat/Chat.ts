@@ -155,7 +155,7 @@ export default class Chat implements IChatManager {
         }
     }
 
-    public async createChat(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
+    public async createChat(invite: Array<string>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
         const newChannel = await this.twilioService?.createChannel(invite, isPrivate, title);
         return newChannel ? Chat.convertToDescriptor(newChannel) : undefined;
     }
