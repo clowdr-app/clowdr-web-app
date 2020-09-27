@@ -20,6 +20,13 @@ export default function TagInput(props: Props) {
                     setCurrentTag("");
                 }
                 return;
+            case " ":
+                e.preventDefault(); // If space, always prevent default
+                if (currentTag !== "") {
+                    props.setTags([...props.tags, currentTag]);
+                    setCurrentTag("");
+                }
+                return;
             case "Backspace":
                 if (e.key === "Backspace" && currentTag === "") {
                     e.preventDefault();
