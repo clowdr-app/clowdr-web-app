@@ -23,8 +23,8 @@ export default function SessionGroup(props: Props) {
         const newEvents = Array.from(events ?? []);
         const idx = newEvents.findIndex(x => x.id === ev.object.id);
         if (idx === -1) {
-            const sessionevent = ev.object as ProgramSessionEvent;
-            if (sessionevent.sessionId === props.session.id) {
+            const event = ev.object as ProgramSessionEvent;
+            if (event.sessionId === props.session.id) {
                 newEvents.push(ev.object as ProgramSessionEvent);
                 setEvents(newEvents);
             }
