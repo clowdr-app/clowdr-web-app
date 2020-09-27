@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import useLogger from "../../../hooks/useLogger";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import MessageList from "../MessageList/MessageList";
@@ -13,30 +13,45 @@ export default function ChatFrame(props: Props) {
     const logger = useLogger("Chat Frame");
     const [newMsgText, setNewMsgText] = useState("");
     const [newMsgEnabled, setNewMsgEnabled] = useState(true);
+    const msgBoxRef = useRef<HTMLTextAreaElement>(null);
 
-    async function sendMessage(ev: React.KeyboardEvent<HTMLInputElement>) {
-        if (ev.key === "Enter") {
+    async function sendMessage(ev: React.KeyboardEvent<HTMLTextAreaElement>) {
+        if (ev.key === "Enter" && !ev.shiftKey) {
             if (mChat) {
                 ev.preventDefault();
                 ev.stopPropagation();
 
-                try {
-                    setNewMsgEnabled(false);
-                    await mChat.sendMessage(props.chatSid, ev.currentTarget.value);
-                    setNewMsgText("");
-                }
-                catch (e) {
-                    if (e.toString().toLowerCase().includes("unauthorized")) {
-                        // TODO: Disable sending
-                        logger.error("Permission denied.");
-                    }
-                    else {
-                        // TODO: Show error to user
-                        logger.error(e);
-                    }
-                }
+                const msg = ev.currentTarget.value.trim();
 
-                setNewMsgEnabled(true);
+                if (msg.length > 0) {
+                    try {
+                        setNewMsgEnabled(false);
+                        await mChat.sendMessage(props.chatSid, msg);
+                        setNewMsgText("");
+                    }
+                    catch (e) {
+                        if (e.toString().toLowerCase().includes("unauthorized")) {
+                            // TODO: Hide composition box
+                            logger.error("Permission denied.");
+                        }
+                        else {
+                            // TODO: Show error to user
+                            logger.error(e);
+                        }
+                    }
+
+                    msgBoxRef.current?.focus();
+                    setNewMsgEnabled(true);
+                }
+                else {
+                    // TODO: Show error to user about not sending blank messages
+                    setNewMsgEnabled(false);
+                    setNewMsgText("");
+                    setTimeout(() => {
+                        setNewMsgEnabled(true);
+                        msgBoxRef.current?.focus();
+                    }, 500);
+                }
             }
         }
     }
@@ -48,14 +63,15 @@ export default function ChatFrame(props: Props) {
     return <div className="chat-frame">
         <MessageList chatSid={props.chatSid} />
         <div className="compose-message">
-            <input
-                type="text" name="message" id="message"
-                placeholder="Type a message, press enter to send"
+            <textarea
+                ref={msgBoxRef}
+                name="message" id="message"
+                placeholder="Type a message [Enter to send, Shift+Enter for newline]"
                 onKeyUp={(ev) => sendMessage(ev)}
                 value={newMsgText}
                 onChange={(ev) => setNewMsgText(ev.target.value)}
-                disabled={!newMsgEnabled}
-            />
+                disabled={!newMsgEnabled}>
+            </textarea>
         </div>
     </div>;
 }

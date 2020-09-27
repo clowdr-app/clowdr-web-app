@@ -1,9 +1,13 @@
 import { Message as TwilioMessage } from "twilio-chat/lib/message";
 import IMessage from "../../IMessage";
+import Channel from "./Channel";
 import Member from "./Member";
 
 export default class Message implements IMessage {
-    constructor(private twilioMessage: TwilioMessage) {
+    constructor(
+        private twilioMessage: TwilioMessage,
+        private channel: Channel
+    ) {
     }
 
     // TODO: Reactions
@@ -36,7 +40,7 @@ export default class Message implements IMessage {
         return this.twilioMessage.memberSid;
     }
     getMember(): Promise<Member> {
-        throw new Error("Method not implemented.");
+        return this.channel.getMember(this.twilioMessage.memberSid);
     }
     remove(): Promise<void> {
         throw new Error("Method not implemented.");

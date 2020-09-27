@@ -1,3 +1,5 @@
+@import "../../../styles/util.scss";
+
 .message-list {
     width     : 100%;
     height    : 100%;
@@ -10,18 +12,76 @@
     .message {
         width: 100%;
 
-        h1,
-        h2,
-        h3 {
-            font-size  : 105%;
-            font-weight: bold;
+        display       : flex;
+        flex-direction: row;
+
+        margin: 1em 0 1em 0;
+
+        .profile {
+            width : 50px;
+            min-width: 50px;
+            max-width: 50px;
+            margin    : 0 1em 0 0;
+            text-align: center;
+
+            img {
+                display: inline-block;
+                width  : 100%;
+            }
+
+            .flair-chip {
+                display: inline-block;
+                margin : 0.3em 0.2em;
+            }
         }
 
-        h4,
-        h5,
-        h6 {
-            font-size  : 90%;
-            font-weight: bold;
+        .content {
+            width: 100%;
+            display              : grid;
+            grid-template-columns: min-content auto auto;
+            grid-template-rows   : auto auto auto;
+            grid-template-areas  :
+                "time name ."
+                "body body body"
+                "reactions reactions reactions";
+
+            .name {
+                display    : inline;
+                grid-area  : name;
+                font-weight: 600;
+                margin-left: 3em;
+                color      : $gray-2;
+                font-size  : 85%;
+            }
+
+            .time {
+                display    : inline;
+                grid-area  : time;
+                color      : $gray-3;
+                font-size  : 80%;
+            }
+
+            .body {
+                grid-area: body;
+
+                h1,
+                h2,
+                h3 {
+                    font-size  : 105%;
+                    font-weight: bold;
+                }
+
+                h4,
+                h5,
+                h6 {
+                    font-size  : 90%;
+                    font-weight: bold;
+                }
+
+                img {
+                    max-width: 100px;
+                }
+            }
         }
     }
 

@@ -12,6 +12,10 @@ interface Props {
 export default function FlairChip(props: Props) {
     const f = props.flair;
 
+    if (f.label === "<empty>") {
+        return <></>;
+    }
+
     const selectedStyles = props.unselected ?
         { background: "none", border: "1px solid " + f.color, color: f.color } :
         { background: f.color, border: "1px solid " + f.color };
@@ -26,8 +30,15 @@ export default function FlairChip(props: Props) {
         classes.push("has-action");
     }
     if (props.small) {
-        label = f.label.match(/\b\w/g)?.join("") ?? f.label;
+        const matches = f.label.match(/\b\w/g);
         classes.push("small");
+        if (matches && matches.length > 1) {
+            label = matches.join("");
+            classes.push("caps");
+        }
+        else {
+            label = f.label;
+        }
     }
 
     return <div

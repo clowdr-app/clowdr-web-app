@@ -4,11 +4,9 @@
     display        : flex;
     flex-direction : column;
     justify-content: center;
-    height         : 2em;
     color          : white;
     padding        : mm(1) mm(2);
     border-radius  : 1000px;
-    font-weight    : bold;
     text-transform : capitalize;
     font-size      : $font-sm;
 
@@ -26,6 +24,11 @@
     }
 
     &.small {
+        text-align: center;
+        font-size: 70%;
+    }
+
+    &.caps {
         text-transform: uppercase;
     }
 }

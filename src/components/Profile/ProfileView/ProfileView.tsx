@@ -29,11 +29,21 @@ export default function ProfileView(props: Props) {
         affiliation = <><span>At</span> {p.affiliation}</>;
     }
 
+    const profilePhotoUrl
+        = p.profilePhoto
+            // TODO: I think this weirdness is caused by the indexeddb caching
+            // This code has been copied around - search for all copies
+            ? "url" in p.profilePhoto
+                ? p.profilePhoto.url()
+                // @ts-ignore
+                : p.profilePhoto._url as string
+            : null;
+
     return <div className="profile-view">
         <div className="content">
             <div className="photo">
-                {p.profilePhoto
-                    ? <img src={p.profilePhoto.url()} alt={p.displayName + "'s avatar"} />
+                {profilePhotoUrl
+                    ? <img src={profilePhotoUrl} alt={p.displayName + "'s avatar"} />
                     : <img src={defaultProfilePic} alt="default avatar" />
                 }
             </div>

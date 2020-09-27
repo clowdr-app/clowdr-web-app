@@ -124,6 +124,10 @@ export default class Channel implements IChannel {
         const channel = await this.upgrade();
         await channel.removeMember(member.sid);
     }
+    async getMember(memberSid: string): Promise<Member> {
+        const channel = await this.upgrade();
+        return new Member(await channel.getMemberBySid(memberSid));
+    }
     getName(): string {
         return this.getCommonField('friendlyName');
     }
@@ -179,7 +183,7 @@ export default class Channel implements IChannel {
         // TODO: Process and attach reactions
         const channel = await this.upgrade();
         const pages = await channel.getMessages(pageSize, anchor, direction);
-        return new MappedPaginator(pages, msg => new Message(msg));
+        return new MappedPaginator(pages, msg => new Message(msg, this));
     }
     async sendMessage(message: string): Promise<number> {
         const channel = await this.upgrade();
@@ -203,6 +207,7 @@ export default class Channel implements IChannel {
 
     async on<K extends ChannelEventNames>(event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
         const channel = await this.upgrade();
+        const _this = this;
 
         function memberWrapper(arg: TwilioMember) {
             listener(new Member(arg) as ChannelEventArgs<K>);
@@ -219,7 +224,7 @@ export default class Channel implements IChannel {
         }
 
         function messageWrapper(arg: TwilioMessage): void {
-            listener(new Message(arg) as ChannelEventArgs<K>);
+            listener(new Message(arg, _this) as ChannelEventArgs<K>);
         }
 
         function messageUpdatedWrapper(arg: {
@@ -227,7 +232,7 @@ export default class Channel implements IChannel {
             updateReasons: Array<TwilioMessage.UpdateReason>
         }): void {
             listener({
-                message: new Message(arg.message),
+                message: new Message(arg.message, _this),
                 updateReasons: arg.updateReasons
             } as ChannelEventArgs<K>);
         }
