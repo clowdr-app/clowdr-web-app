@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import './Page.scss';
 import useMaybeConference from '../../hooks/useMaybeConference';
 import ConferenceSelection, { failedToLoadConferencesF, selectConferenceF } from '../Pages/ConferenceSelection/ConferenceSelection';
@@ -28,8 +28,11 @@ function Page(props: Props) {
     const mConf = useMaybeConference();
     const mUser = useMaybeUserProfile();
 
-    const [docTitle, setDocTitle] = useState("Clowdr");
+    const [docTitle, _setDocTitle] = useState("Clowdr");
     document.title = docTitle;
+    const setDocTitle = useCallback((v) => {
+        _setDocTitle(v);
+    }, []);
 
     const [showSignUp, setShowSignUp] = useState<boolean>(false);
 
@@ -50,86 +53,93 @@ function Page(props: Props) {
         }
     }, setShowSignUp, [mConf?.id]);
 
-    let contentsElem: JSX.Element;
-    let noHeading = false;
     const actionButtonsWrapper: JSX.Element | null = null;
 
-    if (mConf && mUser) {
-        // TODO: Route for /program (to show the whole program)
+    const { noHeading, contents } = useMemo(() => {
+        if (mConf && mUser) {
+            // TODO: Route for /program (to show the whole program)
 
-        // TODO: Route for /room/new (to create a new video room)
-        // TODO: Route for /program/new (conference manager and admin roles only)
+            // TODO: Route for /room/new (to create a new video room)
+            // TODO: Route for /program/new (conference manager and admin roles only)
 
-        // TODO: Route for /watched (to see/edit watched items)
-        // TODO: Route for /moderators (to contact the conference mods)
-        // TODO: Route for /admin to access the top-level admin interface (admin/manager roles only)
+            // TODO: Route for /watched (to see/edit watched items)
+            // TODO: Route for /moderators (to contact the conference mods)
+            // TODO: Route for /admin to access the top-level admin interface (admin/manager roles only)
 
-        // TODO: Route for /about
-        // TODO: Route for /legal
-        // TODO: Route for /help
+            // TODO: Route for /about
+            // TODO: Route for /legal
+            // TODO: Route for /help
 
-        // TODO: Route for /session/:programSessionId (to view a session - this should work out which room to render)
-        // TODO: Route for /event/:programSessionEventId (to view an event - this should work out which room to render)
+            // TODO: Route for /session/:programSessionId (to view a session - this should work out which room to render)
+            // TODO: Route for /event/:programSessionEventId (to view an event - this should work out which room to render)
 
-        contentsElem = <Switch>
-            <Route exact path="/" component={LoggedInWelcome} />
-            <Route path="/signup" component={() =>
-                <Redirect to="/" />
-            } />
+            return {
+                noHeading: false,
+                contents: <Switch>
+                    <Route exact path="/" component={LoggedInWelcome} />
+                    <Route path="/signup" component={() =>
+                        <Redirect to="/" />
+                    } />
 
-            <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
-                <NewChat dmUserProfileId={p.match.params.userProfileId} />
-            } />
-            <Route path="/chat/new" component={() =>
-                <NewChat dmUserProfileId={undefined} />
-            } />
-            <Route path="/chat/:chatId" component={(p: RouteComponentProps<any>) =>
-                <ChatView chatId={p.match.params.chatId} />}
-            />
-            <Route path="/chat" component={AllChats} />
+                    <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
+                        <NewChat dmUserProfileId={p.match.params.userProfileId} />
+                    } />
+                    <Route path="/chat/new" component={() =>
+                        <NewChat dmUserProfileId={undefined} />
+                    } />
+                    <Route path="/chat/:chatId" component={(p: RouteComponentProps<any>) =>
+                        <ChatView chatId={p.match.params.chatId} />}
+                    />
+                    <Route path="/chat" component={AllChats} />
 
-            <Route path="/room/:roomId" component={(p: RouteComponentProps<any>) =>
-                <VideoRoom roomId={p.match.params.roomId} />}
-            />
-            <Route path="/room" component={AllVideoRooms} />
+                    <Route path="/room/:roomId" component={(p: RouteComponentProps<any>) =>
+                        <VideoRoom roomId={p.match.params.roomId} />}
+                    />
+                    <Route path="/room" component={AllVideoRooms} />
 
-            <Route path="/profile/:userProfileId" component={(p: RouteComponentProps<any>) =>
-                <Profile userProfileId={p.match.params.userProfileId} />}
-            />
-            <Route path="/profile" component={() =>
-                <Redirect to={"/profile/" + mUser.id} />
-            } />
-            <Route path="/" component={NotFound} />
-        </Switch>;
-    }
-    else if (mConf) {
-        noHeading = true;
-        const loginComponent = <Login
-            showSignUp={showSignUp}
-            doLogin={props.doLogin}
-            clearSelectedConference={async () => {
-                props.selectConference(null)
-            }}
-        />;
-        const signUpComponent
-            = showSignUp
-                ? <SignUp clearSelectedConference={async () => {
+                    <Route path="/profile/:userProfileId" component={(p: RouteComponentProps<any>) =>
+                        <Profile userProfileId={p.match.params.userProfileId} />}
+                    />
+                    <Route path="/profile" component={() =>
+                        <Redirect to={"/profile/" + mUser.id} />
+                    } />
+                    <Route path="/" component={NotFound} />
+                </Switch>
+            };
+        }
+        else if (mConf) {
+            const loginComponent = <Login
+                showSignUp={showSignUp}
+                doLogin={props.doLogin}
+                clearSelectedConference={async () => {
                     props.selectConference(null)
-                }} />
-                : <Redirect to="/" />;
+                }}
+            />;
+            const signUpComponent
+                = showSignUp
+                    ? <SignUp clearSelectedConference={async () => {
+                        props.selectConference(null)
+                    }} />
+                    : <Redirect to="/" />;
 
-        contentsElem = <Switch>
-            <Route path="/signup" component={() => signUpComponent} />
-            <Route path="/" component={() => loginComponent} />
-        </Switch>;
-    }
-    else {
-        noHeading = true;
-        contentsElem = <ConferenceSelection
-            failedToLoadConferences={props.failedToLoadConferences}
-            selectConference={props.selectConference}
-        />;
-    }
+            return {
+                noHeading: true,
+                contents: <Switch>
+                    <Route path="/signup" component={() => signUpComponent} />
+                    <Route path="/" component={() => loginComponent} />
+                </Switch>
+            };
+        }
+        else {
+            return {
+                noHeading: true,
+                contents: <ConferenceSelection
+                    failedToLoadConferences={props.failedToLoadConferences}
+                    selectConference={props.selectConference}
+                />
+            };
+        }
+    }, [mConf, mUser, props, showSignUp]);
 
     return <>
         {noHeading ? <></> : <header className={"page-header" + (actionButtonsWrapper ? " actions" : " no-actions")}>
@@ -138,7 +148,7 @@ function Page(props: Props) {
         </header>}
         <main className="page">
             <DocTitleContext.Provider value={setDocTitle}>
-                {contentsElem}
+                {contents}
             </DocTitleContext.Provider>
         </main>
     </>;
