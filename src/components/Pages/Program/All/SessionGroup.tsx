@@ -68,12 +68,16 @@ export default function SessionGroup(props: Props) {
         });
     }
 
+    const title =
+        (daysIntoYear(props.session.startTime) !== daysIntoYear(props.session.endTime)
+            ? `${fmtDate(props.session.startTime)} - ${fmtDate(props.session.endTime)}`
+            : `${fmtDate(props.session.startTime)}`)
+        + ` - ${props.session.title}`;
+
     return <div className="session">
         <h2 className="title">
             <Link to={`/session/${props.session.id}`}>
-                {daysIntoYear(props.session.startTime) !== daysIntoYear(props.session.endTime)
-                    ? `${fmtDate(props.session.startTime)} - ${fmtDate(props.session.endTime)}`
-                    : `${fmtDate(props.session.startTime)}`}
+                {title}
             </Link>
         </h2>
         <div className="content">
