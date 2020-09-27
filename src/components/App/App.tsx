@@ -213,7 +213,13 @@ export default function App() {
     // Subscribe to data updates for conference and profile
     const onConferenceUpdated = useCallback(function _onConferenceUpdated(value: DataUpdatedEventDetails<"Conference">) {
         if (appState.conference && value.object.id === appState.conference.id) {
-            dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
+            const newConf = value.object as Conference;
+            if (appState.conference.headerImage !== newConf.headerImage ||
+                appState.conference.name !== newConf.name ||
+                appState.conference.shortName !== newConf.shortName ||
+                appState.conference.welcomeText !== newConf.welcomeText) {
+                dispatchAppUpdate({ action: "setConference", conference: newConf });
+            }
         }
         else if (appState.conferenceId === value.object.id) {
             dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
