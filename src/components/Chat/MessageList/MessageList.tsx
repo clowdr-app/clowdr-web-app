@@ -41,7 +41,9 @@ export default function MessageList(props: Props) {
                 }));
 
                 listeners.set("messageUpdated", await chat.channelEventOn(props.chatSid, "messageUpdated", (msg) => {
-                    if (msg.updateReason === "body" || msg.updateReason === "author" || msg.updateReason === "attributes") {
+                    if (msg.updateReasons.includes("body") ||
+                        msg.updateReasons.includes("author") ||
+                        msg.updateReasons.includes("attributes")) {
                         const newMessages = messages.map(x => {
                             if (x.index === msg.message.index) {
                                 return msg.message;

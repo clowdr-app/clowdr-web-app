@@ -8,7 +8,9 @@ import assert from "assert";
 import * as Twilio from "twilio-chat";
 import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
 import { ChannelDescriptor as TwilioChannelDescriptor } from "twilio-chat/lib/channeldescriptor";
+import { User as TwilioUser } from "twilio-chat/lib/user";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
+import Chat, { ChatDescriptor, MemberDescriptor } from "../../Chat";
 
 export default class TwilioChatService implements IChatService {
     private twilioToken: string | null = null;
@@ -239,7 +241,9 @@ export default class TwilioChatService implements IChatService {
             mode: isPrivate ? "private" : "public",
             title
         });
-        return new Channel({ c: await this.twilioClient.getChannelBySid(result.channelSID) }, this);
+        const channel = await this.twilioClient.getChannelBySid(result.channelSID);
+        await channel._subscribe();
+        return new Channel({ c: channel }, this);
     }
 
     private channelCache: Map<string, Channel> = new Map();
@@ -296,12 +300,157 @@ export default class TwilioChatService implements IChatService {
         });
     }
 
-    // TODO: Service-level events: connectionError
-    // TODO: Service-level events: connectionStateChanged
-    // TODO: Service-level events: channelAdded
-    // TODO: Service-level events: channelInvited
-    // TODO: Service-level events: channelJoined
-    // TODO: Service-level events: channelLeft
-    // TODO: Service-level events: channelRemoved
-    // TODO: Service-level events: channelUpdated
+    async subscribeToUser(profileId: string) {
+        // Causes subscription to the user
+        await this.twilioClient?.getUser(profileId);
+    }
+
+    async unsubscribeFromUser(profileId: string) {
+        const subs = await this.twilioClient?.getSubscribedUsers();
+        if (subs?.map(x => x.identity).includes(profileId)) {
+            const user = await this.twilioClient?.getUser(profileId);
+            if (user) {
+                await user.unsubscribe();
+            }
+        }
+    }
+
+
+    async on<K extends ServiceEventNames>(event: K, listener: (arg: ServiceEventArgs<K>) => void): Promise<() => void> {
+        const _this = this;
+
+        async function channelWrapper(arg: TwilioChannel) {
+            let c: ChatDescriptor | null = null;
+            try {
+                c = await Chat.convertToDescriptor(
+                    new Channel({ c: arg }, _this)
+                );
+            }
+            catch (e) {
+                // An "Access forbidden" error occurs when we try to access the
+                // members of a chat(in `getIsDM`) for a new channel that we
+                // were just invited to but haven't joined yet.
+                if (!e.toString().includes("Access forbidden")) {
+                    throw e;
+                }
+            }
+            if (c) {
+                listener(
+                    c as ServiceEventArgs<K>
+                );
+            }
+        }
+
+        async function channelUpdatedWrapper(arg: {
+            channel: TwilioChannel;
+            updateReasons: Array<TwilioChannel.UpdateReason>
+        }) {
+            listener({
+                channel: await Chat.convertToDescriptor(new Channel({ c: arg.channel }, _this)),
+                updateReasons: arg.updateReasons
+            } as ServiceEventArgs<K>);
+        }
+
+        async function userWrapper(arg: {
+            user: TwilioUser;
+            updateReasons: Array<TwilioUser.UpdateReason>;
+        }) {
+            assert(_this.conference);
+            listener({
+                user: {
+                    isOnline: arg.user.online,
+                    profileId: arg.user.identity
+                },
+                updateReasons: arg.updateReasons
+            } as ServiceEventArgs<K>);
+        }
+
+        assert(this.twilioClient);
+        let _listener: (arg: any) => void = () => { };
+        switch (event) {
+            case "connectionError":
+                _listener = listener;
+                break;
+            case "connectionStateChanged":
+                _listener = listener;
+                break;
+            case "channelAdded":
+                _listener = channelWrapper;
+                break;
+            case "channelInvited":
+                _listener = channelWrapper;
+                break;
+            case "channelJoined":
+                _listener = channelWrapper;
+                break;
+            case "channelLeft":
+                _listener = channelWrapper;
+                break;
+            case "channelRemoved":
+                _listener = channelWrapper;
+                break;
+            case "channelUpdated":
+                _listener = channelUpdatedWrapper;
+                break;
+            case "userUpdated":
+                _listener = userWrapper;
+                break;
+
+        }
+        this.twilioClient.on(event, _listener);
+
+        return _listener as any;
+    }
+
+    async off(event: ServiceEventNames, listener: () => void) {
+        assert(this.twilioClient);
+        this.twilioClient.off(event, listener);
+    }
 }
+
+
+export type ServiceEventNames
+    = "connectionError"
+    | "connectionStateChanged"
+    | "channelAdded"
+    | "channelInvited"
+    | "channelJoined"
+    | "channelLeft"
+    | "channelRemoved"
+    | "channelUpdated"
+    | "userUpdated"
+    ;
+
+export type ConnectionErrorEventArgs = {
+    terminal: boolean;
+    message: string;
+    httpStatusCode?: number;
+    errorCode?: number;
+};
+
+type ConnectionStateChangedEventArgs = Twilio.Client.ConnectionState;
+type ChannelAddedEventArgs = ChatDescriptor;
+type ChannelInvitedEventArgs = ChatDescriptor;
+type ChannelJoinedEventArgs = ChatDescriptor;
+type ChannelLeftEventArgs = ChatDescriptor;
+type ChannelRemovedEventArgs = ChatDescriptor;
+type ChannelUpdatedEventArgs = {
+    channel: ChatDescriptor;
+    updateReasons: Array<TwilioChannel.UpdateReason>;
+}
+type UserUpdatedEventArgs = {
+    user: MemberDescriptor;
+    updateReasons: Array<TwilioUser.UpdateReason>
+};
+
+export type ServiceEventArgs<K extends ServiceEventNames> =
+    K extends "connectionError" ? ConnectionErrorEventArgs
+    : K extends "connectionStateChanged" ? ConnectionStateChangedEventArgs
+    : K extends "channelAdded" ? ChannelAddedEventArgs
+    : K extends "channelInvited" ? ChannelInvitedEventArgs
+    : K extends "channelJoined" ? ChannelJoinedEventArgs
+    : K extends "channelLeft" ? ChannelLeftEventArgs
+    : K extends "channelRemoved" ? ChannelRemovedEventArgs
+    : K extends "channelUpdated" ? ChannelUpdatedEventArgs
+    : K extends "userUpdated" ? UserUpdatedEventArgs
+    : never;

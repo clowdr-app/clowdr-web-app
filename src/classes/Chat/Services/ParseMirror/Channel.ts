@@ -51,7 +51,7 @@ export default class Channel implements IChannel {
     setName(value: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
+    getIsDM(): Promise<false | { member1: MemberDescriptor; member2?: MemberDescriptor }> {
         throw new Error("Method not implemented.");
     }
     getStatus(): 'invited' | 'joined' | undefined {

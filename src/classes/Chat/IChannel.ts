@@ -24,7 +24,7 @@ export default interface IChannel {
 
     getName(): string;
     setName(value: string): Promise<void>;
-    getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }>;
+    getIsDM(): Promise<false | { member1: MemberDescriptor; member2?: MemberDescriptor }>;
     getStatus(): 'invited' | 'joined' | undefined;
     delete(): Promise<void>;
 

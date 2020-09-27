@@ -7,7 +7,7 @@ import IChatManager from "./IChatManager";
 import IMessage from "./IMessage";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
 import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
-import TwilioChatService from "./Services/Twilio/ChatService";
+import TwilioChatService, { ServiceEventArgs, ServiceEventNames } from "./Services/Twilio/ChatService";
 
 export type ChatDescriptor = {
     sid: string;
@@ -18,12 +18,11 @@ export type ChatDescriptor = {
 } | {
     isDM: true;
     member1: MemberDescriptor;
-    member2: MemberDescriptor;
+    member2?: MemberDescriptor;
 });
 
 export type MemberDescriptor = {
     profileId: string;
-    displayName: string;
     isOnline: boolean;
 };
 
@@ -134,7 +133,7 @@ export default class Chat implements IChatManager {
         return this.teardownPromise ?? Promise.resolve();
     }
 
-    private async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor> {
+    public static async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor> {
         const isDM = await chan.getIsDM();
         if (isDM) {
             return {
@@ -158,17 +157,17 @@ export default class Chat implements IChatManager {
 
     public async createChat(invite: Array<UserProfile>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
         const newChannel = await this.twilioService?.createChannel(invite, isPrivate, title);
-        return newChannel ? this.convertToDescriptor(newChannel) : undefined;
+        return newChannel ? Chat.convertToDescriptor(newChannel) : undefined;
     }
 
     public async listAllChats(): Promise<Array<ChatDescriptor>> {
         const channels = await this.twilioService?.allChannels();
-        return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
+        return await Promise.all(channels?.map(x => Chat.convertToDescriptor(x)) ?? []);
     }
 
     public async listActiveChats(): Promise<Array<ChatDescriptor>> {
         const channels = await this.twilioService?.activeChannels();
-        return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
+        return await Promise.all(channels?.map(x => Chat.convertToDescriptor(x)) ?? []);
     }
 
     // These can be done directly against the Twilio API
@@ -213,6 +212,18 @@ export default class Chat implements IChatManager {
         assert(this.twilioService);
         const channel = await this.twilioService.getChannel(chatSid);
         channel.off(event, listener);
+    }
+
+    // TODO: Something, perhaps the App component, should subscribe to the error events
+
+    async serviceEventOn<K extends ServiceEventNames>(event: K, listener: (arg: ServiceEventArgs<K>) => void): Promise<() => void> {
+        assert(this.twilioService);
+        return this.twilioService.on(event, listener);
+    }
+
+    async serviceEventOff(event: ServiceEventNames, listener: () => void): Promise<void> {
+        assert(this.twilioService);
+        this.twilioService.off(event, listener);
     }
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string): Promise<boolean> {

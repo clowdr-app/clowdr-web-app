@@ -27,21 +27,21 @@ export type MemberJoinedEventArgs = Member;
 export type MemberLeftEventArgs = Member;
 export type MemberUpdatedEventArgs = {
     member: Member,
-    updateReason: TwilioMember.UpdateReason
+    updateReasons: Array<TwilioMember.UpdateReason>
 };
 
 export type MessageAddedEventArgs = Message;
 export type MessageRemovedEventArgs = Message;
 export type MessageUpdatedEventArgs = {
     message: Message,
-    updateReason: TwilioMessage.UpdateReason
+    updateReasons: Array<TwilioMessage.UpdateReason>
 };
 
-export type ChannelEventArgs<K> =
-      K extends "memberJoined"   ? MemberJoinedEventArgs
-    : K extends "memberLeft"     ? MemberLeftEventArgs
-    : K extends "memberUpdated"  ? MemberUpdatedEventArgs
-    : K extends "messageAdded"   ? MessageAddedEventArgs
+export type ChannelEventArgs<K extends ChannelEventNames> =
+    K extends "memberJoined" ? MemberJoinedEventArgs
+    : K extends "memberLeft" ? MemberLeftEventArgs
+    : K extends "memberUpdated" ? MemberUpdatedEventArgs
+    : K extends "messageAdded" ? MessageAddedEventArgs
     : K extends "messageRemoved" ? MessageRemovedEventArgs
     : K extends "messageUpdated" ? MessageUpdatedEventArgs
     : never;
@@ -131,33 +131,28 @@ export default class Channel implements IChannel {
         const channel = await this.upgrade();
         await channel.updateFriendlyName(value);
     }
-    async getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
+    async getIsDM(): Promise<false | { member1: MemberDescriptor; member2?: MemberDescriptor }> {
         const attrs = this.getCommonField('attributes');
         if (!!(attrs as any).isDM) {
             assert(this.service.conference);
             const channel = await this.upgrade();
-            const [member1, member2] = (await channel.getMembers()).map(x => new Member(x));
+            const members = await channel.getMembers();
+            const [member1, member2] = members.map(x => new Member(x));
 
-            const [profile1, profile2, member1Online, member2Online] = await Promise.all([
-                UserProfile.get(member1.profileId, this.service.conference.id),
-                UserProfile.get(member2.profileId, this.service.conference.id),
+            const [member1Online, member2Online] = await Promise.all([
                 member1.getOnlineStatus(),
-                member2.getOnlineStatus()
+                (member2?.getOnlineStatus() ?? false)
             ]);
-            assert(profile1);
-            assert(profile2);
 
             return {
                 member1: {
                     profileId: member1.profileId,
-                    displayName: profile1.displayName,
                     isOnline: member1Online
                 },
-                member2: {
+                member2: member2 ? {
                     profileId: member2.profileId,
-                    displayName: profile2.displayName,
                     isOnline: member2Online
-                }
+                } : undefined
             };
         }
         else {
@@ -215,11 +210,11 @@ export default class Channel implements IChannel {
 
         function memberUpdatedWrapper(arg: {
             member: TwilioMember;
-            updateReason: TwilioMember.UpdateReason
+            updateReasons: Array<TwilioMember.UpdateReason>
         }): void {
             listener({
                 member: new Member(arg.member),
-                updateReason: arg.updateReason
+                updateReasons: arg.updateReasons
             } as ChannelEventArgs<K>);
         }
 
@@ -229,11 +224,11 @@ export default class Channel implements IChannel {
 
         function messageUpdatedWrapper(arg: {
             message: TwilioMessage;
-            updateReason: TwilioMessage.UpdateReason
+            updateReasons: Array<TwilioMessage.UpdateReason>
         }): void {
             listener({
                 message: new Message(arg.message),
-                updateReason: arg.updateReason
+                updateReasons: arg.updateReasons
             } as ChannelEventArgs<K>);
         }
 

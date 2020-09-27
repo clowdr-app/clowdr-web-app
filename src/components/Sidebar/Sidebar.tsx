@@ -8,12 +8,15 @@ import MenuExpander, { ButtonSpec } from "./Menu/MenuExpander";
 import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
 import MenuItem from './Menu/MenuItem';
-import { ProgramSession, ProgramSessionEvent } from 'clowdr-db-schema/src/classes/DataLayer';
+import { Conference, ProgramSession, ProgramSessionEvent, UserProfile } from 'clowdr-db-schema/src/classes/DataLayer';
 import { makeCancelable } from 'clowdr-db-schema/src/classes/Util';
 import { ISimpleEvent } from 'strongly-typed-events';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from 'clowdr-db-schema/src/classes/DataLayer/Cache/Cache';
 import useMaybeChat from '../../hooks/useMaybeChat';
-import { ChatDescriptor } from '../../classes/Chat';
+import { ChatDescriptor, MemberDescriptor } from '../../classes/Chat';
+import assert from 'assert';
+import { ServiceEventNames } from '../../classes/Chat/Services/Twilio/ChatService';
+import Chat from '../../classes/Chat/Chat';
 
 interface Props {
     open: boolean,
@@ -26,6 +29,18 @@ type SidebarTasks
     | "loadingActiveChats"
     | "loadingAllChats";
 
+type SidebarChatDescriptor = {
+    sid: string;
+    friendlyName: string;
+    status: 'invited' | 'joined' | undefined;
+} & ({
+    isDM: false;
+} | {
+    isDM: true;
+    member1: MemberDescriptor & { displayName: string };
+    member2?: MemberDescriptor & { displayName: string };
+});
+
 interface SidebarState {
     tasks: Set<SidebarTasks>;
 
@@ -37,12 +52,12 @@ interface SidebarState {
     roomSearch: string | null;
     programSearch: string | null;
 
-    activeChats: Array<ChatDescriptor> | null;
+    activeChats: Array<SidebarChatDescriptor> | null;
     allChats: Array<ChatDescriptor> | null;
     sessions: Array<ProgramSession> | null;
     events: Array<ProgramSessionEvent> | null;
 
-    filteredChats: Array<ChatDescriptor>;
+    filteredChats: Array<SidebarChatDescriptor>;
     filteredSessions: Array<ProgramSession>;
     filteredEvents: Array<ProgramSessionEvent>;
 }
@@ -55,11 +70,14 @@ type SidebarUpdate
     | { action: "updateFilteredEvents"; events: Array<ProgramSessionEvent> }
 
     | { action: "updateAllChats"; chats: Array<ChatDescriptor> }
-    | { action: "updateActiveChats"; chats: Array<ChatDescriptor> }
-    | { action: "updateFilteredChats"; chats: Array<ChatDescriptor> }
+    | { action: "updateActiveChats"; chats: Array<SidebarChatDescriptor> }
+    | { action: "updateFilteredChats"; chats: Array<SidebarChatDescriptor> }
 
     | { action: "deleteSessions"; sessions: Array<string> }
     | { action: "deleteEvents"; events: Array<string> }
+
+    | { action: "deleteFromActiveChats"; chats: Array<string> }
+    | { action: "deleteFromAllChats"; chats: Array<string> }
 
     | { action: "searchChats"; search: string | null }
     | { action: "searchRooms"; search: string | null }
@@ -194,14 +212,16 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                     nextState.events = nextState.events?.map(x => {
                         const idx = updatedIds.indexOf(x.id);
                         if (idx > -1) {
+                            const y = update.events[idx];
                             updatedIds.splice(idx, 1);
-                            return update.events[idx];
+                            update.events.splice(idx, 1);
+                            return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.events = nextState.events?.concat(update.events.filter(x => updatedIds.includes(x.id))) ?? update.events;
+                    nextState.events = nextState.events?.concat(update.events) ?? update.events;
                     sessionsOrEventsUpdated = true;
                 }
                 break;
@@ -211,14 +231,16 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                     nextState.sessions = nextState.sessions?.map(x => {
                         const idx = updatedIds.indexOf(x.id);
                         if (idx > -1) {
+                            const y = update.sessions[idx];
                             updatedIds.splice(idx, 1);
-                            return update.sessions[idx];
+                            update.sessions.splice(idx, 1);
+                            return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.sessions = nextState.sessions?.concat(update.sessions.filter(x => updatedIds.includes(x.id))) ?? update.sessions;
+                    nextState.sessions = nextState.sessions?.concat(update.sessions) ?? update.sessions;
                     sessionsOrEventsUpdated = true;
                 }
                 break;
@@ -228,14 +250,16 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                     nextState.allChats = nextState.allChats?.map(x => {
                         const idx = updatedIds.indexOf(x.sid);
                         if (idx > -1) {
+                            const y = update.chats[idx];
                             updatedIds.splice(idx, 1);
-                            return update.chats[idx];
+                            update.chats.splice(idx, 1);
+                            return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.allChats = nextState.allChats?.concat(update.chats.filter(x => updatedIds.includes(x.sid))) ?? update.chats;
+                    nextState.allChats = nextState.allChats?.concat(update.chats) ?? update.chats;
                     allChatsUpdated = true;
                 }
                 break;
@@ -245,14 +269,16 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                     nextState.activeChats = nextState.activeChats?.map(x => {
                         const idx = updatedIds.indexOf(x.sid);
                         if (idx > -1) {
+                            const y = update.chats[idx];
                             updatedIds.splice(idx, 1);
-                            return update.chats[idx];
+                            update.chats.splice(idx, 1);
+                            return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.activeChats = nextState.activeChats?.concat(update.chats.filter(x => updatedIds.includes(x.sid))) ?? update.chats;
+                    nextState.activeChats = nextState.activeChats?.concat(update.chats) ?? update.chats;
                     activeChatsUpdated = true;
                 }
                 break;
@@ -263,6 +289,14 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
             case "deleteSessions":
                 nextState.sessions = nextState.sessions?.filter(x => !update.sessions.includes(x.id)) ?? null;
                 sessionsOrEventsUpdated = true;
+                break;
+            case "deleteFromActiveChats":
+                nextState.activeChats = nextState.activeChats?.filter(x => !update.chats.includes(x.sid)) ?? null;
+                activeChatsUpdated = true;
+                break;
+            case "deleteFromAllChats":
+                nextState.allChats = nextState.allChats?.filter(x => !update.chats.includes(x.sid)) ?? null;
+                allChatsUpdated = true;
                 break;
 
             case "updateFilteredSessions":
@@ -310,6 +344,61 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
     return nextState;
 }
 
+async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor): Promise<SidebarChatDescriptor> {
+    if (x.isDM) {
+        const [p1, p2] = await Promise.all([
+            UserProfile.get(x.member1.profileId, conf.id),
+            (x.member2 ? UserProfile.get(x.member2.profileId, conf.id) : null)
+        ]);
+        assert(p1);
+        return {
+            ...x,
+            member1: {
+                ...x.member1,
+                displayName: p1.displayName
+            },
+            member2: x.member2 && p2 ? {
+                ...x.member2,
+                displayName: p2.displayName
+            } : undefined
+        };
+    }
+    else {
+        return x;
+    }
+}
+
+
+function subscribeToDMMemberJoin(
+    memberJoinedlisteners: Map<string, () => void>,
+    mChat: Chat,
+    conf: Conference,
+    dispatchUpdate: React.Dispatch<SidebarUpdate | SidebarUpdate[]>
+): (value: ChatDescriptor) => Promise<void> {
+    return async (x) => {
+        if (x.isDM && !x.member2) {
+            memberJoinedlisteners.set(x.sid,
+                await mChat.channelEventOn(x.sid, "memberJoined", async (mem) => {
+                    const profile = await UserProfile.get(mem.profileId, conf.id);
+                    assert(profile);
+                    dispatchUpdate({
+                        action: "updateActiveChats",
+                        chats: [
+                            {
+                                ...x,
+                                member2: {
+                                    isOnline: await mem.getOnlineStatus(),
+                                    profileId: mem.profileId,
+                                    displayName: profile.displayName
+                                }
+                            } as SidebarChatDescriptor
+                        ]
+                    });
+                }));
+        }
+    };
+}
+
 function Sidebar(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
@@ -354,6 +443,7 @@ function Sidebar(props: Props) {
     // Initial fetch of active chats
     useEffect(() => {
         let cancel: () => void = () => { };
+        const memberJoinedlisteners: Map<string, () => void> = new Map();
 
         async function updateChats() {
             try {
@@ -361,9 +451,13 @@ function Sidebar(props: Props) {
                     const chatsP = makeCancelable(mChat.listActiveChats());
                     cancel = chatsP.cancel;
                     const chats = await chatsP.promise;
+                    await Promise.all(chats.map(subscribeToDMMemberJoin(memberJoinedlisteners, mChat, conf, dispatchUpdate)));
+                    const chatsWithName: Array<SidebarChatDescriptor>
+                        = await Promise.all(chats.map(x => upgradeChatDescriptor(conf, x)));
+
                     dispatchUpdate({
                         action: "updateActiveChats",
-                        chats
+                        chats: chatsWithName
                     });
                 }
             }
@@ -376,8 +470,17 @@ function Sidebar(props: Props) {
 
         updateChats();
 
-        return cancel;
-    }, [mChat]);
+        return () => {
+            if (mChat) {
+                const keys = memberJoinedlisteners.keys();
+                for (const key of keys) {
+                    const listener = memberJoinedlisteners.get(key) as () => void;
+                    mChat.channelEventOff(key, "memberJoined", listener);
+                }
+            }
+            cancel();
+        }
+    }, [conf, conf.id, mChat]);
 
     // Initial fetch of all chats
     useEffect(() => {
@@ -511,7 +614,13 @@ function Sidebar(props: Props) {
                 ));
                 cancel = promise.cancel;
                 const filteredChats = await promise.promise;
-                dispatchUpdate({ action: "updateFilteredChats", chats: filteredChats });
+                const filteredChatsWithNames: Array<SidebarChatDescriptor>
+                    = await Promise.all(filteredChats.map(x => upgradeChatDescriptor(conf, x)));
+
+                dispatchUpdate({
+                    action: "updateFilteredChats",
+                    chats: filteredChatsWithNames
+                });
             }
             catch (e) {
                 if (!e.isCanceled) {
@@ -523,9 +632,10 @@ function Sidebar(props: Props) {
         updateFiltered();
 
         return cancel;
-    }, [state.allChats, state.chatSearch]);
+    }, [conf, conf.id, state.allChats, state.chatSearch]);
 
-    // Subscribe to data events
+
+    // Subscribe to program data events
 
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
         dispatchUpdate({ action: "updateSessions", sessions: [ev.object as ProgramSession] });
@@ -594,7 +704,148 @@ function Sidebar(props: Props) {
         return () => { };
     }, [conf.id, onSessionUpdated, onEventUpdated, onSessionDeleted, onEventDeleted, state.tasks]);
 
-    // TODO: Subscribe to chat events
+
+    // Subscribe to chat events
+
+    useEffect(() => {
+        if (mChat && !state.tasks.has("loadingActiveChats")) {
+            const chatService = mChat;
+
+            const listeners: Map<ServiceEventNames, () => void> = new Map();
+            const memberJoinedlisteners: Map<string, () => void> = new Map();
+
+            async function attach() {
+                try {
+                    listeners.set("channelJoined", await chatService.serviceEventOn("channelJoined", async (ch) => {
+                        await subscribeToDMMemberJoin(memberJoinedlisteners, chatService, conf, dispatchUpdate)(ch);
+
+                        if (!ch.isDM || ch.member2) {
+                            dispatchUpdate({
+                                action: "updateActiveChats",
+                                chats: [await upgradeChatDescriptor(conf, ch)]
+                            });
+                        }
+                    }));
+
+                    listeners.set("channelLeft", await chatService.serviceEventOn("channelLeft", (ch) => {
+                        dispatchUpdate({
+                            action: "deleteFromActiveChats",
+                            chats: [ch.sid]
+                        });
+                    }));
+
+                    listeners.set("channelAdded", await chatService.serviceEventOn("channelAdded", (ch) => {
+                        dispatchUpdate({
+                            action: "updateAllChats",
+                            chats: [ch]
+                        });
+                    }));
+
+                    listeners.set("channelRemoved", await chatService.serviceEventOn("channelRemoved", (ch) => {
+                        dispatchUpdate([
+                            {
+                                action: "deleteFromActiveChats",
+                                chats: [ch.sid]
+                            },
+                            {
+                                action: "deleteFromAllChats",
+                                chats: [ch.sid]
+                            }
+                        ]);
+                    }));
+
+                    listeners.set("channelUpdated", await chatService.serviceEventOn("channelUpdated", async (ch) => {
+                        if (ch.updateReasons.includes("attributes")
+                            || ch.updateReasons.includes("friendlyName")
+                            || ch.updateReasons.includes("lastConsumedMessageIndex")
+                            || ch.updateReasons.includes("lastMessage")
+                            || ch.updateReasons.includes("uniqueName")
+                            || ch.updateReasons.includes("status")
+                            || ch.updateReasons.includes("state"))
+                            dispatchUpdate([
+                                {
+                                    action: "updateActiveChats",
+                                    chats: [await upgradeChatDescriptor(conf, ch.channel)]
+                                },
+                                {
+                                    action: "updateAllChats",
+                                    chats: [ch.channel]
+                                }
+                            ]);
+                    }));
+
+                    listeners.set("userUpdated", await chatService.serviceEventOn("userUpdated", async (u) => {
+                        if (u.updateReasons.includes("friendlyName") ||
+                            u.updateReasons.includes("online") ||
+                            u.updateReasons.includes("attributes")) {
+                            const updates: SidebarUpdate[] = [];
+                            function updateDescriptor(x: SidebarChatDescriptor): SidebarChatDescriptor {
+                                if (x.isDM) {
+                                    const m1 = { ...x.member1 };
+                                    if (m1.profileId === u.user.profileId) {
+                                        m1.isOnline = u.user.isOnline;
+                                    }
+
+                                    const m2 = x.member2 ? { ...x.member2 } : undefined;
+                                    if (m2 && m2.profileId === u.user.profileId) {
+                                        m2.isOnline = u.user.isOnline;
+                                    }
+
+                                    return {
+                                        ...x,
+                                        member1: m1,
+                                        member2: m2
+                                    }
+                                }
+                                else {
+                                    return x;
+                                }
+                            }
+
+                            if (state.activeChats) {
+                                const newActiveChats = state.activeChats.map(updateDescriptor);
+                                updates.push({
+                                    action: "updateActiveChats",
+                                    chats: newActiveChats
+                                });
+                            }
+
+                            if (state.allChats) {
+                                updates.push({
+                                    action: "updateFilteredChats",
+                                    chats: state.filteredChats.map(updateDescriptor)
+                                });
+                            }
+
+                            dispatchUpdate(updates);
+                        }
+                    }));
+                }
+                catch (e) {
+                    if (!e.isCanceled) {
+                        throw e;
+                    }
+                }
+            }
+
+            attach();
+
+            return function detach() {
+                const keys1 = listeners.keys();
+                for (const key of keys1) {
+                    const listener = listeners.get(key) as () => void;
+                    chatService.serviceEventOff(key, listener);
+                }
+
+                const keys2 = memberJoinedlisteners.keys();
+                for (const key of keys2) {
+                    const listener = memberJoinedlisteners.get(key) as () => void;
+                    chatService.channelEventOff(key, "memberJoined", listener);
+                }
+            };
+        }
+        return () => { };
+    }, [conf, mChat, state.activeChats, state.allChats, state.filteredChats, state.tasks]);
 
     const sideBarButton = <div className="sidebar-button">
         <button
@@ -687,21 +938,22 @@ function Sidebar(props: Props) {
             if ((state.activeChats && state.activeChats.length > 0)
                 || (chatSearchValid && state.allChats && state.filteredChats.length > 0)) {
 
-                let chats;
+                let chats: Array<SidebarChatDescriptor>;
                 if (state.chatSearch && state.chatSearch.length >= minSearchLength) {
                     chats = state.filteredChats;
                 }
                 else {
                     // We know this can't be null, but TS can't quite figure that out
-                    chats = state.activeChats as Array<ChatDescriptor>;
+                    chats = state.activeChats as Array<SidebarChatDescriptor>;
                 }
 
                 chats = chats.sort((x, y) => x.friendlyName.localeCompare(y.friendlyName));
 
                 const chatMenuItems: MenuGroupItems = [];
                 for (const chat of chats) {
-                    let friendlyName;
-                    let icon;
+                    let friendlyName: string;
+                    let icon: JSX.Element;
+                    let skip = false;
                     if (chat.isDM) {
                         const member1 = chat.member1;
                         const member2 = chat.member2;
@@ -711,9 +963,13 @@ function Sidebar(props: Props) {
                             friendlyName = member1.displayName;
                             otherOnline = member1.isOnline;
                         }
-                        else {
+                        else if (member2) {
                             friendlyName = member2.displayName;
                             otherOnline = member2.isOnline;
+                        }
+                        else {
+                            skip = true;
+                            friendlyName = "<unknown>";
                         }
 
                         icon = <i className={`fa${otherOnline ? 's' : 'r'} fa-circle ${otherOnline ? 'online' : ''}`} ></i>;
@@ -726,16 +982,18 @@ function Sidebar(props: Props) {
 
                     // TODO: "New messages in this chat" boldification
                     // TODO: For DMs, user presence (hollow/solid-green dot)
-                    chatMenuItems.push({
-                        key: chat.sid,
-                        element:
-                            <MenuItem
-                                title={friendlyName}
-                                label={friendlyName}
-                                icon={icon}
-                                action={`/chat/${chat.sid}`}
-                                bold={false} />
-                    });
+                    if (!skip) {
+                        chatMenuItems.push({
+                            key: chat.sid,
+                            element:
+                                <MenuItem
+                                    title={friendlyName}
+                                    label={friendlyName}
+                                    icon={icon}
+                                    action={`/chat/${chat.sid}`}
+                                    bold={false} />
+                        });
+                    }
                 }
 
                 chatEl = <MenuGroup items={chatMenuItems} />;
