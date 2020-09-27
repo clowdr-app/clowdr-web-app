@@ -184,13 +184,16 @@ function generateConferences() {
 function generateFlairs() {
     let result = [];
 
+    const colors = ["#FF00FF", "#0000FF", "#FF0000"];
+    const labels = ["organizing committee", "student volunteer", "job search"];
+
     for (let i = 1; i <= 3; i++) {
         result.push({
             createdAt: new Date(),
             id: "mockFlair" + i,
             updatedAt: new Date(),
-            color: "#FF00FF",
-            label: "mock flair label",
+            color: colors[i - 1],
+            label: labels[i - 1],
             tooltip: "mock flair tooltip",
             priority: 1,
             conference: "mockConference1",

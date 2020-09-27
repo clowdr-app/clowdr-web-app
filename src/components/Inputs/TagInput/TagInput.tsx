@@ -7,9 +7,6 @@ interface Props {
     setTags: (tags: string[]) => void;
 }
 
-/**
- * React component for a simple toast notification with a link.
- */
 export default function TagInput(props: Props) {
     const [currentTag, setCurrentTag] = useState("");
 

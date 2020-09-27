@@ -1,0 +1,31 @@
+@import "../../../styles/util.scss";
+
+.flair-chip {
+    display        : flex;
+    flex-direction : column;
+    justify-content: center;
+    height         : 2em;
+    color          : white;
+    padding        : mm(1) mm(2);
+    border-radius  : 1000px;
+    font-weight    : bold;
+    text-transform : capitalize;
+    font-size      : $font-sm;
+
+    span {
+        display    : block;
+        user-select: none;
+    }
+
+    &.unselected {
+        font-weight: normal;
+    }
+
+    &.has-action {
+        cursor: pointer;
+    }
+
+    &.small {
+        text-transform: uppercase;
+    }
+}
