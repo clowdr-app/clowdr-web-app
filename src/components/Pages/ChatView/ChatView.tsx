@@ -1,6 +1,11 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import useConference from "../../../hooks/useConference";
 import useDocTitle from "../../../hooks/useDocTitle";
+import useMaybeChat from "../../../hooks/useMaybeChat";
+import useSafeAsync from "../../../hooks/useSafeAsync";
+import useUserProfile from "../../../hooks/useUserProfile";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
+import { computeChatDisplayName, upgradeChatDescriptor } from "../../Sidebar/Sidebar";
 import "./ChatView.scss";
 
 interface Props {
@@ -8,8 +13,25 @@ interface Props {
 }
 
 export default function ChatView(props: Props) {
-    // TODO: Chat room name
-    useDocTitle("Chat Room X");
+    const conf = useConference();
+    const mUser = useUserProfile();
+    const mChat = useMaybeChat();
+    const [chatName, setChatName] = useState<string>("Chat");
+    useDocTitle(chatName);
+
+    useSafeAsync(async () => {
+        if (mChat) {
+            const chatD = await mChat.getChat(props.chatId);
+            const chatSD = await upgradeChatDescriptor(conf, chatD);
+            const { friendlyName, skip } = computeChatDisplayName(chatSD, mUser);
+            return skip ? "Chat" : friendlyName;
+        }
+        else {
+            return "Chat";
+        }
+    }, setChatName, [props.chatId, mChat]);
+
+    const chat = <ChatFrame chatSid={props.chatId} />;
 
     // TODO: Action buttons / members view / etc
 
@@ -18,6 +40,6 @@ export default function ChatView(props: Props) {
     // TODO: memberUpdated
 
     return <div className="chat-view">
-        <ChatFrame chatSid={props.chatId} />
+        {chat}
     </div>;
 }

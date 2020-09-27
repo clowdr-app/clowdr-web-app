@@ -171,7 +171,11 @@ export default class Chat implements IChatManager {
     }
 
     // These can be done directly against the Twilio API
-
+    async getChat(chatSid: string): Promise<ChatDescriptor> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        return Chat.convertToDescriptor(channel);
+    }
     // TODO: Process and attach reactions
     async getMessages(chatSid: string): Promise<Paginator<IMessage>> {
         // TODO: In channel implementations, process and attach reactions

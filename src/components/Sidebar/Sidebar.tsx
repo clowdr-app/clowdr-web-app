@@ -344,7 +344,7 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
     return nextState;
 }
 
-async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor): Promise<SidebarChatDescriptor> {
+export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor): Promise<SidebarChatDescriptor> {
     if (x.isDM) {
         const [p1, p2] = await Promise.all([
             UserProfile.get(x.member1.profileId, conf.id),
@@ -952,34 +952,7 @@ function Sidebar(props: Props) {
 
                 const chatMenuItems: MenuGroupItems = [];
                 for (const chat of chats) {
-                    let friendlyName: string;
-                    let icon: JSX.Element;
-                    let skip = false;
-                    if (chat.isDM) {
-                        const member1 = chat.member1;
-                        const member2 = chat.member2;
-                        let otherOnline;
-
-                        if (member1.profileId !== mUser.id) {
-                            friendlyName = member1.displayName;
-                            otherOnline = member1.isOnline;
-                        }
-                        else if (member2) {
-                            friendlyName = member2.displayName;
-                            otherOnline = member2.isOnline;
-                        }
-                        else {
-                            skip = true;
-                            friendlyName = "<unknown>";
-                        }
-
-                        icon = <i className={`fa${otherOnline ? 's' : 'r'} fa-circle ${otherOnline ? 'online' : ''}`} ></i>;
-                    }
-                    else {
-                        // Group chat - use chat friendly name from Twilio
-                        friendlyName = chat.friendlyName;
-                        icon = <i className="fas fa-hashtag"></i>;
-                    }
+                    const { friendlyName, skip, icon } = computeChatDisplayName(chat, mUser);
 
                     // TODO: "New messages in this chat" boldification
                     // TODO: For DMs, user presence (hollow/solid-green dot)
@@ -1123,3 +1096,38 @@ function Sidebar(props: Props) {
 }
 
 export default Sidebar;
+
+export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserProfile) {
+    let friendlyName: string;
+    let icon: JSX.Element;
+    let skip: boolean = false;
+
+    if (chat.isDM) {
+        const member1 = chat.member1;
+        const member2 = chat.member2;
+        let otherOnline;
+
+        if (member1.profileId !== mUser.id) {
+            friendlyName = member1.displayName;
+            otherOnline = member1.isOnline;
+        }
+        else if (member2) {
+            friendlyName = member2.displayName;
+            otherOnline = member2.isOnline;
+        }
+        else {
+            skip = true;
+            friendlyName = "<unknown>";
+        }
+
+        icon = <i className={`fa${otherOnline ? 's' : 'r'} fa-circle ${otherOnline ? 'online' : ''}`}></i>;
+    }
+    else {
+        // Group chat - use chat friendly name from Twilio
+        friendlyName = chat.friendlyName;
+        icon = <i className="fas fa-hashtag"></i>;
+    }
+
+    return { friendlyName, skip, icon };
+}
+
