@@ -3,15 +3,21 @@ import Parse from "parse";
 import { Flair, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
 import "./ProfileEditor.scss";
 import TagInput from "../../Inputs/TagInput/TagInput";
+import FlairInput from "../../Inputs/FlairInput/FlairInput";
+import useSafeAsync from "../../../hooks/useSafeAsync";
 
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
-import FlairInput from "../../Inputs/FlairInput/FlairInput";
-import useSafeAsync from "../../../hooks/useSafeAsync";
+import assert from "assert";
 
 interface Props {
     profile: UserProfile;
     setViewing: () => void;
+}
+
+function sameObjects(xs: { id: string }[], ys: { id: string }[]) {
+    return JSON.stringify(xs.map(x => x.id).sort()) ===
+        JSON.stringify(ys.map(y => y.id).sort());
 }
 
 export default function ProfileEditor(props: Props) {
@@ -22,6 +28,7 @@ export default function ProfileEditor(props: Props) {
     const [pronouns, setPronouns] = useState(p.pronouns);
     const [affiliation, setAffiliation] = useState(p.affiliation);
     const [position, setPosition] = useState(p.position);
+    const [country, setCountry] = useState(p.country);
     const [webpage, setWebpage] = useState(p.webpage);
     const [bio, setBio] = useState(p.bio);
     const [flairs, setFlairs] = useState<Flair[]>([]);
@@ -39,32 +46,23 @@ export default function ProfileEditor(props: Props) {
         e.preventDefault();
         e.stopPropagation();
 
+        const defaultFlair = await Flair.get("<empty>");
+        assert(defaultFlair);
+        const primaryFlair = flairs.reduce((x, y) => x.priority > y.priority ? x : y, defaultFlair);
+
         p.realName = realName;
         p.displayName = displayName;
         p.pronouns = pronouns;
         p.affiliation = affiliation;
         p.position = position;
+        p.country = country;
         p.webpage = webpage;
         p.flairs = Promise.resolve(flairs);
+        p.primaryFlair = Promise.resolve(primaryFlair);
         p.bio = bio;
 
         await p.save();
     };
-
-    function sameObjects(xs: { id: string }[], ys: { id: string }[]) {
-        return JSON.stringify(xs.map(x => x.id).sort()) ===
-            JSON.stringify(ys.map(y => y.id).sort());
-    }
-
-    const isFormDirty =
-        p.realName !== realName ||
-        p.displayName !== displayName ||
-        p.pronouns !== pronouns ||
-        p.affiliation !== affiliation ||
-        p.position !== position ||
-        p.webpage !== webpage ||
-        p.bio !== bio ||
-        !sameObjects(_flairs, flairs);
 
     const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.item(0);
@@ -78,19 +76,20 @@ export default function ProfileEditor(props: Props) {
         }
     };
 
-    const makeTextInput = (label: string, value: string, setter: (x: string) => void) => {
-        const name = label.replace(/\s/g, "");
+    const makeTextInput =
+        (label: string, value: string, setter: (x: string) => void, inputType: string = "text") => {
+            const name = label.replace(/\s/g, "");
 
-        return <>
-            <label htmlFor={name}>{label}</label>
-            <input
-                name={name}
-                type="text"
-                value={value}
-                onChange={(e) => setter(e.target.value)}
-            />
-        </>;
-    };
+            return <>
+                <label htmlFor={name}>{label}</label>
+                <input
+                    name={name}
+                    type={inputType}
+                    value={value}
+                    onChange={(e) => setter(e.target.value)}
+                />
+            </>;
+        };
 
     const profilePhotoUrl
         = p.profilePhoto
@@ -101,6 +100,17 @@ export default function ProfileEditor(props: Props) {
                 // @ts-ignore
                 : p.profilePhoto._url as string
             : null;
+
+    const isFormDirty =
+        p.realName !== realName ||
+        p.displayName !== displayName ||
+        p.pronouns !== pronouns ||
+        p.affiliation !== affiliation ||
+        p.position !== position ||
+        p.country !== country ||
+        p.webpage !== webpage ||
+        p.bio !== bio ||
+        !sameObjects(_flairs, flairs);
 
     return <div className="profile-editor">
         <div className="content">
@@ -146,9 +156,15 @@ export default function ProfileEditor(props: Props) {
                     (s) => setPosition(s === "" ? undefined : s)
                 )}
                 {makeTextInput(
+                    "Country",
+                    country ?? "",
+                    (s) => setCountry(s === "" ? undefined : s)
+                )}
+                {makeTextInput(
                     "Webpage",
                     webpage ?? "",
-                    (s) => setWebpage(s === "" ? undefined : s)
+                    (s) => setWebpage(s === "" ? undefined : s),
+                    "url"
                 )}
                 <label htmlFor="flairs">Flairs</label>
                 <FlairInput name="flairs" flairs={flairs} setFlairs={setFlairs} />
