@@ -189,8 +189,6 @@ export default class Chat implements IChatManager {
         return channel.sendMessage(message);
     }
     // TODO: Send reaction
-    // TODO: Get members
-    // TODO: Get whether member is reachable
     // TODO: Get/set last read message key
     // TODO: Edit channel
     // TODO: Delete channel
@@ -198,13 +196,11 @@ export default class Chat implements IChatManager {
     // These have to be done via our Twilio Backend for permissions control
     // TODO: Invite member
     // TODO: Remove member
-    // TODO: Join channel
     // TODO: Admin controls - list all chats inc. hidden private ones,
     //                      - join/edit/delete (for chats that would otherwise be private)
 
     // Other stuff:
     // TODO: Mirrored channels
-    // TODO: Service-level events
 
     async channelEventOn<K extends ChannelEventNames>(chatSid: string, event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
         assert(this.twilioService);

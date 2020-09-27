@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ISimpleEvent } from "strongly-typed-events";
-import { ProgramItem, ProgramSession, ProgramSessionEvent, ProgramTrack } from "clowdr-db-schema/src/classes/DataLayer";
-import { DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
+import { ProgramSession, ProgramSessionEvent } from "clowdr-db-schema/src/classes/DataLayer";
 import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
 import useConference from "../../hooks/useConference";
 import useLogger from "../../hooks/useLogger";
+import useDataSubscription from "../../hooks/useDataSubscription";
 
 interface Props {
     sessions: Array<ProgramSession>;
@@ -261,55 +260,25 @@ export default function Program(props: Props) {
     }, [logger, props.events, props.sessions, props.timeBoundaries, refreshRequired]);
 
 
-    const onTrackUpdated = useCallback(function _onTrackUpdated() {
-        setRefreshRequired(true);
-    }, []);
-
-    const onItemUpdated = useCallback(function _onItemUpdated() {
-        setRefreshRequired(true);
-    }, []);
-
     // Subscribe to data events
-    useEffect(() => {
-        let cancel: () => void = () => { };
-        let unsubscribe: () => void = () => { };
-        async function subscribeToUpdates() {
-            try {
-                const promises: [
-                    Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramItem">>>,
-                    Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramTrack">>>
-                ] = [
-                        ProgramItem.onDataUpdated(conf.id),
-                        ProgramTrack.onDataUpdated(conf.id)
-                    ];
-                const promise = makeCancelable(Promise.all(promises));
-                cancel = promise.cancel;
-                const [ev1, ev2] = await promise.promise;
-                const unsubscribe1 = ev1.subscribe(onTrackUpdated);
-                const unsubscribe2 = ev2.subscribe(onItemUpdated);
-                unsubscribe = () => {
-                    unsubscribe1();
-                    unsubscribe2();
-                };
-            }
-            catch (e) {
-                if (!e.isCanceled) {
-                    throw e;
-                }
-            }
-            finally {
-                cancel = () => { };
-            }
-        }
 
-        subscribeToUpdates();
+    const onDataUpdated = useCallback(function _onDataUpdated() {
+        setRefreshRequired(true);
+    }, []);
 
-        return () => {
-            unsubscribe();
-            cancel();
-        }
-    }, [conf.id, onTrackUpdated, onItemUpdated]);
+    useDataSubscription(
+        "ProgramTrack",
+        onDataUpdated,
+        () => { },
+        false,
+        conf);
 
+    useDataSubscription(
+        "ProgramItem",
+        onDataUpdated,
+        () => { },
+        false,
+        conf);
 
     logger.info("Props.events", props.events);
     logger.info("Render data", renderData);

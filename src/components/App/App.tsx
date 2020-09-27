@@ -14,9 +14,8 @@ import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import Chat from "../../classes/Chat/Chat";
-import { ISimpleEvent } from "strongly-typed-events";
 import { DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
-import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
+import useDataSubscription from "../../hooks/useDataSubscription";
 
 type AppTasks
     = "beginLoadConference"
@@ -232,47 +231,19 @@ export default function App() {
         }
     }, [appState.profile, appState.sessionToken]);
 
-    useEffect(() => {
-        let cancel: () => void = () => { };
-        let unsubscribe: () => void = () => { };
-        async function subscribeToUpdates() {
-            if (appState.conference) {
-                try {
-                    const promises: [
-                        Promise<ISimpleEvent<DataUpdatedEventDetails<"Conference">>>,
-                        Promise<ISimpleEvent<DataUpdatedEventDetails<"UserProfile">>>
-                    ] = [
-                            Conference.onDataUpdated(appState.conference.id),
-                            UserProfile.onDataUpdated(appState.conference.id)
-                        ];
-                    const promise = makeCancelable(Promise.all(promises));
-                    cancel = promise.cancel;
-                    const [ev1, ev2] = await promise.promise;
-                    const unsubscribe1 = ev1.subscribe(onConferenceUpdated);
-                    const unsubscribe2 = ev2.subscribe(onUserProfileUpdated);
-                    unsubscribe = () => {
-                        unsubscribe1();
-                        unsubscribe2();
-                    };
-                }
-                catch (e) {
-                    if (!e.isCanceled) {
-                        throw e;
-                    }
-                }
-                finally {
-                    cancel = () => { };
-                }
-            }
-        }
+    useDataSubscription(
+        "Conference",
+        onConferenceUpdated,
+        () => { },
+        appState.tasks.has("beginLoadConference") || appState.tasks.has("loadingConference"),
+        appState.conference);
 
-        subscribeToUpdates();
-
-        return () => {
-            unsubscribe();
-            cancel();
-        }
-    }, [appState.conference, onConferenceUpdated, onUserProfileUpdated]);
+    useDataSubscription(
+        "UserProfile",
+        onUserProfileUpdated,
+        () => { },
+        appState.tasks.has("beginLoadCurrentUser") || appState.tasks.has("loadingCurrentUser"),
+        appState.conference);
 
     const doLogin = useCallback(async function _doLogin(email: string, password: string): Promise<boolean> {
         try {

@@ -10,13 +10,13 @@ import Program from './Program';
 import MenuItem from './Menu/MenuItem';
 import { Conference, ProgramSession, ProgramSessionEvent, UserProfile } from 'clowdr-db-schema/src/classes/DataLayer';
 import { makeCancelable } from 'clowdr-db-schema/src/classes/Util';
-import { ISimpleEvent } from 'strongly-typed-events';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from 'clowdr-db-schema/src/classes/DataLayer/Cache/Cache';
 import useMaybeChat from '../../hooks/useMaybeChat';
 import { ChatDescriptor, MemberDescriptor } from '../../classes/Chat';
 import assert from 'assert';
 import { ServiceEventNames } from '../../classes/Chat/Services/Twilio/ChatService';
 import Chat from '../../classes/Chat/Chat';
+import useDataSubscription from '../../hooks/useDataSubscription';
 
 interface Props {
     open: boolean,
@@ -653,60 +653,21 @@ function Sidebar(props: Props) {
         dispatchUpdate({ action: "deleteEvents", events: [ev.objectId] });
     }, []);
 
-    useEffect(() => {
-        if (!state.tasks.has("loadingSessionsAndEvents")) {
-            let cancel: () => void = () => { };
-            let unsubscribe: () => void = () => { };
-            async function subscribeToUpdates() {
-                try {
-                    const promises: [
-                        Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramSession">>>,
-                        Promise<ISimpleEvent<DataDeletedEventDetails<"ProgramSession">>>,
-                        Promise<ISimpleEvent<DataUpdatedEventDetails<"ProgramSessionEvent">>>,
-                        Promise<ISimpleEvent<DataDeletedEventDetails<"ProgramSessionEvent">>>
-                    ] = [
-                            ProgramSession.onDataUpdated(conf.id),
-                            ProgramSession.onDataDeleted(conf.id),
-                            ProgramSessionEvent.onDataUpdated(conf.id),
-                            ProgramSessionEvent.onDataDeleted(conf.id)
-                        ];
-                    const promise = makeCancelable(Promise.all(promises));
-                    cancel = promise.cancel;
-                    const [ev1, ev2, ev3, ev4] = await promise.promise;
-                    const unsubscribe1 = ev1.subscribe(onSessionUpdated);
-                    const unsubscribe2 = ev2.subscribe(onSessionDeleted);
-                    const unsubscribe3 = ev3.subscribe(onEventUpdated);
-                    const unsubscribe4 = ev4.subscribe(onEventDeleted);
-                    unsubscribe = () => {
-                        unsubscribe1();
-                        unsubscribe2();
-                        unsubscribe3();
-                        unsubscribe4();
-                    };
-                }
-                catch (e) {
-                    if (!e.isCanceled) {
-                        throw e;
-                    }
-                }
-                finally {
-                    cancel = () => { };
-                }
-            }
+    useDataSubscription(
+        "ProgramSession",
+        onSessionUpdated,
+        onSessionDeleted,
+        state.tasks.has("loadingSessionsAndEvents"),
+        conf);
 
-            subscribeToUpdates();
-
-            return () => {
-                unsubscribe();
-                cancel();
-            }
-        }
-        return () => { };
-    }, [conf.id, onSessionUpdated, onEventUpdated, onSessionDeleted, onEventDeleted, state.tasks]);
-
+    useDataSubscription(
+        "ProgramSessionEvent",
+        onEventUpdated,
+        onEventDeleted,
+        state.tasks.has("loadingSessionsAndEvents"),
+        conf);
 
     // Subscribe to chat events
-
     useEffect(() => {
         if (mChat && !state.tasks.has("loadingActiveChats")) {
             const chatService = mChat;
