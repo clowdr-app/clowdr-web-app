@@ -941,6 +941,7 @@ function Sidebar(props: Props) {
                 let chats: Array<SidebarChatDescriptor>;
                 if (state.chatSearch && state.chatSearch.length >= minSearchLength) {
                     chats = state.filteredChats;
+                    // TODO: Include searching all user profiles by display name
                 }
                 else {
                     // We know this can't be null, but TS can't quite figure that out
