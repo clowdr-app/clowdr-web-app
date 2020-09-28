@@ -1,5 +1,5 @@
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
-import { ProgramItem, ProgramPerson, ProgramSession, ProgramSessionEvent } from "clowdr-db-schema/src/classes/DataLayer";
+import { ProgramItem, ProgramItemAttachment, ProgramPerson, ProgramSession, ProgramSessionEvent } from "clowdr-db-schema/src/classes/DataLayer";
 import React, { useCallback, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import useConference from "../../../../hooks/useConference";
@@ -9,6 +9,7 @@ import useSafeAsync from "../../../../hooks/useSafeAsync";
 import "./ViewEvent.scss";
 import AuthorsList from "../AuthorsList";
 import { ActionButton } from "../../../../contexts/HeadingContext";
+import AttachmentLink from "./AttachmentLink";
 
 interface Props {
     eventId: string;
@@ -20,6 +21,7 @@ export default function ViewEvent(props: Props) {
     const [item, setItem] = useState<ProgramItem | null>(null);
     const [session, setSession] = useState<ProgramSession | null>(null);
     const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(null);
+    const [attachments, setAttachments] = useState<Array<ProgramItemAttachment> | null>(null);
 
     // Initial data fetch
     useSafeAsync(
@@ -29,6 +31,7 @@ export default function ViewEvent(props: Props) {
     useSafeAsync(async () => await event?.item, setItem, [event]);
     useSafeAsync(async () => await event?.session, setSession, [event]);
     useSafeAsync(async () => item ? await item.authors : null, setAuthors, [item]);
+    useSafeAsync(async () => item ? await item.attachments : null, setAttachments, [item]);
 
     // Subscribe to data updates
     const onSessionEventUpdated = useCallback(function _onSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
@@ -76,8 +79,24 @@ export default function ViewEvent(props: Props) {
         }
     }, [authors]);
 
+    const onAttachmentUpdated = useCallback(function _onAttachmentUpdated(ev: DataUpdatedEventDetails<"ProgramItemAttachment">) {
+        const newAttachments = Array.from(attachments ?? []);
+        const idx = newAttachments.findIndex(x => x.id === ev.object.id);
+        if (idx > -1) {
+            newAttachments.splice(idx, 1, ev.object as ProgramItemAttachment)
+            setAttachments(newAttachments);
+        }
+    }, [attachments]);
+
+    const onAttachmentDeleted = useCallback(function _onAttachmentDeleted(ev: DataDeletedEventDetails<"ProgramItemAttachment">) {
+        if (attachments) {
+            setAttachments(attachments.filter(x => x.id !== ev.objectId));
+        }
+    }, [attachments]);
+
     useDataSubscription("ProgramSessionEvent", onSessionEventUpdated, onSessionEventDeleted, !event, conference);
     useDataSubscription("ProgramPerson", onAuthorUpdated, onAuthorDeleted, !authors, conference);
+    useDataSubscription("ProgramItemAttachment", onAttachmentUpdated, onAttachmentDeleted, !attachments, conference);
     useDataSubscription("ProgramItem", onItemUpdated, onItemDeleted, !item, conference);
     useDataSubscription("ProgramSession", onSessionUpdated, onSessionDeleted, !session, conference);
 
@@ -130,6 +149,12 @@ export default function ViewEvent(props: Props) {
     // TODO: Offer to auto-move to the sessions' next event 30 secs before the
     //       end of the current event
 
+    let attachmentEls: Array<JSX.Element> = [];
+
+    if (attachments) {
+        attachmentEls = attachments.map(x => <AttachmentLink key={x.id} attachment={x} />);
+    }
+
     return <div className="program-event">
         {event && item && authors
             ? <>
@@ -140,6 +165,15 @@ export default function ViewEvent(props: Props) {
                     <AuthorsList authors={authors} />
                 </div>
                 <hr />
+                {attachmentEls.length > 0
+                    ? <>
+                        <div className="attachments">
+                            <h3>Attachments</h3>
+                            {attachmentEls}
+                        </div>
+                        <hr />
+                    </>
+                    : <></>}
             </>
             : <LoadingSpinner />}
     </div>;
