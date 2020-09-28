@@ -29,7 +29,7 @@ const RelationsToTableNames = {
         conference: "Conference",
         profile: "UserProfile",
     },
-    ProgramRoom: {
+    ContentFeed: {
         conference: "Conference",
         zoomRoom: "ZoomRoom",
         textChat: "TextChat",
@@ -38,7 +38,7 @@ const RelationsToTableNames = {
     ProgramSession: {
         conference: "Conference",
         track: "ProgramTrack",
-        room: "ProgramRoom"
+        feed: "ContentFeed"
     },
     ProgramSessionEvent: {
         conference: "Conference",
@@ -549,7 +549,7 @@ function generateProgramSession() {
         title: "Demo Session - NY 1",
         endTime: new Date(1601250300000),
         startTime: new Date(1601247600000),
-        room: "mockConference1-room-0",
+        feed: "mockConference1-feed-0",
         track: "mockConference1-track-0",
 
         _acl: {
@@ -572,7 +572,7 @@ function generateProgramSession() {
         title: "Demo Q&A - NY1",
         endTime: new Date(1601251200000),
         startTime: new Date(1601248500000),
-        room: "mockConference1-room-1",
+        feed: "mockConference1-feed-1",
         track: "mockConference1-track-1",
 
         _acl: {
@@ -595,7 +595,7 @@ function generateProgramSession() {
         title: "Demo Session - NY 2",
         endTime: new Date(1601255700000),
         startTime: new Date(1601253000000),
-        room: "mockConference1-room-2",
+        feed: "mockConference1-feed-2",
         track: "mockConference1-track-0",
 
         _acl: {
@@ -618,7 +618,7 @@ function generateProgramSession() {
         title: "Demo Q&A - NY2",
         endTime: new Date(1601256600000),
         startTime: new Date(1601253900000),
-        room: "mockConference1-room-3",
+        feed: "mockConference1-feed-3",
         track: "mockConference1-track-1",
 
         _acl: {
@@ -641,7 +641,7 @@ function generateProgramSession() {
         title: "Demo Session - Beijing 1",
         endTime: new Date(1601973900000),
         startTime: new Date(1601971200000),
-        room: "mockConference1-room-4",
+        feed: "mockConference1-feed-4",
         track: "mockConference1-track-0",
 
         _acl: {
@@ -664,7 +664,7 @@ function generateProgramSession() {
         title: "Demo Q&A - Beijing 1",
         endTime: new Date(1601974800000),
         startTime: new Date(1601972100000),
-        room: "mockConference1-room-5",
+        feed: "mockConference1-feed-5",
         track: "mockConference1-track-1",
 
         _acl: {
@@ -687,7 +687,7 @@ function generateProgramSession() {
         title: "Demo Session - Beijing 2",
         endTime: new Date(1601979300000),
         startTime: new Date(1601976600000),
-        room: "mockConference1-room-6",
+        feed: "mockConference1-feed-6",
         track: "mockConference1-track-0",
 
         _acl: {
@@ -710,7 +710,7 @@ function generateProgramSession() {
         title: "Demo Q&A - Beijing 2",
         endTime: new Date(1601980200000),
         startTime: new Date(1601977500000),
-        room: "mockConference1-room-7",
+        feed: "mockConference1-feed-7",
         track: "mockConference1-track-1",
 
         _acl: {
@@ -729,15 +729,15 @@ function generateProgramSession() {
     return result;
 }
 
-function generateProgramRoom() {
+function generateContentFeed() {
     let result = [];
 
     result.push({
         conference: "mockConference1",
-        id: "mockConference1-room-0",
+        id: "mockConference1-feed-0",
         createdAt: new Date(),
         updatedAt: new Date(),
-        name: "YT Room - NY 1",
+        name: "YT feed - NY 1",
         textChat: undefined,
         videoRoom: undefined,
         zoomRoom: undefined,
@@ -756,7 +756,7 @@ function generateProgramRoom() {
 
     result.push({
         conference: "mockConference1",
-        id: "mockConference1-room-1",
+        id: "mockConference1-feed-1",
         createdAt: new Date(),
         updatedAt: new Date(),
         name: "Zoom - Q&A NY 1",
@@ -778,10 +778,10 @@ function generateProgramRoom() {
 
     result.push({
         conference: "mockConference1",
-        id: "mockConference1-room-2",
+        id: "mockConference1-feed-2",
         createdAt: new Date(),
         updatedAt: new Date(),
-        name: "YT Room - NY 2",
+        name: "YT feed - NY 2",
         textChat: undefined,
         videoRoom: undefined,
         zoomRoom: undefined,
@@ -800,7 +800,7 @@ function generateProgramRoom() {
 
     result.push({
         conference: "mockConference1",
-        id: "mockConference1-room-3",
+        id: "mockConference1-feed-3",
         createdAt: new Date(),
         updatedAt: new Date(),
         name: "Zoom - Q&A NY 2",
@@ -822,10 +822,10 @@ function generateProgramRoom() {
 
     result.push({
         conference: "mockConference1",
-        id: "mockConference1-room-4",
+        id: "mockConference1-feed-4",
         createdAt: new Date(),
         updatedAt: new Date(),
-        name: "YT Room - Beijing 1",
+        name: "YT feed - Beijing 1",
         textChat: undefined,
         videoRoom: undefined,
         zoomRoom: undefined,
@@ -844,7 +844,7 @@ function generateProgramRoom() {
 
     result.push({
         conference: "mockConference1",
-        id: "mockConference1-room-5",
+        id: "mockConference1-feed-5",
         createdAt: new Date(),
         updatedAt: new Date(),
         name: "Zoom - Q&A Beijing 1",
@@ -866,10 +866,10 @@ function generateProgramRoom() {
 
     result.push({
         conference: "mockConference1",
-        id: "mockConference1-room-6",
+        id: "mockConference1-feed-6",
         createdAt: new Date(),
         updatedAt: new Date(),
-        name: "YT Room - Beijing 2",
+        name: "YT feed - Beijing 2",
         textChat: undefined,
         videoRoom: undefined,
         zoomRoom: undefined,
@@ -888,7 +888,7 @@ function generateProgramRoom() {
 
     result.push({
         conference: "mockConference1",
-        id: "mockConference1-room-7",
+        id: "mockConference1-feed-7",
         createdAt: new Date(),
         updatedAt: new Date(),
         name: "Zoom - Q&A Beijing 2",
@@ -921,7 +921,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A balanced proxy technology applied to a balanced secure algorithm",
         authors: ["mockConference1-person-0", "mockConference1-person-1", "mockConference1-person-2"],
@@ -945,7 +944,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "An interactive binary hypervisor applied to a conceptual big data system",
         authors: ["mockConference1-person-3", "mockConference1-person-4"],
@@ -969,7 +967,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A conceptual secure agent derived from an integrated high-speed solution",
         authors: ["mockConference1-person-5"],
@@ -993,7 +990,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "An integrated functional technology applied to a responsive programmable architecture",
         authors: ["mockConference1-person-6", "mockConference1-person-7", "mockConference1-person-8", "mockConference1-person-9", "mockConference1-person-10"],
@@ -1017,7 +1013,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A conceptual proxy cache for a scalable functional algorithm",
         authors: ["mockConference1-person-11", "mockConference1-person-12"],
@@ -1041,7 +1036,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A virtual knowledge-based interface for an open programmable data center",
         authors: ["mockConference1-person-13", "mockConference1-person-14", "mockConference1-person-15"],
@@ -1065,7 +1059,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A virtual logical network applied to a synchronized logical algorithm",
         authors: ["mockConference1-person-6", "mockConference1-person-7", "mockConference1-person-8", "mockConference1-person-9", "mockConference1-person-10"],
@@ -1089,7 +1082,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A parallel secure architecture for a collaborative big data network",
         authors: ["mockConference1-person-11", "mockConference1-person-12"],
@@ -1113,7 +1105,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "An optimized digital compiler related to a meta-level watermarking preprocessor",
         authors: ["mockConference1-person-13", "mockConference1-person-14", "mockConference1-person-15"],
@@ -1137,7 +1128,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A meta-level distributed architecture derived from a collaborative functional data center",
         authors: ["mockConference1-person-16", "mockConference1-person-17"],
@@ -1161,7 +1151,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "An active functional toolkit related to a virtual programmable protocol",
         authors: ["mockConference1-person-18", "mockConference1-person-19"],
@@ -1185,7 +1174,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A scalable concurrent interface embedded in a coordinated proxy compiler",
         authors: ["mockConference1-person-20", "mockConference1-person-21", "mockConference1-person-22"],
@@ -1209,7 +1197,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "An active object-oriented system derived from an interactive parallelizing language",
         authors: ["mockConference1-person-23", "mockConference1-person-24", "mockConference1-person-25", "mockConference1-person-26"],
@@ -1233,7 +1220,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A reliable parallelizing preprocessor embedded in a coordinated binary system",
         authors: ["mockConference1-person-27"],
@@ -1257,7 +1243,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A virtual big data solution related to a high-level knowledge-based language",
         authors: ["mockConference1-person-28"],
@@ -1281,7 +1266,6 @@ function generateProgramItem() {
         createdAt: new Date(),
         updatedAt: new Date(),
         abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris congue metus purus. Proin sit amet ligula efficitur, pharetra lectus sit amet, posuere dolor. Fusce congue, diam quis venenatis vehicula, enim velit aliquet felis, ut pharetra leo massa eu nisi. Suspendisse vel libero iaculis, pulvinar nibh ut, feugiat nisi. Sed id neque quis magna sagittis porttitor ac ac tortor. Curabitur sed quam nec enim malesuada vulputate non ornare metus. Nullam venenatis laoreet ipsum, quis euismod mauris sagittis quis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse cursus massa et hendrerit euismod.",
-        isPrivate: false,
         posterImage: undefined,
         title: "A high-level real-time system related to a reliable cloud-based architecture",
         authors: ["mockConference1-person-29"],
@@ -2565,7 +2549,7 @@ module.exports = {
             ProgramItem: [],
             ProgramItemAttachment: [],
             ProgramPerson: [],
-            ProgramRoom: [],
+            ContentFeed: [],
             ProgramSession: [],
             ProgramSessionEvent: [],
             ProgramTrack: [],
@@ -2610,8 +2594,8 @@ module.exports = {
         result.ProgramPerson = generateProgramPerson();
         convertToMongoJSON("ProgramPerson", result.ProgramPerson, allItems);
 
-        result.ProgramRoom = generateProgramRoom();
-        convertToMongoJSON("ProgramRoom", result.ProgramRoom, allItems);
+        result.ContentFeed = generateContentFeed();
+        convertToMongoJSON("ContentFeed", result.ContentFeed, allItems);
 
         result.ProgramSession = generateProgramSession();
         convertToMongoJSON("ProgramSession", result.ProgramSession, allItems);

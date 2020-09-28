@@ -69,10 +69,10 @@ export default function useDataSubscription<
                                 Data.ProgramPerson.onDataDeleted(conference.id) as any,
                             ];
                             break;
-                        case "ProgramRoom":
+                        case "ContentFeed":
                             promises = [
-                                Data.ProgramRoom.onDataUpdated(conference.id) as any,
-                                Data.ProgramRoom.onDataDeleted(conference.id) as any,
+                                Data.ContentFeed.onDataUpdated(conference.id) as any,
+                                Data.ContentFeed.onDataDeleted(conference.id) as any,
                             ];
                             break;
                         case "ProgramSession":
