@@ -4,11 +4,12 @@
     display              : grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     grid-auto-rows       : minmax(300px, min-content);
-    grid-gap             : 0.3em;
+    grid-column-gap      : 1em;
+    grid-row-gap         : 8ex;
 
     p {
         padding: 0;
-        margin: 0;
+        margin : 0;
     }
 
     h1,
@@ -96,14 +97,14 @@
         }
 
         &.now {
-            border: 3px solid $primary;
+            border    : 3px solid $primary;
             text-align: center;
 
             &::before {
-                content: "Happening now";
-                color: $primary;
+                content   : "Happening now";
+                color     : $primary;
                 font-style: italic;
-                font-size: 90%;
+                font-size : 90%;
             }
 
             &>.title {
