@@ -67,6 +67,12 @@
 
     min-height: 0;
 
+    .button:hover,
+    button:hover,
+    input[type=button]:hover {
+        background: none;
+    }
+
     .sidebar-header {
         display              : grid;
         grid-template-columns: 40px auto auto;
