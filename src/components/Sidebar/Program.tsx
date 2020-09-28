@@ -66,6 +66,7 @@ interface ItemRenderData {
     track: {
         id: string;
         name: string;
+        // TODO: Track colour badge
     };
     isWatched: boolean;
     additionalClasses: string;

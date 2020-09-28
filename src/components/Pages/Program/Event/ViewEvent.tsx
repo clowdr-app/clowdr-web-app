@@ -10,6 +10,7 @@ import "./ViewEvent.scss";
 import AuthorsList from "../AuthorsList";
 import { ActionButton } from "../../../../contexts/HeadingContext";
 import AttachmentLink from "./AttachmentLink";
+import ReactMarkdown from "react-markdown";
 
 interface Props {
     eventId: string;
@@ -22,6 +23,11 @@ export default function ViewEvent(props: Props) {
     const [session, setSession] = useState<ProgramSession | null>(null);
     const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(null);
     const [attachments, setAttachments] = useState<Array<ProgramItemAttachment> | null>(null);
+
+    // TODO: Extract the information rendering of this into a "ViewItem" component
+
+    // TODO: Build a re-usable "View all the times this program item is scheduled" component
+    //       to be accessible via an Actions Button on an EventItem or embedded in an ViewItem
 
     // Initial data fetch
     useSafeAsync(
@@ -159,9 +165,7 @@ export default function ViewEvent(props: Props) {
         {event && item && authors
             ? <>
                 <div className="info">
-                    <p className="abstract">
-                        {item.abstract}
-                    </p>
+                    <ReactMarkdown className="abstract">{item.abstract}</ReactMarkdown>
                     <AuthorsList authors={authors} />
                 </div>
                 <hr />

@@ -38,7 +38,10 @@ export default function ViewTrack(props: Props) {
 
     useHeading(track?.name ?? "Track");
 
-    // TODO: Render associated TextChat as a column to the side of the track view
+    // TODO: Render associated content feed
+    //       If it's a TextChat: as a column to the side of the track view
+
+    // TODO: Track colour badge
 
     return <div className="whole-program single-track">
         {track ? <TrackColumn key={track.id} track={track} /> : <LoadingSpinner />}

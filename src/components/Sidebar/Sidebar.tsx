@@ -821,6 +821,9 @@ function Sidebar(props: Props) {
         </button>
     </div>;
 
+    // TODO: It may be useful to `useMemo` the rendered menu groups to stop
+    //       them interfering / re-rendering every time one of them changes
+
     if (props.open) {
         const sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.shortName}</Link></h1>;
         const headerBar = <div className="sidebar-header">

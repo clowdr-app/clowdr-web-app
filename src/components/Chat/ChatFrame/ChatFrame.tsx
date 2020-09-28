@@ -60,6 +60,15 @@ export default function ChatFrame(props: Props) {
     //       or not (maybe query our Twilio Backend), then hide the Send box if
     //       we're not allowed.
 
+    // TODO: When should a user auto-leave a channel? E.g. when should they continue
+    //       to receive notifications for channels embedded within events/sessions/tracks/video rooms
+    //       Perhaps those pages should have a "subscribe to notifications" action button?
+    // TODO: Auto-leave / auto-unsubscribe for embedded text chats as per above
+
+    // TODO: If you log in with User A, create a DM to User B, then log out, then log in with User B
+    //       all without changing the page url, then you might get an Access Forbidden error from
+    //       Twilio because the chat will try to load before User B has joined it.
+
     return <div className="chat-frame">
         <MessageList chatSid={props.chatSid} />
         <div className="compose-message">

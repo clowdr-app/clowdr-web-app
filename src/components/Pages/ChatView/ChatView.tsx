@@ -34,6 +34,7 @@ export default function ChatView(props: Props) {
     const chat = <ChatFrame chatSid={props.chatId} />;
 
     // TODO: Action buttons / members view / etc
+    // TODO: Leave channel action button
 
     // TODO: memberAdded
     // TODO: memberRemoved

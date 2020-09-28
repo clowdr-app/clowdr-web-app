@@ -88,7 +88,10 @@ function Page(props: Props) {
             // TODO: Route for /legal
             // TODO: Route for /help
 
+            // TODO: Route for /item/:itemId (to view a program item)
             // TODO: Route for /author/:authorId (to view summary of ProgramPerson, their program items, and to direct message them)
+
+            // TODO: Route for /exhibits (to view exhibited program items - e.g. posters)
 
             return {
                 noHeading: false,

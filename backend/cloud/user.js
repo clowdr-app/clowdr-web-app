@@ -49,6 +49,8 @@ Parse.Cloud.define("user-create", async (request) => {
         let signUpEnabled = signUpEnabledConfig.get("value") === "true";
 
         if (signUpEnabled) {
+            // TODO: Auto-join to text chats
+
             let user = await getUserByEmail(params.email);
             if (user) {
                 // Validate: conference
