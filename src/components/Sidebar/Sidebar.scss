@@ -20,6 +20,10 @@
         border-left  : none;
         background   : none;
 
+        &.change:hover {
+            background: none;
+        }
+
         &.change {
             padding-left: calc(10% + 3px);
         }
@@ -409,10 +413,10 @@
                     }
 
                     .track {
-                        display    : inline-block;
-                        font-size  : 75%;
-                        color      : rgba(255, 255, 255, 0.75);
-                        margin-left: 0.25em;
+                        display     : inline-block;
+                        font-size   : 75%;
+                        color       : rgba(255, 255, 255, 0.75);
+                        margin-left : 0.25em;
                         margin-right: 0;
                     }
                 }

@@ -13,7 +13,7 @@ import getUserProfile from "../../../tests/getUserProfile";
 import { Conference, UserProfile, _User } from "clowdr-db-schema/src/classes/DataLayer";
 import ConferenceContext from "../../../contexts/ConferenceContext";
 import UserProfileContext from "../../../contexts/UserProfileContext";
-import DocTitleContext from "../../../contexts/DocTitleContext";
+import HeadingContext from "../../../contexts/HeadingContext";
 import { generateMockPassword } from "../../../tests/initTestDB";
 
 import waitForExpect from "wait-for-expect";
@@ -39,13 +39,13 @@ describe("Profile", () => {
 
     const TestElement = (userProfileId: string) =>
         <MemoryRouter>
-            <DocTitleContext.Provider value={jest.fn()}>
+            <HeadingContext.Provider value={jest.fn()}>
                 <ConferenceContext.Provider value={testConference}>
                     <UserProfileContext.Provider value={testUserProfile}>
                         <Profile userProfileId={userProfileId} />
                     </UserProfileContext.Provider>
                 </ConferenceContext.Provider>
-            </DocTitleContext.Provider>
+            </HeadingContext.Provider>
         </MemoryRouter>;
 
     beforeAll(async () => {

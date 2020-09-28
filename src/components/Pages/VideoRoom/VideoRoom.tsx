@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import VideoGrid from "../../Video/VideoGrid/VideoGrid";
 import "./VideoRoom.scss";
@@ -13,7 +13,7 @@ interface Props {
 export default function VideoRoom(props: Props) {
     const [size, setSize] = useState(30);
 
-    useDocTitle("Video Room Y");
+    useHeading("Video Room Y");
 
     return <div className="video-room">
         <SplitterLayout

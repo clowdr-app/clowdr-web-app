@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import useConference from "../../../hooks/useConference";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 
 /* We use the react-markdown[1] package to render user-supplied Markdown.
@@ -17,7 +17,7 @@ export default function LoggedInWelcome() {
     const conference = useConference();
     const [contents, setContents] = useState<string>("You are logged in. Loading conference information...");
 
-    useDocTitle(conference.name);
+    useHeading(conference.name);
 
     useSafeAsync(async () => {
         let details = await conference.details;

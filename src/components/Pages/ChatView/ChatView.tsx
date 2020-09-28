@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import useConference from "../../../hooks/useConference";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import useUserProfile from "../../../hooks/useUserProfile";
@@ -17,7 +17,7 @@ export default function ChatView(props: Props) {
     const mUser = useUserProfile();
     const mChat = useMaybeChat();
     const [chatName, setChatName] = useState<string>("Chat");
-    useDocTitle(chatName);
+    useHeading(chatName);
 
     useSafeAsync(async () => {
         if (mChat) {

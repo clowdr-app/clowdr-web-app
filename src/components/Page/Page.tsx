@@ -5,8 +5,8 @@ import ConferenceSelection, { failedToLoadConferencesF, selectConferenceF } from
 import Login, { doLoginF } from '../Pages/Login/Login';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import LoggedInWelcome from '../Pages/LoggedInWelcome/LoggedInWelcome';
-import DocTitleContext from '../../contexts/DocTitleContext';
-import { Switch, Route, RouteComponentProps, Redirect } from 'react-router-dom';
+import HeadingContext, { ActionButton } from '../../contexts/HeadingContext';
+import { Switch, Route, RouteComponentProps, Redirect, Link } from 'react-router-dom';
 import ChatView from '../Pages/ChatView/ChatView';
 import VideoRoom from '../Pages/VideoRoom/VideoRoom';
 import NotFound from '../Pages/NotFound/NotFound';
@@ -20,6 +20,8 @@ import NewChat from '../Pages/NewChat/NewChat';
 import WholeProgram from '../Pages/Program/All/WholeProgram';
 import ViewTrack from '../Pages/Program/Track/ViewTrack';
 import ViewSession from '../Pages/Program/Session/ViewSession';
+import ViewEvent from '../Pages/Program/Event/ViewEvent';
+import { HeadingState } from '../../contexts/HeadingContext';
 
 interface Props {
     doLogin: doLoginF;
@@ -31,10 +33,10 @@ function Page(props: Props) {
     const mConf = useMaybeConference();
     const mUser = useMaybeUserProfile();
 
-    const [docTitle, _setDocTitle] = useState("Clowdr");
-    document.title = docTitle;
-    const setDocTitle = useCallback((v) => {
-        _setDocTitle(v);
+    const [heading, _setHeading] = useState<HeadingState>({ title: "Clowdr" });
+    document.title = heading.title;
+    const setHeading = useCallback((v) => {
+        _setHeading(v);
     }, []);
 
     const [showSignUp, setShowSignUp] = useState<boolean>(false);
@@ -56,7 +58,22 @@ function Page(props: Props) {
         }
     }, setShowSignUp, [mConf?.id]);
 
-    const actionButtonsWrapper: JSX.Element | null = null;
+    function renderActionButton(button: ActionButton): JSX.Element {
+        if (typeof button.action === "string") {
+            return <Link to={button.action} className="button">{button.icon}{button.label}</Link>;
+        }
+        else {
+            return <></>;
+        }
+    }
+
+    let actionButtonsWrapper: JSX.Element = <></>;
+    if (heading.buttons) {
+        actionButtonsWrapper =
+            <div className="actions">
+                {heading.buttons.reduce((acc, b) => <>{acc}{renderActionButton(b)}</>, <></>)}
+            </div>;
+    }
 
     const { noHeading, contents } = useMemo(() => {
         if (mConf && mUser) {
@@ -71,8 +88,7 @@ function Page(props: Props) {
             // TODO: Route for /legal
             // TODO: Route for /help
 
-            // TODO: Route for /session/:programSessionId (to view a session - this should work out which room to render)
-            // TODO: Route for /event/:programSessionEventId (to view an event - this should work out which room to render)
+            // TODO: Route for /author/:authorId (to view summary of ProgramPerson, their program items, and to direct message them)
 
             return {
                 noHeading: false,
@@ -105,6 +121,9 @@ function Page(props: Props) {
                     } />
                     <Route path="/session/:sessionId" component={(p: RouteComponentProps<any>) =>
                         <ViewSession sessionId={p.match.params.sessionId} />
+                    } />
+                    <Route path="/event/:eventId" component={(p: RouteComponentProps<any>) =>
+                        <ViewEvent eventId={p.match.params.eventId} />
                     } />
                     <Route path="/program" component={(p: RouteComponentProps<any>) =>
                         <WholeProgram />
@@ -156,14 +175,15 @@ function Page(props: Props) {
     }, [mConf, mUser, props, showSignUp]);
 
     return <>
-        {noHeading ? <></> : <header className={"page-header" + (actionButtonsWrapper ? " actions" : " no-actions")}>
-            <h1 id="page-title" className="banner" aria-level={1}>{docTitle}</h1>
+        {noHeading ? <></> : <header className="page-header">
+            <h1 id="page-title" className="banner" aria-level={1}>{heading.title}</h1>
+            {heading.subtitle ? <div className="subtitle">{heading.subtitle}</div> : <></>}
             {actionButtonsWrapper}
         </header>}
         <main className="page">
-            <DocTitleContext.Provider value={setDocTitle}>
+            <HeadingContext.Provider value={setHeading}>
                 {contents}
-            </DocTitleContext.Provider>
+            </HeadingContext.Provider>
         </main>
     </>;
 }

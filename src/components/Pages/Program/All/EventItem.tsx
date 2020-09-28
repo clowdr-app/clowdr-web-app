@@ -6,6 +6,7 @@ import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import { Link } from "react-router-dom";
+import AuthorsList from "../AuthorsList";
 
 interface Props {
     event: ProgramSessionEvent;
@@ -18,7 +19,7 @@ export default function EventItem(props: Props) {
 
     // Fetch data
     useSafeAsync(async () => await props.event.item, setItem, [props.event]);
-    useSafeAsync(async () => item ? await item.authors : null, setAuthors, [item, props.event]);
+    useSafeAsync(async () => item ? await item.authors : null, setAuthors, [item]);
 
     // Subscribe to changes
     const onItemUpdated = useCallback(function _onItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
@@ -71,8 +72,8 @@ export default function EventItem(props: Props) {
             {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
         </h2>
         <div className="content">
-            <div className="abstract">{item ? item.title : <LoadingSpinner />}</div>
-            <div className="authors">{authors?.reduce((acc, a) => `${acc}, ${a.name}`, "").substr(2)}</div>
+            <p className="abstract">{item ? item.title : <LoadingSpinner />}</p>
+            <AuthorsList authors={authors} />
         </div>
     </Link>;
 }

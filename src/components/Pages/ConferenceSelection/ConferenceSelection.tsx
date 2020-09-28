@@ -2,7 +2,7 @@ import React, { FormEvent, useEffect, useState } from "react";
 import { Conference } from "clowdr-db-schema/src/classes/DataLayer";
 import "./ConferenceSelection.scss";
 import FooterLinks from "../../FooterLinks/FooterLinks";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 
@@ -21,7 +21,7 @@ export default function ConferenceSelection(props: Props) {
 
     const { failedToLoadConferences, selectConference } = props;
 
-    useDocTitle("Clowdr");
+    useHeading("Clowdr");
 
     useEffect(() => {
         let cancelConferencesPromise: () => void = () => { };

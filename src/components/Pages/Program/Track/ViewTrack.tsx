@@ -3,7 +3,7 @@ import { DataDeletedEventDetails, DataUpdatedEventDetails } from "clowdr-db-sche
 import React, { useCallback, useState } from "react";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
-import useDocTitle from "../../../../hooks/useDocTitle";
+import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import TrackColumn from "../All/TrackColumn";
@@ -36,7 +36,7 @@ export default function ViewTrack(props: Props) {
 
     useDataSubscription("ProgramTrack", onTrackUpdated, onTrackDeleted, !track, conference);
 
-    useDocTitle(track?.name ?? "Track");
+    useHeading(track?.name ?? "Track");
 
     // TODO: Render associated TextChat as a column to the side of the track view
 

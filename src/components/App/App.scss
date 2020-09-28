@@ -16,15 +16,14 @@
 
     display              : grid;
     grid-template-columns: auto;
-    grid-template-areas  : "page";
 
     &.sidebar-open {
         grid-template-areas:
-            "sidebar . page-header"
-            "sidebar . ."
-            "sidebar . page";
+            "sidebar . page-header ."
+            "sidebar . . ."
+            "sidebar . page .";
         grid-template-rows: minmax(3em, min-content) 10px auto;
-        grid-template-columns: minmax(350px, 20%) 1em auto;
+        grid-template-columns: minmax(350px, 20%) 1em auto 1em;
     }
 
     &.sidebar-closed {

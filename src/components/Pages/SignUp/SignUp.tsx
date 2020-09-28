@@ -3,7 +3,7 @@ import { CancelablePromise, makeCancelable } from "clowdr-db-schema/src/classes/
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useConference from "../../../hooks/useConference";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import { clearSelectedConferenceF } from "../Login/Login";
 import "./SignUp.scss";
@@ -13,7 +13,7 @@ interface SignUpProps {
 }
 
 export default function SignUp(props: SignUpProps) {
-    useDocTitle("Sign Up");
+    useHeading("Sign Up");
 
     const [email, setEmail] = useState("");
     const [fullName, setFullName] = useState("");

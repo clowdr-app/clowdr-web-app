@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import useConference from "../../../../hooks/useConference";
-import useDocTitle from "../../../../hooks/useDocTitle";
+import useHeading from "../../../../hooks/useHeading";
 import "./WholeProgram.scss"
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import TrackColumn from "./TrackColumn";
@@ -13,7 +13,7 @@ export default function WholeProgram() {
 
     const [tracks, setTracks] = useState<Map<string, ProgramTrack> | null>(null);
 
-    useDocTitle("Whole program");
+    useHeading("Whole program");
 
     // Fetch data
     useSafeAsync(async () => {

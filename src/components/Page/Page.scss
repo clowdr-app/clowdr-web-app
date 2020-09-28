@@ -6,19 +6,37 @@
 
     overflow: hidden auto;
     /* For focusable section-level elements to display outline properly */
-    padding: 2px;
+    padding : 2px;
 }
 
 .page-header {
     border-bottom: 1px solid $gray-5;
 
     h1 {
-        margin: 0 0 0.3em 0;
+        margin: 0.3em 0 0.3em 0;
     }
 
-    &.no-actions {
-        h1 {
-            margin-top: 0.4em;
+    .subtitle {
+        margin-bottom: 0.4em;
+    }
+
+    .actions {
+        margin: 0.4em 0;
+
+        .button {
+            font-size    : 90%;
+            border-radius: 5px;
+
+            padding: 0.1em 0.4em;
+
+            i {
+                padding  : 0 0.3em 0 0;
+                font-size: 95%;
+            }
+
+            &:not(:first-child) {
+                margin-left: 0.3em;
+            }
         }
     }
 }

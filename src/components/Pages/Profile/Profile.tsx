@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 import useUserProfile from "../../../hooks/useUserProfile";
 import ProfileEditor from "../../Profile/ProfileEditor/ProfileEditor";
 import ProfileView from "../../Profile/ProfileView/ProfileView";
@@ -17,7 +17,7 @@ export default function Profile(props: Props) {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [editing, setEditing] = useState(true);
 
-    useDocTitle("Profile");
+    useHeading("Profile");
 
     useEffect(() => {
         let cancel: () => void = () => { };

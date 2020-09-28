@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 import "./Login.scss";
 import useConference from "../../../hooks/useConference";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
@@ -23,7 +23,7 @@ export default function Login(props: LoginProps) {
     const [attemptingLogin, setAttemptingLogin] = useState<CancelablePromise<boolean> | null>(null);
     const conference = useConference();
 
-    useDocTitle("Sign in");
+    useHeading("Sign in");
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();

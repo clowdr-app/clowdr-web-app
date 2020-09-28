@@ -5,7 +5,7 @@ import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import SessionGroup from "../All/SessionGroup";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
-import useDocTitle from "../../../../hooks/useDocTitle";
+import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import "../All/WholeProgram.scss";
 
@@ -36,7 +36,7 @@ export default function ViewSession(props: Props) {
 
     useDataSubscription("ProgramSession", onSessionUpdated, onSessionDeleted, !session, conference);
 
-    useDocTitle(session?.title ?? "Session");
+    useHeading(session?.title ?? "Session");
 
     // TODO: Render the content feed(s) above the session events list
     // We will allow 1 video and/or 1 chat feed per content feed

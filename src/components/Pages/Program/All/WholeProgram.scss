@@ -6,6 +6,11 @@
     grid-auto-rows       : minmax(300px, min-content);
     grid-gap             : 0.3em;
 
+    p {
+        padding: 0;
+        margin: 0;
+    }
+
     h1,
     h2,
     h3,

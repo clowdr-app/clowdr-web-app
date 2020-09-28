@@ -1,7 +1,8 @@
 import React from "react";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 
 export default function ChatView() {
-    useDocTitle("All Video Rooms");
+    useHeading("All Video Rooms");
+
     return <>All Video Rooms</>;
 }

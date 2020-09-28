@@ -8,7 +8,7 @@ import getConference from "../../../tests/getConference";
 import { Simulate } from "react-dom/test-utils";
 import { generateMockPassword } from "../../../tests/initTestDB";
 import { testData } from "../../../tests/setupTests";
-import DocTitleContext from "../../../contexts/DocTitleContext";
+import HeadingContext from "../../../contexts/HeadingContext";
 
 jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
 
@@ -28,11 +28,11 @@ describe("Login", () => {
         });
 
         return <MemoryRouter>
-            <DocTitleContext.Provider value={jest.fn()}>
+            <HeadingContext.Provider value={jest.fn()}>
                 <ConferenceContext.Provider value={testConference}>
                     <Login showSignUp={true} doLogin={mockDoLogin} clearSelectedConference={jest.fn()} />
                 </ConferenceContext.Provider>
-            </DocTitleContext.Provider>
+            </HeadingContext.Provider>
         </MemoryRouter>
     };
 

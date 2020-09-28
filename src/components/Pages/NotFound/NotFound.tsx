@@ -1,10 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import useDocTitle from "../../../hooks/useDocTitle";
+import useHeading from "../../../hooks/useHeading";
 import "./NotFound.scss";
 
 export default function NotFound() {
-    useDocTitle("Not Found");
+    useHeading("Not Found");
+
     return <div className="not-found-container">
         <div className="not-found">
             <i className="fas fa-cat fa-5x icon"></i>
