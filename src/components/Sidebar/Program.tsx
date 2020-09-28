@@ -63,7 +63,10 @@ function arrangeBoundaries(timeBoundaries: Array<number>)
 
 interface ItemRenderData {
     title: string;
-    track: string;
+    track: {
+        id: string;
+        name: string;
+    };
     isWatched: boolean;
     additionalClasses: string;
     url: string;
@@ -198,10 +201,11 @@ export default function Program(props: Props) {
                     logger.info(timeText, group);
                     let items: Array<ItemRenderData>;
                     items = await Promise.all(group.sessions.map(async session => {
+                        const track = await session.track;
                         const result: ItemRenderData = {
                             title: session.title,
                             url: `/session/${session.id}`,
-                            track: (await session.track).name,
+                            track: { id: track.id, name: track.shortName },
                             isWatched: false,
                             item: { type: "session", data: session },
                             sortValue: session.startTime.getTime(),
@@ -210,10 +214,11 @@ export default function Program(props: Props) {
                         return result;
                     }));
                     items = items.concat(await Promise.all(group.events.map(async event => {
+                        const track = await event.track;
                         const result: ItemRenderData = {
                             title: (await event.item).title,
                             url: `/event/${event.id}`,
-                            track: (await event.track).shortName,
+                            track: { id: track.id, name: track.shortName },
                             isWatched: false,
                             item: { type: "event", data: event },
                             sortValue: event.startTime.getTime(),
@@ -295,7 +300,7 @@ export default function Program(props: Props) {
                     <Link to={item.url}>
                         <h3>{item.title}</h3>
                     </Link>
-                    <div className="track">{item.track}</div>
+                    <Link className="track" to={`/track/${item.track.id}`}>{item.track.name}</Link>
                 </li>);
         }
 

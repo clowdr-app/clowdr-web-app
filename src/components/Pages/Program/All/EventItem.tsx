@@ -47,7 +47,7 @@ export default function EventItem(props: Props) {
     }, [authors]);
 
     useDataSubscription("ProgramPerson", onAuthorUpdated, onAuthorDeleted, !authors, conference);
-    useDataSubscription("ProgramItem", onItemUpdated, onItemDeleted, false, conference);
+    useDataSubscription("ProgramItem", onItemUpdated, onItemDeleted, !item, conference);
 
     function fmtTime(date: Date) {
         return date.toLocaleTimeString(undefined, {

@@ -35,8 +35,12 @@
         }
 
         &>.title {
-            padding       : 0.5em;
-            font-weight   : bold;
+            padding    : 0.5em;
+            font-weight: bold;
+
+            a:hover {
+                text-decoration: underline;
+            }
         }
 
         &>.content {
@@ -53,9 +57,9 @@
     }
 
     .session {
-        display      : block;
-        width        : auto;
-        padding-top  : 1em;
+        display    : block;
+        width      : auto;
+        padding-top: 1em;
 
         &:nth-child(odd) {
             background-color: rgba($primary, 0.1);
@@ -77,10 +81,10 @@
 
 
     .event {
-        display       : block;
-        width         : auto;
-        cursor        : pointer;
-        padding       : 0.5em;
+        display: block;
+        width  : auto;
+        cursor : pointer;
+        padding: 0.5em;
 
         &:hover {
             background-color: rgba($color: #000000, $alpha: 0.05);
@@ -95,8 +99,24 @@
 
             .authors {
                 font-style: italic;
-                font-size: 90%;
+                font-size : 90%;
                 margin-top: 0.4em;
+            }
+        }
+    }
+
+
+
+    &.single-track {
+        .track {
+            border: none;
+
+            &>.title {
+                display: none;
+            }
+
+            &>.content {
+                max-height: 100%;
             }
         }
     }

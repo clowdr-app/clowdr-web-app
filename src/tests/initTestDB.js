@@ -457,7 +457,7 @@ function generateUserProfiles() {
 }
 
 
-/********* AUTO GENERATED using utils/programCSV2TestDataGen.js ************/
+/********* AUTO GENERATED using clowdr-db-schema/scripts/programCSV2TestDataGen.js ************/
 
 function generateProgramTrack() {
     let result = [];
@@ -547,8 +547,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - NY 1",
-        endTime: new Date(1600472700000),
-        startTime: new Date(1600470000000),
+        endTime: new Date(1601250300000),
+        startTime: new Date(1601247600000),
         room: "mockConference1-room-0",
         track: "mockConference1-track-0",
 
@@ -570,8 +570,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - NY1",
-        endTime: new Date(1600473600000),
-        startTime: new Date(1600470900000),
+        endTime: new Date(1601251200000),
+        startTime: new Date(1601248500000),
         room: "mockConference1-room-1",
         track: "mockConference1-track-1",
 
@@ -593,8 +593,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - NY 2",
-        endTime: new Date(1600478100000),
-        startTime: new Date(1600475400000),
+        endTime: new Date(1601255700000),
+        startTime: new Date(1601253000000),
         room: "mockConference1-room-2",
         track: "mockConference1-track-0",
 
@@ -616,8 +616,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - NY2",
-        endTime: new Date(1600479000000),
-        startTime: new Date(1600476300000),
+        endTime: new Date(1601256600000),
+        startTime: new Date(1601253900000),
         room: "mockConference1-room-3",
         track: "mockConference1-track-1",
 
@@ -639,8 +639,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - Beijing 1",
-        endTime: new Date(1601196300000),
-        startTime: new Date(1601193600000),
+        endTime: new Date(1601973900000),
+        startTime: new Date(1601971200000),
         room: "mockConference1-room-4",
         track: "mockConference1-track-0",
 
@@ -662,8 +662,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - Beijing 1",
-        endTime: new Date(1601197200000),
-        startTime: new Date(1601194500000),
+        endTime: new Date(1601974800000),
+        startTime: new Date(1601972100000),
         room: "mockConference1-room-5",
         track: "mockConference1-track-1",
 
@@ -685,8 +685,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Session - Beijing 2",
-        endTime: new Date(1601201700000),
-        startTime: new Date(1601199000000),
+        endTime: new Date(1601979300000),
+        startTime: new Date(1601976600000),
         room: "mockConference1-room-6",
         track: "mockConference1-track-0",
 
@@ -708,8 +708,8 @@ function generateProgramSession() {
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Demo Q&A - Beijing 2",
-        endTime: new Date(1601202600000),
-        startTime: new Date(1601199900000),
+        endTime: new Date(1601980200000),
+        startTime: new Date(1601977500000),
         room: "mockConference1-room-7",
         track: "mockConference1-track-1",
 
@@ -1919,8 +1919,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600470900000),
-        startTime: new Date(1600470000000),
+        endTime: new Date(1601248500000),
+        startTime: new Date(1601247600000),
         item: "mockConference1-item-0",
         session: "mockConference1-session-0",
 
@@ -1942,8 +1942,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600471800000),
-        startTime: new Date(1600470900000),
+        endTime: new Date(1601249400000),
+        startTime: new Date(1601248500000),
         item: "mockConference1-item-1",
         session: "mockConference1-session-0",
 
@@ -1965,8 +1965,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600472700000),
-        startTime: new Date(1600471800000),
+        endTime: new Date(1601250300000),
+        startTime: new Date(1601249400000),
         item: "mockConference1-item-2",
         session: "mockConference1-session-0",
 
@@ -1988,8 +1988,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600471800000),
-        startTime: new Date(1600470900000),
+        endTime: new Date(1601249400000),
+        startTime: new Date(1601248500000),
         item: "mockConference1-item-0",
         session: "mockConference1-session-1",
 
@@ -2011,8 +2011,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600472700000),
-        startTime: new Date(1600471800000),
+        endTime: new Date(1601250300000),
+        startTime: new Date(1601249400000),
         item: "mockConference1-item-1",
         session: "mockConference1-session-1",
 
@@ -2034,8 +2034,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600473600000),
-        startTime: new Date(1600472700000),
+        endTime: new Date(1601251200000),
+        startTime: new Date(1601250300000),
         item: "mockConference1-item-2",
         session: "mockConference1-session-1",
 
@@ -2057,8 +2057,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600476300000),
-        startTime: new Date(1600475400000),
+        endTime: new Date(1601253900000),
+        startTime: new Date(1601253000000),
         item: "mockConference1-item-3",
         session: "mockConference1-session-2",
 
@@ -2080,8 +2080,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600477200000),
-        startTime: new Date(1600476300000),
+        endTime: new Date(1601254800000),
+        startTime: new Date(1601253900000),
         item: "mockConference1-item-4",
         session: "mockConference1-session-2",
 
@@ -2103,8 +2103,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600478100000),
-        startTime: new Date(1600477200000),
+        endTime: new Date(1601255700000),
+        startTime: new Date(1601254800000),
         item: "mockConference1-item-5",
         session: "mockConference1-session-2",
 
@@ -2126,8 +2126,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600477200000),
-        startTime: new Date(1600476300000),
+        endTime: new Date(1601254800000),
+        startTime: new Date(1601253900000),
         item: "mockConference1-item-6",
         session: "mockConference1-session-3",
 
@@ -2149,8 +2149,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600478100000),
-        startTime: new Date(1600477200000),
+        endTime: new Date(1601255700000),
+        startTime: new Date(1601254800000),
         item: "mockConference1-item-7",
         session: "mockConference1-session-3",
 
@@ -2172,8 +2172,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1600479000000),
-        startTime: new Date(1600478100000),
+        endTime: new Date(1601256600000),
+        startTime: new Date(1601255700000),
         item: "mockConference1-item-8",
         session: "mockConference1-session-3",
 
@@ -2195,8 +2195,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601194500000),
-        startTime: new Date(1601193600000),
+        endTime: new Date(1601972100000),
+        startTime: new Date(1601971200000),
         item: "mockConference1-item-0",
         session: "mockConference1-session-4",
 
@@ -2218,8 +2218,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601195400000),
-        startTime: new Date(1601194500000),
+        endTime: new Date(1601973000000),
+        startTime: new Date(1601972100000),
         item: "mockConference1-item-1",
         session: "mockConference1-session-4",
 
@@ -2241,8 +2241,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601196300000),
-        startTime: new Date(1601195400000),
+        endTime: new Date(1601973900000),
+        startTime: new Date(1601973000000),
         item: "mockConference1-item-2",
         session: "mockConference1-session-4",
 
@@ -2264,8 +2264,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601195400000),
-        startTime: new Date(1601194500000),
+        endTime: new Date(1601973000000),
+        startTime: new Date(1601972100000),
         item: "mockConference1-item-0",
         session: "mockConference1-session-5",
 
@@ -2287,8 +2287,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601196300000),
-        startTime: new Date(1601195400000),
+        endTime: new Date(1601973900000),
+        startTime: new Date(1601973000000),
         item: "mockConference1-item-1",
         session: "mockConference1-session-5",
 
@@ -2310,8 +2310,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601197200000),
-        startTime: new Date(1601196300000),
+        endTime: new Date(1601974800000),
+        startTime: new Date(1601973900000),
         item: "mockConference1-item-2",
         session: "mockConference1-session-5",
 
@@ -2333,8 +2333,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601199900000),
-        startTime: new Date(1601199000000),
+        endTime: new Date(1601977500000),
+        startTime: new Date(1601976600000),
         item: "mockConference1-item-3",
         session: "mockConference1-session-6",
 
@@ -2356,8 +2356,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601200800000),
-        startTime: new Date(1601199900000),
+        endTime: new Date(1601978400000),
+        startTime: new Date(1601977500000),
         item: "mockConference1-item-4",
         session: "mockConference1-session-6",
 
@@ -2379,8 +2379,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601201700000),
-        startTime: new Date(1601200800000),
+        endTime: new Date(1601979300000),
+        startTime: new Date(1601978400000),
         item: "mockConference1-item-5",
         session: "mockConference1-session-6",
 
@@ -2402,8 +2402,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601200800000),
-        startTime: new Date(1601199900000),
+        endTime: new Date(1601978400000),
+        startTime: new Date(1601977500000),
         item: "mockConference1-item-6",
         session: "mockConference1-session-7",
 
@@ -2425,8 +2425,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601201700000),
-        startTime: new Date(1601200800000),
+        endTime: new Date(1601979300000),
+        startTime: new Date(1601978400000),
         item: "mockConference1-item-7",
         session: "mockConference1-session-7",
 
@@ -2448,8 +2448,8 @@ function generateProgramSessionEvent() {
         createdAt: new Date(),
         updatedAt: new Date(),
         directLink: undefined,
-        endTime: new Date(1601202600000),
-        startTime: new Date(1601201700000),
+        endTime: new Date(1601980200000),
+        startTime: new Date(1601979300000),
         item: "mockConference1-item-8",
         session: "mockConference1-session-7",
 

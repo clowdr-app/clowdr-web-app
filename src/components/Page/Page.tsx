@@ -18,6 +18,7 @@ import useSafeAsync from '../../hooks/useSafeAsync';
 import { ConferenceConfiguration } from 'clowdr-db-schema/src/classes/DataLayer';
 import NewChat from '../Pages/NewChat/NewChat';
 import WholeProgram from '../Pages/Program/All/WholeProgram';
+import ViewTrack from '../Pages/Program/Track/ViewTrack';
 
 interface Props {
     doLogin: doLoginF;
@@ -69,7 +70,6 @@ function Page(props: Props) {
             // TODO: Route for /legal
             // TODO: Route for /help
 
-            // TODO: Route for /track/:trackId (to view a track - this should work out which chat to render)
             // TODO: Route for /session/:programSessionId (to view a session - this should work out which room to render)
             // TODO: Route for /event/:programSessionEventId (to view an event - this should work out which room to render)
 
@@ -99,6 +99,9 @@ function Page(props: Props) {
                     <Route path="/room" component={AllVideoRooms} />
 
 
+                    <Route path="/track/:trackId" component={(p: RouteComponentProps<any>) =>
+                        <ViewTrack trackId={p.match.params.trackId} />
+                    } />
                     <Route path="/program" component={(p: RouteComponentProps<any>) =>
                         <WholeProgram />
                     } />

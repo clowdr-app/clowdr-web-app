@@ -5,6 +5,7 @@ import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import SessionGroup from "./SessionGroup";
+import { Link } from "react-router-dom";
 
 interface Props {
     track: ProgramTrack;
@@ -58,7 +59,7 @@ export default function TrackColumn(props: Props) {
 
     return <div className="track">
         <h2 className="title">
-            {props.track.name}
+            <Link to={`/track/${props.track.id}`}>{props.track.name}</Link>
         </h2>
         <div className="content">
             {rows}
