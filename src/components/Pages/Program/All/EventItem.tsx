@@ -57,9 +57,15 @@ export default function EventItem(props: Props) {
         });
     }
 
+    function fmtDay(date: Date) {
+        return date.toLocaleDateString(undefined, {
+            weekday: "short"
+        });
+    }
+
     return <Link className="event" to={`/event/${props.event.id}`}>
         <h2 className="title">
-            {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
+            {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
         </h2>
         <div className="content">
             <div className="abstract">{item ? item.title : <LoadingSpinner />}</div>

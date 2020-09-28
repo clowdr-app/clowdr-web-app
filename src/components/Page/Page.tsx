@@ -19,6 +19,7 @@ import { ConferenceConfiguration } from 'clowdr-db-schema/src/classes/DataLayer'
 import NewChat from '../Pages/NewChat/NewChat';
 import WholeProgram from '../Pages/Program/All/WholeProgram';
 import ViewTrack from '../Pages/Program/Track/ViewTrack';
+import ViewSession from '../Pages/Program/Session/ViewSession';
 
 interface Props {
     doLogin: doLoginF;
@@ -101,6 +102,9 @@ function Page(props: Props) {
 
                     <Route path="/track/:trackId" component={(p: RouteComponentProps<any>) =>
                         <ViewTrack trackId={p.match.params.trackId} />
+                    } />
+                    <Route path="/session/:sessionId" component={(p: RouteComponentProps<any>) =>
+                        <ViewSession sessionId={p.match.params.sessionId} />
                     } />
                     <Route path="/program" component={(p: RouteComponentProps<any>) =>
                         <WholeProgram />

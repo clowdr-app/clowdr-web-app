@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 
 interface Props {
     session: ProgramSession;
+    overrideTitle?: string;
 }
 
 export default function SessionGroup(props: Props) {
@@ -64,7 +65,7 @@ export default function SessionGroup(props: Props) {
     function fmtDate(date: Date) {
         return date.toLocaleDateString(undefined, {
             day: "numeric",
-            month: "numeric"
+            month: "short"
         });
     }
 
@@ -76,9 +77,12 @@ export default function SessionGroup(props: Props) {
 
     return <div className="session">
         <h2 className="title">
-            <Link to={`/session/${props.session.id}`}>
-                {title}
-            </Link>
+            {props.overrideTitle
+                ? props.overrideTitle
+                : <Link to={`/session/${props.session.id}`}>
+                    {title}
+                </Link>
+            }
         </h2>
         <div className="content">
             {rows}
