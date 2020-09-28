@@ -146,7 +146,7 @@ export default function ViewEvent(props: Props) {
 
     // TODO: Render the content feed(s) (re-use component from ViewSession)
 
-    // TODO: Offer to auto-move to the sessions' next event 30 secs before the
+    // TODO: Offer to auto-move to the session's next event 30 secs before the
     //       end of the current event
 
     let attachmentEls: Array<JSX.Element> = [];
