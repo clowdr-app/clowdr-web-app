@@ -1,11 +1,28 @@
 @import "../../../../styles/util";
 
+.whole-program-page {
+    .switcher {
+        text-align: center;
+    }
+}
+
 .whole-program {
     display              : grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    grid-auto-rows       : minmax(300px, min-content);
+    grid-auto-rows       : min-content;
     grid-column-gap      : 1em;
     grid-row-gap         : 8ex;
+
+    &.schedule {
+        grid-template-columns: 100%;
+        grid-auto-rows       : auto;
+        grid-column-gap      : 1em;
+        grid-row-gap         : 1em;
+
+        hr {
+            border-color: $color-3;
+        }
+    }
 
     p {
         padding: 0;
@@ -52,7 +69,7 @@
         &>.content {
             display       : flex;
             flex-direction: column;
-            max-height    : 50ex;
+            max-height    : 80ex;
             overflow-x    : auto;
             overflow-y    : auto;
 
@@ -96,6 +113,14 @@
             background-color: rgba($color: #000000, $alpha: 0.05);
         }
 
+        &.disabled {
+            cursor: inherit;
+
+            &:hover {
+                background: none;
+            }
+        }
+
         &.now {
             border    : 3px solid $primary;
             text-align: center;
@@ -107,9 +132,11 @@
                 font-size : 90%;
             }
 
-            &>.title {
-                margin-top: 0.2em;
-                text-align: left;
+            &>.heading {
+                &>.title {
+                    margin-top: 0.2em;
+                    text-align: left;
+                }
             }
 
             &>.content {
@@ -117,8 +144,26 @@
             }
         }
 
-        &>.title {
+        &>.heading {
+            display       : flex;
+            flex-direction: row;
             padding-bottom: 0.2em;
+            justify-content: space-between;
+            flex-wrap: wrap;
+
+            &>.title {
+                display: inline-block;
+            }
+
+            &>a {
+                display: inline-block;
+                font-size: 80%;
+                min-width: 8em;
+            }
+
+            &>a:nth-child(2) {
+                font-style: italic;
+            }
         }
 
         &>.content {

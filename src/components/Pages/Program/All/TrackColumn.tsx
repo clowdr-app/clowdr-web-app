@@ -6,6 +6,7 @@ import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import SessionGroup from "./SessionGroup";
 import { Link } from "react-router-dom";
+import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 
 interface Props {
     track: ProgramTrack;
@@ -57,12 +58,16 @@ export default function TrackColumn(props: Props) {
         rows.push(<SessionGroup key={session.id} session={session} />);
     }
 
+    if (rows.length === 0) {
+        rows.push(<div className="session"><h2 className="title">This track contains no sessions.</h2></div>);
+    }
+
     return <div className="track">
         <h2 className="title">
             <Link to={`/track/${props.track.id}`}>{props.track.name}</Link>
         </h2>
         <div className="content">
-            {rows}
+            {sessions ? rows : <LoadingSpinner />}
         </div>
     </div>;
 }

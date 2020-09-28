@@ -7,32 +7,37 @@ import TrackColumn from "./TrackColumn";
 import { ProgramTrack } from "clowdr-db-schema/src/classes/DataLayer";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
+import Toggle from "react-toggle";
+import ScheduleView from "./ScheduleView";
+import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 
 export default function WholeProgram() {
     const conference = useConference();
 
-    const [tracks, setTracks] = useState<Map<string, ProgramTrack> | null>(null);
+    const [scheduleView, setScheduleView] = useState(false);
+    const [tracks, setTracks] = useState<Array<ProgramTrack> | null>(null);
 
     useHeading("Whole program");
 
     // Fetch data
-    useSafeAsync(async () => {
-        const results = await ProgramTrack.getAll(conference.id);
-        return new Map(results.map(x => [x.id, x]));
-    }, setTracks, [conference.id]);
+    useSafeAsync(async () => await ProgramTrack.getAll(conference.id), setTracks, [conference.id]);
 
     // Subscribe to changes
     const onTrackUpdated = useCallback(function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
-        const newTracks = tracks ? new Map(tracks) : new Map();
-        newTracks.set(ev.object.id, ev.object as ProgramTrack);
+        const newTracks = Array.from(tracks ?? []);
+        const idx = newTracks?.findIndex(x => x.id === ev.object.id);
+        if (idx === -1) {
+            newTracks.push(ev.object as ProgramTrack);
+        }
+        else {
+            newTracks.splice(idx, 1, ev.object as ProgramTrack);
+        }
         setTracks(newTracks);
     }, [tracks]);
 
     const onTrackDeleted = useCallback(function _onTrackDeleted(ev: DataDeletedEventDetails<"ProgramTrack">) {
         if (tracks) {
-            const newTracks = new Map(tracks);
-            newTracks.delete(ev.objectId);
-            setTracks(newTracks);
+            setTracks(tracks.filter(x => x.id === ev.objectId));
         }
     }, [tracks]);
 
@@ -52,7 +57,22 @@ export default function WholeProgram() {
         columns.push(<TrackColumn key={track.id} track={track} />);
     }
 
-    return <div className="whole-program">
-        {columns}
+    const schedule = tracks ? <ScheduleView tracks={tracks} /> : <LoadingSpinner />;
+
+    return <div className="whole-program-page">
+        <div className="switcher">
+            <label>
+                <span>Schedule</span>
+                <Toggle
+                    icons={false}
+                    defaultChecked={!scheduleView}
+                    onChange={(ev) => setScheduleView(!ev.target.checked)}
+                />
+                <span>Tracks</span>
+            </label>
+        </div>
+        <div className={`whole-program${scheduleView ? " schedule" : ""}`}>
+            {scheduleView ? schedule : columns.length > 0 ? columns : <LoadingSpinner />}
+        </div>
     </div>;
 }

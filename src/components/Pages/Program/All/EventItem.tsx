@@ -1,21 +1,24 @@
 import React, { useCallback, useState } from "react";
-import { ProgramPerson, ProgramItem, ProgramSessionEvent } from "clowdr-db-schema/src/classes/DataLayer";
+import { ProgramPerson, ProgramItem, ProgramSessionEvent, ProgramSession, ProgramTrack } from "clowdr-db-schema/src/classes/DataLayer";
 import { DataUpdatedEventDetails, DataDeletedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import AuthorsList from "../AuthorsList";
 
 interface Props {
     event: ProgramSessionEvent;
+    session?: ProgramSession;
+    track?: ProgramTrack;
 }
 
 export default function EventItem(props: Props) {
     const conference = useConference();
     const [item, setItem] = useState<ProgramItem | null>(null);
     const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(null);
+    const history = useHistory();
 
     // Fetch data
     useSafeAsync(async () => await props.event.item, setItem, [props.event]);
@@ -67,13 +70,24 @@ export default function EventItem(props: Props) {
     const now = new Date();
     const isNow = props.event.startTime < now && props.event.endTime > now;
 
-    return <Link className={`event${isNow ? " now" : ""}`} to={`/event/${props.event.id}`}>
-        <h2 className="title">
-            {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
-        </h2>
+    return <div
+        className={`event${isNow ? " now" : ""}`}
+        onClick={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            history.push(`/event/${props.event.id}`);
+        }}
+    >
+        <div className="heading">
+            <h2 className="title">
+                {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
+            </h2>
+            {props.session ? <Link className="session-info" to={`/session/${props.session.id}`}>{props.session.title}</Link> : <></>}
+            {props.track ? <Link className="track-info" to={`/track/${props.track.id}`}>{props.track.name}</Link> : <></>}
+        </div>
         <div className="content">
-            <p className="abstract">{item ? item.title : <LoadingSpinner />}</p>
+            <div className="abstract">{item ? item.title : <LoadingSpinner />}</div>
             <AuthorsList authors={authors} />
         </div>
-    </Link>;
+    </div>;
 }

@@ -6,6 +6,8 @@ import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import EventItem from "./EventItem";
 import { Link } from "react-router-dom";
+import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
+import { daysIntoYear } from "../../../../classes/Utils";
 
 interface Props {
     session: ProgramSession;
@@ -58,10 +60,6 @@ export default function SessionGroup(props: Props) {
         rows.push(<EventItem key={event.id} event={event} />);
     }
 
-    function daysIntoYear(date: Date) {
-        return (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000;
-    }
-
     function fmtDate(date: Date) {
         return date.toLocaleDateString(undefined, {
             day: "numeric",
@@ -75,6 +73,10 @@ export default function SessionGroup(props: Props) {
             : `${fmtDate(props.session.startTime)}`)
         + ` - ${props.session.title}`;
 
+    if (rows.length === 0) {
+        rows.push(<div className="event disabled"><div className="heading"><h2 className="title">This session contains no events.</h2></div></div>);
+    }
+
     return <div className="session">
         <h2 className="title">
             {props.overrideTitle
@@ -85,7 +87,7 @@ export default function SessionGroup(props: Props) {
             }
         </h2>
         <div className="content">
-            {rows}
+            {events ? rows : <LoadingSpinner />}
         </div>
     </div>;
 }

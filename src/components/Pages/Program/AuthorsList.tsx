@@ -10,7 +10,13 @@ export default function AuthorsList(props: Props) {
     let authorsEls: Array<JSX.Element> = [];
     if (props.authors) {
         authorsEls = props.authors.map(author => {
-            return <Link key={author.id} to={`/author/${author.id}`}>{author.name}</Link>;
+            return <Link
+                key={author.id}
+                to={`/author/${author.id}`}
+                onClick={(ev) => ev.stopPropagation()}
+            >
+                {author.name}
+            </Link>;
         });
         authorsEls = authorsEls.flatMap((el, i) => [el, <span key={i}>&middot;</span>]);
         authorsEls = authorsEls.slice(0, authorsEls.length - 1);
