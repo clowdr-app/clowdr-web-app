@@ -63,7 +63,10 @@ export default function EventItem(props: Props) {
         });
     }
 
-    return <Link className="event" to={`/event/${props.event.id}`}>
+    const now = new Date();
+    const isNow = props.event.startTime < now && props.event.endTime > now;
+
+    return <Link className={`event${isNow ? " now" : ""}`} to={`/event/${props.event.id}`}>
         <h2 className="title">
             {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
         </h2>

@@ -2,7 +2,7 @@
 
 .whole-program {
     display              : grid;
-    grid-template-columns: repeat(auto-fit, minmax(18em, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     grid-auto-rows       : minmax(300px, min-content);
     grid-gap             : 0.3em;
 
@@ -29,8 +29,8 @@
         width  : 100%;
         border : 1px solid $gray-6;
 
-        @media only screen and (max-width: $break-sm) {
-            border-top-color: $primary;
+        @media only screen and (max-width: $break-md) {
+            border-top-color: $color-3;
             border-top-width: 2px;
         }
 
@@ -50,7 +50,7 @@
             overflow-x    : auto;
             overflow-y    : auto;
 
-            @media only screen and (max-width: $break-sm) {
+            @media only screen and (max-width: $break-md) {
                 max-height: 100%;
             }
         }
@@ -88,6 +88,27 @@
 
         &:hover {
             background-color: rgba($color: #000000, $alpha: 0.05);
+        }
+
+        &.now {
+            border: 3px solid $primary;
+            text-align: center;
+
+            &::before {
+                content: "Happening now";
+                color: $primary;
+                font-style: italic;
+                font-size: 90%;
+            }
+
+            &>.title {
+                margin-top: 0.2em;
+                text-align: left;
+            }
+
+            &>.content {
+                text-align: left;
+            }
         }
 
         &>.title {
