@@ -86,6 +86,10 @@ export default function ScheduleView(props: Props) {
             }
             prevEventDay = currEventDay;
         }
+
+        if (rows.length === 0) {
+            rows.push(<div key="empty">There are no tracks in this program.</div>);
+        }
     }
 
     return events && sessions ? <>{rows}</> : <LoadingSpinner />;

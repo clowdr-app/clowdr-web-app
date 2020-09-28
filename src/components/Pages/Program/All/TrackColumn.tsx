@@ -59,7 +59,7 @@ export default function TrackColumn(props: Props) {
     }
 
     if (rows.length === 0) {
-        rows.push(<div className="session"><h2 className="title">This track contains no sessions.</h2></div>);
+        rows.push(<div key="empty" className="session"><h2 className="title">This track contains no sessions.</h2></div>);
     }
 
     return <div className="track">

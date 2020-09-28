@@ -74,7 +74,7 @@ export default function SessionGroup(props: Props) {
         + ` - ${props.session.title}`;
 
     if (rows.length === 0) {
-        rows.push(<div className="event disabled"><div className="heading"><h2 className="title">This session contains no events.</h2></div></div>);
+        rows.push(<div key="empty" className="event disabled"><div className="heading"><h2 className="title">This session contains no events.</h2></div></div>);
     }
 
     return <div className="session">

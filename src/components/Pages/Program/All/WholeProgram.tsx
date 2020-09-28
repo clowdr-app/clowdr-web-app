@@ -45,16 +45,20 @@ export default function WholeProgram() {
 
 
     const columns: Array<JSX.Element> = [];
-    const trackEntries
-        = tracks
-            ? Array.from(tracks.values())
-                .sort((x, y) => {
-                    return x.name.localeCompare(y.name);
-                })
-            : [];
+    if (tracks) {
+        const trackEntries
+            = Array.from(tracks.values())
+                    .sort((x, y) => {
+                        return x.name.localeCompare(y.name);
+                    });
 
-    for (const track of trackEntries) {
-        columns.push(<TrackColumn key={track.id} track={track} />);
+        for (const track of trackEntries) {
+            columns.push(<TrackColumn key={track.id} track={track} />);
+        }
+
+        if (columns.length === 0) {
+            columns.push(<div key="empty">There are no tracks in this program.</div>);
+        }
     }
 
     const schedule = tracks ? <ScheduleView tracks={tracks} /> : <LoadingSpinner />;
