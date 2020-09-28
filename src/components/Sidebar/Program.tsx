@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ProgramSession, ProgramSessionEvent } from "clowdr-db-schema/src/classes/DataLayer";
-import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
+import { ProgramSession, ProgramSessionEvent } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import useConference from "../../hooks/useConference";
 import useLogger from "../../hooks/useLogger";
 import useDataSubscription from "../../hooks/useDataSubscription";

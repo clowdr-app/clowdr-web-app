@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./ProfileView.scss";
-import { Flair, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";

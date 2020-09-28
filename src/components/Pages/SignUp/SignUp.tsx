@@ -1,5 +1,5 @@
 import Parse from "parse";
-import { CancelablePromise, makeCancelable } from "clowdr-db-schema/src/classes/Util";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useConference from "../../../hooks/useConference";

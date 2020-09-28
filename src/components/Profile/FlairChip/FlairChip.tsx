@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flair } from 'clowdr-db-schema/src/classes/DataLayer';
+import { Flair } from '@clowdr-app/clowdr-db-schema/build/DataLayer';
 import "./FlairChip.scss";
 
 interface Props {

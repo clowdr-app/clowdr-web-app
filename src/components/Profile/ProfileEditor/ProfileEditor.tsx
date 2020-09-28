@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Parse from "parse";
-import { Flair, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import "./ProfileEditor.scss";
 import TagInput from "../../Inputs/TagInput/TagInput";
 import FlairInput from "../../Inputs/FlairInput/FlairInput";

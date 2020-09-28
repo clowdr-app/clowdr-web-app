@@ -1,6 +1,6 @@
 import assert from "assert";
-import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
-import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
+import { Conference, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import DebugLogger from "@clowdr-app/clowdr-db-schema/build/DebugLogger";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "./IChannel";
 import IChatManager from "./IChatManager";

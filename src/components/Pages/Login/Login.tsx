@@ -3,7 +3,7 @@ import useHeading from "../../../hooks/useHeading";
 import "./Login.scss";
 import useConference from "../../../hooks/useConference";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-import { CancelablePromise, makeCancelable } from "clowdr-db-schema/src/classes/Util";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { Link } from "react-router-dom";
 
 export type doLoginF = (username: string, password: string) => Promise<boolean>;

@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import UserContext from '../contexts/UserProfileContext';
-import { UserProfile } from 'clowdr-db-schema/src/classes/DataLayer';
+import { UserProfile } from '@clowdr-app/clowdr-db-schema/build/DataLayer';
 import assert from 'assert';
 
 /**

@@ -469,8 +469,6 @@ function generateProgramTrack() {
         updatedAt: new Date(),
 
         colour: "#000000",
-        generateTextChatPerItem: true,
-        generateVideoRoomPerItem: true,
         name: "Research Papers",
         shortName: "RP",
 
@@ -493,8 +491,6 @@ function generateProgramTrack() {
         updatedAt: new Date(),
 
         colour: "#000000",
-        generateTextChatPerItem: true,
-        generateVideoRoomPerItem: true,
         name: "Q&A",
         shortName: "Q&A",
 
@@ -517,8 +513,6 @@ function generateProgramTrack() {
         updatedAt: new Date(),
 
         colour: "#000000",
-        generateTextChatPerItem: true,
-        generateVideoRoomPerItem: true,
         name: "Posters",
         shortName: "Posters",
 

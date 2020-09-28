@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import ConferenceContext from '../contexts/ConferenceContext';
-import { Conference } from 'clowdr-db-schema/src/classes/DataLayer';
+import { Conference } from '@clowdr-app/clowdr-db-schema/build/DataLayer';
 import assert from 'assert';
 
 /**

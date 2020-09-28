@@ -2,11 +2,11 @@ import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import ConferenceContext from "../../contexts/ConferenceContext";
-import { Conference } from "clowdr-db-schema/src/classes/DataLayer";
+import { Conference } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import { render } from "@testing-library/react";
 import getConference from "../../tests/getConference";
 
-jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
+jest.mock("@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache");
 
 describe("Sidebar", () => {
     let testConference: Conference;

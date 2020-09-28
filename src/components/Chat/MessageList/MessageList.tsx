@@ -14,7 +14,7 @@ import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import ReactMarkdown from "react-markdown";
 import assert from "assert";
 import { ChannelEventNames } from "../../../classes/Chat/Services/Twilio/Channel";
-import { Flair, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import useConference from "../../../hooks/useConference";
 
 interface Props {

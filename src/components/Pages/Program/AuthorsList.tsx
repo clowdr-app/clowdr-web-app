@@ -1,4 +1,4 @@
-import { ProgramPerson } from "clowdr-db-schema/src/classes/DataLayer";
+import { ProgramPerson } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import React from "react";
 import { Link } from "react-router-dom";
 

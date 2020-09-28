@@ -1,4 +1,4 @@
-import { UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import { UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "../../IChannel";
 import Member from "./Member";

@@ -4,9 +4,9 @@ import useHeading from "../../../../hooks/useHeading";
 import "./WholeProgram.scss"
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import TrackColumn from "./TrackColumn";
-import { ProgramTrack } from "clowdr-db-schema/src/classes/DataLayer";
+import { ProgramTrack } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
-import { DataDeletedEventDetails, DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import Toggle from "react-toggle";
 import ScheduleView from "./ScheduleView";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";

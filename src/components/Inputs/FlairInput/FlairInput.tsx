@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flair } from 'clowdr-db-schema/src/classes/DataLayer';
+import { Flair } from '@clowdr-app/clowdr-db-schema/build/DataLayer';
 import "./FlairInput.scss";
 import FlairChip from '../../Profile/FlairChip/FlairChip';
 import useSafeAsync from '../../../hooks/useSafeAsync';

@@ -15,7 +15,7 @@ import AllVideoRooms from '../Pages/AllVideoRooms/AllVideoRooms';
 import Profile from '../Pages/Profile/Profile';
 import SignUp from '../Pages/SignUp/SignUp';
 import useSafeAsync from '../../hooks/useSafeAsync';
-import { ConferenceConfiguration } from 'clowdr-db-schema/src/classes/DataLayer';
+import { ConferenceConfiguration } from '@clowdr-app/clowdr-db-schema/build/DataLayer';
 import NewChat from '../Pages/NewChat/NewChat';
 import WholeProgram from '../Pages/Program/All/WholeProgram';
 import ViewTrack from '../Pages/Program/Track/ViewTrack';

@@ -8,13 +8,13 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
 import ChatContext from '../../contexts/ChatContext';
 import useLogger from '../../hooks/useLogger';
-import Caches from "clowdr-db-schema/src/classes/DataLayer/Cache";
-import { Conference, UserProfile, _User } from "clowdr-db-schema/src/classes/DataLayer";
+import Caches from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache";
+import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import Chat from "../../classes/Chat/Chat";
-import { DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
+import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../hooks/useDataSubscription";
 
 type AppTasks

@@ -1,9 +1,9 @@
-import { Conference, ConferenceConfiguration, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import { Conference, ConferenceConfiguration, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import IChatManager from "../../IChatManager";
 import IChatService from "../../IChatService";
 import Channel from "./Channel";
 import { default as LocalStorage_TwilioChatToken } from "../../../LocalStorage/TwilioChatToken";
-import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
+import DebugLogger from "@clowdr-app/clowdr-db-schema/build/DebugLogger";
 import assert from "assert";
 import * as Twilio from "twilio-chat";
 import { Channel as TwilioChannel } from "twilio-chat/lib/channel";

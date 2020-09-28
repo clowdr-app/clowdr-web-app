@@ -1,5 +1,5 @@
-import { AttachmentType, ProgramItemAttachment } from "clowdr-db-schema/src/classes/DataLayer";
-import { DataUpdatedEventDetails, DataDeletedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
+import { AttachmentType, ProgramItemAttachment } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { DataUpdatedEventDetails, DataDeletedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";

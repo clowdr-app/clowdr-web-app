@@ -1,4 +1,4 @@
-import { Conference } from "clowdr-db-schema/src/classes/DataLayer";
+import { Conference } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import { testData } from "./setupTests";
 
 export default async function getConference() {

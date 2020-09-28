@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { DataDeletedEventDetails, DataUpdatedEventDetails } from "clowdr-db-schema/src/classes/DataLayer/Cache/Cache";
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { ISimpleEvent } from "strongly-typed-events";
-import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
-import { CachedSchemaKeys } from "clowdr-db-schema/src/classes/DataLayer/WholeSchema";
-import * as Data from "clowdr-db-schema/src/classes/DataLayer";
+import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import { CachedSchemaKeys } from "@clowdr-app/clowdr-db-schema/build/DataLayer/WholeSchema";
+import * as Data from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 
 export default function useDataSubscription<
     K extends CachedSchemaKeys

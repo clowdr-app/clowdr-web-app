@@ -6,7 +6,7 @@ import "./App.scss";
 import { testData } from "../../tests/setupTests";
 import waitForExpect from "wait-for-expect";
 
-jest.mock("clowdr-db-schema/src/classes/DataLayer/Cache/Cache");
+jest.mock("@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache");
 
 describe("App", () => {
 

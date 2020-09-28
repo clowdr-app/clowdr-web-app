@@ -1,4 +1,4 @@
-import DebugLogger from "clowdr-db-schema/src/classes/DebugLogger";
+import DebugLogger from "@clowdr-app/clowdr-db-schema/build/DebugLogger";
 import { useState } from "react";
 
 export default function useLogger(componentName: string): DebugLogger {

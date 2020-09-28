@@ -1,4 +1,4 @@
-import { makeCancelable } from "clowdr-db-schema/src/classes/Util";
+import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { DependencyList, useCallback, useEffect } from "react";
 
 export default function useSafeAsync<T>(

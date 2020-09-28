@@ -1,4 +1,4 @@
-import { Conference, UserProfile } from "clowdr-db-schema/src/classes/DataLayer";
+import { Conference, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import IChannel from "./IChannel";
 
 export default interface IChatService {
