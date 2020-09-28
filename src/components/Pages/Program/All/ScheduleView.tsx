@@ -73,6 +73,10 @@ export default function ScheduleView(props: Props) {
         for (const event of sortedEvents) {
             const session = sessions.find(x => x.id === event.sessionId);
             const track = session ? props.tracks.find(x => x.id === session.trackId) : undefined;
+            const currEventDay = daysIntoYear(event.startTime);
+            if (prevEventDay && prevEventDay !== currEventDay) {
+                rows.push(<hr key={currEventDay} />);
+            }
             rows.push(
                 <EventItem
                     key={event.id}
@@ -80,10 +84,6 @@ export default function ScheduleView(props: Props) {
                     session={session}
                     track={track}
                 />);
-            const currEventDay = daysIntoYear(event.startTime);
-            if (prevEventDay && prevEventDay !== currEventDay) {
-                rows.push(<hr key={currEventDay}/>);
-            }
             prevEventDay = currEventDay;
         }
 
