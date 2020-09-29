@@ -1,0 +1,44 @@
+[
+    {
+        "affiliation": "University of Bristol",
+        "country": "England, UK",
+        "email": "test1@sc1.com",
+        "name": "Ed Nutting"
+    },
+    {
+        "affiliation": "University of Bristol",
+        "country": "England, UK",
+        "email": "test2@sc1.com",
+        "name": "Ben Marshall"
+    },
+    {
+        "affiliation": "University of Bristol",
+        "country": "England, UK",
+        "email": "test3@sc1.com",
+        "name": "Ross Gardiner"
+    },
+    {
+        "affiliation": "University of Pennsylvania",
+        "country": "United States of America",
+        "email": "test4@sc1.com",
+        "name": "Benjamin Pierce"
+    },
+    {
+        "affiliation": "University of Pennsylvania",
+        "country": "United States of America",
+        "email": "test5@sc1.com",
+        "name": "Harry Goldstein"
+    },
+    {
+        "affiliation": "George Mason University",
+        "country": "United States of America",
+        "email": "test6@sc1.com",
+        "name": "Jonathan Bell"
+    },
+    {
+        "affiliation": "University of California",
+        "country": "United States of America",
+        "email": "test7@sc1.com",
+        "name": "Crista Lopes"
+    }
+]

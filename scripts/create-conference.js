@@ -107,6 +107,7 @@ async function main() {
     const itemAttachmentsData = readDatas(rootPath, "itemAttachments");
     const sessionsData = readDatas(rootPath, "sessions");
     const eventsData = readDatas(rootPath, "events");
+    const registrationsData = readDatas(rootPath, "registrations");
 
     const youtubeFeedsData = [];
     const zoomRoomsData = [];
@@ -211,6 +212,8 @@ async function main() {
     remapObjects(sessions, "session", eventsData);
     remapObjects(items, "item", eventsData);
     const events = await createObjects(confId, adminSessionToken, eventsData, "event", "startTime");
+
+    const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name");
 
     // TODO: Registrations
 }
