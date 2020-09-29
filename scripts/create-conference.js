@@ -109,6 +109,8 @@ async function main() {
     // TODO: Item Attachments
     // TODO: Sessions
     // TODO: Events
+
+    // TODO: Registrations
 }
 
 main();
