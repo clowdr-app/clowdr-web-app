@@ -1,0 +1,277 @@
+[
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Demo 1",
+        "authors": [
+            "Harry Goldstein",
+            "Ed Nutting"
+        ],
+        "track": "Demonstrations",
+        "feed": {
+            "zoomRoom": "https://zoom.us/j/92200737321?pwd=eVdEVkFlelFhbTMxM1pzU09PWTlRUT09",
+            "name": "A Zoom Room"
+        }
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Demo 2",
+        "authors": [
+            "Benjamin Pierce",
+            "Crista Lopes"
+        ],
+        "track": "Demonstrations",
+        "feed": {
+            "zoomRoom": "https://zoom.us/j/92200737321?pwd=eVdEVkFlelFhbTMxM1pzU09PWTlRUT09",
+            "name": "A Zoom Room"
+        }
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Demo 3",
+        "authors": [
+            "Ross Gardiner",
+            "Ed Nutting",
+            "Jonathan Bell"
+        ],
+        "track": "Demonstrations",
+        "feed": {
+            "zoomRoom": "https://zoom.us/j/92200737321?pwd=eVdEVkFlelFhbTMxM1pzU09PWTlRUT09",
+            "name": "A Zoom Room"
+        }
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Demo 4",
+        "authors": [
+            "Harry Goldstein",
+            "Ed Nutting"
+        ],
+        "track": "Demonstrations"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Demo 5",
+        "authors": [
+            "Benjamin Pierce",
+            "Crista Lopes"
+        ],
+        "track": "Demonstrations"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Demo 6",
+        "authors": [
+            "Ross Gardiner",
+            "Ed Nutting",
+            "Jonathan Bell"
+        ],
+        "track": "Demonstrations"
+    },
+
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Keynote 1",
+        "authors": [
+            "Harry Goldstein",
+            "Ed Nutting"
+        ],
+        "track": "Keynotes",
+        "feed": {
+            "youtube": "EJS4hYNngto",
+            "name": "Cats on YouTube"
+        }
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Keynote 2",
+        "authors": [
+            "Benjamin Pierce",
+            "Crista Lopes"
+        ],
+        "track": "Keynotes",
+        "feed": {
+            "youtube": "EJS4hYNngto",
+            "name": "Cats on YouTube"
+        }
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Keynote 3",
+        "authors": [
+            "Ross Gardiner",
+            "Ed Nutting",
+            "Jonathan Bell"
+        ],
+        "track": "Keynotes",
+        "feed": {
+            "youtube": "EJS4hYNngto",
+            "name": "Cats on YouTube"
+        }
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Keynote 4",
+        "authors": [
+            "Harry Goldstein",
+            "Ed Nutting"
+        ],
+        "track": "Keynotes"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Keynote 5",
+        "authors": [
+            "Benjamin Pierce",
+            "Crista Lopes"
+        ],
+        "track": "Keynotes"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Keynote 6",
+        "authors": [
+            "Ross Gardiner",
+            "Ed Nutting",
+            "Jonathan Bell"
+        ],
+        "track": "Keynotes"
+    },
+
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": true,
+        "title": "Poster 1",
+        "authors": [
+            "Harry Goldstein",
+            "Ed Nutting"
+        ],
+        "track": "Posters"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": true,
+        "title": "Poster 2",
+        "authors": [
+            "Benjamin Pierce",
+            "Crista Lopes"
+        ],
+        "track": "Posters"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": true,
+        "title": "Poster 3",
+        "authors": [
+            "Ross Gardiner",
+            "Ed Nutting",
+            "Jonathan Bell"
+        ],
+        "track": "Posters"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": true,
+        "title": "Poster 4",
+        "authors": [
+            "Harry Goldstein",
+            "Ed Nutting"
+        ],
+        "track": "Posters"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": true,
+        "title": "Poster 5",
+        "authors": [
+            "Benjamin Pierce",
+            "Crista Lopes"
+        ],
+        "track": "Posters"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": true,
+        "title": "Poster 6",
+        "authors": [
+            "Ross Gardiner",
+            "Ed Nutting",
+            "Jonathan Bell"
+        ],
+        "track": "Posters"
+    },
+
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Research Paper 1",
+        "authors": [
+            "Harry Goldstein",
+            "Ed Nutting"
+        ],
+        "track": "Research Papers"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Research Paper 2",
+        "authors": [
+            "Benjamin Pierce",
+            "Crista Lopes"
+        ],
+        "track": "Research Papers"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Research Paper 3",
+        "authors": [
+            "Ross Gardiner",
+            "Ed Nutting",
+            "Jonathan Bell"
+        ],
+        "track": "Research Papers"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Research Paper 4",
+        "authors": [
+            "Harry Goldstein",
+            "Ed Nutting"
+        ],
+        "track": "Research Papers"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Research Paper 5",
+        "authors": [
+            "Benjamin Pierce",
+            "Crista Lopes"
+        ],
+        "track": "Research Papers"
+    },
+    {
+        "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla interdum sapien sapien, in lacinia ex feugiat in. Sed efficitur pellentesque sapien sed tincidunt. Quisque tincidunt dolor est, cursus placerat justo molestie et. Duis nulla metus, venenatis nec tellus elementum, feugiat dapibus velit. Quisque elementum placerat massa non porta. Sed id sapien ex. Praesent euismod gravida pharetra. Sed vestibulum elit mauris, ut placerat nibh eleifend sit amet. In varius varius lectus, iaculis porta elit ultricies ut.",
+        "exhibit": false,
+        "title": "Research Paper 6",
+        "authors": [
+            "Ross Gardiner",
+            "Ed Nutting",
+            "Jonathan Bell"
+        ],
+        "track": "Research Papers"
+    }
+]

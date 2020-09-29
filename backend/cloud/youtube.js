@@ -6,29 +6,29 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 
-// **** Zoom Room **** //
+// **** Youtube Feed **** //
 
 /**
- * @typedef {Object} ZoomRoomSpec
- * @property {string} url
+ * @typedef {Object} YouTubeFeedSpec
+ * @property {string} videoId
  * @property {Pointer} conference
  */
 
-const createZoomRoomSchema = {
-    url: "string",
+const createYouTubeFeedSchema = {
+    videoId: "string",
     conference: "string"
 };
 
 /**
- * Creates a Zoom Room.
+ * Creates a Youtube Feed.
  *
  * Note: You must perform authentication prior to calling this.
  *
- * @param {ZoomRoomSpec} data - The specification of the new Zoom Room.
- * @returns {Promise<Parse.Object>} - The new Zoom Room
+ * @param {YouTubeFeedSpec} data - The specification of the new Youtube Feed.
+ * @returns {Promise<Parse.Object>} - The new Youtube Feed
  */
-async function createZoomRoom(data) {
-    const newObject = new Parse.Object("ZoomRoom", data);
+async function createYouTubeFeed(data) {
+    const newObject = new Parse.Object("YouTubeFeed", data);
     await configureDefaultProgramACLs(newObject);
     await newObject.save(null, { useMasterKey: true });
     return newObject;
@@ -37,10 +37,10 @@ async function createZoomRoom(data) {
 /**
  * @param {Parse.Cloud.FunctionRequest} req
  */
-async function handleCreateZoomRoom(req) {
+async function handleCreateYouTubeFeed(req) {
     const { params, user } = req;
 
-    const requestValidation = validateRequest(createZoomRoomSchema, params);
+    const requestValidation = validateRequest(createYouTubeFeedSchema, params);
     if (requestValidation.ok) {
         const confId = params.conference;
 
@@ -48,7 +48,7 @@ async function handleCreateZoomRoom(req) {
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
-            const result = await createZoomRoom(spec);
+            const result = await createYouTubeFeed(spec);
             return result.id;
         }
         else {
@@ -59,4 +59,4 @@ async function handleCreateZoomRoom(req) {
         throw new Error(requestValidation.error);
     }
 }
-Parse.Cloud.define("zoomRoom-create", handleCreateZoomRoom);
+Parse.Cloud.define("youtubeFeed-create", handleCreateYouTubeFeed);

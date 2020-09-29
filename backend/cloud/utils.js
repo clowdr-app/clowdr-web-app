@@ -1,6 +1,8 @@
 /**
  * Validates a request object matches a given schema.
  * 
+ * TODO: Handle Parse.File fields
+ * 
  * @param {Object} schema The schema
  * @param {Object} request The request object
  * @returns { { ok: boolean, error: string | undefined } } ok is true if request matches schema
@@ -65,7 +67,20 @@ function validateObjectType(keyPrefix, schema, request) {
 function validateBasicType(key, schemaType, actualValue) {
     let actualType = typeof actualValue;
 
-    if (schemaType === "string" || schemaType === "boolean" || schemaType === "number") {
+    if (schemaType === "date") {
+        if (actualType !== "string") {
+            return {
+                ok: false,
+                error: `Schema mismatch @${key}. Expected date string, received '${actualType}'.`
+            }
+        }
+        else {
+            // Validate we can create a date
+            // eslint-disable-next-line no-unused-vars
+            const x = new Date(actualValue);
+        }
+    }
+    else if (schemaType === "string" || schemaType === "boolean" || schemaType === "number") {
         if (actualType !== schemaType) {
             return {
                 ok: false,

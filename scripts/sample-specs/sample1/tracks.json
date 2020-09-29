@@ -1,0 +1,22 @@
+[
+    {
+        "shortName": "Demos",
+        "name": "Demonstrations",
+        "colour": "#0000ff"
+    },
+    {
+        "shortName": "Keynotes",
+        "name": "Keynotes",
+        "colour": "#ff00ff"
+    },
+    {
+        "shortName": "Posters",
+        "name": "Posters",
+        "colour": "#ff0000"
+    },
+    {
+        "shortName": "Papers",
+        "name": "Research Papers",
+        "colour": "#00ff00"
+    }
+]

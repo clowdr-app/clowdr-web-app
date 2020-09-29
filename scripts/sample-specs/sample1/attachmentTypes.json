@@ -1,0 +1,43 @@
+[
+    {
+        "name": "Paper",
+        "displayAsLink": true,
+        "isCoverImage": false,
+        "ordinal": 1,
+        "supportsFile": true
+    },
+    {
+        "name": "Poll for Q&A",
+        "displayAsLink": true,
+        "isCoverImage": false,
+        "ordinal": 5,
+        "supportsFile": false
+    },
+    {
+        "name": "Poster",
+        "displayAsLink": false,
+        "isCoverImage": true,
+        "ordinal": 4,
+        "supportsFile": true,
+        "extra": "Only png and jpg are supported",
+        "fileTypes": [
+            "image/jpeg",
+            "image/png"
+        ]
+    },
+    {
+        "name": "Slides",
+        "displayAsLink": true,
+        "isCoverImage": false,
+        "ordinal": 2,
+        "supportsFile": true
+    },
+    {
+        "name": "Video",
+        "displayAsLink": true,
+        "isCoverImage": false,
+        "ordinal": 3,
+        "supportsFile": false,
+        "extra": "Links to YouTube or other streaming video services"
+    }
+]

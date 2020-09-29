@@ -1,8 +1,0 @@
-{
-    "name": "Video",
-    "displayAsLink": true,
-    "isCoverImage": false,
-    "ordinal": 3,
-    "supportsFile": false,
-    "extra": "Links to YouTube or other streaming video services"
-}
