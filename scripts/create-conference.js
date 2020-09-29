@@ -90,6 +90,8 @@ async function main() {
         });
     }
 
+    // TODO: Content feeds
+
     const tracksDir = path.join(rootPath, "tracks");
     const trackFileNames = fs.readdirSync(tracksDir);
     for (const trackFileName of trackFileNames) {
@@ -101,6 +103,12 @@ async function main() {
             sessionToken: adminSessionToken
         });
     }
+
+    // TODO: Persons
+    // TODO: Items
+    // TODO: Item Attachments
+    // TODO: Sessions
+    // TODO: Events
 }
 
 main();
