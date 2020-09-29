@@ -1,6 +1,8 @@
 /* global Parse */
 // ^ for eslint
 
+// tslint:disable:no-console
+
 const Twilio = require("twilio");
 
 const { validateRequest } = require("./utils");
@@ -193,7 +195,6 @@ Parse.Cloud.job("conference-create", async (request) => {
     const flairMap = new Map();
     let loggedInText = null;
     let adminUser = null;
-    let adminUserPresence = null;
     let adminUserProfile = null;
     let twilioSubaccount = null;
     const configurationMap = new Map();
@@ -235,18 +236,6 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up admin user profile. ${e2}`);
-            cleanupSuccess = false;
-        }
-
-        try {
-            if (adminUserPresence) {
-                console.log(`Destroying admin user presence: '${adminUserPresence.id}'`);
-                await adminUserPresence.destroy({ useMasterKey: true });
-                console.log(`Destroyed admin user presence: '${adminUserPresence.id}'`);
-            }
-        }
-        catch (e2) {
-            console.error(`Failed to clean up admin user presence. ${e2}`);
             cleanupSuccess = false;
         }
 
@@ -505,27 +494,6 @@ Parse.Cloud.job("conference-create", async (request) => {
             }
             message("Created admin user.");
 
-            // Create admin user presence
-            message("Creating admin user presence...");
-            {
-                const adminUserPresenceACL = new Parse.ACL();
-                adminUserPresenceACL.setPublicReadAccess(false);
-                adminUserPresenceACL.setPublicWriteAccess(false);
-                adminUserPresenceACL.setRoleReadAccess(attendeeRole, true);
-                adminUserPresenceACL.setRoleWriteAccess(adminRole, true);
-                adminUserPresenceACL.setReadAccess(adminUser, true);
-                adminUserPresenceACL.setWriteAccess(adminUser, true);
-                const adminUserPresenceO = new Parse.Object("UserPresence");
-                adminUserPresenceO.setACL(adminUserPresenceACL);
-                adminUserPresence = await adminUserPresenceO.save({
-                    isDNT: false,
-                    lastSeen: new Date()
-                }, {
-                    useMasterKey: true
-                });
-            }
-            message("Created admin user presence.");
-
             // Create admin user profile
             message("Creating admin user profile...");
             {
@@ -557,7 +525,6 @@ Parse.Cloud.job("conference-create", async (request) => {
                     pronouns: params.admin.pronouns,
                     tags: params.admin.tags,
                     webpage: params.admin.webpage,
-                    presence: adminUserPresence,
                 }, {
                     useMasterKey: true
                 });
@@ -789,7 +756,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             await setConfiguration("SENDGRID_SENDER", params.sendgrid.SENDER);
             message(`Configured SendGrid.`);
 
-            message(`Conference created: '${conference.id}'.`);
+            message(conference.id);
         }
         else {
             console.error("ERROR: " + requestValidation.error);

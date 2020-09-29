@@ -7,8 +7,8 @@
  * 
  * Schema type definitions:
  * 
- * basic_type: 'string' | 'boolean' | 'number'
- * array_type: '[' basic_type ']'
+ * basic_type: 'string' | 'boolean' | 'number' (append '?' for optional)
+ * array_type: '[' basic_type ']' (append '?' for optional)
  * 
  * 
  * Schema format:
@@ -26,11 +26,22 @@ function validateObjectType(keyPrefix, schema, request) {
     let requestKeys = Object.keys(request);
     for (let key of typeKeys) {
         let schemaType = schema[key];
+        const optional = typeof schemaType === "string" && schemaType.endsWith("?");
+        if (optional) {
+            schemaType = schemaType.substr(0, schemaType.length - 1);
+        }
         
         if (!requestKeys.includes(key)) {
-            return {
-                ok: false,
-                error: `Missing '${keyPrefix}.${key}'`
+            if (!optional) {
+                return {
+                    ok: false,
+                    error: `Missing '${keyPrefix}.${key}'`
+                }
+            }
+            else {
+                return {
+                    ok: true
+                };
             }
         }
 

@@ -1,0 +1,12 @@
+{
+    "name": "Poster",
+    "displayAsLink": false,
+    "isCoverImage": true,
+    "ordinal": 4,
+    "supportsFile": true,
+    "extra": "Only png and jpg are supported",
+    "fileTypes": [
+        "image/jpeg",
+        "image/png"
+    ]
+}

@@ -1,8 +1,9 @@
+// tslint:disable:no-console
+
 const fs = require('fs');
 const fsExtra = require('fs-extra')
 const { spawn } = require('child_process');
 const dotenv = require('dotenv');
-const { generateTestData } = require("../src/tests/initTestDB.js");
 const BSON = require('bson');
 const path = require('path');
 
@@ -26,60 +27,42 @@ else {
     fsExtra.emptyDirSync(testDirPath);
 }
 
-let testData = generateTestData().json;
 let schemaFilePaths = fs.readdirSync(schemaDirPath);
 for (let schemaFilePath of schemaFilePaths) {
     let tableName = schemaFilePath.replace(/\.json/i, "");
-    if (!testData[tableName]) {
-        if (tableName.includes("meta")) {
+    if (tableName.includes("meta")) {
+        console.log(schemaFilePath);
+        fs.copyFileSync(
+            `${schemaDirPath}/${schemaFilePath}`,
+            `${testDirPath}/${schemaFilePath}`
+        );
+    }
+    else {
+        let JSONStr = fs.readFileSync(`${schemaDirPath}/${schemaFilePath}`, 'UTF-8');
+        const JSONLines = JSONStr.split(/\r?\n/);
+        if (JSONLines.length > 0 && JSONLines[0].length > 0) {
             console.log(schemaFilePath);
-            fs.copyFileSync(
-                `${schemaDirPath}/${schemaFilePath}`,
-                `${testDirPath}/${schemaFilePath}`
+
+            let data;
+            JSONLines.forEach(JSONLine => {
+                if (JSONLine.length > 0) {
+                    let obj = JSON.parse(JSONLine);
+                    let datas = BSON.serialize(obj);
+                    if (data) {
+                        data = Buffer.concat([datas, data]);
+                    }
+                    else {
+                        data = datas;
+                    }
+                }
+            });
+
+            fs.writeFileSync(
+                `${testDirPath}/${tableName}.bson`,
+                data
             );
         }
-        else {
-            let JSONStr = fs.readFileSync(`${schemaDirPath}/${schemaFilePath}`, 'UTF-8');
-            const JSONLines = JSONStr.split(/\r?\n/);
-            if (JSONLines.length > 0 && JSONLines[0].length > 0) {
-                console.log(schemaFilePath);
-
-                let data;
-                JSONLines.forEach(JSONLine => {
-                    if (JSONLine.length > 0) {
-                        let obj = JSON.parse(JSONLine);
-                        let datas = BSON.serialize(obj);
-                        if (data) {
-                            data = Buffer.concat([datas, data]);
-                        }
-                        else {
-                            data = datas;
-                        }
-                    }
-                });
-
-                fs.writeFileSync(
-                    `${testDirPath}/${tableName}.bson`,
-                    data
-                );
-            }
-        }
     }
-}
-
-for (let tableName in testData) {
-    let fName = tableName.replace(/:/g, "%3A");
-    let datas = testData[tableName].map(x => BSON.serialize(x));
-    let data = Buffer.concat(datas);
-    console.log(fName);
-    fs.writeFileSync(
-        `${testDirPath}/${fName}.bson`,
-        data
-    );
-    fs.writeFileSync(
-        `${testDirPath}/${fName}.json`,
-        JSON.stringify(testData[tableName])
-    );
 }
 
 let db = process.env.MONGODB_DB;
@@ -138,10 +121,10 @@ dropDBProcess.on("exit", (code) => {
             console.error(`DB drop error! ${err.toString()}`);
         });
 
-        dbRestoreProcess.on("exit", (code) => {
-            if (code) {
+        dbRestoreProcess.on("exit", (code2) => {
+            if (code2) {
                 console.error("===============================");
-                console.error(`DB restore failed! Error code: ${code}`);
+                console.error(`DB restore failed! Error code: ${code2}`);
                 console.error("===============================");
             }
             else {

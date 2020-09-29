@@ -4,7 +4,7 @@
     "private": true,
     "dependencies": {
         "@babel/core": "7.9.0",
-        "@clowdr-app/clowdr-db-schema": "^1.0.6",
+        "@clowdr-app/clowdr-db-schema": "^1.1.0",
         "@material-ui/core": "^4.11.0",
         "@material-ui/icons": "^4.9.1",
         "@primer/octicons-react": "^9.4.0",
@@ -140,8 +140,9 @@
         "run-test": "node scripts/test.js",
         "debug-test": "node scripts/test.js --runInBand --maxConcurrency=1 --no-cache",
         "init-test-data": "node-env-run -E .env scripts/test-db.js",
+        "blank-db": "node-env-run -E .env scripts/blank-db.js",
         "deploy": "deployator",
-        "create-sample-conference": "node-env-run -E .env scripts/create-sample-conference.js"
+        "create-conference": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample1"
     },
     "eslintConfig": {
         "extends": "react-app"

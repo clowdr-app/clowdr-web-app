@@ -59,21 +59,14 @@ const RelationsToTableNames = {
     _User: {
         profiles: "UserProfile"
     },
-    UserPresence: {
-    },
     UserProfile: {
         conference: "Conference",
-        presence: "UserPresence",
         primaryFlair: "Flair",
         user: "_User",
         flairs: "Flair"
     },
-    ZoomHostAccount: {
-        conference: "Conference",
-    },
     ZoomRoom: {
         conference: "Conference",
-        hostAccount: "ZoomHostAccount",
     },
     TextChat: {
         conference: "Conference"
@@ -360,35 +353,6 @@ function generateUsers() {
     return result;
 }
 
-function generateUserPresences() {
-    let result = [];
-
-    for (let i = 1; i <= 3; i++) {
-        const acl = {
-            "role:mockConference1-admin": { w: true },
-            "role:mockConference1-attendee": { r: true }
-        };
-        acl["mockUser" + i] = { w: true };
-
-        result.push({
-            createdAt: new Date(),
-            id: "mockUserPresence" + i,
-            updatedAt: new Date(),
-            isDNT: false,
-            lastSeen: new Date(),
-
-            _acl: acl,
-            _wperm: [
-                "role:mockConference1-admin",
-                "mockUser" + i,
-            ],
-            _rperm: ["role:mockConference1-attendee"],
-        });
-    }
-
-    return result;
-}
-
 function generateUserProfiles() {
     let result = [];
 
@@ -437,7 +401,6 @@ function generateUserProfiles() {
             welcomeModalShown: false,
             conference: "mockConference1",
             primaryFlair: "mockFlair" + i,
-            presence: "mockUserPresence" + i,
             programPersons: [], // TODO: Mock program persons
             user: "mockUser" + i,
 
@@ -2550,9 +2513,7 @@ module.exports = {
             Registration: [],
             SocialSpace: [],
             _User: [],
-            UserPresence: [],
             UserProfile: [],
-            ZoomHostAccount: [],
             ZoomRoom: []
         };
 
@@ -2575,9 +2536,6 @@ module.exports = {
 
         result._User = generateUsers();
         convertToMongoJSON("_User", result._User, allItems);
-
-        result.UserPresence = generateUserPresences();
-        convertToMongoJSON("UserPresence", result.UserPresence, allItems);
 
         result.UserProfile = generateUserProfiles();
         convertToMongoJSON("UserProfile", result.UserProfile, allItems);

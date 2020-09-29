@@ -1,6 +1,9 @@
 /* global Parse */
 // ^ for eslint
 
+// TODO: Before delete: Remove user ACLs for every record related to the conference
+// TODO: Before save: If banning a user, remove their ACLs for every record related to the conference
+
 const Twilio = require("twilio");
 const {
     getConferenceById,
@@ -50,6 +53,10 @@ Parse.Cloud.define("user-create", async (request) => {
 
         if (signUpEnabled) {
             // TODO: Auto-join to text chats
+            // TODO: Link profile to program person (author)
+            // TODO: If is an author, auto-subscribe them to the text chats for their papers
+            // TODO: Do we want authors to be auto-watching their items & content feeds (video rooms/text chats)
+            // TODO: Give authors write access to their program items/events
 
             let user = await getUserByEmail(params.email);
             if (user) {
@@ -84,21 +91,6 @@ Parse.Cloud.define("user-create", async (request) => {
                 let adminRole = await getRoleByName("admin", conference);
                 let attendeeRole = await getRoleByName("attendee", conference);
 
-                let newPresence = new Parse.Object("UserPresence", {
-                    lastSeen: new Date(),
-                    isDNT: false // TODO: Get from signup form
-                });
-                let newPresenceACL = new Parse.ACL();
-                newPresenceACL.setPublicReadAccess(false);
-                newPresenceACL.setPublicWriteAccess(false);
-                newPresenceACL.setRoleReadAccess(attendeeRole, true);
-                newPresenceACL.setRoleReadAccess(adminRole, true);
-                newPresenceACL.setRoleWriteAccess(adminRole, true);
-                newPresenceACL.setReadAccess(newUser, true);
-                newPresenceACL.setWriteAccess(newUser, true);
-                newPresence.setACL(newPresenceACL);
-                newPresence = await newPresence.save(null, { useMasterKey: true });
-
                 let emptyFlair = await getFlairByLabel("<empty>", conference);
                 let newProfile = new Parse.Object("UserProfile", {
                     user: newUser,
@@ -107,7 +99,6 @@ Parse.Cloud.define("user-create", async (request) => {
                     welcomeModalShown: false,
                     realName: params.fullName,
                     displayName: params.fullName,
-                    presence: newPresence,
                     dataConsentGiven: false, // TODO: Require from sign up form
                     pronouns: ["they", "them"],
                     tags: []
