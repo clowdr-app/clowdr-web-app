@@ -16,8 +16,8 @@
     &.schedule {
         grid-template-columns: 100%;
         grid-auto-rows       : auto;
-        grid-column-gap      : 1em;
-        grid-row-gap         : 1em;
+        grid-column-gap      : 0;
+        grid-row-gap         : 0;
 
         hr {
             border-color: $color-3;
