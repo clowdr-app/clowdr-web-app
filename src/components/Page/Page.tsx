@@ -23,6 +23,7 @@ import ViewSession from '../Pages/Program/Session/ViewSession';
 import ViewEvent from '../Pages/Program/Event/ViewEvent';
 import { HeadingState } from '../../contexts/HeadingContext';
 import ViewAuthor from '../Pages/Program/Author/ViewAuthor';
+import ViewItem from '../Pages/Program/Item/ViewItem';
 
 interface Props {
     doLogin: doLoginF;
@@ -89,9 +90,6 @@ function Page(props: Props) {
             // TODO: Route for /legal
             // TODO: Route for /help
 
-            // TODO: Route for /item/:itemId (to view a program item)
-            // TODO: Route for /author/:authorId (to view summary of ProgramPerson, their program items, and to direct message them)
-
             // TODO: Route for /exhibits (to view exhibited program items - e.g. posters)
 
             return {
@@ -128,6 +126,9 @@ function Page(props: Props) {
                     } />
                     <Route path="/event/:eventId" component={(p: RouteComponentProps<any>) =>
                         <ViewEvent eventId={p.match.params.eventId} />
+                    } />
+                    <Route path="/item/:itemId" component={(p: RouteComponentProps<any>) =>
+                        <ViewItem item={p.match.params.itemId} />
                     } />
                     <Route path="/author/:authorId" component={(p: RouteComponentProps<any>) =>
                         <ViewAuthor authorId={p.match.params.authorId} />

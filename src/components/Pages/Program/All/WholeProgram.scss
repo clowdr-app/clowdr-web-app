@@ -76,6 +76,11 @@
             @media only screen and (max-width: $break-md) {
                 max-height: 100%;
             }
+
+            &>.program-item {
+                padding      : 0.5em;
+                border-bottom: 1px solid $gray-5;
+            }
         }
     }
 
@@ -139,24 +144,24 @@
                 }
             }
 
-            &>.content {
+            &>.program-item {
                 text-align: left;
             }
         }
 
         &>.heading {
-            display       : flex;
-            flex-direction: row;
-            padding-bottom: 0.2em;
+            display        : flex;
+            flex-direction : row;
+            padding-bottom : 0.2em;
             justify-content: space-between;
-            flex-wrap: wrap;
+            flex-wrap      : wrap;
 
             &>.title {
                 display: inline-block;
             }
 
             &>a {
-                display: inline-block;
+                display  : inline-block;
                 font-size: 80%;
                 min-width: 8em;
             }
@@ -165,22 +170,29 @@
                 font-style: italic;
             }
         }
+    }
 
-        &>.content {
-            padding-left: 2em;
+    .program-item {
+        padding-left: 2em;
 
-            .authors {
-                font-style: italic;
-                font-size : 90%;
-                margin-top: 0.4em;
+        .authors {
+            font-style: italic;
+            font-size : 90%;
+            margin-top: 0.4em;
 
-                span {
-                    margin: 0 0.4em;
-                }
+            span {
+                margin: 0 0.4em;
+            }
+        }
+
+        &.clickable {
+            cursor: pointer;
+
+            &:hover {
+                background-color: rgba($color: #000000, $alpha: 0.05);
             }
         }
     }
-
 
 
     &.single-track {
@@ -189,6 +201,10 @@
 
             &>.title {
                 display: none;
+            }
+
+            &.with-heading>.title {
+                display: inline-block;
             }
 
             &>.content {
@@ -205,10 +221,10 @@
 }
 
 .track-marker {
-    display: inline-block;
+    display       : inline-block;
     vertical-align: middle;
 
-    width: 20px;
+    width : 20px;
     height: 20px;
 
     margin: 0 0.3em 0.3em 0.3em;

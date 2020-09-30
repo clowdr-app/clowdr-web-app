@@ -112,58 +112,78 @@ async function main() {
     const youtubeFeedsData = [];
     const zoomRoomsData = [];
     const contentFeedsData = [];
-    function extractFeeds(item) {
-        if (item.feed) {
-            let content;
+    const textChatsData = [];
+    function extractFeeds(type) {
+        return (item) => {
+            if (item.feed) {
+                let content;
 
-            if (item.feed.zoomRoom) {
-                let feed = zoomRoomsData.find(x => x.url === item.feed.zoomRoom);
-                if (!feed) {
-                    feed = {
-                        id: zoomRoomsData.length,
-                        url: item.feed.zoomRoom
-                    };
-                    zoomRoomsData.push(feed);
+                if (item.feed.zoomRoom) {
+                    let feed = zoomRoomsData.find(x => x.url === item.feed.zoomRoom);
+                    if (!feed) {
+                        feed = {
+                            id: zoomRoomsData.length,
+                            url: item.feed.zoomRoom
+                        };
+                        zoomRoomsData.push(feed);
+                    }
+                    content = contentFeedsData.find(x => x.zoomRoom === feed.id && x.name === item.feed.name);
+                    if (!content) {
+                        content = {
+                            id: contentFeedsData.length,
+                            name: item.feed.name,
+                            zoomRoom: feed.id
+                        };
+                        contentFeedsData.push(content);
+                    }
                 }
-                content = contentFeedsData.find(x => x.zoomRoom === feed.id && x.name === item.feed.name);
-                if (!content) {
-                    content = {
-                        id: contentFeedsData.length,
-                        name: item.feed.name,
-                        zoomRoom: feed.id
-                    };
-                    contentFeedsData.push(content);
+                else if (item.feed.youtube) {
+                    let feed = youtubeFeedsData.find(x => x.videoId === item.feed.youtube);
+                    if (!feed) {
+                        feed = {
+                            id: youtubeFeedsData.length,
+                            videoId: item.feed.youtube
+                        };
+                        youtubeFeedsData.push(feed);
+                    }
+                    content = contentFeedsData.find(x => x.youtube === feed.id && x.name === item.feed.name);
+                    if (!content) {
+                        content = {
+                            id: contentFeedsData.length,
+                            name: item.feed.name,
+                            youtube: feed.id
+                        };
+                        contentFeedsData.push(content);
+                    }
                 }
-            }
-            else if (item.feed.youtube) {
-                let feed = youtubeFeedsData.find(x => x.videoId === item.feed.youtube);
-                if (!feed) {
-                    feed = {
-                        id: youtubeFeedsData.length,
-                        videoId: item.feed.youtube
-                    };
-                    youtubeFeedsData.push(feed);
-                }
-                content = contentFeedsData.find(x => x.youtube === feed.id && x.name === item.feed.name);
-                if (!content) {
-                    content = {
-                        id: contentFeedsData.length,
-                        name: item.feed.name,
-                        youtube: feed.id
-                    };
-                    contentFeedsData.push(content);
-                }
-            }
+                else if (item.feed.textChat) {
+                    content = contentFeedsData.find(x => x.name === item.feed.name);
+                    if (!content) {
+                        const newTextChat = {
+                            id: textChatsData.length,
+                            name: item.feed.name,
+                            autoWatch: false
+                        };
+                        textChatsData.push(newTextChat);
 
-            item.feed = content.id;
+                        content = {
+                            id: contentFeedsData.length,
+                            name: newTextChat.name,
+                            textChat: newTextChat.id
+                        };
+                        contentFeedsData.push(content);
+                    }
+                }
+
+                item.feed = content.id;
+            }
         }
     }
-    tracksData.forEach(extractFeeds);
-    itemsData.forEach(extractFeeds);
-    sessionsData.forEach(extractFeeds);
-    eventsData.forEach(extractFeeds);
+    tracksData.forEach(extractFeeds("Track"));
+    itemsData.forEach(extractFeeds("Item"));
+    sessionsData.forEach(extractFeeds("Session"));
+    eventsData.forEach(extractFeeds("Event"));
 
-    const textChatsData = [];
     // Extract text chats for tracks
     tracksData.forEach(track => {
         if (track.textChat) {

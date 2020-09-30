@@ -2,13 +2,17 @@
     form {
         display       : flex;
         flex-direction: column;
-        margin-left   : $gutter;
+        margin        : 0 $gutter 0 $gutter;
         max-width     : $main-width;
-    
+
+        @media only screen and (max-width: $break-sm) {
+            margin: 0;
+        }
+
         label {
             margin-top   : mm(4);
             margin-bottom: mm(1);
-    
+
             &:first-child {
                 margin-top: 0;
             }
@@ -16,15 +20,15 @@
 
         input {
             border-radius: 4px;
-            border: 1px solid black;
-            padding : mm(3) mm(3);
+            border       : 1px solid black;
+            padding      : mm(3) mm(3);
         }
-    
+
         .submit-container {
             display        : flex;
             justify-content: flex-end;
             margin-top     : mm(4);
-    
+
             button,
             input {
                 padding      : mm(3) mm(5);
@@ -32,17 +36,17 @@
                 border       : none;
                 border-radius: radius(2);
             }
-    
+
             button {
                 background  : $color-3;
                 margin-right: mm(5);
-    
+
                 &:disabled {
                     background: $gray-4;
                     cursor    : not-allowed;
                 }
             }
-    
+
             input {
                 background: $secondary;
             }

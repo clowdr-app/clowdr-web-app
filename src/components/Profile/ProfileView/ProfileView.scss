@@ -6,9 +6,11 @@ $main-width : mm(150);
 
 .profile-view {
     .content {
-        display: flex;
-        width  : calc(#{$photo-width} + #{$gutter} + #{$main-width});
-        margin : mm(20) auto 0 auto;
+        display        : flex;
+        margin         : 0 auto 0 auto;
+        flex-direction : row;
+        flex-wrap      : wrap;
+        justify-content: center;
 
         .photo {
             background-color: black;

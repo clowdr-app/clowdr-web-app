@@ -1,48 +1,19 @@
 @import "../../../../styles/util";
 
 .program-event {
-    .info {
-        .abstract {}
-
-        .authors {
-            font-style: italic;
-
-            a {
-                color: inherit;
-            }
-
-            span {
-                margin: 0 0.5em;
-            }
-        }
+    h2 {
+        font-size: 130%;
     }
 
-    .attachments {
-        h3 {
-            font-size  : inherit;
-            font-weight: bold;
-        }
+    .session-feed {
+        border-bottom: 1px solid $gray-5;
+        padding-bottom: 3em;
+        margin-bottom: 3em;
+    }
 
-        .video-player {
-            max-width: 100%;
-
-            width : 640px;
-            height: 360px;
-
-            @media only screen and (max-width: $break-md) {
-                width : 320px;
-                height: 180px;
-            }
-
-            position: relative;
-
-            div {
-                position: absolute;
-                top     : 0;
-                left    : 0;
-                bottom  : 0;
-                right   : 0;
-            }
-        }
+    .event-feed {
+        border-bottom: 1px solid $gray-5;
+        padding-bottom: 3em;
+        margin-bottom: 3em;
     }
 }

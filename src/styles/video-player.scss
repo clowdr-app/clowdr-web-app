@@ -1,0 +1,21 @@
+.video-player {
+    max-width: 100%;
+
+    width : 640px;
+    height: 360px;
+
+    @media only screen and (max-width: $break-md) {
+        width : 320px;
+        height: 180px;
+    }
+
+    position: relative;
+
+    div {
+        position: absolute;
+        top     : 0;
+        left    : 0;
+        bottom  : 0;
+        right   : 0;
+    }
+}

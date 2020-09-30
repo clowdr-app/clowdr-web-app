@@ -4,7 +4,11 @@
         "endTime": "2020-09-29T22:10:00.000Z",
         "startTime": "2020-09-29T22:00:00.000Z",
         "item": "Demo 1",
-        "session": "Demo Session 1"
+        "session": "Demo Session 1",
+        "feed": {
+            "name": "Demo 1 Q&A",
+            "textChat": true
+        }
     },
     {
         "endTime": "2020-09-29T22:20:00.000Z",

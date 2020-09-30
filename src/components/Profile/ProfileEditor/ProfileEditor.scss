@@ -9,15 +9,19 @@ $main-width : mm(150);
     @include basic-form;
 
     .content {
-        display: flex;
-        width  : calc(#{$photo-width} + #{$gutter} + #{$main-width});
-        margin : mm(20) auto 0 auto;
+        display        : flex;
+        max-width      : calc(#{$photo-width} + #{$gutter} + #{$main-width});
+        margin         : 0 auto 0 auto;
+        flex-direction : row;
+        flex-wrap      : wrap;
+        justify-content: space-evenly;
 
         .photo {
             background-color: black;
             width           : $photo-width;
             height          : $photo-width;
             position        : relative;
+            margin-bottom   : $gutter;
 
             img {
                 width          : $photo-width;

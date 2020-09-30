@@ -1,0 +1,15 @@
+@import "../../styles/util";
+
+.content-feed {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 1em;
+
+    h3 {
+        font-size: inherit;
+        font-weight: bold;
+    }
+}

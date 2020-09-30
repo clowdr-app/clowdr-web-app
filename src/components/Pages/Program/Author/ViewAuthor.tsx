@@ -5,6 +5,8 @@ import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import ProfileView from "../../../Profile/ProfileView/ProfileView";
+import Item from "../All/Item";
+import "./ViewAuthor.scss";
 
 interface Props {
     authorId: string;
@@ -27,7 +29,7 @@ export default function ViewAuthor(props: Props) {
         [author]);
 
     useSafeAsync(
-        async () => await author?.items ?? null,
+        async () => (await author?.items ?? null)?.sort((x, y) => x.title.localeCompare(y.title)),
         setItems,
         [author]);
 
@@ -35,12 +37,21 @@ export default function ViewAuthor(props: Props) {
 
     useHeading(author ? author.name : "Author");
 
-    // TODO: Extract ViewItem from ViewEventItem and re-use for the list of items here
-
     return author
-        ? <>
+        ? <div className="view-author">
             {profile ? <ProfileView profile={profile} /> : <></>}
-            <p>TODO: Render an author program items.</p>
-        </>
+            <div className="whole-program single-track single-session">
+                <div className="track with-heading">
+                    <h2 className="title">
+                        Authored items
+                    </h2>
+                    <div className="content">
+                        {items ? items.map(x => {
+                            return <Item key={x.id} item={x} clickable={true} />
+                        }) : <LoadingSpinner />}
+                    </div>
+                </div>
+            </div>
+        </div>
         : <LoadingSpinner />;
 }
