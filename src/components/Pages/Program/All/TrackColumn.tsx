@@ -19,10 +19,6 @@ export default function TrackColumn(props: Props) {
     const [sessions, setSessions] = useState<Array<ProgramSession> | null>(null);
     const [items, setItems] = useState<Array<ProgramItem> | null>(null);
 
-    // TODO: Fetch & render program items for this track that are not pointed to
-    //       by any session event i.e. are unscheduled (such as poster items in
-    //       a Posters track)
-
     // Fetch data
     useSafeAsync(async () => await props.track.sessions, setSessions, [props.track]);
     useSafeAsync(async () => {
