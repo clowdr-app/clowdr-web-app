@@ -4,8 +4,9 @@
         "startTime": "2020-09-29T22:00:00.000Z",
         "title": "Demo Session 1",
         "feed": {
-            "youtube": "EJS4hYNngto",
-            "name": "Cats on YouTube"
+            "name": "Demo Session Room",
+            "videoRoom": true,
+            "textChat": true
         },
         "track": "Demonstrations"
     },
@@ -25,8 +26,8 @@
         "startTime": "2020-09-29T22:00:00.000Z",
         "title": "Keynote Session 1",
         "feed": {
-            "youtube": "EJS4hYNngto",
-            "name": "Cats on YouTube"
+            "name": "Keynote Session Room",
+            "videoRoom": true
         },
         "track": "Keynotes"
     },
@@ -35,8 +36,8 @@
         "startTime": "2020-09-29T23:00:00.000Z",
         "title": "Keynote Session 2",
         "feed": {
-            "zoomRoom": "https://zoom.us/j/92200737321?pwd=eVdEVkFlelFhbTMxM1pzU09PWTlRUT09",
-            "name": "A Zoom Room"
+            "name": "Keynote Session Chat",
+            "textChat": true
         },
         "track": "Keynotes"
     },

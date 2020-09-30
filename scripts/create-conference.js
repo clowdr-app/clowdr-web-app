@@ -113,6 +113,7 @@ async function main() {
     const zoomRoomsData = [];
     const contentFeedsData = [];
     const textChatsData = [];
+    const videoRoomsData = [];
     function extractFeeds(type) {
         return (item) => {
             if (item.feed) {
@@ -152,6 +153,39 @@ async function main() {
                             id: contentFeedsData.length,
                             name: item.feed.name,
                             youtube: feed.id
+                        };
+                        contentFeedsData.push(content);
+                    }
+                }
+                else if (item.feed.videoRoom) {
+                    content = contentFeedsData.find(x => x.name === item.feed.name);
+                    if (!content) {
+                        let textChatId = undefined;
+                        if (item.feed.textChat) {
+                            textChatId = textChatsData.find(x => x.name === item.feed.name)?.id;
+                            if (!textChatId) {
+                                textChatId = textChatsData.length;
+                                const newTextChat = {
+                                    id: textChatsData.length,
+                                    name: item.feed.name,
+                                    autoWatch: false
+                                };
+                                textChatsData.push(newTextChat);
+                            }
+                        }
+                        const newVideoRoom = {
+                            id: videoRoomsData.length,
+                            name: item.feed.name,
+                            capacity: 50,
+                            ephemeral: false,
+                            textChat: textChatId
+                        };
+                        videoRoomsData.push(newVideoRoom);
+
+                        content = {
+                            id: contentFeedsData.length,
+                            name: newVideoRoom.name,
+                            videoRoom: newVideoRoom.id
                         };
                         contentFeedsData.push(content);
                     }
@@ -229,9 +263,12 @@ async function main() {
     const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id");
     const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id");
     const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id");
+    remapObjects(textChats, "textChat", videoRoomsData);
+    const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id");
     remapObjects(youtubeFeeds, "youtube", contentFeedsData);
     remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
     remapObjects(textChats, "textChat", contentFeedsData);
+    remapObjects(videoRooms, "videoRoom", contentFeedsData);
     const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id");
     remapObjects(contentFeeds, "feed", tracksData);
     remapObjects(contentFeeds, "feed", itemsData);

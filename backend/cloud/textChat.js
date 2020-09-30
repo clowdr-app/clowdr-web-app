@@ -15,7 +15,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
         const parseChat = req.object;
         const confId = parseChat.get("conference").id;
         const twilioChatService = await getTwilioChatService(confId);
-        if (twilioChatService) {
+        if (twilioChatService && !req.object.get("twilioID")) {
             const friendlyName = req.object.get("name");
             const uniqueName = friendlyName;
             const createdBy = "system";
