@@ -1,6 +1,7 @@
 import { ContentFeed, ProgramTrack, TextChat } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
+import SplitterLayout from "react-splitter-layout";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useHeading from "../../../../hooks/useHeading";
@@ -10,6 +11,7 @@ import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import TrackColumn from "../All/TrackColumn";
 import TrackMarker from "../All/TrackMarker";
 import "../All/WholeProgram.scss";
+import "./ViewTrack.scss";
 
 interface Props {
     trackId: string;
@@ -20,6 +22,7 @@ export default function ViewTrack(props: Props) {
     const [track, setTrack] = useState<ProgramTrack | null>(null);
     const [feed, setFeed] = useState<ContentFeed | null>(null);
     const [textChat, setTextChat] = useState<TextChat | "not present" | null>(null);
+    const [chatSize, setChatSize] = useState(30);
 
     // Initial data fetch
     useSafeAsync(
@@ -70,19 +73,38 @@ export default function ViewTrack(props: Props) {
         subtitle: track ? <TrackMarker track={track} /> : undefined
     });
 
-    // TODO: Render TextChat as a column to the side of the track view
+    // TODO: Render TextChat in a horizontally divided view with the program
 
-    return <div className="view-track">
-        <div className="whole-program single-track">
+    const trackEl
+        = <div className="whole-program single-track">
             {track ? <TrackColumn key={track.id} track={track} /> : <LoadingSpinner />}
-        </div>
-        {!!feed
-            ? <div className="embedded-content">
-                {textChat && textChat !== "not present"
-                    ? <ChatFrame chatSid={textChat.twilioID} />
-                    : <div className="invalid">This track has been given an invalid or unsupported feed.</div>}
+        </div>;
+
+    return !!feed
+        ? <div className="view-track">
+            <SplitterLayout
+                vertical={true}
+                percentage={true}
+                ref={component => { component?.setState({ secondaryPaneSize: chatSize }) }}
+                onSecondaryPaneSizeChange={newSize => setChatSize(newSize)}
+            >
+                <div className="split top-split">
+                    {trackEl}
+                    <button onClick={() => setChatSize(100)}>
+                        &#9650;
+                </button>
                 </div>
-            : <></>
-        }
-    </div>;
+                <div className="split bottom-split">
+                    <button onClick={() => setChatSize(0)}>
+                        &#9660;
+                    </button>
+                    <div className="embedded-content">
+                        {textChat && textChat !== "not present"
+                            ? <ChatFrame chatSid={textChat.twilioID} />
+                            : <div className="invalid">This track has been given an invalid or unsupported feed.</div>}
+                    </div>
+                </div>
+            </SplitterLayout>
+        </div>
+        : trackEl;
 }
