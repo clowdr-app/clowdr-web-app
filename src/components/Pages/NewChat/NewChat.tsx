@@ -9,6 +9,9 @@ import { Redirect } from "react-router-dom";
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
 import MultiSelect from "react-multi-select-component";
+import "./NewChat.scss";
+import { addError } from "../../../classes/Notifications/Notifications";
+import AsyncButton from "../../AsyncButton/AsyncButton";
 
 interface Props {
     dmUserProfileId?: string;
@@ -57,6 +60,14 @@ export default function NewChat(props: Props) {
     }, setAllUsers, []);
 
     /**
+     * Check whether the state is currently valid for the form to be submitted.
+     */
+    function inputValid(): boolean {
+        // Currently we don't bother checking that the title is long enough (this is handled at submission time)
+        return invites !== null && invites.length > 0
+    }
+
+    /**
      * Elements that need to be on this page (as a MVP):
      *
      *    * Who to invite to the chat (+ auto-fill for DM scenario)
@@ -68,59 +79,62 @@ export default function NewChat(props: Props) {
         ev.preventDefault();
         ev.stopPropagation();
 
-        if (invites && invites.length > 0) {
-            const newChannel = await mChat?.createChat(
-                invites.map(x => x.value),
-                !isPublic,
-                (!isPublic && invites.length === 1) ? `DM: ${currentUserProfile.displayName} <-> ${invites[0].label}` : title
-            )
-            console.log(`New channel SID ${JSON.stringify(newChannel)}`);
-            setNewChannelSID(newChannel?.sid ?? null);
+        if (invites === null || invites.length === 0) {
+            addError("You must invite somebody to chat.")
+            return;
         }
+
+        const chatTitle = (!isPublic && invites.length === 1) ? `DM: ${currentUserProfile.displayName} <-> ${invites[0].label}` : title;
+
+        if (chatTitle === null || chatTitle.trim().length < 5) {
+            addError("You must choose a chat title with at least five characters.");
+            return;
+        }
+
+        const newChannel = await mChat?.createChat(
+            invites.map(x => x.value),
+            !isPublic,
+            chatTitle
+        )
+        console.log(`New channel SID ${JSON.stringify(newChannel)}`);
+        setNewChannelSID(newChannel?.sid ?? null);
     }
 
-    function inviteAll(ev: React.FormEvent<HTMLButtonElement>) {
-        ev.preventDefault();
-        ev.stopPropagation();
-
-        setInvites(allUsers);
-
-        return true;
-    }
-
-    const publicEl = <label>
-        <span>Public?</span>
+    const publicEl = <>
+        <label htmlFor="is-public">Public?</label>
         <Toggle
+            name="is-public"
             defaultChecked={!props.dmUserProfileId}
             onChange={(ev) => setIsPublic(ev.target.checked)}
         />
-    </label>;
-    const invitesEl = <div>
-        <MultiSelect
-            labelledBy="Invite users"
-            options={allUsers ?? []}
-            value={invites ?? []}
-            onChange={setInvites}
-        />
-        <button 
-            onClick={(ev) => { ev.preventDefault(); }}
-            onSubmit={(ev) => inviteAll(ev)}>
-            Select all
-        </button>
-    </div>;
+    </>;
+    const invitesEl = <>
+        <label>With:</label>
+        <div className="invite-users-control">
+            <MultiSelect
+                className="invite-users-control__multiselect"
+                labelledBy="Invite users"
+                overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
+                options={allUsers ?? []}
+                value={invites ?? []}
+                onChange={setInvites}
+            />
+        </div>
+    </>;
     const titleEl = (isPublic || !invites || invites.length > 1)
-        ? <label>
-            <span>Name</span>
+        ? <>
+            <label htmlFor="title-control">Name</label>
             <input
+                name="title-control"
                 type="text"
                 placeholder="Title of the chat"
                 maxLength={25}
                 onChange={(ev) => setTitle(ev.target.value)}
             />
-        </label>
+        </>
         : <></>;
     const createButton =
-        <button onClick={(ev) => doCreateChat(ev)}>Create chat</button>;
+        <AsyncButton action={(ev) => doCreateChat(ev)} disabled={!inputValid()} content="Create chat" />;
 
     /*
         dmUserProfile
@@ -130,11 +144,15 @@ export default function NewChat(props: Props) {
     return <>{
         newChannelSID
             ? <Redirect to={`/chat/${newChannelSID}`} />
-            : <form onSubmit={(ev) => doCreateChat(ev)}>
-                {publicEl}<br />
-                {invitesEl}<br />
-                {titleEl}<br />
-                {createButton}
-            </form>
+            : <div className="new-chat">
+                <form onSubmit={(ev) => doCreateChat(ev)}>
+                    {publicEl}<br />
+                    {invitesEl}<br />
+                    {titleEl}<br />
+                    <div className="submit-container">
+                        {createButton}
+                    </div>
+                </form>
+            </div>
     }</>;
 }

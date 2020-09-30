@@ -1,0 +1,25 @@
+@import "../../../styles/util.scss";
+
+div.clowdr-error-notification {
+    background: rgba($color: $dark-primary, $alpha: 0.8);
+    border-bottom: 1px $gray-1 solid;
+    border-left: 1px $gray-1 solid;
+    color: white;
+    margin: 0;
+    padding: 1em;
+
+    p {
+        margin: 0;
+    }
+
+    .Toastify__close-button {
+        color: $gray-6;
+        opacity: 0.8;
+    }
+}
+
+.Toastify__toast-container--top-right {
+    top: 0 !important;
+    right: 0 !important;
+    padding: 0 !important;
+}

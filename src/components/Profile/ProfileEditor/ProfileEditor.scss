@@ -1,10 +1,13 @@
 @import "../../../styles/util.scss";
+@import "../../../styles/form.scss";
 
 $photo-width: mm(60);
 $gutter     : mm(10);
 $main-width : mm(150);
 
 .profile-editor {
+    @include basic-form;
+
     .content {
         display: flex;
         width  : calc(#{$photo-width} + #{$gutter} + #{$main-width});
@@ -55,50 +58,6 @@ $main-width : mm(150);
                     overflow: hidden;
                     position: absolute;
                     z-index : -1;
-                }
-            }
-        }
-
-        form {
-            display       : flex;
-            flex-direction: column;
-            margin-left   : $gutter;
-            width         : $main-width;
-
-            label {
-                margin-top   : mm(4);
-                margin-bottom: mm(1);
-
-                &:first-child {
-                    margin-top: 0;
-                }
-            }
-
-            .submit-container {
-                display        : flex;
-                justify-content: flex-end;
-                margin-top     : mm(4);
-
-                button,
-                input {
-                    padding      : mm(3) mm(5);
-                    color        : white;
-                    border       : none;
-                    border-radius: radius(2);
-                }
-
-                button {
-                    background  : $color-3;
-                    margin-right: mm(5);
-
-                    &:disabled {
-                        background: $gray-4;
-                        cursor    : not-allowed;
-                    }
-                }
-
-                input {
-                    background: $secondary;
                 }
             }
         }

@@ -1,0 +1,15 @@
+@import "../../styles/util.scss";
+
+button {
+    padding      : mm(3) mm(5);
+    color        : white;
+    border       : none;
+    border-radius: radius(2);
+    background  : $color-3;
+    margin-right: mm(5);
+
+    &:disabled {
+        background: $gray-4;
+        cursor    : not-allowed;
+    }
+}
