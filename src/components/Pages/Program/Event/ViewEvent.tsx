@@ -41,34 +41,40 @@ export default function ViewEvent(props: Props) {
 
     // Subscribe to data updates
     const onSessionEventUpdated = useCallback(function _onSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
-        if (!event || ev.object.id === event.id) {
+        if (event && ev.object.id === event.id) {
             setEvent(ev.object as ProgramSessionEvent);
         }
     }, [event]);
 
     const onSessionEventDeleted = useCallback(function _onSessionEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {
-        setEvent(null)
-    }, []);
+        if (event && event.id === ev.objectId) {
+            setEvent(null)
+        }
+    }, [event]);
 
     const onItemUpdated = useCallback(function _onItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
-        if (!item || ev.object.id === item.id) {
+        if (item && ev.object.id === item.id) {
             setItem(ev.object as ProgramItem);
         }
     }, [item]);
 
     const onItemDeleted = useCallback(function _onItemDeleted(ev: DataDeletedEventDetails<"ProgramItem">) {
-        setItem(null)
-    }, []);
+        if (item && item.id === ev.objectId) {
+            setItem(null)
+        }
+    }, [item]);
 
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
-        if (!session || ev.object.id === session.id) {
+        if (session && ev.object.id === session.id) {
             setSession(ev.object as ProgramSession);
         }
     }, [session]);
 
     const onSessionDeleted = useCallback(function _onSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
-        setSession(null)
-    }, []);
+        if (session && session.id === ev.objectId) {
+            setSession(null)
+        }
+    }, [session]);
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);

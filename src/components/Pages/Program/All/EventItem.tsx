@@ -26,14 +26,16 @@ export default function EventItem(props: Props) {
 
     // Subscribe to changes
     const onItemUpdated = useCallback(function _onItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
-        if (!item || ev.object.id === item.id) {
+        if (item && ev.object.id === item.id) {
             setItem(ev.object as ProgramItem);
         }
     }, [item]);
 
     const onItemDeleted = useCallback(function _onItemDeleted(ev: DataDeletedEventDetails<"ProgramItem">) {
-        setItem(null)
-    }, []);
+        if (item && item.id === ev.objectId) {
+            setItem(null)
+        }
+    }, [item]);
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);

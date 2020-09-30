@@ -25,14 +25,16 @@ export default function ViewSession(props: Props) {
 
     // Subscribe to data updates
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
-        if (!session || ev.object.id === session.id) {
+        if (session && ev.object.id === session.id) {
             setSession(ev.object as ProgramSession);
         }
     }, [session]);
 
     const onSessionDeleted = useCallback(function _onSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
-        setSession(null)
-    }, []);
+        if (session && ev.objectId === session.id) {
+            setSession(null);
+        }
+    }, [session]);
 
     useDataSubscription("ProgramSession", onSessionUpdated, onSessionDeleted, !session, conference);
 

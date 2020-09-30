@@ -25,14 +25,16 @@ export default function ViewTrack(props: Props) {
 
     // Subscribe to data updates
     const onTrackUpdated = useCallback(function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
-        if (!track || ev.object.id === track.id) {
+        if (track && ev.object.id === track.id) {
             setTrack(ev.object as ProgramTrack);
         }
     }, [track]);
 
     const onTrackDeleted = useCallback(function _onTrackDeleted(ev: DataDeletedEventDetails<"ProgramTrack">) {
-        setTrack(null)
-    }, []);
+        if (track && ev.objectId === track.id) {
+            setTrack(null);
+        }
+    }, [track]);
 
     useDataSubscription("ProgramTrack", onTrackUpdated, onTrackDeleted, !track, conference);
 

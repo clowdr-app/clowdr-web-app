@@ -19,14 +19,16 @@ export default function AttachmentLink(props: Props) {
     useSafeAsync(async () => await props.attachment.attachmentType, setAttachmentType, [props.attachment.attachmentType]);
 
     const onAttachmentTypeUpdated = useCallback(function _onAttachmentTypeUpdated(ev: DataUpdatedEventDetails<"AttachmentType">) {
-        if (!attachmentType || ev.object.id === attachmentType.id) {
+        if (attachmentType && ev.object.id === attachmentType.id) {
             setAttachmentType(ev.object as AttachmentType);
         }
     }, [attachmentType]);
 
     const onAttachmentTypeDeleted = useCallback(function _onAttachmentTypeDeleted(ev: DataDeletedEventDetails<"AttachmentType">) {
-        setAttachmentType(null)
-    }, []);
+        if (attachmentType && attachmentType.id === ev.objectId) {
+            setAttachmentType(null)
+        }
+    }, [attachmentType]);
 
     useDataSubscription("AttachmentType", onAttachmentTypeUpdated, onAttachmentTypeDeleted, !attachmentType, conference);
 
