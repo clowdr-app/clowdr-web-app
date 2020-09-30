@@ -22,6 +22,7 @@ import ViewTrack from '../Pages/Program/Track/ViewTrack';
 import ViewSession from '../Pages/Program/Session/ViewSession';
 import ViewEvent from '../Pages/Program/Event/ViewEvent';
 import { HeadingState } from '../../contexts/HeadingContext';
+import ViewAuthor from '../Pages/Program/Author/ViewAuthor';
 
 interface Props {
     doLogin: doLoginF;
@@ -127,6 +128,9 @@ function Page(props: Props) {
                     } />
                     <Route path="/event/:eventId" component={(p: RouteComponentProps<any>) =>
                         <ViewEvent eventId={p.match.params.eventId} />
+                    } />
+                    <Route path="/author/:authorId" component={(p: RouteComponentProps<any>) =>
+                        <ViewAuthor authorId={p.match.params.authorId} />
                     } />
                     <Route path="/program" component={(p: RouteComponentProps<any>) =>
                         <WholeProgram />

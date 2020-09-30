@@ -17,7 +17,7 @@ export default function Profile(props: Props) {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [editing, setEditing] = useState(true);
 
-    useHeading("Profile");
+    useHeading(profile ? profile.displayName : "Profile");
 
     useEffect(() => {
         let cancel: () => void = () => { };
