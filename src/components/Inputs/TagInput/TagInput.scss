@@ -3,6 +3,8 @@
 .tag-input {
     border : 1px solid black;
     display: flex;
+    align-items: center;
+    padding-left: mm(2);
 
     .tag-container {
         .tag-chip {
@@ -20,6 +22,6 @@
         }
 
         width : 100%;
-        border: none;
+        border: none !important;
     }
 }
