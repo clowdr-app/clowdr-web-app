@@ -34,10 +34,10 @@
     @media only screen and (max-width: $break-md) {
         &.sidebar-open {
             grid-template-columns: 100% 0%;
+        }
 
-            .page {
-                // display: none;
-            }
+        &.sidebar-closed {
+            grid-template-columns: 20px 50px auto;
         }
     }
 
@@ -62,6 +62,10 @@
             grid-row-end     : 4;
             grid-column-start: 2;
             grid-column-end  : 4;
+
+            @media only screen and (max-width: $break-md) {
+                grid-column-start: 1;
+            }
         }
 
         .page-header {
