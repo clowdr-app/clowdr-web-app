@@ -21,7 +21,7 @@ async function getConfig(confId) {
     const config = {};
 
     // Load config from the database
-    const q = new Parse.Query("ConferenceConfig")
+    const q = new Parse.Query("ConferenceConfiguration")
     q.equalTo("conference", new Parse.Object("Conference", { id: confId }));
     const res = await q.find({ useMasterKey: true });
     for (const obj of res) {
