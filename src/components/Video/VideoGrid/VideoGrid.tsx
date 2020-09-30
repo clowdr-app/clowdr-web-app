@@ -1,12 +1,13 @@
 import React from "react";
+import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import "./VideoGrid.scss";
 
 interface Props {
-    roomId: string;
+    room: string | VideoRoom;
 }
 
-export default function VideoRoom(props: Props) {
+export default function VideoGrid(props: Props) {
     return <div className="video-grid">
-        VIDEO GRID {props.roomId}
+        VIDEO GRID {typeof props.room === "string" ? props.room : props.room.id}
     </div>;
 }

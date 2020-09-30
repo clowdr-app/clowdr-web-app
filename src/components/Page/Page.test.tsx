@@ -10,7 +10,7 @@ import ConferenceSelection from "../Pages/ConferenceSelection/ConferenceSelectio
 import Login from "../Pages/Login/Login";
 import LoggedInWelcome from "../Pages/LoggedInWelcome/LoggedInWelcome";
 
-import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema";
 import { mocked } from "ts-jest/utils";
 import getConference from "../../tests/getConference";
 import getUserProfile from "../../tests/getUserProfile";

@@ -1,4 +1,4 @@
-import { Conference, ConferenceConfiguration, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { Conference, ConferenceConfiguration, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import IChatManager from "../../IChatManager";
 import IChatService from "../../IChatService";
 import Channel from "./Channel";

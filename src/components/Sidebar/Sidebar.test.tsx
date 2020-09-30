@@ -2,7 +2,7 @@ import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import ConferenceContext from "../../contexts/ConferenceContext";
-import { Conference } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { Conference } from "@clowdr-app/clowdr-db-schema";
 import { render } from "@testing-library/react";
 import getConference from "../../tests/getConference";
 

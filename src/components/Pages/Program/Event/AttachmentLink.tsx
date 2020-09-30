@@ -1,4 +1,4 @@
-import { AttachmentType, ProgramItemAttachment } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { AttachmentType, ProgramItemAttachment } from "@clowdr-app/clowdr-db-schema";
 import { DataUpdatedEventDetails, DataDeletedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
 import { handleParseFileURLWeirdness } from "../../../../classes/Utils";

@@ -9,7 +9,7 @@ import UserProfileContext from '../../contexts/UserProfileContext';
 import ChatContext from '../../contexts/ChatContext';
 import useLogger from '../../hooks/useLogger';
 import Caches from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache";
-import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";

@@ -23,7 +23,7 @@ export default function VideoRoom(props: Props) {
             onSecondaryPaneSizeChange={newSize => setSize(newSize)}
         >
             <div className="split top-split">
-                <VideoGrid roomId={props.roomId} />
+                <VideoGrid room={props.roomId} />
                 <button onClick={() => setSize(100)}>
                     &#9650;
                 </button>

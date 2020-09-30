@@ -1,5 +1,5 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { Conference } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { Conference } from "@clowdr-app/clowdr-db-schema";
 import "./ConferenceSelection.scss";
 import FooterLinks from "../../FooterLinks/FooterLinks";
 import useHeading from "../../../hooks/useHeading";

@@ -1,5 +1,5 @@
 import assert from "assert";
-import { Conference, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { Conference, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import DebugLogger from "@clowdr-app/clowdr-db-schema/build/DebugLogger";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "./IChannel";

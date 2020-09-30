@@ -1,5 +1,5 @@
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
-import { ProgramItem, ProgramItemAttachment, ProgramPerson, ProgramSession, ProgramSessionEvent } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { ProgramItem, ProgramItemAttachment, ProgramPerson, ProgramSession, ProgramSessionEvent } from "@clowdr-app/clowdr-db-schema";
 import React, { useCallback, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import useConference from "../../../../hooks/useConference";

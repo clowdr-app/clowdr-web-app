@@ -3,7 +3,7 @@ import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/cl
 import { ISimpleEvent } from "strongly-typed-events";
 import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { CachedSchemaKeys } from "@clowdr-app/clowdr-db-schema/build/DataLayer/WholeSchema";
-import * as Data from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import * as Data from "@clowdr-app/clowdr-db-schema";
 
 export default function useDataSubscription<
     K extends CachedSchemaKeys

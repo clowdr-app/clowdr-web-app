@@ -1,4 +1,4 @@
-import { ContentFeed, ProgramTrack, TextChat } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { ContentFeed, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
 import SplitterLayout from "react-splitter-layout";
@@ -6,7 +6,7 @@ import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
-import ChatFrame from "../../../Chat/ChatFrame/ChatFrame";
+import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import TrackColumn from "../All/TrackColumn";
 import TrackMarker from "../All/TrackMarker";
@@ -21,7 +21,6 @@ export default function ViewTrack(props: Props) {
     const conference = useConference();
     const [track, setTrack] = useState<ProgramTrack | null>(null);
     const [feed, setFeed] = useState<ContentFeed | null>(null);
-    const [textChat, setTextChat] = useState<TextChat | "not present" | null>(null);
     const [chatSize, setChatSize] = useState(30);
 
     // Initial data fetch
@@ -34,11 +33,6 @@ export default function ViewTrack(props: Props) {
         async () => (await track?.feed) ?? null,
         setFeed,
         [track]);
-
-    useSafeAsync(
-        async () => feed ? ((await feed.textChat) ?? "not present") : null,
-        setTextChat,
-        [feed]);
 
     // Subscribe to data updates
     const onTrackUpdated = useCallback(function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
@@ -73,8 +67,6 @@ export default function ViewTrack(props: Props) {
         subtitle: track ? <TrackMarker track={track} /> : undefined
     });
 
-    // TODO: Render TextChat in a horizontally divided view with the program
-
     const trackEl
         = <div className="whole-program single-track">
             {track ? <TrackColumn key={track.id} track={track} /> : <LoadingSpinner />}
@@ -99,9 +91,7 @@ export default function ViewTrack(props: Props) {
                         &#9660;
                     </button>
                     <div className="embedded-content">
-                        {textChat && textChat !== "not present"
-                            ? <ChatFrame chatSid={textChat.twilioID} />
-                            : <div className="invalid">This track has been given an invalid or unsupported feed.</div>}
+                        <ViewContentFeed feed={feed} />
                     </div>
                 </div>
             </SplitterLayout>

@@ -1,3 +1,5 @@
+@import "../../../../styles/util";
+
 .program-event {
     .info {
         .abstract {}
@@ -17,26 +19,29 @@
 
     .attachments {
         h3 {
-            font-size: inherit;
+            font-size  : inherit;
             font-weight: bold;
         }
 
         .video-player {
             max-width: 100%;
 
-            width: 640px;
-            height: auto;
-            padding-top: 75%; /* 4:3 Aspect Ratio (divide 3 by 4 = 0.75) */
-            /* padding-top: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            width : 640px;
+            height: 360px;
+
+            @media only screen and (max-width: $break-md) {
+                width : 320px;
+                height: 180px;
+            }
 
             position: relative;
 
             div {
                 position: absolute;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                right: 0;
+                top     : 0;
+                left    : 0;
+                bottom  : 0;
+                right   : 0;
             }
         }
     }

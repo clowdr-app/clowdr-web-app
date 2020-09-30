@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { act, render, waitForElement } from "@testing-library/react";
 import ConferenceContext from "../../../contexts/ConferenceContext";
 import Login from "./Login";
-import { Conference } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { Conference } from "@clowdr-app/clowdr-db-schema";
 import getConference from "../../../tests/getConference";
 import { Simulate } from "react-dom/test-utils";
 import { generateMockPassword } from "../../../tests/initTestDB";

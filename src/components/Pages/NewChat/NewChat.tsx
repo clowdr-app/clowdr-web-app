@@ -1,4 +1,4 @@
-import { UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import React, { useState } from "react";
 import useConference from "../../../hooks/useConference";
 import useHeading from "../../../hooks/useHeading";

@@ -10,7 +10,7 @@ import ProfileEditor from "../../Profile/ProfileEditor/ProfileEditor";
 import { mocked } from "ts-jest/utils";
 import getConference from "../../../tests/getConference";
 import getUserProfile from "../../../tests/getUserProfile";
-import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema";
 import ConferenceContext from "../../../contexts/ConferenceContext";
 import UserProfileContext from "../../../contexts/UserProfileContext";
 import HeadingContext from "../../../contexts/HeadingContext";

@@ -4,7 +4,7 @@ import useHeading from "../../../../hooks/useHeading";
 import "./WholeProgram.scss"
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import TrackColumn from "./TrackColumn";
-import { ProgramTrack } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import Toggle from "react-toggle";

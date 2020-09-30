@@ -4,7 +4,7 @@ import useUserProfile from "../../../hooks/useUserProfile";
 import ProfileEditor from "../../Profile/ProfileEditor/ProfileEditor";
 import ProfileView from "../../Profile/ProfileView/ProfileView";
 import useConference from "../../../hooks/useConference";
-import { UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
+import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 
 interface Props {
