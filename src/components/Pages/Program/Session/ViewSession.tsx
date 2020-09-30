@@ -8,6 +8,7 @@ import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import "../All/WholeProgram.scss";
+import { ActionButton } from "../../../../contexts/HeadingContext";
 
 interface Props {
     sessionId: string;
@@ -38,7 +39,19 @@ export default function ViewSession(props: Props) {
 
     useDataSubscription("ProgramSession", onSessionUpdated, onSessionDeleted, !session, conference);
 
-    useHeading(session?.title ?? "Session");
+    const buttons: Array<ActionButton> = [];
+    if (session) {
+        buttons.push({
+            label: "Track",
+            action: `/track/${session.trackId}`,
+            icon: <i className="fas fa-eye"></i>
+        });
+    }
+
+    useHeading({
+        title: session?.title ?? "Session",
+        buttons: buttons.length > 0 ? buttons : undefined
+    });
 
     // TODO: Render the content feed(s) above the session events list
     // We will allow 1 video and/or 1 chat feed per content feed
