@@ -34,10 +34,13 @@
     },
     {
         "name": "Video",
-        "displayAsLink": true,
+        "displayAsLink": false,
         "isCoverImage": false,
         "ordinal": 3,
         "supportsFile": false,
-        "extra": "Links to YouTube or other streaming video services"
+        "extra": "Links to YouTube or other streaming video services",
+        "fileTypes": [
+            "video"
+        ]
     }
 ]

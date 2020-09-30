@@ -7,6 +7,7 @@ import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import ReactMarkdown from "react-markdown";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import FlairChip from "../FlairChip/FlairChip";
+import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 
 interface Props {
     profile: UserProfile;
@@ -29,15 +30,7 @@ export default function ProfileView(props: Props) {
         affiliation = <><span>At</span> {p.affiliation}</>;
     }
 
-    const profilePhotoUrl
-        = p.profilePhoto
-            // TODO: I think this weirdness is caused by the indexeddb caching
-            // This code has been copied around - search for all copies
-            ? "url" in p.profilePhoto
-                ? p.profilePhoto.url()
-                // @ts-ignore
-                : p.profilePhoto._url as string
-            : null;
+    const profilePhotoUrl = handleParseFileURLWeirdness(p.profilePhoto);
 
     return <div className="profile-view">
         <div className="content">

@@ -16,6 +16,7 @@ import assert from "assert";
 import { ChannelEventNames } from "../../../classes/Chat/Services/Twilio/Channel";
 import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema/build/DataLayer";
 import useConference from "../../../hooks/useConference";
+import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 
 interface Props {
     chatSid: string;
@@ -110,15 +111,7 @@ export default function MessageList(props: Props) {
             const now = Date.now();
             const isOver24HrOld = (now - time.getTime()) > (1000 * 60 * 60 * 24);
             const flair = await profile.primaryFlair;
-            const profilePhotoUrl
-                = profile.profilePhoto
-                    // TODO: I think this weirdness is caused by the indexeddb caching
-                    // This code has been copied around - search for all copies
-                    ? "url" in profile.profilePhoto
-                        ? profile.profilePhoto.url()
-                        // @ts-ignore
-                        : profile.profilePhoto._url as string
-                    : null;
+            const profilePhotoUrl = handleParseFileURLWeirdness(profile.profilePhoto);
             const result: RenderedMessage = {
                 body,
                 profileFlair: flair,

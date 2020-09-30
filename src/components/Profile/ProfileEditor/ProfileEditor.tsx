@@ -9,6 +9,7 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import assert from "assert";
+import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 
 interface Props {
     profile: UserProfile;
@@ -91,15 +92,7 @@ export default function ProfileEditor(props: Props) {
             </>;
         };
 
-    const profilePhotoUrl
-        = p.profilePhoto
-            // TODO: I think this weirdness is caused by the indexeddb caching
-            // This code has been copied around - search for all copies
-            ? "url" in p.profilePhoto
-                ? p.profilePhoto.url()
-                // @ts-ignore
-                : p.profilePhoto._url as string
-            : null;
+    const profilePhotoUrl = handleParseFileURLWeirdness(p.profilePhoto);
 
     const isFormDirty =
         p.realName !== realName ||
