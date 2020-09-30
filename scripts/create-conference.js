@@ -163,6 +163,30 @@ async function main() {
     sessionsData.forEach(extractFeeds);
     eventsData.forEach(extractFeeds);
 
+    const textChatsData = [];
+    // Extract text chats for tracks
+    tracksData.forEach(track => {
+        if (track.textChat) {
+            delete track.textChat;
+
+            const newTextChat = {
+                id: textChatsData.length,
+                name: `Track: ${track.name}`,
+                autoWatch: false
+            };
+            textChatsData.push(newTextChat);
+
+            const newContentFeed = {
+                id: contentFeedsData.length,
+                name: newTextChat.name,
+                textChat: newTextChat.id
+            };
+            contentFeedsData.push(newContentFeed);
+
+            track.feed = newContentFeed.id;
+        }
+    });
+
     assert(process.env.REACT_APP_PARSE_APP_ID, "REACT_APP_PARSE_APP_ID not provided.");
     assert(process.env.REACT_APP_PARSE_JS_KEY, "REACT_APP_PARSE_JS_KEY not provided.");
     assert(process.env.REACT_APP_PARSE_DATABASE_URL, "REACT_APP_PARSE_DATABASE_URL not provided.");
@@ -184,8 +208,10 @@ async function main() {
 
     const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id");
     const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id");
+    const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id");
     remapObjects(youtubeFeeds, "youtube", contentFeedsData);
     remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
+    remapObjects(textChats, "textChat", contentFeedsData);
     const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id");
     remapObjects(contentFeeds, "feed", tracksData);
     remapObjects(contentFeeds, "feed", itemsData);
@@ -214,7 +240,5 @@ async function main() {
     const events = await createObjects(confId, adminSessionToken, eventsData, "event", "startTime");
 
     const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name");
-
-    // TODO: Registrations
 }
 

@@ -54,7 +54,7 @@ Parse.Cloud.define("user-create", async (request) => {
         if (signUpEnabled) {
             // TODO: Auto-join to text chats
             // TODO: Link profile to program person (author)
-            // TODO: If is an author, auto-subscribe them to the text chats for their papers
+            // TODO: If is an author, auto-watch them to the text chats for their papers
             // TODO: Do we want authors to be auto-watching their items & content feeds (video rooms/text chats)
             // TODO: Give authors write access to their program items/events
 
