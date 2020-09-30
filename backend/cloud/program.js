@@ -10,13 +10,6 @@ const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 // TODO: Before save of ProgramItemAttachment: If type AttachmentType `isCoverImage`, update associated program item's `posterImage` field
 // TODO: Before delete of ProgramItemAttachment: If type AttachmentType `isCoverImage`, clear associated program item's `posterImage` field
 
-// TODO: Authenticate actions against roles
-
-// TODO: Create
-//       * Item attachments
-//       * Session
-//       * Event
-
 /**
  * @typedef {Parse.Object} Pointer
  */
