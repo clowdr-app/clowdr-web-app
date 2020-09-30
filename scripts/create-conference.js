@@ -241,4 +241,3 @@ async function main() {
 
     const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name");
 }
-

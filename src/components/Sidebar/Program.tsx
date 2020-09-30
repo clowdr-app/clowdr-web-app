@@ -5,6 +5,7 @@ import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import useConference from "../../hooks/useConference";
 import useLogger from "../../hooks/useLogger";
 import useDataSubscription from "../../hooks/useDataSubscription";
+import TrackMarker from "../Pages/Program/All/TrackMarker";
 
 interface Props {
     sessions: Array<ProgramSession>;
@@ -66,7 +67,7 @@ interface ItemRenderData {
     track: {
         id: string;
         name: string;
-        // TODO: Track colour badge
+        colour: string;
     };
     isWatched: boolean;
     additionalClasses: string;
@@ -206,7 +207,7 @@ export default function Program(props: Props) {
                         const result: ItemRenderData = {
                             title: session.title,
                             url: `/session/${session.id}`,
-                            track: { id: track.id, name: track.shortName },
+                            track: { id: track.id, name: track.shortName, colour: track.colour },
                             isWatched: false,
                             item: { type: "session", data: session },
                             sortValue: session.startTime.getTime(),
@@ -219,7 +220,7 @@ export default function Program(props: Props) {
                         const result: ItemRenderData = {
                             title: (await event.item).title,
                             url: `/event/${event.id}`,
-                            track: { id: track.id, name: track.shortName },
+                            track: { id: track.id, name: track.shortName, colour: track.colour },
                             isWatched: false,
                             item: { type: "event", data: event },
                             sortValue: event.startTime.getTime(),
@@ -301,7 +302,10 @@ export default function Program(props: Props) {
                     <Link to={item.url}>
                         <h3>{item.title}</h3>
                     </Link>
-                    <Link className="track" to={`/track/${item.track.id}`}>{item.track.name}</Link>
+                    <Link className="track" to={`/track/${item.track.id}`}>
+                        <TrackMarker track={item.track.colour} small={true} />
+                        <span>{item.track.name}</span>
+                    </Link>
                 </li>);
         }
 

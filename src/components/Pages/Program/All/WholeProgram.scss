@@ -203,3 +203,18 @@
         }
     }
 }
+
+.track-marker {
+    display: inline-block;
+    vertical-align: middle;
+
+    width: 20px;
+    height: 20px;
+
+    margin: 0 0.3em 0.3em 0.3em;
+
+    &.small {
+        width : 10px;
+        height: 10px;
+    }
+}

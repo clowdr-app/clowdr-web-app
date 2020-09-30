@@ -7,6 +7,7 @@ import useSafeAsync from "../../../../hooks/useSafeAsync";
 import SessionGroup from "./SessionGroup";
 import { Link } from "react-router-dom";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
+import TrackMarker from "./TrackMarker";
 
 interface Props {
     track: ProgramTrack;
@@ -70,6 +71,7 @@ export default function TrackColumn(props: Props) {
 
     return <div className="track">
         <h2 className="title">
+            <TrackMarker track={props.track} small={true} />
             <Link to={`/track/${props.track.id}`}>{props.track.name}</Link>
         </h2>
         <div className="content">
