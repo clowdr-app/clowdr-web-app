@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { ProgramSession, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
+import { ProgramItem, ProgramSession, ProgramSessionEvent, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import { DataUpdatedEventDetails, DataDeletedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
@@ -8,6 +8,7 @@ import SessionGroup from "./SessionGroup";
 import { Link } from "react-router-dom";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import TrackMarker from "./TrackMarker";
+import Item from "./Item";
 
 interface Props {
     track: ProgramTrack;
@@ -16,15 +17,22 @@ interface Props {
 export default function TrackColumn(props: Props) {
     const conference = useConference();
     const [sessions, setSessions] = useState<Array<ProgramSession> | null>(null);
+    const [items, setItems] = useState<Array<ProgramItem> | null>(null);
 
     // TODO: Fetch & render program items for this track that are not pointed to
     //       by any session event i.e. are unscheduled (such as poster items in
     //       a Posters track)
 
-    // TODO: Track `colour`
-
     // Fetch data
     useSafeAsync(async () => await props.track.sessions, setSessions, [props.track]);
+    useSafeAsync(async () => {
+        const _items = await props.track.items;
+        const events: Map<string, ProgramSessionEvent[]> = new Map();
+        await Promise.all(_items.map(async x => {
+            events.set(x.id, await x.events);
+        }));
+        return _items.filter(x => !events.get(x.id)?.length);
+    }, setItems, [props.track]);
 
     // Subscribe to changes
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
@@ -65,6 +73,27 @@ export default function TrackColumn(props: Props) {
         rows.push(<SessionGroup key={session.id} session={session} />);
     }
 
+    if (items && items.length > 0) {
+        if (sessionEntries.length > 0) {
+            rows.push(<hr />);
+            const _rows: Array<JSX.Element> = [];
+            for (const item of items.sort((x, y) => x.title.localeCompare(y.title))) {
+                _rows.push(<Item item={item} clickable={true} />);
+            }
+            rows.push(<div className="session">
+                <h2 className="title">Unscheduled items</h2>
+                <div className="content">
+                    {_rows}
+                </div>
+            </div>);
+        }
+        else {
+            for (const item of items.sort((x, y) => x.title.localeCompare(y.title))) {
+                rows.push(<Item item={item} clickable={true} />);
+            }
+        }
+    }
+
     if (rows.length === 0) {
         rows.push(<div key="empty" className="session"><h2 className="title">This track contains no sessions.</h2></div>);
     }
@@ -75,7 +104,7 @@ export default function TrackColumn(props: Props) {
             <Link to={`/track/${props.track.id}`}>{props.track.name}</Link>
         </h2>
         <div className="content">
-            {sessions ? rows : <LoadingSpinner />}
+            {sessions && items ? rows : <LoadingSpinner />}
         </div>
     </div>;
 }

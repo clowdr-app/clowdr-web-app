@@ -104,7 +104,11 @@
             }
         }
 
-        &>.content {}
+        &>.content {
+            &>.program-item {
+                padding      : 0.5em;
+            }
+        }
     }
 
 
