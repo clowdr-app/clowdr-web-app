@@ -2,15 +2,16 @@
 
 $photo-width: mm(60);
 $gutter     : mm(10);
-$main-width : mm(150);
+$main-width : mm(120);
 
 .profile-view {
     .content {
         display        : flex;
+        max-width      : calc(#{$photo-width} + #{$gutter} + #{$main-width});
         margin         : 0 auto 0 auto;
         flex-direction : row;
         flex-wrap      : wrap;
-        justify-content: center;
+        justify-content: space-evenly;
 
         .photo {
             background-color: black;
@@ -28,7 +29,6 @@ $main-width : mm(150);
         .main-info {
             display       : flex;
             flex-direction: column;
-            margin-left   : $gutter;
             width         : $main-width;
 
             .name {

@@ -63,7 +63,7 @@ export default function ViewContentFeed(props: Props) {
                         </a>
                             <p>TODO: Embed zoom within the webapp</p>
                             {/* TODO: Embed zoom within the webapp:
-                            <button onClick={() => joinZoomByBrowser()}>Join by Browser</button> 
+                            <button onClick={() => joinZoomByBrowser()}>Join by Browser</button>
                         */}
                         </div>
                         : <div className="invalid">Unfortunately this is an invalid or unsupported feed configuration.</div>
