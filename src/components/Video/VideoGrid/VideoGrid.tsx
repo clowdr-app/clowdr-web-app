@@ -6,39 +6,36 @@ import AsyncButton from "../../AsyncButton/AsyncButton";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import useMaybeVideo from "../../../hooks/useMaybeVideo";
 import { addError } from "../../../classes/Notifications/Notifications";
-import { Tag } from "@primer/octicons-react";
-import Tooltip from "material-ui/internal/Tooltip";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import { DeviceSelector } from "../VideoFrontend/components/MenuBar/DeviceSelector/DeviceSelector";
 import FlipCameraButton from "../VideoFrontend/components/MenuBar/FlipCameraButton/FlipCameraButton";
 import ToggleFullscreenButton from "../VideoFrontend/components/MenuBar/ToggleFullScreenButton/ToggleFullScreenButton";
-import { VideoProvider, VideoContext } from "../VideoFrontend/components/VideoProvider";
+import { VideoProvider } from "../VideoFrontend/components/VideoProvider";
 import AppStateProvider from "../VideoFrontend/state";
 import theme from "./theme";
-import { useHistory } from "react-router-dom";
 import { TwilioError, ConnectOptions } from "twilio-video";
 import { isMobile } from "../VideoFrontend/utils";
 import EmbeddedVideoWrapper from "./EmbeddedVideoWrapper";
 import useLogger from "../../../hooks/useLogger";
+import LocalVideoPreview from "../VideoFrontend/components/LocalVideoPreview/LocalVideoPreview";
+import LocalAudioLevelIndicator from "../VideoFrontend/components/MenuBar/DeviceSelector/LocalAudioLevelIndicator/LocalAudioLevelIndicator";
+import useLocalAudioToggle from "../VideoFrontend/hooks/useLocalAudioToggle/useLocalAudioToggle";
+import useLocalVideoToggle from "../VideoFrontend/hooks/useLocalVideoToggle/useLocalVideoToggle";
+import Video from "../../../classes/Video/Video";
 
 interface Props {
     room: VideoRoom;
 }
 
-export default function VideoGrid(props: Props) {
-    // TODO: Two stages: 1. Ask camera/mic on/off, 2. Show the video grid
-
-    // Why do we do the ask here? Because VideoGrids can be embedded as Content
-    // Feeds in lots of different places, so it's convenient to handle the join
-    // procedure consistently here.
-
-    const logger = useLogger("VideoGrid");
-    const history = useHistory();
-    const mVideo = useMaybeVideo();
-    const [enteringRoom, setEnteringRoom] = useState<boolean>(false);
-    const [token, setToken] = useState<string | null>(null);
-    const [shouldEnableMic, setShouldEnableMic] = useState<boolean>(false);
-    const [shouldEnableCam, setShouldEnableCam] = useState<boolean>(true);
+function VideoWrapperComponent(props: Props & {
+    enterRoom: (ev: React.FormEvent) => Promise<void>,
+    mVideo: Video | null,
+    token: string | null,
+    enteringRoom: boolean
+}) {
+    const logger = useLogger("VideoWrapperComponent");
+    const [isAudioEnabled, toggleAudioEnabled] = useLocalAudioToggle();
+    const [isVideoEnabled, toggleVideoEnabled] = useLocalVideoToggle();
 
     // TODO: Disable in production
     logger.enable();
@@ -47,8 +44,8 @@ export default function VideoGrid(props: Props) {
         <label htmlFor="enable-mic">Enable microphone?</label>
         <Toggle
             name="enable-mic"
-            defaultChecked={shouldEnableMic}
-            onChange={(ev) => setShouldEnableMic(ev.target.checked)}
+            checked={isAudioEnabled}
+            onChange={(ev) => toggleAudioEnabled()}
             icons={{ checked: <i className="fas fa-microphone"></i>, unchecked: <i className="fas fa-microphone-slash"></i> }}
         />
     </>;
@@ -56,26 +53,20 @@ export default function VideoGrid(props: Props) {
         <label htmlFor="enable-cam">Enable camera?</label>
         <Toggle
             name="enable-cam"
-            defaultChecked={shouldEnableCam}
-            onChange={(ev) => setShouldEnableCam(ev.target.checked)}
+            checked={isVideoEnabled}
+            onChange={(ev) => toggleVideoEnabled()}
             icons={{ checked: <i className="fas fa-video"></i>, unchecked: <i className="fas fa-video-slash"></i> }}
         />
     </>;
     const enterButton =
-        <AsyncButton action={(ev) => enterRoom(ev)} content="Enter the room" disabled={!mVideo} />;
+        <AsyncButton
+            action={async (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
 
-    async function enterRoom(ev: React.FormEvent) {
-        setEnteringRoom(true);
-        const _token = await mVideo?.fetchFreshToken(props.room);
-        // TODO: Handle the expiry time
-        if (_token) {
-            setToken(_token.token);
-        }
-        else {
-            setToken(null);
-            addError("Sorry, we were unable to initialise a connection to this room at the moment. Please try again in a few moments or contact your conference organiser.");
-        }
-    }
+                await props.enterRoom(ev);
+            }}
+            content="Enter the room" disabled={!props.mVideo} />;
 
     // TODO: Camera/microphone preview/test prior to entering the room
 
@@ -84,86 +75,34 @@ export default function VideoGrid(props: Props) {
     // TODO: Private vs public badge
     // TODO: Members/free spaces counters
 
+    let camPreview = <></>;
+    let micPreview = <></>;
 
-    // Copied from old:
-    // See:
-    // for available connection options.https://media.twiliocdn.com/sdk/js/video/releases/2.0.0/docs/global.html#ConnectOptions
-    const connectionOptions: ConnectOptions = {
-        // Bandwidth Profile, Dominant Speaker, and Network Quality
-        // features are only available in Small Group or Group Rooms.
-        // Please set "Room Type" to "Group" or "Small Group" in your
-        // Twilio Console: https://www.twilio.com/console/video/configure
-        bandwidthProfile: {
-            video: {
-                mode: 'grid',
-                maxTracks: 4,
-                // dominantSpeakerPriority: 'standard',
-                renderDimensions: {
-                    high: { height: 720, width: 1080 },
-                    standard: { height: 240, width: 320 },
-                    low: { height: 176, width: 144 }
-                },
-            },
-        },
-        dominantSpeaker: false,
-        networkQuality: { local: 1, remote: 1 },
-        audio: shouldEnableMic,
-        video: shouldEnableCam,
-
-        // Comment this line if you are playing music.
-        maxAudioBitrate: 16000,
-
-        // VP8 simulcast enables the media server in a Small Group or Group Room
-        // to adapt your encoded video quality for each RemoteParticipant based on
-        // their individual bandwidth constraints. This has no effect if you are
-        // using Peer-to-Peer Rooms.
-        preferredVideoCodecs: [{ codec: 'VP8', simulcast: false }],
-
-        // @ts-ignore
-        onError: (err) => {
-            addError("Unable to connect to video: unable to acquire browser permissions for camera " + err.toString());
-        }
-    };
-
-    // For mobile browsers, limit the maximum incoming video bitrate to 2.5 Mbps.
-    if (isMobile && connectionOptions.bandwidthProfile?.video) {
-        connectionOptions.bandwidthProfile.video.maxSubscriptionBitrate = 2500000;
-        connectionOptions.video = { height: 480, frameRate: 24, width: 640 };
+    if (isAudioEnabled) {
+        micPreview = <div className="local-preview-container audio">
+            <DeviceSelector />
+            <div style={{
+                display: "inline-block",
+                backgroundColor: "rgba(0, 0, 128, 1)"
+            }}>
+                <LocalAudioLevelIndicator />
+            </div>
+        </div>;
     }
 
-    let videoGrid = <></>;
-
-    function handleLogout() {
-        history.push("/");
+    if (isVideoEnabled) {
+        camPreview
+            = <div className="local-preview-container video">
+                <FlipCameraButton />
+                <DeviceSelector />
+                <LocalVideoPreview />
+            </div>;
     }
 
-    function onError(e: TwilioError) {
-        logger.error("Twilio error", e);
-        addError(e.message);
-    }
-
-    if (token) {
-        videoGrid = <MuiThemeProvider theme={theme}>
-            <AppStateProvider
-                meeting={props.room.twilioID}
-                token={token}
-                isEmbedded={true}
-                onConnect={(room, videoContext) => {
-                    // if(this.state.room.get("mode") === "group") {
-                    //     let localTracks = videoContext.localTracks;
-                    //     const audioTrack = localTracks.find(track => track.kind === 'audio');
-                    //     audioTrack.disable();
-                    // }
-                }
-                }
-                onDisconnect={() => handleLogout}>
-                <VideoProvider
-                    onError={(e) => onError(e)}
-                    options={connectionOptions}
-                    onDisconnect={() => handleLogout}
-                >
-                    {<div style={{ display: "flex" }}>
-                        {/*</div><div style={{ flex: 1 }}>
+    return props.token
+        ? <div className="video-grid">
+            {<div style={{ display: "flex" }}>
+                {/*</div><div style={{ flex: 1 }}>
                             {this.props.hideInfo
                                 ? (<VideoContext.Consumer>
                                     {
@@ -208,53 +147,142 @@ export default function VideoGrid(props: Props) {
                                     {privacyDescription}</h3>)}
                         </div>*/}
 
-                        <div style={{}}>
-                            <FlipCameraButton />
-                            <DeviceSelector />
-                            <ToggleFullscreenButton />
-                            {/* TODO: <ReportToModsButton room={this.state.room} /> */}
-                        </div>
-                    </div>}
+                <div style={{}}>
+                    <FlipCameraButton />
+                    <DeviceSelector />
+                    <ToggleFullscreenButton />
+                    {/* TODO: <ReportToModsButton room={this.state.room} /> */}
+                </div>
+            </div>}
 
-                    {/* ACLdescription */}
+            {/* ACLdescription */}
 
-                    {/* {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.isManager ? <Popconfirm title="Are you sure you want to delete and end this room?"
+            {/* {(this.props.clowdrAppState.user && !this.props.hideInfo && this.props.clowdrAppState.isManager ? <Popconfirm title="Are you sure you want to delete and end this room?"
                         onConfirm={this.deleteRoom.bind(this)}><Button size="small" danger loading={this.state.roomDeleteInProgress}>Delete Room</Button></Popconfirm> : <></>)} */}
 
-                    {/* {!this.props.hideInfo ? <div>
+            {/* {!this.props.hideInfo ? <div>
                         {(this.state.room.get("mode") === "group" ? <span>This is a big group room. It supports up to {this.state.room.get("capacity")} participants, but will only show the video of the most active participants. Click a participant to pin them to always show their video. </span> :
                             this.state.room.get("mode") === "peer-to-peer" ? "This is a peer to peer room. It supports up to 10 participants, but the quality may not be as good as a group room" : "This is a small group room. It supports up to 4 participants.")}
                     </div> : <></>} */}
 
-                    <div className={"videoEmbed"}>
-                        <EmbeddedVideoWrapper />
-                    </div>
-                </VideoProvider>
-            </AppStateProvider>
-        </MuiThemeProvider>;
-    }
-
-    return token
-        ? <div className="video-grid">
-            {videoGrid}
+            <div className={"videoEmbed"}>
+                <EmbeddedVideoWrapper />
+            </div>
         </div>
-        : enteringRoom
+        : props.enteringRoom
             ? <LoadingSpinner message="Entering room, please wait" />
             : <div className="enter-room-choices">
                 <p className="main-message">
                     You are about to enter a video room.
                     Please choose your initial camera and microphone states.
                     You can turn your video and microphone on or off (independently) at any time.
-                    To leave the room at any time, simply navigate to a different page or close your web-browser's tab.
-            </p>
-                <p className="no-preview-message">
-                    Clowdr is currently unable to provide a preview of your mic/camera. This feature
-                    will be added at our earliest opportunity.
-            </p>
-                <form onSubmit={(ev) => enterRoom(ev)}>
+                    </p>
+                <form onSubmit={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    props.enterRoom(ev);
+                }}>
                     {enableMicEl}
+                    {micPreview}
                     {enableCamEl}
-                    {!!mVideo ? enterButton : <LoadingSpinner message="Video service initialising, please wait" />}
+                    {camPreview}
+                    {!!props.mVideo ? enterButton : <LoadingSpinner message="Video service initialising, please wait" />}
                 </form>
             </div>;
+}
+
+export default function VideoGrid(props: Props) {
+    const logger = useLogger("VideoGrid");
+
+    function handleLogout() {
+        logger.info("Handle logout");
+        setToken(null);
+    }
+
+    function onError(e: TwilioError) {
+        logger.error("Twilio error", e);
+        addError(e.message);
+    }
+
+    // See:
+    // for available connection options.https://media.twiliocdn.com/sdk/js/video/releases/2.0.0/docs/global.html#ConnectOptions
+    const connectionOptions: ConnectOptions = {
+        // Bandwidth Profile, Dominant Speaker, and Network Quality
+        // features are only available in Small Group or Group Rooms.
+        // Please set "Room Type" to "Group" or "Small Group" in your
+        // Twilio Console: https://www.twilio.com/console/video/configure
+        bandwidthProfile: {
+            video: {
+                mode: 'grid',
+                maxTracks: 4,
+                // dominantSpeakerPriority: 'standard',
+                renderDimensions: {
+                    high: { height: 720, width: 1080 },
+                    standard: { height: 240, width: 320 },
+                    low: { height: 176, width: 144 }
+                },
+            },
+        },
+        dominantSpeaker: false,
+        networkQuality: { local: 1, remote: 1 },
+
+        // Comment this line if you are playing music.
+        maxAudioBitrate: 16000,
+
+        // VP8 simulcast enables the media server in a Small Group or Group Room
+        // to adapt your encoded video quality for each RemoteParticipant based on
+        // their individual bandwidth constraints. This has no effect if you are
+        // using Peer-to-Peer Rooms.
+        preferredVideoCodecs: [{ codec: 'VP8', simulcast: false }],
+        logLevel: logger.isEnabled ? "debug" : "off",
+
+        // @ts-ignore
+        onError: (err) => {
+            addError("Unable to connect to video: unable to acquire browser permissions for camera " + err.toString());
+        }
+    };
+
+    // For mobile browsers, limit the maximum incoming video bitrate to 2.5 Mbps.
+    if (isMobile && connectionOptions.bandwidthProfile?.video) {
+        connectionOptions.bandwidthProfile.video.maxSubscriptionBitrate = 2500000;
+        connectionOptions.video = { height: 480, frameRate: 24, width: 640 };
+    }
+
+    const mVideo = useMaybeVideo();
+    const [enteringRoom, setEnteringRoom] = useState<boolean>(false);
+    const [token, setToken] = useState<string | null>(null);
+    async function enterRoom(ev: React.FormEvent) {
+        setEnteringRoom(true);
+        const _token = await mVideo?.fetchFreshToken(props.room);
+        // TODO: Handle the expiry time
+        if (_token) {
+            setToken(_token.token);
+        }
+        else {
+            setToken(null);
+            addError("Sorry, we were unable to initialise a connection to this room at the moment. Please try again in a few moments or contact your conference organiser.");
+        }
+    }
+
+    return <MuiThemeProvider theme={theme}>
+        <AppStateProvider
+            meeting={props.room.twilioID}
+            token={token ?? undefined}
+            isEmbedded={true}
+            onDisconnect={() => handleLogout}>
+            <VideoProvider
+                onError={(e) => onError(e)}
+                options={connectionOptions}
+                onDisconnect={() => handleLogout}
+            >
+                <VideoWrapperComponent
+                    room={props.room}
+                    enterRoom={enterRoom}
+                    enteringRoom={enteringRoom}
+                    mVideo={mVideo}
+                    token={token}
+                />
+            </VideoProvider>
+        </AppStateProvider>
+    </MuiThemeProvider>;
 }

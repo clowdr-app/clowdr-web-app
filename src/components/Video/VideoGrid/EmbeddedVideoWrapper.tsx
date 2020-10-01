@@ -1,12 +1,7 @@
 import clsx from 'clsx';
 
 import useRoomState from "../VideoFrontend/hooks/useRoomState/useRoomState";
-import ConnectTriggeringLocalVideoPreview
-    from "../VideoFrontend/components/LocalVideoPreview/ConnectTriggeringLocalVideoPreview"
-import ReconnectingNotification
-    from "../VideoFrontend/components/ReconnectingNotification/ReconnectingNotification";
-import { styled } from "@material-ui/core";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import ConnectBridge from "../VideoFrontend/components/MenuBar/ConnectBridge";
 import useVideoContext from "../VideoFrontend/hooks/useVideoContext/useVideoContext";
@@ -30,26 +25,61 @@ import ToggleVideoButton from "../VideoFrontend/components/Controls/ToggleVideoB
 import ToggleScreenShareButton
     from "../VideoFrontend/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
 import EndCallButton from "../VideoFrontend/components/Controls/EndCallButton/EndCallButton";
-import { AudioTrack, Participant as TwilioParticipant, RemoteVideoTrack, LocalVideoTrack } from "twilio-video";
-
-const Main = styled('main')({});
+import { AudioTrack, Participant as TwilioParticipant, RemoteVideoTrack, LocalVideoTrack, LocalVideoTrackPublication } from "twilio-video";
+import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
+import { useAppState } from '../VideoFrontend/state';
 
 export default function App() {
     const roomState = useRoomState();
-    const fullVideoContext = useVideoContext();
+    const stateContext = useAppState();
+    const videoContext = useVideoContext();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_roomName, setRoomName] = useState('');
 
-    return <>
-        <ConnectBridge videoContext={fullVideoContext} setRoomName={setRoomName} />
-        <Main>
-            {roomState}
-            {roomState === 'disconnected'
-                ? <ConnectTriggeringLocalVideoPreview />
-                : <ParticipantStrip />
+    useEffect(() => {
+        console.log(`Room state: ${roomState}`);
+        if (roomState === "disconnected") {
+            if (videoContext.isConnecting || !stateContext.token) {
+                return;
             }
-        </Main>
-        <ReconnectingNotification />
+
+            videoContext.isConnecting = true;
+
+            // tslint:disable-next-line:no-console
+            console.log('Attempting to connect video context...');
+
+            videoContext
+                .connect(stateContext.token)
+                .then(room => {
+                    // tslint:disable-next-line:no-console
+                    console.log('Video context connected.');
+
+                    if (stateContext.onConnect) {
+                        stateContext.onConnect(room);
+                    }
+                    videoContext.room.on('disconnected', eventRoom => {
+                        // tslint:disable-next-line:no-console
+                        console.log('Video context disconnected.');
+                        eventRoom.localParticipant.tracks.forEach((publication: LocalVideoTrackPublication) => {
+                            const attachedElements = publication.track.detach();
+                            attachedElements.forEach(element => element.remove());
+                        });
+
+                        if (stateContext.onDisconnect) {
+                            stateContext.onDisconnect(room);
+                        }
+                    });
+                })
+                .catch(err => videoContext.onError);
+        }
+    }, [roomState, stateContext, videoContext]);
+
+    return <>
+        <ConnectBridge videoContext={videoContext} setRoomName={setRoomName} />
+        {roomState === "disconnected"
+            ? <LoadingSpinner message="Connecting" />
+            : <ParticipantStrip />
+        }
     </>;
 }
 
