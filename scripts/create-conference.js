@@ -178,6 +178,7 @@ async function main() {
                             name: item.feed.name,
                             capacity: 50,
                             ephemeral: false,
+                            isPrivate: false,
                             textChat: textChatId
                         };
                         videoRoomsData.push(newVideoRoom);

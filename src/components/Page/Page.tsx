@@ -24,6 +24,7 @@ import ViewEvent from '../Pages/Program/Event/ViewEvent';
 import { HeadingState } from '../../contexts/HeadingContext';
 import ViewAuthor from '../Pages/Program/Author/ViewAuthor';
 import ViewItem from '../Pages/Program/Item/ViewItem';
+import NewVideoRoom from '../Pages/NewVideoRoom/NewVideoRoom';
 
 interface Props {
     doLogin: doLoginF;
@@ -112,6 +113,9 @@ function Page(props: Props) {
                     <Route path="/chat" component={AllChats} />
 
 
+                    <Route path="/room/new" component={() =>
+                        <NewVideoRoom />
+                    } />
                     <Route path="/room/:roomId" component={(p: RouteComponentProps<any>) =>
                         <VideoRoom roomId={p.match.params.roomId} />}
                     />

@@ -95,8 +95,8 @@ export default function NewChat(props: Props) {
             invites.map(x => x.value),
             !isPublic,
             chatTitle
-        )
-        console.log(`New channel SID ${JSON.stringify(newChannel)}`);
+        );
+        console.log(`New channel: ${JSON.stringify(newChannel)}`);
         setNewChannelSID(newChannel?.sid ?? null);
     }
 
@@ -136,23 +136,16 @@ export default function NewChat(props: Props) {
     const createButton =
         <AsyncButton action={(ev) => doCreateChat(ev)} disabled={!inputValid()} content="Create chat" />;
 
-    /*
-        dmUserProfile
-                ? <>You, {currentUserProfile.displayName}, wish to DM {dmUserProfile.displayName}?<br />{testButton}</>
-                : <>You, {currentUserProfile.displayName}, shall DM no-one!</>
-     */
-    return <>{
-        newChannelSID
-            ? <Redirect to={`/chat/${newChannelSID}`} />
-            : <div className="new-chat">
-                <form onSubmit={(ev) => doCreateChat(ev)}>
-                    {publicEl}<br />
-                    {invitesEl}<br />
-                    {titleEl}<br />
-                    <div className="submit-container">
-                        {createButton}
-                    </div>
-                </form>
-            </div>
-    }</>;
+    return newChannelSID
+        ? <Redirect to={`/chat/${newChannelSID}`} />
+        : <div className="new-chat">
+            <form onSubmit={(ev) => doCreateChat(ev)}>
+                {publicEl}<br />
+                {invitesEl}<br />
+                {titleEl}<br />
+                <div className="submit-container">
+                    {createButton}
+                </div>
+            </form>
+        </div>;
 }

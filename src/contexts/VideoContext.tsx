@@ -1,10 +1,10 @@
 import React from 'react';
-import Chat from '../classes/Chat/Chat';
+import Video from '../classes/Video/Video';
 
 /**
  * Hint: You will never need to use this directly. Instead, use the
- * `useChat` hook.
+ * `useVideo` hook.
  */
-const Context = React.createContext<Chat | null>(null);
+const Context = React.createContext<Video | null>(null);
 
 export default Context;

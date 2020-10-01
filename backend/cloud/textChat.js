@@ -11,11 +11,11 @@ const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 
 Parse.Cloud.beforeSave("TextChat", async (req) => {
-    if (req.object.isNew()) {
+    if (req.object.isNew() && !req.object.get("twilioID")) {
         const parseChat = req.object;
         const confId = parseChat.get("conference").id;
         const twilioChatService = await getTwilioChatService(confId);
-        if (twilioChatService && !req.object.get("twilioID")) {
+        if (twilioChatService) {
             const friendlyName = req.object.get("name");
             const uniqueName = friendlyName;
             const createdBy = "system";
@@ -66,8 +66,10 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
 
 const createTextChatSchema = {
     autoWatch: "boolean",
+    mirrored: "boolean?",
     name: "string",
     conference: "string",
+    twilioID: "string?",
 };
 
 /**
@@ -95,13 +97,24 @@ async function handleCreateTextChat(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager", "attendee"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
             if (!spec.mirrored) {
                 spec.mirrored = false;
             }
+            if (!await isUserInRoles(user.id, confId, ["admin", "manager"])) {
+                spec.mirrored = false;
+                spec.autoWatch = false;
+                if (!spec.twilioID) {
+                    throw new Error("Refusing to create TextChat record for attendee for a channel that doesn't exist in Twilio.");
+                }
+                else {
+                    // TODO: Validate the TwilioID using the Twilio API
+                }
+            }
+
             const result = await createTextChat(spec);
             return result.id;
         }
@@ -114,3 +127,7 @@ async function handleCreateTextChat(req) {
     }
 }
 Parse.Cloud.define("textChat-create", handleCreateTextChat);
+
+module.exports = {
+    createTextChat: createTextChat
+};

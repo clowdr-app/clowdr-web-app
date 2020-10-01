@@ -7,6 +7,7 @@ import Sidebar from '../Sidebar/Sidebar';
 import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
 import ChatContext from '../../contexts/ChatContext';
+import VideoContext from '../../contexts/VideoContext';
 import useLogger from '../../hooks/useLogger';
 import Caches from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache";
 import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema";
@@ -16,6 +17,7 @@ import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import Chat from "../../classes/Chat/Chat";
 import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../hooks/useDataSubscription";
+import Video from "../../classes/Video/Video";
 
 type AppTasks
     = "beginLoadConference"
@@ -106,6 +108,7 @@ export default function App() {
         sessionToken: null
     });
     const [chatReady, setChatReady] = useState(false);
+    const [videoReady, setVideoReady] = useState(false);
 
     // logger.enable();
 
@@ -208,6 +211,34 @@ export default function App() {
         }
 
         updateChat();
+    }, [appState.conference, appState.profile, appState.sessionToken]);
+
+    // Update video
+    useEffect(() => {
+        async function updateVideo() {
+            if (appState.conference && appState.sessionToken && appState.profile) {
+                Video.setup(appState.conference, appState.profile, appState.sessionToken)
+                    .then(ok => {
+                        setVideoReady(ok);
+                    })
+                    .catch(err => {
+                        console.error("Error during video initialisation.", err);
+                        setVideoReady(false);
+                    });
+            }
+            else {
+                Video.teardown()
+                    .then(() => {
+                        setVideoReady(false);
+                    })
+                    .catch(err => {
+                        console.error("Error during video teardown.", err);
+                        setVideoReady(false);
+                    });
+            }
+        }
+
+        updateVideo();
     }, [appState.conference, appState.profile, appState.sessionToken]);
 
     // Subscribe to data updates for conference and profile
@@ -382,8 +413,10 @@ export default function App() {
             <ConferenceContext.Provider value={appState.conference}>
                 <UserProfileContext.Provider value={appState.profile}>
                     <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
-                        {sidebar}
-                        {page}
+                        <VideoContext.Provider value={videoReady ? Video.instance() : null}>
+                            {sidebar}
+                            {page}
+                        </VideoContext.Provider>
                     </ChatContext.Provider>
                 </UserProfileContext.Provider>
             </ConferenceContext.Provider>

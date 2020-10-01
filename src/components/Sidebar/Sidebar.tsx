@@ -868,7 +868,7 @@ function Sidebar(props: Props) {
                 }
             },
             { type: "link", label: "Show all rooms", icon: "fa-globe-europe", url: "/room" },
-            { type: "link", label: "Create new room", icon: "fa-plus", url: "/chat/new" }
+            { type: "link", label: "Create new room", icon: "fa-plus", url: "/room/new" }
         ];
         const programButtons: Array<ButtonSpec> = [
             {

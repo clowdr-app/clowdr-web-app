@@ -1,9 +1,9 @@
 /* global Parse */
 // ^ for eslint
 
-const { getTwilioChatService } = require("./twilio");
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
+const { createTextChat } = require('./textChat');
 
 // TODO: Before delete: Kick any members, delete room in Twilio
 
@@ -23,6 +23,7 @@ const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
  * @typedef {Object} VideoRoomSpec
  * @property {number} capacity
  * @property {boolean} ephemeral
+ * @property {boolean} isPrivate
  * @property {string} name
  * @property {string | undefined} [twilioID]
  * @property {Pointer} conference
@@ -32,6 +33,7 @@ const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 const createVideoRoomSchema = {
     capacity: "number",
     ephemeral: "boolean",
+    isPrivate: "boolean",
     name: "string",
     twilioID: "string?",
     conference: "string",
@@ -67,9 +69,30 @@ async function handleCreateVideoRoom(req) {
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
-            if (spec.textChat) {
+            // Prevent non-admin/manager from creating persistent rooms
+            // Prevent non-admin/manager from creating large rooms
+            if (!await isUserInRoles(user.id, confId, ["admin", "manager"])) {
+                spec.ephemeral = true;
+                spec.capacity = 10;
+            }
+            // Clamp capacity down to Twilio max size
+            spec.capacity = Math.min(spec.capacity, 50);
+
+            // For now, if a text chat is not included, we will automatically create one
+            if (!spec.textChat) {
+                const newChatSpec = {
+                    autoWatch: false,
+                    mirrored: false,
+                    name: spec.name,
+                    conference: spec.conference,
+                };
+                const newChat = await createTextChat(newChatSpec);
+                spec.textChat = newChat;
+            }
+            else {
                 spec.textChat = new Parse.Object("TextChat", { id: spec.textChat });
             }
+
             const result = await createVideoRoom(spec);
             return result.id;
         }
