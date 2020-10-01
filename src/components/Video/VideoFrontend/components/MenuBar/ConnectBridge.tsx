@@ -38,6 +38,6 @@ export default class ConnectBridge extends Component<
     }
 
     render() {
-        return <span></span>;
+        return <></>;
     }
 }
