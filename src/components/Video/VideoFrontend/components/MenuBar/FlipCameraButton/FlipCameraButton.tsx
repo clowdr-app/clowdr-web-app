@@ -9,7 +9,7 @@ export default function FlipCameraButton() {
         localTracks,
         getLocalVideoTrack,
     } = useVideoContext();
-    const [supportsFacingMode, setSupportsFacingMode] = useState<Boolean | null>(null);
+    const [supportsFacingMode, setSupportsFacingMode] = useState<boolean | null>(null);
     const videoTrack = localTracks.find(track => track.name.includes('camera'));
     const facingMode = videoTrack?.mediaStreamTrack.getSettings().facingMode;
 

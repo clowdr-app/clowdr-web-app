@@ -12,7 +12,6 @@ import ParticipantConnectionIndicator
     from "../VideoFrontend/components/ParticipantInfo/ParticipantConnectionIndicator/ParticipantConnectionIndicator";
 import NetworkQualityLevel from "../VideoFrontend/components/NewtorkQualityLevel/NetworkQualityLevel";
 import AudioLevelIndicator from "../VideoFrontend/components/AudioLevelIndicator/AudioLevelIndicator";
-import { ScreenShare, VideocamOff } from "@material-ui/icons";
 import usePublications from "../VideoFrontend/hooks/usePublications/usePublications";
 import useParticipantNetworkQualityLevel
     from "../VideoFrontend/hooks/useParticipantNetworkQualityLevel/useParticipantNetworkQualityLevel";
@@ -40,7 +39,6 @@ export default function App() {
     const [_roomName, setRoomName] = useState('');
 
     useEffect(() => {
-        console.log(`Room state: ${roomState}`);
         if (roomState === "disconnected") {
             if (videoContext.isConnecting || !stateContext.token) {
                 return;
@@ -48,15 +46,9 @@ export default function App() {
 
             videoContext.isConnecting = true;
 
-            // tslint:disable-next-line:no-console
-            console.log('Attempting to connect video context...');
-
             videoContext
                 .connect(stateContext.token)
                 .then(() => {
-                    // tslint:disable-next-line:no-console
-                    console.log('Video context connected.');
-
                     if (videoContext.onConnect) {
                         videoContext.onConnect();
                     }
@@ -177,7 +169,6 @@ function ParticipantInfo(
 
     const networkQualityLevel = useParticipantNetworkQualityLevel(participant);
     const isVideoEnabled = Boolean(videoPublication);
-    const isScreenShareEnabled = publications.find(p => p.trackName.includes('screen'));
 
     const videoTrack = useTrack(videoPublication) as RemoteVideoTrack | LocalVideoTrack | undefined | null;
     const isVideoSwitchedOff = useIsTrackSwitchedOff(videoTrack);

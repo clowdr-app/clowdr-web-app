@@ -89,10 +89,6 @@ export function VideoProvider({
             }}
         >
             <SelectedParticipantProvider room={room}>{children}</SelectedParticipantProvider>
-            {/* 
-        The AttachVisibilityHandler component is using the useLocalVideoToggle hook
-        which must be used within the VideoContext Provider.
-      */}
             <AttachVisibilityHandler />
         </VideoContext.Provider>
     );
