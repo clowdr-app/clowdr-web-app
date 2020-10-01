@@ -66,6 +66,23 @@ export default class Channel implements IChannel {
         if ('d' in this.channel) {
             this.channel = { c: await this.channel.d.getChannel() };
         }
+        try {
+            // TODO: Where to put this? Putting it here can trigger either a
+            // "conflicting member modification" error or a "member already
+            // exists" error
+            if (this.channel.c.status !== "joined") {
+                console.log(`Joining chat: ${this.channel.c.sid}`);
+                await this.channel.c.join();
+                console.log(`Joined chat: ${this.channel.c.sid}`);
+            }
+        }
+        catch (e) {
+            const msg = (e.toString() as string).toLowerCase();
+            if (!msg.includes("conflicting member modification") &&
+                !msg.includes("member already exists")) {
+                throw e;
+            }
+        }
         return this.channel.c;
     }
 

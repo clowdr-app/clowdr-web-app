@@ -17,6 +17,7 @@ import { ChannelEventNames } from "../../../classes/Chat/Services/Twilio/Channel
 import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import useConference from "../../../hooks/useConference";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
+import { addError } from "../../../classes/Notifications/Notifications";
 
 interface Props {
     chatSid: string;
@@ -93,9 +94,15 @@ export default function MessageList(props: Props) {
 
     useSafeAsync(async () => {
         if (mChat) {
-            const pager = await mChat.getMessages(props.chatSid);
-            setMessages(pager.items);
-            setMessagesPager(pager);
+            try {
+                const pager = await mChat.getMessages(props.chatSid);
+                setMessages(pager.items);
+                setMessagesPager(pager);
+            }
+            catch (e) {
+                console.error("Failed to fetch chat messages.", e);
+                addError("Failed to fetch chat messages.");
+            }
         }
         return null;
     }, setMessagesPager, [mChat, props.chatSid]);
