@@ -3,6 +3,9 @@ import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import "./VideoGrid.scss";
 import Toggle from "react-toggle";
 import AsyncButton from "../../AsyncButton/AsyncButton";
+import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
+import useMaybeVideo from "../../../hooks/useMaybeVideo";
+import { addError } from "../../../classes/Notifications/Notifications";
 
 interface Props {
     room: VideoRoom;
@@ -15,7 +18,9 @@ export default function VideoGrid(props: Props) {
     // Feeds in lots of different places, so it's convenient to handle the join
     // procedure consistently here.
 
-    const [enteredRoom, setEnteredRoom] = useState<boolean>(false);
+    const mVideo = useMaybeVideo();
+    const [enteringRoom, setEnteringRoom] = useState<boolean>(false);
+    const [token, setToken] = useState<string | null>(null);
     const [shouldEnableMic, setShouldEnableMic] = useState<boolean>(false);
     const [shouldEnableCam, setShouldEnableCam] = useState<boolean>(true);
 
@@ -38,18 +43,29 @@ export default function VideoGrid(props: Props) {
         />
     </>;
     const enterButton =
-        <AsyncButton action={(ev) => enterRoom(ev)} content="Enter the room" />;
+        <AsyncButton action={(ev) => enterRoom(ev)} content="Enter the room" disabled={!mVideo} />;
 
     async function enterRoom(ev: React.FormEvent) {
-        setEnteredRoom(true);
+        setEnteringRoom(true);
+        const _token = await mVideo?.fetchFreshToken(props.room);
+        // TODO: Handle the expiry time
+        if (_token) {
+            setToken(_token.token);
+        }
+        else {
+            setToken(null);
+            addError("Sorry, we were unable to initialise a connection to this room at the moment. Please try again in a few moments or contact your conference organiser.");
+        }
     }
 
     // TODO: Camera/microphone preview/test prior to entering the room
 
-    return enteredRoom
+    return token
         ? <div className="video-grid">
-            VIDEO GRID {typeof props.room === "string" ? props.room : props.room.id}
+            VIDEO GRID {props.room.id}
         </div>
+        : enteringRoom
+        ? <LoadingSpinner message="Entering room, please wait" />
         : <div className="enter-room-choices">
             <p className="main-message">
                 You are about to enter a video room.
@@ -64,7 +80,7 @@ export default function VideoGrid(props: Props) {
             <form onSubmit={(ev) => enterRoom(ev)}>
                 {enableMicEl}
                 {enableCamEl}
-                {enterButton}
+                {!!mVideo ? enterButton : <LoadingSpinner message="Video service initialising, please wait" />}
             </form>
         </div>;
 }

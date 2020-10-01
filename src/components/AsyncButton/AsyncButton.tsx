@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import "./AsyncButton.scss";
 
-interface Handler {
-    (ev: React.FormEvent): Promise<void>;
-}
+type Handler = (ev: React.FormEvent) => Promise<void>;
 
 interface Props {
     disabled?: boolean;
