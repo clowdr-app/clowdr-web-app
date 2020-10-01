@@ -1,3 +1,25 @@
+@import "../../../styles/util.scss";
+@import "../../../styles/form.scss";
+
+$gutter : mm(10);
+$main-width : mm(150);
+
+.enter-room-choices {
+    @include basic-form;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & > p {
+        max-width: $break-md;
+    }
+
+    & > form > button {
+        margin-top: 1em;
+    }
+}
+
 .video-grid {
     width           : 100%;
     height          : 100%;

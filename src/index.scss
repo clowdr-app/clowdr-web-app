@@ -87,7 +87,7 @@ body {
     width   : 100%;
     overflow: hidden;
 
-    button {
+    & > button {
         display         : block;
         position        : absolute;
         left            : 0;
@@ -116,5 +116,28 @@ body {
 
     &.bottom-split button {
         top: 0;
+    }
+}
+
+.react-toggle-track {
+    position: relative;
+
+    i {
+        color: #fcfcfc;
+        font-size: 12px;
+        margin: -1px 0 0 0;
+        padding: 0;
+    }
+
+    .react-toggle-track-check {
+        i {
+            margin-left: 0.1em;
+        }
+    }
+
+    .react-toggle-track-x {
+        i {
+            margin-left: -0.1em;
+        }
     }
 }
