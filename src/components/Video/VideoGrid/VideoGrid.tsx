@@ -3,7 +3,7 @@ import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import "./VideoGrid.scss";
 
 interface Props {
-    room: string | VideoRoom;
+    room: VideoRoom;
 }
 
 export default function VideoGrid(props: Props) {
