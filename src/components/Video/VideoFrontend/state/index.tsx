@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { TwilioError } from 'twilio-video';
 import { useLocation } from 'react-router-dom';
-import { Callback } from '../types';
 
 export interface StateContextType {
     error: TwilioError | null;
@@ -17,8 +16,6 @@ export interface StateContextType {
     meeting?: string;
     token?: string;
     isEmbedded?: boolean;
-    onDisconnect?: Callback;
-    onConnect?: Callback;
 }
 
 export const StateContext = createContext<StateContextType>(null!);
@@ -27,8 +24,6 @@ export interface AppStateProvider {
     meeting?: string;
     token?: string;
     isEmbedded?: boolean;
-    onDisconnect?: Callback;
-    onConnect?: Callback;
 }
 function useQuery() {
     return new URLSearchParams(useLocation().search);
@@ -62,18 +57,6 @@ export default function AppStateProvider(props: React.PropsWithChildren<AppState
             isEmbedded: props.isEmbedded,
         };
     }
-    if (props.onConnect) {
-        contextValue = {
-            ...contextValue,
-            onConnect: props.onConnect,
-        };
-    }
-    if (props.onDisconnect) {
-        contextValue = {
-            ...contextValue,
-            onDisconnect: props.onDisconnect,
-        };
-    }
     if (props.token && props.meeting) {
         contextValue = {
             ...contextValue,
@@ -82,13 +65,13 @@ export default function AppStateProvider(props: React.PropsWithChildren<AppState
         };
     }
     const query = useQuery();
-    let roomId = query.get('roomId');
-    let token = query.get('token');
+    const roomId = query.get('roomId');
+    const token = query.get('token');
     if (roomId && token) {
         contextValue = {
             ...contextValue,
             meeting: roomId,
-            token: token,
+            token,
         };
     }
 

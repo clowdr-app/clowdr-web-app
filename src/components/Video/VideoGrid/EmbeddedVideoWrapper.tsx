@@ -25,9 +25,12 @@ import ToggleVideoButton from "../VideoFrontend/components/Controls/ToggleVideoB
 import ToggleScreenShareButton
     from "../VideoFrontend/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
 import EndCallButton from "../VideoFrontend/components/Controls/EndCallButton/EndCallButton";
-import { AudioTrack, Participant as TwilioParticipant, RemoteVideoTrack, LocalVideoTrack, LocalVideoTrackPublication } from "twilio-video";
+import { AudioTrack, Participant as TwilioParticipant, RemoteVideoTrack, LocalVideoTrack } from "twilio-video";
 import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
 import { useAppState } from '../VideoFrontend/state';
+import { DeviceSelector } from '../VideoFrontend/components/MenuBar/DeviceSelector/DeviceSelector';
+import FlipCameraButton from '../VideoFrontend/components/MenuBar/FlipCameraButton/FlipCameraButton';
+import ToggleFullscreenButton from '../VideoFrontend/components/MenuBar/ToggleFullScreenButton/ToggleFullScreenButton';
 
 export default function App() {
     const roomState = useRoomState();
@@ -50,29 +53,17 @@ export default function App() {
 
             videoContext
                 .connect(stateContext.token)
-                .then(room => {
+                .then(() => {
                     // tslint:disable-next-line:no-console
                     console.log('Video context connected.');
 
-                    if (stateContext.onConnect) {
-                        stateContext.onConnect(room);
+                    if (videoContext.onConnect) {
+                        videoContext.onConnect();
                     }
-                    videoContext.room.on('disconnected', eventRoom => {
-                        // tslint:disable-next-line:no-console
-                        console.log('Video context disconnected.');
-                        eventRoom.localParticipant.tracks.forEach((publication: LocalVideoTrackPublication) => {
-                            const attachedElements = publication.track.detach();
-                            attachedElements.forEach(element => element.remove());
-                        });
-
-                        if (stateContext.onDisconnect) {
-                            stateContext.onDisconnect(room);
-                        }
-                    });
                 })
                 .catch(err => videoContext.onError);
         }
-    }, [roomState, stateContext, videoContext]);
+    }, [roomState, stateContext.token, videoContext.isConnecting, videoContext]);
 
     return <>
         <ConnectBridge videoContext={videoContext} setRoomName={setRoomName} />
@@ -118,7 +109,8 @@ function ParticipantStrip() {
                     priority={"high"}
                     onClick={() => setSelectedParticipant(selectedParticipant)}
                 /> : ""}
-                {tmp.filter((participant) => (participant !== selectedParticipant))
+                {// TODO: Create a stable ordering
+                    tmp.filter((participant) => (participant !== selectedParticipant))
                     .sort((x, y) => x.identity.localeCompare(y.identity))
                     .map((participant, idx) =>
                         (<Participant
@@ -133,12 +125,16 @@ function ParticipantStrip() {
             </div>
 
             <div className={clsx("controls", { showControls })}>
+                <DeviceSelector />
+                <FlipCameraButton />
                 <ToggleAudioButton disabled={isReconnecting} />
                 <ToggleVideoButton disabled={isReconnecting} />
                 {roomState !== 'disconnected' && (
                     <>
                         <ToggleScreenShareButton disabled={isReconnecting} />
                         <EndCallButton />
+                        <ToggleFullscreenButton />
+                        {/* TODO: <ReportToModsButton room={this.state.room} /> */}
                     </>
                 )}
             </div>
@@ -196,20 +192,15 @@ function ParticipantInfo(
             onClick={onClick}
             data-cy-participant={participant.identity}
         >
+            <div className="border-provider"></div>
             <div className="infoContainer">
-                <div className="infoRow">
-                    <h4 className="identity">
-                        <ParticipantConnectionIndicator participant={participant} />
-                        {/* TODO: <UserStatusDisplay inline={true} profileID={participant.identity} /> */}
-                    </h4>
-                    <NetworkQualityLevel qualityLevel={networkQualityLevel} />
-                </div>
-                <div>
-                    <AudioLevelIndicator audioTrack={audioTrack} background="white" />
-                    {!isVideoEnabled && <VideocamOff />}
-                    {isScreenShareEnabled && <ScreenShare />}
-                    {isSelected ? <i className="fas fa-thumbtack"></i> : <i className="far fa-thumbtack"></i>}
-                </div>
+                <h4 className="identity">
+                    <LoadingSpinner message="Loading name" />
+                    {/* TODO: <UserStatusDisplay inline={true} profileID={participant.identity} /> */}
+                </h4>
+                <ParticipantConnectionIndicator participant={participant} />
+                <AudioLevelIndicator audioTrack={audioTrack} background="white" />
+                <NetworkQualityLevel qualityLevel={networkQualityLevel} />
             </div>
             {children}
         </div>

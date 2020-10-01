@@ -10,12 +10,13 @@ const useStyles = makeStyles({
         width: '10px',
         height: '10px',
         borderRadius: '100%',
-        background: '#0c0',
+        background: '#ffb100',
+        opacity: 0,
         display: 'inline-block',
         marginRight: '3px',
     },
     isReconnecting: {
-        background: '#ffb100',
+        opacity: 1
     },
 });
 

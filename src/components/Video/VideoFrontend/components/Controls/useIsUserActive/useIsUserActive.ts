@@ -9,7 +9,7 @@ export default function useIsUserActive() {
         const handleUserActivity = throttle(() => {
             setIsUserActive(true);
             clearTimeout(timeoutIDRef.current);
-            const timeoutID = window.setTimeout(() => setIsUserActive(false), 5000);
+            const timeoutID = window.setTimeout(() => setIsUserActive(false), 3000);
             timeoutIDRef.current = timeoutID;
         }, 500);
 

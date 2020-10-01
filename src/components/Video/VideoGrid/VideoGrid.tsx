@@ -9,7 +9,6 @@ import { addError } from "../../../classes/Notifications/Notifications";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import { DeviceSelector } from "../VideoFrontend/components/MenuBar/DeviceSelector/DeviceSelector";
 import FlipCameraButton from "../VideoFrontend/components/MenuBar/FlipCameraButton/FlipCameraButton";
-import ToggleFullscreenButton from "../VideoFrontend/components/MenuBar/ToggleFullScreenButton/ToggleFullScreenButton";
 import { VideoProvider } from "../VideoFrontend/components/VideoProvider";
 import AppStateProvider from "../VideoFrontend/state";
 import theme from "./theme";
@@ -146,13 +145,6 @@ function VideoWrapperComponent(props: Props & {
                                     {fullLabel}{visibilityDescription}
                                     {privacyDescription}</h3>)}
                         </div>*/}
-
-                <div style={{}}>
-                    <FlipCameraButton />
-                    <DeviceSelector />
-                    <ToggleFullscreenButton />
-                    {/* TODO: <ReportToModsButton room={this.state.room} /> */}
-                </div>
             </div>}
 
             {/* ACLdescription */}
@@ -194,13 +186,15 @@ function VideoWrapperComponent(props: Props & {
 export default function VideoGrid(props: Props) {
     const logger = useLogger("VideoGrid");
 
-    function handleLogout() {
-        logger.info("Handle logout");
+    function handleDisconnected() {
+        setEnteringRoom(false);
         setToken(null);
     }
 
     function onError(e: TwilioError) {
         logger.error("Twilio error", e);
+        // TODO: Handle "Room completed" error
+        // TODO: Handle "Room not found" error
         addError(e.message);
     }
 
@@ -253,10 +247,10 @@ export default function VideoGrid(props: Props) {
     const [token, setToken] = useState<string | null>(null);
     async function enterRoom(ev: React.FormEvent) {
         setEnteringRoom(true);
-        const _token = await mVideo?.fetchFreshToken(props.room);
+        const result = await mVideo?.fetchFreshToken(props.room);
         // TODO: Handle the expiry time
-        if (_token) {
-            setToken(_token.token);
+        if (result) {
+            setToken(result.token);
         }
         else {
             setToken(null);
@@ -269,11 +263,11 @@ export default function VideoGrid(props: Props) {
             meeting={props.room.twilioID}
             token={token ?? undefined}
             isEmbedded={true}
-            onDisconnect={() => handleLogout}>
+        >
             <VideoProvider
                 onError={(e) => onError(e)}
                 options={connectionOptions}
-                onDisconnect={() => handleLogout}
+                onDisconnect={() => handleDisconnected()}
             >
                 <VideoWrapperComponent
                     room={props.room}

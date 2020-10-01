@@ -16,6 +16,7 @@ import useHandleOnDisconnect from './useHandleOnDisconnect/useHandleOnDisconnect
 import useHandleTrackPublicationFailed from './useHandleTrackPublicationFailed/useHandleTrackPublicationFailed';
 import useLocalTracks from './useLocalTracks/useLocalTracks';
 import useRoom from './useRoom/useRoom';
+import useHandleOnConnect from './useHandleOnConnect/useHandleOnConnect';
 
 /*
  *  The hooks used by the VideoProvider component are different than the hooks found in the 'hooks/' directory. The hooks
@@ -30,6 +31,7 @@ export interface IVideoContext {
     isConnecting: boolean;
     connect: (token: string) => Promise<void>;
     onError: ErrorCallback;
+    onConnect?: Callback;
     onDisconnect: Callback;
     getLocalVideoTrack: (newOptions?: CreateLocalTrackOptions) => Promise<LocalVideoTrack>;
     getLocalAudioTrack: (deviceId?: string) => Promise<LocalAudioTrack>;
@@ -40,6 +42,7 @@ export const VideoContext = createContext<IVideoContext>(null!);
 interface VideoProviderProps {
     options?: ConnectOptions;
     onError: ErrorCallback;
+    onConnect?: Callback;
     onDisconnect?: Callback;
     children: ReactNode;
 }
@@ -48,6 +51,7 @@ export function VideoProvider({
     options,
     children,
     onError = (err: any) => { },
+    onConnect = () => { },
     onDisconnect = () => { },
 }: VideoProviderProps) {
     const onErrorCallback = (error: TwilioError) => {
@@ -67,6 +71,7 @@ export function VideoProvider({
     // Register onError and onDisconnect callback functions.
     useHandleRoomDisconnectionErrors(room, onError);
     useHandleTrackPublicationFailed(room, onError);
+    useHandleOnConnect(room, onConnect);
     useHandleOnDisconnect(room, onDisconnect);
 
     return (
@@ -76,6 +81,7 @@ export function VideoProvider({
                 localTracks,
                 isConnecting,
                 onError: onErrorCallback,
+                onConnect,
                 onDisconnect,
                 getLocalVideoTrack,
                 getLocalAudioTrack,
