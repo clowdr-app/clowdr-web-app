@@ -31,6 +31,8 @@ export default function ViewVideoRoom(props: Props) {
 
     useHeading(room?.name ?? "Room");
 
+    // TODO: Members list (action button)
+
     return <div className="video-room">
         <SplitterLayout
             vertical={true}
