@@ -10,6 +10,9 @@ const {
     getConferenceConfigurationByKey,
     generateRoleDBName
 } = require("./conference");
+const {
+    getRegistrationById
+} = require("./registration");
 const { getFlairByLabel } = require("./flair");
 
 async function getUserByEmail(email) {
@@ -34,6 +37,35 @@ async function getRoleByName(roleName, conference) {
         return null;
     }
 }
+
+Parse.Cloud.define("user-register", async (request) => {
+    try {
+        let { params } = request;
+
+        if (!params.registrationId
+            || !params.password) {
+            return false;
+        }
+
+        let registration = await getRegistrationById(params.registrationId);
+        let user = getUserByEmail(registration.get("email"));
+
+        if (user) {
+            throw new Error("Registration: a user has already been registered for this email address.");
+        }
+
+        if (registration.get("invitationSentDate")) {
+            // todo: abstract out the logic from user-create and reuse it here
+        } else {
+            throw Error("Registration: no registration invitation has been sent for this user.");
+        }
+    }
+    catch (e) {
+        console.error("Error during registration", e);
+    }
+
+    return false;
+});
 
 Parse.Cloud.define("user-create", async (request) => {
     try {

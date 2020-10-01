@@ -11,6 +11,11 @@ const { isUserInRoles, getRoleByName } = require("./role");
 
 // **** Registration **** //
 
+async function getRegistrationById(id) {
+    let query = new Parse.Query("Registration");
+    return query.get(id, { useMasterKey: true });
+}
+
 async function configureDefaultRegistrationACLs(object) {
     const confId = object.get("conference").id;
     const adminRole = await getRoleByName(confId, "admin");
@@ -84,3 +89,7 @@ async function handleCreateRegistration(req) {
     }
 }
 Parse.Cloud.define("registration-create", handleCreateRegistration);
+
+module.exports = {
+    getRegistrationById
+};

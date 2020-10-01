@@ -25,6 +25,7 @@ import { HeadingState } from '../../contexts/HeadingContext';
 import ViewAuthor from '../Pages/Program/Author/ViewAuthor';
 import ViewItem from '../Pages/Program/Item/ViewItem';
 import NewVideoRoom from '../Pages/NewVideoRoom/NewVideoRoom';
+import Register from '../Pages/Register/Register';
 
 interface Props {
     doLogin: doLoginF;
@@ -171,6 +172,9 @@ function Page(props: Props) {
                 noHeading: true,
                 contents: <Switch>
                     <Route path="/signup" component={() => signUpComponent} />
+                    <Route path="/register/:token/:greeting" component={(p: RouteComponentProps<any>) =>
+                        <Register token={p.match.params.token} greeting={p.match.params.greeting} />
+                    } />
                     <Route path="/" component={() => loginComponent} />
                 </Switch>
             };
