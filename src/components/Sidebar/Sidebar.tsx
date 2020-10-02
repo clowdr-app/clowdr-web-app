@@ -242,96 +242,101 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 break;
             case "updateEvents":
                 {
-                    const updatedIds = update.events.map(x => x.id);
+                    const changes = [...update.events];
+                    const updatedIds = changes.map(x => x.id);
                     nextState.events = nextState.events?.map(x => {
                         const idx = updatedIds.indexOf(x.id);
                         if (idx > -1) {
-                            const y = update.events[idx];
+                            const y = changes[idx];
                             updatedIds.splice(idx, 1);
-                            update.events.splice(idx, 1);
+                            changes.splice(idx, 1);
                             return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.events = nextState.events?.concat(update.events) ?? update.events;
+                    nextState.events = nextState.events?.concat(changes) ?? changes;
                     sessionsOrEventsUpdated = true;
                 }
                 break;
             case "updateSessions":
                 {
-                    const updatedIds = update.sessions.map(x => x.id);
+                    const changes = [...update.sessions];
+                    const updatedIds = changes.map(x => x.id);
                     nextState.sessions = nextState.sessions?.map(x => {
                         const idx = updatedIds.indexOf(x.id);
                         if (idx > -1) {
-                            const y = update.sessions[idx];
+                            const y = changes[idx];
                             updatedIds.splice(idx, 1);
-                            update.sessions.splice(idx, 1);
+                            changes.splice(idx, 1);
                             return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.sessions = nextState.sessions?.concat(update.sessions) ?? update.sessions;
+                    nextState.sessions = nextState.sessions?.concat(changes) ?? changes;
                     sessionsOrEventsUpdated = true;
                 }
                 break;
             case "updateAllChats":
                 {
-                    const updatedIds = update.chats.map(x => x.sid);
+                    const changes = [...update.chats];
+                    const updatedIds = changes.map(x => x.sid);
                     nextState.allChats = nextState.allChats?.map(x => {
                         const idx = updatedIds.indexOf(x.sid);
                         if (idx > -1) {
-                            const y = update.chats[idx];
+                            const y = changes[idx];
                             updatedIds.splice(idx, 1);
-                            update.chats.splice(idx, 1);
+                            changes.splice(idx, 1);
                             return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.allChats = nextState.allChats?.concat(update.chats) ?? update.chats;
+                    nextState.allChats = nextState.allChats?.concat(changes) ?? changes;
                     allChatsUpdated = true;
                 }
                 break;
             case "updateActiveChats":
                 {
-                    const updatedIds = update.chats.map(x => x.sid);
+                    const changes = [...update.chats];
+                    const updatedIds = changes.map(x => x.sid);
                     nextState.activeChats = nextState.activeChats?.map(x => {
                         const idx = updatedIds.indexOf(x.sid);
                         if (idx > -1) {
-                            const y = update.chats[idx];
+                            const y = changes[idx];
                             updatedIds.splice(idx, 1);
-                            update.chats.splice(idx, 1);
+                            changes.splice(idx, 1);
                             return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.activeChats = nextState.activeChats?.concat(update.chats) ?? update.chats;
+                    nextState.activeChats = nextState.activeChats?.concat(changes) ?? changes;
                     activeChatsUpdated = true;
                 }
                 break;
             case "updateAllRooms":
                 {
-                    const updatedIds = update.rooms.map(x => x.room.id);
+                    const changes = [...update.rooms];
+                    const updatedIds = changes.map(x => x.room.id);
                     nextState.allRooms = nextState.allRooms?.map(x => {
                         const idx = updatedIds.indexOf(x.room.id);
                         if (idx > -1) {
-                            const y = update.rooms[idx];
+                            const y = changes[idx];
                             updatedIds.splice(idx, 1);
-                            update.rooms.splice(idx, 1);
+                            changes.splice(idx, 1);
                             return y;
                         }
                         else {
                             return x;
                         }
                     }) ?? null;
-                    nextState.allRooms = nextState.allRooms?.concat(update.rooms) ?? update.rooms;
+                    nextState.allRooms = nextState.allRooms?.concat(changes) ?? changes;
                     allRoomsUpdated = true;
                 }
                 break;
@@ -603,16 +608,6 @@ function Sidebar(props: Props) {
             }
             catch (e) {
                 if (!e.isCanceled) {
-
-                    dispatchUpdate([
-                        {
-                            action: "updateSessions",
-                            sessions: []
-                        }, {
-                            action: "updateEvents",
-                            events: []
-                        }]);
-
                     throw e;
                 }
             }
@@ -632,10 +627,12 @@ function Sidebar(props: Props) {
                 const promise: Promise<Array<FullRoomInfo>>
                     = VideoRoom.getAll(conf.id).then(rooms => {
                         return Promise.all(rooms.map(async room => {
+                            const [participants, feeds] = await Promise.all([room.participantProfiles, room.feeds]);
+                            const isFeedRoom = feeds.length > 0;
                             return {
                                 room,
-                                participants: await room.participantProfiles,
-                                isFeedRoom: (await room.feeds).length > 0
+                                participants,
+                                isFeedRoom
                             };
                         }));
                     });
@@ -653,13 +650,6 @@ function Sidebar(props: Props) {
             }
             catch (e) {
                 if (!e.isCanceled) {
-
-                    dispatchUpdate([
-                        {
-                            action: "updateAllRooms",
-                            rooms: []
-                        }]);
-
                     throw e;
                 }
             }
@@ -816,12 +806,14 @@ function Sidebar(props: Props) {
 
     const onRoomUpdated = useCallback(async function _onRoomUpdated(ev: DataUpdatedEventDetails<"VideoRoom">) {
         const room = ev.object as VideoRoom;
+        const [participants, feeds] = await Promise.all([room.participantProfiles, room.feeds]);
+        const isFeedRoom = feeds.length > 0;
         dispatchUpdate({
             action: "updateAllRooms",
             rooms: [{
                 room,
-                participants: await room.participantProfiles,
-                isFeedRoom: (await room.feeds).length > 0
+                participants,
+                isFeedRoom
             }]
         });
     }, []);
