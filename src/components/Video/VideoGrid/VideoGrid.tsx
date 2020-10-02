@@ -27,7 +27,7 @@ interface Props {
 }
 
 function VideoWrapperComponent(props: Props & {
-    enterRoom: (ev: React.FormEvent) => Promise<void>,
+    enterRoom: () => Promise<void>,
     mVideo: Video | null,
     token: string | null,
     enteringRoom: boolean
@@ -60,10 +60,7 @@ function VideoWrapperComponent(props: Props & {
     const enterButton =
         <AsyncButton
             action={async (ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
-
-                await props.enterRoom(ev);
+                await props.enterRoom();
             }}
             content="Enter the room" disabled={!props.mVideo} />;
 
@@ -172,7 +169,6 @@ function VideoWrapperComponent(props: Props & {
                 <form onSubmit={(ev) => {
                     ev.preventDefault();
                     ev.stopPropagation();
-                    props.enterRoom(ev);
                 }}>
                     {enableMicEl}
                     {micPreview}
@@ -245,7 +241,7 @@ export default function VideoGrid(props: Props) {
     const mVideo = useMaybeVideo();
     const [enteringRoom, setEnteringRoom] = useState<boolean>(false);
     const [token, setToken] = useState<{ roomId: string, token: string } | null>(null);
-    async function enterRoom(ev: React.FormEvent) {
+    async function enterRoom() {
         setEnteringRoom(true);
         const result = await mVideo?.fetchFreshToken(props.room);
         // TODO: Handle the expiry time
