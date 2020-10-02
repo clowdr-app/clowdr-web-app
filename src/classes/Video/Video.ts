@@ -98,7 +98,7 @@ export default class Video {
         return { token: result.token, expiry: new Date(result.expiry) };
     }
 
-    async requestClowdrTwilioBackend(
+    public async requestClowdrTwilioBackend(
         endpoint: "token",
         data: any = {}
     ) {

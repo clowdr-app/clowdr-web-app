@@ -8,7 +8,7 @@ import MenuExpander, { ButtonSpec } from "./Menu/MenuExpander";
 import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
 import MenuItem from './Menu/MenuItem';
-import { Conference, ProgramSession, ProgramSessionEvent, UserProfile } from '@clowdr-app/clowdr-db-schema/build/DataLayer';
+import { Conference, ProgramSession, ProgramSessionEvent, UserProfile, VideoRoom } from '@clowdr-app/clowdr-db-schema';
 import { makeCancelable } from '@clowdr-app/clowdr-db-schema/build/Util';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
 import useMaybeChat from '../../hooks/useMaybeChat';
@@ -17,6 +17,7 @@ import assert from 'assert';
 import { ServiceEventNames } from '../../classes/Chat/Services/Twilio/ChatService';
 import Chat from '../../classes/Chat/Chat';
 import useDataSubscription from '../../hooks/useDataSubscription';
+import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
 
 interface Props {
     open: boolean,
@@ -27,7 +28,8 @@ interface Props {
 type SidebarTasks
     = "loadingSessionsAndEvents"
     | "loadingActiveChats"
-    | "loadingAllChats";
+    | "loadingAllChats"
+    | "loadingAllRooms";
 
 type SidebarChatDescriptor = {
     sid: string;
@@ -40,6 +42,12 @@ type SidebarChatDescriptor = {
     member1: MemberDescriptor & { displayName: string };
     member2?: MemberDescriptor & { displayName: string };
 });
+
+type FullRoomInfo = {
+    room: VideoRoom,
+    participants: Array<UserProfile>,
+    isFeedRoom: boolean
+};
 
 interface SidebarState {
     tasks: Set<SidebarTasks>;
@@ -54,10 +62,12 @@ interface SidebarState {
 
     activeChats: Array<SidebarChatDescriptor> | null;
     allChats: Array<ChatDescriptor> | null;
+    allRooms: Array<FullRoomInfo> | null
     sessions: Array<ProgramSession> | null;
     events: Array<ProgramSessionEvent> | null;
 
     filteredChats: Array<SidebarChatDescriptor>;
+    filteredRooms: Array<FullRoomInfo>;
     filteredSessions: Array<ProgramSession>;
     filteredEvents: Array<ProgramSessionEvent>;
 }
@@ -73,11 +83,16 @@ type SidebarUpdate
     | { action: "updateActiveChats"; chats: Array<SidebarChatDescriptor> }
     | { action: "updateFilteredChats"; chats: Array<SidebarChatDescriptor> }
 
+    | { action: "updateAllRooms"; rooms: Array<FullRoomInfo> }
+    | { action: "updateFilteredRooms"; rooms: Array<FullRoomInfo> }
+
     | { action: "deleteSessions"; sessions: Array<string> }
     | { action: "deleteEvents"; events: Array<string> }
 
     | { action: "deleteFromActiveChats"; chats: Array<string> }
     | { action: "deleteFromAllChats"; chats: Array<string> }
+
+    | { action: "deleteRooms"; rooms: Array<string> }
 
     | { action: "searchChats"; search: string | null }
     | { action: "searchRooms"; search: string | null }
@@ -89,6 +104,7 @@ type SidebarUpdate
     ;
 
 const minSearchLength = 3;
+const maxRoomParticipantsToList = 6;
 
 async function filterSessionsAndEvents(
     allSessions: Array<ProgramSession>,
@@ -160,6 +176,21 @@ async function filterChats(
     }
 }
 
+async function filterRooms(
+    allRooms: Array<FullRoomInfo>,
+    _search: string | null): Promise<Array<FullRoomInfo>> {
+    if (_search && _search.length >= minSearchLength) {
+        const search = _search.toLowerCase();
+        return allRooms.filter(x =>
+            x.room.name.toLowerCase().includes(search) ||
+            x.participants.some(y => y.displayName.includes(search))
+        );
+    }
+    else {
+        return allRooms;
+    }
+}
+
 function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | Array<SidebarUpdate>): SidebarState {
     const nextState: SidebarState = {
         tasks: new Set(currentState.tasks),
@@ -174,10 +205,12 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
 
         allChats: currentState.allChats,
         activeChats: currentState.activeChats,
+        allRooms: currentState.allRooms,
         sessions: currentState.sessions,
         events: currentState.events,
 
         filteredChats: currentState.filteredChats,
+        filteredRooms: currentState.filteredRooms,
         filteredSessions: currentState.filteredSessions,
         filteredEvents: currentState.filteredEvents
     };
@@ -185,6 +218,7 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
     let sessionsOrEventsUpdated = false;
     let allChatsUpdated = false;
     let activeChatsUpdated = false;
+    let allRoomsUpdated = false;
 
     function doUpdate(update: SidebarUpdate) {
         switch (update.action) {
@@ -282,6 +316,25 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                     activeChatsUpdated = true;
                 }
                 break;
+            case "updateAllRooms":
+                {
+                    const updatedIds = update.rooms.map(x => x.room.id);
+                    nextState.allRooms = nextState.allRooms?.map(x => {
+                        const idx = updatedIds.indexOf(x.room.id);
+                        if (idx > -1) {
+                            const y = update.rooms[idx];
+                            updatedIds.splice(idx, 1);
+                            update.rooms.splice(idx, 1);
+                            return y;
+                        }
+                        else {
+                            return x;
+                        }
+                    }) ?? null;
+                    nextState.allRooms = nextState.allRooms?.concat(update.rooms) ?? update.rooms;
+                    allRoomsUpdated = true;
+                }
+                break;
             case "deleteEvents":
                 nextState.events = nextState.events?.filter(x => !update.events.includes(x.id)) ?? null;
                 sessionsOrEventsUpdated = true;
@@ -307,6 +360,9 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 break;
             case "updateFilteredChats":
                 nextState.filteredChats = update.chats;
+                break;
+            case "updateFilteredRooms":
+                nextState.filteredRooms = update.rooms;
                 break;
         }
     }
@@ -339,6 +395,15 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
 
     if (activeChatsUpdated) {
         nextState.tasks.delete("loadingActiveChats");
+    }
+
+    if (allRoomsUpdated) {
+        if (nextState.allRooms) {
+            nextState.tasks.delete("loadingAllRooms");
+        }
+        else {
+            nextState.filteredRooms = [];
+        }
     }
 
     return nextState;
@@ -408,7 +473,8 @@ function Sidebar(props: Props) {
         tasks: new Set([
             "loadingSessionsAndEvents",
             "loadingChats",
-            "loadingActiveChats"
+            "loadingActiveChats",
+            "loadingAllRooms"
         ] as SidebarTasks[]),
 
         chatsIsOpen: true,
@@ -421,10 +487,12 @@ function Sidebar(props: Props) {
 
         allChats: null,
         activeChats: null,
+        allRooms: null,
         sessions: null,
         events: null,
 
         filteredChats: [],
+        filteredRooms: [],
         filteredSessions: [],
         filteredEvents: []
     });
@@ -555,6 +623,53 @@ function Sidebar(props: Props) {
         return cancel;
     }, [conf.id]);
 
+    // Initial fetch of rooms
+    useEffect(() => {
+        let cancel: () => void = () => { };
+
+        async function updateRooms() {
+            try {
+                const promise: Promise<Array<FullRoomInfo>>
+                    = VideoRoom.getAll(conf.id).then(rooms => {
+                        return Promise.all(rooms.map(async room => {
+                            return {
+                                room,
+                                participants: await room.participantProfiles,
+                                isFeedRoom: (await room.feeds).length > 0
+                            };
+                        }));
+                    });
+                const wrappedPromise = makeCancelable(promise);
+                cancel = wrappedPromise.cancel;
+
+                const allRooms = await wrappedPromise.promise;
+
+                dispatchUpdate([
+                    {
+                        action: "updateAllRooms",
+                        rooms: allRooms
+                    }
+                ]);
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+
+                    dispatchUpdate([
+                        {
+                            action: "updateAllRooms",
+                            rooms: []
+                        }]);
+
+                    throw e;
+                }
+            }
+        }
+
+        updateRooms();
+
+        return cancel;
+    }, [conf.id]);
+
     // Refresh the view every few mins
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -634,6 +749,36 @@ function Sidebar(props: Props) {
         return cancel;
     }, [conf, conf.id, state.allChats, state.chatSearch]);
 
+    // Update filtered room results
+    useEffect(() => {
+        let cancel: () => void = () => { };
+
+        async function updateFiltered() {
+            try {
+                const promise = makeCancelable(filterRooms(
+                    state.allRooms ?? [],
+                    state.roomSearch
+                ));
+                cancel = promise.cancel;
+                const filteredRooms = await promise.promise;
+
+                dispatchUpdate({
+                    action: "updateFilteredRooms",
+                    rooms: filteredRooms
+                });
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+                    throw e;
+                }
+            }
+        }
+
+        updateFiltered();
+
+        return cancel;
+    }, [conf, conf.id, state.allRooms, state.roomSearch]);
+
 
     // Subscribe to program data events
 
@@ -666,6 +811,32 @@ function Sidebar(props: Props) {
         onEventDeleted,
         state.tasks.has("loadingSessionsAndEvents"),
         conf);
+
+    // Subscribe to room updates
+
+    const onRoomUpdated = useCallback(async function _onRoomUpdated(ev: DataUpdatedEventDetails<"VideoRoom">) {
+        const room = ev.object as VideoRoom;
+        dispatchUpdate({
+            action: "updateAllRooms",
+            rooms: [{
+                room,
+                participants: await room.participantProfiles,
+                isFeedRoom: (await room.feeds).length > 0
+            }]
+        });
+    }, []);
+
+    const onRoomDeleted = useCallback(function _onRoomDeleted(ev: DataDeletedEventDetails<"VideoRoom">) {
+        dispatchUpdate({ action: "deleteRooms", rooms: [ev.objectId] });
+    }, []);
+
+    useDataSubscription(
+        "VideoRoom",
+        onRoomUpdated,
+        onRoomDeleted,
+        state.tasks.has("loadingAllRooms"),
+        conf);
+
 
     // Subscribe to chat events
     useEffect(() => {
@@ -938,7 +1109,7 @@ function Sidebar(props: Props) {
             }
             else {
                 chatEl = <>
-                    {state.allChats ? <span className="menu-group">No chats to show.</span> : <></>}
+                    {state.allChats ? <span className="menu-group">No chats to show.</span> : <LoadingSpinner />}
                     <MenuGroup items={[{
                         key: "whole-chat",
                         element: <MenuItem title="View all chats" label="All chats" icon={<i className="fas fa-globe-europe"></i>} action="/chat" bold={true} />
@@ -956,44 +1127,61 @@ function Sidebar(props: Props) {
                     {chatEl}
                 </MenuExpander>;
 
-            // TODO: Generate room items from database (inc. any current search)
-            const roomMenuItems: MenuGroupItems = [
-                {
-                    key: "room-1",
-                    element:
-                        <MenuItem title="Breakout room 1" label="Breakout room 1" icon={<i className="fas fa-video"></i>} action="/room/1">
+            let roomsEl: JSX.Element;
+            if (state.filteredRooms.length > 0) {
+                const roomSearchValid = state.roomSearch && state.roomSearch.length >= minSearchLength;
+                let activeRooms = state.filteredRooms.filter(x => x.participants.length > 0);
+                let inactiveRooms = state.filteredRooms.filter(x => x.participants.length === 0 && (roomSearchValid || !x.isFeedRoom));
+                activeRooms = activeRooms.sort((x, y) => x.room.name.localeCompare(y.room.name));
+                inactiveRooms = inactiveRooms.sort((x, y) => x.room.name.localeCompare(y.room.name));
+
+                let roomMenuItems: MenuGroupItems = [];
+                roomMenuItems = roomMenuItems.concat(activeRooms.map(room => {
+                    const morePeopleCount = room.participants.length - maxRoomParticipantsToList;
+                    return {
+                        key: room.room.id,
+                        element: <MenuItem
+                            title={room.room.name}
+                            label={room.room.name}
+                            icon={< i className="fas fa-video" ></i >}
+                            action={`/room/${room.room.id}`} >
                             <ul>
-                                <li>Benjamin Pierce</li>
-                                <li>Crista Lopes</li>
-                                <li>Jonathan Bell</li>
+                                {room.participants
+                                    .slice(0, Math.min(room.participants.length, maxRoomParticipantsToList))
+                                    .map(x => <li key={x.id}>{x.displayName}</li>)}
+                                {morePeopleCount > 0
+                                    ? <li
+                                        key="more-participants"
+                                        className="plus-bullet">
+                                        {morePeopleCount} more {morePeopleCount === 1 ? "person" : "people"}...
+                                    </li>
+                                    : <></>}
                             </ul>
                         </MenuItem>
-                },
-                {
-                    key: "room-2",
-                    element:
-                        <MenuItem title="Breakout room 2" label="Breakout room 2" icon={<i className="fas fa-video"></i>} action="/room/2">
-                            <ul>
-                                <li>Ed Nutting</li>
-                                <li>Harry Goldstein</li>
-                                <li>Alan Turing</li>
-                                <li>The one and only SPJ</li>
-                                <li>Stephanie Weirich</li>
-                            </ul>
-                        </MenuItem>
-                },
-                {
-                    key: "room-3",
-                    element:
-                        <MenuItem title="Large room" label="Large room" icon={<i className="fas fa-video"></i>} action="/room/3">
-                            <ul>
-                                <li>Alonzo Church</li>
-                                <li>Ada Lovelace</li>
-                                <li className="plus-bullet">11 more people...</li>
-                            </ul>
-                        </MenuItem>
-                },
-            ];
+                    };
+                }));
+                roomMenuItems = roomMenuItems.concat(inactiveRooms.map(room => {
+                    return {
+                        key: room.room.id,
+                        element: <MenuItem
+                            title={room.room.name}
+                            label={room.room.name}
+                            icon={< i className="fas fa-video" ></i >}
+                            action={`/room/${room.room.id}`} />
+                    };
+                }));
+                roomsEl = <MenuGroup items={roomMenuItems} />;
+            }
+            else {
+                roomsEl = <>
+                    {state.allRooms ? <span className="menu-group">No rooms to show.</span> : <LoadingSpinner />}
+                    <MenuGroup items={[{
+                        key: "whole-rooms",
+                        element: <MenuItem title="View all rooms" label="All rooms" icon={<i className="fas fa-globe-europe"></i>} action="/room" bold={true} />
+                    }]} />
+                </>;
+            }
+
             roomsExpander
                 = <MenuExpander
                     title="Rooms"
@@ -1001,7 +1189,7 @@ function Sidebar(props: Props) {
                     buttons={roomsButtons}
                     onOpenStateChange={() => dispatchUpdate({ action: "setRoomsIsOpen", isOpen: !state.roomsIsOpen })}
                 >
-                    <MenuGroup items={roomMenuItems} />
+                    {roomsEl}
                 </MenuExpander>;
         }
 
@@ -1019,7 +1207,7 @@ function Sidebar(props: Props) {
         }
         else {
             program = <>
-                {state.sessions && state.events ? <span className="menu-group">No events to show.</span> : <></>}
+                {state.sessions && state.events ? <span className="menu-group">No events to show.</span> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-program",
                     element: <MenuItem title="View whole program" label="Whole program" icon={<i className="fas fa-globe-europe"></i>} action="/program" bold={true} />

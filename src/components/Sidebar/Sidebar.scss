@@ -338,13 +338,15 @@
                     display: block;
 
                     ul {
-                        margin         : 0.4ex 0 0.4ex 0;
+                        margin         : 1ex 0 0.4ex 0;
                         columns        : 2;
                         -webkit-columns: 2;
                         -moz-columns   : 2;
                         font-size      : 80%;
 
                         li {
+                            list-style-type: disc;
+
                             &.plus-bullet {
                                 list-style-type: '+';
                                 padding-left   : 0.5em;

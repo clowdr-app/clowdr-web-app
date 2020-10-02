@@ -30,6 +30,9 @@ import { useAppState } from '../VideoFrontend/state';
 import { DeviceSelector } from '../VideoFrontend/components/MenuBar/DeviceSelector/DeviceSelector';
 import FlipCameraButton from '../VideoFrontend/components/MenuBar/FlipCameraButton/FlipCameraButton';
 import ToggleFullscreenButton from '../VideoFrontend/components/MenuBar/ToggleFullScreenButton/ToggleFullScreenButton';
+import { UserProfile } from '@clowdr-app/clowdr-db-schema';
+import useConference from '../../../hooks/useConference';
+import { makeCancelable } from '@clowdr-app/clowdr-db-schema/build/Util';
 
 export default function App() {
     const roomState = useRoomState();
@@ -124,7 +127,7 @@ function ParticipantStrip() {
                 {roomState !== 'disconnected' && (
                     <>
                         <ToggleScreenShareButton disabled={isReconnecting} />
-                        <EndCallButton />
+                        {/*TODO: Clicking this breaks everything (inc. the sidebar updates): <EndCallButton />*/}
                         <ToggleFullscreenButton />
                         {/* TODO: <ReportToModsButton room={this.state.room} /> */}
                     </>
@@ -186,7 +189,7 @@ function ParticipantInfo(
             <div className="border-provider"></div>
             <div className="infoContainer">
                 <h4 className="identity">
-                    <LoadingSpinner message="Loading name" />
+                    <UserDisplayName profileId={participant.identity} />
                     {/* TODO: <UserStatusDisplay inline={true} profileID={participant.identity} /> */}
                 </h4>
                 <ParticipantConnectionIndicator participant={participant} />
@@ -196,6 +199,21 @@ function ParticipantInfo(
             {children}
         </div>
     );
+}
+
+function UserDisplayName({ profileId }: { profileId: string }) {
+    const conference = useConference();
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    useEffect(() => {
+        const p = makeCancelable(UserProfile.get(profileId, conference.id));
+        p.promise.then(setProfile).catch(err => {
+            if (!err.isCanceled) {
+                throw err;
+            }
+        });
+        return p.cancel;
+    }, [conference.id, profileId]);
+    return profile ? <>{profile.displayName}</> : <LoadingSpinner message="Loading name" />;
 }
 
 function ParticipantTracks({
