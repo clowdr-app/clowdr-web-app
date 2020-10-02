@@ -27,15 +27,19 @@ export default function AudioInputList() {
 
     function replaceTrack(newDeviceId: string) {
         localAudioTrack?.stop();
-        getLocalAudioTrack(newDeviceId).then(newTrack => {
+        const p = getLocalAudioTrack(newDeviceId);
+        p.promise.then(newTrack => {
             if (localAudioTrack) {
                 const localTrackPublication = localParticipant?.unpublishTrack(localAudioTrack);
                 // TODO: remove when SDK implements this event. See: https://issues.corp.twilio.com/browse/JSDK-2592
                 localParticipant?.emit('trackUnpublished', localTrackPublication);
             }
 
-            localParticipant?.publishTrack(newTrack);
+            if (newTrack) {
+                localParticipant?.publishTrack(newTrack);
+            }
         });
+        return p.cancel;
     }
 
     return (
@@ -44,7 +48,9 @@ export default function AudioInputList() {
                 {audioInputDevices.length > 1 ? (
                     <FormControl fullWidth>
                         <Typography variant="h6">Audio Input:</Typography>
-                        <Select onChange={e => replaceTrack(e.target.value as string)} value={localAudioInputDeviceId || ''}>
+                        <Select
+                            onChange={e => replaceTrack(e.target.value as string)}
+                            value={localAudioInputDeviceId || ''}>
                             {audioInputDevices.map(device => (
                                 <MenuItem value={device.deviceId} key={device.deviceId}>
                                     {device.label}

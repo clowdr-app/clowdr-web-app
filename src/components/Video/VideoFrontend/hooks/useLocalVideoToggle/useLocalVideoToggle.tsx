@@ -19,12 +19,15 @@ export default function useLocalVideoToggle() {
             }
             videoTrack.stop();
         } else {
-            getLocalVideoTrack().then((track: LocalVideoTrack) => {
-                if (localParticipant) {
+            const p = getLocalVideoTrack();
+            p.promise.then((track: LocalVideoTrack | undefined) => {
+                if (localParticipant && track) {
                     localParticipant.publishTrack(track, { priority: 'low' });
                 }
             });
+            return p.cancel;
         }
+        return () => { };
     }, [videoTrack, localParticipant, getLocalVideoTrack]);
 
     return [!!videoTrack, toggleVideoEnabled] as const;

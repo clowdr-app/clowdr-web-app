@@ -17,6 +17,7 @@ import useHandleTrackPublicationFailed from './useHandleTrackPublicationFailed/u
 import useLocalTracks from './useLocalTracks/useLocalTracks';
 import useRoom from './useRoom/useRoom';
 import useHandleOnConnect from './useHandleOnConnect/useHandleOnConnect';
+import { CancelablePromise } from '@clowdr-app/clowdr-db-schema/build/Util';
 
 /*
  *  The hooks used by the VideoProvider component are different than the hooks found in the 'hooks/' directory. The hooks
@@ -33,8 +34,8 @@ export interface IVideoContext {
     onError: ErrorCallback;
     onConnect?: Callback;
     onDisconnect: Callback;
-    getLocalVideoTrack: (newOptions?: CreateLocalTrackOptions) => Promise<LocalVideoTrack>;
-    getLocalAudioTrack: (deviceId?: string) => Promise<LocalAudioTrack>;
+    getLocalVideoTrack: (newOptions?: CreateLocalTrackOptions) => CancelablePromise<LocalVideoTrack | undefined>;
+    getLocalAudioTrack: (deviceId?: string) => CancelablePromise<LocalAudioTrack | undefined>;
 }
 
 export const VideoContext = createContext<IVideoContext>(null!);

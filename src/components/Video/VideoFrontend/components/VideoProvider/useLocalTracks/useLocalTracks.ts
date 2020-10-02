@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { ensureMediaPermissions } from '../../../utils';
 import Video, { LocalVideoTrack, LocalAudioTrack, CreateLocalTrackOptions } from 'twilio-video';
+import { makeCancelable } from '@clowdr-app/clowdr-db-schema/build/Util';
 
 export function useLocalAudioTrack(errorHandler?: (err: any) => {}) {
     const [track, setTrack] = useState<LocalAudioTrack>();
@@ -13,22 +14,26 @@ export function useLocalAudioTrack(errorHandler?: (err: any) => {}) {
             options.deviceId = { exact: deviceId };
         }
 
-        return ensureMediaPermissions()
-            .then(() =>
-                Video.createLocalAudioTrack(options).then(newTrack => {
-                    setTrack(newTrack);
-                    return newTrack;
-                })
-            )
+        const p = makeCancelable(ensureMediaPermissions().then(() => Video.createLocalAudioTrack(options)));
+        p.promise
+            .then(newTrack => {
+                setTrack(newTrack);
+                return newTrack;
+            })
             .catch(err => {
-                if (errorHandler) errorHandler(err);
-                throw err;
+                if (!err.isCanceled) {
+                    if (errorHandler)
+                        errorHandler(err);
+                    throw err;
+                }
+                return undefined;
             });
+        return p;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        getLocalAudioTrack();
+        return getLocalAudioTrack().cancel;
     }, [getLocalAudioTrack]);
 
     useEffect(() => {
@@ -63,24 +68,27 @@ export function useLocalVideoTrack(errorHandler?: (err: any) => {}) {
             ...newOptions,
         };
 
-        return ensureMediaPermissions()
-            .then(() =>
-                Video.createLocalVideoTrack(options).then(newTrack => {
-                    setTrack(newTrack);
-                    return newTrack;
-                })
-            )
+        const p = makeCancelable(ensureMediaPermissions().then(() => Video.createLocalVideoTrack(options)));
+        p.promise
+            .then(newTrack => {
+                setTrack(newTrack);
+                return newTrack;
+            })
             .catch(err => {
-                if (errorHandler) errorHandler(err);
-                console.log(err);
-                throw err;
+                if (!err.isCanceled) {
+                    if (errorHandler)
+                        errorHandler(err);
+                    throw err;
+                }
+                return undefined;
             });
+        return p;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
         // We get a new local video track when the app loads.
-        getLocalVideoTrack();
+        return getLocalVideoTrack().cancel;
     }, [getLocalVideoTrack]);
 
     useEffect(() => {

@@ -29,13 +29,17 @@ export default function FlipCameraButton() {
 
         videoTrack!.stop();
 
-        getLocalVideoTrack({ facingMode: newFacingMode }).then(newVideoTrack => {
+        const p = getLocalVideoTrack({ facingMode: newFacingMode });
+        p.promise.then(newVideoTrack => {
             const localTrackPublication = localParticipant?.unpublishTrack(videoTrack!);
             // TODO: remove when SDK implements this event. See: https://issues.corp.twilio.com/browse/JSDK-2592
             localParticipant?.emit('trackUnpublished', localTrackPublication);
 
-            localParticipant?.publishTrack(newVideoTrack, { priority: 'low' });
+            if (newVideoTrack) {
+                localParticipant?.publishTrack(newVideoTrack, { priority: 'low' });
+            }
         });
+        return p.cancel;
     }, [facingMode, getLocalVideoTrack, localParticipant, videoTrack]);
 
     return supportsFacingMode ? (
