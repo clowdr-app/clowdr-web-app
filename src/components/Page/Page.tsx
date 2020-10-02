@@ -172,8 +172,8 @@ function Page(props: Props) {
                 noHeading: true,
                 contents: <Switch>
                     <Route path="/signup" component={() => signUpComponent} />
-                    <Route path="/register/:token/:email" component={(p: RouteComponentProps<any>) =>
-                        <Register registrationId={p.match.params.token} email={p.match.params.email} />
+                    <Route path="/register/:conferenceId/:registrationId/:email" component={(p: RouteComponentProps<any>) =>
+                        <Register conferenceId={p.match.params.conferenceId} registrationId={p.match.params.registrationId} email={p.match.params.email} />
                     } />
                     <Route path="/" component={() => loginComponent} />
                 </Switch>
