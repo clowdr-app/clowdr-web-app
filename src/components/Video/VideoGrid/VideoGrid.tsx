@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import "./VideoGrid.scss";
 import Toggle from "react-toggle";
@@ -244,13 +244,13 @@ export default function VideoGrid(props: Props) {
 
     const mVideo = useMaybeVideo();
     const [enteringRoom, setEnteringRoom] = useState<boolean>(false);
-    const [token, setToken] = useState<string | null>(null);
+    const [token, setToken] = useState<{ roomId: string, token: string } | null>(null);
     async function enterRoom(ev: React.FormEvent) {
         setEnteringRoom(true);
         const result = await mVideo?.fetchFreshToken(props.room);
         // TODO: Handle the expiry time
         if (result) {
-            setToken(result.token);
+            setToken(result.token ? { roomId: props.room.id, token: result.token } : null);
         }
         else {
             setToken(null);
@@ -258,10 +258,16 @@ export default function VideoGrid(props: Props) {
         }
     }
 
+    useEffect(() => {
+        if (token && token.roomId !== props.room.id) {
+            setToken(null);
+        }
+    }, [props.room.id, token]);
+
     return <MuiThemeProvider theme={theme}>
         <AppStateProvider
             meeting={props.room.twilioID}
-            token={token ?? undefined}
+            token={token?.token ?? undefined}
             isEmbedded={true}
         >
             <VideoProvider
@@ -274,7 +280,7 @@ export default function VideoGrid(props: Props) {
                     enterRoom={enterRoom}
                     enteringRoom={enteringRoom}
                     mVideo={mVideo}
-                    token={token}
+                    token={token?.token ?? null}
                 />
             </VideoProvider>
         </AppStateProvider>
