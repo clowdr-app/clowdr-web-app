@@ -57,7 +57,7 @@ async function createUser(email, fullName, password, conference) {
 
     let newUser = new Parse.User({
         email: email,
-        username: fullName.replace(/ /g, "_")
+        username: email,
     });
     let newUserACL = new Parse.ACL();
     newUserACL.setPublicReadAccess(false);
