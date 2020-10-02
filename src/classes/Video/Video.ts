@@ -85,7 +85,8 @@ export default class Video {
 
     public async fetchFreshToken(room: VideoRoom): Promise<{
         token: string | null,
-        expiry: Date | null
+        expiry: Date | null,
+        twilioRoomId: string | null
     }> {
         assert(this.profile);
         assert(this.conference);
@@ -95,7 +96,7 @@ export default class Video {
         const result = await this.requestClowdrTwilioBackend("token", {
             room: room.id
         });
-        return { token: result.token, expiry: new Date(result.expiry) };
+        return { token: result.token, expiry: new Date(result.expiry), twilioRoomId: result.twilioRoomId };
     }
 
     public async requestClowdrTwilioBackend(

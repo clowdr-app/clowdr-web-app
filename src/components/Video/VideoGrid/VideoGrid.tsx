@@ -240,13 +240,15 @@ export default function VideoGrid(props: Props) {
 
     const mVideo = useMaybeVideo();
     const [enteringRoom, setEnteringRoom] = useState<boolean>(false);
-    const [token, setToken] = useState<{ roomId: string, token: string } | null>(null);
+    const [token, setToken] = useState<{ roomId: string, token: string, twilioRoomId: string } | null>(null);
     async function enterRoom() {
         setEnteringRoom(true);
         const result = await mVideo?.fetchFreshToken(props.room);
         // TODO: Handle the expiry time
         if (result) {
-            setToken(result.token ? { roomId: props.room.id, token: result.token } : null);
+            setTimeout(() => {
+                setToken(result.token && result.twilioRoomId ? { roomId: props.room.id, token: result.token, twilioRoomId: result.twilioRoomId } : null)
+            }, 1);
         }
         else {
             setToken(null);
@@ -262,7 +264,7 @@ export default function VideoGrid(props: Props) {
 
     return <MuiThemeProvider theme={theme}>
         <AppStateProvider
-            meeting={props.room.twilioID}
+            meeting={token?.twilioRoomId}
             token={token?.token ?? undefined}
             isEmbedded={true}
         >

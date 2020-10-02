@@ -11,7 +11,7 @@ export default class ConnectBridge extends Component<
             // Detach the local media elements
             let room = this.props.videoContext.room;
             room.localParticipant.tracks.forEach(publication => {
-                console.log(publication.track.kind);
+                // console.log(publication.track.kind);
                 switch (publication.track.kind) {
                     case 'video':
                         publication.track.stop();
