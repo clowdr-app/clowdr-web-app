@@ -1,0 +1,17 @@
+@import "../../../styles/util.scss";
+@import "../../../styles/form.scss";
+
+$gutter     : mm(10);
+$main-width : mm(150);
+
+.register-form {
+    margin-top    : 10vh 2.5em;
+    display       : flex;
+    flex-direction: column;
+
+    .register-section-header {
+        margin: 0 $gutter;
+    }
+
+    @include basic-form;
+}
