@@ -2,7 +2,7 @@
 // ^ for eslint
 
 const { validateRequest } = require("./utils");
-const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
+const { isUserInRoles, getRoleByName } = require("./role");
 const { createTextChat } = require('./textChat');
 
 // TODO: Before delete: Kick any members, delete room in Twilio
@@ -48,9 +48,31 @@ const createVideoRoomSchema = {
  * @param {VideoRoomSpec} data - The specification of the new Video Room.
  * @returns {Promise<Parse.Object>} - The new Video Room
  */
-async function createVideoRoom(data) {
+async function createVideoRoom(data, user) {
     const newObject = new Parse.Object("VideoRoom", data);
-    await configureDefaultProgramACLs(newObject);
+
+    const confId = newObject.get("conference").id;
+    const adminRole = await getRoleByName(confId, "admin");
+    const managerRole = await getRoleByName(confId, "manager");
+    const attendeeRole = await getRoleByName(confId, "attendee");
+
+    const acl = new Parse.ACL();
+    acl.setPublicReadAccess(false);
+    acl.setPublicWriteAccess(false);
+    acl.setWriteAccess(user, true);
+    if (data.isPrivate) {
+        acl.setRoleReadAccess(managerRole, true);
+        acl.setRoleReadAccess(adminRole, true);
+
+        acl.setReadAccess(user, true);
+    }
+    else {
+        acl.setRoleReadAccess(attendeeRole, true);
+    }
+    acl.setRoleWriteAccess(managerRole, true);
+    acl.setRoleWriteAccess(adminRole, true);
+    newObject.setACL(acl);
+
     await newObject.save(null, { useMasterKey: true });
     return newObject;
 }
@@ -80,20 +102,26 @@ async function handleCreateVideoRoom(req) {
 
             // For now, if a text chat is not included, we will automatically create one
             if (!spec.textChat) {
-                const newChatSpec = {
-                    autoWatch: false,
-                    mirrored: false,
-                    name: spec.name,
-                    conference: spec.conference,
-                };
-                const newChat = await createTextChat(newChatSpec);
-                spec.textChat = newChat;
+                if (!spec.isPrivate) {
+                    const newChatSpec = {
+                        autoWatch: false,
+                        mirrored: false,
+                        name: spec.name,
+                        conference: spec.conference,
+                    };
+                    const newChat = await createTextChat(newChatSpec);
+                    spec.textChat = newChat;
+                }
+                else {
+                    // TODO: Enable creation of text chats that are private in Parse
+                    //       (At the moment, we assume all text chats in Parse are public chats)
+                }
             }
             else {
                 spec.textChat = new Parse.Object("TextChat", { id: spec.textChat });
             }
 
-            const result = await createVideoRoom(spec);
+            const result = await createVideoRoom(spec, user);
             return result.id;
         }
         else {
