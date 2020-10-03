@@ -6,6 +6,7 @@ export default function useSafeAsync<T>(
     setState: (newState: T) => void,
     deps: DependencyList): void {
     const generatorCallback = useCallback(generator, deps);
+    const setStateCallback = useCallback(setState, []);
 
     useEffect(() => {
         let cancel = () => { };
@@ -16,7 +17,7 @@ export default function useSafeAsync<T>(
                 cancel = p.cancel;
                 const newV = await p.promise;
                 if (newV) {
-                    setState(newV);
+                    setStateCallback(newV);
                 }
                 cancel = () => { };
             }
@@ -30,5 +31,5 @@ export default function useSafeAsync<T>(
         execute();
 
         return cancel;
-    }, [generatorCallback, setState]);
+    }, [generatorCallback, setStateCallback]);
 }
