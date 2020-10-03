@@ -31,6 +31,14 @@ function readDatas(rootPath, tableName) {
 }
 
 async function createConference(conferenceData) {
+    const existingConfQ = new Parse.Query("Conference");
+    existingConfQ.equalTo("name", conferenceData.conference.name);
+    const existingConf = await existingConfQ.first({ useMasterKey: true });
+    if (existingConf) {
+        console.log("Conference already exists - re-using it.");
+        return existingConf.id;
+    }
+
     conferenceData.twilio = {};
     conferenceData.twilio.MASTER_SID = process.env.TWILIO_MASTER_SID;
     conferenceData.twilio.MASTER_AUTH_TOKEN = process.env.TWILIO_MASTER_AUTH_TOKEN;

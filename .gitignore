@@ -49,3 +49,6 @@ sample-program-data.js
 .vscode/settings.json
 
 .env.prod
+
+.parse.local
+.parse.project

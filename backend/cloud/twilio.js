@@ -13,7 +13,7 @@ const { getConfig } = require("./config");
  * @returns {Promise<Twilio.Twilio | undefined>} - The Twilio client.
  */
 async function createTwilioClient(confId, config) {
-    config = config ?? await getConfig(confId);
+    config = config ? await getConfig(confId) : undefined;
     if (!config.TWILIO_ACCOUNT_SID || !config.TWILIO_AUTH_TOKEN) {
         return undefined;
     }
@@ -28,7 +28,7 @@ async function createTwilioClient(confId, config) {
  * @param {ClowdrConfig} [config] - The existing conference config.
  */
 async function getTwilioChatService(confId, config) {
-    config = config ?? await getConfig(confId);
+    config = config ? config : await getConfig(confId);
     if (!config.TWILIO_CHAT_SERVICE_SID) {
         return undefined;
     }
@@ -38,7 +38,7 @@ async function getTwilioChatService(confId, config) {
         return undefined;
     }
 
-    return client?.chat.services(config.TWILIO_CHAT_SERVICE_SID);
+    return client ? client.chat.services(config.TWILIO_CHAT_SERVICE_SID) : undefined;
 }
 
 module.exports = {

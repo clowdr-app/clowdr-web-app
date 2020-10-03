@@ -18,6 +18,7 @@
     "moment-timezone": "^0.5.31",
     "nodemailer": "^6.4.10",
     "sendgrid": "^5.2.3",
+    "twilio": "^3.49.4",
     "xml2json": "^0.12.0"
   }
 }

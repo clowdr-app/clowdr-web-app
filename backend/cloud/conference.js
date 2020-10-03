@@ -182,7 +182,12 @@ function generateRoleDBName(conference, name) {
 }
 
 Parse.Cloud.job("conference-create", async (request) => {
-    const { params, message } = request;
+    const { params, message: _message } = request;
+    const message = (msg) => {
+        console.log(msg);
+        _message(msg);
+    };
+    message("Starting create conference...");
 
     // Stuff we re-use but doesn't directly need cleaning up
     let twilioMasterClient = null;
@@ -640,7 +645,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             async function configureTwilioChatService() {
                 await setConfiguration("TWILIO_CHAT_SERVICE_SID", twilioChatService.sid, false);
 
-                await twilioChatService.update({
+                const service = await twilioChatService.update({
                     reachabilityEnabled: TWILIO_REACHABILITY_ENABLED,
                     readStatusEnabled: TWILIO_READ_STATUS_ENABLED,
                     webhookMethod: TWILIO_WEBHOOK_METHOD,
@@ -653,7 +658,8 @@ Parse.Cloud.job("conference-create", async (request) => {
                     },
                     preWebhookRetryCount: TWILIO_CHAT_PRE_WEBHOOK_RETRY_COUNT,
                     postWebhookRetryCount: TWILIO_CHAT_POST_WEBHOOK_RETRY_COUNT
-                }).then(service => console.log(`Updated Twilio Chat Service: ${service.friendlyName}`));
+                });
+                console.log(`Updated Twilio Chat Service: ${service.friendlyName}`);
             }
             await getTwilioChatService();
             if (!twilioChatService) {
@@ -681,15 +687,19 @@ Parse.Cloud.job("conference-create", async (request) => {
             // Roles we need: Service admin, service user, channel admin, channel user, announcements channel admin, announcements channel user
             const twilioChatRoles = new Map();
             async function getChatRoles() {
+                message(`Getting chat roles`);
                 const roles = await twilioChatService.roles().list();
+                message(`Got chat roles, processing them...`);
                 for (let role of roles) {
                     twilioChatRoles.set(role.friendlyName, role);
                 }
+                message(`Obtained and processed chat roles`);
             }
             function addPermissionsToDescriptor(obj, permissions) {
                 obj.permission = permissions;
             }
             async function createChatRole(friendlyName, type, permissions) {
+                message(`Creating chat role ${friendlyName}`);
                 let roleDescriptor = {
                     friendlyName: friendlyName,
                     type: type
@@ -697,11 +707,14 @@ Parse.Cloud.job("conference-create", async (request) => {
                 addPermissionsToDescriptor(roleDescriptor, permissions);
                 let role = await twilioChatService.roles().create(roleDescriptor);
                 twilioChatRoles.set(friendlyName, role);
+                message(`Created chat role ${friendlyName}`);
             }
             async function configureChatRole(friendlyName, permissions) {
+                message(`Configuring chat role ${friendlyName}`);
                 let obj = {};
                 addPermissionsToDescriptor(obj, permissions);
                 await twilioChatRoles.get(friendlyName).update(obj);
+                message(`Configured chat role ${friendlyName}`);
             }
             await getChatRoles();
             for (let role of defaultTwilioChatRoles) {
@@ -738,6 +751,9 @@ Parse.Cloud.job("conference-create", async (request) => {
                 await createAnnouncementsChannel();
             }
             setConfiguration("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", twilioAccouncementsChannel.sid);
+            message(`Configured announcements channel.`);
+
+            message(`Adding admin user to announcements channel...`);
             await twilioChatService.users().create({
                 identity: adminUserProfile.id,
                 friendlyName: adminUserProfile.get("displayName"),
@@ -747,8 +763,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 identity: adminUserProfile.id,
                 roleSid: twilioChatRoles.get("announcements admin").sid
             });
-
-            message(`Configured announcements channel.`);
+            message(`Added admin user to announcements channel.`);
 
             // Configure SendGrid
             message(`Configuring SendGrid...`);
@@ -767,7 +782,7 @@ Parse.Cloud.job("conference-create", async (request) => {
     catch (e) {
         await cleanupOnFailure();
 
-        console.error("ERROR: " + e);
+        console.error("ERROR: " + e.stack, e);
         message(e);
         throw e;
     }
