@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 
 import ConnectBridge from "../VideoFrontend/components/MenuBar/ConnectBridge";
 import useVideoContext from "../VideoFrontend/hooks/useVideoContext/useVideoContext";
-import useParticipants from "../VideoFrontend/hooks/useParticipants/useParticipants";
+import useParticipants, { ParticipantWithSlot } from "../VideoFrontend/hooks/useParticipants/useParticipants";
 import useSelectedParticipant
     from "../VideoFrontend/components/VideoProvider/useSelectedParticipant/useSelectedParticipant";
 import ParticipantConnectionIndicator
@@ -23,7 +23,7 @@ import ToggleAudioButton from "../VideoFrontend/components/Controls/ToggleAudioB
 import ToggleVideoButton from "../VideoFrontend/components/Controls/ToggleVideoButton/ToggleVideoButton";
 import ToggleScreenShareButton
     from "../VideoFrontend/components/Controls/ToogleScreenShareButton/ToggleScreenShareButton";
-import EndCallButton from "../VideoFrontend/components/Controls/EndCallButton/EndCallButton";
+// import EndCallButton from "../VideoFrontend/components/Controls/EndCallButton/EndCallButton";
 import { AudioTrack, Participant as TwilioParticipant, RemoteVideoTrack, LocalVideoTrack } from "twilio-video";
 import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
 import { useAppState } from '../VideoFrontend/state';
@@ -77,12 +77,15 @@ function ParticipantStrip() {
     const participants = useParticipants();
     const roomState = useRoomState();
 
-    let tmp: Array<TwilioParticipant> = [];
+    let tmp: Array<ParticipantWithSlot> = [];
     tmp = tmp.concat(participants)
     // DEBUG: Create multiple copies of the local participant
     // const duplicates = 10;
     // for (let i = 0; i < duplicates; i++) {
-    tmp.push(localParticipant);
+    tmp.push({
+        participant: localParticipant,
+        slot: 0 // Slot 0 is reserved for local participant
+    });
     // }
 
 
@@ -92,6 +95,10 @@ function ParticipantStrip() {
 
     const [selectedParticipant, setSelectedParticipant] = useSelectedParticipant();
     const defaultPriority = "low";
+
+    function participantSorter(x: ParticipantWithSlot, y: ParticipantWithSlot): number {
+        return x.slot < y.slot ? -1 : x.slot === y.slot ? 0 : 1;
+    }
 
     return (
         <>
@@ -104,17 +111,16 @@ function ParticipantStrip() {
                     priority={"high"}
                     onClick={() => setSelectedParticipant(selectedParticipant)}
                 /> : ""}
-                {// TODO: Create a stable ordering
-                    tmp.filter((participant) => (participant !== selectedParticipant))
-                    .sort((x, y) => x.identity.localeCompare(y.identity))
-                    .map((participant, idx) =>
+                {tmp.filter(p => (p.participant !== selectedParticipant))
+                    .sort(participantSorter)
+                    .map((p, idx) =>
                         (<Participant
-                            key={"" + idx + participant.sid}
-                            participant={participant}
-                            isSelected={selectedParticipant === participant}
+                            key={idx.toString() + p.participant.sid}
+                            participant={p.participant}
+                            isSelected={selectedParticipant === p.participant}
                             enableScreenShare={true}
                             priority={defaultPriority}
-                            onClick={() => setSelectedParticipant(participant)}
+                            onClick={() => setSelectedParticipant(p.participant)}
                         />
                         ))}
             </div>
