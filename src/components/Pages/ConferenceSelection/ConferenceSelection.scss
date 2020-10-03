@@ -55,30 +55,4 @@
             border-radius   : radius(2);
         }
     }
-
-    @media (min-width: $break-sm) and (max-width: $break-lg - 1) {
-        justify-content: start;
-        padding-top    : mm(10);
-
-        .main {
-            width: 100%;
-        }
-
-        .input-wrapper {
-            flex-direction : row;
-            justify-content: center;
-            align-items    : center;
-
-            select {
-                width : 50%;
-                height: mm(10);
-                margin: 0;
-            }
-
-            .join-button {
-                margin: 0 0 0 mm(5);
-                height: mm(10);
-            }
-        }
-    }
 }
