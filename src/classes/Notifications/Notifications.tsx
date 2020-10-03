@@ -6,9 +6,9 @@ import ErrorNotification from "../../components/Notifications/ErrorNotification/
 /**
  * Display a global notification toast using `react-toastify`.
  */
-function addNotification(content: string, actionUrl: string, actionText: string) {
+function addNotification(content: string, action?: { url: string, text: string }) {
     toast(
-        (<Notification content={content} actionUrl={actionUrl} actionText={actionText} />),
+        (<Notification content={content} action={action} />),
         {
             className: "clowdr-notification",
             hideProgressBar: true,

@@ -4,8 +4,7 @@ import "./Notification.scss";
 
 interface Props {
     content: string,
-    actionUrl: string,
-    actionText: string,
+    action?: { url: string, text: string }
 }
 
 /**
@@ -14,11 +13,13 @@ interface Props {
 export default function Notification(props: Props) {
     return <div>
         <p>{props.content}</p>
-        <p className="notification-action">
-            <Link to={props.actionUrl}>
-                {props.actionText}
-                <i className="fas fa-chevron-circle-right icon"></i>
-            </Link>
-        </p>
+        {props.action
+            ? <p className="notification-action">
+                <Link to={props.action.url}>
+                    {props.action.text}
+                    <i className="fas fa-chevron-circle-right icon"></i>
+                </Link>
+            </p>
+            : <></>}
     </div>;
 }
