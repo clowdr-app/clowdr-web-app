@@ -1,0 +1,31 @@
+{
+    "port": 4000,
+    "appId": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "clientKey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "masterKey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "javascriptKey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "restAPIKey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "databaseURI": "mongodb://localhost/clowdr",
+    "liveQuery": {
+        "classNames": [
+            "AttachmentType",
+            "Conference",
+            "Flair",
+            "PrivilegedConferenceDetails",
+            "ProgramPerson",
+            "ProgramItem",
+            "ProgramItemAttachment",
+            "ProgramRoom",
+            "ProgramSession",
+            "ProgramSessionEvent",
+            "ProgramTrack",
+            "TextChat",
+            "TextChatMessage",
+            "UserProfile",
+            "VideoRoom"
+        ]
+    },
+    "startLiveQueryServer": true,
+    "allowCustomObjectId": true,
+    "cloud": "./main.js"
+}

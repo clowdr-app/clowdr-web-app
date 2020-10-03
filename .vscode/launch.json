@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "command": "npm start",
+            "name": "Debug parse-server (local)",
+            "request": "launch",
+            "type": "node-terminal",
+            "cwd": "${workspaceFolder}/backend/cloud/"
+        },
+        {
             "name": "Launch convert-program-csv via NPM",
             "request": "launch",
             "runtimeArgs": [
