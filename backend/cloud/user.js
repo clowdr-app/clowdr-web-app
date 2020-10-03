@@ -40,6 +40,7 @@ async function getUserProfile(user, conference) {
 
 /**
  * @param {string} userId
+ * @returns {Promise<Parse.User<Parse.Attributes>>}
  */
 async function getUserById(userId) {
     let query = new Parse.Query(Parse.User);
@@ -129,14 +130,27 @@ async function createUserProfile(user, fullName, conference) {
         friendlyName: newProfile.get("displayName"),
         xTwilioWebhookEnabled: true
     });
+}
 
-    return true;
+/**
+ * @param {string} registrationId
+ */
+async function deleteRegistration(registrationId) {
+    const q = new Parse.Query("Registration");
+
+    try {
+        let registration = await q.get(registrationId, { useMasterKey: true });
+        registration.destroy({ useMasterKey: true });
+    } catch (e) {
+        throw new Error("Could not find registration to be deleted.");
+    }
 }
 
 
 /**
  * @param {Parse.User} user
  * @param {string} confId
+ * @returns {Promise<Parse.Object | null>}
  */
 async function getProfileOfUser(user, confId) {
     const q = new Parse.Query("UserProfile");
@@ -150,7 +164,18 @@ async function getProfileOfUser(user, confId) {
     }
 }
 
-Parse.Cloud.define("user-register", async (request) => {
+/**
+ * @typedef {Object} RegisterUserParams
+ * @property {string | undefined} registrationId
+ * @property {string | undefined} conferenceId
+ * @property {string | undefined} fullName
+ * @property {string | undefined} password
+ */
+
+/**
+ * @param {Parse.Cloud.FunctionRequest<RegisterUserParams>} request
+ */
+async function handleRegisterUser(request) {
     try {
         let { params } = request;
 
@@ -183,12 +208,13 @@ Parse.Cloud.define("user-register", async (request) => {
             let userProfile = await getUserProfile(user, conference);
 
             if (userProfile) {
+                await deleteRegistration(params.registrationId);
                 throw new Error("Registration: the user has already been registered for this conference.");
             } else {
                 await user.verifyPassword(params.password).catch(_ => {
                     throw new Error(`Registration: error matching user details.`)
                 });
-                return await createUserProfile(user, params.fullName, conference);
+                await createUserProfile(user, params.fullName, conference);
             }
         } else {
             let user = await createUser(email, params.password);
@@ -197,17 +223,33 @@ Parse.Cloud.define("user-register", async (request) => {
                 throw new Error("Signup: Failed to create user.");
             }
 
-            return await createUserProfile(user, params.fullName, conference);
+            await createUserProfile(user, params.fullName, conference);
         }
+
+        await deleteRegistration(params.registrationId);
+
+        return true;
     }
     catch (e) {
         console.error("Error during registration", e);
     }
 
     return false;
-});
+}
+Parse.Cloud.define("user-register", handleRegisterUser);
 
-Parse.Cloud.define("user-create", async (request) => {
+/**
+ * @typedef {Object} CreateUserParams
+ * @property {string | undefined} conference
+ * @property {string | undefined} email
+ * @property {string | undefined} password
+ * @property {string | undefined} fullName
+ */
+
+/**
+ * @param {Parse.Cloud.FunctionRequest<CreateUserParams>} request
+ */
+async function handleCreateUser(request) {
     try {
         let { params } = request;
 
@@ -260,7 +302,8 @@ Parse.Cloud.define("user-create", async (request) => {
     }
 
     return false;
-});
+}
+Parse.Cloud.define("user-create", handleCreateUser);
 
 // TODO: When upgrading a user to an admin, iterate over all their twilio channels
 //       and update their role SID. Also, update their service-level role SID.
