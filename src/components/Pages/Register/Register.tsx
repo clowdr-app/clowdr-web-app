@@ -114,6 +114,7 @@ export default function Register(props: Props) {
         return <>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <p>Welcome to Clowdr. Please choose a password to complete your registration for {conference.name}.</p>
+                <p>If you have used Clowdr before, enter your existing password.</p>
                 <label htmlFor="email">Email</label>
                 <input name="email" type="email" value={props.email} disabled />
                 <label htmlFor="fullName">Full name</label>
