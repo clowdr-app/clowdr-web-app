@@ -90,6 +90,67 @@ async function handleCreateRegistration(req) {
 }
 Parse.Cloud.define("registration-create", handleCreateRegistration);
 
+/**
+ * @typedef {Object} RegistrationEmailSpec
+ * @property {boolean} sendOnlyUnsent
+ * @property {Pointer} conference
+ */
+
+const sendregistrationEmailsSchema = {
+    sendOnlyUnsent: "boolean",
+    conference: "string"
+};
+
+/**
+ * Sends registration emails for conference attendees.
+ *
+ * Note: you must perform authentication prior to calling this function.
+ *
+ * @param {RegistrationEmailSpec} data - The specification of the new Registration.
+ * @returns {Promise<boolean>} - The new Registration
+ */
+async function sendRegistrationEmails(data) {
+    const regQ = new Parse.Query("Registration");
+    regQ.equalTo("conference", data.conference)
+
+    if (data.sendOnlyUnsent) {
+        regQ.doesNotExist("invitationSentDate");
+    }
+
+    let objects = await regQ.find({ useMasterKey: true });
+
+    console.log(objects);
+
+    return true;
+}
+
+/**
+ * @param {Parse.Cloud.FunctionRequest} req
+ */
+async function handleSendRegistrationEmails(req) {
+    const { params, user } = req;
+
+    const requestValidation = validateRequest(sendregistrationEmailsSchema, params);
+    if (requestValidation.ok) {
+        const confId = params.conference;
+
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        if (authorized) {
+            const spec = params;
+            spec.conference = new Parse.Object("Conference", { id: confId });
+            const result = await sendRegistrationEmails(spec);
+            return result;
+        }
+        else {
+            throw new Error("Permission denied");
+        }
+    }
+    else {
+        throw new Error(requestValidation.error);
+    }
+}
+Parse.Cloud.define("registration-send-emails", handleSendRegistrationEmails);
+
 module.exports = {
     getRegistrationById
 };

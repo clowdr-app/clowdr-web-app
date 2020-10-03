@@ -26,6 +26,7 @@ import ViewAuthor from '../Pages/Program/Author/ViewAuthor';
 import ViewItem from '../Pages/Program/Item/ViewItem';
 import NewVideoRoom from '../Pages/NewVideoRoom/NewVideoRoom';
 import Register from '../Pages/Register/Register';
+import Admin from '../Pages/Admin/Admin';
 
 interface Props {
     doLogin: doLoginF;
@@ -149,6 +150,9 @@ function Page(props: Props) {
                     <Route path="/profile" component={() =>
                         <Redirect to={"/profile/" + mUser.id} />
                     } />
+                    <Route path="/admin" component={() =>
+                        <Admin />
+                    } />
                     <Route path="/" component={NotFound} />
                 </Switch>
             };
@@ -172,8 +176,8 @@ function Page(props: Props) {
                 noHeading: true,
                 contents: <Switch>
                     <Route path="/signup" component={() => signUpComponent} />
-                    <Route path="/register/:token/:greeting" component={(p: RouteComponentProps<any>) =>
-                        <Register token={p.match.params.token} greeting={p.match.params.greeting} />
+                    <Route path="/register/:conferenceId/:registrationId/:email" component={(p: RouteComponentProps<any>) =>
+                        <Register conferenceId={p.match.params.conferenceId} registrationId={p.match.params.registrationId} email={p.match.params.email} />
                     } />
                     <Route path="/" component={() => loginComponent} />
                 </Switch>
@@ -182,10 +186,15 @@ function Page(props: Props) {
         else {
             return {
                 noHeading: true,
-                contents: <ConferenceSelection
-                    failedToLoadConferences={props.failedToLoadConferences}
-                    selectConference={props.selectConference}
-                />
+                contents: <Switch>
+                    <Route path="/register/:conferenceId/:registrationId/:email" component={(p: RouteComponentProps<any>) =>
+                        <Register conferenceId={p.match.params.conferenceId} registrationId={p.match.params.registrationId} email={p.match.params.email} />
+                    } />
+                    <Route path="/" component={() =>
+                        <ConferenceSelection
+                            failedToLoadConferences={props.failedToLoadConferences}
+                            selectConference={props.selectConference} />} />
+                </Switch>
             };
         }
     }, [mConf, mUser, props, showSignUp]);

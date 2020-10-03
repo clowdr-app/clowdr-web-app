@@ -26,6 +26,18 @@ async function getUserByEmail(email) {
     }
 }
 
+async function getUserProfile(user, conference) {
+    let query = new Parse.Query("UserProfile");
+    query.equalTo("conference", conference);
+    query.equalTo("user", user);
+    try {
+        return await query.first({ useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
+}
+
 /**
  * @param {string} userId
  */
@@ -51,6 +63,77 @@ async function getRoleByName(roleName, conference) {
     }
 }
 
+async function createUser(email, password) {
+    // TODO: Recover gracefully from failure
+    // TODO: Verification email
+
+    let newUser = new Parse.User({
+        email: email,
+        username: email,
+    });
+    let newUserACL = new Parse.ACL();
+    newUserACL.setPublicReadAccess(false);
+    newUserACL.setPublicWriteAccess(false);
+    newUser.setACL(newUserACL);
+    newUser.setPassword(password);
+    newUser.set("passwordSet", true);
+    newUser.set("emailVerified", true); // TODO: Set to false when using email verification
+    newUser = await newUser.save(null, { useMasterKey: true });
+    newUserACL.setReadAccess(newUser, true);
+    newUserACL.setWriteAccess(newUser, true);
+    let user = await newUser.save(null, { useMasterKey: true });
+    return user;
+}
+
+async function createUserProfile(user, fullName, conference) {
+    let adminRole = await getRoleByName("admin", conference);
+    let attendeeRole = await getRoleByName("attendee", conference);
+
+    let emptyFlair = await getFlairByLabel("<empty>", conference);
+    let newProfile = new Parse.Object("UserProfile", {
+        user: user,
+        conference: conference,
+        primaryFlair: emptyFlair,
+        welcomeModalShown: false,
+        realName: fullName,
+        displayName: fullName,
+        dataConsentGiven: false, // TODO: Require from sign up form
+        pronouns: ["they", "them"],
+        tags: []
+    });
+    let flairsRel = newProfile.relation("flairs");
+    flairsRel.add(emptyFlair);
+    let newProfileACl = new Parse.ACL();
+    newProfileACl.setPublicReadAccess(false);
+    newProfileACl.setPublicWriteAccess(false);
+    newProfileACl.setRoleReadAccess(attendeeRole, true);
+    newProfileACl.setRoleReadAccess(adminRole, true);
+    newProfileACl.setRoleWriteAccess(adminRole, true);
+    newProfileACl.setReadAccess(user, true);
+    newProfileACl.setWriteAccess(user, true);
+    newProfile.setACL(newProfileACl);
+    newProfile = await newProfile.save(null, { useMasterKey: true });
+
+    let attendeeUsersRel = attendeeRole.relation("users");
+    attendeeUsersRel.add(user);
+    attendeeRole.save(null, { useMasterKey: true });
+
+    const twilioAccountSID = (await getConferenceConfigurationByKey(conference, "TWILIO_ACCOUNT_SID")).get("value");
+    const twilioAuthToken = (await getConferenceConfigurationByKey(conference, "TWILIO_AUTH_TOKEN")).get("value");
+    const twilioChatServiceSID = (await getConferenceConfigurationByKey(conference, "TWILIO_CHAT_SERVICE_SID")).get("value");
+    const twilioClient = Twilio(twilioAccountSID, twilioAuthToken);
+    const twilioChatService = twilioClient.chat.services(twilioChatServiceSID);
+    // Adding the user will trigger our Twilio backend to add them to the announcements channel
+    await twilioChatService.users.create({
+        identity: newProfile.id,
+        friendlyName: newProfile.get("displayName"),
+        xTwilioWebhookEnabled: true
+    });
+
+    return true;
+}
+
+
 /**
  * @param {Parse.User} user
  * @param {string} confId
@@ -72,21 +155,49 @@ Parse.Cloud.define("user-register", async (request) => {
         let { params } = request;
 
         if (!params.registrationId
+            || !params.conferenceId
+            || !params.fullName
             || !params.password) {
             return false;
         }
 
-        let registration = await getRegistrationById(params.registrationId);
-        let user = getUserByEmail(registration.get("email"));
+        let conference = await getConferenceById(params.conferenceId);
 
-        if (user) {
-            throw new Error("Registration: a user has already been registered for this email address.");
+        if (!conference) {
+            throw new Error("Registration: conference not found.");
         }
 
-        if (registration.get("invitationSentDate")) {
-            // todo: abstract out the logic from user-create and reuse it here
+        let registration = await getRegistrationById(params.registrationId);
+        if (!registration.get("invitationSentDate")) {
+            throw new Error("Registration: no registration invitation has been sent for this user.");
+        }
+
+        if (!conference.equals(registration.get("conference"))) {
+            throw new Error("Registration: registration is not valid for the chosen conference.");
+        }
+
+        let email = registration.get("email");
+        let user = await getUserByEmail(email);
+
+        if (user) {
+            let userProfile = await getUserProfile(user, conference);
+
+            if (userProfile) {
+                throw new Error("Registration: the user has already been registered for this conference.");
+            } else {
+                await user.verifyPassword(params.password).catch(_ => {
+                    throw new Error(`Registration: error matching user details.`)
+                });
+                return await createUserProfile(user, params.fullName, conference);
+            }
         } else {
-            throw Error("Registration: no registration invitation has been sent for this user.");
+            let user = await createUser(email, params.password);
+
+            if (!user) {
+                throw new Error("Signup: Failed to create user.");
+            }
+
+            return await createUserProfile(user, params.fullName, conference);
         }
     }
     catch (e) {
@@ -124,81 +235,28 @@ Parse.Cloud.define("user-create", async (request) => {
                 // Validate: conference
                 // validate their password matches
                 //       If: they don't already have a profile for this conference
-                //       Then: create a new user profile for the specificed conference and log them in
+                //       Then: create a new user profile for the specified conference and log them in
                 //       Else: Log them in and redirect to the profile page, with a message telling them so
                 // Override: Only log them in if their email is verified
-                throw new Error("Sign up: creating new profile for existing account not implemented.");
+                if (user.get("password") === params.password) {
+                    return await createUserProfile(user, params.fullName, conference);
+                } else {
+                    throw new Error("Signup: error matching user details.");
+                }
             }
             else {
-                // TODO: Recover gracefully from failure
-                // TODO: Verification email
+                let user = await createUser(params.email, params.password);
 
-                let newUser = new Parse.User({
-                    email: params.email,
-                    username: params.fullName.replace(/ /g, "_")
-                });
-                let newUserACL = new Parse.ACL();
-                newUserACL.setPublicReadAccess(false);
-                newUserACL.setPublicWriteAccess(false);
-                newUser.setACL(newUserACL);
-                newUser.setPassword(params.password);
-                newUser.set("passwordSet", true);
-                newUser.set("emailVerified", true); // TODO: Set to false when using email verification
-                newUser = await newUser.save(null, { useMasterKey: true });
-                newUserACL.setReadAccess(newUser, true);
-                newUserACL.setWriteAccess(newUser, true);
-                await newUser.save(null, { useMasterKey: true });
+                if (!user) {
+                    throw new Error("Signup: failed to create user.");
+                }
 
-                let adminRole = await getRoleByName("admin", conference);
-                let attendeeRole = await getRoleByName("attendee", conference);
-
-                let emptyFlair = await getFlairByLabel("<empty>", conference);
-                let newProfile = new Parse.Object("UserProfile", {
-                    user: newUser,
-                    conference: conference,
-                    primaryFlair: emptyFlair,
-                    welcomeModalShown: false,
-                    realName: params.fullName,
-                    displayName: params.fullName,
-                    dataConsentGiven: false, // TODO: Require from sign up form
-                    pronouns: ["they", "them"],
-                    tags: []
-                });
-                let flairsRel = newProfile.relation("flairs");
-                flairsRel.add(emptyFlair);
-                let newProfileACl = new Parse.ACL();
-                newProfileACl.setPublicReadAccess(false);
-                newProfileACl.setPublicWriteAccess(false);
-                newProfileACl.setRoleReadAccess(attendeeRole, true);
-                newProfileACl.setRoleReadAccess(adminRole, true);
-                newProfileACl.setRoleWriteAccess(adminRole, true);
-                newProfileACl.setReadAccess(newUser, true);
-                newProfileACl.setWriteAccess(newUser, true);
-                newProfile.setACL(newProfileACl);
-                newProfile = await newProfile.save(null, { useMasterKey: true });
-
-                let attendeeUsersRel = attendeeRole.relation("users");
-                attendeeUsersRel.add(newUser);
-                attendeeRole.save(null, { useMasterKey: true });
-
-                const twilioAccountSID = (await getConferenceConfigurationByKey(conference, "TWILIO_ACCOUNT_SID")).get("value");
-                const twilioAuthToken = (await getConferenceConfigurationByKey(conference, "TWILIO_AUTH_TOKEN")).get("value");
-                const twilioChatServiceSID = (await getConferenceConfigurationByKey(conference, "TWILIO_CHAT_SERVICE_SID")).get("value");
-                const twilioClient = Twilio(twilioAccountSID, twilioAuthToken);
-                const twilioChatService = twilioClient.chat.services(twilioChatServiceSID);
-                // Adding the user will trigger our Twilio backend to add them to the announcements channel
-                await twilioChatService.users.create({
-                    identity: newProfile.id,
-                    friendlyName: newProfile.get("displayName"),
-                    xTwilioWebhookEnabled: true
-                });
-
-                return true;
+                return await createUserProfile(user, params.fullName, conference);
             }
         }
     }
     catch (e) {
-        console.error("Error during sign up", e);
+        throw new Error("Error during sign up: " + JSON.stringify(e));
     }
 
     return false;
