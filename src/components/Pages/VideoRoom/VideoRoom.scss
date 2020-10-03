@@ -1,4 +1,8 @@
 @import "../../../styles/util.scss";
+@import "../../../styles/form.scss";
+
+$gutter     : mm(10);
+$main-width : mm(150);
 
 .video-room {
     position: relative;
@@ -8,6 +12,27 @@
     &.invite-view {
         .splitter-layout {
             display: none;
+        }
+
+        @include basic-form;
+
+        form {
+            .invite-users-control {
+                display       : flex;
+                flex-direction: row;
+
+                &__multiselect {
+                    flex-grow    : 1;
+                    --rmsc-border: #000;
+                    --rmsc-gray  : #666;
+                    --rmsc-h     : 42px;
+                }
+
+                &__button {
+                    flex-shrink: 1;
+                    margin-left: mm(4);
+                }
+            }
         }
     }
 }

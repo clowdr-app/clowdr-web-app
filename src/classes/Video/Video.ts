@@ -67,6 +67,14 @@ export default class Video {
         });
     }
 
+    public async inviteToRoom(room: VideoRoom, users: Array<string>): Promise<{ [k: string]: boolean }> {
+        return Parse.Cloud.run("videoRoom-invite", {
+            conference: this.conference.id,
+            room: room.id,
+            users,
+            write: false
+        });
+    }
 
     private async get_REACT_APP_TWILIO_CALLBACK_URL(): Promise<string> {
         if (!this._REACT_APP_TWILIO_CALLBACK_URL) {

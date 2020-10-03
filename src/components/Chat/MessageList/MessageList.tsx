@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./MessageList.scss";
 import "../../Profile/FlairChip/FlairChip.scss";
 

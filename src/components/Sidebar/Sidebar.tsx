@@ -1119,7 +1119,8 @@ function Sidebar(props: Props) {
                     {chatEl}
                 </MenuExpander>;
 
-            let roomsEl: JSX.Element;
+            let roomsEl: JSX.Element = <></>;
+            let noRooms = true;
             if (state.filteredRooms.length > 0) {
                 const roomSearchValid = state.roomSearch && state.roomSearch.length >= minSearchLength;
                 let activeRooms = state.filteredRooms.filter(x => x.participants.length > 0);
@@ -1127,44 +1128,49 @@ function Sidebar(props: Props) {
                 activeRooms = activeRooms.sort((x, y) => x.room.name.localeCompare(y.room.name));
                 inactiveRooms = inactiveRooms.sort((x, y) => x.room.name.localeCompare(y.room.name));
 
-                let roomMenuItems: MenuGroupItems = [];
-                roomMenuItems = roomMenuItems.concat(activeRooms.map(room => {
-                    const morePeopleCount = room.participants.length - maxRoomParticipantsToList;
-                    return {
-                        key: room.room.id,
-                        element: <MenuItem
-                            title={room.room.name}
-                            label={room.room.name}
-                            icon={< i className="fas fa-video" ></i >}
-                            action={`/room/${room.room.id}`} >
-                            <ul>
-                                {room.participants
-                                    .slice(0, Math.min(room.participants.length, maxRoomParticipantsToList))
-                                    .map(x => <li key={x.id}>{x.displayName}</li>)}
-                                {morePeopleCount > 0
-                                    ? <li
-                                        key="more-participants"
-                                        className="plus-bullet">
-                                        {morePeopleCount} more {morePeopleCount === 1 ? "person" : "people"}...
+                noRooms = activeRooms.length === 0 && inactiveRooms.length === 0;
+
+                if (!noRooms) {
+                    let roomMenuItems: MenuGroupItems = [];
+                    roomMenuItems = roomMenuItems.concat(activeRooms.map(room => {
+                        const morePeopleCount = room.participants.length - maxRoomParticipantsToList;
+                        return {
+                            key: room.room.id,
+                            element: <MenuItem
+                                title={room.room.name}
+                                label={room.room.name}
+                                icon={< i className="fas fa-video" ></i >}
+                                action={`/room/${room.room.id}`} >
+                                <ul>
+                                    {room.participants
+                                        .slice(0, Math.min(room.participants.length, maxRoomParticipantsToList))
+                                        .map(x => <li key={x.id}>{x.displayName}</li>)}
+                                    {morePeopleCount > 0
+                                        ? <li
+                                            key="more-participants"
+                                            className="plus-bullet">
+                                            {morePeopleCount} more {morePeopleCount === 1 ? "person" : "people"}...
                                     </li>
-                                    : <></>}
-                            </ul>
-                        </MenuItem>
-                    };
-                }));
-                roomMenuItems = roomMenuItems.concat(inactiveRooms.map(room => {
-                    return {
-                        key: room.room.id,
-                        element: <MenuItem
-                            title={room.room.name}
-                            label={room.room.name}
-                            icon={< i className="fas fa-video" ></i >}
-                            action={`/room/${room.room.id}`} />
-                    };
-                }));
-                roomsEl = <MenuGroup items={roomMenuItems} />;
+                                        : <></>}
+                                </ul>
+                            </MenuItem>
+                        };
+                    }));
+                    roomMenuItems = roomMenuItems.concat(inactiveRooms.map(room => {
+                        return {
+                            key: room.room.id,
+                            element: <MenuItem
+                                title={room.room.name}
+                                label={room.room.name}
+                                icon={< i className="fas fa-video" ></i >}
+                                action={`/room/${room.room.id}`} />
+                        };
+                    }));
+                    roomsEl = <MenuGroup items={roomMenuItems} />;
+                }
             }
-            else {
+
+            if (noRooms) {
                 roomsEl = <>
                     {state.allRooms ? <span className="menu-group">No rooms to show.</span> : <LoadingSpinner />}
                     <MenuGroup items={[{

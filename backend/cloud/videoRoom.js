@@ -22,7 +22,7 @@ const { getUserById, getProfileOfUser } = require("./user");
 
 async function getRoomById(roomId, confId) {
     const q = new Parse.Query("VideoRoom");
-    q.equalTo("conference", confId);
+    q.equalTo("conference", new Parse.Object("Conference", { id: confId }));
     return await q.get(roomId, { useMasterKey: true });
 }
 
@@ -163,7 +163,7 @@ async function grantAccessToVideoRoom(room, user, write, sessionToken) {
         acl.setWriteAccess(user, true);
     }
     room.setACL(acl);
-    room.save(null, { sessionToken: sessionToken });
+    await room.save(null, { sessionToken: sessionToken });
 }
 
 const inviteToVideoRoomSchema = {
@@ -187,7 +187,7 @@ async function handleInviteToVideoRoom(req) {
         const room = await getRoomById(roomId, confId);
         const results = {};
         for (const userId of params.users) {
-            const targetUser = await getUserById();
+            const targetUser = await getUserById(userId);
             let succeeded = false;
             if (targetUser) {
                 if (await getProfileOfUser(targetUser, confId)) {

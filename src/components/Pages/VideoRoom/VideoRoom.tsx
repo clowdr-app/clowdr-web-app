@@ -1,26 +1,44 @@
-import React, { useState } from "react";
+import Parse from "parse";
+import React, { useEffect, useState } from "react";
 import useHeading from "../../../hooks/useHeading";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import VideoGrid from "../../Video/VideoGrid/VideoGrid";
 import "./VideoRoom.scss";
 import SplitterLayout from "react-splitter-layout";
 import "react-splitter-layout/lib/index.css";
-import { TextChat, VideoRoom } from "@clowdr-app/clowdr-db-schema";
+import { TextChat, UserProfile, VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import useConference from "../../../hooks/useConference";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import { ActionButton } from "../../../contexts/HeadingContext";
+import MultiSelect from "react-multi-select-component";
+import useUserProfile from "../../../hooks/useUserProfile";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import assert from "assert";
+import { addError, addNotification } from "../../../classes/Notifications/Notifications";
+import useMaybeVideo from "../../../hooks/useMaybeVideo";
 
 interface Props {
     roomId: string;
 }
 
+type UserOption = {
+    label: string;
+    value: string;
+}
+
 export default function ViewVideoRoom(props: Props) {
     const conference = useConference();
+    const currentUserProfile = useUserProfile();
+    const mVideo = useMaybeVideo();
     const [size, setSize] = useState(30);
     const [room, setRoom] = useState<VideoRoom | null>(null);
     const [chat, setChat] = useState<TextChat | "not present" | null>(null);
     const [showInvite, setShowInvite] = useState<boolean>(false);
+    const [allUsers, setAllUsers] = useState<Array<UserOption> | null>(null);
+    const [invites, setInvites] = useState<Array<UserOption> | null>(null);
+    const [inviting, setInviting] = useState<CancelablePromise<unknown> | null>(null);
+    const [usersWithAccess, setUsersWithAccess] = useState<Array<string> | null>(null);
 
     useSafeAsync(
         async () => await VideoRoom.get(props.roomId, conference.id),
@@ -30,9 +48,20 @@ export default function ViewVideoRoom(props: Props) {
         async () => room ? ((await room.textChat) ?? "not present") : null,
         setChat,
         [room]);
+    useSafeAsync(async () => {
+        const profiles = await UserProfile.getAll(conference.id);
+        return profiles.map(x => ({
+            value: x.userId,
+            label: x.displayName
+        })).filter(x => x.value !== currentUserProfile.id);
+    }, setAllUsers, []);
+    useSafeAsync(
+        async () => room ? await room.userIdsWithAccess : null,
+        setUsersWithAccess,
+        [room]);
 
     const actionButtons: Array<ActionButton> = [];
-    if (room && room.isPrivate) {
+    if (mVideo && room && room.isPrivate) {
         if (showInvite) {
             actionButtons.push({
                 label: "Back to room",
@@ -63,10 +92,80 @@ export default function ViewVideoRoom(props: Props) {
         buttons: actionButtons
     });
 
+    useEffect(() => inviting?.cancel, [inviting]);
+    function doInviteUsers(ev: React.FormEvent) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        if (!invites || invites.length === 0) {
+            addError("Please select some users to invite.");
+            return;
+        }
+
+        async function inviteUsers(): Promise<void> {
+            try {
+                assert(room);
+                assert(mVideo);
+                assert(invites);
+                const p = makeCancelable(mVideo.inviteToRoom(room, invites.map(x => x.value)));
+                setInviting(p);
+                const results = await p.promise;
+                const fails = [];
+                for (const key in results) {
+                    if (!results[key]) {
+                        fails.push(key);
+                    }
+                }
+                if (fails.length > 0) {
+                    addError(`Failed to invite some users: ${fails.map(x => allUsers?.find(u => u.value === x)?.label ?? ", <Unknown>").reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}`);
+                }
+                else {
+                    addNotification("Successfully invited selected users.", );
+                }
+                setShowInvite(false);
+                setInviting(null);
+                setInvites([]);
+            }
+            catch (e) {
+                if (!e.isCanceled) {
+                    throw e;
+                }
+            }
+        }
+
+        inviteUsers();
+    }
+
+    const inviteEl
+        = inviting
+        ? <LoadingSpinner message="Inviting users, please wait" />
+        : <>
+        <p>
+            By inviting users to join this room you will give them access to
+            participate in the room but not to invite more people.
+        </p>
+        <form onSubmit={(ev) => doInviteUsers(ev)}>
+            <label>Select users to invite:</label>
+            <div className="invite-users-control">
+                <MultiSelect
+                    className="invite-users-control__multiselect"
+                    labelledBy="Invite users"
+                    overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
+                    options={allUsers?.filter(x => !usersWithAccess?.includes(x.value)) ?? []}
+                    value={invites ?? []}
+                    onChange={setInvites}
+                />
+            </div>
+            <div className="submit-container">
+                <button>Invite</button>
+            </div>
+        </form>
+    </>;
+
     // TODO: Members list (action button)
 
     return <div className={`video-room${showInvite ? " invite-view" : ""}`}>
-        {showInvite ? <></> : <></>}
+        {showInvite ? inviteEl : <></>}
         <SplitterLayout
             vertical={true}
             percentage={true}
