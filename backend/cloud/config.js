@@ -2,6 +2,10 @@
 // ^ for eslint
 
 /**
+ * @module config
+ */
+
+/**
  * @typedef {Object} ClowdrConfig
  * @property {string | undefined} TWILIO_API_KEY
  * @property {string | undefined} TWILIO_API_SECRET
@@ -9,11 +13,14 @@
  * @property {string | undefined} TWILIO_AUTH_TOKEN
  * @property {string | undefined} TWILIO_CHAT_SERVICE_SID
  * @property {string | undefined} TWILIO_ANNOUNCEMENTS_CHANNEL_SID
+ * @property {string | undefined} SENDGRID_API_KEY
+ * @property {string | undefined} SENDGRID_SENDER
+ * @property {string | undefined} REACT_APP_FRONTEND_URL
  */
 
 /**
  * Loads the conference configuration.
- * 
+ *
  * @param {string} confId The Id of the conference.
  * @returns {Promise<ClowdrConfig>} The configuration
  */

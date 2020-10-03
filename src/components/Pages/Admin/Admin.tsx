@@ -2,6 +2,7 @@ import { _Role } from "@clowdr-app/clowdr-db-schema";
 import Parse from "parse";
 import React, { useState } from "react";
 import { Redirect } from "react-router-dom";
+import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import useConference from "../../../hooks/useConference";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
@@ -17,6 +18,11 @@ interface SendRegistrationEmailsData {
     conference: string;
 }
 
+interface SendRegistrationEmailsResponse {
+    success: boolean;
+    results: { success: boolean, to: string, reason?: string }[]
+}
+
 export default function Admin(props: Props) {
     const loggedInUserProfile = useUserProfile();
     const conference = useConference();
@@ -30,14 +36,20 @@ export default function Admin(props: Props) {
         return true;
     }, setIsAdmin, [loggedInUserProfile])
 
-    async function doSendRegistrationEmails(data: SendRegistrationEmailsData): Promise<boolean> {
-        let ok = await Parse.Cloud.run("registration-send-emails", data) as boolean;
-        return ok;
+    async function doSendRegistrationEmails(data: SendRegistrationEmailsData): Promise<SendRegistrationEmailsResponse> {
+        let response = await Parse.Cloud.run("registration-send-emails", data) as SendRegistrationEmailsResponse;
+        return response;
     }
 
     function sendRegistrationEmails(sendOnlyUnsent: boolean): void {
         doSendRegistrationEmails({ sendOnlyUnsent: sendOnlyUnsent, conference: conference.id })
-            .then(response => console.log(`Sending ${response ? "succeeded" : "failed"}`));
+            .then(response => {
+                if (response.success) {
+                    addNotification(`Sent ${response.results.length} registration ${response.results.length === 1 ? "email" : "emails"}.`, "", "");
+                } else {
+                    addError(`Failed to send ${response.results.filter(result => !result.success).length} of ${response.results.length} registration ${response.results.length === 1 ? "email" : "emails"}.`)
+                }
+            });
     }
 
     const adminPanel = <>

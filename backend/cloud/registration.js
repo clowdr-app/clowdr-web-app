@@ -1,5 +1,6 @@
 /* global Parse */
 // ^ for eslint
+/// <reference path="./config.js" />
 
 // TODO: Function to trigger sending out (unsent) registration emails
 // TODO: Function to trigger sending out reminder/repeat registration emails
@@ -8,6 +9,8 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
+const sgMail = require("@sendgrid/mail");
+const Config = require("./config.js")
 
 // **** Registration **** //
 
@@ -91,7 +94,7 @@ async function handleCreateRegistration(req) {
 Parse.Cloud.define("registration-create", handleCreateRegistration);
 
 /**
- * @typedef {Object} RegistrationEmailSpec
+ * @typedef {Object} SendRegistrationEmailsRequest
  * @property {boolean} sendOnlyUnsent
  * @property {Pointer} conference
  */
@@ -102,26 +105,92 @@ const sendregistrationEmailsSchema = {
 };
 
 /**
+ * @typedef {Object} SendRegistrationEmailsResponse
+ * @property {boolean} success
+ * @property {SendRegistrationEmailResult[]} results
+ */
+
+/**
+ * @typedef {Object} SendRegistrationEmailResult
+ * @property {boolean} success
+ * @property {string} to
+ * @property {string} [reason]
+ */
+
+/**
  * Sends registration emails for conference attendees.
  *
  * Note: you must perform authentication prior to calling this function.
  *
- * @param {RegistrationEmailSpec} data - The specification of the new Registration.
- * @returns {Promise<boolean>} - The new Registration
+ * @param {SendRegistrationEmailsRequest} data - The specification of the new Registration.
+ * @returns {Promise<SendRegistrationEmailsResponse>} - The new Registration
  */
 async function sendRegistrationEmails(data) {
     const regQ = new Parse.Query("Registration");
-    regQ.equalTo("conference", data.conference)
+    regQ.equalTo("conference", data.conference);
 
     if (data.sendOnlyUnsent) {
         regQ.doesNotExist("invitationSentDate");
     }
 
-    let objects = await regQ.find({ useMasterKey: true });
+    let registrations = await regQ.find({ useMasterKey: true });
 
-    console.log(objects);
+    console.log(registrations);
 
-    return true;
+    let config = await Config.getConfig(data.conference.id);
+
+    if (!config.SENDGRID_API_KEY) {
+        throw new Error("No SendGrid API key available.")
+    }
+
+    sgMail.setApiKey(config.SENDGRID_API_KEY);
+
+    let sendMessagePromises = [];
+
+    for (let registration of registrations) {
+        let email = registration.get("email");
+        let link = `${config.REACT_APP_FRONTEND_URL}/register/${data.conference.id}/${registration.id}/${email}`;
+
+        data.conference = await data.conference.fetch({ useMasterKey: true });
+
+        let conferenceName = data.conference.get("name");
+        let messageText = `${conferenceName} is fast approaching! You have registered but you haven't yet activated your Clowdr profile. ${conferenceName} is using Clowdr to provide an interactive virtual conference experience. The Clowdr app gives you access to the conference program, live sessions, networking and more.`
+        let greeting = `Best wishes from the ${conferenceName} team`
+
+        let message = {
+            to: email,
+            from: config.SENDGRID_SENDER,
+            subject: `Action required for ${conferenceName}: activate your Clowdr profile`,
+            text: `${messageText}\n\nActivate your Clowdr profile at ${link}\n\n${greeting}`,
+            html: `<p>${messageText}</p>
+            <p><a href="${link}">Activate your Clowdr profile for ${conferenceName} now!</a></p>
+            <p>${greeting}</p>`
+        };
+
+        console.log(`Sending email to ${email}`);
+
+        sendMessagePromises.push(sgMail
+            .send(message)
+            .then(async _ => {
+                try {
+                    await registration.save("invitationSentDate", new Date(), { useMasterKey: true });
+                    return { to: message.to, success: true };
+                } catch(reason) {
+                    console.error(`Failed to record that a registration invitation was sent to ${email}.`, reason)
+                    return { to: message.to, success: false, reason }
+                }
+            })
+            .catch(error => {
+                return { to: message.to, success: false, reason: error };
+            }));
+    }
+
+    let results = await Promise.all(sendMessagePromises);
+
+    return {
+        success: results.every(result => result.success),
+        results
+    };
 }
 
 /**
