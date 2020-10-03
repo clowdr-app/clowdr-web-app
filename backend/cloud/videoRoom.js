@@ -3,7 +3,8 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
-const { createTextChat } = require('./textChat');
+const { createTextChat } = require("./textChat");
+const { getUserById, getProfileOfUser } = require("./user");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
 
@@ -18,6 +19,12 @@ const { createTextChat } = require('./textChat');
 // immediately inside Twilio - partly because they are persistent.
 
 // **** Video Room **** //
+
+async function getRoomById(roomId, confId) {
+    const q = new Parse.Query("VideoRoom");
+    q.equalTo("conference", confId);
+    return await q.get(roomId, { useMasterKey: true });
+}
 
 /**
  * @typedef {Object} VideoRoomSpec
@@ -133,3 +140,72 @@ async function handleCreateVideoRoom(req) {
     }
 }
 Parse.Cloud.define("videoRoom-create", handleCreateVideoRoom);
+
+/**
+ * Gives a user access (ACL) for a video room.
+ * 
+ * Does nothing if the room is not private.
+ * 
+ * @param {Parse.Object} room - Video room to modify
+ * @param {Parse.User} user - User to grant access
+ * @param {boolean} write - Whether to grant write-access or not
+ * @param {string} sessionToken - Current user's session token
+ */
+async function grantAccessToVideoRoom(room, user, write, sessionToken) {
+    if (!room.get("isPrivate")) {
+        // Public room, nothing to do.
+        return;
+    }
+
+    const acl = room.getACL();
+    acl.setReadAccess(user, true);
+    if (write) {
+        acl.setWriteAccess(user, true);
+    }
+    room.setACL(acl);
+    room.save(null, { sessionToken: sessionToken });
+}
+
+const inviteToVideoRoomSchema = {
+    conference: "string",
+    room: "string",
+    users: "[string]",
+    write: "boolean"
+};
+
+/**
+ * @param {Parse.Cloud.FunctionRequest} req
+ */
+async function handleInviteToVideoRoom(req) {
+    const { params, user } = req;
+
+    const requestValidation = validateRequest(inviteToVideoRoomSchema, params);
+    if (requestValidation.ok) {
+        const confId = params.conference;
+        const roomId = params.room;
+
+        const room = await getRoomById(roomId, confId);
+        const results = {};
+        for (const userId of params.users) {
+            const targetUser = await getUserById();
+            let succeeded = false;
+            if (targetUser) {
+                if (await getProfileOfUser(targetUser, confId)) {
+                    try {
+                        await grantAccessToVideoRoom(room, targetUser, params.write, user.getSessionToken());
+                        succeeded = true;
+                    }
+                    catch (e) {
+                        succeeded = false;
+                    }
+                }
+            }
+            results[userId] = succeeded;
+        }
+        return results;
+    }
+    else {
+        throw new Error(requestValidation.error);
+    }
+}
+Parse.Cloud.define("videoRoom-invite", handleInviteToVideoRoom);
