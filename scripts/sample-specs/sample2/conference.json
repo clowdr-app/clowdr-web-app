@@ -1,0 +1,18 @@
+{
+    "conference": {
+        "name": "Sample Conference 2",
+        "shortName": "SC2",
+        "welcomeText": "# Welcome\nThis is some opening welcome text.",
+        "loggedInText": "# Welcome\nThis is some logged-in welcome text.",
+        "signUpEnabled": true
+    },
+    "admin": {
+        "username": "sc2-admin",
+        "password": "admin",
+        "email": "admin@sc2.com",
+        "realName": "Sample Admin 2",
+        "pronouns": ["they", "them"],
+        "displayName": "Admin",
+        "country": "Middle Earth"
+    }
+}
