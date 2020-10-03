@@ -9,6 +9,7 @@ import { TextChat, VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import useConference from "../../../hooks/useConference";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
+import { ActionButton } from "../../../contexts/HeadingContext";
 
 interface Props {
     roomId: string;
@@ -19,6 +20,7 @@ export default function ViewVideoRoom(props: Props) {
     const [size, setSize] = useState(30);
     const [room, setRoom] = useState<VideoRoom | null>(null);
     const [chat, setChat] = useState<TextChat | "not present" | null>(null);
+    const [showInvite, setShowInvite] = useState<boolean>(false);
 
     useSafeAsync(
         async () => await VideoRoom.get(props.roomId, conference.id),
@@ -29,11 +31,42 @@ export default function ViewVideoRoom(props: Props) {
         setChat,
         [room]);
 
-    useHeading(room?.name ?? "Room");
+    const actionButtons: Array<ActionButton> = [];
+    if (room && room.isPrivate) {
+        if (showInvite) {
+            actionButtons.push({
+                label: "Back to room",
+                icon: <i className="fas fa-video"></i>,
+                action: (ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+
+                    setShowInvite(false);
+                }
+            });
+        }
+        else {
+            actionButtons.push({
+                label: "Invite",
+                icon: <i className="fas fa-envelope"></i>,
+                action: (ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+
+                    setShowInvite(true);
+                }
+            });
+        }
+    }
+    useHeading({
+        title: room?.name ?? "Room",
+        buttons: actionButtons
+    });
 
     // TODO: Members list (action button)
 
-    return <div className="video-room">
+    return <div className={`video-room${showInvite ? " invite-view" : ""}`}>
+        {showInvite ? <></> : <></>}
         <SplitterLayout
             vertical={true}
             percentage={true}
