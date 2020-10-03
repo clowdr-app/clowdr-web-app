@@ -62,36 +62,9 @@ for (let schemaFilePath of schemaFilePaths) {
     }
 }
 
-let db = process.env.MONGODB_DB;
-let host = process.env.MONGODB_HOST;
-
-let dropDBProcess = spawn(
-    `mongo`,
-    [
-        `--host`, host,
-        db,
-        `--eval`, "db.dropDatabase()"],
-    { stdio: 'inherit', stderr: 'inherit' });
-
-dropDBProcess.on("error", (err) => {
-    console.error(`DB drop error! ${err.toString()}`);
-});
-
-dropDBProcess.on("exit", (code) => {
-    if (code) {
-        console.error("===============================");
-        console.error(`DB drop failed! Error code: ${code}`);
-        console.error("===============================");
-    }
-    else {
-        console.log("===============================");
-        console.log('DB drop succeeded.');
-        console.log("===============================");
-        runRestore();
-    }
-});
-
 function runRestore() {
+    let db = process.env.MONGODB_DB;
+    let host = process.env.MONGODB_HOST;
 
     let cmd = { cmd: "", args: [] };
     if (process.env.MONGODB_PASSWORD) {
@@ -137,3 +110,5 @@ function runRestore() {
         }
     });
 }
+
+runRestore();

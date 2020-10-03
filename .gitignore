@@ -47,3 +47,5 @@ sample-program-data.js
 
 .vscode/tasks.json
 .vscode/settings.json
+
+.env.prod

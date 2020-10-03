@@ -147,7 +147,8 @@
         "blank-db": "node-env-run -E .env scripts/blank-db.js",
         "deploy": "deployator",
         "create-conference1": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample1",
-        "create-conference2": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample2"
+        "create-conference2": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample2",
+        "restore-schema-to-production-db-use-with-caution": "node-env-run -E .env.prod scripts/restore-schema.js"
     },
     "eslintConfig": {
         "extends": "react-app"
