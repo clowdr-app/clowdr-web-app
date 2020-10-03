@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "./MessageList.scss";
 import "../../Profile/FlairChip/FlairChip.scss";
 
@@ -96,8 +96,7 @@ export default function MessageList(props: Props) {
         if (mChat) {
             try {
                 const pager = await mChat.getMessages(props.chatSid);
-                setMessages(pager.items);
-                setMessagesPager(pager);
+                return { messages: pager.items, pager };
             }
             catch (e) {
                 console.error("Failed to fetch chat messages.", e);
@@ -105,7 +104,19 @@ export default function MessageList(props: Props) {
             }
         }
         return null;
-    }, setMessagesPager, [mChat, props.chatSid]);
+    }, (data: {
+        messages: IMessage[],
+        pager: Paginator<IMessage>
+    } | null) => {
+        if (data) {
+            setMessages(data.messages);
+            setMessagesPager(data.pager);
+        }
+        else {
+            setMessages([]);
+            setMessagesPager(null);
+        }
+    }, [mChat, props.chatSid]);
 
     useSafeAsync(async () => {
         return await Promise.all(messages.map(async message => {
