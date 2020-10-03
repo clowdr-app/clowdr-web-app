@@ -26,12 +26,41 @@ async function getUserByEmail(email) {
     }
 }
 
+/**
+ * @param {string} userId
+ */
+async function getUserById(userId) {
+    let query = new Parse.Query(Parse.User);
+    try {
+        return await query.get(userId, { useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
+}
+
 async function getRoleByName(roleName, conference) {
     let query = new Parse.Query("_Role");
     query.equalTo("name", generateRoleDBName(conference, roleName));
     query.equalTo("conference", conference);
     try {
         return await query.first({ useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
+}
+
+/**
+ * @param {Parse.User} user
+ * @param {string} confId
+ */
+async function getProfileOfUser(user, confId) {
+    const q = new Parse.Query("UserProfile");
+    q.equalTo("conference", new Parse.Object("Conference", { id: confId }));
+    q.equalTo("user", user);
+    try {
+        return await q.first({ useMasterKey: true });
     }
     catch {
         return null;
@@ -177,3 +206,8 @@ Parse.Cloud.define("user-create", async (request) => {
 
 // TODO: When upgrading a user to an admin, iterate over all their twilio channels
 //       and update their role SID. Also, update their service-level role SID.
+
+module.exports = {
+    getUserById: getUserById,
+    getProfileOfUser: getProfileOfUser
+};
