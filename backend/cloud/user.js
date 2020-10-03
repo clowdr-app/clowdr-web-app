@@ -26,6 +26,18 @@ async function getUserByEmail(email) {
     }
 }
 
+async function getUserProfile(user, conference) {
+    let query = new Parse.Query("UserProfile");
+    query.equalTo("conference", conference);
+    query.equalTo("user", user);
+    try {
+        return await query.first({ useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
+}
+
 /**
  * @param {string} userId
  */
@@ -51,7 +63,7 @@ async function getRoleByName(roleName, conference) {
     }
 }
 
-async function createUser(email, fullName, password, conference) {
+async function createUser(email, password) {
     // TODO: Recover gracefully from failure
     // TODO: Verification email
 
@@ -69,14 +81,17 @@ async function createUser(email, fullName, password, conference) {
     newUser = await newUser.save(null, { useMasterKey: true });
     newUserACL.setReadAccess(newUser, true);
     newUserACL.setWriteAccess(newUser, true);
-    await newUser.save(null, { useMasterKey: true });
+    let user = await newUser.save(null, { useMasterKey: true });
+    return user;
+}
 
+async function createUserProfile(user, fullName, conference) {
     let adminRole = await getRoleByName("admin", conference);
     let attendeeRole = await getRoleByName("attendee", conference);
 
     let emptyFlair = await getFlairByLabel("<empty>", conference);
     let newProfile = new Parse.Object("UserProfile", {
-        user: newUser,
+        user: user,
         conference: conference,
         primaryFlair: emptyFlair,
         welcomeModalShown: false,
@@ -94,13 +109,13 @@ async function createUser(email, fullName, password, conference) {
     newProfileACl.setRoleReadAccess(attendeeRole, true);
     newProfileACl.setRoleReadAccess(adminRole, true);
     newProfileACl.setRoleWriteAccess(adminRole, true);
-    newProfileACl.setReadAccess(newUser, true);
-    newProfileACl.setWriteAccess(newUser, true);
+    newProfileACl.setReadAccess(user, true);
+    newProfileACl.setWriteAccess(user, true);
     newProfile.setACL(newProfileACl);
     newProfile = await newProfile.save(null, { useMasterKey: true });
 
     let attendeeUsersRel = attendeeRole.relation("users");
-    attendeeUsersRel.add(newUser);
+    attendeeUsersRel.add(user);
     attendeeRole.save(null, { useMasterKey: true });
 
     const twilioAccountSID = (await getConferenceConfigurationByKey(conference, "TWILIO_ACCOUNT_SID")).get("value");
@@ -140,8 +155,16 @@ Parse.Cloud.define("user-register", async (request) => {
         let { params } = request;
 
         if (!params.registrationId
+            || !params.conferenceId
+            || !params.fullName
             || !params.password) {
             return false;
+        }
+
+        let conference = await getConferenceById(params.conference);
+
+        if (!conference) {
+            throw new Error("Registration: conference not found.");
         }
 
         let registration = await getRegistrationById(params.registrationId);
@@ -149,13 +172,25 @@ Parse.Cloud.define("user-register", async (request) => {
         let user = await getUserByEmail(email);
 
         if (user) {
-            throw new Error("Registration: a user has already been registered for this email address.");
-        }
+            let userProfile = await getUserProfile(user, conference);
 
-        if (registration.get("invitationSentDate")) {
-            return await createUser(email, registration.get("name"), params.password, registration.get("conference"))
+            if (userProfile) {
+                throw new Error("Registration: the user has already been registered for this conference.");
+            } else {
+                if (registration.get("invitationSentDate")) {
+                    return await createUserProfile(user, params.fullName, conference);
+                } else {
+                    throw new Error("Registration: no registration invitation has been sent for this user.");
+                }
+            }
         } else {
-            throw Error("Registration: no registration invitation has been sent for this user.");
+            let user = await createUser(params.email, params.password);
+
+            if (!user) {
+                throw new Error("Signup: Failed to create user.");
+            }
+
+            return await createUserProfile(user, params.fullName, conference);
         }
     }
     catch (e) {
@@ -193,13 +228,23 @@ Parse.Cloud.define("user-create", async (request) => {
                 // Validate: conference
                 // validate their password matches
                 //       If: they don't already have a profile for this conference
-                //       Then: create a new user profile for the specificed conference and log them in
+                //       Then: create a new user profile for the specified conference and log them in
                 //       Else: Log them in and redirect to the profile page, with a message telling them so
                 // Override: Only log them in if their email is verified
-                throw new Error("Sign up: creating new profile for existing account not implemented.");
+                if (user.get("password") === params.password) {
+                    return await createUserProfile(user, params.fullName, conference);
+                } else {
+                    throw new Error("Signup: Error matching user details.");
+                }
             }
             else {
-                return await createUser(params.email, params.fullName, params.password, conference);
+                let user = await createUser(params.email, params.password);
+
+                if (!user) {
+                    throw new Error("Signup: Failed to create user.");
+                }
+
+                return await createUserProfile(user, params.fullName, conference);
             }
         }
     }
