@@ -94,7 +94,7 @@ up.
       --javascriptKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
       --restAPIKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
       --databaseURI mongodb://localhost/clowdr \
-      --liveQuery "{ \"classNames\": [\"AttachmentType\",\"Conference\",\"Flair\",\"PrivilegedConferenceDetails\",\"ProgramPerson\",\"ProgramItem\",\"ProgramItemAttachment\",\"ProgramRoom\",\"ProgramSession\",\"ProgramSessionEvent\",\"ProgramTrack\",\"TextChat\",\"TextChatMessage\",\"UserProfile\",\"VideoRoom\"] }" \
+      --liveQuery "{ \"classNames\": [\"AttachmentType\",\"Conference\",\"Flair\",\"PrivilegedConferenceDetails\",\"ProgramPerson\",\"ProgramItem\",\"ProgramItemAttachment\",\"ContentFeed\",\"ProgramSession\",\"ProgramSessionEvent\",\"ProgramTrack\",\"TextChat\",\"TextChatMessage\",\"UserProfile\",\"VideoRoom\"] }" \
       --startLiveQueryServer \
       --allowCustomObjectId \
       --cloud ./backend/cloud/main.js

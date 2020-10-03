@@ -1,6 +1,10 @@
+import { ConferenceConfiguration } from "@clowdr-app/clowdr-db-schema";
 import React, { useRef, useState } from "react";
+import useConference from "../../../hooks/useConference";
 import useLogger from "../../../hooks/useLogger";
 import useMaybeChat from "../../../hooks/useMaybeChat";
+import useSafeAsync from "../../../hooks/useSafeAsync";
+import useUserRoles from "../../../hooks/useUserRoles";
 import MessageList from "../MessageList/MessageList";
 import "./ChatFrame.scss";
 
@@ -9,11 +13,22 @@ interface Props {
 }
 
 export default function ChatFrame(props: Props) {
+    const conference = useConference();
     const mChat = useMaybeChat();
     const logger = useLogger("Chat Frame");
     const [newMsgText, setNewMsgText] = useState("");
     const [newMsgEnabled, setNewMsgEnabled] = useState(true);
     const msgBoxRef = useRef<HTMLTextAreaElement>(null);
+    const { isAdmin, isManager } = useUserRoles();
+    const [announcementsChannelSid, setAnnouncementsChannelSid] = useState<string | null>(null);
+
+    useSafeAsync(async () => {
+        const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", conference.id);
+        if (configs.length > 0) {
+            return configs[0].value;
+        }
+        return null;
+    }, setAnnouncementsChannelSid, [conference.id]);
 
     async function sendMessage(ev: React.KeyboardEvent<HTMLTextAreaElement>) {
         if (ev.key === "Enter" && !ev.shiftKey) {
@@ -56,10 +71,6 @@ export default function ChatFrame(props: Props) {
         }
     }
 
-    // TODO: Somehow detect whether we're going to be permitted to send messages
-    //       or not (maybe query our Twilio Backend), then hide the Send box if
-    //       we're not allowed.
-
     // TODO: When should a user auto-leave a channel? E.g. when should they continue
     //       to receive notifications for channels embedded within events/sessions/tracks/video rooms
     //       Perhaps those pages should have a "subscribe to notifications" action button?
@@ -71,16 +82,19 @@ export default function ChatFrame(props: Props) {
 
     return <div className="chat-frame">
         <MessageList chatSid={props.chatSid} />
-        <div className="compose-message">
-            <textarea
-                ref={msgBoxRef}
-                name="message" id="message"
-                placeholder="Type a message [Enter to send, Shift+Enter for newline]"
-                onKeyUp={(ev) => sendMessage(ev)}
-                value={newMsgText}
-                onChange={(ev) => setNewMsgText(ev.target.value)}
-                disabled={!newMsgEnabled}>
-            </textarea>
-        </div>
+        {props.chatSid !== announcementsChannelSid || isAdmin
+            ? <div className="compose-message">
+                <textarea
+                    ref={msgBoxRef}
+                    name="message" id="message"
+                    placeholder="Type a message [Enter to send, Shift+Enter for newline]"
+                    onKeyUp={(ev) => sendMessage(ev)}
+                    value={newMsgText}
+                    onChange={(ev) => setNewMsgText(ev.target.value)}
+                    disabled={!newMsgEnabled}>
+                </textarea>
+            </div>
+            : <></>
+        }
     </div>;
 }

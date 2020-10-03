@@ -750,7 +750,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             if (!twilioAccouncementsChannel) {
                 await createAnnouncementsChannel();
             }
-            setConfiguration("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", twilioAccouncementsChannel.sid);
+            setConfiguration("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", twilioAccouncementsChannel.sid, true);
             message(`Configured announcements channel.`);
 
             message(`Adding admin user to announcements channel...`);

@@ -8,9 +8,10 @@ import ConferenceContext from '../../contexts/ConferenceContext';
 import UserProfileContext from '../../contexts/UserProfileContext';
 import ChatContext from '../../contexts/ChatContext';
 import VideoContext from '../../contexts/VideoContext';
+import UserRolesContext from "../../contexts/UserRolesContext";
 import useLogger from '../../hooks/useLogger';
 import Caches from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache";
-import { Conference, UserProfile, _User } from "@clowdr-app/clowdr-db-schema";
+import { Conference, UserProfile, _Role, _User } from "@clowdr-app/clowdr-db-schema";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
@@ -31,6 +32,7 @@ interface AppState {
     conference: Conference | null;
     profile: UserProfile | null;
     sessionToken: string | null;
+    userRoles: { isAdmin: boolean, isManager: boolean };
 }
 
 type AppUpdate
@@ -39,6 +41,7 @@ type AppUpdate
     | { action: "setConference", conference: Conference | null }
     | { action: "setUserProfile", data: { profile: UserProfile, sessionToken: string } | null; }
     | { action: "chatUpdated" }
+    | { action: "setUserRoles", roles: { isAdmin: boolean, isManager: boolean } }
     ;
 
 function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpdate>): AppState {
@@ -47,7 +50,8 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
         conferenceId: currentState.conference?.id ?? null,
         conference: currentState.conference,
         profile: currentState.profile,
-        sessionToken: currentState.sessionToken
+        sessionToken: currentState.sessionToken,
+        userRoles: currentState.userRoles
     };
 
     function doUpdate(update: AppUpdate) {
@@ -71,6 +75,9 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
                 nextState.tasks.delete("loadingCurrentUser");
                 nextState.profile = update.data?.profile ?? null;
                 nextState.sessionToken = update.data?.sessionToken ?? null;
+                break;
+            case "setUserRoles":
+                nextState.userRoles = update.roles;
                 break;
         }
     }
@@ -105,7 +112,8 @@ export default function App() {
         conferenceId: LocalStorage_Conference.currentConferenceId,
         conference: null,
         profile: null,
-        sessionToken: null
+        sessionToken: null,
+        userRoles: { isAdmin: false, isManager: false }
     });
     const [chatReady, setChatReady] = useState(false);
     const [videoReady, setVideoReady] = useState(false);
@@ -153,6 +161,8 @@ export default function App() {
                     // deleted in the database.
                     let profile = null;
                     let sessionToken = null;
+                    let isAdmin = false;
+                    let isManager = false;
 
                     if (appState.conferenceId) {
                         if (user && user.id) {
@@ -163,19 +173,31 @@ export default function App() {
                             if (profile) {
                                 sessionToken = user.getSessionToken();
                             }
+
+                            isAdmin = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin"]);
+                            isManager = isAdmin || await _Role.isUserInRoles(user.id, appState.conferenceId, ["manager"]);
                         }
                     }
 
-                    dispatchAppUpdate({
-                        action: "setUserProfile",
-                        data: profile && sessionToken
-                            ? { profile, sessionToken }
-                            : null
-                    });
+                    dispatchAppUpdate([
+                        {
+                            action: "setUserProfile",
+                            data: profile && sessionToken
+                                ? { profile, sessionToken }
+                                : null
+                        },
+                        {
+                            action: "setUserRoles",
+                            roles: { isAdmin, isManager }
+                        }
+                    ]);
                 }).catch(reason => {
                     logger.error("Failed to get current user from Parse.", reason);
 
-                    dispatchAppUpdate({ action: "setUserProfile", data: null });
+                    dispatchAppUpdate([
+                        { action: "setUserProfile", data: null },
+                        { action: "setUserRoles", roles: { isAdmin: false, isManager: false } }
+                    ]);
                 });;
             }
         }
@@ -258,13 +280,15 @@ export default function App() {
     }, [appState.conference, appState.conferenceId]);
     const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(value: DataUpdatedEventDetails<"UserProfile">) {
         if (appState.sessionToken && appState.profile && value.object.id === appState.profile.id) {
-            dispatchAppUpdate({
-                action: "setUserProfile",
-                data: {
-                    profile: value.object as UserProfile,
-                    sessionToken: appState.sessionToken
+            dispatchAppUpdate([
+                {
+                    action: "setUserProfile",
+                    data: {
+                        profile: value.object as UserProfile,
+                        sessionToken: appState.sessionToken
+                    }
                 }
-            });
+            ]);
         }
     }, [appState.profile, appState.sessionToken]);
 
@@ -291,18 +315,30 @@ export default function App() {
             await cache.updateUserAuthenticated({ authed: true, sessionToken: parseUser.sessionToken });
             const profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
 
-            dispatchAppUpdate({
-                action: "setUserProfile",
-                data: profile
-                    ? { profile, sessionToken: parseUser.sessionToken }
-                    : null
-            });
+            const isAdmin = await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["admin"]);
+            const isManager = isAdmin || await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["manager"]);
+
+            dispatchAppUpdate([
+                {
+                    action: "setUserProfile",
+                    data: profile
+                        ? { profile, sessionToken: parseUser.sessionToken }
+                        : null
+                },
+                {
+                    action: "setUserRoles",
+                    roles: { isAdmin, isManager }
+                }
+            ]);
 
             return !!profile;
         }
         catch (e) {
             logger.error(e);
-            dispatchAppUpdate({ action: "setUserProfile", data: null });
+            dispatchAppUpdate([
+                { action: "setUserProfile", data: null },
+                { action: "setUserRoles", roles: { isAdmin: false, isManager: false } }
+            ]);
             return false;
         }
     }, [appState.conference, logger]);
@@ -317,7 +353,8 @@ export default function App() {
         finally {
             dispatchAppUpdate([
                 { action: "setConference", conference: null },
-                { action: "setUserProfile", data: null }
+                { action: "setUserProfile", data: null },
+                { action: "setUserRoles", roles: { isAdmin: false, isManager: false } }
             ]);
 
             await Parse.User.logOut();
@@ -414,8 +451,10 @@ export default function App() {
                 <UserProfileContext.Provider value={appState.profile}>
                     <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
                         <VideoContext.Provider value={videoReady ? Video.instance() : null}>
-                            {sidebar}
-                            {page}
+                            <UserRolesContext.Provider value={appState.userRoles}>
+                                {sidebar}
+                                {page}
+                            </UserRolesContext.Provider>
                         </VideoContext.Provider>
                     </ChatContext.Provider>
                 </UserProfileContext.Provider>
