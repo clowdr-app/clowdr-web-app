@@ -34,10 +34,10 @@ export default function Login(props: LoginProps) {
             setErrorMsg(null);
 
             try {
-                let p = makeCancelable(doLogin(email, password));
+                const p = makeCancelable(doLogin(email, password));
                 setAttemptingLogin(p);
 
-                let ok = await p.promise;
+                const ok = await p.promise;
                 if (!ok) {
                     setErrorMsg("We were unable to log you in, please try again.");
                 }
@@ -66,7 +66,7 @@ export default function Login(props: LoginProps) {
     ) {
         setErrorMsg(null);
 
-        let value = event.target.value;
+        const value = event.target.value;
         switch (element) {
             case "email":
                 setEmail(value);
