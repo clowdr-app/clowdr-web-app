@@ -182,10 +182,15 @@ function Page(props: Props) {
         else {
             return {
                 noHeading: true,
-                contents: <ConferenceSelection
-                    failedToLoadConferences={props.failedToLoadConferences}
-                    selectConference={props.selectConference}
-                />
+                contents: <Switch>
+                    <Route path="/register/:conferenceId/:registrationId/:email" component={(p: RouteComponentProps<any>) =>
+                        <Register conferenceId={p.match.params.conferenceId} registrationId={p.match.params.registrationId} email={p.match.params.email} />
+                    } />
+                    <Route path="/" component={() =>
+                        <ConferenceSelection
+                            failedToLoadConferences={props.failedToLoadConferences}
+                            selectConference={props.selectConference} />} />
+                </Switch>
             };
         }
     }, [mConf, mUser, props, showSignUp]);

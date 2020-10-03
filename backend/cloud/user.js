@@ -161,13 +161,21 @@ Parse.Cloud.define("user-register", async (request) => {
             return false;
         }
 
-        let conference = await getConferenceById(params.conference);
+        let conference = await getConferenceById(params.conferenceId);
 
         if (!conference) {
             throw new Error("Registration: conference not found.");
         }
 
         let registration = await getRegistrationById(params.registrationId);
+        if (!registration.get("invitationSentDate")) {
+            throw new Error("Registration: no registration invitation has been sent for this user.");
+        }
+
+        if (!conference.equals(registration.get("conference"))) {
+            throw new Error("Registration: registration is not valid for the chosen conference.");
+        }
+
         let email = registration.get("email");
         let user = await getUserByEmail(email);
 
@@ -177,14 +185,13 @@ Parse.Cloud.define("user-register", async (request) => {
             if (userProfile) {
                 throw new Error("Registration: the user has already been registered for this conference.");
             } else {
-                if (registration.get("invitationSentDate")) {
-                    return await createUserProfile(user, params.fullName, conference);
-                } else {
-                    throw new Error("Registration: no registration invitation has been sent for this user.");
-                }
+                await user.verifyPassword(params.password).catch(_ => {
+                    throw new Error(`Registration: error matching user details.`)
+                });
+                return await createUserProfile(user, params.fullName, conference);
             }
         } else {
-            let user = await createUser(params.email, params.password);
+            let user = await createUser(email, params.password);
 
             if (!user) {
                 throw new Error("Signup: Failed to create user.");
@@ -234,14 +241,14 @@ Parse.Cloud.define("user-create", async (request) => {
                 if (user.get("password") === params.password) {
                     return await createUserProfile(user, params.fullName, conference);
                 } else {
-                    throw new Error("Signup: Error matching user details.");
+                    throw new Error("Signup: error matching user details.");
                 }
             }
             else {
                 let user = await createUser(params.email, params.password);
 
                 if (!user) {
-                    throw new Error("Signup: Failed to create user.");
+                    throw new Error("Signup: failed to create user.");
                 }
 
                 return await createUserProfile(user, params.fullName, conference);
