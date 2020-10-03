@@ -26,6 +26,7 @@ import ViewAuthor from '../Pages/Program/Author/ViewAuthor';
 import ViewItem from '../Pages/Program/Item/ViewItem';
 import NewVideoRoom from '../Pages/NewVideoRoom/NewVideoRoom';
 import Register from '../Pages/Register/Register';
+import Admin from '../Pages/Admin/Admin';
 
 interface Props {
     doLogin: doLoginF;
@@ -148,6 +149,9 @@ function Page(props: Props) {
                     />
                     <Route path="/profile" component={() =>
                         <Redirect to={"/profile/" + mUser.id} />
+                    } />
+                    <Route path="/admin" component={() =>
+                        <Admin />
                     } />
                     <Route path="/" component={NotFound} />
                 </Switch>
