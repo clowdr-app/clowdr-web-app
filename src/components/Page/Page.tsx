@@ -67,7 +67,7 @@ function Page(props: Props) {
             return <Link to={button.action} className="button">{button.icon}{button.label}</Link>;
         }
         else {
-            return <></>;
+            return <button onClick={button.action} className="button">{button.icon}{button.label}</button>;
         }
     }
 
