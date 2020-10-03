@@ -16,15 +16,15 @@ interface Props {
 }
 
 type FormData = {
-    registrationId: string;
     password: string;
+    fullName: string;
 }
 
 type Status = { state: "notwaiting" } | { state: "waiting" } | { state: "registered" };
 
 export default function Register(props: Props) {
     useHeading("Register");
-    const { register, handleSubmit, watch, errors } = useForm();
+    const { register, handleSubmit, watch, errors } = useForm<FormData>();
     const [status, setStatus] = useState<Status>({ state: "notwaiting" });
     const [conference, setConference] = useState<Conference | null>(null);
     const [loadFailed, setLoadFailed] = useState<boolean>(false);
@@ -64,7 +64,9 @@ export default function Register(props: Props) {
     async function doRegister(data: FormData): Promise<boolean> {
         let ok = await Parse.Cloud.run("user-register", {
             registrationId: props.registrationId,
+            conferenceId: props.conferenceId,
             password: data.password,
+            fullName: data.fullName,
         }) as boolean;
         return ok;
     }
@@ -114,6 +116,8 @@ export default function Register(props: Props) {
                 <p>Welcome to Clowdr. Please choose a password to complete your registration for {conference.name}.</p>
                 <label htmlFor="email">Email</label>
                 <input name="email" type="email" value={props.email} disabled />
+                <label htmlFor="fullName">Full name</label>
+                <input name="fullName" ref={register({ required: true})} />
                 <label htmlFor="password">Choose a password</label>
                 <input name="password" type="password" ref={register({ required: true, minLength: 10, maxLength: 100 })} />
                 {errors.password && "Must be at least 10 characters."}
