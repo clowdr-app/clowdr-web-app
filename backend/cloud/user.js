@@ -274,17 +274,11 @@ async function handleCreateUser(request) {
 
             let user = await getUserByEmail(params.email);
             if (user) {
-                // Validate: conference
-                // validate their password matches
-                //       If: they don't already have a profile for this conference
-                //       Then: create a new user profile for the specified conference and log them in
-                //       Else: Log them in and redirect to the profile page, with a message telling them so
-                // Override: Only log them in if their email is verified
-                if (user.get("password") === params.password) {
-                    return await createUserProfile(user, params.fullName, conference);
-                } else {
-                    throw new Error("Signup: error matching user details.");
-                }
+                await user.verifyPassword(params.password).catch(_ => {
+                    throw new Error(`Registration: error matching user details.`)
+                });
+                await createUserProfile(user, params.fullName, conference);
+                return true;
             }
             else {
                 let user = await createUser(params.email, params.password);
@@ -293,12 +287,13 @@ async function handleCreateUser(request) {
                     throw new Error("Signup: failed to create user.");
                 }
 
-                return await createUserProfile(user, params.fullName, conference);
+                await createUserProfile(user, params.fullName, conference);
+                return true;
             }
         }
     }
     catch (e) {
-        throw new Error("Error during sign up: " + JSON.stringify(e));
+        console.error("Error during signup", e);
     }
 
     return false;
