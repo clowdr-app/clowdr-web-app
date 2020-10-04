@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+</head>
+<!-- Styles for Zoom. by default the #zmmtg-root div tries to take over the whole page. -->
+<!-- import #zmmtg-root css -->
+<link type="text/css" rel="stylesheet" href="https://source.zoom.us/1.8.1/css/bootstrap.css" />
+<link type="text/css" rel="stylesheet" href="https://source.zoom.us/1.8.1/css/react-select.css" />
+
+<body data-iframe-height>
+    <!-- import ZoomMtg dependencies -->
+    <script src="https://source.zoom.us/1.8.1/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/1.8.1/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/1.8.1/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/1.8.1/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/1.8.1/lib/vendor/jquery.min.js"></script>
+    <script src="https://source.zoom.us/1.8.1/lib/vendor/lodash.min.js"></script>
+
+    <!-- import ZoomMtg -->
+    <script src="https://source.zoom.us/zoom-meeting-1.8.1.min.js"></script>
+
+    <script>
+        ZoomMtg.preLoadWasm();
+        ZoomMtg.prepareJssdk();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const signature = urlParams.get("signature");
+        const meetingNumber = urlParams.get("meetingNumber");
+        const password = urlParams.get("password");
+        const apiKey = urlParams.get("apiKey");
+        const userName = urlParams.get("userName");
+
+        ZoomMtg.init({
+            leaveUrl: "about:blank",
+            isSupportAV: true,
+            success: function() {
+                window.addEventListener('beforeunload', function(event) {
+                    ZoomMtg.leaveMeeting({});
+                });
+                ZoomMtg.join({
+                    signature: signature,
+                    apiKey: apiKey,
+                    meetingNumber: meetingNumber,
+                    userName: userName,
+                    // password optional; set by Host
+                    passWord: password,
+                    error(res) {
+                        console.log(res);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

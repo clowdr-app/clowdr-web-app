@@ -771,6 +771,12 @@ Parse.Cloud.job("conference-create", async (request) => {
             await setConfiguration("SENDGRID_SENDER", params.sendgrid.SENDER);
             message(`Configured SendGrid.`);
 
+            // Configure Zoom
+            message(`Configuring Zoom...`);
+            await setConfiguration("ZOOM_API_KEY", params.zoom.API_KEY);
+            await setConfiguration("ZOOM_API_SECRET", params.zoom.API_SECRET);
+            message(`Configured Zoom.`)
+
             message(conference.id);
         }
         else {
