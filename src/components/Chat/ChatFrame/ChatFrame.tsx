@@ -7,6 +7,9 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
 import useUserRoles from "../../../hooks/useUserRoles";
 import MessageList from "../MessageList/MessageList";
 import "./ChatFrame.scss";
+import { Picker as EmojiPicker } from 'emoji-mart';
+import { emojify } from "react-emojione";
+import assert from "assert";
 
 interface Props {
     chatSid: string;
@@ -21,6 +24,7 @@ export default function ChatFrame(props: Props) {
     const msgBoxRef = useRef<HTMLTextAreaElement>(null);
     const { isAdmin, isManager } = useUserRoles();
     const [announcementsChannelSid, setAnnouncementsChannelSid] = useState<string | null>(null);
+    const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
 
     useSafeAsync(async () => {
         const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", conference.id);
@@ -93,6 +97,27 @@ export default function ChatFrame(props: Props) {
                     onChange={(ev) => setNewMsgText(ev.target.value)}
                     disabled={!newMsgEnabled}>
                 </textarea>
+                <div className="add-emoji">
+                    {showEmojiPicker
+                        ? <EmojiPicker
+                            showPreview={false}
+                            useButton={false}
+                            title="Pick a reaction"
+                            onSelect={async (ev) => {
+                                setShowEmojiPicker(false);
+                                const emojiId = (ev as any).native;
+                                setNewMsgText(newMsgText + emojiId);
+                            }}
+                        />
+                        : <></>
+                    }
+                    <button
+                        onClick={(ev) => {
+                            setShowEmojiPicker(!showEmojiPicker);
+                        }}>
+                        <i className="fas fa-smile-beam"></i>+
+                    </button>
+                </div>
             </div>
             : <></>
         }

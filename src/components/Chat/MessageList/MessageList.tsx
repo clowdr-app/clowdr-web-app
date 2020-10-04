@@ -1,4 +1,4 @@
-import React, { ElementType, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./MessageList.scss";
 import "../../Profile/FlairChip/FlairChip.scss";
 
@@ -223,8 +223,39 @@ export default function MessageList(props: Props) {
                     {msg.body}
                 </ReactMarkdown>
                 <div className="reactions">
+                    <div className="add-reaction">
+                        {pickEmojiForMsgSid === msg.sid
+                            ? <EmojiPicker
+                                showPreview={false}
+                                useButton={false}
+                                title="Pick a reaction"
+                                onSelect={async (ev) => {
+                                    setPickEmojiForMsgSid(null);
+                                    const emojiId = ev.colons ?? ev.id;
+                                    assert(emojiId);
+                                    try {
+                                        assert((await mChat?.addReaction(props.chatSid, msg.sid, emojiId))?.ok);
+                                    }
+                                    catch (e) {
+                                        console.error(e);
+                                        addError("Sorry, we could not add your reaction.");
+                                    }
+                                }}
+                            />
+                            : <></>}
+                        <button
+                            className="new"
+                            onClick={(ev) => toggleAddReaction(msg.sid)}
+                        >
+                            <i className="fas fa-smile-beam"></i>+
+                        </button>
+                    </div>
                     {Object.keys(msg.reactions).map(reaction => {
-                        return <Tooltip key={reaction} title={msg.reactions[reaction].names.reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}>
+                        return <Tooltip
+                            key={reaction}
+                            title={msg.reactions[reaction].names.reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}
+                            placement="top"
+                        >
                             <button
                                 onClick={async (ev) => {
                                     ev.preventDefault();
@@ -254,33 +285,6 @@ export default function MessageList(props: Props) {
                             </button>
                         </Tooltip>;
                     })}
-                    <div className="add-reaction">
-                        {pickEmojiForMsgSid === msg.sid
-                            ? <EmojiPicker
-                                showPreview={false}
-                                useButton={false}
-                                title="Pick a reaction"
-                                onSelect={async (ev) => {
-                                    setPickEmojiForMsgSid(null);
-                                    const emojiId = ev.colons ?? ev.id;
-                                    assert(emojiId);
-                                    try {
-                                        assert((await mChat?.addReaction(props.chatSid, msg.sid, emojiId))?.ok);
-                                    }
-                                    catch (e) {
-                                        console.error(e);
-                                        addError("Sorry, we could not add your reaction.");
-                                    }
-                                }}
-                            />
-                            : <></>}
-                        <button
-                            className="new"
-                            onClick={(ev) => toggleAddReaction(msg.sid)}
-                        >
-                            <i className="fas fa-smile-beam"></i>+
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>;

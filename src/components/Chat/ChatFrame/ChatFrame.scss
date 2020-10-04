@@ -7,11 +7,28 @@
     overflow: hidden;
 
     .compose-message {
+        display: grid;
+        grid-template-columns: auto min-content;
+        grid-template-rows: 1fr;
+        grid-template-areas: 
+            "compose emoji";
         margin: 0.3em 2px;
 
         input[type=text], textarea {
             padding: 0.2em;
             width: 100%;
+            grid-area: compose;
+        }
+
+        .add-emoji {
+            grid-area: emoji;
+            position: relative;
+
+            .emoji-mart {
+                position: absolute;
+                bottom  : calc(100% + 1ex);
+                right    : 0;
+            }
         }
     }
 }
