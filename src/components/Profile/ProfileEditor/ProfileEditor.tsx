@@ -49,6 +49,19 @@ export default function ProfileEditor(props: Props) {
         e.preventDefault();
         e.stopPropagation();
 
+        // Update the associated program person
+        if (programPersonId !== undefined) {
+            let ok = await Parse.Cloud.run("person-set-profile", {
+                programPerson: programPersonId === "" ? undefined : programPersonId,
+                profile: p.id,
+                conference: (await p.conference).id,
+            }) as boolean;
+
+            if (!ok) {
+                throw new Error("Could not save associated program authors.");
+            }
+        }
+
         // TODO: This should be a get by field
         const defaultFlair = (await Flair.getAll(conference.id)).find(x => x.label === "<empty>");
         assert(defaultFlair);
@@ -66,18 +79,6 @@ export default function ProfileEditor(props: Props) {
         p.bio = bio;
 
         await p.save();
-
-        if (programPersonId !== undefined) {
-            let ok = await Parse.Cloud.run("person-set-profile", {
-                programPerson: programPersonId === "" ? undefined : programPersonId,
-                profile: p.id,
-                conference: (await p.conference).id,
-            }) as boolean;
-
-            if (!ok) {
-                throw new Error("Could not save associated program authors.");
-            }
-        }
     };
 
     const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
