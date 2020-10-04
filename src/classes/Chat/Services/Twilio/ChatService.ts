@@ -161,7 +161,7 @@ export default class TwilioChatService implements IChatService {
     }
 
     async requestClowdrTwilioBackend(
-        endpoint: "token" | "create" | "invite" | "addMember",
+        endpoint: "token" | "create" | "invite" | "addMember" | "react" | "tcaer",
         data: any = {}
     ) {
         assert(this.sessionToken);
@@ -237,7 +237,7 @@ export default class TwilioChatService implements IChatService {
         assert(invite.length > 0);
 
         const result = await this.requestClowdrTwilioBackend("create", {
-            invite: invite,
+            invite,
             mode: isPrivate ? "private" : "public",
             title
         });

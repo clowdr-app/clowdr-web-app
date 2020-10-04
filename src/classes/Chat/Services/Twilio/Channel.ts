@@ -206,11 +206,18 @@ export default class Channel implements IChannel {
         const channel = await this.upgrade();
         return channel.sendMessage(message);
     }
-    async sendReaction(messageIndex: number, reaction: string): Promise<void> {
-        const channel = await this.upgrade();
-        await channel.sendMessage(reaction, {
-            isReaction: true,
-            targetIndex: messageIndex
+    async addReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
+        return this.service.requestClowdrTwilioBackend("react", {
+            channel: 'c' in this.channel ? this.channel.c.sid : this.channel.d.sid,
+            message: messageSid,
+            reaction
+        });
+    }
+    async removeReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
+        return this.service.requestClowdrTwilioBackend("tcaer", {
+            channel: 'c' in this.channel ? this.channel.c.sid : this.channel.d.sid,
+            message: messageSid,
+            reaction
         });
     }
     async subscribe(): Promise<void> {

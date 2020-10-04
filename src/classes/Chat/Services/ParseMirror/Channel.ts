@@ -66,7 +66,10 @@ export default class Channel implements IChannel {
     sendMessage(message: string): Promise<number> {
         throw new Error("Method not implemented.");
     }
-    sendReaction(messageIndex: number, reaction: string): Promise<void> {
+    addReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
+        throw new Error("Method not implemented.");
+    }
+    removeReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
         throw new Error("Method not implemented.");
     }
     subscribe(): Promise<void> {

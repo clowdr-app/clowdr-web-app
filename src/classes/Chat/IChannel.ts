@@ -30,7 +30,8 @@ export default interface IChannel {
 
     getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<IMessage>>
     sendMessage(message: string): Promise<number>;
-    sendReaction(messageIndex: number, reaction: string): Promise<void>;
+    addReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined>;
+    removeReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined>;
 
     subscribe(): Promise<void>;
     unsubscribe(): Promise<void>;

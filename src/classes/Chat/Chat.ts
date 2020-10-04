@@ -188,7 +188,16 @@ export default class Chat implements IChatManager {
         const channel = await this.twilioService.getChannel(chatSid);
         return channel.sendMessage(message);
     }
-    // TODO: Send reaction
+    async addReaction(chatSid: string, messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        return channel.addReaction(messageSid, reaction);
+    }
+    async removeReaction(chatSid: string, messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        return channel.removeReaction(messageSid, reaction);
+    }
     // TODO: Get/set last read message key
     // TODO: Edit channel
     // TODO: Delete channel

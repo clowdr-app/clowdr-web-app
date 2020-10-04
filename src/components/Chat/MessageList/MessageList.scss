@@ -8,6 +8,14 @@
 
     display       : flex;
     flex-direction: column-reverse;
+    position      : relative;
+
+    .infinite-scroll-component__outerdiv {
+        height: 100%;
+        .infinite-scroll-component  {
+            min-height: 100%;
+        }
+    }
 
     .message {
         width: 100%;
@@ -18,9 +26,9 @@
         margin: 1em 0 1em 0;
 
         .profile {
-            width : 50px;
-            min-width: 50px;
-            max-width: 50px;
+            width     : 50px;
+            min-width : 50px;
+            max-width : 50px;
             margin    : 0 1em 0 0;
             text-align: center;
 
@@ -36,7 +44,7 @@
         }
 
         .content {
-            width: 100%;
+            width                : 100%;
             display              : grid;
             grid-template-columns: min-content auto auto;
             grid-template-rows   : auto auto auto;
@@ -55,10 +63,10 @@
             }
 
             .time {
-                display    : inline;
-                grid-area  : time;
-                color      : $gray-3;
-                font-size  : 80%;
+                display  : inline;
+                grid-area: time;
+                color    : $gray-3;
+                font-size: 80%;
             }
 
             .body {
@@ -80,6 +88,39 @@
 
                 img {
                     max-width: 100px;
+                }
+            }
+
+            .reactions {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+
+                grid-area: reactions;
+
+                & > button,
+                .add-reaction > button {
+                    font-size: 80%;
+                    padding: 0 0.5em 0 0.2em;
+                    display: inline-block;
+                    margin: 2px;
+                }
+
+                .add-reaction {
+                    width: auto;
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: stretch;
+                    height: 100%;
+                    vertical-align: middle;
+
+                    .emoji-mart {
+                        position: absolute;
+                        bottom  : calc(100% + 1ex);
+                        right   : 0;
+                    }
                 }
             }
         }

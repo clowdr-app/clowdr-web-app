@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ElementType, useEffect, useRef, useState } from "react";
 import "./MessageList.scss";
 import "../../Profile/FlairChip/FlairChip.scss";
 
@@ -19,11 +19,18 @@ import useConference from "../../../hooks/useConference";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import { addError } from "../../../classes/Notifications/Notifications";
 
+import 'emoji-mart/css/emoji-mart.css';
+import { Picker as EmojiPicker } from 'emoji-mart';
+import { emojify } from "react-emojione";
+import { Tooltip } from "@material-ui/core";
+import useUserProfile from "../../../hooks/useUserProfile";
+
 interface Props {
     chatSid: string;
 }
 
 type RenderedMessage = {
+    sid: string;
     body: string;
     profileId: string;
     profileName: string;
@@ -31,15 +38,18 @@ type RenderedMessage = {
     profileFlair: Flair;
     time: string;
     index: number;
-    // TODO: Reactions
+    reactions: {
+        [reaction: string]: { ids: Array<string>; names: Array<string> } }
 };
 
 export default function MessageList(props: Props) {
     const conf = useConference();
+    const userProfile = useUserProfile();
     const [messagePager, setMessagesPager] = useState<Paginator<IMessage> | null>(null);
     const [messages, setMessages] = useState<Array<IMessage>>([]);
     const [renderedMessages, setRenderedMessages] = useState<Array<RenderedMessage>>([]);
     const mChat = useMaybeChat();
+    const [pickEmojiForMsgSid, setPickEmojiForMsgSid] = useState<string | null>(null);
 
     function sortMessages(msgs: Array<IMessage>): Array<IMessage> {
         return msgs.sort((x, y) => x.index < y.index ? -1 : x.index === y.index ? 0 : 1);
@@ -130,14 +140,29 @@ export default function MessageList(props: Props) {
             const isOver24HrOld = (now - time.getTime()) > (1000 * 60 * 60 * 24);
             const flair = await profile.primaryFlair;
             const profilePhotoUrl = handleParseFileURLWeirdness(profile.profilePhoto);
+            const reactorIds = (message.attributes as any)?.reactions ?? {};
+            const reactions: { [reaction: string]: { ids: Array<string>; names: Array<string> } } = {};
+            for (const reaction in reactorIds) {
+                if (reaction in reactorIds) {
+                    reactions[reaction] = {
+                        ids: reactorIds[reaction],
+                        names: await Promise.all(reactorIds[reaction].map(async (aProfileId: string) => {
+                            const aProfile = await UserProfile.get(aProfileId, conf.id);
+                            return aProfile?.displayName ?? "<Unknown>";
+                        }))
+                    };
+                }
+            }
             const result: RenderedMessage = {
+                sid: message.sid,
                 body,
                 profileFlair: flair,
                 profileId: profile.id,
                 profileName: profile.displayName,
                 profilePhotoUrl,
                 time: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
-                index: message.index
+                index: message.index,
+                reactions
             };
             return result;
         }));
@@ -165,7 +190,19 @@ export default function MessageList(props: Props) {
         setMessages(sortMessages(newMessages));
     }
 
+    function toggleAddReaction(msgSid: string) {
+        if (pickEmojiForMsgSid) {
+            setPickEmojiForMsgSid(null);
+        }
+        else {
+            setPickEmojiForMsgSid(msgSid);
+        }
+    }
+
     function renderMessage(msg: RenderedMessage): JSX.Element {
+        const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
+        const renderEmoji = (text: any) => doEmojify(text.value);
+
         return <div className="message" key={msg.index}>
             <div className="profile">
                 {msg.profilePhotoUrl
@@ -177,7 +214,74 @@ export default function MessageList(props: Props) {
             <div className="content">
                 <div className="name">{msg.profileName}</div>
                 <div className="time">{msg.time}</div>
-                <ReactMarkdown className="body">{msg.body}</ReactMarkdown>
+                <ReactMarkdown
+                    className="body"
+                    renderers={{
+                        text: renderEmoji
+                    }}
+                >
+                    {msg.body}
+                </ReactMarkdown>
+                <div className="reactions">
+                    {Object.keys(msg.reactions).map(reaction => {
+                        return <Tooltip key={reaction} title={msg.reactions[reaction].names.reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}>
+                            <button
+                                onClick={async (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    setPickEmojiForMsgSid(null);
+                                    if (msg.reactions[reaction].ids.includes(userProfile.id)) {
+                                        try {
+                                            assert((await mChat?.removeReaction(props.chatSid, msg.sid, reaction))?.ok);
+                                        }
+                                        catch (e) {
+                                            console.error(e);
+                                            addError("Sorry, we could not remove your reaction.");
+                                        }
+                                    }
+                                    else {
+                                        try {
+                                            assert((await mChat?.addReaction(props.chatSid, msg.sid, reaction))?.ok);
+                                        }
+                                        catch (e) {
+                                            console.error(e);
+                                            addError("Sorry, we could not add your reaction.");
+                                        }
+                                    }
+                                }}
+                            >
+                                {doEmojify(reaction)}
+                            </button>
+                        </Tooltip>;
+                    })}
+                    <div className="add-reaction">
+                        {pickEmojiForMsgSid === msg.sid
+                            ? <EmojiPicker
+                                showPreview={false}
+                                useButton={false}
+                                title="Pick a reaction"
+                                onSelect={async (ev) => {
+                                    setPickEmojiForMsgSid(null);
+                                    const emojiId = ev.colons ?? ev.id;
+                                    assert(emojiId);
+                                    try {
+                                        assert((await mChat?.addReaction(props.chatSid, msg.sid, emojiId))?.ok);
+                                    }
+                                    catch (e) {
+                                        console.error(e);
+                                        addError("Sorry, we could not add your reaction.");
+                                    }
+                                }}
+                            />
+                            : <></>}
+                        <button
+                            className="new"
+                            onClick={(ev) => toggleAddReaction(msg.sid)}
+                        >
+                            <i className="fas fa-smile-beam"></i>+
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>;
     }
