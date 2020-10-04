@@ -54,6 +54,10 @@ async function createConference(conferenceData) {
     conferenceData.sendgrid.API_KEY = conferenceData.sendgrid.API_KEY ?? process.env.SENDGRID_API_KEY;
     conferenceData.sendgrid.SENDER = conferenceData.sendgrid.SENDER ?? process.env.SENDGRID_SENDER;
 
+    conferenceData.zoom = conferenceData.zoom ?? {};
+    conferenceData.zoom.API_KEY = conferenceData.zoom.API_KEY ?? process.env.ZOOM_API_KEY;
+    conferenceData.zoom.API_SECRET = conferenceData.zoom.API_SECRET ?? process.env.ZOOM_API_SECRET;
+
     const createConfJobID = await Parse.Cloud.startJob("conference-create", conferenceData);
     console.log(`Create conference job identity: ${createConfJobID}`);
 

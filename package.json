@@ -69,6 +69,7 @@
         "html-webpack-plugin": "4.0.0-beta.11",
         "idb": "^5.0.6",
         "identity-obj-proxy": "3.0.0",
+        "iframe-resizer-react": "^1.0.4",
         "jest-environment-jsdom-fourteen": "1.0.1",
         "jest-resolve": "24.9.0",
         "jest-watch-typeahead": "0.4.2",
