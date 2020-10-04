@@ -3,6 +3,7 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
+const { getProfileOfUser } = require("./user");
 
 // TODO: Before delete of track/item/session/event: Cleanup unused content feed(s)
 // TODO: Before save: Give authors write access to their program items/events
@@ -207,6 +208,89 @@ async function handleCreatePerson(req) {
     }
 }
 Parse.Cloud.define("person-create", handleCreatePerson);
+
+/**
+ * @typedef {Object} ProgramPersonSetProfileSpec
+ * @property {string} [programPerson]
+ * @property {Pointer} profile
+ * @property {Pointer} conference
+ */
+
+const programPersonSetProfileSchema = {
+    programPerson: "string?",
+    profile: "string",
+    conference: "string",
+};
+
+/**
+ * Associates the program person with the specified user profile.
+ * Unassociates any other program persons from the user profile.
+ *
+ * Note: You must perform authentication prior to calling this.
+ *
+ * @param {ProgramPersonSetProfileSpec} data
+ * @returns {Promise<Parse.Object>}
+ */
+async function programPersonSetProfile(data) {
+    try {
+        // Unassociate any existing program persons from this profile
+        let programPersons = await new Parse.Query("ProgramPerson")
+            .equalTo("conference", data.conference)
+            .equalTo("profile", data.profile)
+            .find({ useMasterKey: true });
+
+        for (let programPerson of programPersons) {
+            programPerson.unset("profile")
+            await programPerson.save({}, { useMasterKey: true });
+        }
+
+        // If a new program person is specified, associate them with the profile
+        if (data.programPerson) {
+            let programPerson = await new Parse.Query("ProgramPerson")
+                .equalTo("conference", data.conference)
+                .get(data.programPerson.id, { useMasterKey: true });
+
+            await programPerson.save("profile", data.profile, { useMasterKey: true });
+        }
+
+        return true;
+    } catch (e) {
+        console.error("Error while associating profile with program person.", e)
+    }
+    return false;
+}
+
+/**
+ * @param {Parse.Cloud.FunctionRequest} req
+ */
+async function handlePersonSetProfile(req) {
+    const { params, user } = req;
+
+    const requestValidation = validateRequest(programPersonSetProfileSchema, params);
+    if (requestValidation.ok) {
+        const reqUserProfile = await getProfileOfUser(user, params.conference);
+        const targetUserProfile = await new Parse.Object("UserProfile", { id: params.profile });
+
+        if (!!user && await isUserInRoles(user.id, params.conference, ["admin", "manager", "attendee"]) && reqUserProfile.equals(targetUserProfile)) {
+            const spec = params;
+            spec.conference = new Parse.Object("Conference", { id: spec.conference });
+            spec.profile = new Parse.Object("UserProfile", { id: spec.profile });
+            if (spec.programPerson) {
+                spec.programPerson = new Parse.Object("ProgramPerson", { id: spec.programPerson });
+            }
+
+            const result = await programPersonSetProfile(spec);
+            return result;
+        }
+        else {
+            throw new Error("Permission denied");
+        }
+    }
+    else {
+        throw new Error(requestValidation.error);
+    }
+}
+Parse.Cloud.define("person-set-profile", handlePersonSetProfile);
 
 // **** Program Item **** //
 

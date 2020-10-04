@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import Parse from "parse";
 import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema";
-import "./ProfileEditor.scss";
 import TagInput from "../../Inputs/TagInput/TagInput";
 import FlairInput from "../../Inputs/FlairInput/FlairInput";
 import useSafeAsync from "../../../hooks/useSafeAsync";
-
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import assert from "assert";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
+import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
+import "./ProfileEditor.scss";
+import useConference from "../../../hooks/useConference";
 
 interface Props {
     profile: UserProfile;
@@ -24,6 +25,7 @@ function sameObjects(xs: { id: string }[], ys: { id: string }[]) {
 export default function ProfileEditor(props: Props) {
     const p = props.profile;
 
+    const conference = useConference();
     const [displayName, setDisplayName] = useState(p.displayName);
     const [realName, setRealName] = useState(p.realName);
     const [pronouns, setPronouns] = useState(p.pronouns);
@@ -32,24 +34,25 @@ export default function ProfileEditor(props: Props) {
     const [country, setCountry] = useState(p.country);
     const [webpage, setWebpage] = useState(p.webpage);
     const [bio, setBio] = useState(p.bio);
-    const [flairs, setFlairs] = useState<Flair[]>([]);
-    const [_flairs, _setFlairs] = useState<Flair[]>([]);
+    const [modifiedFlairs, setModifiedFlairs] = useState<Flair[]>([]);
+    const [originalFlairs, setOriginalFlairs] = useState<Flair[]>([]);
+    const [programPersonId, setProgramPersonId] = useState<string | undefined>(undefined);
 
     useSafeAsync(async () => {
         return await p.flairs;
-    }, setFlairs, []);
-
-    useSafeAsync(async () => {
-        return await p.flairs;
-    }, _setFlairs, []);
+    }, (flairs: Array<Flair>) => {
+        setModifiedFlairs(flairs);
+        setOriginalFlairs(flairs);
+    }, []);
 
     const submitForm = async (e: React.FormEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const defaultFlair = await Flair.get("<empty>");
+        // TODO: This should be a get by field
+        const defaultFlair = (await Flair.getAll(conference.id)).find(x => x.label === "<empty>");
         assert(defaultFlair);
-        const primaryFlair = flairs.reduce((x, y) => x.priority > y.priority ? x : y, defaultFlair);
+        const primaryFlair = modifiedFlairs.reduce((x, y) => x.priority > y.priority ? x : y, defaultFlair);
 
         p.realName = realName;
         p.displayName = displayName;
@@ -58,11 +61,23 @@ export default function ProfileEditor(props: Props) {
         p.position = position;
         p.country = country;
         p.webpage = webpage;
-        p.flairs = Promise.resolve(flairs);
+        p.flairs = Promise.resolve(modifiedFlairs);
         p.primaryFlair = Promise.resolve(primaryFlair);
         p.bio = bio;
 
         await p.save();
+
+        if (programPersonId !== undefined) {
+            let ok = await Parse.Cloud.run("person-set-profile", {
+                programPerson: programPersonId === "" ? undefined : programPersonId,
+                profile: p.id,
+                conference: (await p.conference).id,
+            }) as boolean;
+
+            if (!ok) {
+                throw new Error("Could not save associated program authors.");
+            }
+        }
     };
 
     const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +118,7 @@ export default function ProfileEditor(props: Props) {
         p.country !== country ||
         p.webpage !== webpage ||
         p.bio !== bio ||
-        !sameObjects(_flairs, flairs);
+        !sameObjects(originalFlairs, modifiedFlairs);
 
     return <div className="profile-editor">
         <div className="content">
@@ -160,7 +175,7 @@ export default function ProfileEditor(props: Props) {
                     "url"
                 )}
                 <label htmlFor="flairs">Flairs</label>
-                <FlairInput name="flairs" flairs={flairs} setFlairs={setFlairs} />
+                <FlairInput name="flairs" flairs={modifiedFlairs} setFlairs={setModifiedFlairs} />
                 <label htmlFor="bio">Bio</label>
                 <textarea
                     name="bio"
@@ -168,6 +183,8 @@ export default function ProfileEditor(props: Props) {
                     cols={30} rows={4}
                     value={bio}
                 />
+                <label>Program Author</label>
+                <ProgramPersonSelector setProgramPersonId={setProgramPersonId} />
                 <div className="submit-container">
                     <button
                         type="button"

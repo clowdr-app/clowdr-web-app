@@ -3,6 +3,7 @@ import { Flair } from '@clowdr-app/clowdr-db-schema/build/DataLayer';
 import "./FlairInput.scss";
 import FlairChip from '../../Profile/FlairChip/FlairChip';
 import useSafeAsync from '../../../hooks/useSafeAsync';
+import useConference from '../../../hooks/useConference';
 
 interface Props {
     name: string;
@@ -11,10 +12,11 @@ interface Props {
 }
 
 export default function FlairInput(props: Props) {
+    const conference = useConference();
     const [allFlairs, setAllFlairs] = useState<Flair[]>([]);
 
     useSafeAsync(async () => {
-        return await Flair.getAll().then(fs => fs.filter(x => x.id !== "<empty>"));
+        return await Flair.getAll(conference.id).then(fs => fs.filter(x => x.id !== "<empty>"));
     }, setAllFlairs, []);
 
     const isSelected = (flair: Flair) => props.flairs.find(x => x.id === flair.id) !== undefined;
