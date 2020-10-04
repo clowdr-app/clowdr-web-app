@@ -52,3 +52,7 @@ sample-program-data.js
 
 .parse.local
 .parse.project
+
+scripts/dump-existing-users.js
+
+existing-users-dump.json
