@@ -11,7 +11,7 @@ import VideoContext from '../../contexts/VideoContext';
 import UserRolesContext from "../../contexts/UserRolesContext";
 import useLogger from '../../hooks/useLogger';
 import Caches from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache";
-import { Conference, UserProfile, _Role, _User } from "@clowdr-app/clowdr-db-schema";
+import { Conference, ConferenceConfiguration, UserProfile, _Role, _User } from "@clowdr-app/clowdr-db-schema";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
@@ -19,6 +19,9 @@ import Chat from "../../classes/Chat/Chat";
 import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../hooks/useDataSubscription";
 import Video from "../../classes/Video/Video";
+import { addNotification } from "../../classes/Notifications/Notifications";
+import ReactMarkdown from "react-markdown";
+import { emojify } from "react-emojione";
 
 type AppTasks
     = "beginLoadConference"
@@ -33,6 +36,7 @@ interface AppState {
     profile: UserProfile | null;
     sessionToken: string | null;
     userRoles: { isAdmin: boolean, isManager: boolean };
+    announcementsChannelSID: string | null;
 }
 
 type AppUpdate
@@ -42,6 +46,7 @@ type AppUpdate
     | { action: "setUserProfile", data: { profile: UserProfile, sessionToken: string } | null; }
     | { action: "chatUpdated" }
     | { action: "setUserRoles", roles: { isAdmin: boolean, isManager: boolean } }
+    | { action: "setAccouncementsChannelSID", sid: string | null }
     ;
 
 function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpdate>): AppState {
@@ -51,7 +56,8 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
         conference: currentState.conference,
         profile: currentState.profile,
         sessionToken: currentState.sessionToken,
-        userRoles: currentState.userRoles
+        userRoles: currentState.userRoles,
+        announcementsChannelSID: currentState.announcementsChannelSID
     };
 
     function doUpdate(update: AppUpdate) {
@@ -78,6 +84,9 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
                 break;
             case "setUserRoles":
                 nextState.userRoles = update.roles;
+                break;
+            case "setAccouncementsChannelSID":
+                nextState.announcementsChannelSID = update.sid;
                 break;
         }
     }
@@ -113,7 +122,8 @@ export default function App() {
         conference: null,
         profile: null,
         sessionToken: null,
-        userRoles: { isAdmin: false, isManager: false }
+        userRoles: { isAdmin: false, isManager: false },
+        announcementsChannelSID: null
     });
     const [chatReady, setChatReady] = useState(false);
     const [videoReady, setVideoReady] = useState(false);
@@ -131,10 +141,17 @@ export default function App() {
                 dispatchAppUpdate({ action: "beginningLoadConference" });
 
                 let _conference: Conference | null = null;
+                let announcementsChannelSID: string | null = null;
 
                 if (appState.conferenceId) {
                     try {
                         _conference = await Conference.get(appState.conferenceId);
+                        if (_conference) {
+                            const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", _conference.id);
+                            if (configs.length > 0) {
+                                announcementsChannelSID = configs[0].value;
+                            }
+                        }
                     }
                     catch (e) {
                         _conference = null;
@@ -142,7 +159,10 @@ export default function App() {
                     }
                 }
 
-                dispatchAppUpdate({ action: "setConference", conference: _conference });
+                dispatchAppUpdate([
+                    { action: "setConference", conference: _conference },
+                    { action: "setAccouncementsChannelSID", sid: announcementsChannelSID }
+                ]);
             }
         }
 
@@ -353,6 +373,7 @@ export default function App() {
         finally {
             dispatchAppUpdate([
                 { action: "setConference", conference: null },
+                { action: "setAccouncementsChannelSID", sid: null },
                 { action: "setUserProfile", data: null },
                 { action: "setUserRoles", roles: { isAdmin: false, isManager: false } }
             ]);
@@ -395,16 +416,26 @@ export default function App() {
 
     const selectConference = useCallback(async function _selectConference(id: string | null): Promise<boolean> {
         let conference: Conference | null = null;
+        let announcementsChannelSID: string | null = null;
         try {
             if (id) {
                 conference = await Conference.get(id);
+                if (conference) {
+                    const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", conference.id);
+                    if (configs.length > 0) {
+                        announcementsChannelSID = configs[0].value;
+                    }
+                }
             }
         }
         catch (e) {
             logger.error(e);
         }
 
-        dispatchAppUpdate({ action: "setConference", conference });
+        dispatchAppUpdate([
+            { action: "setConference", conference },
+            { action: "setAccouncementsChannelSID", sid: announcementsChannelSID }
+        ]);
 
         return conference !== null;
     }, [logger]);
@@ -414,6 +445,42 @@ export default function App() {
     }, [sidebarOpen]);
 
     const appClassNames = ["app"];
+
+    useEffect(() => {
+        if (chatReady) {
+            const mChat = Chat.instance();
+            if (mChat && appState.announcementsChannelSID) {
+                const channelSid = appState.announcementsChannelSID;
+                const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
+                const renderEmoji = (text: any) => doEmojify(text.value);
+
+                let functionToOff: (() => void) | null = null;
+                mChat.channelEventOn(channelSid, "messageAdded", (msg) => {
+                    addNotification(<ReactMarkdown
+                        className="body"
+                        renderers={{
+                            text: renderEmoji
+                        }}
+                    >
+                        {msg.body}
+                    </ReactMarkdown>);
+                }).then(x => {
+                    functionToOff = x;
+                }).catch(err => {
+                    // Swallow the error
+                    console.error(`Announcements notification error (App.tsx)`, err);
+                });
+
+                return () => {
+                    if (functionToOff) {
+                        mChat.channelEventOff(channelSid, "messageAdded", functionToOff);
+                    }
+                };
+            }
+        }
+
+        return () => { };
+    });
 
     // The main page element - this is where the bulk of content goes
     const page = useMemo(() => <Page

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import "./Notification.scss";
 
 interface Props {
-    content: string,
+    content: string | JSX.Element,
     action?: { url: string, text: string }
 }
 
@@ -12,7 +12,7 @@ interface Props {
  */
 export default function Notification(props: Props) {
     return <div>
-        <p>{props.content}</p>
+        {typeof props.content === "string" ? <p>{props.content}</p> : props.content}
         {props.action
             ? <p className="notification-action">
                 <Link to={props.action.url}>
