@@ -48,6 +48,10 @@ const createConferenceRequestSchema = {
     sendgrid: {
         API_KEY: "string",
         SENDER: "string"
+    },
+    zoom: {
+        API_KEY: "string",
+        API_SECRET: "string"
     }
 };
 
