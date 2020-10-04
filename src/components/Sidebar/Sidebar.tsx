@@ -18,6 +18,7 @@ import { ServiceEventNames } from '../../classes/Chat/Services/Twilio/ChatServic
 import Chat from '../../classes/Chat/Chat';
 import useDataSubscription from '../../hooks/useDataSubscription';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
+import useUserRoles from '../../hooks/useUserRoles';
 
 interface Props {
     open: boolean,
@@ -438,6 +439,40 @@ export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor)
     }
 }
 
+export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserProfile) {
+    let friendlyName: string;
+    let icon: JSX.Element;
+    let skip: boolean = false;
+
+    if (chat.isDM) {
+        const member1 = chat.member1;
+        const member2 = chat.member2;
+        let otherOnline;
+
+        if (member1.profileId !== mUser.id) {
+            friendlyName = member1.displayName;
+            otherOnline = member1.isOnline;
+        }
+        else if (member2) {
+            friendlyName = member2.displayName;
+            otherOnline = member2.isOnline;
+        }
+        else {
+            skip = true;
+            friendlyName = "<unknown>";
+        }
+
+        icon = <i className={`fa${otherOnline ? 's' : 'r'} fa-circle ${otherOnline ? 'online' : ''}`}></i>;
+    }
+    else {
+        // Group chat - use chat friendly name from Twilio
+        friendlyName = chat.friendlyName;
+        icon = <i className="fas fa-hashtag"></i>;
+    }
+
+    return { friendlyName, skip, icon };
+}
+
 
 function subscribeToDMMemberJoin(
     memberJoinedlisteners: Map<string, () => void>,
@@ -469,7 +504,7 @@ function subscribeToDMMemberJoin(
     };
 }
 
-function Sidebar(props: Props) {
+export default function Sidebar(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
     const mChat = useMaybeChat();
@@ -501,6 +536,7 @@ function Sidebar(props: Props) {
         filteredSessions: [],
         filteredEvents: []
     });
+    const { isAdmin, isManager } = useUserRoles();
 
     // TODO: When sidebar is occupying full window (e.g. on mobile), close it
     // when the user clicks a link.
@@ -1056,8 +1092,10 @@ function Sidebar(props: Props) {
                 { key: "watched-items", element: <MenuItem title="Watched items" label="Watched items" action="/watched" /> },
                 { key: "profile", element: <MenuItem title="Profile" label="Profile" action="/profile" /> },
                 { key: "contact-moderators", element: <MenuItem title="Contact moderators" label="Contact moderators" action="/moderators" /> },
-                // TODO: If admin: { key: "admin", element: <MenuItem title="Admin tools" label="Admin tools" action="/admin"><></></MenuItem> }
             ];
+            if (isAdmin) {
+                mainMenuItems.push({ key: "admin", element: <MenuItem title="Admin tools" label="Admin tools" action="/admin" /> });
+            }
             mainMenuGroup = <MenuGroup items={mainMenuItems} />;
 
             let chatEl: JSX.Element;
@@ -1244,40 +1282,3 @@ function Sidebar(props: Props) {
         return sideBarButton;
     }
 }
-
-export default Sidebar;
-
-export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserProfile) {
-    let friendlyName: string;
-    let icon: JSX.Element;
-    let skip: boolean = false;
-
-    if (chat.isDM) {
-        const member1 = chat.member1;
-        const member2 = chat.member2;
-        let otherOnline;
-
-        if (member1.profileId !== mUser.id) {
-            friendlyName = member1.displayName;
-            otherOnline = member1.isOnline;
-        }
-        else if (member2) {
-            friendlyName = member2.displayName;
-            otherOnline = member2.isOnline;
-        }
-        else {
-            skip = true;
-            friendlyName = "<unknown>";
-        }
-
-        icon = <i className={`fa${otherOnline ? 's' : 'r'} fa-circle ${otherOnline ? 'online' : ''}`}></i>;
-    }
-    else {
-        // Group chat - use chat friendly name from Twilio
-        friendlyName = chat.friendlyName;
-        icon = <i className="fas fa-hashtag"></i>;
-    }
-
-    return { friendlyName, skip, icon };
-}
-

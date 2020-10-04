@@ -82,12 +82,10 @@ function Page(props: Props) {
 
     const { noHeading, contents } = useMemo(() => {
         if (mConf && mUser) {
-            // TODO: Route for /room/new (to create a new video room)
             // TODO: Route for /program/new (conference manager and admin roles only)
 
             // TODO: Route for /watched (to see/edit watched items)
             // TODO: Route for /moderators (to contact the conference mods)
-            // TODO: Route for /admin to access the top-level admin interface (admin/manager roles only)
 
             // TODO: Route for /about
             // TODO: Route for /legal
