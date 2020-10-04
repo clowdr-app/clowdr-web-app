@@ -16,6 +16,8 @@
  * @property {string | undefined} SENDGRID_API_KEY
  * @property {string | undefined} SENDGRID_SENDER
  * @property {string | undefined} REACT_APP_FRONTEND_URL
+ * @property {string | undefined} ZOOM_API_KEY
+ * @property {string | undefined} ZOOM_API_SECRET
  */
 
 /**
