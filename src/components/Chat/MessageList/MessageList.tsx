@@ -308,7 +308,7 @@ export default function MessageList(props: Props) {
             next={() => loadMoreMessages()}
             inverse={true}
             // Has to be applied as style not scss
-            style={{ display: 'flex', flexDirection: 'column-reverse' }}
+            style={{ display: 'flex', flexDirection: 'column-reverse', height: '100%' }}
             hasMore={messagePager === null || messagePager.hasPrevPage}
             loader={<LoadingSpinner />}
             endMessage={

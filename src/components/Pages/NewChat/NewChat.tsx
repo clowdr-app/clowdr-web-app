@@ -140,9 +140,9 @@ export default function NewChat(props: Props) {
         ? <Redirect to={`/chat/${newChannelSID}`} />
         : <div className="new-chat">
             <form onSubmit={(ev) => doCreateChat(ev)}>
-                {publicEl}<br />
-                {invitesEl}<br />
-                {titleEl}<br />
+                {publicEl}
+                {invitesEl}
+                {titleEl}
                 <div className="submit-container">
                     {createButton}
                 </div>

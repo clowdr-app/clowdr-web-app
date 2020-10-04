@@ -170,15 +170,29 @@ export default class Chat implements IChatManager {
         return await Promise.all(channels?.map(x => Chat.convertToDescriptor(x)) ?? []);
     }
 
+    public async listChatMembers(chatSid: string): Promise<Array<MemberDescriptor>> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        const members = await channel.members();
+        return await Promise.all(members.map(async member => ({
+            profileId: member.profileId,
+            isOnline: await member.getOnlineStatus()
+        })));
+    }
+
+    public async getChatMembersCount(chatSid: string): Promise<number> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatSid);
+        return channel.membersCount();
+    }
+
     // These can be done directly against the Twilio API
     async getChat(chatSid: string): Promise<ChatDescriptor> {
         assert(this.twilioService);
         const channel = await this.twilioService.getChannel(chatSid);
         return Chat.convertToDescriptor(channel);
     }
-    // TODO: Process and attach reactions
     async getMessages(chatSid: string): Promise<Paginator<IMessage>> {
-        // TODO: In channel implementations, process and attach reactions
         assert(this.twilioService);
         const channel = await this.twilioService.getChannel(chatSid);
         return channel.getMessages(20);
@@ -203,6 +217,10 @@ export default class Chat implements IChatManager {
     // TODO: Delete channel
 
     // These have to be done via our Twilio Backend for permissions control
+    async inviteUsers(chatSid: string, userProfileIds: string[]): Promise<void> {
+        assert(this.twilioService);
+        return (await this.twilioService.getChannel(chatSid)).inviteUsers(userProfileIds);
+    }
     // TODO: Invite member
     // TODO: Remove member
     // TODO: Admin controls - list all chats inc. hidden private ones,

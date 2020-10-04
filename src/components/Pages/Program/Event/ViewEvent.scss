@@ -5,15 +5,23 @@
         font-size: 130%;
     }
 
+    .content-feed {
+        max-height       : 80vh;
+        overflow         : hidden;
+        display          : grid;
+        grid-auto-columns: 100%;
+        grid-auto-rows   : 100%;
+    }
+
     .session-feed {
-        border-bottom: 1px solid $gray-5;
+        border-bottom : 1px solid $gray-5;
         padding-bottom: 3em;
-        margin-bottom: 3em;
+        margin-bottom : 3em;
     }
 
     .event-feed {
-        border-bottom: 1px solid $gray-5;
+        border-bottom : 1px solid $gray-5;
         padding-bottom: 3em;
-        margin-bottom: 3em;
+        margin-bottom : 3em;
     }
 }

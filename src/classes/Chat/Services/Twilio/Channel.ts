@@ -112,10 +112,10 @@ export default class Channel implements IChannel {
             await channel.updateLastConsumedMessageIndex(value);
         }
     }
-    async inviteUser(userProfile: UserProfile): Promise<void> {
+    async inviteUsers(userProfileIds: string[]): Promise<void> {
         await this.service.requestClowdrTwilioBackend("invite", {
             channel: this.getCommonField('sid'),
-            targetIdentity: userProfile.id
+            targetIdentities: userProfileIds
         });
     }
     async declineInvitation(): Promise<void> {

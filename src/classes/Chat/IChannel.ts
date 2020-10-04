@@ -14,7 +14,7 @@ export default interface IChannel {
     getLastReadIndex(): Promise<number | null>;
     setLastReadIndex(value: number | null): Promise<void>;
 
-    inviteUser(userProfile: UserProfile): Promise<void>;
+    inviteUsers(userProfileIds: string[]): Promise<void>;
     declineInvitation(): Promise<void>;
 
     join(): Promise<void>;

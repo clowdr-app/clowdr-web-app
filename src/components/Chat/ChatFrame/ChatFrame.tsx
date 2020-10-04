@@ -8,8 +8,6 @@ import useUserRoles from "../../../hooks/useUserRoles";
 import MessageList from "../MessageList/MessageList";
 import "./ChatFrame.scss";
 import { Picker as EmojiPicker } from 'emoji-mart';
-import { emojify } from "react-emojione";
-import assert from "assert";
 
 interface Props {
     chatSid: string;
@@ -22,7 +20,7 @@ export default function ChatFrame(props: Props) {
     const [newMsgText, setNewMsgText] = useState("");
     const [newMsgEnabled, setNewMsgEnabled] = useState(true);
     const msgBoxRef = useRef<HTMLTextAreaElement>(null);
-    const { isAdmin, isManager } = useUserRoles();
+    const { isAdmin } = useUserRoles();
     const [announcementsChannelSid, setAnnouncementsChannelSid] = useState<string | null>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
 

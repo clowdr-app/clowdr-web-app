@@ -30,7 +30,7 @@ export default class Channel implements IChannel {
     setLastReadIndex(value: number | null): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    inviteUser(userProfile: UserProfile): Promise<void> {
+    inviteUsers(userProfileIds: string[]): Promise<void> {
         throw new Error("Method not implemented.");
     }
     declineInvitation(): Promise<void> {
