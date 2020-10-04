@@ -310,7 +310,7 @@ const createItemSchema = {
     "abstract": "string",
     "exhibit": "boolean",
     "title": "string",
-    "authors": "[string]",
+    "authors": "[string]?",
     "conference": "string",
     "feed": "string?",
     "track": "string",
@@ -361,6 +361,9 @@ async function handleCreateItem(req) {
             }
             if (spec.track) {
                 spec.track = new Parse.Object("ProgramTrack", { id: spec.track });
+            }
+            if (!spec.authors) {
+                spec.authors = [];
             }
             const result = await createProgramItem(spec);
             return result.id;

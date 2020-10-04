@@ -3,7 +3,7 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
-const { createTextChat } = require("./textChat");
+const { createTextChat, getTextChatByName } = require("./textChat");
 const { getUserById, getProfileOfUser } = require("./user");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
@@ -116,8 +116,19 @@ async function handleCreateVideoRoom(req) {
                         name: spec.name,
                         conference: spec.conference,
                     };
-                    const newChat = await createTextChat(newChatSpec);
-                    spec.textChat = newChat;
+                    const existingChat = await getTextChatByName(newChatSpec.name, spec.conference.id);
+                    if (existingChat) {
+                        if (!existingChat.get("isPrivate")) {
+                            spec.textChat = existingChat;
+                        }
+                        else {
+                            throw new Error("Cannot create text chat - conflicting name.");
+                        }
+                    }
+                    else {
+                        const newChat = await createTextChat(newChatSpec);
+                        spec.textChat = newChat;
+                    }
                 }
                 else {
                     // TODO: Enable creation of text chats that are private in Parse

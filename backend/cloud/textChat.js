@@ -87,6 +87,13 @@ async function createTextChat(data) {
     return newObject;
 }
 
+async function getTextChatByName(name, confId) {
+    const q = new Parse.Query("TextChat");
+    q.equalTo("conference", new Parse.Object("Conference", { id: confId }));
+    q.equalTo("name", name);
+    return q.first({ useMasterKey: true });
+}
+
 /**
  * @param {Parse.Cloud.FunctionRequest} req
  */
@@ -129,5 +136,6 @@ async function handleCreateTextChat(req) {
 Parse.Cloud.define("textChat-create", handleCreateTextChat);
 
 module.exports = {
-    createTextChat: createTextChat
+    createTextChat: createTextChat,
+    getTextChatByName: getTextChatByName
 };

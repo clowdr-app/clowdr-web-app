@@ -540,7 +540,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             message("Getting or creating Twilio subaccount...");
             function generateTwilioSubaccountFriendlyName() {
                 // Something consistent between calls and that is unique - conference names are unique.
-                return conference.get("name");
+                return conference.id + ": " + conference.get("shortName");
             }
             async function clearOutDeadSubaccounts() {
                 let accounts = await twilioMasterClient.api.accounts.list({ status: 'active' });

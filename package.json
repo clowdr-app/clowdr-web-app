@@ -148,7 +148,7 @@
         "deploy": "deployator",
         "create-conference1": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample1",
         "create-conference2": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample2",
-        "create-conference-production": "node-env-run -E .env.production.local scripts/create-conference.js -- -c ./scripts/sample-specs/sample1",
+        "create-conference-production": "node-env-run -E .env.production.local scripts/create-conference.js -- -c J:/Clowdr/CSCW/DataSet1-Processed/cscw",
         "restore-schema-to-production-db-use-with-caution": "node-env-run -E .env.production.local scripts/restore-schema.js"
     },
     "eslintConfig": {

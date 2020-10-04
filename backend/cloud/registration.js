@@ -1,6 +1,5 @@
 /* global Parse */
 // ^ for eslint
-/// <reference path="./config.js" />
 
 // TODO: Function to trigger sending out (unsent) registration emails
 // TODO: Function to trigger sending out reminder/repeat registration emails
@@ -60,6 +59,14 @@ const createRegistrationSchema = {
  * @returns {Promise<Parse.Object>} - The new Registration
  */
 async function createRegistration(data) {
+    let existingQ = new Parse.Query("Registration");
+    existingQ.equalTo("conference", data.conference);
+    existingQ.equalTo("email", data.email);
+    const existingObjs = await existingQ.find({ useMasterKey: true });
+    if (existingObjs.length > 0) {
+        return existingObjs[0];
+    }
+
     const newObject = new Parse.Object("Registration", data);
     await configureDefaultRegistrationACLs(newObject);
     await newObject.save(null, { useMasterKey: true });

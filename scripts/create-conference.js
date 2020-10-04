@@ -32,8 +32,8 @@ function readDatas(rootPath, tableName) {
 
 async function createConference(conferenceData) {
     const existingConfQ = new Parse.Query("Conference");
-    existingConfQ.equalTo("name", conferenceData.conference.name);
-    const existingConf = await existingConfQ.first({ useMasterKey: true });
+    const confs = await existingConfQ.filter(x => x.get("name").includes(conferenceData.conference.name), { useMasterKey: true });
+    const existingConf = confs.length > 0 ? confs[0] : null;
     if (existingConf) {
         console.log("Conference already exists - re-using it.");
         return existingConf.id;
@@ -81,7 +81,7 @@ async function createConference(conferenceData) {
     return confId;
 }
 
-async function createObjects(confId, adminSessionToken, datas, objectName, keyName) {
+async function createObjects(confId, adminSessionToken, datas, objectName, keyName, tableName, verifyByField) {
     const results = {};
     for (const data of datas) {
         data.conference = confId;
@@ -89,10 +89,39 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
         delete finalData.id;
 
         console.log(`Creating ${objectName}: ${data[keyName]}`);
-        const id = await Parse.Cloud.run(`${objectName}-create`, finalData, {
-            sessionToken: adminSessionToken
-        });
-        results[data[keyName]] = id;
+        let shouldCreate = true;
+        if (tableName && verifyByField) {
+            const existingQ = new Parse.Query(tableName);
+            existingQ.equalTo("conference", new Parse.Object("Conference", { id: confId }));
+            existingQ.equalTo(verifyByField, data[verifyByField]);
+            const existing = await existingQ.first({ useMasterKey: true });
+            if (existing) {
+                if (tableName === "ProgramPerson") {
+                    results[data[keyName].toLowerCase()] = existing.id;
+                }
+                else {
+                    results[data[keyName]] = existing.id;
+                }
+                shouldCreate = false;
+            }
+        }
+
+        if (shouldCreate) {
+            try {
+                const id = await Parse.Cloud.run(`${objectName}-create`, finalData, {
+                    sessionToken: adminSessionToken
+                });
+                if (tableName === "ProgramPerson") {
+                    results[data[keyName].toLowerCase()] = id;
+                }
+                else {
+                    results[data[keyName]] = id;
+                }
+            }
+            catch (e) {
+                console.warn(`Creating ${tableName}: ${data[keyName]} failed`, e);
+            }
+        }
     }
     return results;
 }
@@ -269,34 +298,36 @@ async function main() {
     const adminUser = await Parse.User.logIn(conferenceData.admin.username, conferenceData.admin.password);
     const adminSessionToken = adminUser.getSessionToken();
 
-    const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id");
-    const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id");
-    const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id");
+    const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
+    const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
+    const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
     remapObjects(textChats, "textChat", videoRoomsData);
-    const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id");
+    const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
     remapObjects(youtubeFeeds, "youtube", contentFeedsData);
     remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
     remapObjects(textChats, "textChat", contentFeedsData);
     remapObjects(videoRooms, "videoRoom", contentFeedsData);
-    const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id");
+    const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id", "ContentFeed", "name");
     remapObjects(contentFeeds, "feed", tracksData);
     remapObjects(contentFeeds, "feed", itemsData);
     remapObjects(contentFeeds, "feed", sessionsData);
     remapObjects(contentFeeds, "feed", eventsData);
 
-    const attachmentTypes = await createObjects(confId, adminSessionToken, attachmentTypesData, "attachmentType", "name");
-    const tracks = await createObjects(confId, adminSessionToken, tracksData, "track", "name");
-    const persons = await createObjects(confId, adminSessionToken, personsData, "person", "name");
+    const attachmentTypes = await createObjects(confId, adminSessionToken, attachmentTypesData, "attachmentType", "name", "AttachmentType", "name");
+    const tracks = await createObjects(confId, adminSessionToken, tracksData, "track", "name", "ProgramTrack", "name");
+    const persons = await createObjects(confId, adminSessionToken, personsData, "person", "name", "ProgramPerson", "name");
 
     remapObjects(tracks, "track", itemsData);
     itemsData.forEach(item => {
-        item.authors = item.authors.map(authorName => persons[authorName]);
+        item.authors = item.authors.map(authorName => {
+            return persons[authorName.toLowerCase()];
+        });
     });
-    const items = await createObjects(confId, adminSessionToken, itemsData, "item", "title");
+    const items = await createObjects(confId, adminSessionToken, itemsData, "item", "title", "ProgramItem", "title");
 
     remapObjects(items, "programItem", itemAttachmentsData);
     remapObjects(attachmentTypes, "attachmentType", itemAttachmentsData);
-    const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url");
+    const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url", "ProgramItemAttachment", "url");
 
     remapObjects(tracks, "track", sessionsData);
     const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "title");
@@ -305,5 +336,5 @@ async function main() {
     remapObjects(items, "item", eventsData);
     const events = await createObjects(confId, adminSessionToken, eventsData, "event", "startTime");
 
-    const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name");
+    const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name", "Registration", "name");
 }

@@ -84,7 +84,7 @@ function validateBasicType(key, schemaType, actualValue) {
         if (actualType !== schemaType) {
             return {
                 ok: false,
-                error: `Schema mismatch @${key}. Expected '${schemaType}', received '${actualType}'.`
+                error: `Schema mismatch @${key}. Expected '${schemaType}', received '${actualType}' (${actualValue}).`
             };
         }
     }
@@ -99,7 +99,7 @@ function validateBasicType(key, schemaType, actualValue) {
         let innerSchemaType = schemaType.substr(1, schemaType.length - 2);
         for (let idx = 0; idx < actualValue.length; idx++) {
             let item = actualValue[idx];
-            let result = validateBasicType(idx.toString(), innerSchemaType, item);
+            let result = validateBasicType(key + "." + idx.toString(), innerSchemaType, item);
             if (!result.ok) {
                 return result;
             }
