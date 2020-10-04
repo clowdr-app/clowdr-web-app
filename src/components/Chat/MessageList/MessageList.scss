@@ -32,6 +32,7 @@
             max-width : 50px;
             margin    : 0 1em 0 0;
             text-align: center;
+            cursor: pointer;
 
             img {
                 display: inline-block;
@@ -109,11 +110,11 @@
                     align-items: center;
                     margin   : 2px;
                     text-align: center;
-                    border-radius: 40%;
+                    border-radius: 1000px;
 
-                    i {
+                    span {
                         padding: 0;
-                        margin: 0;
+                        margin: 0 0.15em;
                     }
                 }
 
@@ -136,8 +137,8 @@
                         width: auto;
 
                         i {
-                            margin-right: 0.15em;
-                            margin-left: 0.15em;
+                            margin: 0 0.15em;
+                            padding: 0;
                         }
                     }
                 }

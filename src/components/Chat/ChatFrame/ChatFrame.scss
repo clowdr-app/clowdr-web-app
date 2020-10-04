@@ -24,6 +24,11 @@
             grid-area: emoji;
             position: relative;
 
+            button {
+                border-radius: 1000px;
+                margin-left: 0.2em;
+            }
+
             .emoji-mart {
                 position: absolute;
                 bottom  : calc(100% + 1ex);

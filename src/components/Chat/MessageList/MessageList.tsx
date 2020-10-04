@@ -24,6 +24,7 @@ import { Picker as EmojiPicker } from 'emoji-mart';
 import { emojify } from "react-emojione";
 import { Tooltip } from "@material-ui/core";
 import useUserProfile from "../../../hooks/useUserProfile";
+import { useHistory } from "react-router-dom";
 
 interface Props {
     chatSid: string;
@@ -49,6 +50,7 @@ export default function MessageList(props: Props) {
     const [messages, setMessages] = useState<Array<IMessage>>([]);
     const [renderedMessages, setRenderedMessages] = useState<Array<RenderedMessage>>([]);
     const mChat = useMaybeChat();
+    const history = useHistory();
     const [pickEmojiForMsgSid, setPickEmojiForMsgSid] = useState<string | null>(null);
 
     function sortMessages(msgs: Array<IMessage>): Array<IMessage> {
@@ -204,7 +206,12 @@ export default function MessageList(props: Props) {
         const renderEmoji = (text: any) => doEmojify(text.value);
 
         return <div className="message" key={msg.index}>
-            <div className="profile">
+            <div className="profile" onClick={(ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+
+                history.push(`/profile/${msg.profileId}`);
+            }}>
                 {msg.profilePhotoUrl
                     ? <img src={msg.profilePhotoUrl} alt={msg.profileName + "'s avatar"} />
                     : <img src={defaultProfilePic} alt="default avatar" />
@@ -281,7 +288,8 @@ export default function MessageList(props: Props) {
                                     }
                                 }}
                             >
-                                {doEmojify(reaction)}
+                                <span>{doEmojify(reaction)}</span>
+                                <span>{msg.reactions[reaction].ids.length}</span>
                             </button>
                         </Tooltip>;
                     })}
