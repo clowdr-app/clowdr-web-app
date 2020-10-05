@@ -144,8 +144,7 @@ export default function Register(props: Props) {
                 return <>
                     <p>
                         You have successfully registered. Please return to the login
-                        page to continue. If you are a new user, please first check
-                        your inbox for the account verification email.
+                        page to continue.
                 </p>
                     {goToSignInButton}
                 </>;

@@ -179,8 +179,7 @@ export default function SignUp(props: SignUpProps) {
                 ? <>
                     <p>
                         You have successfully signed up. Please return to the login
-                        page to continue. If you are a new user, please first check
-                        your inbox for the account verification email.
+                        page to continue.
                     </p>
                     {goToSignInButton}
                     </>
