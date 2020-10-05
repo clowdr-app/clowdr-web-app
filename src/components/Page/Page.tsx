@@ -27,6 +27,7 @@ import ViewItem from '../Pages/Program/Item/ViewItem';
 import NewVideoRoom from '../Pages/NewVideoRoom/NewVideoRoom';
 import Register from '../Pages/Register/Register';
 import Admin from '../Pages/Admin/Admin';
+import ComingSoon from '../Pages/ComingSoon/ComingSoon';
 
 interface Props {
     doLogin: doLoginF;
@@ -96,6 +97,16 @@ function Page(props: Props) {
             return {
                 noHeading: false,
                 contents: <Switch>
+                    <Route path="/chat/all" component={ComingSoon} />
+                    <Route path="/room/all" component={ComingSoon} />
+                    <Route path="/moderators" component={ComingSoon} />
+                    <Route path="/watched" component={ComingSoon} />
+                    <Route path="/about" component={ComingSoon} />
+                    <Route path="/legal" component={ComingSoon} />
+                    <Route path="/help" component={ComingSoon} />
+                    <Route path="/exhibits" component={ComingSoon} />
+                    <Route path="/program/new" component={ComingSoon} />
+
                     <Route exact path="/" component={LoggedInWelcome} />
                     <Route path="/signup" component={() =>
                         <Redirect to="/" />

@@ -1,0 +1,23 @@
+@import "../../../styles/util.scss";
+
+.page {
+    .coming-soon-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+
+        .coming-soon {
+            margin    : auto;
+            text-align: center;
+
+            .icon {
+                color        : $dark-primary;
+                margin-bottom: 0.7em;
+            }
+
+            h2 {
+                font-size: $font-xl;
+            }
+        }
+    }
+}
