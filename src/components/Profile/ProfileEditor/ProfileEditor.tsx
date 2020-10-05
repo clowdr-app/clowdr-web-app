@@ -77,8 +77,6 @@ export default function ProfileEditor(props: Props) {
         p.primaryFlair = Promise.resolve(primaryFlair);
         p.bio = bio;
 
-        await new Promise(r => setTimeout(r, 5000));
-
         await p.save();
     };
 
