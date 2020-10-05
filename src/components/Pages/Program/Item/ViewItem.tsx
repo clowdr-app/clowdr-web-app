@@ -31,7 +31,7 @@ export default function ViewItem(props: Props) {
             : props.item,
         setItem,
         [props.item, conference.id]);
-    useSafeAsync(async () => item ? await item.authors : null, setAuthors, [item]);
+    useSafeAsync(async () => item ? await item.authorPerons : null, setAuthors, [item]);
     useSafeAsync(async () => item ? await item.attachments : null, setAttachments, [item]);
     useSafeAsync(async () => (await item?.feed) ?? null, setFeed, [item]);
 

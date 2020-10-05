@@ -18,7 +18,7 @@ export default function Item(props: Props) {
     const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(null);
     const history = useHistory();
 
-    useSafeAsync(async () => item ? await item.authors : null, setAuthors, [item]);
+    useSafeAsync(async () => item ? await item.authorPerons : null, setAuthors, [item]);
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);

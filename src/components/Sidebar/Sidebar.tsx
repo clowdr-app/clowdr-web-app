@@ -131,7 +131,7 @@ async function filterSessionsAndEvents(
         for (const x of allEvents) {
             const item = await x.item;
             const itemTitle = item.title;
-            const authorNames = (await item.authors).map(y => y.name);
+            const authorNames = (await item.authorPerons).map(y => y.name);
             const trackName = (await x.track).name;
             const sessionTitle = (await x.session).title;
 

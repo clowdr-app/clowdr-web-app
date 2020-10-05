@@ -300,7 +300,7 @@ Parse.Cloud.define("person-set-profile", handlePersonSetProfile);
  * @property {boolean} exhibit
  * @property {Parse.File | undefined} posterImage
  * @property {string} title
- * @property {Array<Pointer>} authors
+ * @property {Array<string>} authors
  * @property {Pointer} conference
  * @property {Pointer | undefined} [feed]
  * @property {Pointer} track
@@ -325,16 +325,9 @@ const createItemSchema = {
  * @returns {Promise<Parse.Object>} - The new item
  */
 async function createProgramItem(data) {
-    const authorIds = data.authors;
-    delete data.authors;
-
     const newObject = new Parse.Object("ProgramItem", data);
     // TODO: ACLs: Allow authors to edit their own item records
     await configureDefaultProgramACLs(newObject);
-    const authorsRel = newObject.relation("authors");
-    authorIds.forEach(id => {
-        authorsRel.add(new Parse.Object("ProgramPerson", { id }));
-    });
     await newObject.save(null, { useMasterKey: true });
     return newObject;
 }
