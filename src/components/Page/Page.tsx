@@ -97,8 +97,6 @@ function Page(props: Props) {
             return {
                 noHeading: false,
                 contents: <Switch>
-                    <Route path="/chat/all" component={ComingSoon} />
-                    <Route path="/room/all" component={ComingSoon} />
                     <Route path="/moderators" component={ComingSoon} />
                     <Route path="/watched" component={ComingSoon} />
                     <Route path="/about" component={ComingSoon} />

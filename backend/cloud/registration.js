@@ -38,6 +38,7 @@ async function configureDefaultRegistrationACLs(object) {
  * @property {string} email
  * @property {Date | undefined} invitationSentDate
  * @property {string} name
+ * @property {string | undefined} [newRole]
  * @property {Pointer} conference
  */
 
@@ -47,7 +48,8 @@ const createRegistrationSchema = {
     email: "string",
     invitationSentDate: "date?",
     name: "string",
-    conference: "string"
+    conference: "string",
+    newRole: "string?"
 };
 
 /**

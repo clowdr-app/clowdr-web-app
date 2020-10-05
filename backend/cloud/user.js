@@ -86,9 +86,10 @@ async function createUser(email, password) {
     return user;
 }
 
-async function createUserProfile(user, fullName, conference) {
+async function createUserProfile(user, fullName, newRoleName, conference) {
     let adminRole = await getRoleByName("admin", conference);
     let attendeeRole = await getRoleByName("attendee", conference);
+    let newRole = await getRoleByName(newRoleName, conference);
 
     let emptyFlair = await getFlairByLabel("<empty>", conference);
     let newProfile = new Parse.Object("UserProfile", {
@@ -115,9 +116,9 @@ async function createUserProfile(user, fullName, conference) {
     newProfile.setACL(newProfileACl);
     newProfile = await newProfile.save(null, { useMasterKey: true });
 
-    let attendeeUsersRel = attendeeRole.relation("users");
-    attendeeUsersRel.add(user);
-    attendeeRole.save(null, { useMasterKey: true });
+    let newRoleUsersRel = newRole.relation("users");
+    newRoleUsersRel.add(user);
+    newRole.save(null, { useMasterKey: true });
 
     const twilioAccountSID = (await getConferenceConfigurationByKey(conference, "TWILIO_ACCOUNT_SID")).get("value");
     const twilioAuthToken = (await getConferenceConfigurationByKey(conference, "TWILIO_AUTH_TOKEN")).get("value");
@@ -214,7 +215,7 @@ async function handleRegisterUser(request) {
                 await user.verifyPassword(params.password).catch(_ => {
                     throw new Error(`Registration: error matching user details.`)
                 });
-                await createUserProfile(user, params.fullName, conference);
+                await createUserProfile(user, params.fullName, registration.get("newRole"), conference);
             }
         } else {
             let user = await createUser(email, params.password);
@@ -223,7 +224,7 @@ async function handleRegisterUser(request) {
                 throw new Error("Signup: Failed to create user.");
             }
 
-            await createUserProfile(user, params.fullName, conference);
+            await createUserProfile(user, params.fullName, registration.get("newRole"), conference);
         }
 
         await deleteRegistration(params.registrationId);
@@ -277,7 +278,7 @@ async function handleCreateUser(request) {
                 await user.verifyPassword(params.password).catch(_ => {
                     throw new Error(`Registration: error matching user details.`)
                 });
-                await createUserProfile(user, params.fullName, conference);
+                await createUserProfile(user, params.fullName, "attendee", conference);
                 return true;
             }
             else {
@@ -287,7 +288,7 @@ async function handleCreateUser(request) {
                     throw new Error("Signup: failed to create user.");
                 }
 
-                await createUserProfile(user, params.fullName, conference);
+                await createUserProfile(user, params.fullName, "attendee", conference);
                 return true;
             }
         }
