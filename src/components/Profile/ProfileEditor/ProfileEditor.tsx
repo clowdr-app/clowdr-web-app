@@ -11,6 +11,7 @@ import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
 import "./ProfileEditor.scss";
 import useConference from "../../../hooks/useConference";
+import AsyncButton from "../../AsyncButton/AsyncButton";
 
 interface Props {
     profile: UserProfile;
@@ -37,6 +38,7 @@ export default function ProfileEditor(props: Props) {
     const [modifiedFlairs, setModifiedFlairs] = useState<Flair[]>([]);
     const [originalFlairs, setOriginalFlairs] = useState<Flair[]>([]);
     const [programPersonId, setProgramPersonId] = useState<string | undefined>(undefined);
+    const [isSaving, setIsSaving] = useState<boolean>(false);
 
     useSafeAsync(async () => {
         return await p.flairs;
@@ -45,10 +47,7 @@ export default function ProfileEditor(props: Props) {
         setOriginalFlairs(flairs);
     }, []);
 
-    const submitForm = async (e: React.FormEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-
+    const saveProfile = async (e: React.FormEvent) => {
         // Update the associated program person
         if (programPersonId !== undefined) {
             let ok = await Parse.Cloud.run("person-set-profile", {
@@ -78,6 +77,8 @@ export default function ProfileEditor(props: Props) {
         p.primaryFlair = Promise.resolve(primaryFlair);
         p.bio = bio;
 
+        await new Promise(r => setTimeout(r, 5000));
+
         await p.save();
     };
 
@@ -104,6 +105,7 @@ export default function ProfileEditor(props: Props) {
                     type={inputType}
                     value={value}
                     onChange={(e) => setter(e.target.value)}
+                    disabled={isSaving}
                 />
             </>;
         };
@@ -145,7 +147,7 @@ export default function ProfileEditor(props: Props) {
                     </label>
                 </div>
             </div>
-            <form onSubmit={submitForm}>
+            <form>
                 {makeTextInput("Real Name", realName, setRealName)}
                 {makeTextInput("Display Name", displayName, setDisplayName)}
                 <label htmlFor="pronouns">Pronouns</label>
@@ -153,6 +155,7 @@ export default function ProfileEditor(props: Props) {
                     name="pronouns"
                     tags={pronouns}
                     setTags={ps => setPronouns(ps)}
+                    disabled={isSaving}
                 />
                 {makeTextInput(
                     "Affiliation",
@@ -176,16 +179,17 @@ export default function ProfileEditor(props: Props) {
                     "url"
                 )}
                 <label htmlFor="flairs">Flairs</label>
-                <FlairInput name="flairs" flairs={modifiedFlairs} setFlairs={setModifiedFlairs} />
+                <FlairInput name="flairs" flairs={modifiedFlairs} setFlairs={setModifiedFlairs} disabled={isSaving} />
                 <label htmlFor="bio">Bio</label>
                 <textarea
                     name="bio"
                     onChange={e => setBio(e.target.value)}
                     cols={30} rows={4}
                     value={bio}
+                    disabled={isSaving}
                 />
                 <label>Program Author</label>
-                <ProgramPersonSelector setProgramPersonId={setProgramPersonId} />
+                <ProgramPersonSelector setProgramPersonId={setProgramPersonId} disabled={isSaving} />
                 <div className="submit-container">
                     <button
                         type="button"
@@ -193,7 +197,7 @@ export default function ProfileEditor(props: Props) {
                         title={isFormDirty ? "Please save your profile info." : undefined}
                         onClick={props.setViewing}
                     >View</button>
-                    <input type="submit" value="Save" />
+                    <AsyncButton content="Save" action={saveProfile} setIsRunning={setIsSaving} />
                 </div>
             </form>
         </div>

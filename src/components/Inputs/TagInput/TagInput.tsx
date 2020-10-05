@@ -5,12 +5,13 @@ interface Props {
     name: string;
     tags: string[];
     setTags: (tags: string[]) => void;
+    disabled?: boolean;
 }
 
 export default function TagInput(props: Props) {
     const [currentTag, setCurrentTag] = useState("");
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    function handleKeyDown(e: React.KeyboardEvent) {
         switch (e.key) {
             case "Enter":
             case "Tab":
@@ -36,10 +37,22 @@ export default function TagInput(props: Props) {
         }
     };
 
+    function handleBlur(_: React.FocusEvent) {
+        if (currentTag !== "") {
+            props.setTags([...props.tags, currentTag]);
+            setCurrentTag("");
+        }
+    }
+
     return <div className="tag-input">
         {props.tags.map((tag, i) =>
             <div key={i} className="tag-container">
-                <span className="tag-chip">{tag}</span>
+                <span className="tag-chip" onClick={() => {
+                    if (props.disabled) {
+                        return;
+                    }
+                    props.setTags(props.tags.filter((_, j) => j !== i));
+                }}>{tag}</span>
             </div>
         )}
         <input
@@ -47,7 +60,9 @@ export default function TagInput(props: Props) {
             name={props.name}
             onChange={e => setCurrentTag(e.target.value)}
             onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
             value={currentTag}
+            disabled={props.disabled}
         />
     </div >;
 }

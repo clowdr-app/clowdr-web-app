@@ -9,6 +9,7 @@ interface Props {
     name: string;
     flairs: Flair[];
     setFlairs: (flairs: Flair[]) => void;
+    disabled?: boolean;
 }
 
 export default function FlairInput(props: Props) {
@@ -28,6 +29,9 @@ export default function FlairInput(props: Props) {
                     flair={flair}
                     unselected={!isSelected(flair)}
                     onClick={() => {
+                        if (props.disabled) {
+                            return;
+                        }
                         if (isSelected(flair)) {
                             props.setFlairs(props.flairs.filter(x => x.id !== flair.id));
                         } else {

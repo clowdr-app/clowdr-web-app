@@ -1,5 +1,5 @@
 import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
-import React, { useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import "./AsyncButton.scss";
 
@@ -9,6 +9,7 @@ interface Props {
     disabled?: boolean;
     action?: Handler;
     content?: string;
+    setIsRunning?(isRunning: boolean): void;
 }
 
 interface Pending {
@@ -41,9 +42,16 @@ export default function AsyncButton(props: Props) {
         if (actionState.state === "pending") {
             if (!props.action) {
                 setActionState({ state: "notpending" });
+                if (props.setIsRunning) {
+                    props.setIsRunning(false);
+                }
             }
             else {
                 setActionState({ state: "running" });
+
+                if (props.setIsRunning) {
+                    props.setIsRunning(true);
+                }
 
                 const p = makeCancelable(props.action(actionState.event));
                 cancel = p.cancel;
@@ -51,6 +59,9 @@ export default function AsyncButton(props: Props) {
                 p.promise
                     .then(() => {
                         setActionState({ state: "notpending" });
+                        if (props.setIsRunning) {
+                            props.setIsRunning(false);
+                        }
                     })
                     .catch(error => {
                         if (!error.isCanceled) {
@@ -67,10 +78,24 @@ export default function AsyncButton(props: Props) {
         setActionState({ state: "pending", event });
     }
 
+    function getContents(): ReactElement | string | undefined {
+        switch (actionState.state) {
+            case "pending":
+                case "running":
+                return <LoadingSpinner message={props.content ?? "Loading"} />;
+            case "notpending":
+                return props.content;
+            case "rejected":
+                return "Failed";
+
+        }
+    }
+
     return <button
-        disabled={props.disabled || actionState.state === "pending"}
+        disabled={props.disabled || actionState.state !== "notpending"}
         onClick={event => handleClick(event)}
-        className={actionState.state}>
-        {actionState.state === "pending" ? <LoadingSpinner /> : props.content}
+        className={actionState.state}
+        type="button">
+        {getContents()}
     </button>;
 }

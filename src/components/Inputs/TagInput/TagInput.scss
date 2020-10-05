@@ -12,6 +12,11 @@
             padding      : 0 mm(2);
             margin       : 0 mm(1);
             border-radius: 1000px;
+            cursor: pointer;
+
+            &:hover {
+                text-decoration: line-through;
+            }
         }
     }
 

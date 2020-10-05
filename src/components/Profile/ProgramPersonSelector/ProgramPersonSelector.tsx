@@ -9,6 +9,7 @@ import "./ProgramPersonSelector.scss";
 
 interface Props {
     setProgramPersonId(programPersonId: string): void;
+    disabled?: boolean;
 }
 
 type Person = {
@@ -62,7 +63,8 @@ export default function ProgramPersonSelector(props: Props) {
         <div className="program-person-selector">
             <select
                 onChange={e => { setChosenPerson(e.target.value) }}
-                value={chosenPerson ?? allProgramPersons?.find(p => p.profile?.id === profile.id)?.personId ?? ""}>
+                value={chosenPerson ?? allProgramPersons?.find(p => p.profile?.id === profile.id)?.personId ?? ""}
+                disabled={props.disabled}>
                 {allProgramPersons?.map(person => {
                     return <option
                         key={person.personId}
