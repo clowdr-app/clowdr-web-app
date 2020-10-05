@@ -480,7 +480,7 @@ export default function App() {
         }
 
         return () => { };
-    });
+    }, [appState.announcementsChannelSID, chatReady]);
 
     // The main page element - this is where the bulk of content goes
     const page = useMemo(() => <Page
