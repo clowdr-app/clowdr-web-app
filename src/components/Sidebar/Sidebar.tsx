@@ -102,6 +102,8 @@ type SidebarUpdate
     | { action: "setChatsIsOpen"; isOpen: boolean }
     | { action: "setRoomsIsOpen"; isOpen: boolean }
     | { action: "setProgramIsOpen"; isOpen: boolean }
+
+    | { action: "updateChatDescriptors"; f: (x: SidebarChatDescriptor) => SidebarChatDescriptor }
     ;
 
 const minSearchLength = 3;
@@ -370,6 +372,16 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
             case "updateFilteredRooms":
                 nextState.filteredRooms = update.rooms;
                 break;
+
+            case "updateChatDescriptors":
+                if (nextState.activeChats) {
+                    nextState.activeChats = nextState.activeChats.map(update.f);
+                }
+
+                if (nextState.allChats) {
+                    nextState.filteredChats = nextState.filteredChats.map(update.f);
+                }
+                break;
         }
     }
 
@@ -536,7 +548,7 @@ export default function Sidebar(props: Props) {
         filteredSessions: [],
         filteredEvents: []
     });
-    const { isAdmin, isManager } = useUserRoles();
+    const { isAdmin } = useUserRoles();
 
     // TODO: When sidebar is occupying full window (e.g. on mobile), close it
     // when the user clicks a link.
@@ -868,7 +880,7 @@ export default function Sidebar(props: Props) {
 
     // Subscribe to chat events
     useEffect(() => {
-        if (mChat && !state.tasks.has("loadingActiveChats")) {
+        if (mChat) {
             const chatService = mChat;
 
             const listeners: Map<ServiceEventNames, () => void> = new Map();
@@ -938,7 +950,6 @@ export default function Sidebar(props: Props) {
                         if (u.updateReasons.includes("friendlyName") ||
                             u.updateReasons.includes("online") ||
                             u.updateReasons.includes("attributes")) {
-                            const updates: SidebarUpdate[] = [];
                             function updateDescriptor(x: SidebarChatDescriptor): SidebarChatDescriptor {
                                 if (x.isDM) {
                                     const m1 = { ...x.member1 };
@@ -962,22 +973,10 @@ export default function Sidebar(props: Props) {
                                 }
                             }
 
-                            if (state.activeChats) {
-                                const newActiveChats = state.activeChats.map(updateDescriptor);
-                                updates.push({
-                                    action: "updateActiveChats",
-                                    chats: newActiveChats
-                                });
-                            }
-
-                            if (state.allChats) {
-                                updates.push({
-                                    action: "updateFilteredChats",
-                                    chats: state.filteredChats.map(updateDescriptor)
-                                });
-                            }
-
-                            dispatchUpdate(updates);
+                            dispatchUpdate({
+                                action: "updateChatDescriptors",
+                                f: updateDescriptor
+                            });
                         }
                     }));
                 }
@@ -1005,7 +1004,7 @@ export default function Sidebar(props: Props) {
             };
         }
         return () => { };
-    }, [conf, mChat, state.activeChats, state.allChats, state.filteredChats, state.tasks]);
+    }, [conf, mChat]);
 
     const sideBarButton = <div className="sidebar-button">
         <button

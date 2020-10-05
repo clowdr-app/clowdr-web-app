@@ -71,12 +71,12 @@ export default function TrackColumn(props: Props) {
 
     if (items && items.length > 0) {
         if (sessionEntries.length > 0) {
-            rows.push(<hr />);
+            rows.push(<hr key="unscheduled-divider" />);
             const _rows: Array<JSX.Element> = [];
             for (const item of items.sort((x, y) => x.title.localeCompare(y.title))) {
-                _rows.push(<Item item={item} clickable={true} />);
+                _rows.push(<Item key={item.id} item={item} clickable={true} />);
             }
-            rows.push(<div className="session">
+            rows.push(<div key="unscheduled-items" className="session">
                 <h2 className="title">Unscheduled items</h2>
                 <div className="content">
                     {_rows}
@@ -85,7 +85,7 @@ export default function TrackColumn(props: Props) {
         }
         else {
             for (const item of items.sort((x, y) => x.title.localeCompare(y.title))) {
-                rows.push(<Item item={item} clickable={true} />);
+                rows.push(<Item key={item.id} item={item} clickable={true} />);
             }
         }
     }

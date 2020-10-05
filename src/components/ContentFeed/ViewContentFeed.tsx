@@ -1,5 +1,5 @@
 import { ContentFeed, TextChat, VideoRoom, YouTubeFeed, ZoomRoom } from "@clowdr-app/clowdr-db-schema";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import ReactPlayer from "react-player";
 import Parse from "parse";
 import useConference from "../../hooks/useConference";
