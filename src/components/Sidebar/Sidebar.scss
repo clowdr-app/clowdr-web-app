@@ -421,11 +421,27 @@
                     }
 
                     .track {
-                        display     : inline-block;
+                        display     : grid;
                         font-size   : 75%;
                         color       : rgba(255, 255, 255, 0.75);
                         margin-left : 0.25em;
                         margin-right: 0;
+
+                        grid-template-rows: 1fr auto 1fr;
+                        grid-template-columns: 0.5em auto auto 0.5em;
+                        grid-template-areas: 
+                            ". . . ."
+                            ". track session ."
+                            ". . . .";
+
+                        svg {
+                            grid-area: track;
+                            margin: 0.3em;
+                        }
+
+                        span {
+                            grid-area: session;
+                        }
                     }
                 }
             }
