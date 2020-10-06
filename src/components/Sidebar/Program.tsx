@@ -24,13 +24,6 @@ function arrangeBoundaries(timeBoundaries: Array<number>)
     const now = Date.now();
     const boundaries = timeBoundaries
         .sort((x, y) => x < y ? -1 : x === y ? 0 : 1) // Order them
-        .reduce((acc, x) =>
-            acc.length === 0
-                ? [x]
-                : acc[acc.length - 1] !== x
-                    ? [...acc, x]
-                    : acc
-            , [] as number[]) // Remove gaps of zero
         .map(x => x * 60 * 1000); // Convert to milliseconds
     const boundaryPairs: Array<{ start: number, end: number, isLast: boolean }> = [];
     const insaneLengthOfTime = 1000 * 60 * 60 * 24 * 365 * 10; // Ten years in ms
