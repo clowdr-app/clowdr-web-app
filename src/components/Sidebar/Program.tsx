@@ -190,14 +190,20 @@ export default function Program(props: Props) {
                         timeText = "Happening now";
                     }
                     else {
-                        let distance = group.startTime.getTime() - now;
-                        let units = "minutes";
-                        distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
-                        if (distance >= 60) {
-                            distance = Math.floor(distance / 60);
-                            units = "hour" + (distance > 1 ? "s" : "");
+                        const startTime = group.startTime.getTime();
+                        const endTime = group.endTime.getTime();
+                        const { distance: startDistance, units: startUnits } = generateTimeText(startTime, now);
+                        const { distance: endDistance, units: endUnits } = generateTimeText(endTime, now);
+                        if (group.isLast) {
+                            timeText = `Beyond ${startDistance} ${startUnits}`;
                         }
-                        timeText = `${group.isLast ? "Beyond" : "In"} ${distance} ${units}`;
+                        else if (startUnits === endUnits ||
+                            startUnits === (endUnits + "s")) {
+                            timeText = `Starts in ${startDistance} to ${endDistance} ${endUnits}`;
+                        }
+                        else {
+                            timeText = `Starts in ${startDistance} ${startUnits} to ${endDistance} ${endUnits}`;
+                        }
                     }
 
                     logger.info(timeText, group);
@@ -323,3 +329,14 @@ export default function Program(props: Props) {
         {groupElems.reduce((acc, x) => <>{acc}{x}</>, <></>)}
     </div>;
 }
+function generateTimeText(startTime: number, now: number) {
+    let distance = startTime - now;
+    let units = "minutes";
+    distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
+    if (distance >= 60) {
+        distance = Math.floor(distance / 60);
+        units = "hour" + (distance > 1 ? "s" : "");
+    }
+    return { distance, units };
+}
+
