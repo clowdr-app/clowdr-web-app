@@ -4,7 +4,7 @@
     "private": true,
     "dependencies": {
         "@babel/core": "7.9.0",
-        "@clowdr-app/clowdr-db-schema": "^1.4.3",
+        "@clowdr-app/clowdr-db-schema": "^1.4.4",
         "@material-ui/core": "^4.11.0",
         "@material-ui/icons": "^4.9.1",
         "@primer/octicons-react": "^9.4.0",
@@ -150,6 +150,7 @@
         "create-conference1": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample1",
         "create-conference2": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample2",
         "create-conference-production": "node-env-run -E .env.production.local scripts/create-conference.js -- -c J:/Clowdr/CSCW/DataSet1-Processed/cscw",
+        "create-registrations-production": "node-env-run -E .env.production.local scripts/create-conference.js -- -r -c J:/Clowdr/CSCW/DataSet1-Processed/cscw",
         "restore-schema-to-production-db-use-with-caution": "node-env-run -E .env.production.local scripts/restore-schema.js"
     },
     "eslintConfig": {
