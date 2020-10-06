@@ -4,7 +4,7 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
 const { createTextChat, getTextChatByName } = require("./textChat");
-const { getUserById, getProfileOfUser } = require("./user");
+const { getUserById, getProfileOfUser, getUserProfileById } = require("./user");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
 
@@ -162,12 +162,13 @@ Parse.Cloud.define("videoRoom-create", handleCreateVideoRoom);
  * @param {boolean} write - Whether to grant write-access or not
  * @param {string} sessionToken - Current user's session token
  */
-async function grantAccessToVideoRoom(room, user, write, sessionToken) {
+async function grantAccessToVideoRoom(room, userProfile, write, sessionToken) {
     if (!room.get("isPrivate")) {
         // Public room, nothing to do.
         return;
     }
 
+    const user = userProfile.get("user");
     const acl = room.getACL();
     acl.setReadAccess(user, true);
     if (write) {
@@ -198,17 +199,15 @@ async function handleInviteToVideoRoom(req) {
         const room = await getRoomById(roomId, confId);
         const results = {};
         for (const userId of params.users) {
-            const targetUser = await getUserById(userId);
+            const targetUserProfile = await getUserProfileById(userId, confId);
             let succeeded = false;
-            if (targetUser) {
-                if (await getProfileOfUser(targetUser, confId)) {
-                    try {
-                        await grantAccessToVideoRoom(room, targetUser, params.write, user.getSessionToken());
-                        succeeded = true;
-                    }
-                    catch (e) {
-                        succeeded = false;
-                    }
+            if (targetUserProfile) {
+                try {
+                    await grantAccessToVideoRoom(room, targetUserProfile, params.write, user.getSessionToken());
+                    succeeded = true;
+                }
+                catch (e) {
+                    succeeded = false;
                 }
             }
             results[userId] = succeeded;

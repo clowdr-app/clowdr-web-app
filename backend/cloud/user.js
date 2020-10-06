@@ -51,6 +51,17 @@ async function getUserById(userId) {
     }
 }
 
+async function getUserProfileById(userProfileId, confId) {
+    let query = new Parse.Query("UserProfile");
+    query.equalTo("conference", new Parse.Object("Conference", { id: confId }));
+    try {
+        return await query.get(userProfileId, { useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
+}
+
 async function getRoleByName(roleName, conference) {
     let query = new Parse.Query("_Role");
     query.equalTo("name", generateRoleDBName(conference, roleName));
@@ -303,5 +314,6 @@ Parse.Cloud.define("user-create", handleCreateUser);
 
 module.exports = {
     getUserById: getUserById,
-    getProfileOfUser: getProfileOfUser
+    getProfileOfUser: getProfileOfUser,
+    getUserProfileById: getUserProfileById
 };

@@ -50,7 +50,7 @@ export default function ViewVideoRoom(props: Props) {
     useSafeAsync(async () => {
         const profiles = await UserProfile.getAll(conference.id);
         return profiles.map(x => ({
-            value: x.userId,
+            value: x.id,
             label: x.displayName
         })).filter(x => x.value !== currentUserProfile.id);
     }, setAllUsers, []);
