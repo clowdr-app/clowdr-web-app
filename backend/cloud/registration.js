@@ -64,9 +64,16 @@ async function createRegistration(data) {
     let existingQ = new Parse.Query("Registration");
     existingQ.equalTo("conference", data.conference);
     existingQ.equalTo("email", data.email);
-    const existingObjs = await existingQ.find({ useMasterKey: true });
-    if (existingObjs.length > 0) {
-        return existingObjs[0];
+    const existingRegs = await existingQ.find({ useMasterKey: true });
+    if (existingRegs.length > 0) {
+        return existingRegs[0];
+    }
+
+    let existingU = new Parse.Query("_User");
+    existingU.equalTo("email", data.email);
+    const existingUsers = await existingU.find({ useMasterKey: true });
+    if (existingUsers.length > 0) {
+        return true;
     }
 
     const newObject = new Parse.Object("Registration", data);
@@ -90,7 +97,12 @@ async function handleCreateRegistration(req) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
             const result = await createRegistration(spec);
-            return result.id;
+            if (result === true) {
+                return true;
+            }
+            else {
+                return result.id;
+            }
         }
         else {
             throw new Error("Permission denied");
