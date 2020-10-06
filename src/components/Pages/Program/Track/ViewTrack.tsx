@@ -64,7 +64,12 @@ export default function ViewTrack(props: Props) {
 
     useHeading({
         title: track?.name ?? "Track",
-        subtitle: track ? <TrackMarker track={track} /> : undefined
+        subtitle: track ? <TrackMarker track={track} /> : undefined,
+        buttons: [{
+            label: "Program",
+            icon: <i className="fas fa-eye"></i>,
+            action: "/program"
+        }]
     });
 
     const trackEl
