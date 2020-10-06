@@ -13,7 +13,6 @@ const {
 const {
     getRegistrationById
 } = require("./registration");
-const { getFlairByLabel } = require("./flair");
 
 async function getUserByEmail(email) {
     let query = new Parse.Query(Parse.User);
