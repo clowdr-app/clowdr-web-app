@@ -8,9 +8,24 @@ export default function useLocalAudioToggle() {
     const audioTrack = localTracks.find(track => track.kind === 'audio') as LocalAudioTrack;
     const isEnabled = useIsTrackEnabled(audioTrack);
 
-    const toggleAudioEnabled = useCallback(() => {
+    const toggleAudioEnabled = useCallback((enable?: boolean) => {
         if (audioTrack) {
-            audioTrack.isEnabled ? audioTrack.disable() : audioTrack.enable();
+            if (enable !== undefined) {
+                if (enable) {
+                    audioTrack.enable()
+                }
+                else {
+                    audioTrack.disable();
+                }
+            }
+            else {
+                if (audioTrack.isEnabled) {
+                    audioTrack.disable()
+                }
+                else {
+                    audioTrack.enable();
+                }
+            }
         }
     }, [audioTrack]);
 

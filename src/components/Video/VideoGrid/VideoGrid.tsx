@@ -36,6 +36,10 @@ function VideoWrapperComponent(props: Props & {
     const [isAudioEnabled, toggleAudioEnabled] = useLocalAudioToggle();
     const [isVideoEnabled, toggleVideoEnabled] = useLocalVideoToggle();
 
+    useEffect(() => {
+        toggleAudioEnabled(false);
+    }, [toggleAudioEnabled, toggleVideoEnabled]);
+
     // TODO: Disable in production
     logger.enable();
 
@@ -63,8 +67,6 @@ function VideoWrapperComponent(props: Props & {
                 await props.enterRoom();
             }}
             content="Enter the room" disabled={!props.mVideo} />;
-
-    // TODO: Camera/microphone preview/test prior to entering the room
 
     // TODO: Capacity control
     // TODO: Ephemeral vs persistant message
