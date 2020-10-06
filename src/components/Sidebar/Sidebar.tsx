@@ -9,7 +9,7 @@ import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
 import MenuItem from './Menu/MenuItem';
 import { Conference, ProgramSession, ProgramSessionEvent, UserProfile, VideoRoom } from '@clowdr-app/clowdr-db-schema';
-import { makeCancelable } from '@clowdr-app/clowdr-db-schema/build/Util';
+import { makeCancelable, removeNull } from '@clowdr-app/clowdr-db-schema/build/Util';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
 import useMaybeChat from '../../hooks/useMaybeChat';
 import { ChatDescriptor, MemberDescriptor } from '../../classes/Chat';
@@ -116,19 +116,18 @@ async function filterSessionsAndEvents(
     if (_search && _search.length >= minSearchLength) {
         const search = _search.toLowerCase();
 
-        const sessions: Array<ProgramSession> = [];
-        for (const x of allSessions) {
+        const sessions: Array<ProgramSession> = removeNull(await Promise.all(allSessions.map(async x => {
             const trackName = (await x.track).name;
             const sessionTitle = x.title;
 
             if (!!trackName.toLowerCase().match(search)?.length
                 || !!sessionTitle.toLowerCase().match(search)?.length) {
-                sessions.push(x);
+                return x;
             }
-        }
+            return null;
+        })));
 
-        const events: Array<ProgramSessionEvent> = [];
-        for (const x of allEvents) {
+        const events: Array<ProgramSessionEvent> = removeNull(await Promise.all(allEvents.map(async x => {
             const item = await x.item;
             const itemTitle = item.title;
             const authorNames = (await item.authorPerons).map(y => y.name);
@@ -139,9 +138,10 @@ async function filterSessionsAndEvents(
                 || !!trackName.toLowerCase().match(search)?.length
                 || !!sessionTitle.toLowerCase().match(search)?.length
                 || authorNames.reduce<boolean>((acc, y) => acc || (!!y.toLowerCase().match(search)?.length), false)) {
-                events.push(x);
+                return x;
             }
-        }
+            return null;
+        })));
 
         return [sessions, events];
     }
@@ -151,19 +151,19 @@ async function filterSessionsAndEvents(
         const endLimit = now;
         const startLimit = now + twoHours;
 
-        let sessions = allSessions
+        const sessions = allSessions
             .filter(x => x.endTime.getTime() >= endLimit
                 && x.startTime.getTime() <= startLimit);
 
-        const events = allEvents
-            .filter(x => x.endTime.getTime() >= endLimit
-                && x.startTime.getTime() <= startLimit);
+        // TODO: When do we want to display events in the sidebar? CSCW didn't want them - maybe make this configurable
+        // const events = allEvents
+        //     .filter(x => x.endTime.getTime() >= endLimit
+        //         && x.startTime.getTime() <= startLimit);
 
-        const eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
+        // const eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
+        // sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
 
-        sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
-
-        return [sessions, events];
+        return [sessions, []];
     }
 }
 

@@ -210,7 +210,7 @@ export default function Program(props: Props) {
                             isWatched: false,
                             item: { type: "session", data: session },
                             sortValue: session.startTime.getTime(),
-                            additionalClasses: "session"
+                            additionalClasses: "session no-events" // TODO: Remove .no-events if displaying events
                         };
                         return result;
                     }));
