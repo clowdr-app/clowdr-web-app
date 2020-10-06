@@ -53,6 +53,7 @@ export default function NewVideoRoom() {
             defaultChecked={false}
             onChange={(ev) => setIsPrivate(ev.target.checked)}
         />
+        <span>Admins can access all private breakout rooms.</span>
     </>;
     const persistentEl = <>
         <label htmlFor="is-persistent">Persistent?</label>
