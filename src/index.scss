@@ -34,11 +34,11 @@ body {
         box-sizing: border-box;
 
         cursor: pointer;
-        background-color: #efffef;
+        background-color: rgba($primary, 0.1);
 
         &:hover {
             text-decoration : none;
-            background-color: #003000;
+            background-color: $primary;
             color: #fff;
         }
 
