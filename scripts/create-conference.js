@@ -12,6 +12,11 @@ const argv = yargs
         description: "The path to the folder containing the conference spec.",
         type: "string"
     })
+    .option("registration", {
+        alias: "r",
+        description: "Only create registrations.",
+        type: "boolean"
+    })
     .help()
     .alias("help", "h")
     .argv;
@@ -30,10 +35,19 @@ function readDatas(rootPath, tableName) {
     return JSON.parse(dataStr);
 }
 
-async function createConference(conferenceData) {
+async function getConference(name) {
     const existingConfQ = new Parse.Query("Conference");
-    const confs = await existingConfQ.filter(x => x.get("name").includes(conferenceData.conference.name), { useMasterKey: true });
+    const confs = await existingConfQ.filter(x => x.get("name").includes(name), { useMasterKey: true });
     const existingConf = confs.length > 0 ? confs[0] : null;
+    if (existingConf) {
+        console.log("Conference already exists - re-using it.");
+        return existingConf.id;
+    }
+    return undefined;
+}
+
+async function createConference(conferenceData) {
+    const existingConf = getConference(conferenceData.conference.name);
     if (existingConf) {
         console.log("Conference already exists - re-using it.");
         return existingConf.id;
@@ -138,6 +152,7 @@ function remapObjects(sourceMap, targetKey, targetDatas) {
 
 async function main() {
     const rootPath = argv.conference;
+    const regsOnly = argv.registration;
 
     let conferenceData = readConferenceData(rootPath);
 
@@ -297,48 +312,50 @@ async function main() {
     Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
     Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
-    const confId = await createConference(conferenceData);
+    const confId = regsOnly ? await getConference(conferenceData.conference.name) : await createConference(conferenceData);
 
     const adminUser = await Parse.User.logIn(conferenceData.admin.username, conferenceData.admin.password);
     const adminSessionToken = adminUser.getSessionToken();
 
-    const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
-    const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
-    const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
-    remapObjects(textChats, "textChat", videoRoomsData);
-    const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
-    remapObjects(youtubeFeeds, "youtube", contentFeedsData);
-    remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
-    remapObjects(textChats, "textChat", contentFeedsData);
-    remapObjects(videoRooms, "videoRoom", contentFeedsData);
-    const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id", "ContentFeed", "name");
-    remapObjects(contentFeeds, "feed", tracksData);
-    remapObjects(contentFeeds, "feed", itemsData);
-    remapObjects(contentFeeds, "feed", sessionsData);
-    remapObjects(contentFeeds, "feed", eventsData);
+    if (!regsOnly) {
+        const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
+        const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
+        const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
+        remapObjects(textChats, "textChat", videoRoomsData);
+        const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
+        remapObjects(youtubeFeeds, "youtube", contentFeedsData);
+        remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
+        remapObjects(textChats, "textChat", contentFeedsData);
+        remapObjects(videoRooms, "videoRoom", contentFeedsData);
+        const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id", "ContentFeed", "name");
+        remapObjects(contentFeeds, "feed", tracksData);
+        remapObjects(contentFeeds, "feed", itemsData);
+        remapObjects(contentFeeds, "feed", sessionsData);
+        remapObjects(contentFeeds, "feed", eventsData);
 
-    const attachmentTypes = await createObjects(confId, adminSessionToken, attachmentTypesData, "attachmentType", "name", "AttachmentType", "name");
-    const tracks = await createObjects(confId, adminSessionToken, tracksData, "track", "name", "ProgramTrack", "name");
-    const persons = await createObjects(confId, adminSessionToken, personsData, "person", "name", "ProgramPerson", "name");
+        const attachmentTypes = await createObjects(confId, adminSessionToken, attachmentTypesData, "attachmentType", "name", "AttachmentType", "name");
+        const tracks = await createObjects(confId, adminSessionToken, tracksData, "track", "name", "ProgramTrack", "name");
+        const persons = await createObjects(confId, adminSessionToken, personsData, "person", "name", "ProgramPerson", "name");
 
-    remapObjects(tracks, "track", itemsData);
-    itemsData.forEach(item => {
-        item.authors = item.authors.map(authorName => {
-            return persons[authorName.toLowerCase()];
+        remapObjects(tracks, "track", itemsData);
+        itemsData.forEach(item => {
+            item.authors = item.authors.map(authorName => {
+                return persons[authorName.toLowerCase()];
+            });
         });
-    });
-    const items = await createObjects(confId, adminSessionToken, itemsData, "item", "title", "ProgramItem", "title");
+        const items = await createObjects(confId, adminSessionToken, itemsData, "item", "title", "ProgramItem", "title");
 
-    remapObjects(items, "programItem", itemAttachmentsData);
-    remapObjects(attachmentTypes, "attachmentType", itemAttachmentsData);
-    const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url", "ProgramItemAttachment", "url");
+        remapObjects(items, "programItem", itemAttachmentsData);
+        remapObjects(attachmentTypes, "attachmentType", itemAttachmentsData);
+        const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url", "ProgramItemAttachment", "url");
 
-    remapObjects(tracks, "track", sessionsData);
-    const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "title");
+        remapObjects(tracks, "track", sessionsData);
+        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "title");
 
-    remapObjects(sessions, "session", eventsData);
-    remapObjects(items, "item", eventsData);
-    const events = await createObjects(confId, adminSessionToken, eventsData, "event", "startTime");
+        remapObjects(sessions, "session", eventsData);
+        remapObjects(items, "item", eventsData);
+        const events = await createObjects(confId, adminSessionToken, eventsData, "event", "startTime");
+    }
 
     const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name", "Registration", "name");
 }
