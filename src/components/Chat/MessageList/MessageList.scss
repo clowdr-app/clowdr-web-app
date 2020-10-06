@@ -111,6 +111,11 @@
                     margin   : 2px;
                     text-align: center;
                     border-radius: 1000px;
+                    background: none;
+
+                    &:hover {
+                        color: $gray-1;
+                    }
 
                     span {
                         padding: 0;
