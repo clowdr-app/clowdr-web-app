@@ -10,6 +10,7 @@ import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
 import "./ProfileEditor.scss";
 import AsyncButton from "../../AsyncButton/AsyncButton";
+import { addError } from "../../../classes/Notifications/Notifications";
 
 interface Props {
     profile: UserProfile;
@@ -44,7 +45,7 @@ export default function ProfileEditor(props: Props) {
         setOriginalFlairs(flairs);
     }, []);
 
-    const saveProfile = async (e: React.FormEvent) => {
+    const saveProfile = async () => {
         // Update the associated program person
         if (programPersonId !== undefined) {
             const ok = await Parse.Cloud.run("person-set-profile", {
@@ -67,8 +68,8 @@ export default function ProfileEditor(props: Props) {
         p.position = position;
         p.country = country;
         p.webpage = webpage;
-        p.flairObjects = Promise.resolve(modifiedFlairs);
-        p.primaryFlair = Promise.resolve(primaryFlair);
+        p.flairs = modifiedFlairs.map(x => x.id);
+        p.primaryFlairId = primaryFlair?.id;
         p.bio = bio;
 
         await p.save();
@@ -190,7 +191,14 @@ export default function ProfileEditor(props: Props) {
                         title={isFormDirty ? "Please save your profile info." : undefined}
                         onClick={props.setViewing}
                     >Preview</button>
-                    <AsyncButton content="Save" action={saveProfile} setIsRunning={setIsSaving} />
+                    <AsyncButton content="Save" action={async () => {
+                        try {
+                            await saveProfile();
+                        }
+                        catch {
+                            addError("Sorry, an error occurred and we were unable to save your profile.");
+                        }
+                    }} setIsRunning={setIsSaving} />
                 </div>
             </form>
         </div>
