@@ -46,7 +46,7 @@ type AppUpdate
     | { action: "setUserProfile", data: { profile: UserProfile, sessionToken: string } | null; }
     | { action: "chatUpdated" }
     | { action: "setUserRoles", roles: { isAdmin: boolean, isManager: boolean } }
-    | { action: "setAccouncementsChannelSID", sid: string | null }
+    | { action: "setAnnouncementsChannelSID", sid: string | null }
     ;
 
 function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpdate>): AppState {
@@ -85,7 +85,7 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
             case "setUserRoles":
                 nextState.userRoles = update.roles;
                 break;
-            case "setAccouncementsChannelSID":
+            case "setAnnouncementsChannelSID":
                 nextState.announcementsChannelSID = update.sid;
                 break;
         }
@@ -161,7 +161,7 @@ export default function App() {
 
                 dispatchAppUpdate([
                     { action: "setConference", conference: _conference },
-                    { action: "setAccouncementsChannelSID", sid: announcementsChannelSID }
+                    { action: "setAnnouncementsChannelSID", sid: announcementsChannelSID }
                 ]);
             }
         }
@@ -229,6 +229,15 @@ export default function App() {
     useEffect(() => {
         async function updateChat() {
             if (appState.conference && appState.sessionToken && appState.profile) {
+                if (!appState.announcementsChannelSID) {
+                    let configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", appState.conference.id);
+                    if (configs.length > 0) {
+                        dispatchAppUpdate([
+                            { action: "setAnnouncementsChannelSID", sid: configs[0].value },
+                        ]);
+                    }
+                }
+
                 Chat.setup(appState.conference, appState.profile, appState.sessionToken)
                     .then(ok => {
                         setChatReady(ok);
@@ -373,7 +382,7 @@ export default function App() {
         finally {
             dispatchAppUpdate([
                 { action: "setConference", conference: null },
-                { action: "setAccouncementsChannelSID", sid: null },
+                { action: "setAnnouncementsChannelSID", sid: null },
                 { action: "setUserProfile", data: null },
                 { action: "setUserRoles", roles: { isAdmin: false, isManager: false } }
             ]);
@@ -434,7 +443,7 @@ export default function App() {
 
         dispatchAppUpdate([
             { action: "setConference", conference },
-            { action: "setAccouncementsChannelSID", sid: announcementsChannelSID }
+            { action: "setAnnouncementsChannelSID", sid: announcementsChannelSID }
         ]);
 
         return conference !== null;
@@ -449,6 +458,7 @@ export default function App() {
     useEffect(() => {
         if (chatReady) {
             const mChat = Chat.instance();
+            console.log(`6: ${appState.announcementsChannelSID}`);
             if (mChat && appState.announcementsChannelSID) {
                 const channelSid = appState.announcementsChannelSID;
                 const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
