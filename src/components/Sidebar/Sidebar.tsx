@@ -19,6 +19,7 @@ import Chat from '../../classes/Chat/Chat';
 import useDataSubscription from '../../hooks/useDataSubscription';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
 import useUserRoles from '../../hooks/useUserRoles';
+import { handleParseFileURLWeirdness } from '../../classes/Utils';
 
 interface Props {
     open: boolean,
@@ -1024,7 +1025,11 @@ export default function Sidebar(props: Props) {
     //       them interfering / re-rendering every time one of them changes
 
     if (props.open) {
-        const sideBarHeading = <h1 aria-level={1}><Link to="/" aria-label="Conference homepage">{conf.shortName}</Link></h1>;
+        const sideBarHeading = <h1 aria-level={1} className={conf.headerImage ? "img" : ""}>
+            <Link to="/" aria-label="Conference homepage">
+                {conf.headerImage ? <img src={handleParseFileURLWeirdness(conf.headerImage) ?? undefined} alt={conf.shortName} /> : conf.shortName}
+            </Link>
+        </h1>;
         const headerBar = <div className="sidebar-header">
             {sideBarButton}
             {sideBarHeading}

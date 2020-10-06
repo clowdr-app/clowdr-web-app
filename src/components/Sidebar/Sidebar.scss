@@ -78,7 +78,7 @@
 
     .sidebar-header {
         display              : grid;
-        grid-template-columns: 40px auto auto;
+        grid-template-columns: 40px auto 40px;
         grid-template-areas  : "button-l heading button-r";
 
         grid-area: header;
@@ -127,6 +127,16 @@
 
             a {
                 color: inherit;
+            }
+
+            &.img {
+                margin: 0.4em 0 0 0;
+                text-align: center;
+            }
+
+            img {
+                max-width: 100%;
+                max-height: 3.7ex;
             }
         }
     }
