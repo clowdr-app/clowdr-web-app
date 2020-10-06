@@ -19,7 +19,7 @@ export default function ProfileView(props: Props) {
 
     const [flairs, setFlairs] = useState<Flair[]>([]);
 
-    useSafeAsync(() => p.flairs, setFlairs, [])
+    useSafeAsync(() => p.flairObjects, setFlairs, [])
 
     let affiliation = null;
     if (p.position && p.affiliation) {

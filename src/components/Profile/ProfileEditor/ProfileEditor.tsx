@@ -6,11 +6,9 @@ import FlairInput from "../../Inputs/FlairInput/FlairInput";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
-import assert from "assert";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
 import "./ProfileEditor.scss";
-import useConference from "../../../hooks/useConference";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 
 interface Props {
@@ -26,7 +24,6 @@ function sameObjects(xs: { id: string }[], ys: { id: string }[]) {
 export default function ProfileEditor(props: Props) {
     const p = props.profile;
 
-    const conference = useConference();
     const [displayName, setDisplayName] = useState(p.displayName);
     const [realName, setRealName] = useState(p.realName);
     const [pronouns, setPronouns] = useState(p.pronouns);
@@ -41,7 +38,7 @@ export default function ProfileEditor(props: Props) {
     const [isSaving, setIsSaving] = useState<boolean>(false);
 
     useSafeAsync(async () => {
-        return await p.flairs;
+        return await p.flairObjects;
     }, (flairs: Array<Flair>) => {
         setModifiedFlairs(flairs);
         setOriginalFlairs(flairs);
@@ -50,7 +47,7 @@ export default function ProfileEditor(props: Props) {
     const saveProfile = async (e: React.FormEvent) => {
         // Update the associated program person
         if (programPersonId !== undefined) {
-            let ok = await Parse.Cloud.run("person-set-profile", {
+            const ok = await Parse.Cloud.run("person-set-profile", {
                 programPerson: programPersonId === "" ? undefined : programPersonId,
                 profile: p.id,
                 conference: (await p.conference).id,
@@ -61,10 +58,7 @@ export default function ProfileEditor(props: Props) {
             }
         }
 
-        // TODO: This should be a get by field
-        const defaultFlair = (await Flair.getAll(conference.id)).find(x => x.label === "<empty>");
-        assert(defaultFlair);
-        const primaryFlair = modifiedFlairs.reduce((x, y) => x.priority > y.priority ? x : y, defaultFlair);
+        const primaryFlair = modifiedFlairs.length > 0 ? modifiedFlairs.sort((x, y) => x.priority > y.priority ? -1 : x.priority === y.priority ? 0 : 1)[0] : undefined;
 
         p.realName = realName;
         p.displayName = displayName;
@@ -73,7 +67,7 @@ export default function ProfileEditor(props: Props) {
         p.position = position;
         p.country = country;
         p.webpage = webpage;
-        p.flairs = Promise.resolve(modifiedFlairs);
+        p.flairObjects = Promise.resolve(modifiedFlairs);
         p.primaryFlair = Promise.resolve(primaryFlair);
         p.bio = bio;
 

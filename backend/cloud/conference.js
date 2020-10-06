@@ -82,7 +82,6 @@ const defaultRoles = [
 ];
 
 const defaultFlairs = [
-    { label: "<empty>", color: "rgba(0, 0, 0, 0)", tooltip: "<empty>", priority: 0 },
     { label: "Admin", color: "rgba(200, 32, 0, 1)", tooltip: "Conference administrator", priority: 100 },
     { label: "Moderator", color: "rgba(32, 200, 0, 1)", tooltip: "Conference moderator", priority: 90 }
 ];
@@ -516,9 +515,6 @@ Parse.Cloud.job("conference-create", async (request) => {
                 adminUserProfileACL.setWriteAccess(adminUser, true);
                 const adminUserProfileO = new Parse.Object("UserProfile");
                 adminUserProfileO.setACL(adminUserProfileACL);
-                const flairsRel = adminUserProfileO.relation("flairs");
-                flairsRel.add(flairMap.get("<empty>"));
-                flairsRel.add(flairMap.get("Admin"));
                 adminUserProfile = await adminUserProfileO.save({
                     conference: conference,
                     primaryFlair: flairMap.get("Admin"),
@@ -534,6 +530,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                     pronouns: params.admin.pronouns,
                     tags: params.admin.tags,
                     webpage: params.admin.webpage,
+                    flairs: [flairMap.get("Admin").id]
                 }, {
                     useMasterKey: true
                 });

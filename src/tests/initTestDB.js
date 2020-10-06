@@ -62,8 +62,7 @@ const RelationsToTableNames = {
     UserProfile: {
         conference: "Conference",
         primaryFlair: "Flair",
-        user: "_User",
-        flairs: "Flair"
+        user: "_User"
     },
     ZoomRoom: {
         conference: "Conference",

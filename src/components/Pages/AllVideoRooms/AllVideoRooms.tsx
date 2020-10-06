@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import useConference from "../../../hooks/useConference";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
-import useUserProfile from "../../../hooks/useUserProfile";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import "./AllVideoRooms.scss";
 

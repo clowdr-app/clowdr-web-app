@@ -34,7 +34,7 @@ export default function Register(props: Props) {
 
         async function getConference() {
             try {
-                let { promise, cancel } = makeCancelable(Conference.get(props.conferenceId).catch(async (reason) => {
+                const { promise, cancel } = makeCancelable(Conference.get(props.conferenceId).catch(async (reason) => {
                     setLoadFailed(true);
                     return null;
                 }));
@@ -62,7 +62,7 @@ export default function Register(props: Props) {
     }, [props.conferenceId])
 
     async function doRegister(data: FormData): Promise<boolean> {
-        let ok = await Parse.Cloud.run("user-register", {
+        const ok = await Parse.Cloud.run("user-register", {
             registrationId: props.registrationId,
             conferenceId: props.conferenceId,
             password: data.password,
@@ -75,7 +75,7 @@ export default function Register(props: Props) {
         async function _onSubmit() {
             try {
                 setStatus({ state: "waiting" });
-                let p = makeCancelable(doRegister(data));
+                const p = makeCancelable(doRegister(data));
 
                 let ok = false;
                 try {
@@ -110,10 +110,10 @@ export default function Register(props: Props) {
             Go to sign in
         </Link>;
 
-    function registrationForm(conference: Conference) {
+    function registrationForm(_conference: Conference) {
         return <>
             <form onSubmit={handleSubmit(onSubmit)}>
-                <p>Welcome to Clowdr. Please choose a password to complete your registration for {conference.name}.</p>
+                <p>Welcome to Clowdr. Please choose a password to complete your registration for {_conference.name}.</p>
                 <p>If you have used Clowdr before, enter your existing password.</p>
                 <label htmlFor="email">Email</label>
                 <input name="email" type="email" value={props.email} disabled />
@@ -134,10 +134,10 @@ export default function Register(props: Props) {
         </>;
     }
 
-    function contents(status: Status, conference: Conference) {
-        switch (status.state) {
+    function contents(_status: Status, _conference: Conference) {
+        switch (_status.state) {
             case "notwaiting":
-                return registrationForm(conference);
+                return registrationForm(_conference);
             case "waiting":
                 return <LoadingSpinner message="Registering, please wait" />
             case "registered":

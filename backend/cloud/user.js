@@ -91,20 +91,18 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
     let attendeeRole = await getRoleByName("attendee", conference);
     let newRole = await getRoleByName(newRoleName, conference);
 
-    let emptyFlair = await getFlairByLabel("<empty>", conference);
     let newProfile = new Parse.Object("UserProfile", {
         user: user,
         conference: conference,
-        primaryFlair: emptyFlair,
+        primaryFlair: undefined,
         welcomeModalShown: false,
         realName: fullName,
         displayName: fullName,
         dataConsentGiven: false, // TODO: Require from sign up form
         pronouns: ["they", "them"],
-        tags: []
+        tags: [],
+        flairs: []
     });
-    let flairsRel = newProfile.relation("flairs");
-    flairsRel.add(emptyFlair);
     let newProfileACl = new Parse.ACL();
     newProfileACl.setPublicReadAccess(false);
     newProfileACl.setPublicWriteAccess(false);

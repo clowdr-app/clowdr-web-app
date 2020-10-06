@@ -36,7 +36,7 @@ type RenderedMessage = {
     profileId: string;
     profileName: string;
     profilePhotoUrl: string | null;
-    profileFlair: Flair;
+    profileFlair: Flair | undefined;
     time: string;
     index: number;
     reactions: {
@@ -216,7 +216,7 @@ export default function MessageList(props: Props) {
                     ? <img src={msg.profilePhotoUrl} alt={msg.profileName + "'s avatar"} />
                     : <img src={defaultProfilePic} alt="default avatar" />
                 }
-                <FlairChip flair={msg.profileFlair} small />
+                {msg.profileFlair ? <FlairChip flair={msg.profileFlair} small /> : <></>}
             </div>
             <div className="content">
                 <div className="name">{msg.profileName}</div>

@@ -66,6 +66,9 @@ export default function AsyncButton(props: Props) {
                     .catch(error => {
                         if (!error.isCanceled) {
                             setActionState({ state: "rejected" });
+                            if (props.setIsRunning) {
+                                props.setIsRunning(false);
+                            }
                         }
                     });
             }

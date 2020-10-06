@@ -262,7 +262,7 @@ export default function App() {
         }
 
         updateChat();
-    }, [appState.conference, appState.profile, appState.sessionToken]);
+    }, [appState.announcementsChannelSID, appState.conference, appState.profile, appState.sessionToken]);
 
     // Update video
     useEffect(() => {

@@ -17,7 +17,7 @@ export default function FlairInput(props: Props) {
     const [allFlairs, setAllFlairs] = useState<Flair[]>([]);
 
     useSafeAsync(async () => {
-        return await Flair.getAll(conference.id).then(fs => fs.filter(x => x.id !== "<empty>"));
+        return await Flair.getAll(conference.id);
     }, setAllFlairs, []);
 
     const isSelected = (flair: Flair) => props.flairs.find(x => x.id === flair.id) !== undefined;

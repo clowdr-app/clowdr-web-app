@@ -12,10 +12,6 @@ interface Props {
 export default function FlairChip(props: Props) {
     const f = props.flair;
 
-    if (f.label === "<empty>") {
-        return <></>;
-    }
-
     const selectedStyles = props.unselected ?
         { background: "none", border: "1px solid " + f.color, color: f.color } :
         { background: f.color, border: "1px solid " + f.color };
