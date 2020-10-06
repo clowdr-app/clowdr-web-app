@@ -14,7 +14,7 @@ import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 export default function WholeProgram() {
     const conference = useConference();
 
-    const [scheduleView, setScheduleView] = useState(false);
+    const [scheduleView, setScheduleView] = useState(true);
     const [tracks, setTracks] = useState<Array<ProgramTrack> | null>(null);
 
     useHeading("Whole program");
