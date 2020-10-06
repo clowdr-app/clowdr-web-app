@@ -97,9 +97,9 @@ export default function ViewItem(props: Props) {
             ? <>
                 {feed
                     ? <>
-                        <hr />
                         <h2>{feed.name}</h2>
                         <ViewContentFeed feed={feed} />
+                        <hr />
                     </>
                     : <></>}
                 <div className="info">
