@@ -130,7 +130,7 @@ export default function App() {
 
     // logger.enable();
 
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+    const [sidebarOpen, setSidebarOpen] = useState<boolean>(window.location.pathname === "/");
 
     // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
 
