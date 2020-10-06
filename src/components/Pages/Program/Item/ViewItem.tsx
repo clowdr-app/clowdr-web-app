@@ -95,6 +95,13 @@ export default function ViewItem(props: Props) {
     return <div className="program-item">
         {item && authors
             ? <>
+                {feed
+                    ? <>
+                        <hr />
+                        <h2>{feed.name}</h2>
+                        <ViewContentFeed feed={feed} />
+                    </>
+                    : <></>}
                 <div className="info">
                     <ReactMarkdown className="abstract">{item.abstract}</ReactMarkdown>
                     <AuthorsList authors={authors} />
@@ -106,13 +113,6 @@ export default function ViewItem(props: Props) {
                             <h3>Attachments</h3>
                             {attachmentEls}
                         </div>
-                    </>
-                    : <></>}
-                {feed
-                    ? <>
-                        <hr />
-                        <h2>{feed.name}</h2>
-                        <ViewContentFeed feed={feed} />
                     </>
                     : <></>}
             </>

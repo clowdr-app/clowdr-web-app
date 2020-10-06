@@ -6,11 +6,11 @@
     }
 
     .content-feed {
-        max-height       : 80vh;
-        overflow         : hidden;
-        display          : grid;
-        grid-auto-columns: 100%;
-        grid-auto-rows   : 100%;
+        & > .chat-frame {
+            & > .message-list {
+                max-height: 80vh;
+            }
+        }
     }
 
     .session-feed {
