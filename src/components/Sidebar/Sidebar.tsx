@@ -117,11 +117,11 @@ async function filterSessionsAndEvents(
         const search = _search.toLowerCase();
 
         const sessions: Array<ProgramSession> = removeNull(await Promise.all(allSessions.map(async x => {
-            const trackName = (await x.track).name;
+            // const trackName = (await x.track).name;
             const sessionTitle = x.title;
 
-            if (!!trackName.toLowerCase().match(search)?.length
-                || !!sessionTitle.toLowerCase().match(search)?.length) {
+            if (// !!trackName.toLowerCase().match(search)?.length ||
+                !!sessionTitle.toLowerCase().match(search)?.length) {
                 return x;
             }
             return null;
@@ -130,14 +130,15 @@ async function filterSessionsAndEvents(
         const events: Array<ProgramSessionEvent> = removeNull(await Promise.all(allEvents.map(async x => {
             const item = await x.item;
             const itemTitle = item.title;
-            const authorNames = (await item.authorPerons).map(y => y.name);
-            const trackName = (await x.track).name;
-            const sessionTitle = (await x.session).title;
+            // const authorNames = (await item.authorPerons).map(y => y.name);
+            // const trackName = (await x.track).name;
+            // const sessionTitle = (await x.session).title;
 
             if (!!itemTitle.toLowerCase().match(search)?.length
-                || !!trackName.toLowerCase().match(search)?.length
-                || !!sessionTitle.toLowerCase().match(search)?.length
-                || authorNames.reduce<boolean>((acc, y) => acc || (!!y.toLowerCase().match(search)?.length), false)) {
+                // || !!trackName.toLowerCase().match(search)?.length
+                // || !!sessionTitle.toLowerCase().match(search)?.length
+                // || authorNames.reduce<boolean>((acc, y) => acc || (!!y.toLowerCase().match(search)?.length), false)
+            ) {
                 return x;
             }
             return null;
@@ -1220,7 +1221,7 @@ export default function Sidebar(props: Props) {
 
             roomsExpander
                 = <MenuExpander
-                    title="Rooms"
+                    title="Breakout Rooms"
                     isOpen={state.roomsIsOpen}
                     buttons={roomsButtons}
                     onOpenStateChange={() => dispatchUpdate({ action: "setRoomsIsOpen", isOpen: !state.roomsIsOpen })}
