@@ -1243,7 +1243,7 @@ export default function Sidebar(props: Props) {
         }
         else {
             program = <>
-                {state.sessions && state.events ? <span className="menu-group">No events to show.</span> : <LoadingSpinner />}
+                {state.sessions && state.events ? <span className="menu-group">No upcoming events in the next 2 hours.</span> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-program",
                     element: <MenuItem title="View whole program" label="Whole program" icon={<i className="fas fa-globe-europe"></i>} action="/program" bold={true} />
