@@ -458,7 +458,6 @@ export default function App() {
     useEffect(() => {
         if (chatReady) {
             const mChat = Chat.instance();
-            console.log(`6: ${appState.announcementsChannelSID}`);
             if (mChat && appState.announcementsChannelSID) {
                 const channelSid = appState.announcementsChannelSID;
                 const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
