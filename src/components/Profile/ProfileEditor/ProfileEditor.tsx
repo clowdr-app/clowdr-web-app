@@ -177,6 +177,7 @@ export default function ProfileEditor(props: Props) {
                     "url"
                 )}
                 <label htmlFor="flairs">Flairs</label>
+                <p>Click a flair to toggle it on or off. Highlighted flairs will be shown on your profile.</p>
                 <FlairInput name="flairs" flairs={modifiedFlairs} setFlairs={setModifiedFlairs} disabled={isSaving} />
                 <label htmlFor="bio">Bio</label>
                 <textarea
@@ -194,7 +195,7 @@ export default function ProfileEditor(props: Props) {
                         disabled={isFormDirty}
                         title={isFormDirty ? "Please save your profile info." : undefined}
                         onClick={props.setViewing}
-                    >View</button>
+                    >Preview</button>
                     <AsyncButton content="Save" action={saveProfile} setIsRunning={setIsSaving} />
                 </div>
             </form>
