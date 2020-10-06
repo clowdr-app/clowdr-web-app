@@ -32,6 +32,7 @@ export default function NewChat(props: Props) {
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
     const [title, setTitle] = useState<string>("");
     const [isPublic, setIsPublic] = useState<boolean>(!props.dmUserProfileId);
+    const [isCreating, setIsCreating] = useState<boolean>(false);
 
     useHeading("New chat");
 
@@ -106,6 +107,7 @@ export default function NewChat(props: Props) {
             name="is-public"
             defaultChecked={!props.dmUserProfileId}
             onChange={(ev) => setIsPublic(ev.target.checked)}
+            disabled={isCreating}
         />
     </>;
     const invitesEl = <>
@@ -118,6 +120,7 @@ export default function NewChat(props: Props) {
                 options={allUsers ?? []}
                 value={invites ?? []}
                 onChange={setInvites}
+                disabled={isCreating}
             />
         </div>
     </>;
@@ -130,11 +133,16 @@ export default function NewChat(props: Props) {
                 placeholder="Title of the chat"
                 maxLength={25}
                 onChange={(ev) => setTitle(ev.target.value)}
+                disabled={isCreating}
             />
         </>
         : <></>;
     const createButton =
-        <AsyncButton action={(ev) => doCreateChat(ev)} disabled={!inputValid()} content="Create chat" />;
+        <AsyncButton
+            action={(ev) => doCreateChat(ev)}
+            disabled={!inputValid()}
+            setIsRunning={setIsCreating}
+            content="Create chat" />;
 
     return newChannelSID
         ? <Redirect to={`/chat/${newChannelSID}`} />
