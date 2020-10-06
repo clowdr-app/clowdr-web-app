@@ -1139,7 +1139,7 @@ export default function Sidebar(props: Props) {
             }
             else {
                 chatEl = <>
-                    {state.allChats ? <span className="menu-group">No chats to show.</span> : <LoadingSpinner />}
+                    {state.allChats ? <></> : <LoadingSpinner />}
                     <MenuGroup items={[{
                         key: "whole-chat",
                         element: <MenuItem title="View all chats" label="All chats" icon={<i className="fas fa-globe-europe"></i>} action="/chat" bold={true} />
@@ -1210,7 +1210,7 @@ export default function Sidebar(props: Props) {
 
             if (noRooms) {
                 roomsEl = <>
-                    {state.allRooms ? <span className="menu-group">No rooms to show.</span> : <LoadingSpinner />}
+                    {state.allRooms ? <></> : <LoadingSpinner />}
                     <MenuGroup items={[{
                         key: "whole-rooms",
                         element: <MenuItem title="View all rooms" label="All rooms" icon={<i className="fas fa-globe-europe"></i>} action="/room" bold={true} />
