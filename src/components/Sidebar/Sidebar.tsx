@@ -1233,7 +1233,7 @@ export default function Sidebar(props: Props) {
         if (state.sessions && state.events &&
             (state.filteredSessions.length > 0 || state.filteredEvents.length > 0)) {
             const programTimeBoundaries: Array<number> = [
-                0, 0, 3, 15, 30, 60, 120
+                0.1, 0.5, 3, 15, 30, 60, 120
             ];
 
             program = <Program

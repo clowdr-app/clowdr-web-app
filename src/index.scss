@@ -24,20 +24,22 @@ body {
     input[type=submit],
     .button {
         display   : inline-block;
-        border    : 1px solid $gray-3;
+        border    : 1px solid $gray-1;
         background: none;
         line-height: 3ex;
 
-        color     : $gray-3;
+        color     : $gray-1;
         padding   : 0.3em;
         margin    : 0%;
         box-sizing: border-box;
 
         cursor: pointer;
+        background-color: #efffef;
 
         &:hover {
             text-decoration : none;
-            background-color: #f4f4f4;
+            background-color: #003000;
+            color: #fff;
         }
 
         i {

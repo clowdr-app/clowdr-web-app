@@ -67,6 +67,9 @@
 
     min-height: 0;
 
+    .button,
+    button,
+    input[type=button],
     .button:hover,
     button:hover,
     input[type=button]:hover {
