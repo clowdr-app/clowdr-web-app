@@ -12,7 +12,7 @@ function addNotification(content: string | JSX.Element, action?: { url: string, 
         {
             className: "clowdr-notification",
             hideProgressBar: true,
-            delay: 8000
+            autoClose: 8000
         });
 }
 
@@ -26,7 +26,7 @@ function addError(content: string) {
             className: "clowdr-error-notification",
             hideProgressBar: true,
             position: 'bottom-center',
-            delay: 8000
+            autoClose: 8000
         }
     )
 }
