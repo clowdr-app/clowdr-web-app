@@ -12,6 +12,7 @@ import MultiSelect from "react-multi-select-component";
 import "./NewChat.scss";
 import { addError } from "../../../classes/Notifications/Notifications";
 import AsyncButton from "../../AsyncButton/AsyncButton";
+import { ActionButton } from "../../../contexts/HeadingContext";
 
 interface Props {
     dmUserProfileId?: string;
@@ -34,7 +35,20 @@ export default function NewChat(props: Props) {
     const [isPublic, setIsPublic] = useState<boolean>(!props.dmUserProfileId);
     const [isCreating, setIsCreating] = useState<boolean>(false);
 
-    useHeading("New chat");
+    const actionButtons: Array<ActionButton> = [];
+    if (props.dmUserProfileId) {
+        if (invites && invites.length === 1) {
+            actionButtons.push({
+                label: `Go to ${invites[0].label}'s profile`,
+                action: `/profile/${invites[0].value}`,
+                icon: <i className="fas fa-eye"></i>
+            });
+        }
+    }
+    useHeading({
+        title: "New chat",
+        buttons: actionButtons
+    });
 
     // Fetch DM user profile if it exists
     useSafeAsync(async () => {
