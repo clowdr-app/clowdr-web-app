@@ -98,6 +98,13 @@ async function handleCreateRegistration(req) {
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
+            if ("roleName" in spec) {
+                if (!("newRole" in spec)) {
+                    spec.newRole = spec.roleName;
+                }
+                delete spec.roleName;
+            }
+            spec.newRole = spec.newRole.toLowerCase();
             const result = await createRegistration(spec);
             if (result === true) {
                 return true;
