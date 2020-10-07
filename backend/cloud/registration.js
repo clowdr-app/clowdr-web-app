@@ -61,6 +61,8 @@ const createRegistrationSchema = {
  * @returns {Promise<Parse.Object>} - The new Registration
  */
 async function createRegistration(data) {
+    data.email = data.email.toLowerCase();
+
     let existingQ = new Parse.Query("Registration");
     existingQ.equalTo("conference", data.conference);
     existingQ.equalTo("email", data.email);
@@ -169,7 +171,7 @@ async function sendRegistrationEmails(data) {
     let sendMessagePromises = [];
 
     for (let registration of registrations) {
-        let email = registration.get("email");
+        let email = registration.get("email").toLowerCase();
         let link = `${config.REACT_APP_FRONTEND_URL}/register/${data.conference.id}/${registration.id}/${email}`;
 
         data.conference = await data.conference.fetch({ useMasterKey: true });

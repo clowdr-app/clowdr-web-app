@@ -120,6 +120,7 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
                 else {
                     results[data[keyName]] = existing.id;
                 }
+                console.log(` - Already exists: ${existing.id}`);
                 shouldCreate = false;
             }
         }

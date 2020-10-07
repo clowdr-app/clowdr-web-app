@@ -21,7 +21,7 @@ const { generateRoleDBName } = require("./role");
 
 async function getUserByEmail(email) {
     let query = new Parse.Query(Parse.User);
-    query.equalTo("email", email);
+    query.equalTo("email", email.toLowerCase());
     try {
         return await query.first({ useMasterKey: true });
     }
@@ -215,7 +215,7 @@ async function handleRegisterUser(request) {
             throw new Error("Registration: registration is not valid for the chosen conference.");
         }
 
-        let email = registration.get("email");
+        let email = registration.get("email").toLowerCase();
         let user = await getUserByEmail(email);
 
         if (user) {
@@ -288,7 +288,7 @@ async function handleCreateUser(request) {
             // TODO: Do we want authors to be auto-watching their items & content feeds (video rooms/text chats)
             // TODO: Give authors write access to their program items/events
 
-            let user = await getUserByEmail(params.email);
+            let user = await getUserByEmail(params.email.toLowerCase());
             if (user) {
                 await Parse.User.logIn(user.get("username"), params.password, { useMasterKey: true }).catch(_ => {
                     throw new Error(`Registration: error matching user details.`)
@@ -297,7 +297,7 @@ async function handleCreateUser(request) {
                 return true;
             }
             else {
-                let user = await createUser(params.email, params.password);
+                let user = await createUser(params.email.toLowerCase(), params.password);
 
                 if (!user) {
                     throw new Error("Signup: failed to create user.");
@@ -335,7 +335,7 @@ const startResetPasswordSchema = {
  */
 async function startResetPassword(data) {
     try {
-        let email = await data.user.get("email");
+        let email = await data.user.get("email").toLowerCase();
         if (data.user && email) {
             let token = nanoid();
             let dateAndToken = `${new Date().getTime()},${token}`;
@@ -358,15 +358,15 @@ async function handleStartResetPassword(req) {
     const requestValidation = validateRequest(startResetPasswordSchema, params);
     if (requestValidation.ok) {
         let confId = params.conference;
-        let user = await getUserByEmail(params.email)
+        let user = await getUserByEmail(params.email.toLowerCase())
         const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager", "attendee"]);
 
         if (!authorized) {
-            console.log(`Password reset not triggered for ${params.email}`);
+            console.log(`Password reset not triggered for ${params.email.toLowerCase()}`);
             return;
         }
 
-        console.log(`Password reset triggered for ${params.email}`);
+        console.log(`Password reset triggered for ${params.email.toLowerCase()}`);
         let spec = {
             user,
             conference: new Parse.Object("Conference", { id: confId }),
@@ -392,13 +392,13 @@ async function sendPasswordResetEmail(confId, email, token) {
 
     sgMail.setApiKey(config.SENDGRID_API_KEY);
 
-    let link = `${config.REACT_APP_FRONTEND_URL}/resetPassword/${token}/${email}`;
+    let link = `${config.REACT_APP_FRONTEND_URL}/resetPassword/${token}/${email.toLowerCase()}`;
 
-    let messageText = `A password reset has been request for your Clowdr account registered to ${email}.`;
+    let messageText = `A password reset has been request for your Clowdr account registered to ${email.toLowerCase()}.`;
     let greeting = `Best wishes from the Clowdr team`;
 
     let message = {
-        to: email,
+        to: email.toLowerCase(),
         from: config.SENDGRID_SENDER,
         subject: `Password reset for your Clowdr profile`,
         text: `${messageText}\n\nReset your password at ${link}\n\n${greeting}`,
@@ -407,12 +407,12 @@ async function sendPasswordResetEmail(confId, email, token) {
         <p>${greeting}</p>`
     };
 
-    console.log(`Sending email to ${email}`);
+    console.log(`Sending email to ${email.toLowerCase()}`);
 
     try {
         await sgMail.send(message);
     } catch (e) {
-        console.log(`Sending password reset to ${email} failed`, e);
+        console.log(`Sending password reset to ${email.toLowerCase()} failed`, e);
     }
 }
 
@@ -437,7 +437,7 @@ const resetPasswordSchema = {
  */
 async function resetPassword(data) {
     try {
-        let user = await getUserByEmail(data.email);
+        let user = await getUserByEmail(data.email.toLowerCase());
         let dateAndToken = user.get("passwordResetToken");
 
         let [millis, token] = dateAndToken.split(',');
@@ -463,7 +463,7 @@ async function handleResetPassword(req) {
 
     const requestValidation = validateRequest(resetPasswordSchema, params);
     if (requestValidation.ok) {
-        console.log(`Resetting password for ${params.email}`);
+        console.log(`Resetting password for ${params.email.toLowerCase()}`);
         await resetPassword(params);
     } else {
         throw new Error(requestValidation.error);

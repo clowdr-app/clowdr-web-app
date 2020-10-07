@@ -515,7 +515,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                     emailVerified: true,
                     passwordSet: true,
                     username: params.admin.username,
-                    email: params.admin.email
+                    email: params.admin.email.toLowerCase()
                 }, {
                     useMasterKey: true
                 });
