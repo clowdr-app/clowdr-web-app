@@ -1,43 +1,63 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import Parse from "parse";
+import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { addError } from "../../../../classes/Notifications/Notifications";
 import useHeading from "../../../../hooks/useHeading";
 import "./ForgotPassword.scss";
+import useConference from "../../../../hooks/useConference";
 
 interface ForgotPasswordProps {
     initialEmail?: string;
 }
 
+interface FormData {
+    email: string;
+}
+
+type State = "unsubmitted" | "submitted" | "finished";
+
 export default function ForgotPassword(props: ForgotPasswordProps) {
-    const [email, setEmail] = useState<string | undefined>();
-    const [submitted, setSubmitted] = useState<boolean>(false);
+    const { register, handleSubmit } = useForm<FormData>();
+    const [state, setState] = useState<State>("unsubmitted");
+    const conference = useConference();
 
     useHeading("Reset your password");
 
-    useEffect(() => {
-        setEmail(props.initialEmail);
-    }, [props.initialEmail]);
+    async function onSubmit(data: FormData) {
+        setState("submitted");
 
-    const emailInput = <input
+        try {
+            await Parse.Cloud.run("user-start-reset-password", { email: data.email, conference: conference.id });
+            setState("finished");
+        } catch (e) {
+            addError("Could not start password reset.");
+            setState("unsubmitted");
+        }
+    }
+
+    const emailInput = <>
+    <label htmlFor="email" hidden={true}>Email</label>
+    <input
         type="email"
         name="email"
         aria-label="Email"
-        value={email}
+        defaultValue={props.initialEmail}
         placeholder={"Email"}
         required={true}
-    />
+        ref={register({ required: true })} />
+    </>
 
     const formButtons = <div className="form-buttons">
         <input
-            className="reset-password"
             type="submit"
-            aria-label="Reset password"
             value="Reset password" />
         <Link className="back-to-sign-in" to="/">Back to sign in</Link>
     </div>;
 
     const form = <>
         <p>Forgotten your password? Enter your email address to receive an email containing a link to reset your password.</p>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
             {emailInput}
             {formButtons}
         </form>
@@ -45,18 +65,24 @@ export default function ForgotPassword(props: ForgotPasswordProps) {
 
     const afterSubmit = <>
         <p>
-            A password reset message has been sent to {email} if that email is registered.
+            A password reset message has been sent.
         </p>
         <Link className="back-to-sign-in" to="/">Back to sign in</Link>
     </>
 
-    async function onSubmit() {
-        setSubmitted(true);
+    function contents() {
+        switch (state) {
+            case "unsubmitted":
+            case "submitted":
+                return form;
+            case "finished":
+                return afterSubmit;
+        }
     }
 
     const page = <section aria-labelledby="page-title" tabIndex={0} className="forgot-password">
         <h1>Reset your password</h1>
-        { submitted ? afterSubmit : form }
+        {contents()}
 
     </section>
 

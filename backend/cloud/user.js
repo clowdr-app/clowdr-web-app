@@ -5,6 +5,9 @@
 // TODO: Before save: If banning a user, remove their ACLs for every record related to the conference
 
 const Twilio = require("twilio");
+const { nanoid } = require("nanoid");
+const sgMail = require("@sendgrid/mail");
+const { isUserInRoles } = require("./role");
 const {
     getConferenceById,
     getConferenceConfigurationByKey
@@ -12,6 +15,8 @@ const {
 const {
     getRegistrationById
 } = require("./registration");
+const { validateRequest } = require("./utils");
+const Config = require("./config")
 const { generateRoleDBName } = require("./role");
 
 async function getUserByEmail(email) {
@@ -308,6 +313,161 @@ async function handleCreateUser(request) {
     return false;
 }
 Parse.Cloud.define("user-create", handleCreateUser);
+
+/**
+ * @typedef {Object} StartResetPasswordSpec
+ * @property {Pointer} user
+ * @property {Pointer} conference
+ */
+
+const startResetPasswordSchema = {
+    email: "string",
+    conference: "string",
+};
+
+/**
+ * Trigger the password reset process.
+ *
+ * @param {StartResetPasswordSpec} data
+ * @returns {Promise<void>}
+ */
+async function startResetPassword(data) {
+    try {
+        let email = await data.user.get("email");
+        if (data.user && email) {
+            let token = nanoid();
+            let dateAndToken = `${new Date().getTime()},${token}`;
+            await data.user.save("passwordResetToken", dateAndToken, { useMasterKey: true });
+            await sendPasswordResetEmail(data.conference.id, email, token);
+        } else {
+            console.error(`Failed to retrieve email for user ${data.user.id}`);
+        }
+    } catch (e) {
+        throw new Error("Failed to start password reset.");
+    }
+}
+
+/**
+ * @param {Parse.Cloud.FunctionRequest} req
+ */
+async function handleStartResetPassword(req) {
+    let { params } = req
+
+    const requestValidation = validateRequest(startResetPasswordSchema, params);
+    if (requestValidation.ok) {
+        let confId = params.conference;
+        let user = await getUserByEmail(params.email)
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager", "attendee"]);
+
+        if (!authorized) {
+            console.log(`Password reset not triggered for ${params.email}`);
+            return;
+        }
+
+        console.log(`Password reset triggered for ${params.email}`);
+        let spec = {
+            user,
+            conference: new Parse.Object("Conference", { id: confId }),
+        };
+        await startResetPassword(spec);
+    } else {
+        throw new Error(requestValidation.error);
+    }
+}
+Parse.Cloud.define("user-start-reset-password", handleStartResetPassword)
+
+/**
+ * @param {string} confId
+ * @param {string} email
+ * @param {string} token
+ */
+async function sendPasswordResetEmail(confId, email, token) {
+    let config = await Config.getConfig(confId);
+
+    if (!config.SENDGRID_API_KEY) {
+        throw new Error("No SendGrid API key available.")
+    }
+
+    sgMail.setApiKey(config.SENDGRID_API_KEY);
+
+    let link = `${config.REACT_APP_FRONTEND_URL}/resetPassword/${token}/${email}`;
+
+    let messageText = `A password reset has been request for your Clowdr account registered to ${email}.`;
+    let greeting = `Best wishes from the Clowdr team`;
+
+    let message = {
+        to: email,
+        from: config.SENDGRID_SENDER,
+        subject: `Password reset for your Clowdr profile`,
+        text: `${messageText}\n\nReset your password at ${link}\n\n${greeting}`,
+        html: `<p>${messageText}</p>
+        <p><a href="${link}">Reset your password</a></p>
+        <p>${greeting}</p>`
+    };
+
+    console.log(`Sending email to ${email}`);
+
+    try {
+        await sgMail.send(message);
+    } catch (e) {
+        console.log(`Sending password reset to ${email} failed`, e);
+    }
+}
+
+/**
+ * @typedef {Object} ResetPasswordSpec
+ * @property {string} email
+ * @property {string} token
+ * @property {string} newPassword
+ */
+
+const resetPasswordSchema = {
+    email: "string",
+    token: "string",
+    newPassword: "string",
+};
+
+/**
+ * Reset a user's password.
+ *
+ * @param {ResetPasswordSpec} data
+ * @returns {Promise<void>}
+ */
+async function resetPassword(data) {
+    try {
+        let user = await getUserByEmail(data.email);
+        let dateAndToken = user.get("passwordResetToken");
+
+        let [millis, token] = dateAndToken.split(',');
+        let timeSinceTokenIssued = new Date() - new Date(parseInt(millis, 10));
+
+        if (86400000 > timeSinceTokenIssued && token === data.token) {
+            user.setPassword(data.newPassword);
+            user.unset("passwordResetToken");
+            await user.save(null, { useMasterKey: true });
+        } else {
+            throw new Error("Failed to reset password.");
+        }
+    } catch (e) {
+        throw new Error("Failed to reset password.");
+    }
+}
+
+/**
+ * @param {Parse.Cloud.FunctionRequest} req
+ */
+async function handleResetPassword(req) {
+    let { params } = req
+
+    const requestValidation = validateRequest(resetPasswordSchema, params);
+    if (requestValidation.ok) {
+        console.log(`Resetting password for ${params.email}`);
+        await resetPassword(params);
+    } else {
+        throw new Error(requestValidation.error);
+    }
+}
+Parse.Cloud.define("user-reset-password", handleResetPassword)
 
 // TODO: When upgrading a user to an admin, iterate over all their twilio channels
 //       and update their role SID. Also, update their service-level role SID.

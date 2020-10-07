@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "command": "npm run create-conference1",
+            "name": "Debug create-conference1 (local)",
+            "request": "launch",
+            "type": "node-terminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "command": "npm start",
             "name": "Debug parse-server (local)",
             "request": "launch",
