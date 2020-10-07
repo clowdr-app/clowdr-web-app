@@ -80,11 +80,8 @@ export default function Sidebar(props: Props) {
             <div className="sidebar-scrollable">
                 <div className="menu">
                     {mainMenuGroup}
-
                     {chatsExpander}
-
                     {roomsExpander}
-
                     {programExpander}
                 </div>
 

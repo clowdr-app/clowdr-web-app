@@ -358,5 +358,5 @@ async function main() {
         const events = await createObjects(confId, adminSessionToken, eventsData, "event", "startTime");
     }
 
-    const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name", "Registration", "name");
+    const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name", "Registration", "email");
 }
