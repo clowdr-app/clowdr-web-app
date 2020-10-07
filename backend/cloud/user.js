@@ -109,7 +109,7 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
         realName: fullName,
         displayName: fullName,
         dataConsentGiven: false, // TODO: Require from sign up form
-        pronouns: ["they", "them"],
+        pronouns: [],
         tags: [],
         flairs: []
     });

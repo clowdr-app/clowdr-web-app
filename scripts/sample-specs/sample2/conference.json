@@ -11,7 +11,7 @@
         "password": "admin",
         "email": "admin@sc2.com",
         "realName": "Sample Admin 2",
-        "pronouns": ["they", "them"],
+        "pronouns": [],
         "displayName": "Admin",
         "country": "Middle Earth"
     }
