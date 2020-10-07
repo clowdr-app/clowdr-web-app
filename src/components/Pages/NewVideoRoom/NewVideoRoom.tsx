@@ -6,6 +6,7 @@ import useMaybeVideo from "../../../hooks/useMaybeVideo";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import { addError } from "../../../classes/Notifications/Notifications";
 import "./NewVideoRoom.scss";
+import useUserRoles from "../../../hooks/useUserRoles";
 
 export default function NewVideoRoom() {
     const mVideo = useMaybeVideo();
@@ -15,6 +16,7 @@ export default function NewVideoRoom() {
     const [capacity, setCapacity] = useState<number>(10);
     const [isPersistent, setIsPersistent] = useState<boolean>(false);
     const [isPrivate, setIsPrivate] = useState<boolean>(false);
+    const { isAdmin, isManager } = useUserRoles();
 
     useHeading("New room");
 
@@ -83,7 +85,7 @@ export default function NewVideoRoom() {
                 {capacityEl}<br />
                 {titleEl}<br />
                 {privateEl}<br />
-                {persistentEl}<br />
+                {isAdmin || isManager ? <>{persistentEl}<br/></> : <></>}
                 <div className="submit-container">
                     {createButton}
                 </div>
