@@ -43,7 +43,7 @@ export default function ProfileView(props: Props) {
             <div className="main-info">
                 <div className="name">
                     <span className="display-name">{p.displayName}</span>
-                    <span className="pronouns">({p.pronouns.reduce((x, y) => `${x}/${y}`)})</span>
+                    {p.pronouns.length > 0 ? <span className="pronouns">({p.pronouns.reduce((x, y) => `${x}/${y}`, "")})</span> : <></>}
                     {p.realName !== p.displayName
                         ? <div className="real-name">{p.realName}</div>
                         : <></>}
