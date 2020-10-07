@@ -71,6 +71,10 @@
 
     min-height: 0;
 
+    &.closed {
+        display: none;
+    }
+
     .button,
     button,
     input[type=button],

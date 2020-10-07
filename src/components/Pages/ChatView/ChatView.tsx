@@ -14,7 +14,7 @@ import useUserRoles from "../../../hooks/useUserRoles";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-import { computeChatDisplayName, upgradeChatDescriptor } from "../../Sidebar/Sidebar";
+import { computeChatDisplayName, upgradeChatDescriptor } from "../../Sidebar/Groups/ChatGroup";
 import "./ChatView.scss";
 
 interface Props {
