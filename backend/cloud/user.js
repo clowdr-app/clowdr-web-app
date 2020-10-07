@@ -185,9 +185,9 @@ async function getProfileOfUser(user, confId) {
  * @param {Parse.Cloud.FunctionRequest<RegisterUserParams>} request
  */
 async function handleRegisterUser(request) {
-    try {
         let { params } = request;
 
+    try {
         if (!params.registrationId
             || !params.conferenceId
             || !params.fullName
@@ -240,7 +240,7 @@ async function handleRegisterUser(request) {
         return true;
     }
     catch (e) {
-        console.error("Error during registration", e);
+        console.error(`Error during registration of ${params.registrationId}`, e);
     }
 
     return false;
