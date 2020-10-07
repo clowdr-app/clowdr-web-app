@@ -69,7 +69,7 @@ async function getUserProfileById(userProfileId, confId) {
 
 async function getRoleByName(roleName, conference) {
     let query = new Parse.Query("_Role");
-    query.equalTo("name", generateRoleDBName(conference, roleName));
+    query.equalTo("name", generateRoleDBName(conference.id, roleName));
     query.equalTo("conference", conference);
     try {
         return await query.first({ useMasterKey: true });
