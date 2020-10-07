@@ -1,5 +1,4 @@
 import React, { useEffect, useReducer } from 'react';
-import './ChatGroup.scss';
 import useConference from '../../../hooks/useConference';
 import useMaybeUserProfile from '../../../hooks/useMaybeUserProfile';
 import MenuExpander, { ButtonSpec } from "../Menu/MenuExpander";
@@ -264,7 +263,7 @@ interface Props {
     minSearchLength: number
 }
 
-export default function ChatGroup(props: Props) {
+export default function ChatsGroup(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
     const mChat = useMaybeChat();

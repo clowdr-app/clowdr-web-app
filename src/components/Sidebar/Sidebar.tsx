@@ -8,7 +8,7 @@ import MenuExpander, { ButtonSpec } from "./Menu/MenuExpander";
 import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
 import Program from './Program';
 import MenuItem from './Menu/MenuItem';
-import { ProgramSession, ProgramSessionEvent, UserProfile, VideoRoom } from '@clowdr-app/clowdr-db-schema';
+import { ProgramSession, ProgramSessionEvent } from '@clowdr-app/clowdr-db-schema';
 import { makeCancelable, removeNull } from '@clowdr-app/clowdr-db-schema/build/Util';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
 import useDataSubscription from '../../hooks/useDataSubscription';
@@ -16,7 +16,8 @@ import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
 import useUserRoles from '../../hooks/useUserRoles';
 import { handleParseFileURLWeirdness } from '../../classes/Utils';
 import useSafeAsync from '../../hooks/useSafeAsync';
-import ChatGroup from './Groups/ChatGroup';
+import ChatsGroup from './Groups/ChatsGroup';
+import RoomsGroup from './Groups/RoomsGroup';
 
 interface Props {
     open: boolean,
@@ -25,29 +26,18 @@ interface Props {
 }
 
 type SidebarTasks
-    = "loadingSessionsAndEvents"
-    | "loadingAllRooms";
-
-type FullRoomInfo = {
-    room: VideoRoom,
-    participants: Array<UserProfile>,
-    isFeedRoom: boolean
-};
+    = "loadingSessionsAndEvents";
 
 interface SidebarState {
     tasks: Set<SidebarTasks>;
 
-    roomsIsOpen: boolean;
     programIsOpen: boolean;
 
-    roomSearch: string | null;
     programSearch: string | null;
 
-    allRooms: Array<FullRoomInfo> | null
     sessions: Array<ProgramSession> | null;
     events: Array<ProgramSessionEvent> | null;
 
-    filteredRooms: Array<FullRoomInfo>;
     filteredSessions: Array<ProgramSession>;
     filteredEvents: Array<ProgramSessionEvent>;
 }
@@ -55,27 +45,15 @@ interface SidebarState {
 type SidebarUpdate
     = { action: "updateSessions"; sessions: Array<ProgramSession> }
     | { action: "updateEvents"; events: Array<ProgramSessionEvent> }
-
     | { action: "updateFilteredSessions"; sessions: Array<ProgramSession> }
     | { action: "updateFilteredEvents"; events: Array<ProgramSessionEvent> }
-
-    | { action: "updateAllRooms"; rooms: Array<FullRoomInfo> }
-    | { action: "updateFilteredRooms"; rooms: Array<FullRoomInfo> }
-
     | { action: "deleteSessions"; sessions: Array<string> }
     | { action: "deleteEvents"; events: Array<string> }
-
-    | { action: "deleteRooms"; rooms: Array<string> }
-
-    | { action: "searchRooms"; search: string | null }
     | { action: "searchProgram"; search: string | null }
-
-    | { action: "setRoomsIsOpen"; isOpen: boolean }
     | { action: "setProgramIsOpen"; isOpen: boolean }
     ;
 
 const minSearchLength = 3;
-const maxRoomParticipantsToList = 6;
 
 async function filterSessionsAndEvents(
     allSessions: Array<ProgramSession>,
@@ -136,56 +114,26 @@ async function filterSessionsAndEvents(
     }
 }
 
-async function filterRooms(
-    allRooms: Array<FullRoomInfo>,
-    _search: string | null): Promise<Array<FullRoomInfo>> {
-    if (_search && _search.length >= minSearchLength) {
-        const search = _search.toLowerCase();
-        return allRooms.filter(x =>
-            x.room.name.toLowerCase().includes(search) ||
-            x.participants.some(y => y.displayName.includes(search))
-        );
-    }
-    else {
-        return allRooms;
-    }
-}
-
 function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | Array<SidebarUpdate>): SidebarState {
     const nextState: SidebarState = {
         tasks: new Set(currentState.tasks),
-
-        roomsIsOpen: currentState.roomsIsOpen,
         programIsOpen: currentState.programIsOpen,
-
-        roomSearch: currentState.roomSearch,
         programSearch: currentState.programSearch,
-
-        allRooms: currentState.allRooms,
         sessions: currentState.sessions,
         events: currentState.events,
-
-        filteredRooms: currentState.filteredRooms,
         filteredSessions: currentState.filteredSessions,
         filteredEvents: currentState.filteredEvents
     };
 
     let sessionsOrEventsUpdated = false;
-    let allRoomsUpdated = false;
 
     function doUpdate(update: SidebarUpdate) {
         switch (update.action) {
             case "searchProgram":
                 nextState.programSearch = update.search?.length ? update.search : null;
                 break;
-            case "searchRooms":
-                nextState.roomSearch = update.search?.length ? update.search : null;
-                break;
             case "setProgramIsOpen":
                 nextState.programIsOpen = update.isOpen;
-                break;
-            case "setRoomsIsOpen":
-                nextState.roomsIsOpen = update.isOpen;
                 break;
             case "updateEvents":
                 {
@@ -227,26 +175,6 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                     sessionsOrEventsUpdated = true;
                 }
                 break;
-            case "updateAllRooms":
-                {
-                    const changes = [...update.rooms];
-                    const updatedIds = changes.map(x => x.room.id);
-                    nextState.allRooms = nextState.allRooms?.map(x => {
-                        const idx = updatedIds.indexOf(x.room.id);
-                        if (idx > -1) {
-                            const y = changes[idx];
-                            updatedIds.splice(idx, 1);
-                            changes.splice(idx, 1);
-                            return y;
-                        }
-                        else {
-                            return x;
-                        }
-                    }) ?? null;
-                    nextState.allRooms = nextState.allRooms?.concat(changes) ?? changes;
-                    allRoomsUpdated = true;
-                }
-                break;
             case "deleteEvents":
                 nextState.events = nextState.events?.filter(x => !update.events.includes(x.id)) ?? null;
                 sessionsOrEventsUpdated = true;
@@ -255,15 +183,11 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
                 nextState.sessions = nextState.sessions?.filter(x => !update.sessions.includes(x.id)) ?? null;
                 sessionsOrEventsUpdated = true;
                 break;
-
             case "updateFilteredSessions":
                 nextState.filteredSessions = update.sessions;
                 break;
             case "updateFilteredEvents":
                 nextState.filteredEvents = update.events;
-                break;
-            case "updateFilteredRooms":
-                nextState.filteredRooms = update.rooms;
                 break;
         }
     }
@@ -285,15 +209,6 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
         }
     }
 
-    if (allRoomsUpdated) {
-        if (nextState.allRooms) {
-            nextState.tasks.delete("loadingAllRooms");
-        }
-        else {
-            nextState.filteredRooms = [];
-        }
-    }
-
     return nextState;
 }
 
@@ -303,21 +218,16 @@ export default function Sidebar(props: Props) {
     const burgerButtonRef = useRef<HTMLButtonElement>(null);
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
         tasks: new Set([
-            "loadingSessionsAndEvents",
-            "loadingAllRooms"
+            "loadingSessionsAndEvents"
         ] as SidebarTasks[]),
 
-        roomsIsOpen: true,
         programIsOpen: true,
 
-        roomSearch: null,
         programSearch: null,
 
-        allRooms: null,
         sessions: null,
         events: null,
 
-        filteredRooms: [],
         filteredSessions: [],
         filteredEvents: []
     });
@@ -375,48 +285,6 @@ export default function Sidebar(props: Props) {
         return cancel;
     }, [conf.id]);
 
-    // Initial fetch of rooms
-    useEffect(() => {
-        let cancel: () => void = () => { };
-
-        async function updateRooms() {
-            try {
-                const promise: Promise<Array<FullRoomInfo>>
-                    = VideoRoom.getAll(conf.id).then(rooms => {
-                        return Promise.all(rooms.map(async room => {
-                            const [participants, feeds] = await Promise.all([room.participantProfiles, room.feeds]);
-                            const isFeedRoom = feeds.length > 0;
-                            return {
-                                room,
-                                participants,
-                                isFeedRoom
-                            };
-                        }));
-                    });
-                const wrappedPromise = makeCancelable(promise);
-                cancel = wrappedPromise.cancel;
-
-                const allRooms = await wrappedPromise.promise;
-
-                dispatchUpdate([
-                    {
-                        action: "updateAllRooms",
-                        rooms: allRooms
-                    }
-                ]);
-            }
-            catch (e) {
-                if (!e.isCanceled) {
-                    throw e;
-                }
-            }
-        }
-
-        updateRooms();
-
-        return cancel;
-    }, [conf.id]);
-
     // Refresh the view every few mins
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -464,37 +332,6 @@ export default function Sidebar(props: Props) {
         return cancel;
     }, [state.events, state.programSearch, state.sessions]);
 
-    // Update filtered room results
-    useEffect(() => {
-        let cancel: () => void = () => { };
-
-        async function updateFiltered() {
-            try {
-                const promise = makeCancelable(filterRooms(
-                    state.allRooms ?? [],
-                    state.roomSearch
-                ));
-                cancel = promise.cancel;
-                const filteredRooms = await promise.promise;
-
-                dispatchUpdate({
-                    action: "updateFilteredRooms",
-                    rooms: filteredRooms
-                });
-            }
-            catch (e) {
-                if (!e.isCanceled) {
-                    throw e;
-                }
-            }
-        }
-
-        updateFiltered();
-
-        return cancel;
-    }, [conf, conf.id, state.allRooms, state.roomSearch]);
-
-
     // Subscribe to program data events
 
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
@@ -527,33 +364,6 @@ export default function Sidebar(props: Props) {
         state.tasks.has("loadingSessionsAndEvents"),
         conf);
 
-    // Subscribe to room updates
-
-    const onRoomUpdated = useCallback(async function _onRoomUpdated(ev: DataUpdatedEventDetails<"VideoRoom">) {
-        const room = ev.object as VideoRoom;
-        const [participants, feeds] = await Promise.all([room.participantProfiles, room.feeds]);
-        const isFeedRoom = feeds.length > 0;
-        dispatchUpdate({
-            action: "updateAllRooms",
-            rooms: [{
-                room,
-                participants,
-                isFeedRoom
-            }]
-        });
-    }, []);
-
-    const onRoomDeleted = useCallback(function _onRoomDeleted(ev: DataDeletedEventDetails<"VideoRoom">) {
-        dispatchUpdate({ action: "deleteRooms", rooms: [ev.objectId] });
-    }, []);
-
-    useDataSubscription(
-        "VideoRoom",
-        onRoomUpdated,
-        onRoomDeleted,
-        state.tasks.has("loadingAllRooms"),
-        conf);
-
     const sideBarButton = <div className="sidebar-button">
         <button
             aria-label="Open Menu"
@@ -567,9 +377,6 @@ export default function Sidebar(props: Props) {
         </button>
     </div>;
 
-    // TODO: It may be useful to `useMemo` the rendered menu groups to stop
-    //       them interfering / re-rendering every time one of them changes
-
     const sideBarHeading = <h1 aria-level={1} className={conf.headerImage ? "img" : ""}>
         <Link to="/" aria-label="Conference homepage">
             {conf.headerImage ? <img src={handleParseFileURLWeirdness(conf.headerImage) ?? undefined} alt={conf.shortName} /> : conf.shortName}
@@ -581,27 +388,10 @@ export default function Sidebar(props: Props) {
     </div>
 
     let mainMenuGroup: JSX.Element = <></>;
-    const chatsExpander: JSX.Element = <ChatGroup minSearchLength={minSearchLength} />;
-    let roomsExpander: JSX.Element = <></>;
+    const chatsExpander: JSX.Element = <ChatsGroup minSearchLength={minSearchLength} />;
+    const roomsExpander: JSX.Element = <RoomsGroup minSearchLength={minSearchLength} />;
     let programExpander: JSX.Element = <></>;
 
-    const roomsButtons: Array<ButtonSpec> = [
-        {
-            type: "search", label: "Search all rooms", icon: "fa-search",
-            onSearch: (event) => {
-                dispatchUpdate({ action: "searchRooms", search: event.target.value });
-                return event.target.value;
-            },
-            onSearchOpen: () => {
-                dispatchUpdate({ action: "setRoomsIsOpen", isOpen: true });
-            },
-            onSearchClose: () => {
-                dispatchUpdate({ action: "searchRooms", search: null });
-            }
-        },
-        { type: "link", label: "Show all rooms", icon: "fa-globe-europe", url: "/room" },
-        { type: "link", label: "Create new room", icon: "fa-plus", url: "/room/new" }
-    ];
     const programButtons: Array<ButtonSpec> = [
         {
             type: "search", label: "Search whole program", icon: "fa-search",
@@ -632,109 +422,38 @@ export default function Sidebar(props: Props) {
         }
         mainMenuGroup = <MenuGroup items={mainMenuItems} />;
 
-        let roomsEl: JSX.Element = <></>;
-        let noRooms = true;
-        if (state.filteredRooms.length > 0) {
-            const roomSearchValid = state.roomSearch && state.roomSearch.length >= minSearchLength;
-            let activeRooms = state.filteredRooms.filter(x => x.participants.length > 0);
-            let inactiveRooms = state.filteredRooms.filter(x => x.participants.length === 0 && (roomSearchValid || !x.isFeedRoom));
-            activeRooms = activeRooms.sort((x, y) => x.room.name.localeCompare(y.room.name));
-            inactiveRooms = inactiveRooms.sort((x, y) => x.room.name.localeCompare(y.room.name));
+        let program: JSX.Element;
+        if (state.sessions && state.events &&
+            (state.filteredSessions.length > 0 || state.filteredEvents.length > 0)) {
+            const programTimeBoundaries: Array<number> = [
+                0.1, 0.5, 3, 15, 30, 60, 120
+            ];
 
-            noRooms = activeRooms.length === 0 && inactiveRooms.length === 0;
-
-            if (!noRooms) {
-                let roomMenuItems: MenuGroupItems = [];
-                roomMenuItems = roomMenuItems.concat(activeRooms.map(room => {
-                    const morePeopleCount = room.participants.length - maxRoomParticipantsToList;
-                    return {
-                        key: room.room.id,
-                        element: <MenuItem
-                            title={room.room.name}
-                            label={room.room.name}
-                            icon={< i className="fas fa-video" ></i >}
-                            action={`/room/${room.room.id}`} >
-                            <ul>
-                                {room.participants
-                                    .slice(0, Math.min(room.participants.length, maxRoomParticipantsToList))
-                                    .map(x => <li key={x.id}>{x.displayName}</li>)}
-                                {morePeopleCount > 0
-                                    ? <li
-                                        key="more-participants"
-                                        className="plus-bullet">
-                                        {morePeopleCount} more {morePeopleCount === 1 ? "person" : "people"}...
-                                    </li>
-                                    : <></>}
-                            </ul>
-                        </MenuItem>
-                    };
-                }));
-                roomMenuItems = roomMenuItems.concat(inactiveRooms.map(room => {
-                    return {
-                        key: room.room.id,
-                        element: <MenuItem
-                            title={room.room.name}
-                            label={room.room.name}
-                            icon={< i className="fas fa-video" ></i >}
-                            action={`/room/${room.room.id}`} />
-                    };
-                }));
-                roomsEl = <MenuGroup items={roomMenuItems} />;
-            }
+            program = <Program
+                sessions={state.filteredSessions}
+                events={state.filteredEvents}
+                timeBoundaries={programTimeBoundaries} />;
         }
-
-        if (noRooms) {
-            roomsEl = <>
-                {state.allRooms ? <></> : <LoadingSpinner />}
+        else {
+            program = <>
+                {state.sessions && state.events ? <span className="menu-group">No upcoming events in the next 2 hours.</span> : <LoadingSpinner />}
                 <MenuGroup items={[{
-                    key: "whole-rooms",
-                    element: <MenuItem title="View all rooms" label="All rooms" icon={<i className="fas fa-globe-europe"></i>} action="/room" bold={true} />
+                    key: "whole-program",
+                    element: <MenuItem title="View whole program" label="Whole program" icon={<i className="fas fa-globe-europe"></i>} action="/program" bold={true} />
                 }]} />
             </>;
         }
 
-        roomsExpander
+        programExpander
             = <MenuExpander
-                title="Breakout Rooms"
-                isOpen={state.roomsIsOpen}
-                buttons={roomsButtons}
-                onOpenStateChange={() => dispatchUpdate({ action: "setRoomsIsOpen", isOpen: !state.roomsIsOpen })}
+                title="Program"
+                isOpen={state.programIsOpen}
+                buttons={programButtons}
+                onOpenStateChange={() => dispatchUpdate({ action: "setProgramIsOpen", isOpen: !state.programIsOpen })}
             >
-                {roomsEl}
+                {program}
             </MenuExpander>;
     }
-
-    let program: JSX.Element;
-    if (state.sessions && state.events &&
-        (state.filteredSessions.length > 0 || state.filteredEvents.length > 0)) {
-        const programTimeBoundaries: Array<number> = [
-            0.1, 0.5, 3, 15, 30, 60, 120
-        ];
-
-        program = <Program
-            sessions={state.filteredSessions}
-            events={state.filteredEvents}
-            timeBoundaries={programTimeBoundaries} />;
-    }
-    else {
-        program = <>
-            {state.sessions && state.events ? <span className="menu-group">No upcoming events in the next 2 hours.</span> : <LoadingSpinner />}
-            <MenuGroup items={[{
-                key: "whole-program",
-                element: <MenuItem title="View whole program" label="Whole program" icon={<i className="fas fa-globe-europe"></i>} action="/program" bold={true} />
-            }]} />
-        </>;
-    }
-
-    programExpander
-        = <MenuExpander
-            title="Program"
-            isOpen={state.programIsOpen}
-            buttons={programButtons}
-            onOpenStateChange={() => dispatchUpdate({ action: "setProgramIsOpen", isOpen: !state.programIsOpen })}
-        >
-            {program}
-        </MenuExpander>;
 
     return <>
         {!props.open ? sideBarButton : <></>}
