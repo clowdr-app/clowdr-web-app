@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import "./VideoGrid.scss";
 import Toggle from "react-toggle";
+import { Prompt } from 'react-router';
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import useMaybeVideo from "../../../hooks/useMaybeVideo";
@@ -264,25 +265,42 @@ export default function VideoGrid(props: Props) {
         }
     }, [props.room.id, token]);
 
-    return <MuiThemeProvider theme={theme}>
-        <AppStateProvider
-            meeting={token?.twilioRoomId}
-            token={token?.token ?? undefined}
-            isEmbedded={true}
-        >
-            <VideoProvider
-                onError={(e) => onError(e)}
-                options={connectionOptions}
-                onDisconnect={() => handleDisconnected()}
+    useEffect(() => {
+        window.onbeforeunload = (ev: BeforeUnloadEvent) => {
+            ev.returnValue = "Are you sure you wish to leave this video room?";
+            return "Are you sure you wish to leave this video room?";
+        };
+
+        return () => {
+            window.onbeforeunload = () => {};
+        };
+    }, []);
+
+    return <>
+        <Prompt
+            when={!!token}
+            message='Are you sure you wish to leave the video room?'
+        />
+        <MuiThemeProvider theme={theme}>
+            <AppStateProvider
+                meeting={token?.twilioRoomId}
+                token={token?.token ?? undefined}
+                isEmbedded={true}
             >
-                <VideoWrapperComponent
-                    room={props.room}
-                    enterRoom={enterRoom}
-                    enteringRoom={enteringRoom}
-                    mVideo={mVideo}
-                    token={token?.token ?? null}
-                />
-            </VideoProvider>
-        </AppStateProvider>
-    </MuiThemeProvider>;
+                <VideoProvider
+                    onError={(e) => onError(e)}
+                    options={connectionOptions}
+                    onDisconnect={() => handleDisconnected()}
+                >
+                    <VideoWrapperComponent
+                        room={props.room}
+                        enterRoom={enterRoom}
+                        enteringRoom={enteringRoom}
+                        mVideo={mVideo}
+                        token={token?.token ?? null}
+                    />
+                </VideoProvider>
+            </AppStateProvider>
+        </MuiThemeProvider>
+    </>;
 }
