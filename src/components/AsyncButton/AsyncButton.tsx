@@ -7,6 +7,7 @@ type Handler = (ev: React.FormEvent) => Promise<void>;
 
 interface Props {
     disabled?: boolean;
+    className?: string;
     action?: Handler;
     content?: string;
     setIsRunning?(isRunning: boolean): void;
@@ -97,7 +98,7 @@ export default function AsyncButton(props: Props) {
     return <button
         disabled={props.disabled || actionState.state !== "notpending"}
         onClick={event => handleClick(event)}
-        className={actionState.state}
+        className={`${actionState.state} ${props.className ?? ""}`}
         type="button">
         {getContents()}
     </button>;

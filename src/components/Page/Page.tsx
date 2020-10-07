@@ -32,6 +32,7 @@ import { default as AdminWelcomePage } from '../Pages/Admin/WelcomePage/WelcomeP
 import { default as AdminTools } from '../Pages/Admin/Tools';
 import ComingSoon from '../Pages/ComingSoon/ComingSoon';
 import ForgotPassword from '../Pages/Login/ForgotPassword/ForgotPassword';
+import ResetPassword from '../Pages/Login/ResetPassword/ResetPassword';
 
 interface Props {
     doLogin: doLoginF;
@@ -182,8 +183,8 @@ function Page(props: Props) {
                 <Register conferenceId={p.match.params.conferenceId} registrationId={p.match.params.registrationId} email={p.match.params.email} />
             } />;
 
-            const forgotPasswordRoute = <Route path="/forgotPassword/:email?" component={(p: RouteComponentProps<any>) =>
-                <ForgotPassword initialEmail={p.match.params.email} />
+            const resetPasswordRoute = <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
+                <ResetPassword email={p.match.params.email} token={p.match.params.token} />
             } />;
 
             if (mConf) {
@@ -206,7 +207,10 @@ function Page(props: Props) {
                     contents: <Switch>
                         <Route path="/signup" component={() => signUpComponent} />
                         {registerRoute}
-                        {forgotPasswordRoute}
+                        {resetPasswordRoute}
+                        <Route path="/forgotPassword/:email?" component={(p: RouteComponentProps<any>) =>
+                            <ForgotPassword initialEmail={p.match.params.email} />
+                        } />;
                         <Route path="/" component={() => loginComponent} />
                     </Switch>
                 };
@@ -215,7 +219,7 @@ function Page(props: Props) {
                     noHeading: true,
                     contents: <Switch>
                         {registerRoute}
-                        {forgotPasswordRoute}
+                        {resetPasswordRoute}
                         <Route path="/" component={() =>
                             <ConferenceSelection
                                 failedToLoadConferences={props.failedToLoadConferences}
