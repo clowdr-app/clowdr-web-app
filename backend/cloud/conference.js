@@ -351,7 +351,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 acl.setPublicReadAccess(true);
                 acl.setPublicWriteAccess(false);
 
-                const roleO = new Parse.Role(generateRoleDBName(conference, name), acl);
+                const roleO = new Parse.Role(generateRoleDBName(conference.id, name), acl);
                 roleO.set("conference", conference);
 
                 if (name === "admin") {
