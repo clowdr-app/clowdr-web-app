@@ -120,11 +120,29 @@ export default function Register(props: Props) {
                 <p>If you have used Clowdr before, enter your existing password.</p>
                 <label htmlFor="email">Email</label>
                 <input name="email" type="email" value={props.email} disabled />
+                <label htmlFor="email">Repeat your email</label>
+                <input name="email-confirm" type="email" ref={register({
+                    validate: (value) => value === props.email
+                })} />
+                {errors["email-confirm"] && "Email addresses do not match. Please ensure you use your registration's email address listed above."}
                 <label htmlFor="fullName">Full name</label>
-                <input name="fullName" ref={register({ required: true})} />
+                <input name="fullName" ref={register({
+                    required: true
+                })} />
+                {errors.fullName && "Full name required."}
                 <label htmlFor="password">Choose a password</label>
-                <input name="password" type="password" ref={register({ required: true, minLength: 10, maxLength: 100 })} />
-                {errors.password && "Must be at least 10 characters."}
+                <input name="password" type="password" ref={register({
+                    required: "Password required",
+                    minLength: {
+                        value: 10,
+                        message: "Minimum length of 10 characters"
+                    },
+                    maxLength: {
+                        value: 100,
+                        message: "Maximum length of 100 characters"
+                    },
+                })} />
+                {errors.password && "Must be at least 10 characters (maximum 100 characters)."}
                 <label htmlFor="password-repeat">Repeat your password</label>
                 <input name="password-repeat" type="password" ref={register({
                     validate: (value) => value === watch("password")
