@@ -31,7 +31,7 @@ export default function Sidebar(props: Props) {
     useSafeAsync(async () => {
         const details = await conf.details;
         return details.find(x => x.key === "SIDEBAR_COLOUR")?.value ?? "#761313";
-    }, setBgColour, [conf]);
+    }, setBgColour, [conf, mUser]);
 
     useEffect(() => {
         burgerButtonRef.current?.focus();
