@@ -362,12 +362,13 @@ async function handleStartResetPassword(req) {
     if (requestValidation.ok) {
         let confId = params.conference;
         let user = await getUserByEmail(params.email.toLowerCase())
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager", "attendee"]);
-
-        if (!authorized) {
-            console.log(`Password reset not triggered for ${params.email.toLowerCase()}`);
-            return;
-        }
+        // This fails if the user has a user account, forgot their password but doesn't
+        // have a profile for this conference.
+        // const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager", "attendee"]);
+        // if (!authorized) {
+        //     console.log(`Password reset not triggered for ${params.email.toLowerCase()}`);
+        //     return;
+        // }
 
         console.log(`Password reset triggered for ${params.email.toLowerCase()}`);
         let spec = {
