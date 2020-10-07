@@ -225,7 +225,9 @@ async function handleRegisterUser(request) {
                 await deleteRegistration(params.registrationId);
                 throw new Error("Registration: the user has already been registered for this conference.");
             } else {
-                await user.verifyPassword(params.password).catch(_ => {
+                await Parse.User.logIn(user.get("username"), params.password, {
+                    useMasterKey: true
+                }).catch(_ => {
                     throw new Error(`Registration: error matching user details.`)
                 });
                 await createUserProfile(user, params.fullName, registration.get("newRole"), conference);
@@ -288,7 +290,7 @@ async function handleCreateUser(request) {
 
             let user = await getUserByEmail(params.email);
             if (user) {
-                await user.verifyPassword(params.password).catch(_ => {
+                await Parse.User.logIn(user.get("username"), params.password, { useMasterKey: true }).catch(_ => {
                     throw new Error(`Registration: error matching user details.`)
                 });
                 await createUserProfile(user, params.fullName, "attendee", conference);
