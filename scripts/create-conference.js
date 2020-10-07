@@ -47,7 +47,7 @@ async function getConference(name) {
 }
 
 async function createConference(conferenceData) {
-    const existingConf = getConference(conferenceData.conference.name);
+    const existingConf = await getConference(conferenceData.conference.name);
     if (existingConf) {
         console.log("Conference already exists - re-using it.");
         return existingConf.id;
