@@ -1,0 +1,10 @@
+.admin-welcome {
+    .save {
+        text-align: right;
+        margin-top: 1em;
+    }
+
+    .react-mde *.image-tip {
+        display: none !important; /* Necessary because react-mde uses !important */
+    }
+}

@@ -20,6 +20,10 @@
         border-left  : none;
         background   : none;
 
+        &:hover {
+            background: rgba(128, 30, 30, 0.2);
+        }
+
         &.change:hover {
             background: none;
         }
@@ -136,7 +140,7 @@
 
             img {
                 max-width: 100%;
-                max-height: 3.7ex;
+                max-height: $max-logo-height;
             }
         }
     }

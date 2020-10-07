@@ -26,7 +26,10 @@ import ViewAuthor from '../Pages/Program/Author/ViewAuthor';
 import ViewItem from '../Pages/Program/Item/ViewItem';
 import NewVideoRoom from '../Pages/NewVideoRoom/NewVideoRoom';
 import Register from '../Pages/Register/Register';
-import Admin from '../Pages/Admin/Admin';
+import { default as AdminRegistration } from '../Pages/Admin/Registration/Registration';
+import { default as AdminSidebar } from '../Pages/Admin/Sidebar/Sidebar';
+import { default as AdminWelcomePage } from '../Pages/Admin/WelcomePage/WelcomePage';
+import { default as AdminTools } from '../Pages/Admin/Tools';
 import ComingSoon from '../Pages/ComingSoon/ComingSoon';
 
 interface Props {
@@ -157,8 +160,17 @@ function Page(props: Props) {
                     <Route path="/profile" component={() =>
                         <Redirect to={"/profile/" + mUser.id} />
                     } />
+                    <Route path="/admin/registration" component={() =>
+                        <AdminRegistration />
+                    } />
+                    <Route path="/admin/sidebar" component={() =>
+                        <AdminSidebar />
+                    } />
+                    <Route path="/admin/welcome" component={() =>
+                        <AdminWelcomePage />
+                    } />
                     <Route path="/admin" component={() =>
-                        <Admin />
+                        <AdminTools />
                     } />
                     <Route path="/" component={NotFound} />
                 </Switch>

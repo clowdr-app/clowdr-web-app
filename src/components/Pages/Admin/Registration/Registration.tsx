@@ -1,13 +1,12 @@
 import Parse from "parse";
 import React, { useState } from "react";
 import { Redirect } from "react-router-dom";
-import { addError, addNotification } from "../../../classes/Notifications/Notifications";
-import useConference from "../../../hooks/useConference";
-import useHeading from "../../../hooks/useHeading";
-import useSafeAsync from "../../../hooks/useSafeAsync";
-import useUserProfile from "../../../hooks/useUserProfile";
-import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-import "./Admin.scss";
+import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
+import useConference from "../../../../hooks/useConference";
+import useHeading from "../../../../hooks/useHeading";
+import useUserRoles from "../../../../hooks/useUserRoles";
+import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
+import "./Registration.scss";
 
 interface Props {
 }
@@ -22,19 +21,14 @@ interface SendRegistrationEmailsResponse {
     results: { success: boolean, to: string, reason?: string }[]
 }
 
-export default function Admin(props: Props) {
-    const loggedInUserProfile = useUserProfile();
+export default function AdminRegistration(props: Props) {
     const conference = useConference();
-    const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+    const { isAdmin } = useUserRoles();
     const [isSending, setIsSending] = useState<boolean>(false);
 
     useHeading({
-        title: "Admin",
+        title: "Admin: Registrations",
     });
-
-    useSafeAsync(async () => {
-        return true;
-    }, setIsAdmin, [loggedInUserProfile])
 
     async function doSendRegistrationEmails(data: SendRegistrationEmailsData): Promise<SendRegistrationEmailsResponse> {
         setIsSending(true);

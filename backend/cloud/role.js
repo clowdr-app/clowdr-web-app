@@ -7,7 +7,7 @@
  * @param {string} confId 
  * @param {string} roleName 
  */
-function generateRoleName(confId, roleName) {
+function generateRoleDBName(confId, roleName) {
     return confId + "-" + roleName;
 }
 
@@ -25,13 +25,13 @@ async function isUserInRoles(userId, confId, allowedRoles) {
     rolesQ.equalTo("conference", new Parse.Object("Conference", { id: confId }))
 
     const roles = await rolesQ.find({ useMasterKey: true });
-    return roles.some(r => allowedRoles.some(allowed => r.get("name") === generateRoleName(confId, allowed)));
+    return roles.some(r => allowedRoles.some(allowed => r.get("name") === generateRoleDBName(confId, allowed)));
 }
 
 async function getRoleByName(confId, roleName) {
     const roleQ = new Parse.Query(Parse.Role);
     roleQ.equalTo("conference", new Parse.Object("Conference", { id: confId }));
-    roleQ.equalTo("name", generateRoleName(confId, roleName));
+    roleQ.equalTo("name", generateRoleDBName(confId, roleName));
     return await roleQ.first({ useMasterKey: true });
 }
 
@@ -58,5 +58,6 @@ async function configureDefaultProgramACLs(object) {
 module.exports = {
     isUserInRoles: isUserInRoles,
     getRoleByName: getRoleByName,
-    configureDefaultProgramACLs: configureDefaultProgramACLs
+    configureDefaultProgramACLs: configureDefaultProgramACLs,
+    generateRoleDBName: generateRoleDBName
 };

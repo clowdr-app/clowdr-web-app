@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useReducer, useRef } from 'react';
+import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
@@ -20,6 +20,7 @@ import useDataSubscription from '../../hooks/useDataSubscription';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
 import useUserRoles from '../../hooks/useUserRoles';
 import { handleParseFileURLWeirdness } from '../../classes/Utils';
+import useSafeAsync from '../../hooks/useSafeAsync';
 
 interface Props {
     open: boolean,
@@ -551,9 +552,15 @@ export default function Sidebar(props: Props) {
         filteredEvents: []
     });
     const { isAdmin } = useUserRoles();
+    const [bgColour, setBgColour] = useState<string>("#761313");
 
     // TODO: When sidebar is occupying full window (e.g. on mobile), close it
     // when the user clicks a link.
+
+    useSafeAsync(async () => {
+        const details = await conf.details;
+        return details.find(x => x.key === "SIDEBAR_COLOUR")?.value ?? "#761313";
+    }, setBgColour, [conf]);
 
     useEffect(() => {
         burgerButtonRef.current?.focus();
@@ -1267,7 +1274,11 @@ export default function Sidebar(props: Props) {
                 {program}
             </MenuExpander>;
 
-        return <div className="sidebar">
+        return <div
+            className="sidebar"
+            style={{
+                backgroundColor: bgColour
+            }}>
             {headerBar}
             <div className="sidebar-scrollable">
                 <div className="menu">

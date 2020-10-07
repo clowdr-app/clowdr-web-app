@@ -6,6 +6,7 @@
 const Twilio = require("twilio");
 
 const { validateRequest } = require("./utils");
+const { generateRoleDBName, getRoleByName, isUserInRoles } = require("./role");
 
 /**
  * All the information needed to initialise a fresh conference.
@@ -180,8 +181,16 @@ async function getConferenceConfigurationByKey(conference, key) {
     }
 }
 
-function generateRoleDBName(conference, name) {
-    return `${conference.id}-${name}`;
+async function getConferenceDetails(conference, key) {
+    let query = new Parse.Query("PrivilegedConferenceDetails");
+    query.equalTo("conference", conference);
+    query.equalTo("key", key);
+    try {
+        return query.first({ useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
 }
 
 Parse.Cloud.job("conference-create", async (request) => {
@@ -462,7 +471,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 loggedInACL.setPublicReadAccess(false);
                 loggedInACL.setPublicWriteAccess(false);
                 loggedInACL.setRoleReadAccess(attendeeRole, true);
-                loggedInACL.setRoleWriteAccess(managerRole, true);
+                loggedInACL.setRoleWriteAccess(adminRole, true);
                 const loggedInTextO = new Parse.Object("PrivilegedConferenceDetails");
                 loggedInTextO.setACL(loggedInACL);
                 loggedInText = await loggedInTextO.save({
@@ -474,6 +483,24 @@ Parse.Cloud.job("conference-create", async (request) => {
                 });
             }
             message("Created logged in text.");
+
+            // Create logged in text
+            message("Creating sidebar colour...");
+            {
+                const newACL = new Parse.ACL();
+                newACL.setPublicReadAccess(false);
+                newACL.setPublicWriteAccess(false);
+                newACL.setRoleReadAccess(attendeeRole, true);
+                newACL.setRoleWriteAccess(adminRole, true);
+                let newDetails = new Parse.Object("PrivilegedConferenceDetails");
+                newDetails.setACL(newACL);
+                newDetails = await newDetails.save({
+                    conference: conference,
+                    key: "SIDEBAR_COLOUR",
+                    value: params.conference.sidebar && params.conference.sidebar.colour ? params.conference.sidebar.colour : "#761313"
+                }, { useMasterKey: true });
+            }
+            message("Created sidebar colour.");
 
             // Create admin user
             message("Creating admin user...");
@@ -795,8 +822,93 @@ Parse.Cloud.job("conference-create", async (request) => {
     }
 });
 
+Parse.Cloud.define("conference-setSidebarBgColour", async (req) => {
+    const { params, user } = req;
+
+    const requestValidation = validateRequest({
+        colour: "string",
+        conference: "string"
+    }, params);
+    if (requestValidation.ok) {
+        const confId = params.conference;
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        if (authorized) {
+            const conf = new Parse.Object("Conference", { id: confId });
+
+            const existingDetails = await getConferenceDetails(conf, "SIDEBAR_COLOUR");
+            if (existingDetails) {
+                await existingDetails.save({
+                    value: params.colour
+                }, { useMasterKey: true });
+                return existingDetails.id;
+            }
+            else {
+                const attendeeRole = await getRoleByName(confId, "attendee");
+                const adminRole = await getRoleByName(confId, "admin");
+                const newACL = new Parse.ACL();
+                newACL.setPublicReadAccess(false);
+                newACL.setPublicWriteAccess(false);
+                newACL.setRoleReadAccess(attendeeRole, true);
+                newACL.setRoleWriteAccess(adminRole, true);
+                let newDetails = new Parse.Object("PrivilegedConferenceDetails");
+                newDetails.setACL(newACL);
+                newDetails = await newDetails.save({
+                    conference: conf,
+                    key: "SIDEBAR_COLOUR",
+                    value: params.colour
+                }, { useMasterKey: true });
+                return newDetails.id;
+            }
+        }
+    }
+
+    return false;
+});
+
+Parse.Cloud.define("conference-setLoggedInText", async (req) => {
+    const { params, user } = req;
+
+    const requestValidation = validateRequest({
+        text: "string",
+        conference: "string"
+    }, params);
+    if (requestValidation.ok) {
+        const confId = params.conference;
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        if (authorized) {
+            const conf = new Parse.Object("Conference", { id: confId });
+
+            const existingDetails = await getConferenceDetails(conf, "LOGGED_IN_TEXT");
+            if (existingDetails) {
+                await existingDetails.save({
+                    value: params.text
+                }, { useMasterKey: true });
+                return existingDetails.id;
+            }
+            else {
+                const attendeeRole = await getRoleByName(confId, "attendee");
+                const adminRole = await getRoleByName(confId, "admin");
+                const newACL = new Parse.ACL();
+                newACL.setPublicReadAccess(false);
+                newACL.setPublicWriteAccess(false);
+                newACL.setRoleReadAccess(attendeeRole, true);
+                newACL.setRoleWriteAccess(adminRole, true);
+                let newDetails = new Parse.Object("PrivilegedConferenceDetails");
+                newDetails.setACL(newACL);
+                newDetails = await newDetails.save({
+                    conference: conf,
+                    key: "LOGGED_IN_TEXT",
+                    value: params.text
+                }, { useMasterKey: true });
+                return newDetails.id;
+            }
+        }
+    }
+
+    return false;
+});
+
 module.exports = {
     getConferenceById: getConferenceById,
-    getConferenceConfigurationByKey: getConferenceConfigurationByKey,
-    generateRoleDBName: generateRoleDBName
+    getConferenceConfigurationByKey: getConferenceConfigurationByKey
 };

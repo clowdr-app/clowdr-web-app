@@ -7,12 +7,12 @@
 const Twilio = require("twilio");
 const {
     getConferenceById,
-    getConferenceConfigurationByKey,
-    generateRoleDBName
+    getConferenceConfigurationByKey
 } = require("./conference");
 const {
     getRegistrationById
 } = require("./registration");
+const { generateRoleDBName } = require("./role");
 
 async function getUserByEmail(email) {
     let query = new Parse.Query(Parse.User);
@@ -185,7 +185,7 @@ async function getProfileOfUser(user, confId) {
  * @param {Parse.Cloud.FunctionRequest<RegisterUserParams>} request
  */
 async function handleRegisterUser(request) {
-        let { params } = request;
+    let { params } = request;
 
     try {
         if (!params.registrationId

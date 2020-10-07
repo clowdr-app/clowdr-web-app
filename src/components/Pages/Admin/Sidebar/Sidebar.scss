@@ -1,0 +1,70 @@
+@import "../../../../styles/util.scss";
+
+.admin-sidebar {
+    .logo {
+        width           : min-content;
+        height          : min-content;
+        position        : relative;
+        margin-bottom   : 1em;
+        padding         : 1em;
+
+        img {
+            max-height     : $max-logo-height;
+            object-fit     : cover;
+            object-position: center;
+        }
+
+        span {
+            color: white;
+        }
+
+        .colour {
+            margin-top: 1em;
+        }
+
+        .upload {
+            text-align: center;
+
+            label, button {
+                color     : white;
+                border    : 1px solid white;
+                background: rgba(0, 0, 0, 0.4);
+                padding   : mm(1) mm(2);
+                margin    : 0;
+                cursor    : pointer;
+                border-radius: 0;
+            }
+
+            .logo-input {
+                width   : 0.1px;
+                height  : 0.1px;
+                opacity : 0;
+                overflow: hidden;
+                position: absolute;
+                z-index : -1;
+            }
+
+            label, input, button {
+                margin-top: 1em;
+            }
+
+            button {
+                margin-left: 0.5em;
+                margin-right: 0.5em;
+            }
+
+            input:focus+label,
+            input+label:hover,
+            button:focus,
+            button:hover {
+                background: rgba(255, 255, 255, 0.4);
+            }
+
+            input:disabled+label,
+            input:disabled+button {
+                cursor    : not-allowed;
+                background: rgba(0, 0, 0, 0.4);
+            }
+        }
+    }
+}

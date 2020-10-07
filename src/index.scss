@@ -23,9 +23,9 @@ body {
     button,
     input[type=submit],
     .button {
-        display   : inline-block;
-        border    : 1px solid $gray-1;
-        background: none;
+        display    : inline-block;
+        border     : 1px solid $gray-1;
+        background : none;
         line-height: 3ex;
 
         color     : $gray-1;
@@ -33,13 +33,13 @@ body {
         margin    : 0%;
         box-sizing: border-box;
 
-        cursor: pointer;
+        cursor          : pointer;
         background-color: rgba($primary, 0.1);
 
         &:hover {
             text-decoration : none;
             background-color: $primary;
-            color: #fff;
+            color           : #fff;
         }
 
         i {
@@ -83,6 +83,13 @@ body {
     }
 }
 
+.splitter-layout > .layout-splitter {
+    background-color: rgba($primary, 0.8);
+
+    &:hover {
+        background-color: rgba($primary, 1);
+    }
+}
 
 .split {
     position: relative;
@@ -90,19 +97,21 @@ body {
     width   : 100%;
     overflow: hidden;
 
-    & > button {
+    &>button {
         display         : block;
         position        : absolute;
         left            : 0;
         right           : 0;
         width           : 100%;
         border          : none;
-        background-color: rgba(0, 0, 0, 0.05);
+        background-color: rgba($secondary, 0.8);
         cursor          : pointer;
         font-size       : mm(2);
+        z-index         : 100;
+        color           : white;
 
         &:hover {
-            background-color: rgba(0, 0, 0, 0.1);
+            background-color: rgba($secondary, 1);
         }
     }
 
@@ -111,6 +120,14 @@ body {
         height  : 100%;
         overflow: auto;
         padding : 2px;
+    }
+
+    &>.embedded-content {
+
+        &>.content-feed {
+            margin: 0;
+            height: 100%;
+        }
     }
 
     &.top-split button {
@@ -126,10 +143,10 @@ body {
     position: relative;
 
     i {
-        color: #fcfcfc;
+        color    : #fcfcfc;
         font-size: 12px;
-        margin: -1px 0 0 0;
-        padding: 0;
+        margin   : -1px 0 0 0;
+        padding  : 0;
     }
 
     .react-toggle-track-check {
