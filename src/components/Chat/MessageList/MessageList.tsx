@@ -17,7 +17,7 @@ import { ChannelEventNames } from "../../../classes/Chat/Services/Twilio/Channel
 import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import useConference from "../../../hooks/useConference";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
-import { addError } from "../../../classes/Notifications/Notifications";
+import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 
 import 'emoji-mart/css/emoji-mart.css';
 import { Picker as EmojiPicker } from 'emoji-mart';
@@ -33,8 +33,8 @@ interface Props {
 type RenderedMessage = {
     sid: string;
     body: string;
-    profileId: string;
-    profileName: string;
+    profileId: string | null;
+    profileName: string | null;
     profilePhotoUrl: string | null;
     profileFlair: Flair | undefined;
     time: string;
@@ -136,12 +136,11 @@ export default function MessageList(props: Props) {
             const member = await message.getMember();
             const memberProfileId = member.profileId;
             const profile = await UserProfile.get(memberProfileId, conf.id);
-            assert(profile);
             const time = message.timestamp;
             const now = Date.now();
             const isOver24HrOld = (now - time.getTime()) > (1000 * 60 * 60 * 24);
-            const flair = await profile.primaryFlair;
-            const profilePhotoUrl = handleParseFileURLWeirdness(profile.profilePhoto);
+            const flair = await profile?.primaryFlair;
+            const profilePhotoUrl = handleParseFileURLWeirdness(profile?.profilePhoto);
             const reactorIds = (message.attributes as any)?.reactions ?? {};
             const reactions: { [reaction: string]: { ids: Array<string>; names: Array<string> } } = {};
             for (const reaction in reactorIds) {
@@ -159,8 +158,8 @@ export default function MessageList(props: Props) {
                 sid: message.sid,
                 body,
                 profileFlair: flair,
-                profileId: profile.id,
-                profileName: profile.displayName,
+                profileId: profile?.id ?? null,
+                profileName: profile?.displayName ?? null,
                 profilePhotoUrl,
                 time: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
                 index: message.index,
@@ -210,16 +209,21 @@ export default function MessageList(props: Props) {
                 ev.preventDefault();
                 ev.stopPropagation();
 
-                history.push(`/profile/${msg.profileId}`);
+                if (msg.profileId) {
+                    history.push(`/profile/${msg.profileId}`);
+                }
+                else {
+                    addNotification("User is not known - they may have been deleted.");
+                }
             }}>
                 {msg.profilePhotoUrl
-                    ? <img src={msg.profilePhotoUrl} alt={msg.profileName + "'s avatar"} />
+                    ? <img src={msg.profilePhotoUrl} alt={(msg.profileName ?? "Unknown") + "'s avatar"} />
                     : <img src={defaultProfilePic} alt="default avatar" />
                 }
                 {msg.profileFlair ? <FlairChip flair={msg.profileFlair} small /> : <></>}
             </div>
             <div className="content">
-                <div className="name">{msg.profileName}</div>
+                <div className="name">{msg.profileName ?? "<Unknown>"}</div>
                 <div className="time">{msg.time}</div>
                 <ReactMarkdown
                     className="body"
@@ -308,7 +312,7 @@ export default function MessageList(props: Props) {
             next={() => loadMoreMessages()}
             inverse={true}
             // Has to be applied as style not scss
-            style={{ display: 'flex', flexDirection: 'column-reverse', height: '100%' }}
+            style={{ display: 'flex', flexDirection: 'column-reverse' }}
             hasMore={messagePager === null || messagePager.hasPrevPage}
             loader={<LoadingSpinner />}
             endMessage={

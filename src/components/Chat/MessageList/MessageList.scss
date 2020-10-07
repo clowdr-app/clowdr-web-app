@@ -11,10 +11,10 @@
     position      : relative;
 
     .infinite-scroll-component__outerdiv {
-        height: 100%;
+        height: auto;
 
         .infinite-scroll-component {
-            min-height: 100%;
+            height: auto;
         }
     }
 
