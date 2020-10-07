@@ -171,8 +171,8 @@ export default function ProfileEditor(props: Props) {
                     (s) => setWebpage(s === "" ? undefined : s),
                     "url"
                 )}
-                <label htmlFor="flairs">Flairs</label>
-                <p>Click a flair to toggle it on or off. Highlighted flairs will be shown on your profile.</p>
+                <label htmlFor="flairs">Badges</label>
+                <p>Click a badge to toggle it on or off. Highlighted badges will be shown on your profile.</p>
                 <FlairInput name="flairs" flairs={modifiedFlairs} setFlairs={setModifiedFlairs} disabled={isSaving} />
                 <label htmlFor="bio">Bio</label>
                 <textarea

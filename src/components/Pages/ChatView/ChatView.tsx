@@ -142,7 +142,9 @@ export default function ChatView(props: Props) {
 
     const chat = <ChatFrame chatSid={props.chatId} />;
 
-    // TODO: Action buttons: Watch, Laucnh video room, Invite
+    // WATCH_TODO: Watch button
+    // WATCH_TODO: Admin button to enable/disable auto-watch
+    // TODO: Action buttons: Watch, Launch video room
     // TODO: Start/stop watching action button
 
     useEffect(() => {

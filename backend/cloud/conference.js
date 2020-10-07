@@ -532,6 +532,17 @@ Parse.Cloud.job("conference-create", async (request) => {
             // Create admin user profile
             message("Creating admin user profile...");
             {
+                let newWatchedItems = new Parse.Object("WatchedItems", {
+                    conference
+                });
+                let newWatchedItemsACL = new Parse.ACL();
+                newWatchedItemsACL.setPublicReadAccess(false);
+                newWatchedItemsACL.setPublicWriteAccess(false);
+                newWatchedItemsACL.setReadAccess(adminUser, true);
+                newWatchedItemsACL.setWriteAccess(adminUser, true);
+                newWatchedItems.setACL(newWatchedItemsACL);
+                newWatchedItems = await newWatchedItems.save(null, { useMasterKey: true });
+
                 const adminUserProfileACL = new Parse.ACL();
                 adminUserProfileACL.setPublicReadAccess(false);
                 adminUserProfileACL.setPublicWriteAccess(false);
@@ -557,7 +568,8 @@ Parse.Cloud.job("conference-create", async (request) => {
                     pronouns: params.admin.pronouns,
                     tags: params.admin.tags,
                     webpage: params.admin.webpage,
-                    flairs: [flairMap.get("Admin").id]
+                    flairs: [flairMap.get("Admin").id],
+                    watched: newWatchedItems
                 }, {
                     useMasterKey: true
                 });

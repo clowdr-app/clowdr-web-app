@@ -16,8 +16,4 @@ export default interface IChatService {
 
     enableAutoRenewConnection(): Promise<void>;
     enableAutoJoinOnInvite(): Promise<void>;
-
-    // TODO: Error event
-    // TODO: Channel events (invited/joined/created (added)/updated/removed)
-    // TODO: User events (updated)
 }

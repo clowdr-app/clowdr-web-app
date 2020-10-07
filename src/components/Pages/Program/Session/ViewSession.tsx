@@ -71,6 +71,8 @@ export default function ViewSession(props: Props) {
         });
     }
 
+    // WATCH_TODO: Watch session action button
+
     useHeading({
         title: session?.title ?? "Session",
         buttons: buttons.length > 0 ? buttons : undefined

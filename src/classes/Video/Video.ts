@@ -18,8 +18,6 @@ export default class Video {
         private profile: UserProfile,
         private sessionToken: string
     ) {
-        // TODO: Remove this line in production
-        this.logger.enable();
     }
 
     private async setup(): Promise<boolean> {

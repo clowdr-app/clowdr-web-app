@@ -5,14 +5,6 @@
 // TODO: Before delete: Clean up any content feeds
 // TODO: Before delete: Prevent deletion if still in use anywhere
 
-// TODO: Create TextChat/VideoRoom
-// TODO: And then Create content feed
-
-/* global Parse */
-// ^ for eslint
-
-// TODO: Before delete: Prevent delete if still in use anywhere
-
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 

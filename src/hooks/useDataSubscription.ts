@@ -39,6 +39,12 @@ export default function useDataSubscription<
                                 Data.Conference.onDataDeleted(conference.id) as any,
                             ];
                             break;
+                        case "ConferenceConfiguration":
+                            promises = [
+                                Data.ConferenceConfiguration.onDataUpdated(conference.id) as any,
+                                Data.ConferenceConfiguration.onDataDeleted(conference.id) as any,
+                            ];
+                            break;
                         case "Flair":
                             promises = [
                                 Data.Flair.onDataUpdated(conference.id) as any,
@@ -115,6 +121,24 @@ export default function useDataSubscription<
                             promises = [
                                 Data.VideoRoom.onDataUpdated(conference.id) as any,
                                 Data.VideoRoom.onDataDeleted(conference.id) as any,
+                            ];
+                            break;
+                        case "YouTubeFeed":
+                            promises = [
+                                Data.YouTubeFeed.onDataUpdated(conference.id) as any,
+                                Data.YouTubeFeed.onDataDeleted(conference.id) as any,
+                            ];
+                            break;
+                        case "ZoomRoom":
+                            promises = [
+                                Data.ZoomRoom.onDataUpdated(conference.id) as any,
+                                Data.ZoomRoom.onDataDeleted(conference.id) as any,
+                            ];
+                            break;
+                        case "WatchedItems":
+                            promises = [
+                                Data.WatchedItems.onDataUpdated(conference.id) as any,
+                                Data.WatchedItems.onDataDeleted(conference.id) as any,
                             ];
                             break;
                         default:

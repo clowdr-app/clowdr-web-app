@@ -131,9 +131,9 @@ export default function ViewEvent(props: Props) {
         //       times) for this event's program item
     }
 
-    // TODO: directLink?
+    // WATCH_TODO: Watch event action button via the item's useHeading call (pass as props)
 
-    // TODO: Render the content feed(s) (re-use component from ViewSession)
+    // TODO: directLink?
 
     // TODO: Offer to auto-move to the session's next event 30 secs before the
     //       end of the current event

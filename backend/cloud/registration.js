@@ -104,6 +104,11 @@ async function handleCreateRegistration(req) {
                 }
                 delete spec.roleName;
             }
+            
+            if (!("newRole" in spec) || !spec.newRole) {
+                spec.newRole = "attendee";
+            }
+
             spec.newRole = spec.newRole.toLowerCase();
             const result = await createRegistration(spec);
             if (result === true) {

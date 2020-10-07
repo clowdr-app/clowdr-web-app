@@ -106,6 +106,17 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
     let attendeeRole = await getRoleByName("attendee", conference);
     let newRole = await getRoleByName(newRoleName, conference);
 
+    let newWatchedItems = new Parse.Object("WatchedItems", {
+        conference
+    });
+    let newWatchedItemsACL = new Parse.ACL();
+    newWatchedItemsACL.setPublicReadAccess(false);
+    newWatchedItemsACL.setPublicWriteAccess(false);
+    newWatchedItemsACL.setReadAccess(user, true);
+    newWatchedItemsACL.setWriteAccess(user, true);
+    newWatchedItems.setACL(newWatchedItemsACL);
+    newWatchedItems = await newWatchedItems.save(null, { useMasterKey: true });
+
     let newProfile = new Parse.Object("UserProfile", {
         user: user,
         conference: conference,
@@ -116,7 +127,8 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
         dataConsentGiven: false, // TODO: Require from sign up form
         pronouns: [],
         tags: [],
-        flairs: []
+        flairs: [],
+        watched: newWatchedItems
     });
     let newProfileACl = new Parse.ACL();
     newProfileACl.setPublicReadAccess(false);
@@ -144,6 +156,14 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
         friendlyName: newProfile.get("displayName"),
         xTwilioWebhookEnabled: true
     });
+
+    // And now we re-save the new watched items to trigger the beforeSave event
+    // which will now be able to set up the auto watches correctly
+
+    await newWatchedItems.save(null, { useMasterKey: true });
+
+    // TODO: Link profile to program person (author)
+    // TODO: Give authors write access to their program items/events
 }
 
 /**
@@ -285,12 +305,6 @@ async function handleCreateUser(request) {
         let signUpEnabled = signUpEnabledConfig.get("value") === "true";
 
         if (signUpEnabled) {
-            // TODO: Auto-join to text chats
-            // TODO: Link profile to program person (author)
-            // TODO: If is an author, auto-watch them to the text chats for their papers
-            // TODO: Do we want authors to be auto-watching their items & content feeds (video rooms/text chats)
-            // TODO: Give authors write access to their program items/events
-
             let user = await getUserByEmail(params.email.toLowerCase());
             if (user) {
                 await Parse.User.logIn(user.get("username"), params.password, { useMasterKey: true }).catch(_ => {
@@ -475,8 +489,10 @@ async function handleResetPassword(req) {
 }
 Parse.Cloud.define("user-reset-password", handleResetPassword)
 
-// TODO: When upgrading a user to an admin, iterate over all their twilio channels
+// CHAT_TODO: When upgrading a user to an admin, iterate over all their twilio channels
 //       and update their role SID. Also, update their service-level role SID.
+// CHAT_TODO: And likewise if upgrading them to a manager
+// CHAT_TODO: And likewise if downgrading them to a manager or attendee
 
 module.exports = {
     getUserById: getUserById,

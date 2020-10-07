@@ -5,6 +5,7 @@ const Parse = require("parse/node");
 const fs = require('fs');
 const path = require('path');
 const assert = require("assert");
+const fetch = require("node-fetch");
 
 const argv = yargs
     .option("conference", {
@@ -40,17 +41,16 @@ async function getConference(name) {
     const confs = await existingConfQ.filter(x => x.get("name").includes(name), { useMasterKey: true });
     const existingConf = confs.length > 0 ? confs[0] : null;
     if (existingConf) {
-        console.log("Conference already exists - re-using it.");
         return existingConf.id;
     }
     return undefined;
 }
 
 async function createConference(conferenceData) {
-    const existingConf = await getConference(conferenceData.conference.name);
-    if (existingConf) {
+    const existingConfId = await getConference(conferenceData.conference.name);
+    if (existingConfId) {
         console.log("Conference already exists - re-using it.");
-        return existingConf.id;
+        return existingConfId;
     }
 
     conferenceData.twilio = {};
@@ -225,7 +225,8 @@ async function main() {
                                 const newTextChat = {
                                     id: textChatsData.length,
                                     name: item.feed.name,
-                                    autoWatch: false
+                                    autoWatch: false,
+                                    forVideoRoom: true
                                 };
                                 textChatsData.push(newTextChat);
                             }
@@ -321,7 +322,34 @@ async function main() {
     if (!regsOnly) {
         const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
         const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
-        const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
+        // TODO: Handle creating text chats via the Twilio Backend
+        // const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
+        const textChats = (await Promise.all(textChatsData.map(async spec => {
+            const resp = await fetch(
+                `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/chat/create`,
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        identity: adminSessionToken,
+                        conference: confId,
+                        invite: [],
+                        mode: "public",
+                        title: spec.name,
+                        forVideoRoom: spec.forVideoRoom,
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+            const respStr = resp.body.read().toString();
+            return {
+                key: spec.id,
+                id: JSON.parse(respStr).textChatID
+            }
+        }))).reduce((obj, x) => {
+            obj[x.key] = x.id;
+            return obj;
+        }, {});
         remapObjects(textChats, "textChat", videoRoomsData);
         const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
         remapObjects(youtubeFeeds, "youtube", contentFeedsData);

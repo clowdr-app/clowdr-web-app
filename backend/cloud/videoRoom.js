@@ -3,8 +3,10 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
-const { createTextChat, getTextChatByName } = require("./textChat");
-const { getUserById, getProfileOfUser, getUserProfileById } = require("./user");
+const { getProfileOfUser, getUserProfileById } = require("./user");
+const { getConferenceConfigurationByKey } = require("./conference");
+const assert = require("assert");
+const fetch = require("node-fetch");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
 
@@ -107,32 +109,33 @@ async function handleCreateVideoRoom(req) {
             // Clamp capacity down to Twilio max size
             spec.capacity = Math.min(spec.capacity, 50);
 
-            // For now, if a text chat is not included, we will automatically create one
             if (!spec.textChat) {
-                if (!spec.isPrivate) {
-                    const newChatSpec = {
-                        autoWatch: false,
-                        mirrored: false,
-                        name: spec.name,
-                        conference: spec.conference,
-                    };
-                    const existingChat = await getTextChatByName(newChatSpec.name, spec.conference.id);
-                    if (existingChat) {
-                        if (!existingChat.get("isPrivate")) {
-                            spec.textChat = existingChat;
+                const twilioBackendURLConfig = await getConferenceConfigurationByKey(spec.conference, "REACT_APP_TWILIO_CALLBACK_URL");
+                assert(twilioBackendURLConfig);
+                const twilioBackendURL = twilioBackendURLConfig.get("value");
+                const resp = await fetch(
+                    `${twilioBackendURL}/chat/create`,
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            identity: user.getSessionToken(),
+                            conference: confId,
+                            invite: [],
+                            mode: spec.isPrivate ? "private" : "public",
+                            title: spec.name,
+                            forVideoRoom: true,
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
                         }
-                        else {
-                            throw new Error("Cannot create text chat - conflicting name.");
-                        }
-                    }
-                    else {
-                        const newChat = await createTextChat(newChatSpec);
-                        spec.textChat = newChat;
-                    }
+                    });
+                const respStr = resp.body.read().toString();
+                const { textChatID } = JSON.parse(respStr);
+                if (textChatID) {
+                    spec.textChat = new Parse.Object("TextChat", { id: textChatID });
                 }
                 else {
-                    // TODO: Enable creation of text chats that are private in Parse
-                    //       (At the moment, we assume all text chats in Parse are public chats)
+                    throw new Error("Could not create text chat");
                 }
             }
             else {

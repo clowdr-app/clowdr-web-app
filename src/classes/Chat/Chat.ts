@@ -221,7 +221,6 @@ export default class Chat implements IChatManager {
         assert(this.twilioService);
         return (await this.twilioService.getChannel(chatSid)).inviteUsers(userProfileIds);
     }
-    // TODO: Invite member
     // TODO: Remove member
     // TODO: Admin controls - list all chats inc. hidden private ones,
     //                      - join/edit/delete (for chats that would otherwise be private)
