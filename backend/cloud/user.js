@@ -247,7 +247,7 @@ async function handleRegisterUser(request) {
         return true;
     }
     catch (e) {
-        console.error(`Error during registration of ${params.registrationId}`, e);
+        console.error(`Error during registration of ${params.registrationId} / ${params.fullName}`, e);
     }
 
     return false;
