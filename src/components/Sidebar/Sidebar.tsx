@@ -4,14 +4,12 @@ import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import FooterLinks from '../FooterLinks/FooterLinks';
 import { Link } from 'react-router-dom';
-import MenuGroup, { MenuGroupItems } from './Menu/MenuGroup';
-import MenuItem from './Menu/MenuItem';
-import useUserRoles from '../../hooks/useUserRoles';
 import { handleParseFileURLWeirdness } from '../../classes/Utils';
 import useSafeAsync from '../../hooks/useSafeAsync';
 import ChatsGroup from './Groups/ChatsGroup';
 import RoomsGroup from './Groups/RoomsGroup';
 import ProgramGroup from './Groups/ProgramGroup';
+import MainMenuGroup from './Groups/MainGroup';
 
 interface Props {
     open: boolean,
@@ -25,7 +23,6 @@ export default function Sidebar(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
     const burgerButtonRef = useRef<HTMLButtonElement>(null);
-    const { isAdmin } = useUserRoles();
     const [bgColour, setBgColour] = useState<string>("#761313");
 
     // TODO: When sidebar is occupying full window (e.g. on mobile), close it
@@ -67,23 +64,10 @@ export default function Sidebar(props: Props) {
         {sideBarHeading}
     </div>
 
-    let mainMenuGroup: JSX.Element = <></>;
+    const mainMenuGroup: JSX.Element = <MainMenuGroup />;
     const chatsExpander: JSX.Element = <ChatsGroup minSearchLength={minSearchLength} />;
     const roomsExpander: JSX.Element = <RoomsGroup minSearchLength={minSearchLength} />;
     const programExpander: JSX.Element = <ProgramGroup minSearchLength={minSearchLength} />;
-
-    if (mUser) {
-        const mainMenuItems: MenuGroupItems = [
-            { key: "watched-items", element: <MenuItem title="Watched items" label="Watched items" action="/watched" /> },
-            { key: "exhibits", element: <MenuItem title="Exhibition" label="Exhibition" action="/exhibits" /> },
-            { key: "profile", element: <MenuItem title="Profile" label="Profile" action="/profile" /> },
-            { key: "contact-moderators", element: <MenuItem title="Contact moderators" label="Contact moderators" action="/moderators" /> },
-        ];
-        if (isAdmin) {
-            mainMenuItems.push({ key: "admin", element: <MenuItem title="Admin tools" label="Admin tools" action="/admin" /> });
-        }
-        mainMenuGroup = <MenuGroup items={mainMenuItems} />;
-    }
 
     return <>
         {!props.open ? sideBarButton : <></>}
