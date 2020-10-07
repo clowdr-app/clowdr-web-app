@@ -85,7 +85,18 @@ interface RenderData {
     groups: Array<GroupRenderData>;
 }
 
-export default function Program(props: Props) {
+function generateTimeText(startTime: number, now: number) {
+    let distance = startTime - now;
+    let units = "minutes";
+    distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
+    if (distance >= 60) {
+        distance = Math.floor(distance / 60);
+        units = "hour" + (distance > 1 ? "s" : "");
+    }
+    return { distance, units };
+}
+
+export default function ProgramList(props: Props) {
     const conf = useConference();
     const [renderData, setRenderData] = useState<RenderData>({ groups: [] });
     const logger = useLogger("Sidebar/Program");
@@ -322,14 +333,3 @@ export default function Program(props: Props) {
         {groupElems.reduce((acc, x) => <>{acc}{x}</>, <></>)}
     </div>;
 }
-function generateTimeText(startTime: number, now: number) {
-    let distance = startTime - now;
-    let units = "minutes";
-    distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
-    if (distance >= 60) {
-        distance = Math.floor(distance / 60);
-        units = "hour" + (distance > 1 ? "s" : "");
-    }
-    return { distance, units };
-}
-

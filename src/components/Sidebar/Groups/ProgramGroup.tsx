@@ -3,7 +3,7 @@ import useConference from '../../../hooks/useConference';
 import useMaybeUserProfile from '../../../hooks/useMaybeUserProfile';
 import MenuExpander, { ButtonSpec } from "../Menu/MenuExpander";
 import MenuGroup from '../Menu/MenuGroup';
-import Program from '../Program';
+import ProgramList from '../ProgramList';
 import MenuItem from '../Menu/MenuItem';
 import { ProgramSession, ProgramSessionEvent } from '@clowdr-app/clowdr-db-schema';
 import { makeCancelable, removeNull } from '@clowdr-app/clowdr-db-schema/build/Util';
@@ -363,7 +363,7 @@ export default function ProgramGroup(props: Props) {
                 0.1, 0.5, 3, 15, 30, 60, 120
             ];
 
-            program = <Program
+            program = <ProgramList
                 sessions={state.filteredSessions}
                 events={state.filteredEvents}
                 timeBoundaries={programTimeBoundaries} />;
