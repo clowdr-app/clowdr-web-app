@@ -144,6 +144,7 @@ export default function Login(props: LoginProps) {
             : <>
                 <p>Please log in or sign up to join the conference</p>
                 {form}
+                <p><Link to={`/forgotPassword/${email}`}>Forgotten your password?</Link></p>
             </>
         }
     </section>;
