@@ -223,7 +223,7 @@ async function handleRegisterUser(request) {
 
             if (userProfile) {
                 await deleteRegistration(params.registrationId);
-                throw new Error("Registration: the user has already been registered for this conference.");
+                return true;
             } else {
                 await Parse.User.logIn(user.get("username"), params.password, {
                     useMasterKey: true
@@ -248,6 +248,9 @@ async function handleRegisterUser(request) {
     }
     catch (e) {
         console.error(`Error during registration of ${params.registrationId} / ${params.fullName}`, e);
+        if (e.toString().includes("error matching user details")) {
+            return "Use existing password";
+        }
     }
 
     return false;
