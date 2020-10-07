@@ -27,7 +27,7 @@ export default function ResetPassword(props: ResetPasswordProps) {
         setState("submitted");
 
         try {
-            await Parse.Cloud.run("user-reset-password", { email: props.email, token: props.token, newPassword: data.password });
+            await Parse.Cloud.run("user-reset-password", { email: props.email, token: props.token, password: data.password });
             setState("finished");
         } catch (e) {
             addError("Could not set a new password.");

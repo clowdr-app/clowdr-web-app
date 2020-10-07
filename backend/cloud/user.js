@@ -423,13 +423,13 @@ async function sendPasswordResetEmail(confId, email, token) {
  * @typedef {Object} ResetPasswordSpec
  * @property {string} email
  * @property {string} token
- * @property {string} newPassword
+ * @property {string} password
  */
 
 const resetPasswordSchema = {
     email: "string",
     token: "string",
-    newPassword: "string",
+    password: "string",
 };
 
 /**
@@ -447,7 +447,7 @@ async function resetPassword(data) {
         let timeSinceTokenIssued = new Date() - new Date(parseInt(millis, 10));
 
         if (86400000 > timeSinceTokenIssued && token === data.token) {
-            user.setPassword(data.newPassword);
+            user.setPassword(data.password);
             user.unset("passwordResetToken");
             await user.save(null, { useMasterKey: true });
         } else {
