@@ -23,7 +23,7 @@ type FullRoomInfo = {
     isFeedRoom: boolean
 };
 
-interface SidebarState {
+interface RoomsGroupState {
     tasks: Set<RoomsGroupTasks>;
     isOpen: boolean;
     roomSearch: string | null;
@@ -31,7 +31,7 @@ interface SidebarState {
     filteredRooms: Array<FullRoomInfo>;
 }
 
-type SidebarUpdate
+type RoomsGroupUpdate
     = { action: "updateAllRooms"; rooms: Array<FullRoomInfo> }
     | { action: "updateFilteredRooms"; rooms: Array<FullRoomInfo> }
     | { action: "deleteRooms"; rooms: Array<string> }
@@ -57,8 +57,8 @@ async function filterRooms(
     }
 }
 
-function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | Array<SidebarUpdate>): SidebarState {
-    const nextState: SidebarState = {
+function nextSidebarState(currentState: RoomsGroupState, updates: RoomsGroupUpdate | Array<RoomsGroupUpdate>): RoomsGroupState {
+    const nextState: RoomsGroupState = {
         tasks: new Set(currentState.tasks),
         isOpen: currentState.isOpen,
         roomSearch: currentState.roomSearch,
@@ -68,7 +68,7 @@ function nextSidebarState(currentState: SidebarState, updates: SidebarUpdate | A
 
     let allRoomsUpdated = false;
 
-    function doUpdate(update: SidebarUpdate) {
+    function doUpdate(update: RoomsGroupUpdate) {
         switch (update.action) {
             case "searchRooms":
                 nextState.roomSearch = update.search?.length ? update.search : null;

@@ -29,7 +29,7 @@ type SidebarChatDescriptor = {
     member2?: MemberDescriptor & { displayName: string };
 });
 
-interface ChatGroupState {
+interface ChatsGroupState {
     tasks: Set<ChatGroupTasks>;
     isOpen: boolean;
     chatSearch: string | null;
@@ -38,7 +38,7 @@ interface ChatGroupState {
     filteredChats: Array<SidebarChatDescriptor>;
 }
 
-type SidebarUpdate
+type ChatsGroupUpdate
     = { action: "updateAllChats"; chats: Array<ChatDescriptor> }
     | { action: "updateActiveChats"; chats: Array<SidebarChatDescriptor> }
     | { action: "updateFilteredChats"; chats: Array<SidebarChatDescriptor> }
@@ -62,8 +62,8 @@ async function filterChats(
     }
 }
 
-function nextSidebarState(currentState: ChatGroupState, updates: SidebarUpdate | Array<SidebarUpdate>): ChatGroupState {
-    const nextState: ChatGroupState = {
+function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpdate | Array<ChatsGroupUpdate>): ChatsGroupState {
+    const nextState: ChatsGroupState = {
         tasks: new Set(currentState.tasks),
         isOpen: currentState.isOpen,
         chatSearch: currentState.chatSearch,
@@ -75,7 +75,7 @@ function nextSidebarState(currentState: ChatGroupState, updates: SidebarUpdate |
     let allChatsUpdated = false;
     let activeChatsUpdated = false;
 
-    function doUpdate(update: SidebarUpdate) {
+    function doUpdate(update: ChatsGroupUpdate) {
         switch (update.action) {
             case "searchChats":
                 nextState.chatSearch = update.search?.length ? update.search : null;
@@ -233,7 +233,7 @@ function subscribeToDMMemberJoin(
     memberJoinedlisteners: Map<string, () => void>,
     mChat: Chat,
     conf: Conference,
-    dispatchUpdate: React.Dispatch<SidebarUpdate | SidebarUpdate[]>
+    dispatchUpdate: React.Dispatch<ChatsGroupUpdate | ChatsGroupUpdate[]>
 ): (value: ChatDescriptor) => Promise<void> {
     return async (x) => {
         if (x.isDM && !x.member2) {
