@@ -10,7 +10,7 @@ import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
 import "./ProfileEditor.scss";
 import AsyncButton from "../../AsyncButton/AsyncButton";
-import { addError } from "../../../classes/Notifications/Notifications";
+import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 
 interface Props {
     profile: UserProfile;
@@ -195,6 +195,7 @@ export default function ProfileEditor(props: Props) {
                     <AsyncButton content="Save" action={async () => {
                         try {
                             await saveProfile();
+                            addNotification("Profile saved.");
                         }
                         catch {
                             addError("Sorry, an error occurred and we were unable to save your profile.");
