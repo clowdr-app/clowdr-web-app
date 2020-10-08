@@ -65,7 +65,9 @@ export default function ProgramPersonSelector(props: Props) {
                 onChange={e => { setChosenPerson(e.target.value) }}
                 value={chosenPerson ?? allProgramPersons?.find(p => p.profile?.id === profile.id)?.personId ?? ""}
                 disabled={props.disabled}>
-                {allProgramPersons?.map(person => {
+                {allProgramPersons
+                    ?.sort((x, y) => x.personName.localeCompare(y.personName))
+                    ?.map(person => {
                     return <option
                         key={person.personId}
                         value={person.personId}

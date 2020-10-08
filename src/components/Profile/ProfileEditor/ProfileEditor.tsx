@@ -183,6 +183,7 @@ export default function ProfileEditor(props: Props) {
                     disabled={isSaving}
                 />
                 <label>Program Author</label>
+                <p>If you are an author of an item at this conference, please select your name below.</p>
                 <ProgramPersonSelector setProgramPersonId={setProgramPersonId} disabled={isSaving} />
                 <div className="submit-container">
                     <button
