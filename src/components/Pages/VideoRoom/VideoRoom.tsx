@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import useHeading from "../../../hooks/useHeading";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import VideoGrid from "../../Video/VideoGrid/VideoGrid";
 import "./VideoRoom.scss";
 import SplitterLayout from "react-splitter-layout";
 import "react-splitter-layout/lib/index.css";
-import { TextChat, UserProfile, VideoRoom } from "@clowdr-app/clowdr-db-schema";
+import { TextChat, UserProfile, VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import useConference from "../../../hooks/useConference";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
@@ -16,6 +16,8 @@ import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/
 import assert from "assert";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import useMaybeVideo from "../../../hooks/useMaybeVideo";
+import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import useDataSubscription from "../../../hooks/useDataSubscription";
 
 interface Props {
     roomId: string;
@@ -86,6 +88,97 @@ export default function ViewVideoRoom(props: Props) {
             });
         }
     }
+
+
+    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+    const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
+    useSafeAsync(async () => {
+        const watched = await currentUserProfile.watched;
+        return watched.watchedRooms.includes(props.roomId);
+    }, setIsFollowing, [currentUserProfile.watchedId, props.roomId]);
+
+    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+        if (update.object.id === currentUserProfile.watchedId) {
+            setIsFollowing((update.object as WatchedItems).watchedRooms.includes(props.roomId));
+        }
+    }, [props.roomId, currentUserProfile.watchedId]);
+
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conference);
+
+    const doFollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await currentUserProfile.watched;
+                if (!watched.watchedRooms.includes(props.roomId)) {
+                    watched.watchedRooms.push(props.roomId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.roomId, currentUserProfile.watchedId]);
+
+    const doUnfollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await currentUserProfile.watched;
+                if (watched.watchedRooms.includes(props.roomId)) {
+                    watched.watchedRooms = watched.watchedRooms.filter(x => x !== props.roomId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.roomId, currentUserProfile.watchedId]);
+
+    if (room) {
+        if (isFollowing !== null) {
+            if (isFollowing) {
+                actionButtons.push({
+                    label: changingFollow ? "Changing" : "Unfollow room",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doUnfollow();
+                    }
+                });
+            }
+            else {
+                actionButtons.push({
+                    label: changingFollow ? "Changing" : "Follow room",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doFollow();
+                    }
+                });
+            }
+        }
+    }
+
+
     useHeading({
         title: room?.name ?? "Room",
         buttons: actionButtons
@@ -161,7 +254,6 @@ export default function ViewVideoRoom(props: Props) {
         </form>
     </>;
 
-    // WATCH_TODO: Watch room action button
     // TODO: Members list (action button)
 
     return <div className={`video-room${showInvite ? " invite-view" : ""}`}>
