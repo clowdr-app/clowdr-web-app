@@ -37,7 +37,7 @@ export default function WholeProgram() {
 
     const onTrackDeleted = useCallback(function _onTrackDeleted(ev: DataDeletedEventDetails<"ProgramTrack">) {
         if (tracks) {
-            setTracks(tracks.filter(x => x.id === ev.objectId));
+            setTracks(tracks.filter(x => x.id !== ev.objectId));
         }
     }, [tracks]);
 

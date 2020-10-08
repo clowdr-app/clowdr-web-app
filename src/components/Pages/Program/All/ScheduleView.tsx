@@ -36,7 +36,7 @@ export default function ScheduleView(props: Props) {
 
     const onSessionDeleted = useCallback(function _onSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
         if (sessions) {
-            setSessions(sessions.filter(x => x.id === ev.objectId));
+            setSessions(sessions.filter(x => x.id !== ev.objectId));
         }
     }, [sessions]);
 
@@ -54,7 +54,7 @@ export default function ScheduleView(props: Props) {
 
     const onEventDeleted = useCallback(function _onEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {
         if (events) {
-            setEvents(events.filter(x => x.id === ev.objectId));
+            setEvents(events.filter(x => x.id !== ev.objectId));
         }
     }, [events]);
 
