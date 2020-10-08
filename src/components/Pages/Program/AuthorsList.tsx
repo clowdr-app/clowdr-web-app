@@ -1,6 +1,7 @@
 import { ProgramPerson } from "@clowdr-app/clowdr-db-schema";
 import React from "react";
 import { Link } from "react-router-dom";
+import "./AuthorsList.scss";
 
 interface Props {
     authors: Array<ProgramPerson> | null
@@ -13,8 +14,7 @@ export default function AuthorsList(props: Props) {
             return <Link
                 key={author.id}
                 to={`/author/${author.id}`}
-                onClick={(ev) => ev.stopPropagation()}
-            >
+                onClick={(ev) => ev.stopPropagation()}>
                 {author.name}
             </Link>;
         });

@@ -1,0 +1,14 @@
+@import "../../../../styles/util.scss";
+
+.exhibit {
+    border : 1px solid $gray-5;
+    padding: mm(5);
+
+    a.exhibit__title {
+        color: inherit;
+    }
+
+    .button {
+        margin-top: mm(5);
+    }
+}
