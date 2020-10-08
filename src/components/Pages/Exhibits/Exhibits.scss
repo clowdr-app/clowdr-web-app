@@ -1,0 +1,25 @@
+@import "../../../styles/util.scss";
+
+.exhibits-page {
+    .exhibits {
+        display              : grid;
+        grid-template-columns: minmax(0, 1fr);
+        column-gap           : 5%;
+        row-gap              : mm(10);
+        margin: 10%;
+
+        @media only screen and (min-width: $break-md) {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            margin: 5%;
+        }
+
+        @media only screen and (min-width: $break-lg) {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .exhibit {
+            border: 1px solid $gray-5;
+            padding: mm(5);
+        }
+    }
+}
