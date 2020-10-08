@@ -5,7 +5,6 @@ const Parse = require("parse/node");
 const fs = require('fs');
 const path = require('path');
 const assert = require("assert");
-const fetch = require("node-fetch");
 
 const argv = yargs
     .option("conference", {

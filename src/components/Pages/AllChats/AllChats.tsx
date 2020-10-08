@@ -44,7 +44,7 @@ export default function ChatView() {
                 name: profile.displayName,
                 el: <li key={profile.id}>
                     {dmChat
-                        ? <Link to={`/chat/${dmChat.sid}`}>{profile.displayName}</Link>
+                        ? <Link to={`/chat/${dmChat.id}`}>{profile.displayName}</Link>
                         : <Link to={`/chat/new/${profile.id}`}>{profile.displayName}</Link>
                     }
                 </li>
@@ -108,7 +108,7 @@ export default function ChatView() {
         const otherEls = allTwilioChats
             .filter(x => !x.isDM)
             .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName))
-            .map(x => <li key={x.sid}><Link to={`/chat/${x.sid}`}>{x.friendlyName}</Link></li>);
+            .map(x => <li key={x.id}><Link to={`/chat/${x.id}`}>{x.friendlyName}</Link></li>);
         othersEl = <ul>
             {otherEls}
         </ul>;

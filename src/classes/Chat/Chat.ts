@@ -10,20 +10,20 @@ import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
 import TwilioChatService, { ServiceEventArgs, ServiceEventNames } from "./Services/Twilio/ChatService";
 
 export type ChatDescriptor = {
-    sid: string;
+    id: string;
     friendlyName: string;
-    status: 'invited' | 'joined' | undefined;
+    status: 'joined' | undefined;
 } & ({
     isDM: false;
 } | {
     isDM: true;
     member1: MemberDescriptor;
-    member2?: MemberDescriptor;
+    member2: MemberDescriptor;
 });
 
 export type MemberDescriptor = {
     profileId: string;
-    isOnline: boolean;
+    isOnline: boolean | undefined;
 };
 
 export default class Chat implements IChatManager {
@@ -137,7 +137,7 @@ export default class Chat implements IChatManager {
         const isDM = await chan.getIsDM();
         if (isDM) {
             return {
-                sid: chan.sid,
+                id: chan.id,
                 friendlyName: chan.getName(),
                 status: chan.getStatus(),
                 isDM: true,
@@ -147,7 +147,7 @@ export default class Chat implements IChatManager {
         }
         else {
             return {
-                sid: chan.sid,
+                id: chan.id,
                 friendlyName: chan.getName(),
                 status: chan.getStatus(),
                 isDM: false
@@ -155,24 +155,26 @@ export default class Chat implements IChatManager {
         }
     }
 
-    public async createChat(invite: Array<string>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
-        const newChannel = await this.twilioService?.createChannel(invite, isPrivate, title);
-        return newChannel ? Chat.convertToDescriptor(newChannel) : undefined;
+    public async createChat(members: Array<string>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.createChannel(members, isPrivate, title);
+        return Chat.convertToDescriptor(channel);
     }
 
     public async listAllChats(): Promise<Array<ChatDescriptor>> {
-        const channels = await this.twilioService?.allChannels();
+        assert(this.twilioService);
+        const channels = await this.twilioService.allChannels();
         return await Promise.all(channels?.map(x => Chat.convertToDescriptor(x)) ?? []);
     }
 
-    public async listActiveChats(): Promise<Array<ChatDescriptor>> {
+    public async listWatchedChats(): Promise<Array<ChatDescriptor>> {
         const channels = await this.twilioService?.activeChannels();
         return await Promise.all(channels?.map(x => Chat.convertToDescriptor(x)) ?? []);
     }
 
-    public async listChatMembers(chatSid: string): Promise<Array<MemberDescriptor>> {
+    public async listChatMembers(chatId: string): Promise<Array<MemberDescriptor>> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
+        const channel = await this.twilioService.getChannel(chatId);
         const members = await channel.members();
         return await Promise.all(members.map(async member => ({
             profileId: member.profileId,
@@ -180,36 +182,36 @@ export default class Chat implements IChatManager {
         })));
     }
 
-    public async getChatMembersCount(chatSid: string): Promise<number> {
+    public async getChatMembersCount(chatId: string): Promise<number> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
+        const channel = await this.twilioService.getChannel(chatId);
         return channel.membersCount();
     }
 
     // These can be done directly against the Twilio API
-    async getChat(chatSid: string): Promise<ChatDescriptor> {
+    async getChat(chatId: string): Promise<ChatDescriptor> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
+        const channel = await this.twilioService.getChannel(chatId);
         return Chat.convertToDescriptor(channel);
     }
-    async getMessages(chatSid: string): Promise<Paginator<IMessage>> {
+    async getMessages(chatId: string): Promise<Paginator<IMessage>> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
-        return channel.getMessages(20);
+        const channel = await this.twilioService.getChannel(chatId);
+        return channel.getMessages(40);
     }
-    async sendMessage(chatSid: string, message: string): Promise<number> {
+    async sendMessage(chatId: string, message: string): Promise<number> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
+        const channel = await this.twilioService.getChannel(chatId);
         return channel.sendMessage(message);
     }
-    async addReaction(chatSid: string, messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
+    async addReaction(chatId: string, messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
+        const channel = await this.twilioService.getChannel(chatId);
         return channel.addReaction(messageSid, reaction);
     }
-    async removeReaction(chatSid: string, messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
+    async removeReaction(chatId: string, messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
+        const channel = await this.twilioService.getChannel(chatId);
         return channel.removeReaction(messageSid, reaction);
     }
     // TODO: Get/set last read message key
@@ -217,9 +219,9 @@ export default class Chat implements IChatManager {
     // TODO: Delete channel
 
     // These have to be done via our Twilio Backend for permissions control
-    async inviteUsers(chatSid: string, userProfileIds: string[]): Promise<void> {
+    async inviteUsers(chatId: string, userProfileIds: string[]): Promise<void> {
         assert(this.twilioService);
-        return (await this.twilioService.getChannel(chatSid)).inviteUsers(userProfileIds);
+        return (await this.twilioService.getChannel(chatId)).addMembers(userProfileIds);
     }
     // TODO: Remove member
     // TODO: Admin controls - list all chats inc. hidden private ones,
@@ -228,15 +230,15 @@ export default class Chat implements IChatManager {
     // Other stuff:
     // TODO: Mirrored channels
 
-    async channelEventOn<K extends ChannelEventNames>(chatSid: string, event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
+    async channelEventOn<K extends ChannelEventNames>(chatId: string, event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
+        const channel = await this.twilioService.getChannel(chatId);
         return channel.on(event, listener);
     }
 
-    async channelEventOff(chatSid: string, event: ChannelEventNames, listener: () => void): Promise<void> {
+    async channelEventOff(chatId: string, event: ChannelEventNames, listener: () => void): Promise<void> {
         assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatSid);
+        const channel = await this.twilioService.getChannel(chatId);
         channel.off(event, listener);
     }
 

@@ -12,21 +12,22 @@ import assert from 'assert';
 import { ServiceEventNames } from '../../../classes/Chat/Services/Twilio/ChatService';
 import Chat from '../../../classes/Chat/Chat';
 import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
+import { StaticBaseImpl } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base';
 
 type ChatGroupTasks
     = "loadingActiveChats"
     | "loadingAllChats";
 
 type SidebarChatDescriptor = {
-    sid: string;
+    id: string;
     friendlyName: string;
-    status: 'invited' | 'joined' | undefined;
+    status: 'joined' | undefined;
 } & ({
     isDM: false;
 } | {
     isDM: true;
     member1: MemberDescriptor & { displayName: string };
-    member2?: MemberDescriptor & { displayName: string };
+    member2: MemberDescriptor & { displayName: string };
 });
 
 interface ChatsGroupState {
@@ -86,9 +87,9 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
             case "updateAllChats":
                 {
                     const changes = [...update.chats];
-                    const updatedIds = changes.map(x => x.sid);
+                    const updatedIds = changes.map(x => x.id);
                     nextState.allChats = nextState.allChats?.map(x => {
-                        const idx = updatedIds.indexOf(x.sid);
+                        const idx = updatedIds.indexOf(x.id);
                         if (idx > -1) {
                             const y = changes[idx];
                             updatedIds.splice(idx, 1);
@@ -106,9 +107,9 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
             case "updateActiveChats":
                 {
                     const changes = [...update.chats];
-                    const updatedIds = changes.map(x => x.sid);
+                    const updatedIds = changes.map(x => x.id);
                     nextState.activeChats = nextState.activeChats?.map(x => {
-                        const idx = updatedIds.indexOf(x.sid);
+                        const idx = updatedIds.indexOf(x.id);
                         if (idx > -1) {
                             const y = changes[idx];
                             updatedIds.splice(idx, 1);
@@ -124,11 +125,11 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
                 }
                 break;
             case "deleteFromActiveChats":
-                nextState.activeChats = nextState.activeChats?.filter(x => !update.chats.includes(x.sid)) ?? null;
+                nextState.activeChats = nextState.activeChats?.filter(x => !update.chats.includes(x.id)) ?? null;
                 activeChatsUpdated = true;
                 break;
             case "deleteFromAllChats":
-                nextState.allChats = nextState.allChats?.filter(x => !update.chats.includes(x.sid)) ?? null;
+                nextState.allChats = nextState.allChats?.filter(x => !update.chats.includes(x.id)) ?? null;
                 allChatsUpdated = true;
                 break;
 
@@ -174,19 +175,20 @@ export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor)
     if (x.isDM) {
         const [p1, p2] = await Promise.all([
             UserProfile.get(x.member1.profileId, conf.id),
-            (x.member2 ? UserProfile.get(x.member2.profileId, conf.id) : null)
+            UserProfile.get(x.member2.profileId, conf.id)
         ]);
         assert(p1);
+        assert(p2);
         return {
             ...x,
             member1: {
                 ...x.member1,
                 displayName: p1.displayName
             },
-            member2: x.member2 && p2 ? {
+            member2: {
                 ...x.member2,
                 displayName: p2.displayName
-            } : undefined
+            }
         };
     }
     else {
@@ -234,28 +236,29 @@ function subscribeToDMMemberJoin(
     mChat: Chat,
     conf: Conference,
     dispatchUpdate: React.Dispatch<ChatsGroupUpdate | ChatsGroupUpdate[]>
-): (value: ChatDescriptor) => Promise<void> {
-    return async (x) => {
-        if (x.isDM && !x.member2) {
-            memberJoinedlisteners.set(x.sid,
-                await mChat.channelEventOn(x.sid, "memberJoined", async (mem) => {
-                    const profile = await UserProfile.get(mem.profileId, conf.id);
-                    assert(profile);
-                    dispatchUpdate({
-                        action: "updateActiveChats",
-                        chats: [
-                            {
-                                ...x,
-                                member2: {
-                                    isOnline: await mem.getOnlineStatus(),
-                                    profileId: mem.profileId,
-                                    displayName: profile.displayName
-                                }
-                            } as SidebarChatDescriptor
-                        ]
-                    });
-                }));
-        }
+): (value: string | ChatDescriptor) => Promise<void> {
+    return async (chatIdOrDesc) => {
+        // WATCH_TODO
+        // if (x.isDM && !x.member2) {
+        //     memberJoinedlisteners.set(x.id,
+        //         await mChat.channelEventOn(x.id, "memberJoined", async (mem) => {
+        //             const profile = await UserProfile.get(mem.profileId, conf.id);
+        //             assert(profile);
+        //             dispatchUpdate({
+        //                 action: "updateActiveChats",
+        //                 chats: [
+        //                     {
+        //                         ...x,
+        //                         member2: {
+        //                             isOnline: await mem.getOnlineStatus(),
+        //                             profileId: mem.profileId,
+        //                             displayName: profile.displayName
+        //                         }
+        //                     } as SidebarChatDescriptor
+        //                 ]
+        //             });
+        //         }));
+        // }
     };
 }
 
@@ -287,7 +290,7 @@ export default function ChatsGroup(props: Props) {
         async function updateChats() {
             try {
                 if (mChat) {
-                    const chatsP = makeCancelable(mChat.listActiveChats());
+                    const chatsP = makeCancelable(mChat.listWatchedChats());
                     cancel = chatsP.cancel;
                     const chats = await chatsP.promise;
                     await Promise.all(chats.map(subscribeToDMMemberJoin(memberJoinedlisteners, mChat, conf, dispatchUpdate)));
@@ -395,60 +398,62 @@ export default function ChatsGroup(props: Props) {
                     listeners.set("channelJoined", await chatService.serviceEventOn("channelJoined", async (ch) => {
                         await subscribeToDMMemberJoin(memberJoinedlisteners, chatService, conf, dispatchUpdate)(ch);
 
-                        if (!ch.isDM || ch.member2) {
-                            dispatchUpdate({
-                                action: "updateActiveChats",
-                                chats: [await upgradeChatDescriptor(conf, ch)]
-                            });
-                        }
+                        const tc = await StaticBaseImpl.getByField("TextChat", "twilioID", ch, conf.id);
+                        assert(tc);
+                        const chat = await chatService.getChat(tc.id);
+                        dispatchUpdate({
+                            action: "updateActiveChats",
+                            chats: [await upgradeChatDescriptor(conf, chat)]
+                        });
                     }));
 
                     listeners.set("channelLeft", await chatService.serviceEventOn("channelLeft", (ch) => {
                         dispatchUpdate({
                             action: "deleteFromActiveChats",
-                            chats: [ch.sid]
-                        });
-                    }));
-
-                    listeners.set("channelAdded", await chatService.serviceEventOn("channelAdded", (ch) => {
-                        dispatchUpdate({
-                            action: "updateAllChats",
                             chats: [ch]
                         });
                     }));
 
-                    listeners.set("channelRemoved", await chatService.serviceEventOn("channelRemoved", (ch) => {
-                        dispatchUpdate([
-                            {
-                                action: "deleteFromActiveChats",
-                                chats: [ch.sid]
-                            },
-                            {
-                                action: "deleteFromAllChats",
-                                chats: [ch.sid]
-                            }
-                        ]);
-                    }));
+                    // WATCH_TODO: Do these using useDataSubscription on TextChat
+                    // listeners.set("channelAdded", await chatService.serviceEventOn("channelAdded", (ch) => {
+                    //     dispatchUpdate({
+                    //         action: "updateAllChats",
+                    //         chats: [ch]
+                    //     });
+                    // }));
 
-                    listeners.set("channelUpdated", await chatService.serviceEventOn("channelUpdated", async (ch) => {
-                        if (ch.updateReasons.includes("attributes")
-                            || ch.updateReasons.includes("friendlyName")
-                            || ch.updateReasons.includes("lastConsumedMessageIndex")
-                            || ch.updateReasons.includes("lastMessage")
-                            || ch.updateReasons.includes("uniqueName")
-                            || ch.updateReasons.includes("status")
-                            || ch.updateReasons.includes("state"))
-                            dispatchUpdate([
-                                {
-                                    action: "updateActiveChats",
-                                    chats: [await upgradeChatDescriptor(conf, ch.channel)]
-                                },
-                                {
-                                    action: "updateAllChats",
-                                    chats: [ch.channel]
-                                }
-                            ]);
-                    }));
+                    // listeners.set("channelRemoved", await chatService.serviceEventOn("channelRemoved", (ch) => {
+                    //     dispatchUpdate([
+                    //         {
+                    //             action: "deleteFromActiveChats",
+                    //             chats: [ch.sid]
+                    //         },
+                    //         {
+                    //             action: "deleteFromAllChats",
+                    //             chats: [ch.sid]
+                    //         }
+                    //     ]);
+                    // }));
+
+                    // listeners.set("channelUpdated", await chatService.serviceEventOn("channelUpdated", async (ch) => {
+                    //     if (ch.updateReasons.includes("attributes")
+                    //         || ch.updateReasons.includes("friendlyName")
+                    //         || ch.updateReasons.includes("lastConsumedMessageIndex")
+                    //         || ch.updateReasons.includes("lastMessage")
+                    //         || ch.updateReasons.includes("uniqueName")
+                    //         || ch.updateReasons.includes("status")
+                    //         || ch.updateReasons.includes("state"))
+                    //         dispatchUpdate([
+                    //             {
+                    //                 action: "updateActiveChats",
+                    //                 chats: [await upgradeChatDescriptor(conf, ch.channel)]
+                    //             },
+                    //             {
+                    //                 action: "updateAllChats",
+                    //                 chats: [ch.channel]
+                    //             }
+                    //         ]);
+                    // }));
 
                     listeners.set("userUpdated", await chatService.serviceEventOn("userUpdated", async (u) => {
                         if (u.updateReasons.includes("friendlyName") ||
@@ -461,7 +466,7 @@ export default function ChatsGroup(props: Props) {
                                         m1.isOnline = u.user.isOnline;
                                     }
 
-                                    const m2 = x.member2 ? { ...x.member2 } : undefined;
+                                    const m2 = { ...x.member2 };
                                     if (m2 && m2.profileId === u.user.profileId) {
                                         m2.isOnline = u.user.isOnline;
                                     }
@@ -557,13 +562,13 @@ export default function ChatsGroup(props: Props) {
                 // TODO: "New messages in this chat" boldification
                 if (!skip) {
                     chatMenuItems.push({
-                        key: chat.sid,
+                        key: chat.id,
                         element:
                             <MenuItem
                                 title={friendlyName}
                                 label={friendlyName}
                                 icon={icon}
-                                action={`/chat/${chat.sid}`}
+                                action={`/chat/${chat.id}`}
                                 bold={false} />
                     });
                 }

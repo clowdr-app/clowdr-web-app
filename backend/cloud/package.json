@@ -19,9 +19,9 @@
     "moment": "^2.26.0",
     "moment-timezone": "^0.5.31",
     "nanoid": "^3.1.12",
-    "node-fetch": "^2.6.1",
     "nodemailer": "^6.4.10",
     "twilio": "^3.49.4",
+    "uuid": "^8.3.1",
     "xml2json": "^0.12.0"
   }
 }

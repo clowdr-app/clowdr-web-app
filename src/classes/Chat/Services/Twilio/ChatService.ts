@@ -1,4 +1,4 @@
-import { Conference, ConferenceConfiguration, UserProfile } from "@clowdr-app/clowdr-db-schema";
+import { Conference, ConferenceConfiguration, TextChat, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import IChatManager from "../../IChatManager";
 import IChatService from "../../IChatService";
 import Channel from "./Channel";
@@ -7,10 +7,8 @@ import DebugLogger from "@clowdr-app/clowdr-db-schema/build/DebugLogger";
 import assert from "assert";
 import * as Twilio from "twilio-chat";
 import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
-import { ChannelDescriptor as TwilioChannelDescriptor } from "twilio-chat/lib/channeldescriptor";
 import { User as TwilioUser } from "twilio-chat/lib/user";
-import { Paginator } from "twilio-chat/lib/interfaces/paginator";
-import Chat, { ChatDescriptor, MemberDescriptor } from "../../Chat";
+import { MemberDescriptor } from "../../Chat";
 
 export default class TwilioChatService implements IChatService {
     private twilioToken: string | null = null;
@@ -161,7 +159,7 @@ export default class TwilioChatService implements IChatService {
     }
 
     async requestClowdrTwilioBackend(
-        endpoint: "token" | "create" | "invite" | "addMember" | "react" | "tcaer",
+        endpoint: "token" | "react" | "tcaer",
         data: any = {}
     ) {
         assert(this.sessionToken);
@@ -187,67 +185,53 @@ export default class TwilioChatService implements IChatService {
         return result;
     }
 
-    private convertChannels(chans: Array<TwilioChannel> | undefined): Array<Channel> {
-        return chans?.map(chan => {
-            return new Channel({ c: chan }, this);
-        }) ?? [];
-    }
-    private async acquireAllChannels(pages: Paginator<TwilioChannel> | undefined): Promise<Array<Channel>> {
-        let channels: Array<Channel> = this.convertChannels(pages?.items);
-        while (pages?.hasNextPage) {
-            pages = await pages.nextPage();
-            channels = channels.concat(this.convertChannels(pages?.items));
-        }
-        return channels;
-    }
-
-    private convertChannelDescriptors(chans: Array<TwilioChannelDescriptor> | undefined): Array<Channel> {
-        return chans?.map(chan => {
-            return new Channel({ d: chan }, this);
-        }) ?? [];
-    }
-    private async acquireAllChannelsFromDescriptors(pages: Paginator<TwilioChannelDescriptor> | undefined): Promise<Array<Channel>> {
-        let channels: Array<Channel> = this.convertChannelDescriptors(pages?.items);
-        while (pages?.hasNextPage) {
-            pages = await pages.nextPage();
-            channels = channels.concat(this.convertChannelDescriptors(pages?.items));
-        }
-        return channels;
+    private async convertTextChatToChannel(tc: TextChat): Promise<Channel> {
+        assert(this.twilioClient);
+        const c = await this.twilioClient.getChannelBySid(tc.twilioID);
+        return new Channel(tc, { c }, this);
     }
 
     async allChannels(): Promise<Array<Channel>> {
-        const publicChannels = await this.publicChannels();
-        let userChannels = await this.userChannels();
-        const publicChannelIds = publicChannels.map(x => x.sid);
-        userChannels = userChannels.filter(x => !publicChannelIds.includes(x.sid));
-        return publicChannels.concat(userChannels);
-    }
-    async publicChannels(): Promise<Array<Channel>> {
-        return this.acquireAllChannelsFromDescriptors(await this.twilioClient?.getPublicChannelDescriptors());
-    }
-    async userChannels(): Promise<Array<Channel>> {
-        return this.acquireAllChannelsFromDescriptors(await this.twilioClient?.getUserChannelDescriptors());
+        if (this.conference) {
+            const allChats = await TextChat.getAll(this.conference.id);
+            return Promise.all(allChats.map(tc => this.convertTextChatToChannel(tc)));
+        }
+        return [];
     }
     async activeChannels(): Promise<Array<Channel>> {
-        return this.acquireAllChannels(await this.twilioClient?.getSubscribedChannels());
+        if (this.profile) {
+            const watched = await this.profile.watched;
+            const watchedChats = await watched.watchedChatObjects;
+            return Promise.all(watchedChats.map(tc => this.convertTextChatToChannel(tc)));
+        }
+        return [];
     }
 
     async createChannel(invite: Array<string>, isPrivate: boolean, title: string): Promise<Channel> {
-        assert(this.twilioClient);
+        assert(this.conference);
+        assert(this.profile);
         assert(invite.length > 0);
 
-        const result = await this.requestClowdrTwilioBackend("create", {
-            invite,
-            mode: isPrivate ? "private" : "public",
-            title
+        const newTCId: string = await Parse.Cloud.run("textChat-create", {
+            name: title,
+            conference: this.conference.id,
+            isPrivate,
+            isDM: isPrivate && invite.length === 1,
+            autoWatch: false,
+            members: [...invite, this.profile.id]
         });
-        const channel = await this.twilioClient.getChannelBySid(result.channelSID);
-        await channel._subscribe();
-        return new Channel({ c: channel }, this);
+        return this.getChannel(newTCId);
     }
 
     private channelCache: Map<string, Channel> = new Map();
-    async getChannel(channelSid: string): Promise<Channel> {
+    async getChannel(chatId: string): Promise<Channel> {
+        assert(this.conference);
+        const tc = await TextChat.get(chatId, this.conference.id);
+        if (!tc) {
+            throw new Error("Text chat not found.");
+        }
+        const channelSid = tc.twilioID;
+
         const cachedChannel = this.channelCache.get(channelSid);
         if (cachedChannel) {
             return cachedChannel;
@@ -255,7 +239,7 @@ export default class TwilioChatService implements IChatService {
 
         assert(this.twilioClient);
         const channel = await this.twilioClient.getChannelBySid(channelSid);
-        const result = new Channel({ c: channel }, this);
+        const result = new Channel(tc, { c: channel }, this);
         this.channelCache.set(channelSid, result);
         return result;
     }
@@ -320,35 +304,7 @@ export default class TwilioChatService implements IChatService {
         const _this = this;
 
         async function channelWrapper(arg: TwilioChannel) {
-            let c: ChatDescriptor | null = null;
-            try {
-                c = await Chat.convertToDescriptor(
-                    new Channel({ c: arg }, _this)
-                );
-            }
-            catch (e) {
-                // An "Access forbidden" error occurs when we try to access the
-                // members of a chat(in `getIsDM`) for a new channel that we
-                // were just invited to but haven't joined yet.
-                if (!e.toString().includes("Access forbidden")) {
-                    throw e;
-                }
-            }
-            if (c) {
-                listener(
-                    c as ServiceEventArgs<K>
-                );
-            }
-        }
-
-        async function channelUpdatedWrapper(arg: {
-            channel: TwilioChannel;
-            updateReasons: Array<TwilioChannel.UpdateReason>
-        }) {
-            listener({
-                channel: await Chat.convertToDescriptor(new Channel({ c: arg.channel }, _this)),
-                updateReasons: arg.updateReasons
-            } as ServiceEventArgs<K>);
+            listener(arg.sid as ServiceEventArgs<K>);
         }
 
         async function userWrapper(arg: {
@@ -374,23 +330,11 @@ export default class TwilioChatService implements IChatService {
             case "connectionStateChanged":
                 _listener = listener;
                 break;
-            case "channelAdded":
-                _listener = channelWrapper;
-                break;
-            case "channelInvited":
-                _listener = channelWrapper;
-                break;
             case "channelJoined":
                 _listener = channelWrapper;
                 break;
             case "channelLeft":
                 _listener = channelWrapper;
-                break;
-            case "channelRemoved":
-                _listener = channelWrapper;
-                break;
-            case "channelUpdated":
-                _listener = channelUpdatedWrapper;
                 break;
             case "userUpdated":
                 _listener = userWrapper;
@@ -412,12 +356,8 @@ export default class TwilioChatService implements IChatService {
 export type ServiceEventNames
     = "connectionError"
     | "connectionStateChanged"
-    | "channelAdded"
-    | "channelInvited"
     | "channelJoined"
     | "channelLeft"
-    | "channelRemoved"
-    | "channelUpdated"
     | "userUpdated"
     ;
 
@@ -429,15 +369,8 @@ export type ConnectionErrorEventArgs = {
 };
 
 type ConnectionStateChangedEventArgs = Twilio.Client.ConnectionState;
-type ChannelAddedEventArgs = ChatDescriptor;
-type ChannelInvitedEventArgs = ChatDescriptor;
-type ChannelJoinedEventArgs = ChatDescriptor;
-type ChannelLeftEventArgs = ChatDescriptor;
-type ChannelRemovedEventArgs = ChatDescriptor;
-type ChannelUpdatedEventArgs = {
-    channel: ChatDescriptor;
-    updateReasons: Array<TwilioChannel.UpdateReason>;
-}
+type ChannelJoinedEventArgs = string;
+type ChannelLeftEventArgs = string;
 type UserUpdatedEventArgs = {
     user: MemberDescriptor;
     updateReasons: Array<TwilioUser.UpdateReason>
@@ -446,11 +379,7 @@ type UserUpdatedEventArgs = {
 export type ServiceEventArgs<K extends ServiceEventNames> =
     K extends "connectionError" ? ConnectionErrorEventArgs
     : K extends "connectionStateChanged" ? ConnectionStateChangedEventArgs
-    : K extends "channelAdded" ? ChannelAddedEventArgs
-    : K extends "channelInvited" ? ChannelInvitedEventArgs
     : K extends "channelJoined" ? ChannelJoinedEventArgs
     : K extends "channelLeft" ? ChannelLeftEventArgs
-    : K extends "channelRemoved" ? ChannelRemovedEventArgs
-    : K extends "channelUpdated" ? ChannelUpdatedEventArgs
     : K extends "userUpdated" ? UserUpdatedEventArgs
     : never;

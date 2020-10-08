@@ -3,10 +3,7 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
-const { getProfileOfUser, getUserProfileById } = require("./user");
-const { getConferenceConfigurationByKey } = require("./conference");
-const assert = require("assert");
-const fetch = require("node-fetch");
+const { getUserProfileById } = require("./user");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
 
@@ -70,9 +67,6 @@ async function createVideoRoom(data, user) {
     acl.setPublicWriteAccess(false);
     acl.setWriteAccess(user, true);
     if (data.isPrivate) {
-        acl.setRoleReadAccess(managerRole, true);
-        acl.setRoleReadAccess(adminRole, true);
-
         acl.setReadAccess(user, true);
     }
     else {
@@ -110,33 +104,14 @@ async function handleCreateVideoRoom(req) {
             spec.capacity = Math.min(spec.capacity, 50);
 
             if (!spec.textChat) {
-                const twilioBackendURLConfig = await getConferenceConfigurationByKey(spec.conference, "REACT_APP_TWILIO_CALLBACK_URL");
-                assert(twilioBackendURLConfig);
-                const twilioBackendURL = twilioBackendURLConfig.get("value");
-                const resp = await fetch(
-                    `${twilioBackendURL}/chat/create`,
-                    {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            identity: user.getSessionToken(),
-                            conference: confId,
-                            invite: [],
-                            mode: spec.isPrivate ? "private" : "public",
-                            title: spec.name,
-                            forVideoRoom: true,
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                const respStr = resp.body.read().toString();
-                const { textChatID } = JSON.parse(respStr);
-                if (textChatID) {
-                    spec.textChat = new Parse.Object("TextChat", { id: textChatID });
-                }
-                else {
-                    throw new Error("Could not create text chat");
-                }
+                const newChat = new Parse.Object("TextChat", {
+                    autoWatch: false,
+                    name: spec.name,
+                    conference: spec.conference,
+                    mirrored: false,
+                    isDM: false
+                });
+                spec.textChat = await newChat.save(null, { useMasterKey: true });
             }
             else {
                 spec.textChat = new Parse.Object("TextChat", { id: spec.textChat });

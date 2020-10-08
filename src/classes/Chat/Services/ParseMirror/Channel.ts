@@ -14,7 +14,7 @@ export default class Channel implements IChannel {
     ) {
     }
 
-    public get sid(): string {
+    public get id(): string {
         return this._sid;
     }
 
@@ -30,7 +30,10 @@ export default class Channel implements IChannel {
     setLastReadIndex(value: number | null): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    inviteUsers(userProfileIds: string[]): Promise<void> {
+    addMembers(userProfileIds: string[]): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    removeMembers(userProfileIds: string[]): Promise<void> {
         throw new Error("Method not implemented.");
     }
     declineInvitation(): Promise<void> {
@@ -39,22 +42,16 @@ export default class Channel implements IChannel {
     join(): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    addMember(userProfile: UserProfile): Promise<Member> {
-        throw new Error("Method not implemented.");
-    }
-    removeMember(member: Member): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
     getName(): string {
         throw new Error("Method not implemented.");
     }
     setName(value: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    getIsDM(): Promise<false | { member1: MemberDescriptor; member2?: MemberDescriptor }> {
+    getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
         throw new Error("Method not implemented.");
     }
-    getStatus(): 'invited' | 'joined' | undefined {
+    getStatus(): 'joined' | undefined {
         throw new Error("Method not implemented.");
     }
     delete(): Promise<void> {

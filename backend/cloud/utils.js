@@ -115,6 +115,25 @@ function validateBasicType(key, schemaType, actualValue) {
     return { ok: true };
 }
 
+const backOff = require('exponential-backoff');
+
+async function callWithRetry(f) {
+    const response = await backOff(f,
+        {
+            startingDelay: 500,
+            retry: (err, attemptNum) => {
+                // console.error(err);
+                if (err && err.code === 20429)
+                    return true;
+                // tslint:disable-next-line:no-console
+                console.error("Unexpected error", err);
+                return false;
+            }
+        });
+    return response;
+}
+
 module.exports = {
-    validateRequest: validateRequest
+    validateRequest: validateRequest,
+    callWithRetry: callWithRetry
 }

@@ -6,8 +6,6 @@ export default interface IChatService {
     teardown(): Promise<void>;
 
     allChannels(): Promise<Array<IChannel>>;
-    publicChannels(): Promise<Array<IChannel>>;
-    userChannels(): Promise<Array<IChannel>>;
     activeChannels(): Promise<Array<IChannel>>;
 
     getChannel(channelSid: string): Promise<IChannel>;

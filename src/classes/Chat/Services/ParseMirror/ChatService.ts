@@ -17,12 +17,6 @@ export default class ParseMirrorChatService implements IChatService {
     allChannels(): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }
-    publicChannels(): Promise<Array<Channel>> {
-        throw new Error("Method not implemented.");
-    }
-    userChannels(): Promise<Array<Channel>> {
-        throw new Error("Method not implemented.");
-    }
     activeChannels(): Promise<Array<Channel>> {
         throw new Error("Method not implemented.");
     }

@@ -1,4 +1,4 @@
-import { UserProfile } from "@clowdr-app/clowdr-db-schema";
+import { TextChat } from "@clowdr-app/clowdr-db-schema";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "../../IChannel";
 import Member from "./Member";
@@ -48,6 +48,7 @@ export type ChannelEventArgs<K extends ChannelEventNames> =
 
 export default class Channel implements IChannel {
     constructor(
+        private textChat: TextChat,
         // We can't rely on `instanceof` to distinguish these types (argh!)
         private channel: { c: TwilioChannel } | { d: TwilioChannelDescriptor },
         private service: TwilioChatService
@@ -58,8 +59,8 @@ export default class Channel implements IChannel {
         return 'c' in this.channel ? this.channel.c[s] : this.channel.d[s];
     }
 
-    public get sid(): string {
-        return this.getCommonField('sid');
+    public get id(): string {
+        return this.textChat.id;
     }
 
     private async upgrade(): Promise<TwilioChannel> {
@@ -71,9 +72,9 @@ export default class Channel implements IChannel {
             // "conflicting member modification" error or a "member already
             // exists" error
             if (this.channel.c.status !== "joined") {
-                console.log(`Joining chat: ${this.channel.c.sid}`);
+                // console.log(`Joining chat: ${this.channel.c.sid}`);
                 await this.channel.c.join();
-                console.log(`Joined chat: ${this.channel.c.sid}`);
+                // console.log(`Joined chat: ${this.channel.c.sid}`);
             }
         }
         catch (e) {
@@ -112,38 +113,25 @@ export default class Channel implements IChannel {
             await channel.updateLastConsumedMessageIndex(value);
         }
     }
-    async inviteUsers(userProfileIds: string[]): Promise<void> {
-        await this.service.requestClowdrTwilioBackend("invite", {
-            channel: this.getCommonField('sid'),
-            targetIdentities: userProfileIds
+    async addMembers(userProfileIds: string[]): Promise<void> {
+        return Parse.Cloud.run("textChat-invite", {
+            conference: (await this.textChat.conference).id,
+            chat: this.textChat.id,
+            members: userProfileIds
         });
-    }
-    async declineInvitation(): Promise<void> {
-        const channel = await this.upgrade();
-        await channel.decline();
     }
     async join(): Promise<void> {
         const channel = await this.upgrade();
         await channel.join();
     }
-    async addMember(userProfile: UserProfile): Promise<Member> {
-        const resultP = this.service.requestClowdrTwilioBackend("addMember", {
-            channel: this.getCommonField('sid'),
-            targetIdentity: userProfile.id
-        });
-        const channelP = this.upgrade();
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const [_, channel] = await Promise.all([resultP, channelP]);
-        const member = await channel.getMemberByIdentity(userProfile.id);
-        return new Member(member);
+    async removeMembers(userProfileIds: string[]): Promise<void> {
+        throw new Error("Method not implemented");
+        // const channel = await this.upgrade();
+        // await channel.removeMember(member.sid);
     }
-    async removeMember(member: Member): Promise<void> {
+    async getMember(memberProfileId: string): Promise<Member> {
         const channel = await this.upgrade();
-        await channel.removeMember(member.sid);
-    }
-    async getMember(memberSid: string): Promise<Member> {
-        const channel = await this.upgrade();
-        return new Member(await channel.getMemberBySid(memberSid));
+        return new Member(await channel.getMemberBySid(memberProfileId));
     }
     getName(): string {
         return this.getCommonField('friendlyName');
@@ -152,9 +140,8 @@ export default class Channel implements IChannel {
         const channel = await this.upgrade();
         await channel.updateFriendlyName(value);
     }
-    async getIsDM(): Promise<false | { member1: MemberDescriptor; member2?: MemberDescriptor }> {
-        const attrs = this.getCommonField('attributes');
-        if (!!(attrs as any).isDM) {
+    async getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
+        if (this.textChat.isDM) {
             assert(this.service.conference);
             const channel = await this.upgrade();
             const members = await channel.getMembers();
@@ -162,7 +149,7 @@ export default class Channel implements IChannel {
 
             const [member1Online, member2Online] = await Promise.all([
                 member1.getOnlineStatus(),
-                (member2?.getOnlineStatus() ?? false)
+                member2.getOnlineStatus()
             ]);
 
             return {
@@ -170,20 +157,20 @@ export default class Channel implements IChannel {
                     profileId: member1.profileId,
                     isOnline: member1Online
                 },
-                member2: member2 ? {
+                member2: {
                     profileId: member2.profileId,
                     isOnline: member2Online
-                } : undefined
+                }
             };
         }
         else {
             return false;
         }
     }
-    getStatus(): 'invited' | 'joined' | undefined {
+    getStatus(): 'joined' | undefined {
         const status = this.getCommonField('attributes');
         if (status === "invited") {
-            return "invited";
+            return undefined;
         }
         else if (status === "joined") {
             return "joined";

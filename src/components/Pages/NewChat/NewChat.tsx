@@ -112,7 +112,7 @@ export default function NewChat(props: Props) {
             chatTitle
         );
         console.log(`New channel: ${JSON.stringify(newChannel)}`);
-        setNewChannelSID(newChannel?.sid ?? null);
+        setNewChannelSID(newChannel?.id ?? null);
     }
 
     const publicEl = <>

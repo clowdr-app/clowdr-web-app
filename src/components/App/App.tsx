@@ -22,6 +22,7 @@ import Video from "../../classes/Video/Video";
 import { addNotification } from "../../classes/Notifications/Notifications";
 import ReactMarkdown from "react-markdown";
 import { emojify } from "react-emojione";
+import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base";
 
 type AppTasks
     = "beginLoadConference"
@@ -36,7 +37,7 @@ interface AppState {
     profile: UserProfile | null;
     sessionToken: string | null;
     userRoles: { isAdmin: boolean, isManager: boolean };
-    announcementsChannelSID: string | null;
+    announcementsChannelID: string | null;
 }
 
 type AppUpdate
@@ -46,7 +47,7 @@ type AppUpdate
     | { action: "setUserProfile", data: { profile: UserProfile, sessionToken: string } | null; }
     | { action: "chatUpdated" }
     | { action: "setUserRoles", roles: { isAdmin: boolean, isManager: boolean } }
-    | { action: "setAnnouncementsChannelSID", sid: string | null }
+    | { action: "setAnnouncementsChannelID", id: string | null }
     ;
 
 function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpdate>): AppState {
@@ -57,7 +58,7 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
         profile: currentState.profile,
         sessionToken: currentState.sessionToken,
         userRoles: currentState.userRoles,
-        announcementsChannelSID: currentState.announcementsChannelSID
+        announcementsChannelID: currentState.announcementsChannelID
     };
 
     function doUpdate(update: AppUpdate) {
@@ -85,8 +86,8 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
             case "setUserRoles":
                 nextState.userRoles = update.roles;
                 break;
-            case "setAnnouncementsChannelSID":
-                nextState.announcementsChannelSID = update.sid;
+            case "setAnnouncementsChannelID":
+                nextState.announcementsChannelID = update.id;
                 break;
         }
     }
@@ -123,7 +124,7 @@ export default function App() {
         profile: null,
         sessionToken: null,
         userRoles: { isAdmin: false, isManager: false },
-        announcementsChannelSID: null
+        announcementsChannelID: null
     });
     const [chatReady, setChatReady] = useState(false);
     const [videoReady, setVideoReady] = useState(false);
@@ -141,7 +142,7 @@ export default function App() {
                 dispatchAppUpdate({ action: "beginningLoadConference" });
 
                 let _conference: Conference | null = null;
-                let announcementsChannelSID: string | null = null;
+                let announcementsChannelID: string | null = null;
 
                 if (appState.conferenceId) {
                     try {
@@ -149,7 +150,9 @@ export default function App() {
                         if (_conference) {
                             const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", _conference.id);
                             if (configs.length > 0) {
-                                announcementsChannelSID = configs[0].value;
+                                const announcementsChannelSID = configs[0].value;
+                                const tc = await StaticBaseImpl.getByField("TextChat", "twilioID", announcementsChannelSID, _conference.id);
+                                announcementsChannelID = tc?.id ?? null;
                             }
                         }
                     }
@@ -161,7 +164,7 @@ export default function App() {
 
                 dispatchAppUpdate([
                     { action: "setConference", conference: _conference },
-                    { action: "setAnnouncementsChannelSID", sid: announcementsChannelSID }
+                    { action: "setAnnouncementsChannelID", id: announcementsChannelID }
                 ]);
             }
         }
@@ -229,11 +232,14 @@ export default function App() {
     useEffect(() => {
         async function updateChat() {
             if (appState.conference && appState.sessionToken && appState.profile) {
-                if (!appState.announcementsChannelSID) {
-                    let configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", appState.conference.id);
+                if (!appState.announcementsChannelID) {
+                    const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", appState.conference.id);
                     if (configs.length > 0) {
+                        const tc = await StaticBaseImpl.getByField("TextChat", "twilioID", configs[0].value, appState.conference.id);
+                        const announcementsChannelID = tc?.id ?? null;
+
                         dispatchAppUpdate([
-                            { action: "setAnnouncementsChannelSID", sid: configs[0].value },
+                            { action: "setAnnouncementsChannelID", id: announcementsChannelID },
                         ]);
                     }
                 }
@@ -262,7 +268,7 @@ export default function App() {
         }
 
         updateChat();
-    }, [appState.announcementsChannelSID, appState.conference, appState.profile, appState.sessionToken]);
+    }, [appState.announcementsChannelID, appState.conference, appState.profile, appState.sessionToken]);
 
     // Update video
     useEffect(() => {
@@ -382,7 +388,7 @@ export default function App() {
         finally {
             dispatchAppUpdate([
                 { action: "setConference", conference: null },
-                { action: "setAnnouncementsChannelSID", sid: null },
+                { action: "setAnnouncementsChannelID", id: null },
                 { action: "setUserProfile", data: null },
                 { action: "setUserRoles", roles: { isAdmin: false, isManager: false } }
             ]);
@@ -425,14 +431,16 @@ export default function App() {
 
     const selectConference = useCallback(async function _selectConference(id: string | null): Promise<boolean> {
         let conference: Conference | null = null;
-        let announcementsChannelSID: string | null = null;
+        let announcementsChannelID: string | null = null;
         try {
             if (id) {
                 conference = await Conference.get(id);
                 if (conference) {
                     const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", conference.id);
                     if (configs.length > 0) {
-                        announcementsChannelSID = configs[0].value;
+                        const announcementsChannelSID = configs[0].value;
+                        const tc = await StaticBaseImpl.getByField("TextChat", "twilioID", announcementsChannelSID, conference.id);
+                        announcementsChannelID = tc?.id ?? null;
                     }
                 }
             }
@@ -443,7 +451,7 @@ export default function App() {
 
         dispatchAppUpdate([
             { action: "setConference", conference },
-            { action: "setAnnouncementsChannelSID", sid: announcementsChannelSID }
+            { action: "setAnnouncementsChannelID", id: announcementsChannelID }
         ]);
 
         return conference !== null;
@@ -458,8 +466,9 @@ export default function App() {
     useEffect(() => {
         if (chatReady) {
             const mChat = Chat.instance();
-            if (mChat && appState.announcementsChannelSID) {
-                const channelSid = appState.announcementsChannelSID;
+            if (mChat && appState.announcementsChannelID) {
+                const channelSid = appState.announcementsChannelID;
+
                 const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
                 const renderEmoji = (text: any) => doEmojify(text.value);
 
@@ -489,7 +498,7 @@ export default function App() {
         }
 
         return () => { };
-    }, [appState.announcementsChannelSID, chatReady]);
+    }, [appState.announcementsChannelID, chatReady]);
 
     // The main page element - this is where the bulk of content goes
     const page = useMemo(() => <Page

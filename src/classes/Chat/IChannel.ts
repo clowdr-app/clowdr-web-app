@@ -1,4 +1,3 @@
-import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import { MemberDescriptor } from ".";
 import IMember from "./IMember";
@@ -6,7 +5,7 @@ import IMessage from "./IMessage";
 import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
 
 export default interface IChannel {
-    sid: string;
+    id: string;
 
     membersCount(): Promise<number>;
     members(): Promise<Array<IMember>>;
@@ -14,18 +13,15 @@ export default interface IChannel {
     getLastReadIndex(): Promise<number | null>;
     setLastReadIndex(value: number | null): Promise<void>;
 
-    inviteUsers(userProfileIds: string[]): Promise<void>;
-    declineInvitation(): Promise<void>;
+    addMembers(userProfileIds: string[]): Promise<void>;
+    removeMembers(userProfileIds: string[]): Promise<void>;
 
     join(): Promise<void>;
 
-    addMember(userProfile: UserProfile): Promise<IMember>;
-    removeMember(member: IMember): Promise<void>;
-
     getName(): string;
     setName(value: string): Promise<void>;
-    getIsDM(): Promise<false | { member1: MemberDescriptor; member2?: MemberDescriptor }>;
-    getStatus(): 'invited' | 'joined' | undefined;
+    getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }>;
+    getStatus(): 'joined' | undefined;
     delete(): Promise<void>;
 
     getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<IMessage>>

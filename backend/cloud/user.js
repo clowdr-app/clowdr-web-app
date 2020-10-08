@@ -180,7 +180,6 @@ async function deleteRegistration(registrationId) {
     }
 }
 
-
 /**
  * @param {Parse.User} user
  * @param {string} confId
@@ -190,6 +189,23 @@ async function getProfileOfUser(user, confId) {
     const q = new Parse.Query("UserProfile");
     q.equalTo("conference", new Parse.Object("Conference", { id: confId }));
     q.equalTo("user", user);
+    try {
+        return await q.first({ useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
+}
+
+/**
+ * @param {string} userId
+ * @param {string} confId
+ * @returns {Promise<Parse.Object | null>}
+ */
+async function getProfileOfUserId(userId, confId) {
+    const q = new Parse.Query("UserProfile");
+    q.equalTo("conference", new Parse.Object("Conference", { id: confId }));
+    q.equalTo("user", new Parse.Object("_User", { id: userId }));
     try {
         return await q.first({ useMasterKey: true });
     }
@@ -497,5 +513,6 @@ Parse.Cloud.define("user-reset-password", handleResetPassword)
 module.exports = {
     getUserById: getUserById,
     getProfileOfUser: getProfileOfUser,
+    getProfileOfUserId: getProfileOfUserId,
     getUserProfileById: getUserProfileById
 };
