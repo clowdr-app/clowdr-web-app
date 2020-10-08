@@ -60,15 +60,20 @@ export default function ViewContentFeed(props: Props) {
 
     function zoomRoomToMeetingDetails(zoomRoom: ZoomRoom | "not present" | null): { meetingNumber: string, password: string } | undefined {
         if (zoomRoom && zoomRoom !== "not present") {
-            let url = new URL(zoomRoom.url);
-            let meetingNumber = url.pathname.slice(3);
-            let password = url.searchParams.get("pwd");
+            const url = new URL(zoomRoom.url);
+            const meetingNumber = url.pathname.slice(3);
+            const password = url.searchParams.get("pwd");
             return meetingNumber && password ? { meetingNumber, password } : undefined;
         }
         return undefined;
     }
 
-    return <div className="content-feed">
+    return <div className={`content-feed${youTubeFeed &&
+        youTubeFeed !== "not present"
+        ? " youtube"
+        : zoomRoom && zoomRoom !== "not present"
+            ? "zoom"
+            : ""}`}>
         {textChat && textChat !== "not present"
             ? <ChatFrame chatSid={textChat.twilioID} />
             : videoRoom && videoRoom !== "not present"

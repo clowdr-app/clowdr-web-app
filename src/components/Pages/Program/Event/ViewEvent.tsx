@@ -24,8 +24,6 @@ export default function ViewEvent(props: Props) {
     const [session, setSession] = useState<ProgramSession | null>(null);
     const [sessionFeed, setSessionFeed] = useState<ContentFeed | null>(null);
     const [eventFeed, setEventFeed] = useState<ContentFeed | "not present" | null>(null);
-    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
-    const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
 
     // TODO: Build a re-usable "View all the times this program item is scheduled" component
     //       to be accessible via an Actions Button on an EventItem or embedded in an ViewItem
@@ -116,6 +114,8 @@ export default function ViewEvent(props: Props) {
         });
     }
 
+    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+    const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
     useSafeAsync(async () => {
         const watched = await userProfile.watched;
         return watched.watchedEvents.includes(props.eventId);

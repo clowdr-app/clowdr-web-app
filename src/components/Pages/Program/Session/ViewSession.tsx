@@ -1,5 +1,5 @@
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
-import { ContentFeed, ProgramSession } from "@clowdr-app/clowdr-db-schema";
+import { ContentFeed, ProgramSession, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import React, { useCallback, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import SessionGroup from "../All/SessionGroup";
@@ -12,6 +12,8 @@ import "./ViewSession.scss";
 import { ActionButton } from "../../../../contexts/HeadingContext";
 import SplitterLayout from "react-splitter-layout";
 import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import useUserProfile from "../../../../hooks/useUserProfile";
 
 interface Props {
     sessionId: string;
@@ -19,6 +21,7 @@ interface Props {
 
 export default function ViewSession(props: Props) {
     const conference = useConference();
+    const userProfile = useUserProfile();
     const [session, setSession] = useState<ProgramSession | null>(null);
     const [feed, setFeed] = useState<ContentFeed | null>(null);
     const [chatSize, setChatSize] = useState(30);
@@ -62,16 +65,100 @@ export default function ViewSession(props: Props) {
     useDataSubscription("ProgramSession", onSessionUpdated, onSessionDeleted, !session, conference);
     useDataSubscription("ContentFeed", onContentFeedUpdated, onContentFeedDeleted, !feed, conference);
 
+    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+    const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
+    useSafeAsync(async () => {
+        const watched = await userProfile.watched;
+        return watched.watchedSessions.includes(props.sessionId);
+    }, setIsFollowing, [userProfile.watchedId, props.sessionId]);
+
+    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+        if (update.object.id === userProfile.watchedId) {
+            setIsFollowing((update.object as WatchedItems).watchedSessions.includes(props.sessionId));
+        }
+    }, [props.sessionId, userProfile.watchedId]);
+
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conference);
+
+    const doFollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await userProfile.watched;
+                if (!watched.watchedSessions.includes(props.sessionId)) {
+                    watched.watchedSessions.push(props.sessionId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.sessionId, userProfile.watchedId]);
+
+    const doUnfollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await userProfile.watched;
+                if (watched.watchedSessions.includes(props.sessionId)) {
+                    watched.watchedSessions = watched.watchedSessions.filter(x => x !== props.sessionId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.sessionId, userProfile.watchedId]);
+
     const buttons: Array<ActionButton> = [];
     if (session) {
+        if (isFollowing !== null) {
+            if (isFollowing) {
+                buttons.push({
+                    label: changingFollow ? "Changing" : "Unfollow session",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doUnfollow();
+                    }
+                });
+            }
+            else {
+                buttons.push({
+                    label: changingFollow ? "Changing" : "Follow session",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doFollow();
+                    }
+                });
+            }
+        }
+
         buttons.push({
             label: "Track",
             action: `/track/${session.trackId}`,
             icon: <i className="fas fa-eye"></i>
         });
     }
-
-    // WATCH_TODO: Watch session action button
 
     useHeading({
         title: session?.title ?? "Session",
@@ -91,7 +178,7 @@ export default function ViewSession(props: Props) {
             : <LoadingSpinner />}
     </div>;
 
-    return <div className="view-track">
+    return <div className="view-session">
         <SplitterLayout
             vertical={true}
             percentage={true}

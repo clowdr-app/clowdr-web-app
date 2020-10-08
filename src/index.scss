@@ -54,6 +54,14 @@ body {
         outline-offset: 0;
     }
 
+    * > i.fa-star {
+        color: rgba(230, 164, 0, 0.788);
+    }
+
+    *:hover > i.fa-star {
+        color: gold;
+    }
+
     *:focus {
         outline       : solid 2px $color-3;
         outline-offset: 0;

@@ -1,15 +1,19 @@
 @import "../../styles/util";
 
 .content-feed {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
+
+    &.youtube,
+    &.zoom {
+        display        : flex;
+        flex-direction : row;
+        justify-content: center;
+        align-items    : center;
+    }
 
     margin: mm(5);
 
     h3 {
-        font-size: inherit;
+        font-size  : inherit;
         font-weight: bold;
     }
 

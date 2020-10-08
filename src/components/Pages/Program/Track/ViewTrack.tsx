@@ -1,11 +1,14 @@
-import { ContentFeed, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
+import { ContentFeed, ProgramTrack, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import React, { useCallback, useState } from "react";
 import SplitterLayout from "react-splitter-layout";
+import { ActionButton } from "../../../../contexts/HeadingContext";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
+import useUserProfile from "../../../../hooks/useUserProfile";
 import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import TrackColumn from "../All/TrackColumn";
@@ -19,6 +22,7 @@ interface Props {
 
 export default function ViewTrack(props: Props) {
     const conference = useConference();
+    const userProfile = useUserProfile();
     const [track, setTrack] = useState<ProgramTrack | null>(null);
     const [feed, setFeed] = useState<ContentFeed | null>(null);
     const [chatSize, setChatSize] = useState(30);
@@ -62,17 +66,105 @@ export default function ViewTrack(props: Props) {
     useDataSubscription("ProgramTrack", onTrackUpdated, onTrackDeleted, !track, conference);
     useDataSubscription("ContentFeed", onContentFeedUpdated, onContentFeedDeleted, !feed, conference);
 
+    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+    const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
+    useSafeAsync(async () => {
+        const watched = await userProfile.watched;
+        return watched.watchedTracks.includes(props.trackId);
+    }, setIsFollowing, [userProfile.watchedId, props.trackId]);
 
-    // WATCH_TODO: Watch track action button
+    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+        if (update.object.id === userProfile.watchedId) {
+            setIsFollowing((update.object as WatchedItems).watchedTracks.includes(props.trackId));
+        }
+    }, [props.trackId, userProfile.watchedId]);
+
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conference);
+
+    const doFollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await userProfile.watched;
+                if (!watched.watchedTracks.includes(props.trackId)) {
+                    watched.watchedTracks.push(props.trackId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.trackId, userProfile.watchedId]);
+
+    const doUnfollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await userProfile.watched;
+                if (watched.watchedTracks.includes(props.trackId)) {
+                    watched.watchedTracks = watched.watchedTracks.filter(x => x !== props.trackId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.trackId, userProfile.watchedId]);
+
+    const buttons: Array<ActionButton> = [];
+    if (track) {
+        if (isFollowing !== null) {
+            if (isFollowing) {
+                buttons.push({
+                    label: changingFollow ? "Changing" : "Unfollow track",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doUnfollow();
+                    }
+                });
+            }
+            else {
+                buttons.push({
+                    label: changingFollow ? "Changing" : "Follow track",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doFollow();
+                    }
+                });
+            }
+        }
+    }
+
+    buttons.push({
+        label: "Program",
+        icon: <i className="fas fa-eye"></i>,
+        action: "/program"
+    });
 
     useHeading({
         title: track?.name ?? "Track",
         subtitle: track ? <TrackMarker track={track} /> : undefined,
-        buttons: [{
-            label: "Program",
-            icon: <i className="fas fa-eye"></i>,
-            action: "/program"
-        }]
+        buttons
     });
 
     const trackEl
