@@ -53,14 +53,14 @@ async function createConference(conferenceData) {
         return existingConfId;
     }
 
-    conferenceData.twilio = {};
+    conferenceData.twilio = conferenceData.twilio ?? {};
     conferenceData.twilio.MASTER_SID = process.env.TWILIO_MASTER_SID;
     conferenceData.twilio.MASTER_AUTH_TOKEN = process.env.TWILIO_MASTER_AUTH_TOKEN;
     conferenceData.twilio.CHAT_PRE_WEBHOOK_URL = process.env.TWILIO_CHAT_PRE_WEBHOOK_URL;
     conferenceData.twilio.CHAT_POST_WEBHOOK_URL = process.env.TWILIO_CHAT_POST_WEBHOOK_URL;
     // data.twilio.removeExisting = true;
 
-    conferenceData.react = {};
+    conferenceData.react = conferenceData.react ?? {};
     conferenceData.react.TWILIO_CALLBACK_URL = process.env.REACT_APP_TWILIO_CALLBACK_URL;
     conferenceData.react.FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
 
@@ -262,7 +262,8 @@ async function main() {
                                     id: textChatsData.length,
                                     name: item.feed.name,
                                     autoWatch: false,
-                                    forVideoRoom: true
+                                    isPrivate: false,
+                                    isDM: false
                                 };
                                 textChatsData.push(newTextChat);
                             }
@@ -291,7 +292,9 @@ async function main() {
                         const newTextChat = {
                             id: textChatsData.length,
                             name: item.feed.name,
-                            autoWatch: false
+                            autoWatch: false,
+                            isPrivate: false,
+                            isDM: false
                         };
                         textChatsData.push(newTextChat);
 
@@ -321,7 +324,9 @@ async function main() {
             const newTextChat = {
                 id: textChatsData.length,
                 name: `Track: ${track.name}`,
-                autoWatch: false
+                autoWatch: false,
+                isPrivate: false,
+                isDM: false
             };
             textChatsData.push(newTextChat);
 
@@ -360,34 +365,7 @@ async function main() {
         //       so it may still need updating
         const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
         const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
-        // TODO: Handle creating text chats via the Twilio Backend
-        // const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
-        const textChats = (await Promise.all(textChatsData.map(async spec => {
-            const resp = await fetch(
-                `${process.env.REACT_APP_TWILIO_CALLBACK_URL}/chat/create`,
-                {
-                    method: "POST",
-                    body: JSON.stringify({
-                        identity: adminSessionToken,
-                        conference: confId,
-                        invite: [],
-                        mode: "public",
-                        title: spec.name,
-                        forVideoRoom: spec.forVideoRoom,
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-            const respStr = resp.body.read().toString();
-            return {
-                key: spec.id,
-                id: JSON.parse(respStr).textChatID
-            }
-        }))).reduce((obj, x) => {
-            obj[x.key] = x.id;
-            return obj;
-        }, {});
+        const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
         remapObjects(textChats, "textChat", videoRoomsData);
         const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
         remapObjects(youtubeFeeds, "youtube", contentFeedsData);

@@ -37,6 +37,7 @@ const createConferenceRequestSchema = {
         country: "string",
     },
     twilio: {
+        subaccountName: "string?",
         MASTER_SID: "string",
         MASTER_AUTH_TOKEN: "string",
         CHAT_PRE_WEBHOOK_URL: "string",
@@ -579,8 +580,12 @@ Parse.Cloud.job("conference-create", async (request) => {
             // Get existing or create new Twilio subaccount
             message("Getting or creating Twilio subaccount...");
             function generateTwilioSubaccountFriendlyName() {
-                // Something consistent between calls and that is unique - conference names are unique.
-                return conference.id + ": " + conference.get("shortName");
+                if (params.twilio.subaccountName) {
+                    return params.twilio.subaccountName;
+                }
+                else {
+                    return conference.id + ": " + conference.get("shortName");
+                }
             }
             async function clearOutDeadSubaccounts() {
                 let accounts = await twilioMasterClient.api.accounts.list({ status: 'active' });
