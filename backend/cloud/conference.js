@@ -805,6 +805,35 @@ Parse.Cloud.job("conference-create", async (request) => {
             });
             message(`Added admin user to announcements channel.`);
 
+            message(`Creating announcements text chat in Parse...`);
+            {
+                const textChat = new Parse.Object("TextChat");
+                textChat.set("autoWatch", true);
+                textChat.set("twilioID", twilioAccouncementsChannel.sid);
+                textChat.set("conference", conference);
+                textChat.set("mirrored", false);
+                textChat.set("name", twilioAccouncementsChannel.friendlyName);
+                const newACLs = new Parse.ACL();
+                textChat.setACL(newACLs);
+                textChat.save(null, { useMasterKey: true });
+
+                const acl = new Parse.ACL();
+                acl.setPublicReadAccess(false);
+                acl.setPublicWriteAccess(false);
+
+                acl.setRoleReadAccess(managerRole, true);
+                acl.setRoleWriteAccess(managerRole, true);
+
+                acl.setRoleReadAccess(adminRole, true);
+                acl.setRoleWriteAccess(adminRole, true);
+
+                acl.setRoleReadAccess(attendeeRole, true);
+
+                textChat.setACL(acl);
+                await textChat.save(null, { useMasterKey: true });
+            }
+            message(`Created announcements text chat in Parse.`);
+
             // Configure SendGrid
             message(`Configuring SendGrid...`);
             await setConfiguration("SENDGRID_API_KEY", params.sendgrid.API_KEY);

@@ -3,10 +3,21 @@
 
 const { getRoleByName } = require("./role");
 const { getUserById, getProfileOfUser } = require("./user");
+const { getConferenceConfigurationByKey } = require("./conference");
 
 // TODO: Before delete: Prevent delete if still in use anywhere
 // TODO: Before delete: Delete channel in Twilio
 // TODO: Before delete: Delete mirrored TextChatMessage
+
+Parse.Cloud.beforeSave("TextChat", async (req) => {
+    const textChat = req.object;
+    const conference = textChat.get("conference");
+    const announcementsSIDConfig = await getConferenceConfigurationByKey(conference, "TWILIO_ANNOUNCEMENTS_CHANNEL_SID");
+    const announcementsSID = announcementsSIDConfig.get("value");
+    if (textChat.get("twilioID") && textChat.get("twilioID") === announcementsSID) {
+        textChat.set("autoWatch", true);
+    }
+});
 
 Parse.Cloud.afterSave("TextChat", async (req) => {
     const textChat = req.object;

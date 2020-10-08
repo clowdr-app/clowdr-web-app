@@ -1,11 +1,14 @@
-import { UserProfile } from "@clowdr-app/clowdr-db-schema";
-import React, { useEffect, useState } from "react";
+import { UserProfile, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import React, { useCallback, useEffect, useState } from "react";
 import MultiSelect from "react-multi-select-component";
 import { Link } from "react-router-dom";
 import { MemberDescriptor } from "../../../classes/Chat";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import { ActionButton } from "../../../contexts/HeadingContext";
 import useConference from "../../../hooks/useConference";
+import useDataSubscription from "../../../hooks/useDataSubscription";
 import useHeading from "../../../hooks/useHeading";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
@@ -57,6 +60,68 @@ export default function ChatView(props: Props) {
 
     const actionButtons: Array<ActionButton> = [];
 
+    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+    const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
+    useSafeAsync(async () => {
+        const watched = await mUser.watched;
+        return watched.watchedChats.includes(props.chatId);
+    }, setIsFollowing, [mUser.watchedId, props.chatId]);
+
+    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+        if (update.object.id === mUser.watchedId) {
+            setIsFollowing((update.object as WatchedItems).watchedChats.includes(props.chatId));
+        }
+    }, [props.chatId, mUser.watchedId]);
+
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conf);
+
+    const doFollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await mUser.watched;
+                if (!watched.watchedChats.includes(props.chatId)) {
+                    watched.watchedChats.push(props.chatId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.chatId, mUser.watchedId]);
+
+    const doUnfollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await mUser.watched;
+                if (watched.watchedChats.includes(props.chatId)) {
+                    watched.watchedChats = watched.watchedChats.filter(x => x !== props.chatId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.chatId, mUser.watchedId]);
+
+
     if (showPanel !== "chat") {
         actionButtons.push({
             label: "Back to chat",
@@ -93,6 +158,33 @@ export default function ChatView(props: Props) {
                     setShowPanel("invite");
                 }
             });
+        }
+    }
+
+    if (isDM === false) {
+        if (isFollowing !== null) {
+            if (isFollowing) {
+                actionButtons.push({
+                    label: changingFollow ? "Changing" : "Unfollow chat",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doUnfollow();
+                    }
+                });
+            }
+            else {
+                actionButtons.push({
+                    label: changingFollow ? "Changing" : "Follow chat",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doFollow();
+                    }
+                });
+            }
         }
     }
 
@@ -142,10 +234,8 @@ export default function ChatView(props: Props) {
 
     const chat = <ChatFrame chatSid={props.chatId} />;
 
-    // WATCH_TODO: Watch button
     // WATCH_TODO: Admin button to enable/disable auto-watch
-    // TODO: Action buttons: Watch, Launch video room
-    // TODO: Start/stop watching action button
+    // TODO: Action buttons: Launch video chat
 
     useEffect(() => {
         if (mChat) {
