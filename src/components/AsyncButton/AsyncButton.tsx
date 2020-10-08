@@ -3,7 +3,7 @@ import React, { ReactElement, useEffect, useState } from "react";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import "./AsyncButton.scss";
 
-type Handler = (ev: React.FormEvent) => Promise<void>;
+type Handler = () => Promise<void>;
 
 interface Props {
     disabled?: boolean;
@@ -15,7 +15,6 @@ interface Props {
 
 interface Pending {
     state: "pending";
-    event: React.FormEvent;
 }
 interface Running {
     state: "running";
@@ -54,7 +53,7 @@ export default function AsyncButton(props: Props) {
                     props.setIsRunning(true);
                 }
 
-                const p = makeCancelable(props.action(actionState.event));
+                const p = makeCancelable(props.action());
                 cancel = p.cancel;
 
                 p.promise
@@ -79,7 +78,10 @@ export default function AsyncButton(props: Props) {
     }, [actionState, props]);
 
     function handleClick(event: React.FormEvent) {
-        setActionState({ state: "pending", event });
+        event.preventDefault();
+        event.stopPropagation();
+
+        setActionState({ state: "pending" });
     }
 
     function getContents(): ReactElement | string | undefined {

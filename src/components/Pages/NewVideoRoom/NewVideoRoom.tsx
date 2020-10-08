@@ -28,10 +28,7 @@ export default function NewVideoRoom() {
      *    * Ephemeral selector (forced to true if not an admin/manager)
      */
 
-    async function doCreateRoom(ev: React.FormEvent) {
-        ev.preventDefault();
-        ev.stopPropagation();
-
+    async function doCreateRoom() {
         if (title === null || title.trim().length < 5) {
             addError("You must choose a room title with at least five characters.");
             return;
@@ -76,12 +73,12 @@ export default function NewVideoRoom() {
         />
     </>;
     const createButton =
-        <AsyncButton action={(ev) => doCreateRoom(ev)} content="Create room" />;
+        <AsyncButton action={() => doCreateRoom()} content="Create room" />;
 
     return newRoomId
         ? <Redirect to={`/room/${newRoomId}`} />
         : <div className="new-video-room">
-            <form onSubmit={(ev) => doCreateRoom(ev)}>
+            <form onSubmit={() => doCreateRoom()}>
                 {capacityEl}<br />
                 {titleEl}<br />
                 {privateEl}<br />

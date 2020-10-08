@@ -64,7 +64,7 @@ function VideoWrapperComponent(props: Props & {
     </>;
     const enterButton =
         <AsyncButton
-            action={async (ev) => {
+            action={async () => {
                 await props.enterRoom();
             }}
             content="Enter the room" disabled={!props.mVideo} />;

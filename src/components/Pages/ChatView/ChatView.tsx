@@ -276,7 +276,7 @@ export default function ChatView(props: Props) {
         return () => { };
     }, [conf.id, mChat, props.chatId]);
 
-    async function doInvite(ev: React.FormEvent) {
+    async function doInvite() {
         if (!invites) {
             addError("Please select users to invite.");
             return;
@@ -340,7 +340,7 @@ export default function ChatView(props: Props) {
                         </div>
                         <div className="submit-container">
                             <AsyncButton
-                                action={(ev) => doInvite(ev)}
+                                action={() => doInvite()}
                                 content="Invite"
                                 disabled={sendingInvites || !(invites && invites.length > 0 && (isAdmin || isManager || invites.length <= 20))}/>
                         </div>

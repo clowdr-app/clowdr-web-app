@@ -90,10 +90,7 @@ export default function NewChat(props: Props) {
      *    * Chat title (unless DM'ing)
      */
 
-    async function doCreateChat(ev: React.FormEvent) {
-        ev.preventDefault();
-        ev.stopPropagation();
-
+    async function doCreateChat() {
         if (invites === null || invites.length === 0) {
             addError("You must invite somebody to chat.")
             return;
@@ -153,7 +150,7 @@ export default function NewChat(props: Props) {
         : <></>;
     const createButton =
         <AsyncButton
-            action={(ev) => doCreateChat(ev)}
+            action={() => doCreateChat()}
             disabled={!inputValid()}
             setIsRunning={setIsCreating}
             content="Create chat" />;
@@ -161,7 +158,7 @@ export default function NewChat(props: Props) {
     return newChannelSID
         ? <Redirect to={`/chat/${newChannelSID}`} />
         : <div className="new-chat">
-            <form onSubmit={(ev) => doCreateChat(ev)}>
+            <form onSubmit={() => doCreateChat()}>
                 {publicEl}
                 {invitesEl}
                 {titleEl}
