@@ -1,13 +1,11 @@
-import { ProgramItem, ProgramItemAttachment, ProgramPerson } from "@clowdr-app/clowdr-db-schema";
+import { ProgramItem } from "@clowdr-app/clowdr-db-schema";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
-import { Link } from "react-router-dom";
 import useConference from "../../../hooks/useConference";
 import useDataSubscription from "../../../hooks/useDataSubscription";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-import AttachmentLink from "../Program/Event/AttachmentLink";
 import Exhibit from "./Exhibit/Exhibit";
 import "./Exhibits.scss";
 
@@ -15,7 +13,7 @@ interface ExhibitsProps {
 
 }
 
-export default function Exhibits(props: ExhibitsProps) {
+export default function Exhibits() {
     const conference = useConference();
     const [programItems, setProgramItems] = useState<ProgramItem[] | undefined>();
 
