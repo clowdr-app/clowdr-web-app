@@ -5,6 +5,12 @@
     width          : 100%;
 }
 
+.button > .loading-spinner {
+    display: inline-block;
+    min-width: 1em;
+    width: auto;
+}
+
 .main > .loading-spinner {
     margin-bottom: -5ex;
 }

@@ -1,5 +1,5 @@
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
-import { ProgramItem, ProgramSession, ProgramSessionEvent, ContentFeed } from "@clowdr-app/clowdr-db-schema";
+import { ProgramItem, ProgramSession, ProgramSessionEvent, ContentFeed, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import React, { useCallback, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import useConference from "../../../../hooks/useConference";
@@ -9,6 +9,8 @@ import "./ViewEvent.scss";
 import { ActionButton } from "../../../../contexts/HeadingContext";
 import ViewItem from "../Item/ViewItem";
 import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
+import useUserProfile from "../../../../hooks/useUserProfile";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 
 interface Props {
     eventId: string;
@@ -16,11 +18,14 @@ interface Props {
 
 export default function ViewEvent(props: Props) {
     const conference = useConference();
+    const userProfile = useUserProfile();
     const [event, setEvent] = useState<ProgramSessionEvent | null>(null);
     const [item, setItem] = useState<ProgramItem | null>(null);
     const [session, setSession] = useState<ProgramSession | null>(null);
     const [sessionFeed, setSessionFeed] = useState<ContentFeed | null>(null);
     const [eventFeed, setEventFeed] = useState<ContentFeed | "not present" | null>(null);
+    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+    const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
 
     // TODO: Build a re-usable "View all the times this program item is scheduled" component
     //       to be accessible via an Actions Button on an EventItem or embedded in an ViewItem
@@ -30,8 +35,8 @@ export default function ViewEvent(props: Props) {
         async () => await ProgramSessionEvent.get(props.eventId, conference.id),
         setEvent,
         [props.eventId, conference.id]);
-    useSafeAsync(async () => await event?.item, setItem, [event]);
-    useSafeAsync(async () => await event?.session, setSession, [event]);
+    useSafeAsync(async () => await event?.item ?? null, setItem, [event]);
+    useSafeAsync(async () => await event?.session ?? null, setSession, [event]);
     useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session]);
     useSafeAsync(async () => event ? ((await event.feed) ?? "not present") : null, setEventFeed, [event]);
 
@@ -111,8 +116,92 @@ export default function ViewEvent(props: Props) {
         });
     }
 
+    useSafeAsync(async () => {
+        const watched = await userProfile.watched;
+        return watched.watchedEvents.includes(props.eventId);
+    }, setIsFollowing, [userProfile.watchedId, props.eventId]);
+
+    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+        if (update.object.id === userProfile.watchedId) {
+            setIsFollowing((update.object as WatchedItems).watchedEvents.includes(props.eventId));
+        }
+    }, [props.eventId, userProfile.watchedId]);
+
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conference);
+
+    const doFollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await userProfile.watched;
+                if (!watched.watchedEvents.includes(props.eventId)) {
+                    watched.watchedEvents.push(props.eventId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.eventId, userProfile.watchedId]);
+
+    const doUnfollow = useCallback(async function _doFollow() {
+        try {
+            const p = makeCancelable((async () => {
+                const watched = await userProfile.watched;
+                if (watched.watchedEvents.includes(props.eventId)) {
+                    watched.watchedEvents = watched.watchedEvents.filter(x => x !== props.eventId);
+                    await watched.save();
+                }
+            })());
+            setChangingFollow(p);
+            await p.promise;
+            setChangingFollow(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingFollow(null);
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.eventId, userProfile.watchedId]);
+
     const buttons: Array<ActionButton> = [];
     if (event) {
+        if (isFollowing !== null) {
+            if (isFollowing) {
+                buttons.push({
+                    label: changingFollow ? "Changing" : "Unfollow event",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doUnfollow();
+                    }
+                });
+            }
+            else {
+                buttons.push({
+                    label: changingFollow ? "Changing" : "Follow event",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doFollow();
+                    }
+                });
+            }
+        }
+
         buttons.push({
             label: "Session",
             action: `/session/${event.sessionId}`,
@@ -130,8 +219,6 @@ export default function ViewEvent(props: Props) {
         // TODO: Action button for viewing all session events (i.e. scheduled
         //       times) for this event's program item
     }
-
-    // WATCH_TODO: Watch event action button via the item's useHeading call (pass as props)
 
     // TODO: directLink?
 
