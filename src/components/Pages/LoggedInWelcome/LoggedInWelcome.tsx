@@ -20,7 +20,7 @@ export default function LoggedInWelcome() {
     useHeading(conference.name);
 
     useSafeAsync(async () => {
-        let details = await conference.details;
+        const details = await conference.details;
         return details.find(x => x.key === "LOGGED_IN_TEXT")?.value;
     }, setContents, [conference]);
 

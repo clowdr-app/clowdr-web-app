@@ -530,6 +530,8 @@ export default function ChatsGroup(props: Props) {
         { type: "link", label: "Create new chat", icon: "fa-plus", url: "/chat/new" }
     ];
 
+    // WATCH_TODO: Watched text chats and all that entails
+
     if (mUser) {
         let chatEl: JSX.Element;
         const chatSearchValid = state.chatSearch && state.chatSearch.length >= props.minSearchLength;

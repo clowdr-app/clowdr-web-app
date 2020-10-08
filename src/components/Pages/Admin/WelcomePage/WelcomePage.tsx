@@ -21,7 +21,7 @@ export default function AdminWelcomePage() {
 
     useSafeAsync(async () => {
         const details = await conference.details;
-        return details.find(x => x.key === "LOGGED_IN_TEXT")?.value;
+        return details.find(x => x.key === "LOGGED_IN_TEXT")?.value ?? "Welcome.";
     }, setContents, [conference]);
 
     useHeading("Admin: Welcome page");

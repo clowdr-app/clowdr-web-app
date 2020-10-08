@@ -16,7 +16,7 @@ export default function useSafeAsync<T>(
                 const p = makeCancelable(generatorCallback());
                 cancel = p.cancel;
                 const newV = await p.promise;
-                if (newV) {
+                if (newV !== undefined) {
                     setStateCallback(newV);
                 }
                 cancel = () => { };

@@ -29,7 +29,7 @@ export default function ViewAuthor(props: Props) {
         [author]);
 
     useSafeAsync(
-        async () => (await author?.items ?? null)?.sort((x, y) => x.title.localeCompare(y.title)),
+        async () => (await author?.items ?? null)?.sort((x, y) => x.title.localeCompare(y.title)) ?? [],
         setItems,
         [author]);
 

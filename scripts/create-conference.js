@@ -99,7 +99,21 @@ async function createConference(conferenceData) {
     return confId;
 }
 
+const objectCache = {};
+
 async function createObjects(confId, adminSessionToken, datas, objectName, keyName, tableName, verifyByField) {
+    let tableCache = tableName && objectCache[tableName];
+    if (tableName && !tableCache) {
+        objectCache[tableName] = tableCache = {};
+        const existingQ = new Parse.Query(tableName);
+        existingQ.equalTo("conference", new Parse.Object("Conference", { id: confId }));
+        await existingQ.eachBatch(xs => {
+            xs.forEach(x => {
+                tableCache[x.get(verifyByField).toLowerCase()] = x.id;
+            });
+        }, { batchSize: 1000, useMasterKey: true });
+    }
+
     const results = {};
     for (const data of datas) {
         data.conference = confId;
@@ -109,18 +123,25 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
         console.log(`Creating ${objectName}: ${data[keyName]}`);
         let shouldCreate = true;
         if (tableName && verifyByField) {
-            const existingQ = new Parse.Query(tableName);
-            existingQ.equalTo("conference", new Parse.Object("Conference", { id: confId }));
-            existingQ.equalTo(verifyByField, data[verifyByField]);
-            const existing = await existingQ.first({ useMasterKey: true });
+            let existing;
+            if (typeof data[verifyByField] === "string") {
+                existing = tableCache[data[verifyByField].toLowerCase()];
+            }
+            else {
+                existing = tableCache[data[verifyByField]];
+            }
+
+            // TODO: An object might have the same key but its other fields could have changed
+            //       so it may still need updating
             if (existing) {
-                if (tableName === "ProgramPerson") {
-                    results[data[keyName].toLowerCase()] = existing.id;
+                if (typeof data[keyName] === "string") {
+                    results[data[keyName].toLowerCase()] = existing;
                 }
                 else {
-                    results[data[keyName]] = existing.id;
+                    results[data[keyName]] = existing;
                 }
-                console.log(` - Already exists: ${existing.id}`);
+
+                console.log(` - Already exists: ${existing}`);
                 shouldCreate = false;
             }
         }
@@ -130,11 +151,21 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
                 const id = await Parse.Cloud.run(`${objectName}-create`, finalData, {
                     sessionToken: adminSessionToken
                 });
-                if (tableName === "ProgramPerson") {
+
+                if (typeof data[keyName] === "string") {
                     results[data[keyName].toLowerCase()] = id;
                 }
                 else {
                     results[data[keyName]] = id;
+                }
+
+                if (tableCache) {
+                    if (typeof finalData[verifyByField] === "string") {
+                        tableCache[finalData[verifyByField].toLowerCase()] = id;
+                    }
+                    else {
+                        tableCache[finalData[verifyByField]] = id;
+                    }
                 }
             }
             catch (e) {
@@ -147,7 +178,12 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
 
 function remapObjects(sourceMap, targetKey, targetDatas) {
     for (const data of targetDatas) {
-        data[targetKey] = sourceMap[data[targetKey]];
+        if (typeof data[targetKey] === "string") {
+            data[targetKey] = sourceMap[data[targetKey].toLowerCase()];
+        }
+        else {
+            data[targetKey] = sourceMap[data[targetKey]];
+        }
     }
 }
 
@@ -320,6 +356,8 @@ async function main() {
     const adminSessionToken = adminUser.getSessionToken();
 
     if (!regsOnly) {
+        // TODO: An object might have the same key but its other fields could have changed
+        //       so it may still need updating
         const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
         const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
         // TODO: Handle creating text chats via the Twilio Backend
@@ -379,8 +417,9 @@ async function main() {
         const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url", "ProgramItemAttachment", "url");
 
         remapObjects(tracks, "track", sessionsData);
-        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "title");
+        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "title", "ProgramSession", "title");
 
+        // TODO: Multi-key merge: The session title and item title must be the same for the event to be considered the same event
         remapObjects(sessions, "session", eventsData);
         remapObjects(items, "item", eventsData);
         const events = await createObjects(confId, adminSessionToken, eventsData, "event", "startTime");

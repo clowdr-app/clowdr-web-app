@@ -12,7 +12,7 @@ export default function MainMenuGroup() {
 
     if (mUser) {
         const mainMenuItems: MenuGroupItems = [
-            { key: "watched-items", element: <MenuItem title="Watched items" label="Watched items" action="/watched" /> },
+            { key: "watched-items", element: <MenuItem title="Followed stuff" label="Followed stuff" action="/watched" /> },
             { key: "exhibits", element: <MenuItem title="Exhibition" label="Exhibition" action="/exhibits" /> },
             { key: "profile", element: <MenuItem title="Profile" label="Profile" action="/profile" /> },
             { key: "contact-moderators", element: <MenuItem title="Contact moderators" label="Contact moderators" action="/moderators" /> },
