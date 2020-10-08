@@ -24,7 +24,7 @@ export function LoadingSpinner(props: Props) {
 
     return <div className="loading-spinner">
         <span>
-            {props.message ? props.message : "Loading"}{".".repeat(loadingSpinnerCount)}
+            {props.message !== undefined ? props.message : "Loading"}{".".repeat(loadingSpinnerCount)}
         </span>
     </div>;
 }
