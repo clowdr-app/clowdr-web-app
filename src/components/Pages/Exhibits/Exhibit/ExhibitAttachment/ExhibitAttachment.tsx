@@ -5,6 +5,7 @@ import useConference from "../../../../../hooks/useConference";
 import useDataSubscription from "../../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../../hooks/useSafeAsync";
 import AttachmentLink from "../../../Program/Event/AttachmentLink";
+import "./ExhibitAttachment.scss";
 
 interface Props {
     attachments?: ProgramItemAttachment[];
@@ -52,6 +53,7 @@ export default function ExhibitAttachment(props: Props) {
         const posterAttachments = props.attachments.filter(attachment => posterTypeIds?.includes(attachment.attachmentTypeId));
         if (posterAttachments.length > 0) {
             setBestAttachment(posterAttachments[0]);
+            return;
         }
 
         setBestAttachment(undefined);
@@ -59,7 +61,7 @@ export default function ExhibitAttachment(props: Props) {
     }, [attachmentTypes, props.attachments]);
 
     return <> { bestAttachment
-        ? <AttachmentLink key={bestAttachment.id} attachment={bestAttachment} />
+        ? <div className="exhibit-attachment"><AttachmentLink key={bestAttachment.id} attachment={bestAttachment} /></div>
         : <></>}
     </>;
 }

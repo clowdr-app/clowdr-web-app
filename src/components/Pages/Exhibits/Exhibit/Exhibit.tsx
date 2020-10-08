@@ -51,6 +51,8 @@ export default function Exhibit(props: ExhibitProps) {
             ? <p className="exhibit__abstract">{props.programItem.abstract}</p>
             : <ExhibitAttachment attachments={attachments} />}
 
-        <Link to={`/item/${props.programItem.id}`} className="button">View {props.programItem.title}</Link>
+        <div className="view-item">
+            <Link to={`/item/${props.programItem.id}`} className="button">View {props.programItem.title}</Link>
+        </div>
     </article>;
 }

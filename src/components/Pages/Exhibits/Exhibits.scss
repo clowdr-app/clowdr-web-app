@@ -4,17 +4,26 @@
     .exhibits {
         display              : grid;
         grid-template-columns: minmax(0, 1fr);
-        column-gap           : 5%;
+        grid-auto-rows: minmax(min-content, max-content);
+        column-gap           : 2.5%;
         row-gap              : mm(10);
-        margin               : 10%;
+        margin               : 0%;
+        justify-content      : stretch;
 
         @media only screen and (min-width: $break-md) {
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-            margin               : 5%;
+            margin               : 2.5%;
         }
 
         @media only screen and (min-width: $break-lg) {
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        @media only screen and (max-width: $break-md) {
+            .exhibit {
+                border-left: 0 none;
+                border-right: 0 none;
+            }
         }
     }
 }

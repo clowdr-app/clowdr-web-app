@@ -54,8 +54,8 @@ export default function Exhibits(props: ExhibitsProps) {
 
     return <section aria-labelledby="page-title" tabIndex={0} className="exhibits-page">
         <div className="exhibits">
-            {programItems 
-                ? programItems.map(programItem => <div className="exhibits__exhibit"><Exhibit programItem={programItem} key={programItem.id} /></div>)
+            {programItems
+                ? programItems.sort((a, b) => a.title > b.title ? 1 : -1).map(programItem => <div className="exhibits__exhibit" key={programItem.id}><Exhibit programItem={programItem} /></div>)
                 : <LoadingSpinner message="Loading exhibits" /> }
         </div>
     </section>
