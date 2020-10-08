@@ -33,7 +33,8 @@ export default function Exhibits(props: ExhibitsProps) {
     // Fetch initial render data (program items and their attachments)
     useSafeAsync(
         async () => {
-            let programItems = (await ProgramItem.getAll(conference.id)).filter(programItem => programItem.exhibit);
+            let allProgramItems = await ProgramItem.getAll(conference.id);
+            let programItems = allProgramItems.filter(programItem => programItem.exhibit);
             let authors = (await Promise.all(programItems.map(async programItem => await programItem.authorPerons))).flat();
             let programPeople = new Map(authors.map(author => [author.id, author]))
 
@@ -41,7 +42,7 @@ export default function Exhibits(props: ExhibitsProps) {
                 return [programItem.id, await programItem.attachments];
             }
 
-            let programItemAttachments = new Map(await Promise.all(programItems.map(programItemToAttachmentsEntry)));
+            let programItemAttachments = new Map(await Promise.all(allProgramItems.map(programItemToAttachmentsEntry)));
             return {
                 programItems,
                 programItemAttachments,
@@ -54,7 +55,6 @@ export default function Exhibits(props: ExhibitsProps) {
     const onProgramItemUpdated = useCallback(function _onProgramItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
         setRenderData(renderData => {
             const newProgramItems = Array.from(renderData.programItems ?? []);
-            const newProgramItemAttachments = new Map(renderData.programItemAttachments);
             const idx = newProgramItems?.findIndex(x => x.id === ev.object.id);
             let updatedProgramItem = ev.object as ProgramItem;
             if (idx === -1 && updatedProgramItem.exhibit) {
@@ -64,12 +64,11 @@ export default function Exhibits(props: ExhibitsProps) {
                     newProgramItems.splice(idx, 1, updatedProgramItem);
                 } else {
                     newProgramItems.splice(idx, 1);
-                    newProgramItemAttachments.delete(updatedProgramItem.id);
                 }
             }
             return {
                 programItems: newProgramItems,
-                programItemAttachments: newProgramItemAttachments,
+                programItemAttachments: renderData.programItemAttachments,
                 programPeople: renderData.programPeople,
             }
         });
@@ -77,11 +76,9 @@ export default function Exhibits(props: ExhibitsProps) {
 
     const onProgramItemDeleted = useCallback(function _onProgramItemDeleted(ev: DataDeletedEventDetails<"ProgramItem">) {
         setRenderData(renderData => {
-            const newProgramItemAttachments = new Map(renderData.programItemAttachments);
-            newProgramItemAttachments.delete(ev.objectId);
             return {
                 programItems: renderData.programItems.filter(item => item.id !== ev.objectId),
-                programItemAttachments: newProgramItemAttachments,
+                programItemAttachments: renderData.programItemAttachments,
                 programPeople: renderData.programPeople,
             }
         });
@@ -102,7 +99,9 @@ export default function Exhibits(props: ExhibitsProps) {
             }
 
             // Then add the attachment back to its current item
-            newProgramItemAttachmentsMap[updatedProgramItemAttachment.programItemId] = updatedProgramItemAttachment;
+            let attachments = newProgramItemAttachmentsMap.get(updatedProgramItemAttachment.programItemId) ?? [];
+            attachments?.push(updatedProgramItemAttachment);
+            newProgramItemAttachmentsMap.set(updatedProgramItemAttachment.programItemId,  attachments);
 
             return {
                 programItems: renderData.programItems,
