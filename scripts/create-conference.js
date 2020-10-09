@@ -391,7 +391,8 @@ async function main() {
 
         remapObjects(items, "programItem", itemAttachmentsData);
         remapObjects(attachmentTypes, "attachmentType", itemAttachmentsData);
-        const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url", "ProgramItemAttachment", "url");
+        // TODO: Merge attachments based on the url and the item they point to
+        const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url");
 
         remapObjects(tracks, "track", sessionsData);
         const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "title", "ProgramSession", "title");
