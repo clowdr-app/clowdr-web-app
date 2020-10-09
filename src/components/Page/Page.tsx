@@ -34,6 +34,9 @@ import ComingSoon from '../Pages/ComingSoon/ComingSoon';
 import ForgotPassword from '../Pages/Login/ForgotPassword/ForgotPassword';
 import ResetPassword from '../Pages/Login/ResetPassword/ResetPassword';
 import Exhibits from '../Pages/Exhibits/Exhibits';
+import About from '../Pages/About/About';
+import Legal from '../Pages/Legal/Legal';
+import Help from '../Pages/Help/Help';
 
 interface Props {
     doLogin: doLoginF;
@@ -105,16 +108,14 @@ function Page(props: Props) {
                 contents: <Switch>
                     <Route path="/moderators" component={ComingSoon} />
                     <Route path="/watched" component={ComingSoon} />
-                    <Route path="/about" component={ComingSoon} />
-                    <Route path="/legal" component={ComingSoon} />
-                    <Route path="/help" component={ComingSoon} />
-                    <Route path="/exhibits" component={Exhibits} />
                     <Route path="/program/new" component={ComingSoon} />
 
                     <Route exact path="/" component={LoggedInWelcome} />
                     <Route path="/signup" component={() =>
                         <Redirect to="/" />
                     } />
+
+                    <Route path="/exhibits" component={Exhibits} />
 
                     <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
                         <NewChat dmUserProfileId={p.match.params.userProfileId} />
@@ -175,6 +176,11 @@ function Page(props: Props) {
                     <Route path="/admin" component={() =>
                         <AdminTools />
                     } />
+
+                    <Route path="/about" component={About} />
+                    <Route path="/legal" component={Legal} />
+                    <Route path="/help" component={Help} />
+
                     <Route path="/" component={NotFound} />
                 </Switch>
             };
