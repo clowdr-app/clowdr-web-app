@@ -209,10 +209,10 @@ export default class Chat implements IChatManager {
         const channel = await this.twilioService.getChannel(chatId);
         return this.convertToDescriptor(channel);
     }
-    async getMessages(chatId: string): Promise<Paginator<IMessage>> {
+    async getMessages(chatId: string, limit: number = 40): Promise<Paginator<IMessage>> {
         assert(this.twilioService);
         const channel = await this.twilioService.getChannel(chatId);
-        return channel.getMessages(40);
+        return channel.getMessages(limit);
     }
     async sendMessage(chatId: string, message: string): Promise<number> {
         assert(this.twilioService);

@@ -2,6 +2,7 @@ import React from 'react';
 
 export interface HeadingState {
     title: string;
+    icon?: JSX.Element;
     subtitle?: JSX.Element;
     buttons?: Array<ActionButton>;
 }

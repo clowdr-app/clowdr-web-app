@@ -1,0 +1,44 @@
+@import "../../../styles/util.scss";
+
+.watched-stuff {
+    .info {
+        flex-basis  : 100%;
+        width       : 100%;
+        min-width   : 100%;
+        justify-self: center;
+        align-self  : start;
+    }
+
+    .columns {
+        display       : flex;
+        flex-direction: row;
+        align-items   : stretch;
+        align-content : stretch;
+        flex-wrap     : wrap;
+        row-gap       : 3ex;
+        column-gap    : 0;
+
+        .column {
+            flex: 1 1 auto;
+
+            // flex-basis: 20%;
+            min-width: min-content;
+            margin   : 0;
+            padding  : 0 0.2em;
+
+            &.messages {
+                flex-basis: 40%;
+                max-height: 70vh;
+                overflow  : auto;
+
+                display       : flex;
+                flex-direction: column-reverse;
+
+                .chat-message {
+                    margin-left : 0;
+                    margin-right: 0;
+                }
+            }
+        }
+    }
+}

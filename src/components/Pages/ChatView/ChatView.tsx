@@ -237,16 +237,31 @@ export default function ChatView(props: Props) {
         });
     }
     else {
-        actionButtons.push({
-            label: `Members${chatMembersCount ? ` (${chatMembersCount})` : ""}`,
-            icon: <i className="fas fa-user-friends"></i>,
-            action: (ev) => {
-                ev.stopPropagation();
-                ev.preventDefault();
-
-                setShowPanel("members");
+        if (members) {
+            if (isDM === true) {
+                const otherMember
+                    = members[0].profileId === mUser.id
+                        ? members[1]
+                        : members[0];
+                actionButtons.push({
+                    label: `View ${otherMember.displayName}'s profile`,
+                    icon: <i className="fas fa-eye"></i>,
+                    action: `/profile/${otherMember.profileId}`
+                });
             }
-        });
+            else {
+                actionButtons.push({
+                    label: `Members${chatMembersCount ? ` (${chatMembersCount})` : ""}`,
+                    icon: <i className="fas fa-user-friends"></i>,
+                    action: (ev) => {
+                        ev.stopPropagation();
+                        ev.preventDefault();
+
+                        setShowPanel("members");
+                    }
+                });
+            }
+        }
 
         // isDM could be null...
         if (isDM === false && usersLeftToInvite.length > 0 && isPrivate) {
@@ -317,6 +332,11 @@ export default function ChatView(props: Props) {
 
     useHeading({
         title: chatName,
+        icon: isDM && members
+            ? (members[0].profileId === mUser.id
+                ? (members[1].isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>)
+                : (members[0].isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>))
+            : undefined,
         buttons: actionButtons
     });
 

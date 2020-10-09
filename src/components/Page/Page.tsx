@@ -34,6 +34,7 @@ import ComingSoon from '../Pages/ComingSoon/ComingSoon';
 import ForgotPassword from '../Pages/Login/ForgotPassword/ForgotPassword';
 import ResetPassword from '../Pages/Login/ResetPassword/ResetPassword';
 import Exhibits from '../Pages/Exhibits/Exhibits';
+import WatchedItems from "../Pages/WatchedItems/WatchedItems";
 import About from '../Pages/About/About';
 import Legal from '../Pages/Legal/Legal';
 import Help from '../Pages/Help/Help';
@@ -101,7 +102,6 @@ function Page(props: Props) {
                 noHeading: false,
                 contents: <Switch>
                     <Route path="/moderators" component={ComingSoon} />
-                    <Route path="/watched" component={ComingSoon} />
                     <Route path="/program/new" component={ComingSoon} />
 
                     <Route exact path="/" component={LoggedInWelcome} />
@@ -109,6 +109,7 @@ function Page(props: Props) {
                         <Redirect to="/" />
                     } />
 
+                    <Route path="/watched" component={WatchedItems} />
                     <Route path="/exhibits" component={Exhibits} />
 
                     <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
@@ -233,7 +234,10 @@ function Page(props: Props) {
 
     return <>
         {noHeading ? <></> : <header className="page-header">
-            <h1 id="page-title" className="banner" aria-level={1}>{heading.title}</h1>
+            <h1 id="page-title" className="banner" aria-level={1}>
+                {heading.icon ? heading.icon : <></>}
+                {heading.title}
+            </h1>
             {heading.subtitle ? <div className="subtitle">{heading.subtitle}</div> : <></>}
             {actionButtonsWrapper}
         </header>}

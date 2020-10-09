@@ -83,7 +83,7 @@ export default function ChatFrame(props: Props) {
     //       Twilio because the chat will try to load before User B has joined it.
 
     return <div className="chat-frame">
-        <MessageList chatSid={props.chatId} />
+        <MessageList chatId={props.chatId} />
         {props.chatId !== announcementsChannelSid || isAdmin
             ? <div className="compose-message">
                 <textarea

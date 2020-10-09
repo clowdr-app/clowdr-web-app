@@ -16,7 +16,7 @@ import assert from 'assert';
  * Otherwise, use the `useMaybeUser` hook.
  */
 export default function useUserProfile(): UserProfile {
-    let ctx = useContext(UserContext);
+    const ctx = useContext(UserContext);
     assert(ctx, "User profile should be defined.");
     return ctx;
 }

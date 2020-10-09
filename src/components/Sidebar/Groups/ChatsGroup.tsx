@@ -23,7 +23,7 @@ type ChatGroupTasks
     = "loadingActiveChats"
     | "loadingAllChats";
 
-type SidebarChatDescriptor = {
+export type SidebarChatDescriptor = {
     id: string;
     friendlyName: string;
     status: 'joined' | undefined;

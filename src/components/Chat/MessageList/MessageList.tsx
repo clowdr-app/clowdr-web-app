@@ -4,44 +4,21 @@ import "../../Profile/FlairChip/FlairChip.scss";
 
 import IMessage from "../../../classes/Chat/IMessage";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-// @ts-ignore
-import defaultProfilePic from "../../../assets/default-profile-pic.png";
-import FlairChip from "../../Profile/FlairChip/FlairChip";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
-import ReactMarkdown from "react-markdown";
 import assert from "assert";
 import { ChannelEventNames } from "../../../classes/Chat/Services/Twilio/Channel";
-import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import useConference from "../../../hooks/useConference";
-import { handleParseFileURLWeirdness } from "../../../classes/Utils";
-import { addError, addNotification } from "../../../classes/Notifications/Notifications";
+import { addError } from "../../../classes/Notifications/Notifications";
 
-import 'emoji-mart/css/emoji-mart.css';
-import { Picker as EmojiPicker } from 'emoji-mart';
-import { emojify } from "react-emojione";
-import { Tooltip } from "@material-ui/core";
 import useUserProfile from "../../../hooks/useUserProfile";
-import { useHistory } from "react-router-dom";
+import Message, { RenderedMessage, renderMessage } from "./Message";
 
 interface Props {
-    chatSid: string;
+    chatId: string;
 }
-
-type RenderedMessage = {
-    sid: string;
-    body: string;
-    profileId: string | null;
-    profileName: string | null;
-    profilePhotoUrl: string | null;
-    profileFlair: Flair | undefined;
-    time: string;
-    index: number;
-    reactions: {
-        [reaction: string]: { ids: Array<string>; names: Array<string> } }
-};
 
 export default function MessageList(props: Props) {
     const conf = useConference();
@@ -50,8 +27,6 @@ export default function MessageList(props: Props) {
     const [messages, setMessages] = useState<Array<IMessage>>([]);
     const [renderedMessages, setRenderedMessages] = useState<Array<RenderedMessage>>([]);
     const mChat = useMaybeChat();
-    const history = useHistory();
-    const [pickEmojiForMsgSid, setPickEmojiForMsgSid] = useState<string | null>(null);
 
     function sortMessages(msgs: Array<IMessage>): Array<IMessage> {
         return msgs.sort((x, y) => x.index < y.index ? -1 : x.index === y.index ? 0 : 1);
@@ -63,17 +38,17 @@ export default function MessageList(props: Props) {
 
         async function attach() {
             if (chat) {
-                listeners.set("messageRemoved", await chat.channelEventOn(props.chatSid, "messageRemoved", (msg) => {
+                listeners.set("messageRemoved", await chat.channelEventOn(props.chatId, "messageRemoved", (msg) => {
                     const newMessages = messages.filter(x => x.index !== msg.index);
                     setMessages(newMessages);
                 }));
 
-                listeners.set("messageAdded", await chat.channelEventOn(props.chatSid, "messageAdded", (msg) => {
+                listeners.set("messageAdded", await chat.channelEventOn(props.chatId, "messageAdded", (msg) => {
                     const newMessages = [...messages, msg];
                     setMessages(sortMessages(newMessages));
                 }));
 
-                listeners.set("messageUpdated", await chat.channelEventOn(props.chatSid, "messageUpdated", (msg) => {
+                listeners.set("messageUpdated", await chat.channelEventOn(props.chatId, "messageUpdated", (msg) => {
                     if (msg.updateReasons.includes("body") ||
                         msg.updateReasons.includes("author") ||
                         msg.updateReasons.includes("attributes")) {
@@ -98,16 +73,16 @@ export default function MessageList(props: Props) {
                 const keys = listeners.keys();
                 for (const key of keys) {
                     const listener = listeners.get(key) as () => void;
-                    chat.channelEventOff(props.chatSid, key, listener);
+                    chat.channelEventOff(props.chatId, key, listener);
                 }
             }
         };
-    }, [mChat, messages, props.chatSid]);
+    }, [mChat, messages, props.chatId]);
 
     useSafeAsync(async () => {
         if (mChat) {
             try {
-                const pager = await mChat.getMessages(props.chatSid);
+                const pager = await mChat.getMessages(props.chatId);
                 return { messages: pager.items, pager };
             }
             catch (e) {
@@ -128,46 +103,14 @@ export default function MessageList(props: Props) {
             setMessages([]);
             setMessagesPager(null);
         }
-    }, [mChat, props.chatSid]);
+    }, [mChat, props.chatId]);
 
-    useSafeAsync(async () => {
-        return await Promise.all(messages.map(async message => {
-            const body = message.body;
-            const member = await message.getMember();
-            const memberProfileId = member.profileId;
-            const profile = await UserProfile.get(memberProfileId, conf.id);
-            const time = message.timestamp;
-            const now = Date.now();
-            const isOver24HrOld = (now - time.getTime()) > (1000 * 60 * 60 * 24);
-            const flair = await profile?.primaryFlair;
-            const profilePhotoUrl = handleParseFileURLWeirdness(profile?.profilePhoto);
-            const reactorIds = (message.attributes as any)?.reactions ?? {};
-            const reactions: { [reaction: string]: { ids: Array<string>; names: Array<string> } } = {};
-            for (const reaction in reactorIds) {
-                if (reaction in reactorIds) {
-                    reactions[reaction] = {
-                        ids: reactorIds[reaction],
-                        names: await Promise.all(reactorIds[reaction].map(async (aProfileId: string) => {
-                            const aProfile = await UserProfile.get(aProfileId, conf.id);
-                            return aProfile?.id === userProfile.id ? "You" : aProfile?.displayName ?? "<Unknown>";
-                        }))
-                    };
-                }
-            }
-            const result: RenderedMessage = {
-                sid: message.sid,
-                body,
-                profileFlair: flair,
-                profileId: profile?.id ?? null,
-                profileName: profile?.id === userProfile.id ? "You" : profile?.displayName ?? null,
-                profilePhotoUrl,
-                time: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
-                index: message.index,
-                reactions
-            };
-            return result;
-        }));
-    }, setRenderedMessages, [messages]);
+    useSafeAsync(async () =>
+        Promise.all(messages.map(async message =>
+            renderMessage(conf, userProfile, props.chatId, message))),
+        setRenderedMessages,
+        [messages]
+    );
 
     async function loadMoreMessages() {
         assert(messagePager);
@@ -191,122 +134,12 @@ export default function MessageList(props: Props) {
         setMessages(sortMessages(newMessages));
     }
 
-    function toggleAddReaction(msgSid: string) {
-        if (pickEmojiForMsgSid) {
-            setPickEmojiForMsgSid(null);
-        }
-        else {
-            setPickEmojiForMsgSid(msgSid);
-        }
-    }
-
-    function renderMessage(msg: RenderedMessage): JSX.Element {
-        const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
-        const renderEmoji = (text: any) => doEmojify(text.value);
-
-        return <div className="message" key={msg.index}>
-            <div className="profile" onClick={(ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
-
-                if (msg.profileId) {
-                    history.push(`/profile/${msg.profileId}`);
-                }
-                else {
-                    addNotification("User is not known - they may have been deleted.");
-                }
-            }}>
-                {msg.profilePhotoUrl
-                    ? <img src={msg.profilePhotoUrl} alt={(msg.profileName ?? "Unknown") + "'s avatar"} />
-                    : <img src={defaultProfilePic} alt="default avatar" />
-                }
-                {msg.profileFlair ? <FlairChip flair={msg.profileFlair} small /> : <></>}
-            </div>
-            <div className="content">
-                <div className="name">{msg.profileName ?? "<Unknown>"}</div>
-                <div className="time">{msg.time}</div>
-                <ReactMarkdown
-                    className="body"
-                    renderers={{
-                        text: renderEmoji
-                    }}
-                >
-                    {msg.body}
-                </ReactMarkdown>
-                <div className="reactions">
-                    <div className="add-reaction">
-                        {pickEmojiForMsgSid === msg.sid
-                            ? <EmojiPicker
-                                showPreview={false}
-                                useButton={false}
-                                title="Pick a reaction"
-                                onSelect={async (ev) => {
-                                    setPickEmojiForMsgSid(null);
-                                    const emojiId = ev.colons ?? ev.id;
-                                    assert(emojiId);
-                                    try {
-                                        assert((await mChat?.addReaction(props.chatSid, msg.sid, emojiId))?.ok);
-                                    }
-                                    catch (e) {
-                                        console.error(e);
-                                        addError("Sorry, we could not add your reaction.");
-                                    }
-                                }}
-                            />
-                            : <></>}
-                        <button
-                            className="new"
-                            onClick={(ev) => toggleAddReaction(msg.sid)}
-                        >
-                            <i className="fas fa-smile-beam"></i>+
-                        </button>
-                    </div>
-                    {Object.keys(msg.reactions).map(reaction => {
-                        return <Tooltip
-                            key={reaction}
-                            title={msg.reactions[reaction].names.reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}
-                            placement="top"
-                        >
-                            <button
-                                onClick={async (ev) => {
-                                    ev.preventDefault();
-                                    ev.stopPropagation();
-                                    setPickEmojiForMsgSid(null);
-                                    if (msg.reactions[reaction].ids.includes(userProfile.id)) {
-                                        try {
-                                            assert((await mChat?.removeReaction(props.chatSid, msg.sid, reaction))?.ok);
-                                        }
-                                        catch (e) {
-                                            console.error(e);
-                                            addError("Sorry, we could not remove your reaction.");
-                                        }
-                                    }
-                                    else {
-                                        try {
-                                            assert((await mChat?.addReaction(props.chatSid, msg.sid, reaction))?.ok);
-                                        }
-                                        catch (e) {
-                                            console.error(e);
-                                            addError("Sorry, we could not add your reaction.");
-                                        }
-                                    }
-                                }}
-                            >
-                                <span>{doEmojify(reaction)}</span>
-                                <span>{msg.reactions[reaction].ids.length}</span>
-                            </button>
-                        </Tooltip>;
-                    })}
-                </div>
-            </div>
-        </div>;
-    }
 
     // TODO: Detect if loaded messages render shorter than the available space
     //       if so, element won't present a scrollbar so we must manually load
     //       in more messages until overflow occurs.
 
-    return <div id={props.chatSid} className="message-list">
+    return <div id={props.chatId} className="message-list">
         <InfiniteScroll
             dataLength={messages.length}
             next={() => loadMoreMessages()}
@@ -319,10 +152,10 @@ export default function MessageList(props: Props) {
                 <p className="start-of-chat">
                     Beginning of chat.
                 </p>}
-            scrollableTarget={props.chatSid}
+            scrollableTarget={props.chatId}
         >
             <div>
-                {renderedMessages.map(x => renderMessage(x))}
+                {renderedMessages.map(x => <Message key={x.sid} msg={x} />)}
             </div>
         </InfiniteScroll>
     </div>;
