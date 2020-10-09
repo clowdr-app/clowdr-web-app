@@ -307,7 +307,7 @@ export default function ChatView(props: Props) {
         if (isAutoWatch !== null && (isAdmin || isManager)) {
             if (isAutoWatch) {
                 actionButtons.push({
-                    label: changingAutoWatch ? "Changing" : "Disable auto-watch",
+                    label: changingAutoWatch ? "Changing" : "Disable auto-follow",
                     icon: changingAutoWatch ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
                     action: (ev) => {
                         ev.preventDefault();
@@ -318,7 +318,7 @@ export default function ChatView(props: Props) {
             }
             else {
                 actionButtons.push({
-                    label: changingAutoWatch ? "Changing" : "Enable auto-watch",
+                    label: changingAutoWatch ? "Changing" : "Enable auto-follow",
                     icon: changingAutoWatch ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
                     action: (ev) => {
                         ev.preventDefault();

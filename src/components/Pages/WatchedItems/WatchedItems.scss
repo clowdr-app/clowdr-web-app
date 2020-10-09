@@ -39,6 +39,23 @@
                     margin-right: 0;
                 }
             }
+
+            &.rooms {
+                .room-item {
+                    width: 100%;
+                    flex-direction: row;
+                    display: flex;
+                    margin: 0.2em 0;
+
+                    span:first-child {
+                        margin-right: auto;
+                    }
+
+                    .button {
+                        margin: 0 0 0 0.3em;
+                    }
+                }
+            }
         }
     }
 }
