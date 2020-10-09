@@ -97,12 +97,6 @@ function Page(props: Props) {
             // TODO: Route for /watched (to see/edit watched items)
             // TODO: Route for /moderators (to contact the conference mods)
 
-            // TODO: Route for /about
-            // TODO: Route for /legal
-            // TODO: Route for /help
-
-            // TODO: Route for /exhibits (to view exhibited program items - e.g. posters)
-
             return {
                 noHeading: false,
                 contents: <Switch>
