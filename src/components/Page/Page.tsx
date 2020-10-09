@@ -33,6 +33,7 @@ import { default as AdminTools } from '../Pages/Admin/Tools';
 import ComingSoon from '../Pages/ComingSoon/ComingSoon';
 import ForgotPassword from '../Pages/Login/ForgotPassword/ForgotPassword';
 import ResetPassword from '../Pages/Login/ResetPassword/ResetPassword';
+import Exhibits from '../Pages/Exhibits/Exhibits';
 
 interface Props {
     doLogin: doLoginF;
@@ -107,7 +108,7 @@ function Page(props: Props) {
                     <Route path="/about" component={ComingSoon} />
                     <Route path="/legal" component={ComingSoon} />
                     <Route path="/help" component={ComingSoon} />
-                    <Route path="/exhibits" component={ComingSoon} />
+                    <Route path="/exhibits" component={Exhibits} />
                     <Route path="/program/new" component={ComingSoon} />
 
                     <Route exact path="/" component={LoggedInWelcome} />

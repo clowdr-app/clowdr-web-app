@@ -7,6 +7,7 @@ import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import ReactPlayer from "react-player";
+import "./AttachmentLink.scss";
 
 interface Props {
     attachment: ProgramItemAttachment;
@@ -43,7 +44,7 @@ export default function AttachmentLink(props: Props) {
             if (attachmentType.fileTypes.includes("image/png")
                 || attachmentType.fileTypes.includes("image/jpeg")) {
                 // Display as an image
-                return <img src={url} alt={attachmentType.name} />;
+                return <img className="attachment-link__image" src={url} alt={attachmentType.name} />;
             }
             else if (attachmentType.fileTypes.includes("video")) {
                 // Display as an embedded video
