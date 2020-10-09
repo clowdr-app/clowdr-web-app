@@ -39,7 +39,6 @@ export default function ViewVideoRoom(props: Props) {
     const [allUsers, setAllUsers] = useState<Array<UserOption> | null>(null);
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
     const [inviting, setInviting] = useState<CancelablePromise<unknown> | null>(null);
-    const [usersWithAccess, setUsersWithAccess] = useState<Array<string> | null>(null);
 
     useSafeAsync(
         async () => await VideoRoom.get(props.roomId, conference.id),
@@ -56,10 +55,6 @@ export default function ViewVideoRoom(props: Props) {
             label: x.displayName
         })).filter(x => x.value !== currentUserProfile.id);
     }, setAllUsers, []);
-    useSafeAsync(
-        async () => room ? await room.userIdsWithAccess : null,
-        setUsersWithAccess,
-        [room]);
 
     const actionButtons: Array<ActionButton> = [];
     if (mVideo && room && room.isPrivate) {
@@ -243,7 +238,7 @@ export default function ViewVideoRoom(props: Props) {
                     className="invite-users-control__multiselect"
                     labelledBy="Invite users"
                     overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
-                    options={allUsers?.filter(x => !usersWithAccess?.includes(x.value)) ?? []}
+                    options={allUsers?.filter(x => !room?.userIdsWithAccess?.includes(x.value)) ?? []}
                     value={invites ?? []}
                     onChange={setInvites}
                 />
