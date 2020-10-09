@@ -75,7 +75,7 @@ export default function ViewContentFeed(props: Props) {
             ? "zoom"
             : ""}`}>
         {textChat && textChat !== "not present"
-            ? <ChatFrame chatSid={textChat.twilioID} />
+            ? <ChatFrame chatId={textChat.id} />
             : videoRoom && videoRoom !== "not present"
                 ? <VideoGrid room={videoRoom} />
                 : youTubeFeed && youTubeFeed !== "not present"

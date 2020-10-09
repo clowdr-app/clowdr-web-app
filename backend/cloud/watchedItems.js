@@ -1,7 +1,7 @@
 /* global Parse */
 // ^ for eslint
 
-//const { getAutoWatchTextChats } = require("./textChat");
+//const { getAutoWatchTextChats } = require("./user");
 // Dunno why but Live Query just doesn't respond with correct data when using this
 // so I'm giving up on it for now. It may not be desirable anyway - e.g. people
 // may want to unfollow lobby chats or admins unfollow announcements.

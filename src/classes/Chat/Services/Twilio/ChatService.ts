@@ -10,6 +10,7 @@ import * as Twilio from "twilio-chat";
 import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
 import { User as TwilioUser } from "twilio-chat/lib/user";
 import { MemberDescriptor } from "../../Chat";
+import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 
 export default class TwilioChatService implements IChatService {
     private twilioToken: string | null = null;
@@ -195,7 +196,17 @@ export default class TwilioChatService implements IChatService {
     async allChannels(): Promise<Array<Channel>> {
         if (this.conference) {
             const allChats = await TextChat.getAll(this.conference.id);
-            return Promise.all(allChats.map(tc => this.convertTextChatToChannel(tc)));
+            return removeNull(await Promise.all(allChats.map(async tc => {
+                try {
+                    // Switching between users + caching may result in some channels
+                    // being in the cache that really we're not supposed to have
+                    // access to.
+                    return await this.convertTextChatToChannel(tc);
+                }
+                catch {
+                    return null;
+                }
+            })));
         }
         return [];
     }

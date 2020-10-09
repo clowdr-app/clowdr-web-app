@@ -37,7 +37,6 @@ interface AppState {
     profile: UserProfile | null;
     sessionToken: string | null;
     userRoles: { isAdmin: boolean, isManager: boolean };
-    announcementsChannelID: string | null;
 }
 
 type AppUpdate
@@ -47,7 +46,6 @@ type AppUpdate
     | { action: "setUserProfile", data: { profile: UserProfile, sessionToken: string } | null; }
     | { action: "chatUpdated" }
     | { action: "setUserRoles", roles: { isAdmin: boolean, isManager: boolean } }
-    | { action: "setAnnouncementsChannelID", id: string | null }
     ;
 
 function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpdate>): AppState {
@@ -57,8 +55,7 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
         conference: currentState.conference,
         profile: currentState.profile,
         sessionToken: currentState.sessionToken,
-        userRoles: currentState.userRoles,
-        announcementsChannelID: currentState.announcementsChannelID
+        userRoles: currentState.userRoles
     };
 
     function doUpdate(update: AppUpdate) {
@@ -85,9 +82,6 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
                 break;
             case "setUserRoles":
                 nextState.userRoles = update.roles;
-                break;
-            case "setAnnouncementsChannelID":
-                nextState.announcementsChannelID = update.id;
                 break;
         }
     }
@@ -123,8 +117,7 @@ export default function App() {
         conference: null,
         profile: null,
         sessionToken: null,
-        userRoles: { isAdmin: false, isManager: false },
-        announcementsChannelID: null
+        userRoles: { isAdmin: false, isManager: false }
     });
     const [chatReady, setChatReady] = useState(false);
     const [videoReady, setVideoReady] = useState(false);
@@ -142,19 +135,10 @@ export default function App() {
                 dispatchAppUpdate({ action: "beginningLoadConference" });
 
                 let _conference: Conference | null = null;
-                let announcementsChannelID: string | null = null;
 
                 if (appState.conferenceId) {
                     try {
                         _conference = await Conference.get(appState.conferenceId);
-                        if (_conference) {
-                            const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", _conference.id);
-                            if (configs.length > 0) {
-                                const announcementsChannelSID = configs[0].value;
-                                const tc = await StaticBaseImpl.getByField("TextChat", "twilioID", announcementsChannelSID, _conference.id);
-                                announcementsChannelID = tc?.id ?? null;
-                            }
-                        }
                     }
                     catch (e) {
                         _conference = null;
@@ -163,8 +147,7 @@ export default function App() {
                 }
 
                 dispatchAppUpdate([
-                    { action: "setConference", conference: _conference },
-                    { action: "setAnnouncementsChannelID", id: announcementsChannelID }
+                    { action: "setConference", conference: _conference }
                 ]);
             }
         }
@@ -232,18 +215,6 @@ export default function App() {
     useEffect(() => {
         async function updateChat() {
             if (appState.conference && appState.sessionToken && appState.profile) {
-                if (!appState.announcementsChannelID) {
-                    const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", appState.conference.id);
-                    if (configs.length > 0) {
-                        const tc = await StaticBaseImpl.getByField("TextChat", "twilioID", configs[0].value, appState.conference.id);
-                        const announcementsChannelID = tc?.id ?? null;
-
-                        dispatchAppUpdate([
-                            { action: "setAnnouncementsChannelID", id: announcementsChannelID },
-                        ]);
-                    }
-                }
-
                 Chat.setup(appState.conference, appState.profile, appState.sessionToken)
                     .then(ok => {
                         setChatReady(ok);
@@ -268,7 +239,7 @@ export default function App() {
         }
 
         updateChat();
-    }, [appState.announcementsChannelID, appState.conference, appState.profile, appState.sessionToken]);
+    }, [appState.conference, appState.profile, appState.sessionToken]);
 
     // Update video
     useEffect(() => {
@@ -388,7 +359,6 @@ export default function App() {
         finally {
             dispatchAppUpdate([
                 { action: "setConference", conference: null },
-                { action: "setAnnouncementsChannelID", id: null },
                 { action: "setUserProfile", data: null },
                 { action: "setUserRoles", roles: { isAdmin: false, isManager: false } }
             ]);
@@ -431,18 +401,9 @@ export default function App() {
 
     const selectConference = useCallback(async function _selectConference(id: string | null): Promise<boolean> {
         let conference: Conference | null = null;
-        let announcementsChannelID: string | null = null;
         try {
             if (id) {
                 conference = await Conference.get(id);
-                if (conference) {
-                    const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", conference.id);
-                    if (configs.length > 0) {
-                        const announcementsChannelSID = configs[0].value;
-                        const tc = await StaticBaseImpl.getByField("TextChat", "twilioID", announcementsChannelSID, conference.id);
-                        announcementsChannelID = tc?.id ?? null;
-                    }
-                }
             }
         }
         catch (e) {
@@ -450,8 +411,7 @@ export default function App() {
         }
 
         dispatchAppUpdate([
-            { action: "setConference", conference },
-            { action: "setAnnouncementsChannelID", id: announcementsChannelID }
+            { action: "setConference", conference }
         ]);
 
         return conference !== null;
@@ -462,43 +422,6 @@ export default function App() {
     }, [sidebarOpen]);
 
     const appClassNames = ["app"];
-
-    useEffect(() => {
-        if (chatReady) {
-            const mChat = Chat.instance();
-            if (mChat && appState.announcementsChannelID) {
-                const channelSid = appState.announcementsChannelID;
-
-                const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
-                const renderEmoji = (text: any) => doEmojify(text.value);
-
-                let functionToOff: (() => void) | null = null;
-                mChat.channelEventOn(channelSid, "messageAdded", (msg) => {
-                    addNotification(<ReactMarkdown
-                        className="body"
-                        renderers={{
-                            text: renderEmoji
-                        }}
-                    >
-                        {msg.body}
-                    </ReactMarkdown>);
-                }).then(x => {
-                    functionToOff = x;
-                }).catch(err => {
-                    // Swallow the error
-                    console.error(`Announcements notification error (App.tsx)`, err);
-                });
-
-                return () => {
-                    if (functionToOff) {
-                        mChat.channelEventOff(channelSid, "messageAdded", functionToOff);
-                    }
-                };
-            }
-        }
-
-        return () => { };
-    }, [appState.announcementsChannelID, chatReady]);
 
     // The main page element - this is where the bulk of content goes
     const page = useMemo(() => <Page

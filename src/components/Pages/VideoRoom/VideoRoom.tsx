@@ -274,7 +274,7 @@ export default function ViewVideoRoom(props: Props) {
                 <button onClick={() => setSize(0)}>
                     &#9660;
                 </button>
-                {chat ? chat !== "not present" ? <ChatFrame chatSid={chat.twilioID} /> : <>This room does not have a chat.</> : <LoadingSpinner />}
+                {chat ? chat !== "not present" ? <ChatFrame chatId={chat.id} /> : <>This room does not have a chat.</> : <LoadingSpinner />}
             </div>
         </SplitterLayout>
     </div>;

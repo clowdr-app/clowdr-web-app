@@ -1,10 +1,10 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useCallback, useEffect, useReducer } from 'react';
 import useConference from '../../../hooks/useConference';
 import useMaybeUserProfile from '../../../hooks/useMaybeUserProfile';
 import MenuExpander, { ButtonSpec } from "../Menu/MenuExpander";
 import MenuGroup, { MenuGroupItems } from '../Menu/MenuGroup';
 import MenuItem from '../Menu/MenuItem';
-import { Conference, UserProfile } from '@clowdr-app/clowdr-db-schema';
+import { Conference, TextChat, UserProfile, WatchedItems } from '@clowdr-app/clowdr-db-schema';
 import { makeCancelable } from '@clowdr-app/clowdr-db-schema/build/Util';
 import useMaybeChat from '../../../hooks/useMaybeChat';
 import { ChatDescriptor, MemberDescriptor } from '../../../classes/Chat';
@@ -13,6 +13,12 @@ import { ServiceEventNames } from '../../../classes/Chat/Services/Twilio/ChatSer
 import Chat from '../../../classes/Chat/Chat';
 import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
 import useLogger from '../../../hooks/useLogger';
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
+import useDataSubscription from '../../../hooks/useDataSubscription';
+import useSafeAsync from '../../../hooks/useSafeAsync';
+import { addNotification } from '../../../classes/Notifications/Notifications';
+import ReactMarkdown from 'react-markdown';
+import { emojify } from 'react-emojione';
 
 type ChatGroupTasks
     = "loadingActiveChats"
@@ -36,11 +42,13 @@ interface ChatsGroupState {
     chatSearch: string | null;
     activeChats: Array<SidebarChatDescriptor> | null;
     allChats: Array<ChatDescriptor> | null;
+    watchedChatIds: Array<string> | null;
     filteredChats: Array<SidebarChatDescriptor>;
 }
 
 type ChatsGroupUpdate
     = { action: "updateAllChats"; chats: Array<ChatDescriptor> }
+    | { action: "setActiveChats"; chats: Array<SidebarChatDescriptor> }
     | { action: "updateActiveChats"; chats: Array<SidebarChatDescriptor> }
     | { action: "updateFilteredChats"; chats: Array<SidebarChatDescriptor> }
     | { action: "deleteFromActiveChats"; chats: Array<string> }
@@ -48,6 +56,7 @@ type ChatsGroupUpdate
     | { action: "searchChats"; search: string | null }
     | { action: "setIsOpen"; isOpen: boolean }
     | { action: "updateChatDescriptors"; f: (x: SidebarChatDescriptor) => SidebarChatDescriptor }
+    | { action: "setWatchedChatIds"; ids: Array<string> }
     ;
 
 async function filterChats(
@@ -71,6 +80,7 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
         allChats: currentState.allChats,
         activeChats: currentState.activeChats,
         filteredChats: currentState.filteredChats,
+        watchedChatIds: currentState.watchedChatIds
     };
 
     let allChatsUpdated = false;
@@ -145,6 +155,14 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
                     nextState.filteredChats = nextState.filteredChats.map(update.f);
                 }
                 break;
+
+            case "setActiveChats":
+                nextState.activeChats = update.chats;
+                activeChatsUpdated = true;
+                break;
+            case "setWatchedChatIds":
+                nextState.watchedChatIds = update.ids;
+                break;
         }
     }
 
@@ -199,7 +217,6 @@ export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor)
 export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserProfile) {
     let friendlyName: string;
     let icon: JSX.Element;
-    let skip: boolean = false;
 
     if (chat.isDM) {
         const member1 = chat.member1;
@@ -210,13 +227,9 @@ export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserP
             friendlyName = member1.displayName;
             otherOnline = member1.isOnline;
         }
-        else if (member2) {
+        else {
             friendlyName = member2.displayName;
             otherOnline = member2.isOnline;
-        }
-        else {
-            skip = true;
-            friendlyName = "<unknown>";
         }
 
         icon = <i className={`fa${otherOnline ? 's' : 'r'} fa-circle ${otherOnline ? 'online' : ''}`}></i>;
@@ -227,39 +240,7 @@ export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserP
         icon = <i className="fas fa-hashtag"></i>;
     }
 
-    return { friendlyName, skip, icon };
-}
-
-
-function subscribeToDMMemberJoin(
-    memberJoinedlisteners: Map<string, () => void>,
-    mChat: Chat,
-    conf: Conference,
-    dispatchUpdate: React.Dispatch<ChatsGroupUpdate | ChatsGroupUpdate[]>
-): (value: string | ChatDescriptor) => Promise<void> {
-    return async (chatIdOrDesc) => {
-        // WATCH_TODO
-        // if (x.isDM && !x.member2) {
-        //     memberJoinedlisteners.set(x.id,
-        //         await mChat.channelEventOn(x.id, "memberJoined", async (mem) => {
-        //             const profile = await UserProfile.get(mem.profileId, conf.id);
-        //             assert(profile);
-        //             dispatchUpdate({
-        //                 action: "updateActiveChats",
-        //                 chats: [
-        //                     {
-        //                         ...x,
-        //                         member2: {
-        //                             isOnline: await mem.getOnlineStatus(),
-        //                             profileId: mem.profileId,
-        //                             displayName: profile.displayName
-        //                         }
-        //                     } as SidebarChatDescriptor
-        //                 ]
-        //             });
-        //         }));
-        // }
-    };
+    return { friendlyName, icon };
 }
 
 interface Props {
@@ -280,52 +261,82 @@ export default function ChatsGroup(props: Props) {
         chatSearch: null,
         allChats: null,
         activeChats: null,
+        watchedChatIds: null,
         filteredChats: [],
     });
 
     logger.enable();
 
-    // Initial fetch of active chats
+    const renderEmoji = useCallback((text: any) => {
+        const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
+        return doEmojify(text.value);
+    }, []);
+
     useEffect(() => {
-        let cancel: () => void = () => { };
-        const memberJoinedlisteners: Map<string, () => void> = new Map();
+        let functionsToOff: Promise<Array<{ id: string; f: () => void }>> = Promise.resolve([]);
+        if (mChat && state.activeChats) {
+            functionsToOff = Promise.all(state.activeChats.map(async c => {
+                return {
+                    id: c.id,
+                    f: await mChat.channelEventOn(c.id, "messageAdded", (msg) => {
+                        if (msg.author !== mUser?.id) {
+                            const isAnnouncement = c.friendlyName === "Announcements";
+                            const title = isAnnouncement ? "" : `**${mUser ? computeChatDisplayName(c, mUser).friendlyName : c.friendlyName}**\n\n`;
+                            const body = `${title}${msg.body}`;
+                            addNotification(
+                                <ReactMarkdown
+                                    renderers={{
+                                        text: renderEmoji
+                                    }}
+                                >
+                                    {body}
+                                </ReactMarkdown>, isAnnouncement ? undefined :
+                                {
+                                    url: `/chat/${c.id}`,
+                                    text: "Go to chat"
+                                },
+                                3000
+                            );
+                        }
+                    })
+                };
+            }));
 
-        async function updateChats() {
-            try {
-                if (mChat) {
-                    const chatsP = makeCancelable(mChat.listWatchedChats());
-                    cancel = chatsP.cancel;
-                    const chats = await chatsP.promise;
-                    await Promise.all(chats.map(subscribeToDMMemberJoin(memberJoinedlisteners, mChat, conf, dispatchUpdate)));
-                    const chatsWithName: Array<SidebarChatDescriptor>
-                        = await Promise.all(chats.map(x => upgradeChatDescriptor(conf, x)));
-
-                    dispatchUpdate({
-                        action: "updateActiveChats",
-                        chats: chatsWithName
-                    });
-                }
-            }
-            catch (e) {
-                if (!e.isCanceled) {
-                    throw e;
-                }
-            }
+            return () => {
+                functionsToOff.then(fs => {
+                    fs.forEach(f => mChat.channelEventOff(f.id, "messageAdded", f.f));
+                });
+            };
         }
+        return () => { };
+    }, [mChat, mUser, renderEmoji, state.activeChats]);
 
-        updateChats();
-
-        return () => {
-            if (mChat) {
-                const keys = memberJoinedlisteners.keys();
-                for (const key of keys) {
-                    const listener = memberJoinedlisteners.get(key) as () => void;
-                    mChat.channelEventOff(key, "memberJoined", listener);
-                }
-            }
-            cancel();
+    useSafeAsync(async () => {
+        if (mChat && state.watchedChatIds) {
+            const watchedChatIds = state.watchedChatIds;
+            const chats = await Promise.all(watchedChatIds.map(id => mChat.getChat(id)));
+            const chatsWithName: Array<SidebarChatDescriptor>
+                = await Promise.all(chats.map(x => upgradeChatDescriptor(conf, x)));
+            return chatsWithName;
         }
-    }, [conf, conf.id, mChat]);
+        return null;
+    }, (data: Array<SidebarChatDescriptor> | null) => {
+        if (data) {
+            dispatchUpdate({
+                action: "setActiveChats",
+                chats: data
+            });
+        }
+    }, [conf, conf.id, mChat, state.watchedChatIds]);
+
+    useSafeAsync(async () => mUser?.watched ?? null, (data: WatchedItems | null) => {
+        if (data) {
+            dispatchUpdate({
+                action: "setWatchedChatIds",
+                ids: data.watchedChats
+            });
+        }
+    }, [mUser?.watchedId]);
 
     // Initial fetch of all chats
     useEffect(() => {
@@ -458,8 +469,50 @@ export default function ChatsGroup(props: Props) {
         return () => { };
     }, [conf, logger, mChat]);
 
-    // WATCH_TODO: useDataSubscription on TextChat (add/update/delete) and WatchedItems
-    // WATCH_TODO: Subscribe to new messages from a chat
+    const watchedId = mUser?.watchedId;
+    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+        if (update.object.id === watchedId) {
+            dispatchUpdate({
+                action: "setWatchedChatIds",
+                ids: (update.object as WatchedItems).watchedChats
+            });
+        }
+    }, [watchedId]);
+
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, state.tasks.has("loadingActiveChats"), conf);
+
+    const onTextChatUpdated = useCallback(async function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
+        if (mChat) {
+            const chat = await mChat.getChat(update.object.id);
+            const updates: Array<ChatsGroupUpdate> = [{
+                action: "updateAllChats",
+                chats: [chat]
+            }];
+            if (state.watchedChatIds?.includes(chat.id)) {
+                const chatD = await upgradeChatDescriptor(conf, chat);
+                updates.push({
+                    action: "updateActiveChats",
+                    chats: [chatD]
+                });
+            }
+            dispatchUpdate(updates);
+        }
+    }, [conf, mChat, state.watchedChatIds]);
+
+    const onTextChatDeleted = useCallback(async function _onTextChatDeleted(update: DataDeletedEventDetails<"TextChat">) {
+        dispatchUpdate([
+            {
+                action: "deleteFromAllChats",
+                chats: [update.objectId]
+            },
+            {
+                action: "deleteFromActiveChats",
+                chats: [update.objectId]
+            }
+        ]);
+    }, []);
+
+    useDataSubscription("TextChat", onTextChatUpdated, onTextChatDeleted, state.tasks.has("loadingActiveChats"), conf);
 
     let chatsExpander: JSX.Element = <></>;
 
@@ -501,21 +554,19 @@ export default function ChatsGroup(props: Props) {
 
             const chatMenuItems: MenuGroupItems = [];
             for (const chat of chats) {
-                const { friendlyName, skip, icon } = computeChatDisplayName(chat, mUser);
+                const { friendlyName, icon } = computeChatDisplayName(chat, mUser);
 
                 // TODO: "New messages in this chat" boldification
-                if (!skip) {
-                    chatMenuItems.push({
-                        key: chat.id,
-                        element:
-                            <MenuItem
-                                title={friendlyName}
-                                label={friendlyName}
-                                icon={icon}
-                                action={`/chat/${chat.id}`}
-                                bold={false} />
-                    });
-                }
+                chatMenuItems.push({
+                    key: chat.id,
+                    element:
+                        <MenuItem
+                            title={friendlyName}
+                            label={friendlyName}
+                            icon={icon}
+                            action={`/chat/${chat.id}`}
+                            bold={false} />
+                });
             }
 
             chatEl = <MenuGroup items={chatMenuItems} />;

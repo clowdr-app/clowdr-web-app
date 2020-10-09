@@ -10,7 +10,7 @@ import "./ChatFrame.scss";
 import { Picker as EmojiPicker } from 'emoji-mart';
 
 interface Props {
-    chatSid: string;
+    chatId: string;
 }
 
 export default function ChatFrame(props: Props) {
@@ -43,7 +43,7 @@ export default function ChatFrame(props: Props) {
                 if (msg.length > 0) {
                     try {
                         setNewMsgEnabled(false);
-                        await mChat.sendMessage(props.chatSid, msg);
+                        await mChat.sendMessage(props.chatId, msg);
                         setNewMsgText("");
                     }
                     catch (e) {
@@ -83,8 +83,8 @@ export default function ChatFrame(props: Props) {
     //       Twilio because the chat will try to load before User B has joined it.
 
     return <div className="chat-frame">
-        <MessageList chatSid={props.chatSid} />
-        {props.chatSid !== announcementsChannelSid || isAdmin
+        <MessageList chatSid={props.chatId} />
+        {props.chatId !== announcementsChannelSid || isAdmin
             ? <div className="compose-message">
                 <textarea
                     ref={msgBoxRef}

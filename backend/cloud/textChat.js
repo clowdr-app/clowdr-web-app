@@ -458,14 +458,6 @@ async function getTextChatByName(name, confId) {
     return q.first({ useMasterKey: true });
 }
 
-async function getAutoWatchTextChats(conference, sessionToken) {
-    const query = new Parse.Query("TextChat");
-    query.equalTo("conference", conference);
-    query.equalTo("autoWatch", true);
-    return await query.map(x => x, { sessionToken });
-}
-
 module.exports = {
-    getTextChatByName: getTextChatByName,
-    getAutoWatchTextChats: getAutoWatchTextChats
+    getTextChatByName: getTextChatByName
 };

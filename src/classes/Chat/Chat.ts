@@ -143,7 +143,7 @@ export default class Chat implements IChatManager {
             isAnnouncements = configs[0].value === chan.sid;
         }
         const isDM = await chan.getIsDM();
-        let isPrivate = await chan.getIsPrivate();
+        const isPrivate = await chan.getIsPrivate();
         if (isDM) {
             return {
                 id: chan.id,

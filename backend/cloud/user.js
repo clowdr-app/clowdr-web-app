@@ -8,7 +8,6 @@ const Twilio = require("twilio");
 const { nanoid } = require("nanoid");
 const sgMail = require("@sendgrid/mail");
 const { isUserInRoles } = require("./role");
-const { getAutoWatchTextChats } = require("./textChat");
 const {
     getConferenceById,
     getConferenceConfigurationByKey
@@ -513,9 +512,18 @@ Parse.Cloud.define("user-reset-password", handleResetPassword)
 // CHAT_TODO: And likewise if upgrading them to a manager
 // CHAT_TODO: And likewise if downgrading them to a manager or attendee
 
+// Has to be here so the module loader doesn't land in a loop resulting in functions being undefined
+async function getAutoWatchTextChats(conference, sessionToken) {
+    const query = new Parse.Query("TextChat");
+    query.equalTo("conference", conference);
+    query.equalTo("autoWatch", true);
+    return await query.map(x => x, { sessionToken });
+}
+
 module.exports = {
     getUserById: getUserById,
     getProfileOfUser: getProfileOfUser,
     getProfileOfUserId: getProfileOfUserId,
-    getUserProfileById: getUserProfileById
+    getUserProfileById: getUserProfileById,
+    getAutoWatchTextChats: getAutoWatchTextChats
 };

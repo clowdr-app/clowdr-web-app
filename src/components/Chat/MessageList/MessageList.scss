@@ -10,14 +10,6 @@
     flex-direction: column-reverse;
     position      : relative;
 
-    .infinite-scroll-component__outerdiv {
-        height: auto;
-
-        .infinite-scroll-component {
-            height: auto;
-        }
-    }
-
     .message {
         width: 100%;
 

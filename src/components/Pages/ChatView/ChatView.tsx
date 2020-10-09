@@ -64,10 +64,10 @@ export default function ChatView(props: Props) {
         if (mChat) {
             const chatD = await mChat.getChat(props.chatId);
             const chatSD = await upgradeChatDescriptor(conf, chatD);
-            const { friendlyName, skip } = computeChatDisplayName(chatSD, mUser);
+            const { friendlyName } = computeChatDisplayName(chatSD, mUser);
             const memberCount = await mChat.getChatMembersCount(props.chatId);
             return {
-                name: skip ? "Chat" : friendlyName,
+                name: friendlyName,
                 count: memberCount,
                 isDM: chatSD.isDM,
                 isAutoWatch: chatD.autoWatchEnabled,
@@ -141,7 +141,7 @@ export default function ChatView(props: Props) {
         }
     }, [props.chatId]);
 
-    useDataSubscription("TextChat", onTextChatUpdated, () => { }, isFollowing === null, conf);
+    useDataSubscription("TextChat", onTextChatUpdated, () => { }, isAutoWatch === null, conf);
 
     const doFollow = useCallback(async function _doFollow() {
         try {
@@ -320,7 +320,7 @@ export default function ChatView(props: Props) {
         buttons: actionButtons
     });
 
-    const chat = <ChatFrame chatSid={props.chatId} />;
+    const chat = <ChatFrame chatId={props.chatId} />;
 
     // TODO: Action buttons: Launch video chat
 

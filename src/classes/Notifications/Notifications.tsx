@@ -6,27 +6,27 @@ import ErrorNotification from "../../components/Notifications/ErrorNotification/
 /**
  * Display a global notification toast using `react-toastify`.
  */
-function addNotification(content: string | JSX.Element, action?: { url: string, text: string }) {
+function addNotification(content: string | JSX.Element, action?: { url: string, text: string }, hangTime: number = 8000) {
     toast(
         (<Notification content={content} action={action} />),
         {
             className: "clowdr-notification",
             hideProgressBar: true,
-            autoClose: 8000
+            autoClose: hangTime
         });
 }
 
 /**
  * Display a global error notification toast using `react-toastify`.
  */
-function addError(content: string) {
+function addError(content: string, hangTime: number = 8000) {
     toast(
         (<ErrorNotification content={content} />),
         {
             className: "clowdr-error-notification",
             hideProgressBar: true,
             position: 'bottom-center',
-            autoClose: 8000
+            autoClose: hangTime
         }
     )
 }
