@@ -441,6 +441,12 @@
                         }
                     }
 
+                    button.watch {
+                        padding: 0;
+                        margin: 0;
+                        border: none;
+                    }
+
                     .track {
                         display     : grid;
                         font-size   : 75%;

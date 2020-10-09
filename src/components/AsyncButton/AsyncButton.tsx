@@ -9,7 +9,7 @@ interface Props {
     disabled?: boolean;
     className?: string;
     action?: Handler;
-    content?: string;
+    content?: string | JSX.Element;
     setIsRunning?(isRunning: boolean): void;
 }
 
@@ -87,8 +87,13 @@ export default function AsyncButton(props: Props) {
     function getContents(): ReactElement | string | undefined {
         switch (actionState.state) {
             case "pending":
-                case "running":
-                return <LoadingSpinner message={props.content ?? "Loading"} />;
+            case "running":
+                if (typeof props.content === "string") {
+                    return <LoadingSpinner message={props.content ?? "Loading"} />;
+                }
+                else {
+                    return props.content;
+                }
             case "notpending":
                 return props.content;
             case "rejected":

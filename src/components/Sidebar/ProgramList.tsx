@@ -6,6 +6,7 @@ import useConference from "../../hooks/useConference";
 import useLogger from "../../hooks/useLogger";
 import useDataSubscription from "../../hooks/useDataSubscription";
 import TrackMarker from "../Pages/Program/All/TrackMarker";
+import useMaybeUserProfile from "../../hooks/useMaybeUserProfile";
 
 interface Props {
     sessions: Array<ProgramSession>;
@@ -17,6 +18,8 @@ interface Props {
      * boundaries specified, to include up to a distance of 10 years.
      */
     timeBoundaries: Array<number>;
+    watchedSessions?: Array<string>;
+    watchedEvents?: Array<string>;
 }
 
 function arrangeBoundaries(timeBoundaries: Array<number>)
@@ -98,6 +101,7 @@ function generateTimeText(startTime: number, now: number) {
 
 export default function ProgramList(props: Props) {
     const conf = useConference();
+    const currentUserProfile = useMaybeUserProfile();
     const [renderData, setRenderData] = useState<RenderData>({ groups: [] });
     const logger = useLogger("Sidebar/Program");
     const [refreshRequired, setRefreshRequired] = useState(true);
@@ -218,7 +222,7 @@ export default function ProgramList(props: Props) {
                             title: session.title,
                             url: `/session/${session.id}`,
                             track: { id: track.id, name: track.shortName, colour: track.colour },
-                            isWatched: false,
+                            isWatched: !!props.watchedSessions?.includes(session.id),
                             item: { type: "session", data: session },
                             sortValue: session.startTime.getTime(),
                             additionalClasses: "session no-events" // TODO: Remove .no-events if displaying events
@@ -231,7 +235,7 @@ export default function ProgramList(props: Props) {
                             title: (await event.item).title,
                             url: `/event/${event.id}`,
                             track: { id: track.id, name: track.shortName, colour: track.colour },
-                            isWatched: false,
+                            isWatched: !!props.watchedEvents?.includes(event.id),
                             item: { type: "event", data: event },
                             sortValue: event.startTime.getTime(),
                             additionalClasses: "event"
@@ -274,7 +278,7 @@ export default function ProgramList(props: Props) {
         doBuildRenderData();
 
         return cancel;
-    }, [logger, props.events, props.sessions, props.timeBoundaries, refreshRequired]);
+    }, [logger, props.events, props.sessions, props.timeBoundaries, props.watchedEvents, props.watchedSessions, refreshRequired]);
 
 
     // Subscribe to data events
@@ -302,16 +306,63 @@ export default function ProgramList(props: Props) {
 
     const groupElems: Array<JSX.Element> = [];
 
+    const doToggleFollow = useCallback(async function _doToggleFollow(table: "session" | "event", id: string) {
+        try {
+            if (currentUserProfile) {
+                const p = makeCancelable((async () => {
+                    const watched = await currentUserProfile.watched;
+                    if (table === "session") {
+                        if (!watched.watchedSessions.includes(id)) {
+                            watched.watchedSessions.push(id);
+                        }
+                        else {
+                            watched.watchedSessions = watched.watchedSessions.filter(x => x !== id);
+                        }
+                    }
+                    else if (table === "event") {
+                        if (!watched.watchedEvents.includes(id)) {
+                            watched.watchedEvents.push(id);
+                        }
+                        else {
+                            watched.watchedEvents = watched.watchedEvents.filter(x => x !== id);
+                        }
+                    }
+
+                    await watched.save();
+                })());
+                await p.promise;
+            }
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                throw e;
+            }
+        }
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUserProfile?.watchedId]);
+
     for (const group of renderData.groups) {
         const itemElems: Array<JSX.Element> = [];
         for (const item of group.items) {
-            // TODO: Insert the "watch star" button
-            // TODO: Enable the watch/unwatch
+            const table = item.item.type;
+            const id = item.item.data.id;
             itemElems.push(
                 <li key={item.item.data.id} className={item.additionalClasses + (item.isWatched ? " watched" : "")}>
                     <Link to={item.url}>
                         <h3>{item.title}</h3>
                     </Link>
+                    {item.isWatched
+                        ? <button className="watch" onClick={(ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            doToggleFollow(table, id);
+                        }}><i className="fas fa-star"></i></button>
+                        : <button className="watch" onClick={(ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            doToggleFollow(table, id);
+                        }}><i className="far fa-star"></i></button>}
                     <Link className="track" to={`/track/${item.track.id}`}>
                         <TrackMarker track={item.track.colour} small={true} />
                         <span>{item.track.name}</span>

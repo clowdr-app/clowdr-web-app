@@ -5,11 +5,14 @@ import MenuExpander, { ButtonSpec } from "../Menu/MenuExpander";
 import MenuGroup from '../Menu/MenuGroup';
 import ProgramList from '../ProgramList';
 import MenuItem from '../Menu/MenuItem';
-import { ProgramSession, ProgramSessionEvent } from '@clowdr-app/clowdr-db-schema';
+import { ProgramSession, ProgramSessionEvent, WatchedItems } from '@clowdr-app/clowdr-db-schema';
 import { makeCancelable, removeNull } from '@clowdr-app/clowdr-db-schema/build/Util';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
 import useDataSubscription from '../../../hooks/useDataSubscription';
 import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
+import useSafeAsync from '../../../hooks/useSafeAsync';
+import { addNotification } from '../../../classes/Notifications/Notifications';
+import { useLocation } from 'react-router-dom';
 
 interface Props {
     minSearchLength: number;
@@ -30,6 +33,13 @@ interface ProgramGroupState {
 
     filteredSessions: Array<ProgramSession>;
     filteredEvents: Array<ProgramSessionEvent>;
+
+    watchedSessionIds: Array<string> | null;
+    watchedEventIds: Array<string> | null;
+    watchedTrackIds: Array<string> | null;
+
+    notifiedSessionIds: Array<string>;
+    notifiedEventIds: Array<string>;
 }
 
 type ProgramGroupUpdate
@@ -41,6 +51,11 @@ type ProgramGroupUpdate
     | { action: "deleteEvents"; events: Array<string> }
     | { action: "searchProgram"; search: string | null }
     | { action: "setIsOpen"; isOpen: boolean }
+    | { action: "setWatchedSessionIds"; ids: Array<string> | null }
+    | { action: "setWatchedEventIds"; ids: Array<string> | null }
+    | { action: "setWatchedTrackIds"; ids: Array<string> | null }
+    | { action: "addNotifiedSessionIds"; ids: Array<string> }
+    | { action: "addNotifiedEventIds"; ids: Array<string> }
     ;
 
 async function filterSessionsAndEvents(
@@ -111,7 +126,12 @@ function nextSidebarState(currentState: ProgramGroupState, updates: ProgramGroup
         sessions: currentState.sessions,
         events: currentState.events,
         filteredSessions: currentState.filteredSessions,
-        filteredEvents: currentState.filteredEvents
+        filteredEvents: currentState.filteredEvents,
+        watchedSessionIds: currentState.watchedSessionIds,
+        watchedEventIds: currentState.watchedEventIds,
+        watchedTrackIds: currentState.watchedTrackIds,
+        notifiedSessionIds: currentState.notifiedSessionIds,
+        notifiedEventIds: currentState.notifiedEventIds,
     };
 
     let sessionsOrEventsUpdated = false;
@@ -178,6 +198,21 @@ function nextSidebarState(currentState: ProgramGroupState, updates: ProgramGroup
             case "updateFilteredEvents":
                 nextState.filteredEvents = update.events;
                 break;
+            case "setWatchedSessionIds":
+                nextState.watchedSessionIds = update.ids;
+                break;
+            case "setWatchedEventIds":
+                nextState.watchedEventIds = update.ids;
+                break;
+            case "setWatchedTrackIds":
+                nextState.watchedTrackIds = update.ids;
+                break;
+            case "addNotifiedSessionIds":
+                nextState.notifiedSessionIds = nextState.notifiedSessionIds.concat(update.ids);
+                break;
+            case "addNotifiedEventIds":
+                nextState.notifiedEventIds = nextState.notifiedEventIds.concat(update.ids);
+                break;
         }
     }
 
@@ -204,6 +239,7 @@ function nextSidebarState(currentState: ProgramGroupState, updates: ProgramGroup
 export default function ProgramGroup(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
+    const location = useLocation();
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
         tasks: new Set([
             "loadingSessionsAndEvents"
@@ -217,7 +253,14 @@ export default function ProgramGroup(props: Props) {
         events: null,
 
         filteredSessions: [],
-        filteredEvents: []
+        filteredEvents: [],
+
+        watchedSessionIds: [],
+        watchedEventIds: [],
+        watchedTrackIds: [],
+
+        notifiedSessionIds: [],
+        notifiedEventIds: [],
     });
 
     // Initial fetch of complete program
@@ -255,6 +298,66 @@ export default function ProgramGroup(props: Props) {
         return cancel;
     }, [conf.id]);
 
+    const notifyWatchedItems = useCallback(async function _notifyWatchedItems() {
+        const now = Date.now();
+        const newNotifiedSessionIds: Array<string> = [];
+        const newNotifiedEventIds: Array<string> = [];
+
+        if (state.sessions) {
+            for (const session of state.sessions) {
+                if (!state.notifiedSessionIds.includes(session.id)) {
+                const dist = Math.abs(session.startTime.getTime() - now);
+                    if (dist < 1000 * 60 * 1.5) {
+                        const path = `/session/${session.id}`;
+                        if (!location.pathname.includes(path)) {
+                            if (state.watchedSessionIds?.includes(session.id)
+                                || state.watchedTrackIds?.includes(session.trackId)) {
+                                newNotifiedSessionIds.push(session.id);
+                                addNotification(`"${session.title}" is about to start.`, {
+                                    url: path,
+                                    text: `Go to session`
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (state.events) {
+            for (const event of state.events) {
+                if (!state.notifiedEventIds.includes(event.id)) {
+                    const dist = Math.abs(event.startTime.getTime() - now);
+                    if (dist < 1000 * 60 * 1.5) {
+                        const path = `/event/${event.id}`;
+                        if (!location.pathname.includes(path)) {
+                            const track = await event.track;
+                            if (state.watchedEventIds?.includes(event.id)
+                                || state.watchedTrackIds?.includes(track.id)) {
+                                newNotifiedEventIds.push(event.id);
+                                const item = await event.item;
+                                addNotification(`"${item.title}" is about to start.`, {
+                                    url: path,
+                                    text: `Go to event`
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        const updates: Array<ProgramGroupUpdate> = [];
+        if (newNotifiedSessionIds.length > 0) {
+            updates.push({ action: "addNotifiedSessionIds", ids: newNotifiedSessionIds });
+        }
+        if (newNotifiedEventIds.length > 0) {
+            updates.push({ action: "addNotifiedEventIds", ids: newNotifiedEventIds });
+        }
+        if (updates.length > 0) {
+            dispatchUpdate(updates);
+        }
+    }, [location.pathname, state.events, state.notifiedEventIds, state.notifiedSessionIds, state.sessions, state.watchedEventIds, state.watchedSessionIds, state.watchedTrackIds]);
+
     // Refresh the view every few mins
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -264,12 +367,18 @@ export default function ProgramGroup(props: Props) {
                     search: null
                 });
             }
-        }, 1000 * 60 * 3 /* 3 mins */);
+
+            notifyWatchedItems();
+        }, 1000 * 60 * 1 /* 1 mins */);
 
         return () => {
             clearInterval(intervalId);
         }
-    }, [state.programSearch]);
+    }, [notifyWatchedItems, state.programSearch]);
+
+    useEffect(() => {
+        notifyWatchedItems();
+    }, [notifyWatchedItems]);
 
     // Update filtered program results
     useEffect(() => {
@@ -302,6 +411,51 @@ export default function ProgramGroup(props: Props) {
 
         return cancel;
     }, [props.minSearchLength, state.events, state.programSearch, state.sessions]);
+
+    // Fetch watched items
+    useSafeAsync(async () => mUser?.watched ?? null, (data: WatchedItems | null) => {
+        if (data) {
+            dispatchUpdate([
+                {
+                    action: "setWatchedSessionIds",
+                    ids: data.watchedSessions
+                },
+                {
+                    action: "setWatchedEventIds",
+                    ids: data.watchedEvents
+                },
+                {
+                    action: "setWatchedTrackIds",
+                    ids: data.watchedTracks
+                }
+            ]);
+        }
+    }, [mUser?.watchedId]);
+
+    // Subscribe to watched items changes
+    const watchedId = mUser?.watchedId;
+    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+        if (update.object.id === watchedId) {
+            const data = update.object as WatchedItems;
+            dispatchUpdate([
+                {
+                    action: "setWatchedSessionIds",
+                    ids: data.watchedSessions
+                },
+                {
+                    action: "setWatchedEventIds",
+                    ids: data.watchedEvents
+                },
+                {
+                    action: "setWatchedTrackIds",
+                    ids: data.watchedTracks
+                }
+            ]);
+        }
+    }, [watchedId]);
+
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, !state.watchedSessionIds, conf);
+
 
     // Subscribe to program data events
 
@@ -366,7 +520,10 @@ export default function ProgramGroup(props: Props) {
             program = <ProgramList
                 sessions={state.filteredSessions}
                 events={state.filteredEvents}
-                timeBoundaries={programTimeBoundaries} />;
+                timeBoundaries={programTimeBoundaries}
+                watchedSessions={state.watchedSessionIds ?? undefined}
+                watchedEvents={state.watchedEventIds ?? undefined}
+            />;
         }
         else {
             program = <>
