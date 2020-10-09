@@ -11,6 +11,8 @@ const { getProfileOfUser } = require("./user");
 // TODO: Before save of ProgramItemAttachment: If type AttachmentType `isCoverImage`, update associated program item's `posterImage` field
 // TODO: Before delete of ProgramItemAttachment: If type AttachmentType `isCoverImage`, clear associated program item's `posterImage` field
 
+// WATCH_TODO: Before delete of track/session/event: Remove from user's watched items
+
 /**
  * @typedef {Parse.Object} Pointer
  */

@@ -3,9 +3,10 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
-const { getUserProfileById } = require("./user");
+const { getProfileOfUser, getUserProfileById } = require("./user");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
+// WATCH_TODO: Before delete: Remove from user's watched items
 
 // Video rooms are created in Twilio only when they are first needed.
 // So they are created when a user requests an access token for a room -
@@ -92,6 +93,8 @@ async function handleCreateVideoRoom(req) {
 
         const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager", "attendee"]);
         if (authorized) {
+            const profile = await getProfileOfUser(user, confId);
+
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
             // Prevent non-admin/manager from creating persistent rooms
@@ -104,14 +107,16 @@ async function handleCreateVideoRoom(req) {
             spec.capacity = Math.min(spec.capacity, 50);
 
             if (!spec.textChat) {
-                const newChat = new Parse.Object("TextChat", {
+                const newChatId = await Parse.Cloud.run("textChat-create", {
                     autoWatch: false,
                     name: spec.name,
-                    conference: spec.conference,
+                    conference: spec.conference.id,
                     mirrored: false,
-                    isDM: false
-                });
-                spec.textChat = await newChat.save(null, { useMasterKey: true });
+                    isDM: false,
+                    isPrivate: spec.isPrivate,
+                    members: [profile.id]
+                }, { sessionToken: user.getSessionToken() });
+                spec.textChat = new Parse.Object("TextChat", { id: newChatId });
             }
             else {
                 spec.textChat = new Parse.Object("TextChat", { id: spec.textChat });

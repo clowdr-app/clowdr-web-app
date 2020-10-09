@@ -16,6 +16,7 @@ const Twilio = require("twilio");
 // TODO: Before delete: Prevent delete if still in use anywhere
 // TODO: Before delete: Delete channel in Twilio
 // TODO: Before delete: Delete mirrored TextChatMessage
+// WATCH_TODO: Before delete: Remove from user's watched items
 
 async function ensureTwilioUsersExist(service, profiles) {
     const existingUserProfileIds = (await service.users.list()).map(x => x.identity);
