@@ -215,11 +215,22 @@ Parse.Cloud.job("conference-create", async (request) => {
     let adminUser = null;
     let adminUserProfile = null;
     let twilioSubaccount = null;
+    let announcementsChat = null;
     const configurationMap = new Map();
 
     async function cleanupOnFailure() {
         message("Cleaning up...");
         let cleanupSuccess = true;
+
+        try {
+            if (announcementsChat) {
+                await announcementsChat.remove();
+            }
+        }
+        catch (e2) {
+            console.error(`Failed to clean up announcements chat. ${e2}`);
+            cleanupSuccess = false;
+        }
 
         try {
             for (let configItem of configurationMap.values()) {
@@ -830,7 +841,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 acl.setRoleReadAccess(attendeeRole, true);
                 textChat.setACL(acl);
 
-                await textChat.save(null, { useMasterKey: true });
+                announcementsChat = await textChat.save(null, { useMasterKey: true });
             }
             message(`Created announcements text chat in Parse.`);
 
