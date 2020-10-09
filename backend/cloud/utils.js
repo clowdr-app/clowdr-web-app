@@ -115,7 +115,7 @@ function validateBasicType(key, schemaType, actualValue) {
     return { ok: true };
 }
 
-const backOff = require('exponential-backoff');
+const { backOff } = require('exponential-backoff');
 
 async function callWithRetry(f) {
     const response = await backOff(f,

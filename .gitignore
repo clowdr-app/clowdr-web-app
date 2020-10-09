@@ -56,3 +56,5 @@ sample-program-data.js
 scripts/dump-existing-users.js
 
 existing-users-dump.json
+
+favicon*.png

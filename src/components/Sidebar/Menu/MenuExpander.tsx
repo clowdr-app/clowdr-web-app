@@ -121,7 +121,7 @@ export default function MenuExpander(props: Props) {
                         className="action-link"
                         to={button.url}
                         aria-label={button.label}>
-                        <i className={"fas " + button.icon}></i>
+                        <i className={button.icon}></i>
                         {button.text ? <span className="text">{button.text}</span> : <></>}
                     </Link>;
                 }

@@ -1,29 +1,30 @@
 /* global Parse */
 // ^ for eslint
 
-const { getAutoWatchTextChats } = require("./textChat");
-const assert = require("assert");
+//const { getAutoWatchTextChats } = require("./textChat");
+// Dunno why but Live Query just doesn't respond with correct data when using this
+// so I'm giving up on it for now. It may not be desirable anyway - e.g. people
+// may want to unfollow lobby chats or admins unfollow announcements.
+// Parse.Cloud.beforeSave("WatchedItems", async (request) => {
+//     // TODO: If is an author, auto-watch them to the text chats for their papers
+//     // TODO: Do we want authors to be auto-watching their items & content feeds (video rooms/text chats)
 
-Parse.Cloud.beforeSave("WatchedItems", async (request) => {
-    // TODO: If is an author, auto-watch them to the text chats for their papers
-    // TODO: Do we want authors to be auto-watching their items & content feeds (video rooms/text chats)
+//     // We can't run this code on a new WatchedItems as a profile won't have been
+//     // assigned to it yet.
+//     if (!request.object.isNew() && request.user) {
+//         const watched = request.object;
+//         const conf = watched.get("conference");
 
-    // We can't run this code on a new WatchedItems as a profile won't have been
-    // assigned to it yet.
-    if (!request.object.isNew() && request.user) {
-        const watched = request.object;
-        const conf = watched.get("conference");
-
-        const chatsToAutoWatch = await getAutoWatchTextChats(conf, request.user.getSessionToken());
-        const chatsWatching = watched.get("watchedChats") || [];
-        const newChatsWatching =
-            chatsWatching.reduce(
-                (acc, x) => acc.includes(x) ? acc : [...acc, x],
-                chatsToAutoWatch.map(x => x.id) || []
-            );
-        watched.set("watchedChats", newChatsWatching);
-    }
-});
+//         const chatsToAutoWatch = await getAutoWatchTextChats(conf, request.user.getSessionToken());
+//         const chatsWatching = watched.get("watchedChats") || [];
+//         const newChatsWatching =
+//             chatsWatching.reduce(
+//                 (acc, x) => acc.includes(x) ? acc : [...acc, x],
+//                 chatsToAutoWatch.map(x => x.id) || []
+//             );
+//         watched.set("watchedChats", newChatsWatching);
+//     }
+// });
 
 Parse.Cloud.job("migrate-watchedItems-addToUserProfile", async (request) => {
     const { params, headers, log, message } = request;

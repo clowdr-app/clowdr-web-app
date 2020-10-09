@@ -12,7 +12,7 @@ import assert from 'assert';
 import { ServiceEventNames } from '../../../classes/Chat/Services/Twilio/ChatService';
 import Chat from '../../../classes/Chat/Chat';
 import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
-import { StaticBaseImpl } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base';
+import useLogger from '../../../hooks/useLogger';
 
 type ChatGroupTasks
     = "loadingActiveChats"
@@ -270,6 +270,7 @@ export default function ChatsGroup(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
     const mChat = useMaybeChat();
+    const logger = useLogger("ChatsGroup");
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
         tasks: new Set([
             "loadingChats",
@@ -281,6 +282,8 @@ export default function ChatsGroup(props: Props) {
         activeChats: null,
         filteredChats: [],
     });
+
+    logger.enable();
 
     // Initial fetch of active chats
     useEffect(() => {
@@ -395,66 +398,6 @@ export default function ChatsGroup(props: Props) {
 
             async function attach() {
                 try {
-                    listeners.set("channelJoined", await chatService.serviceEventOn("channelJoined", async (ch) => {
-                        await subscribeToDMMemberJoin(memberJoinedlisteners, chatService, conf, dispatchUpdate)(ch);
-
-                        const tc = await StaticBaseImpl.getByField("TextChat", "twilioID", ch, conf.id);
-                        assert(tc);
-                        const chat = await chatService.getChat(tc.id);
-                        dispatchUpdate({
-                            action: "updateActiveChats",
-                            chats: [await upgradeChatDescriptor(conf, chat)]
-                        });
-                    }));
-
-                    listeners.set("channelLeft", await chatService.serviceEventOn("channelLeft", (ch) => {
-                        dispatchUpdate({
-                            action: "deleteFromActiveChats",
-                            chats: [ch]
-                        });
-                    }));
-
-                    // WATCH_TODO: Do these using useDataSubscription on TextChat
-                    // listeners.set("channelAdded", await chatService.serviceEventOn("channelAdded", (ch) => {
-                    //     dispatchUpdate({
-                    //         action: "updateAllChats",
-                    //         chats: [ch]
-                    //     });
-                    // }));
-
-                    // listeners.set("channelRemoved", await chatService.serviceEventOn("channelRemoved", (ch) => {
-                    //     dispatchUpdate([
-                    //         {
-                    //             action: "deleteFromActiveChats",
-                    //             chats: [ch.sid]
-                    //         },
-                    //         {
-                    //             action: "deleteFromAllChats",
-                    //             chats: [ch.sid]
-                    //         }
-                    //     ]);
-                    // }));
-
-                    // listeners.set("channelUpdated", await chatService.serviceEventOn("channelUpdated", async (ch) => {
-                    //     if (ch.updateReasons.includes("attributes")
-                    //         || ch.updateReasons.includes("friendlyName")
-                    //         || ch.updateReasons.includes("lastConsumedMessageIndex")
-                    //         || ch.updateReasons.includes("lastMessage")
-                    //         || ch.updateReasons.includes("uniqueName")
-                    //         || ch.updateReasons.includes("status")
-                    //         || ch.updateReasons.includes("state"))
-                    //         dispatchUpdate([
-                    //             {
-                    //                 action: "updateActiveChats",
-                    //                 chats: [await upgradeChatDescriptor(conf, ch.channel)]
-                    //             },
-                    //             {
-                    //                 action: "updateAllChats",
-                    //                 chats: [ch.channel]
-                    //             }
-                    //         ]);
-                    // }));
-
                     listeners.set("userUpdated", await chatService.serviceEventOn("userUpdated", async (u) => {
                         if (u.updateReasons.includes("friendlyName") ||
                             u.updateReasons.includes("online") ||
@@ -513,13 +456,16 @@ export default function ChatsGroup(props: Props) {
             };
         }
         return () => { };
-    }, [conf, mChat]);
+    }, [conf, logger, mChat]);
+
+    // WATCH_TODO: useDataSubscription on TextChat (add/update/delete) and WatchedItems
+    // WATCH_TODO: Subscribe to new messages from a chat
 
     let chatsExpander: JSX.Element = <></>;
 
     const chatsButtons: Array<ButtonSpec> = [
         {
-            type: "search", label: "Search all chats", icon: "fa-search",
+            type: "search", label: "Search all chats", icon: "fas fa-search",
             onSearch: (event) => {
                 dispatchUpdate({ action: "searchChats", search: event.target.value });
                 return event.target.value;
@@ -531,11 +477,9 @@ export default function ChatsGroup(props: Props) {
                 dispatchUpdate({ action: "searchChats", search: null });
             }
         },
-        { type: "link", label: "Show all chats", icon: "fa-globe-europe", url: "/chat" },
-        { type: "link", label: "Create new chat", icon: "fa-plus", url: "/chat/new" }
+        { type: "link", label: "Show all chats", icon: "fas fa-users", url: "/chat" },
+        { type: "link", label: "Create new chat", icon: "fas fa-plus", url: "/chat/new" }
     ];
-
-    // WATCH_TODO: Watched text chats and all that entails
 
     if (mUser) {
         let chatEl: JSX.Element;
@@ -581,7 +525,7 @@ export default function ChatsGroup(props: Props) {
                 {state.allChats ? <></> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-chat",
-                    element: <MenuItem title="View all chats" label="All chats" icon={<i className="fas fa-globe-europe"></i>} action="/chat" bold={true} />
+                    element: <MenuItem title="View all chats" label="All chats" icon={<i className="fas fa-users"></i>} action="/chat" bold={true} />
                 }]} />
             </>;
         }

@@ -238,7 +238,7 @@ export default function RoomsGroup(props: Props) {
 
     const roomsButtons: Array<ButtonSpec> = [
         {
-            type: "search", label: "Search all rooms", icon: "fa-search",
+            type: "search", label: "Search all rooms", icon: "fas fa-search",
             onSearch: (event) => {
                 dispatchUpdate({ action: "searchRooms", search: event.target.value });
                 return event.target.value;
@@ -250,8 +250,8 @@ export default function RoomsGroup(props: Props) {
                 dispatchUpdate({ action: "searchRooms", search: null });
             }
         },
-        { type: "link", label: "Show all rooms", icon: "fa-globe-europe", url: "/room" },
-        { type: "link", label: "Create new room", icon: "fa-plus", url: "/room/new" }
+        { type: "link", label: "Show all rooms", icon: "fas fa-person-booth", url: "/room" },
+        { type: "link", label: "Create new room", icon: "fas fa-plus", url: "/room/new" }
     ];
 
     if (mUser) {
@@ -311,7 +311,7 @@ export default function RoomsGroup(props: Props) {
                 {state.allRooms ? <></> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-rooms",
-                    element: <MenuItem title="View all rooms" label="All rooms" icon={<i className="fas fa-globe-europe"></i>} action="/room" bold={true} />
+                    element: <MenuItem title="View all rooms" label="All rooms" icon={<i className="fas fa-person-booth"></i>} action="/room" bold={true} />
                 }]} />
             </>;
         }

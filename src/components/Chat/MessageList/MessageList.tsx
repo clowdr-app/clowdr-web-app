@@ -149,7 +149,7 @@ export default function MessageList(props: Props) {
                         ids: reactorIds[reaction],
                         names: await Promise.all(reactorIds[reaction].map(async (aProfileId: string) => {
                             const aProfile = await UserProfile.get(aProfileId, conf.id);
-                            return aProfile?.displayName ?? "<Unknown>";
+                            return aProfile?.id === userProfile.id ? "You" : aProfile?.displayName ?? "<Unknown>";
                         }))
                     };
                 }
@@ -159,7 +159,7 @@ export default function MessageList(props: Props) {
                 body,
                 profileFlair: flair,
                 profileId: profile?.id ?? null,
-                profileName: profile?.displayName ?? null,
+                profileName: profile?.id === userProfile.id ? "You" : profile?.displayName ?? null,
                 profilePhotoUrl,
                 time: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
                 index: message.index,

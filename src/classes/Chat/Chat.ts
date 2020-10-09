@@ -1,5 +1,5 @@
 import assert from "assert";
-import { Conference, UserProfile } from "@clowdr-app/clowdr-db-schema";
+import { Conference, ConferenceConfiguration, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import DebugLogger from "@clowdr-app/clowdr-db-schema/build/DebugLogger";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "./IChannel";
@@ -13,6 +13,9 @@ export type ChatDescriptor = {
     id: string;
     friendlyName: string;
     status: 'joined' | undefined;
+    autoWatchEnabled: boolean;
+    isAnnouncements: boolean;
+    isPrivate: boolean;
 } & ({
     isDM: false;
 } | {
@@ -133,13 +136,22 @@ export default class Chat implements IChatManager {
         return this.teardownPromise ?? Promise.resolve();
     }
 
-    public static async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor> {
+    public async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor> {
+        const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", this.conference.id);
+        let isAnnouncements = false;
+        if (configs.length > 0) {
+            isAnnouncements = configs[0].value === chan.sid;
+        }
         const isDM = await chan.getIsDM();
+        let isPrivate = await chan.getIsPrivate();
         if (isDM) {
             return {
                 id: chan.id,
                 friendlyName: chan.getName(),
                 status: chan.getStatus(),
+                autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
+                isAnnouncements,
+                isPrivate,
                 isDM: true,
                 member1: isDM.member1,
                 member2: isDM.member2
@@ -150,7 +162,10 @@ export default class Chat implements IChatManager {
                 id: chan.id,
                 friendlyName: chan.getName(),
                 status: chan.getStatus(),
-                isDM: false
+                autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
+                isAnnouncements,
+                isDM: false,
+                isPrivate
             };
         }
     }
@@ -158,18 +173,18 @@ export default class Chat implements IChatManager {
     public async createChat(members: Array<string>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
         assert(this.twilioService);
         const channel = await this.twilioService.createChannel(members, isPrivate, title);
-        return Chat.convertToDescriptor(channel);
+        return this.convertToDescriptor(channel);
     }
 
     public async listAllChats(): Promise<Array<ChatDescriptor>> {
         assert(this.twilioService);
         const channels = await this.twilioService.allChannels();
-        return await Promise.all(channels?.map(x => Chat.convertToDescriptor(x)) ?? []);
+        return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
     }
 
     public async listWatchedChats(): Promise<Array<ChatDescriptor>> {
         const channels = await this.twilioService?.activeChannels();
-        return await Promise.all(channels?.map(x => Chat.convertToDescriptor(x)) ?? []);
+        return await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []);
     }
 
     public async listChatMembers(chatId: string): Promise<Array<MemberDescriptor>> {
@@ -192,7 +207,7 @@ export default class Chat implements IChatManager {
     async getChat(chatId: string): Promise<ChatDescriptor> {
         assert(this.twilioService);
         const channel = await this.twilioService.getChannel(chatId);
-        return Chat.convertToDescriptor(channel);
+        return this.convertToDescriptor(channel);
     }
     async getMessages(chatId: string): Promise<Paginator<IMessage>> {
         assert(this.twilioService);
@@ -224,8 +239,17 @@ export default class Chat implements IChatManager {
         return (await this.twilioService.getChannel(chatId)).addMembers(userProfileIds);
     }
     // TODO: Remove member
-    // TODO: Admin controls - list all chats inc. hidden private ones,
-    //                      - join/edit/delete (for chats that would otherwise be private)
+    // TODO: - edit/delete (for chats that would otherwise be private)
+
+    async enableAutoWatch(chatId: string): Promise<void> {
+        assert(this.twilioService);
+        return (await this.twilioService.getChannel(chatId)).setIsAutoWatchEnabled(true);
+    }
+
+    async disableAutoWatch(chatId: string): Promise<void> {
+        assert(this.twilioService);
+        return (await this.twilioService.getChannel(chatId)).setIsAutoWatchEnabled(false);
+    }
 
     // Other stuff:
     // TODO: Mirrored channels

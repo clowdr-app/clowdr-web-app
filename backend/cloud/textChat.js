@@ -41,6 +41,9 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
 
     const acl = textChat.getACL();
     const attendeeRole = await getRoleByName(conference.id, "attendee");
+    const managerRole = await getRoleByName(conference.id, "manager");
+    const adminRole = await getRoleByName(conference.id, "admin");
+
     const isPrivate = !acl.getRoleReadAccess(attendeeRole);
     const userIdsWithAccess = Object.keys(acl.permissionsById).filter(x => !x.startsWith("role:"));
     const profilesWithAccess = await Promise.all(userIdsWithAccess.map(userId => getProfileOfUserId(userId, conference.id)));
@@ -137,7 +140,6 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
     const serviceSID = config.TWILIO_CHAT_SERVICE_SID;
     const service = twilioClient.chat.services(serviceSID);
 
-    let channel;
     if (!textChat.get("twilioID")) {
         // Twilio max-length 64 chars
         const uniqueName
@@ -155,11 +157,18 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
                 ? (await service.channels.list()).filter(x => x.uniqueName === uniqueName)
                 : [];
 
+        let newChannel;
         if (existingChannels.length > 0) {
-            channel = existingChannels[0];
+            newChannel = existingChannels[0];
+            const existingTextChatsQ = new Parse.Query("TextChat");
+            existingTextChatsQ.equalTo("twilioID", newChannel.sid);
+            const existingTextChat = await existingTextChatsQ.first({ useMasterKey: true });
+            if (existingTextChat) {
+                throw new Error("Text chat for channel already exists.");
+            }
         }
         else {
-            channel = await callWithRetry(() => service.channels.create({
+            newChannel = await callWithRetry(() => service.channels.create({
                 friendlyName,
                 uniqueName,
                 createdBy,
@@ -167,18 +176,17 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
                 attributes: JSON.stringify(attributes)
             }));
 
-            console.log(`Created Twilio channel '${friendlyName}' (${channel.sid})`);
+            console.log(`Created Twilio channel '${friendlyName}' (${newChannel.sid})`);
         }
 
-        if (!channel) {
+        if (!newChannel) {
             throw new Error("Could not get or create Twilio channel for the chat");
         }
 
-        textChat.set("twilioID", channel.sid);
+        textChat.set("twilioID", newChannel.sid);
     }
-    else {
-        channel = service.channels(textChat.get("twilioID"));
-    }
+
+    const channel = service.channels(textChat.get("twilioID"));
 
     try {
         // We're only going to force membership/non-membership if the chat is private
@@ -189,10 +197,17 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             // with Twilio even if something goes wrong.
             const newACL = new Parse.ACL();
             textChat.setACL(newACL);
+            newACL.setRoleWriteAccess(managerRole, true);
+            newACL.setRoleReadAccess(managerRole, true);
+            newACL.setRoleWriteAccess(adminRole, true);
+            newACL.setRoleReadAccess(adminRole, true);
 
             await ensureTwilioUsersExist(service, profilesWithAccess);
 
-            const members = (await channel.members.list());
+            const membersProp = channel.members;
+            const invitesProp = channel.invites;
+
+            const members = await membersProp.list();
             const membersWithProfiles = await Promise.all(members.map(async member => ({
                 member,
                 profile: await getUserProfileById(member.identity, conference.id)
@@ -203,7 +218,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             });
 
             // Clear out any invites - we're not using invites anymore
-            const invites = await channel.invites.list();
+            const invites = await invitesProp.list();
             await Promise.all(invites.map(invite => invite.remove()));
 
             const profileIdsWithAccess = profilesWithAccess.map(x => x.id);
@@ -214,7 +229,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
                     newACL.setReadAccess(member.profile.get("user").id, false);
                 }
                 else {
-                    memberProfileIds.push(member.identity);
+                    memberProfileIds.push(member.member.identity);
                 }
             }));
 
@@ -229,7 +244,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
                 if (!memberProfileIds.includes(profile.id)) {
                     const user = profile.get("user");
                     const userIsManager = await isUserInRoles(user.id, conference.id, ["admin", "manager"]);
-                    await callWithRetry(() => channel.members().create({
+                    await callWithRetry(() => membersProp.create({
                         identity: profile.id,
                         roleSid: userIsManager ? channelAdminRole.sid : channelUserRole.sid
                     }));
@@ -275,7 +290,7 @@ Parse.Cloud.afterSave("TextChat", async (req) => {
                     // Key is a user id
                     const user = await getUserById(key);
                     const profile = await getProfileOfUser(user, conference.id);
-                    const watched = profile.get("watched");
+                    const watched = await profile.get("watched").fetch({ useMasterKey: true });
                     const existingWatchedChats = watched.get("watchedChats");
                     const newWatchedChats
                         = existingWatchedChats.includes(textChat.id)
@@ -303,7 +318,16 @@ Parse.Cloud.beforeDelete("TextChat", async (req) => {
         const serviceSID = config.TWILIO_CHAT_SERVICE_SID;
         const service = twilioClient.chat.services(serviceSID);
         const channel = service.channels(twilioID);
-        await channel.remove();
+        try {
+            await channel.remove();
+        }
+        catch (e) {
+            // "The requested resource /Services/SERVICE_ID/Channels/CHANNEL_ID was not found"
+            // Occurs if the channel was already deleted.
+            if (!(e.toString().includes("resource") && e.toString().includes("not found"))) {
+                throw e;
+            }
+        }
     }
 });
 

@@ -8,6 +8,7 @@ const Twilio = require("twilio");
 const { nanoid } = require("nanoid");
 const sgMail = require("@sendgrid/mail");
 const { isUserInRoles } = require("./role");
+const { getAutoWatchTextChats } = require("./textChat");
 const {
     getConferenceById,
     getConferenceConfigurationByKey
@@ -160,6 +161,8 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
     // And now we re-save the new watched items to trigger the beforeSave event
     // which will now be able to set up the auto watches correctly
 
+    const chatsToAutoWatch = await getAutoWatchTextChats(conference, user.getSessionToken());
+    newWatchedItems.set("watchedChats", chatsToAutoWatch.map(x => x.id));
     await newWatchedItems.save(null, { useMasterKey: true });
 
     // TODO: Link profile to program person (author)

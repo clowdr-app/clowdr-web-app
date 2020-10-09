@@ -1,3 +1,4 @@
+import Parse from "parse";
 import { TextChat } from "@clowdr-app/clowdr-db-schema";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "../../IChannel";
@@ -61,6 +62,10 @@ export default class Channel implements IChannel {
 
     public get id(): string {
         return this.textChat.id;
+    }
+
+    public get sid(): string {
+        return "c" in this.channel ? this.channel.c.sid : this.channel.d.sid;
     }
 
     private async upgrade(): Promise<TwilioChannel> {
@@ -167,6 +172,9 @@ export default class Channel implements IChannel {
             return false;
         }
     }
+    async getIsPrivate(): Promise<boolean> {
+        return !Object.keys(this.textChat.acl.permissionsById).some(x => x.startsWith("role:") && x.includes("attendee"));
+    }
     getStatus(): 'joined' | undefined {
         const status = this.getCommonField('attributes');
         if (status === "invited") {
@@ -178,6 +186,13 @@ export default class Channel implements IChannel {
         else {
             return undefined;
         }
+    }
+    async getIsAutoWatchEnabled(): Promise<boolean> {
+        return this.textChat.autoWatch;
+    }
+    async setIsAutoWatchEnabled(value: boolean): Promise<void> {
+        this.textChat.autoWatch = value;
+        return this.textChat.save();
     }
     async delete(): Promise<void> {
         const channel = await this.upgrade();

@@ -1,4 +1,4 @@
-import { UserProfile, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import { UserProfile, WatchedItems, TextChat } from "@clowdr-app/clowdr-db-schema";
 import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import React, { useCallback, useEffect, useState } from "react";
@@ -42,6 +42,9 @@ export default function ChatView(props: Props) {
     const [chatMembersCount, setChatMembersCount] = useState<number | null>(null);
     const [members, setMembers] = useState<Array<RenderMemberDescriptor> | null>(null);
     const [isDM, setIsDM] = useState<boolean | null>(null);
+    const [isAutoWatch, setIsAutoWatch] = useState<boolean | null>(null);
+    const [isAnnouncements, setIsAnnouncements] = useState<boolean | null>(null);
+    const [isPrivate, setIsPrivate] = useState<boolean | null>(null);
     const [allUsers, setAllUsers] = useState<Array<UserOption> | null>(null);
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
     const { isAdmin, isManager } = useUserRoles();
@@ -55,6 +58,63 @@ export default function ChatView(props: Props) {
             label: x.displayName
         })).filter(x => x.value !== mUser.id);
     }, setAllUsers, []);
+
+    // Fetch chat info
+    useSafeAsync(async () => {
+        if (mChat) {
+            const chatD = await mChat.getChat(props.chatId);
+            const chatSD = await upgradeChatDescriptor(conf, chatD);
+            const { friendlyName, skip } = computeChatDisplayName(chatSD, mUser);
+            const memberCount = await mChat.getChatMembersCount(props.chatId);
+            return {
+                name: skip ? "Chat" : friendlyName,
+                count: memberCount,
+                isDM: chatSD.isDM,
+                isAutoWatch: chatD.autoWatchEnabled,
+                isAnnouncements: chatD.isAnnouncements,
+                isPrivate: chatD.isPrivate
+            };
+        }
+        else {
+            return {
+                name: "Chat",
+                count: null,
+                isDM: null,
+                isAutoWatch: null,
+                isAnnouncements: null,
+                isPrivate: null
+            };
+        }
+    }, (data: {
+        name: string,
+        count: number | null,
+        isDM: boolean | null,
+        isAutoWatch: boolean | null,
+        isAnnouncements: boolean | null,
+        isPrivate: boolean | null
+    }) => {
+        setChatName(data.name);
+        setChatMembersCount(data.count);
+        setIsDM(data.isDM);
+        setIsAutoWatch(data.isAutoWatch);
+        setIsAnnouncements(data.isAnnouncements);
+        setIsPrivate(data.isPrivate);
+    }, [props.chatId, mChat]);
+
+    // Fetch members
+    useSafeAsync(async () => {
+        if (mChat) {
+            return Promise.all((await mChat.listChatMembers(props.chatId)).map(async mem => {
+                return {
+                    ...mem,
+                    displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>"
+                };
+            }));
+        }
+        else {
+            return null;
+        }
+    }, setMembers, [conf.id, props.chatId, mChat]);
 
     const usersLeftToInvite = allUsers?.filter(x => !members?.some(y => y.profileId === x.value)) ?? [];
 
@@ -74,6 +134,14 @@ export default function ChatView(props: Props) {
     }, [props.chatId, mUser.watchedId]);
 
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conf);
+
+    const onTextChatUpdated = useCallback(function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
+        if (update.object.id === props.chatId) {
+            setIsAutoWatch((update.object as TextChat).autoWatch);
+        }
+    }, [props.chatId]);
+
+    useDataSubscription("TextChat", onTextChatUpdated, () => { }, isFollowing === null, conf);
 
     const doFollow = useCallback(async function _doFollow() {
         try {
@@ -121,6 +189,40 @@ export default function ChatView(props: Props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.chatId, mUser.watchedId]);
 
+    const [changingAutoWatch, setChangingAutoWatch] = useState<CancelablePromise<void> | null>(null);
+    const doEnableAutoWatch = useCallback(async function _doDisableAutoWatch() {
+        try {
+            const p = makeCancelable((async () => {
+                await mChat?.enableAutoWatch(props.chatId);
+            })());
+            setChangingAutoWatch(p);
+            await p.promise;
+            setChangingAutoWatch(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingAutoWatch(null);
+                throw e;
+            }
+        }
+    }, [mChat, props.chatId]);
+
+    const doDisableAutoWatch = useCallback(async function _doDisableAutoWatch() {
+        try {
+            const p = makeCancelable((async () => {
+                await mChat?.disableAutoWatch(props.chatId);
+            })());
+            setChangingAutoWatch(p);
+            await p.promise;
+            setChangingAutoWatch(null);
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setChangingAutoWatch(null);
+                throw e;
+            }
+        }
+    }, [mChat, props.chatId]);
 
     if (showPanel !== "chat") {
         actionButtons.push({
@@ -147,7 +249,7 @@ export default function ChatView(props: Props) {
         });
 
         // isDM could be null...
-        if (isDM === false && usersLeftToInvite.length > 0) {
+        if (isDM === false && usersLeftToInvite.length > 0 && isPrivate) {
             actionButtons.push({
                 label: "Invite",
                 icon: <i className="fas fa-envelope"></i>,
@@ -161,7 +263,7 @@ export default function ChatView(props: Props) {
         }
     }
 
-    if (isDM === false) {
+    if (isDM === false && isAnnouncements !== null && !isAnnouncements) {
         if (isFollowing !== null) {
             if (isFollowing) {
                 actionButtons.push({
@@ -186,6 +288,31 @@ export default function ChatView(props: Props) {
                 });
             }
         }
+
+        if (isAutoWatch !== null && (isAdmin || isManager)) {
+            if (isAutoWatch) {
+                actionButtons.push({
+                    label: changingAutoWatch ? "Changing" : "Disable auto-watch",
+                    icon: changingAutoWatch ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doDisableAutoWatch();
+                    }
+                });
+            }
+            else {
+                actionButtons.push({
+                    label: changingAutoWatch ? "Changing" : "Enable auto-watch",
+                    icon: changingAutoWatch ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doEnableAutoWatch();
+                    }
+                });
+            }
+        }
     }
 
     useHeading({
@@ -193,48 +320,8 @@ export default function ChatView(props: Props) {
         buttons: actionButtons
     });
 
-    useSafeAsync(async () => {
-        if (mChat) {
-            const chatD = await mChat.getChat(props.chatId);
-            const chatSD = await upgradeChatDescriptor(conf, chatD);
-            const { friendlyName, skip } = computeChatDisplayName(chatSD, mUser);
-            const memberCount = await mChat.getChatMembersCount(props.chatId);
-            return {
-                name: skip ? "Chat" : friendlyName,
-                count: memberCount,
-                isDM: chatSD.isDM
-            };
-        }
-        else {
-            return {
-                name: "Chat",
-                count: null,
-                isDM: null
-            };
-        }
-    }, (data: { name: string, count: number | null, isDM: boolean | null }) => {
-        setChatName(data.name);
-        setChatMembersCount(data.count);
-        setIsDM(data.isDM);
-    }, [props.chatId, mChat]);
-
-    useSafeAsync(async () => {
-        if (mChat) {
-            return Promise.all((await mChat.listChatMembers(props.chatId)).map(async mem => {
-                return {
-                    ...mem,
-                    displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>"
-                };
-            }));
-        }
-        else {
-            return null;
-        }
-    }, setMembers, [conf.id, props.chatId, mChat]);
-
     const chat = <ChatFrame chatSid={props.chatId} />;
 
-    // WATCH_TODO: Admin button to enable/disable auto-watch
     // TODO: Action buttons: Launch video chat
 
     useEffect(() => {
@@ -342,7 +429,7 @@ export default function ChatView(props: Props) {
                             <AsyncButton
                                 action={() => doInvite()}
                                 content="Invite"
-                                disabled={sendingInvites || !(invites && invites.length > 0 && (isAdmin || isManager || invites.length <= 20))}/>
+                                disabled={sendingInvites || !(invites && invites.length > 0 && (isAdmin || isManager || invites.length <= 20))} />
                         </div>
                     </form>
                 </div>

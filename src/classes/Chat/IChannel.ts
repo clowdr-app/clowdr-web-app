@@ -6,6 +6,7 @@ import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
 
 export default interface IChannel {
     id: string;
+    sid: string;
 
     membersCount(): Promise<number>;
     members(): Promise<Array<IMember>>;
@@ -21,8 +22,12 @@ export default interface IChannel {
     getName(): string;
     setName(value: string): Promise<void>;
     getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }>;
+    getIsPrivate(): Promise<boolean>;
     getStatus(): 'joined' | undefined;
     delete(): Promise<void>;
+
+    getIsAutoWatchEnabled(): Promise<boolean>;
+    setIsAutoWatchEnabled(value: boolean): Promise<void>;
 
     getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<IMessage>>
     sendMessage(message: string): Promise<number>;

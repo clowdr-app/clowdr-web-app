@@ -1,3 +1,4 @@
+import Parse from "parse";
 import { Conference, ConferenceConfiguration, TextChat, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import IChatManager from "../../IChatManager";
 import IChatService from "../../IChatService";

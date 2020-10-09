@@ -15,6 +15,10 @@ export default class Channel implements IChannel {
     }
 
     public get id(): string {
+        throw new Error("Method not implemented");
+    }
+
+    public get sid(): string {
         return this._sid;
     }
 
@@ -51,7 +55,16 @@ export default class Channel implements IChannel {
     getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
         throw new Error("Method not implemented.");
     }
+    getIsPrivate(): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
     getStatus(): 'joined' | undefined {
+        throw new Error("Method not implemented.");
+    }
+    getIsAutoWatchEnabled(): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    setIsAutoWatchEnabled(value: boolean): Promise<void> {
         throw new Error("Method not implemented.");
     }
     delete(): Promise<void> {
