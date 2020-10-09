@@ -11,7 +11,7 @@ import VideoContext from '../../contexts/VideoContext';
 import UserRolesContext from "../../contexts/UserRolesContext";
 import useLogger from '../../hooks/useLogger';
 import Caches from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache";
-import { Conference, ConferenceConfiguration, UserProfile, _Role, _User } from "@clowdr-app/clowdr-db-schema";
+import { Conference, UserProfile, _Role, _User } from "@clowdr-app/clowdr-db-schema";
 import assert from "assert";
 import { useHistory } from "react-router-dom";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
@@ -19,10 +19,6 @@ import Chat from "../../classes/Chat/Chat";
 import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../hooks/useDataSubscription";
 import Video from "../../classes/Video/Video";
-import { addNotification } from "../../classes/Notifications/Notifications";
-import ReactMarkdown from "react-markdown";
-import { emojify } from "react-emojione";
-import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base";
 
 type AppTasks
     = "beginLoadConference"
