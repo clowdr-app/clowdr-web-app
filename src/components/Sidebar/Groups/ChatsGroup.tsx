@@ -512,7 +512,7 @@ export default function ChatsGroup(props: Props) {
         ]);
     }, []);
 
-    useDataSubscription("TextChat", onTextChatUpdated, onTextChatDeleted, state.tasks.has("loadingActiveChats"), conf);
+    useDataSubscription("TextChat", onTextChatUpdated, onTextChatDeleted, !state.watchedChatIds, conf);
 
     let chatsExpander: JSX.Element = <></>;
 

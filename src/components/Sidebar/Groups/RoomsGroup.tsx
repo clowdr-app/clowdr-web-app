@@ -4,11 +4,14 @@ import useMaybeUserProfile from '../../../hooks/useMaybeUserProfile';
 import MenuExpander, { ButtonSpec } from "../Menu/MenuExpander";
 import MenuGroup, { MenuGroupItems } from '../Menu/MenuGroup';
 import MenuItem from '../Menu/MenuItem';
-import { UserProfile, VideoRoom } from '@clowdr-app/clowdr-db-schema';
+import { UserProfile, VideoRoom, WatchedItems } from '@clowdr-app/clowdr-db-schema';
 import { makeCancelable } from '@clowdr-app/clowdr-db-schema/build/Util';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
 import useDataSubscription from '../../../hooks/useDataSubscription';
 import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
+import useSafeAsync from '../../../hooks/useSafeAsync';
+import { addNotification } from '../../../classes/Notifications/Notifications';
+import { useLocation } from 'react-router-dom';
 
 interface Props {
     minSearchLength: number;
@@ -25,10 +28,13 @@ type FullRoomInfo = {
 
 interface RoomsGroupState {
     tasks: Set<RoomsGroupTasks>;
+    currentUserId: string | null;
     isOpen: boolean;
     roomSearch: string | null;
     allRooms: Array<FullRoomInfo> | null
     filteredRooms: Array<FullRoomInfo>;
+    watchedRoomIds: Array<string> | null;
+    currentLocation: string;
 }
 
 type RoomsGroupUpdate
@@ -37,6 +43,9 @@ type RoomsGroupUpdate
     | { action: "deleteRooms"; rooms: Array<string> }
     | { action: "searchRooms"; search: string | null }
     | { action: "setIsOpen"; isOpen: boolean }
+    | { action: "setWatchedRoomIds"; ids: Array<string> }
+    | { action: "setCurrentUserId", id: string | null }
+    | { action: "setCurrentLocation", location: string }
     ;
 
 const maxRoomParticipantsToList = 6;
@@ -60,10 +69,13 @@ async function filterRooms(
 function nextSidebarState(currentState: RoomsGroupState, updates: RoomsGroupUpdate | Array<RoomsGroupUpdate>): RoomsGroupState {
     const nextState: RoomsGroupState = {
         tasks: new Set(currentState.tasks),
+        currentUserId: currentState.currentUserId,
         isOpen: currentState.isOpen,
         roomSearch: currentState.roomSearch,
         allRooms: currentState.allRooms,
-        filteredRooms: currentState.filteredRooms
+        filteredRooms: currentState.filteredRooms,
+        watchedRoomIds: currentState.watchedRoomIds,
+        currentLocation: currentState.currentLocation
     };
 
     let allRoomsUpdated = false;
@@ -99,6 +111,15 @@ function nextSidebarState(currentState: RoomsGroupState, updates: RoomsGroupUpda
             case "updateFilteredRooms":
                 nextState.filteredRooms = update.rooms;
                 break;
+            case "setWatchedRoomIds":
+                nextState.watchedRoomIds = update.ids;
+                break;
+            case "setCurrentUserId":
+                nextState.currentUserId = update.id;
+                break;
+            case "setCurrentLocation":
+                nextState.currentLocation = update.location;
+                break;
         }
     }
 
@@ -112,6 +133,24 @@ function nextSidebarState(currentState: RoomsGroupState, updates: RoomsGroupUpda
     if (allRoomsUpdated) {
         if (nextState.allRooms) {
             nextState.tasks.delete("loadingAllRooms");
+
+            for (const room of nextState.allRooms) {
+                if (!nextState.currentLocation.includes(`/room/${room.room.id}`)) {
+                    const oldRoom = currentState.allRooms?.find(x => x.room.id === room.room.id);
+                    if (oldRoom) {
+                        room.participants.forEach(p => {
+                            if (p.id !== nextState.currentUserId) {
+                                if (!oldRoom.participants.find(x => x.id === p.id)) {
+                                    addNotification(`${p.displayName} joined ${room.room.name}`, {
+                                        url: `/room/${room.room.id}`,
+                                        text: "Go to room"
+                                    }, 3000);
+                                }
+                            }
+                        });
+                    }
+                }
+            }
         }
         else {
             nextState.filteredRooms = [];
@@ -124,15 +163,55 @@ function nextSidebarState(currentState: RoomsGroupState, updates: RoomsGroupUpda
 export default function RoomsGroup(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
+    const location = useLocation();
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
         tasks: new Set([
             "loadingAllRooms"
         ] as RoomsGroupTasks[]),
+        currentUserId: mUser?.id ?? null,
         isOpen: true,
         roomSearch: null,
         allRooms: null,
         filteredRooms: [],
+        watchedRoomIds: null,
+        currentLocation: location.pathname
     });
+
+    useEffect(() => {
+        dispatchUpdate({
+            action: "setCurrentUserId",
+            id: mUser?.id ?? null
+        });
+    }, [mUser]);
+
+    useEffect(() => {
+        dispatchUpdate({
+            action: "setCurrentLocation",
+            location: location.pathname
+        });
+    }, [location.pathname]);
+
+    useSafeAsync(async () => mUser?.watched ?? null, (data: WatchedItems | null) => {
+        if (data) {
+            dispatchUpdate({
+                action: "setWatchedRoomIds",
+                ids: data.watchedRooms
+            });
+        }
+    }, [mUser?.watchedId]);
+
+    const watchedId = mUser?.watchedId;
+    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+        if (update.object.id === watchedId) {
+            dispatchUpdate({
+                action: "setWatchedRoomIds",
+                ids: (update.object as WatchedItems).watchedRooms
+            });
+        }
+    }, [watchedId]);
+
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, !state.watchedRoomIds, conf);
+
 
     // Initial fetch of rooms
     useEffect(() => {
