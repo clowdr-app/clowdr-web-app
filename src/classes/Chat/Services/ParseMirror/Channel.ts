@@ -61,6 +61,9 @@ export default class Channel implements IChannel {
     getIsModeration(): Promise<boolean> {
         throw new Error("Method not implemented");
     }
+    getIsModerationCompleted(): Promise<boolean> {
+        throw new Error("Method not implemented");
+    }
     getIsModerationHub(): Promise<boolean> {
         throw new Error("Method not implemented");
     }
@@ -73,6 +76,9 @@ export default class Channel implements IChannel {
     getIsAutoWatchEnabled(): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
+    getCreatedAt(): Promise<Date> {
+        throw new Error("Method not implemented.");
+    }
     getCreator(): Promise<UserProfile> {
         throw new Error("Method not implemented.");
     }
@@ -80,6 +86,9 @@ export default class Channel implements IChannel {
         throw new Error("Method not implemented.");
     }
     delete(): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    getMessage(messageSid: string, messageIndex: number): Promise<Message | null> {
         throw new Error("Method not implemented.");
     }
     getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import SplitterLayout from "react-splitter-layout";
 import { ChatDescriptor } from "../../../classes/Chat";
+import useHeading from "../../../hooks/useHeading";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
@@ -19,10 +20,20 @@ export default function ModerationHub() {
     useSafeAsync(async () => mChat ? mChat.listAllModerationChats() : null, setAllModChats, [mChat]);
     useSafeAsync(async () => mChat ? mChat.listAllWatchedModerationChats() : null, setWatchedModChats, [mChat]);
 
+    useHeading("Moderation Hub");
+
     function renderChannelLink(channel: ChatDescriptor) {
         const moderationNamePrefix = "Moderation: ";
         return <li key={channel.id}>
             <Link to={`/moderation/${channel.id}`}>
+                {channel.createdAt.toLocaleString(undefined, {
+                    hour12: false,
+                    month: "short",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                })}
+                &nbsp;-&nbsp;
                 {channel.friendlyName.substr(moderationNamePrefix.length)}
                 &nbsp;(created by {channel.creator.displayName})
             </Link>
@@ -34,7 +45,11 @@ export default function ModerationHub() {
     if (allModChats && watchedModChats) {
         const watchedEls
             = watchedModChats
-                .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName))
+                .sort((x, y) =>
+                    y.createdAt < x.createdAt
+                    ? -1
+                    : y.createdAt === x.createdAt
+                        ? 0 : 1)
                 .map(renderChannelLink);
         if (watchedEls.length === 0) {
             watchedEl = <p>You are not following any moderation channels.</p>;
@@ -47,7 +62,11 @@ export default function ModerationHub() {
 
         const otherEls = allModChats
             .filter(x => !watchedModChats.some(y => y.id === x.id))
-            .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName))
+            .sort((x, y) =>
+                    y.createdAt < x.createdAt
+                    ? -1
+                    : y.createdAt === x.createdAt
+                        ? 0 : 1)
             .map(renderChannelLink);
         if (otherEls.length === 0) {
             othersEl = <p>There are no other moderation channels to show.</p>;

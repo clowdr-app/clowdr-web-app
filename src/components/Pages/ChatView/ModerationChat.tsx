@@ -4,7 +4,7 @@ import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/
 import React, { useCallback, useEffect, useState } from "react";
 import MultiSelect from "react-multi-select-component";
 import { Link, Redirect } from "react-router-dom";
-import { MemberDescriptor } from "../../../classes/Chat";
+import { ChatDescriptor, MemberDescriptor } from "../../../classes/Chat";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import { ActionButton } from "../../../contexts/HeadingContext";
 import useConference from "../../../hooks/useConference";
@@ -16,8 +16,8 @@ import useUserProfile from "../../../hooks/useUserProfile";
 import useUserRoles from "../../../hooks/useUserRoles";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
+import Message, { RenderedMessage, renderMessage } from "../../Chat/MessageList/Message";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-import { computeChatDisplayName, upgradeChatDescriptor } from "../../Sidebar/Groups/ChatsGroup";
 import "./ChatView.scss";
 
 interface Props {
@@ -37,16 +37,15 @@ export default function ModerationChat(props: Props) {
     const conf = useConference();
     const mUser = useUserProfile();
     const mChat = useMaybeChat();
-    const [chatName, setChatName] = useState<string>("Chat");
-    const [showPanel, setShowPanel] = useState<"members" | "invite" | "chat">("chat");
-    const [chatMembersCount, setChatMembersCount] = useState<number | null>(null);
+    const [showPanel, setShowPanel] = useState<"members" | "invite" | "chat" | "related">("chat");
+    const [chatDesc, setChatDesc] = useState<ChatDescriptor | null>(null);
     const [members, setMembers] = useState<Array<RenderMemberDescriptor> | null>(null);
-    const [isModeration, setIsModeration] = useState<boolean | null>(null);
-    const [isModerationHub, setIsModerationHub] = useState<boolean | null>(null);
     const [allUsers, setAllUsers] = useState<Array<UserOption> | null>(null);
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
     const { isAdmin, isManager } = useUserRoles();
     const [sendingInvites, setSendingInvites] = useState<boolean>(false);
+    const [reportedChat, setReportedChat] = useState<ChatDescriptor | null>(null);
+    const [reportedMessage, setReportedMessage] = useState<RenderedMessage | null>(null);
 
     // Fetch all user profiles
     useSafeAsync(async () => {
@@ -58,50 +57,7 @@ export default function ModerationChat(props: Props) {
     }, setAllUsers, []);
 
     // Fetch chat info
-    useSafeAsync(async () => {
-        if (mChat) {
-            const chatD = await mChat.getChat(props.chatId);
-            const chatSD = await upgradeChatDescriptor(conf, chatD);
-            const { friendlyName } = computeChatDisplayName(chatSD, mUser);
-            const memberCount = await mChat.getChatMembersCount(props.chatId);
-            return {
-                name: friendlyName,
-                count: memberCount,
-                isDM: chatSD.isDM,
-                isAutoWatch: chatD.autoWatchEnabled,
-                isAnnouncements: chatD.isAnnouncements,
-                isModeration: chatD.isModeration,
-                isModerationHub: chatD.isModerationHub,
-                isPrivate: chatD.isPrivate
-            };
-        }
-        else {
-            return {
-                name: "Chat",
-                count: null,
-                isDM: null,
-                isAutoWatch: null,
-                isAnnouncements: null,
-                isModeration: null,
-                isModerationHub: null,
-                isPrivate: null
-            };
-        }
-    }, (data: {
-        name: string,
-        count: number | null,
-        isDM: boolean | null,
-        isAutoWatch: boolean | null,
-        isAnnouncements: boolean | null,
-        isModeration: boolean | null,
-        isModerationHub: boolean | null,
-        isPrivate: boolean | null
-    }) => {
-        setChatName(data.name);
-        setChatMembersCount(data.count);
-        setIsModeration(data.isModeration);
-        setIsModerationHub(data.isModerationHub);
-    }, [props.chatId, mChat]);
+    useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, setChatDesc, [props.chatId, mChat]);
 
     // Fetch members
     useSafeAsync(async () => {
@@ -117,6 +73,29 @@ export default function ModerationChat(props: Props) {
             return null;
         }
     }, setMembers, [conf.id, props.chatId, mChat]);
+
+    // Fetch reported chat
+    useSafeAsync(async () =>
+        chatDesc?.isModeration && chatDesc.relatedModerationKey
+            ? mChat?.getChat(chatDesc.relatedModerationKey.split(":")[0])
+            : null,
+        setReportedChat, [mChat, chatDesc]);
+
+    // Fetch reported message
+    useSafeAsync(async () => {
+        if (chatDesc?.isModeration && chatDesc.relatedModerationKey && reportedChat) {
+            const msg = await mChat?.getMessage(
+                chatDesc.relatedModerationKey.split(":")[0],
+                chatDesc.relatedModerationKey.split(":")[1],
+                parseInt(chatDesc.relatedModerationKey.split(":")[2], 10)
+            ) ?? null;
+            if (msg) {
+                return renderMessage(conf, mUser, reportedChat.id, msg, reportedChat.isDM, reportedChat.friendlyName);
+            }
+        }
+        return null;
+    },
+        setReportedMessage, [mChat, chatDesc, reportedChat]);
 
     const usersLeftToInvite = allUsers?.filter(x => !members?.some(y => y.profileId === x.value)) ?? [];
 
@@ -198,13 +177,26 @@ export default function ModerationChat(props: Props) {
     else {
         if (members) {
             actionButtons.push({
-                label: `Members${chatMembersCount ? ` (${chatMembersCount})` : ""}`,
+                label: `Members${members ? ` (${members.length})` : ""}`,
                 icon: <i className="fas fa-user-friends"></i>,
                 action: (ev) => {
                     ev.stopPropagation();
                     ev.preventDefault();
 
                     setShowPanel("members");
+                }
+            });
+        }
+
+        if (chatDesc?.isModeration && chatDesc.relatedModerationKey) {
+            actionButtons.push({
+                label: "Reported content",
+                icon: <i className="fas fa-eye"></i>,
+                action: (ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+
+                    setShowPanel("related");
                 }
             });
         }
@@ -248,8 +240,20 @@ export default function ModerationChat(props: Props) {
         }
     }
 
+    if (chatDesc?.isModeration && chatDesc.isActive) {
+        actionButtons.push({
+            label: "Mark completed",
+            icon: <i className="fas fa-check-circle" />,
+            action: (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                alert("TODO"); // TODO
+            }
+        });
+    }
+
     useHeading({
-        title: chatName,
+        title: (chatDesc?.friendlyName ?? "Chat") + (chatDesc?.isModeration && !chatDesc?.isActive ? " (Completed)" : ""),
         icon: <i className="fas fa-circle moderation"></i>,
         buttons: actionButtons
     });
@@ -267,12 +271,10 @@ export default function ModerationChat(props: Props) {
                     displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>"
                 };
                 setMembers(oldMembers => oldMembers ? [...oldMembers, newMember] : [newMember]);
-                setChatMembersCount(oldCount => oldCount ? oldCount + 1 : null);
             });
 
             const leftFunctionToOff = mChat.channelEventOn(props.chatId, "memberLeft", async (mem) => {
                 setMembers(oldMembers => oldMembers ? oldMembers.filter(x => x.profileId !== mem.profileId) : null);
-                setChatMembersCount(oldCount => oldCount ? oldCount - 1 : null);
             });
 
             const updateFunctionToOff = mChat.serviceEventOn("userUpdated", async (event) => {
@@ -323,11 +325,11 @@ export default function ModerationChat(props: Props) {
         }
     }
 
-    return isModerationHub
+    return chatDesc?.isModerationHub
         ? <Redirect to={`/moderation/hub`} />
-        : isModeration == null
+        : chatDesc == null
             ? <LoadingSpinner />
-            : !isModeration
+            : !chatDesc.isModeration
                 ? <Redirect to={`/chat/${props.chatId}`} />
                 : <div className={`chat-view${showPanel !== "chat" ? " show-panel" : ""}`}>
                     {showPanel === "members"
@@ -373,7 +375,13 @@ export default function ModerationChat(props: Props) {
                                     </div>
                                 </form>
                             </div>
-                            : <></>
+                            :
+                            showPanel === "related"
+                                ? (reportedMessage
+                                    ? <Message msg={reportedMessage} />
+                                    : <>The reported message could not be loaded. It may have been deleted.</>
+                                )
+                                : <></>
                     }
                     {chat}
                 </div>;

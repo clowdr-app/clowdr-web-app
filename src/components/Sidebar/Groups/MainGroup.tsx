@@ -12,13 +12,13 @@ export default function MainMenuGroup() {
 
     if (mUser) {
         const mainMenuItems: MenuGroupItems = [
-            { key: "watched-items", element: <MenuItem title="Followed stuff" label="Followed stuff" action="/watched" /> },
+            { key: "watched-items", element: <MenuItem title="Followed items" label="Followed items" action="/watched" /> },
             { key: "exhibits", element: <MenuItem title="Exhibition" label="Exhibition" action="/exhibits" /> },
             { key: "profile", element: <MenuItem title="Profile" label="Profile" action="/profile" /> },
             { key: "contact-moderators", element: <MenuItem title="Contact moderators" label="Contact moderators" action="/moderation" /> },
         ];
         if (isAdmin || isManager) {
-            mainMenuItems.push({ key: "moderation-hub", element: <MenuItem title="Moderation Hub" label="Moderation Hub" action="/moderation/hub" /> });
+            mainMenuItems.push({ key: "moderation-hub", element: <MenuItem title="Moderation hub" label="Moderation hub" action="/moderation/hub" /> });
         }
         if (isAdmin) {
             mainMenuItems.push({ key: "admin", element: <MenuItem title="Admin tools" label="Admin tools" action="/admin" /> });

@@ -475,10 +475,12 @@ async function createTextChat(data) {
     if (newMode === "moderation") {
         let body;
         if (newObject.get("relatedModerationKey")) {
-            body = "A message has been reported and requires moderation.";
+            const channelId = newObject.get("relatedModerationKey").split(":")[0];
+            const channel = await new Parse.Query("TextChat").get(channelId, { useMasterKey: true });
+            body = `${data.creator.get("displayName")} has reported a message in ${channel.get("name")}`;
         }
         else {
-            body = "An attendee has requested help.";
+            body = `${data.creator.get("displayName")} has requested help.`;
         }
 
         await modHubChannel.messages.create({

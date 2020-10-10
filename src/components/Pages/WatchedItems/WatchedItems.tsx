@@ -23,7 +23,7 @@ export default function WatchedItemsPage() {
     const [rooms, setRooms] = useState<Array<VideoRoom> | null>(null);
     const [messages, setMessages] = useState<Array<RenderedMessage> | null>(null);
 
-    useHeading("Followed Stuff");
+    useHeading("Followed Items");
 
     // Initial fetch of user's watched items
     useSafeAsync(async () => userProfile.watched, setWatchedItems, [userProfile.watchedId]);
@@ -149,7 +149,7 @@ export default function WatchedItemsPage() {
     // WATCH_TODO: Column of rooms being followed
     // WATCH_TODO: Column of tracks/sessions/events being followed
 
-    return <div className="watched-stuff">
+    return <div className="watched-Items">
         <p className="info">
             On this page you will find recent messages from chats you are following (including all direct messages and announcements)
             as well as lists of the breakout rooms, tracks, sessions and events you are following.

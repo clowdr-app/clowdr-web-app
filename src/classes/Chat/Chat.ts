@@ -17,6 +17,7 @@ export type ChatDescriptor = {
     autoWatchEnabled: boolean;
     isAnnouncements: boolean;
     creator: UserProfile;
+    createdAt: Date;
 } & ({
     isPrivate: boolean;
     isDM: false;
@@ -36,6 +37,7 @@ export type ChatDescriptor = {
     isModeration: true;
     isModerationHub: false;
 
+    isActive: boolean;
     relatedModerationKey?: string;
 } | {
     isPrivate: true;
@@ -165,11 +167,13 @@ export default class Chat implements IChatManager {
         const isModHub = await chan.getIsModerationHub();
         const isMod = await chan.getIsModeration();
         const creator = await chan.getCreator();
+        const createdAt = await chan.getCreatedAt();
         if (isModHub) {
             return {
                 id: chan.id,
                 friendlyName: chan.getName(),
                 creator,
+                createdAt,
                 status: chan.getStatus(),
                 autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                 isAnnouncements,
@@ -184,11 +188,13 @@ export default class Chat implements IChatManager {
                 id: chan.id,
                 friendlyName: chan.getName(),
                 creator,
+                createdAt,
                 status: chan.getStatus(),
                 autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                 isAnnouncements,
                 isModeration: isMod,
                 isModerationHub: false,
+                isActive: !await chan.getIsModerationCompleted(),
                 relatedModerationKey: await chan.getRelatedModerationKey(),
                 isDM: false,
                 isPrivate: true
@@ -202,6 +208,7 @@ export default class Chat implements IChatManager {
                     id: chan.id,
                     friendlyName: chan.getName(),
                     creator,
+                    createdAt,
                     status: chan.getStatus(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
@@ -218,6 +225,7 @@ export default class Chat implements IChatManager {
                     id: chan.id,
                     friendlyName: chan.getName(),
                     creator,
+                    createdAt,
                     status: chan.getStatus(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
@@ -310,6 +318,11 @@ export default class Chat implements IChatManager {
         const channel = await this.twilioService.getChannel(chatId);
         return this.convertToDescriptor(channel);
     }
+    async getMessage(chatId: string, messageSid: string, messageIdx: number): Promise<IMessage | null> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatId);
+        return channel.getMessage(messageSid, messageIdx);
+    }
     async getMessages(chatId: string, limit: number = 40): Promise<Paginator<IMessage>> {
         assert(this.twilioService);
         const channel = await this.twilioService.getChannel(chatId);
@@ -352,7 +365,7 @@ export default class Chat implements IChatManager {
         return (await this.twilioService.getChannel(chatId)).setIsAutoWatchEnabled(false);
     }
 
-    // Other stuff:
+    // Other Items:
     // TODO: Mirrored channels
 
     async channelEventOn<K extends ChannelEventNames>(chatId: string, event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {

@@ -5,7 +5,7 @@ import "./Message.scss";
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import FlairChip from "../../Profile/FlairChip/FlairChip";
 import ReactMarkdown from "react-markdown";
-import { Conference, Flair } from "@clowdr-app/clowdr-db-schema";
+import { Conference, Flair, TextChat } from "@clowdr-app/clowdr-db-schema";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 
 import 'emoji-mart/css/emoji-mart.css';
@@ -34,6 +34,10 @@ export type RenderedMessage = {
     time: string;
     index: number;
     isDM?: boolean;
+    moderation?: {
+        creator: UserProfile,
+        channel: TextChat
+    }
     reactions: {
         [reaction: string]: {
             ids: Array<string>;
@@ -86,6 +90,17 @@ export async function renderMessage(
             };
         }
     }
+    let moderation;
+    if (message.attributes.moderationChat) {
+        const channel = await TextChat.get(message.attributes.moderationChat, conf.id);
+        if (channel) {
+            moderation = {
+                creator: await channel.creator,
+                channel
+            };
+        }
+    }
+
     const result: RenderedMessage = {
         chatSid,
         chatName,
@@ -98,7 +113,8 @@ export async function renderMessage(
         profilePhotoUrl,
         time: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
         index: message.index,
-        reactions
+        reactions,
+        moderation
     };
     return result;
 }
@@ -134,7 +150,7 @@ export default function Message(props: {
             throw new Error(errMsg);
         }
         try {
-            const newModChat = await mChat.createModerationChat([], `${msg.chatSid}:${msg.sid}`);
+            const newModChat = await mChat.createModerationChat([], `${msg.chatSid}:${msg.sid}:${msg.index}`);
             if (!newModChat) {
                 const errMsg = "Sorry, we were unable to report this message. It may have been removed from the channel but cached in your browser.";
                 addError(errMsg);
@@ -148,6 +164,8 @@ export default function Message(props: {
             throw new Error(errMsg);
         }
     }
+
+    const moderationNamePrefix = "Moderation: ";
 
     return <div className={`chat-message${showReportConfirm ? " highlight" : ""}`} key={msg.index}>
         <div className="profile" onClick={(ev) => {
@@ -174,7 +192,10 @@ export default function Message(props: {
                         <Link className="button" to={`/chat/${msg.chatSid}`}>Go to chat</Link>
                     </div>
                     : ""}
-                <div className="name">{msg.chatName ? (msg.isDM ? `DM: ` : `#${msg.chatName} / `) : ""}{msg.profileName ?? "<Unknown>"}</div>
+                <div className="name">
+                    {msg.chatName ? (msg.isDM ? `DM: ` : `#${msg.chatName} / `) : ""}
+                    {msg.profileName ?? "<Unknown>"}
+                </div>
                 <div className="time">{msg.time}</div>
                 <ReactMarkdown
                     className="body"
@@ -184,7 +205,7 @@ export default function Message(props: {
                 >
                     {msg.body}
                 </ReactMarkdown>
-                {!props.hideReportButton
+                {!props.hideReportButton && msg.profileId !== userProfile.id
                     ? <div className="report">
                         {showReportConfirm || reporting
                             ? <>
@@ -226,8 +247,17 @@ export default function Message(props: {
                     : <></>
                 }
             </div>
-            <div className="reactions">
-                <div className="add-reaction">
+            {msg.moderation
+                ? <div className="moderation">
+                    <Link
+                        className="button go-to"
+                        to={`/moderation/${msg.moderation.channel.id}`}
+                    >
+                        <i className="fas fa-eye"></i> Go to moderation channel ({msg.moderation.channel.name.substr(moderationNamePrefix.length)})
+                        </Link>
+                </div>
+                :
+                <div className="reactions"><div className="add-reaction">
                     {pickEmojiForMsgSid === msg.sid
                         ? <EmojiPicker
                             showPreview={false}
@@ -254,43 +284,44 @@ export default function Message(props: {
                         <i className="fas fa-smile-beam"></i>+
                     </button>
                 </div>
-                {Object.keys(msg.reactions).map(reaction => {
-                    return <Tooltip
-                        key={reaction}
-                        title={msg.reactions[reaction].names.reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}
-                        placement="top"
-                    >
-                        <button
-                            onClick={async (ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                setPickEmojiForMsgSid(null);
-                                if (msg.reactions[reaction].ids.includes(userProfile.id)) {
-                                    try {
-                                        assert((await mChat?.removeReaction(msg.chatSid, msg.sid, reaction))?.ok);
-                                    }
-                                    catch (e) {
-                                        console.error(e);
-                                        addError("Sorry, we could not remove your reaction.");
-                                    }
-                                }
-                                else {
-                                    try {
-                                        assert((await mChat?.addReaction(msg.chatSid, msg.sid, reaction))?.ok);
-                                    }
-                                    catch (e) {
-                                        console.error(e);
-                                        addError("Sorry, we could not add your reaction.");
-                                    }
-                                }
-                            }}
+                    {Object.keys(msg.reactions).map(reaction => {
+                        return <Tooltip
+                            key={reaction}
+                            title={msg.reactions[reaction].names.reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}
+                            placement="top"
                         >
-                            <span>{doEmojify(reaction)}</span>
-                            <span>{msg.reactions[reaction].ids.length}</span>
-                        </button>
-                    </Tooltip>;
-                })}
-            </div>
+                            <button
+                                onClick={async (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    setPickEmojiForMsgSid(null);
+                                    if (msg.reactions[reaction].ids.includes(userProfile.id)) {
+                                        try {
+                                            assert((await mChat?.removeReaction(msg.chatSid, msg.sid, reaction))?.ok);
+                                        }
+                                        catch (e) {
+                                            console.error(e);
+                                            addError("Sorry, we could not remove your reaction.");
+                                        }
+                                    }
+                                    else {
+                                        try {
+                                            assert((await mChat?.addReaction(msg.chatSid, msg.sid, reaction))?.ok);
+                                        }
+                                        catch (e) {
+                                            console.error(e);
+                                            addError("Sorry, we could not add your reaction.");
+                                        }
+                                    }
+                                }}
+                            >
+                                <span>{doEmojify(reaction)}</span>
+                                <span>{msg.reactions[reaction].ids.length}</span>
+                            </button>
+                        </Tooltip>;
+                    })}
+                </div>
+            }
         </div>
     </div>;
 }

@@ -241,7 +241,7 @@ export default class TwilioChatService implements IChatService {
         assert(this.profile, "No profile");
 
         const newTCId: string = await Parse.Cloud.run("textChat-create", {
-            name: `Moderation: ${uuidv4()}`,
+            name: `Moderation: ${uuidv4().split("-")[0]}`,
             conference: this.conference.id,
             isModeration: true,
             isPrivate: true,

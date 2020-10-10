@@ -183,11 +183,17 @@ export default class Channel implements IChannel {
     async getIsModeration(): Promise<boolean> {
         return this.textChat.mode === "moderation" || this.textChat.mode === "moderation_completed";
     }
+    async getIsModerationCompleted(): Promise<boolean> {
+        return this.textChat.mode === "moderation_completed";
+    }
     async getIsModerationHub(): Promise<boolean> {
         return this.textChat.mode === "moderation_hub";
     }
     async getRelatedModerationKey(): Promise<string | undefined> {
         return this.textChat.relatedModerationKey;
+    }
+    async getCreatedAt(): Promise<Date> {
+        return this.textChat.createdAt;
     }
     getCreator(): Promise<UserProfile> {
         return this.textChat.creator;
@@ -214,6 +220,16 @@ export default class Channel implements IChannel {
     async delete(): Promise<void> {
         const channel = await this.upgrade();
         await channel.delete();
+    }
+    async getMessage(messageSid: string, messageIndex: number): Promise<Message | null> {
+        const channel = await this.upgrade();
+        const msgs = await channel.getMessages(1, messageIndex);
+        if (msgs.items.length > 0) {
+            if (msgs.items[0].sid === messageSid) {
+                return new Message(msgs.items[0], this);
+            }
+        }
+        return null;
     }
     async getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {
         // TODO: Process and attach reactions
