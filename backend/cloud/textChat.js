@@ -390,8 +390,6 @@ Parse.Cloud.beforeDelete("TextChat", async (req) => {
 });
 
 async function createTextChat(data) {
-    // TODO: Reject modhub mode
-
     const newObject = new Parse.Object("TextChat", {
         name: data.name,
         conference: data.conference,
@@ -400,6 +398,7 @@ async function createTextChat(data) {
         twilioID: data.twilioID,
         mirrored: data.mirrored,
         creator: data.creator,
+        mode: data.mode,
         relatedModerationKey: data.relatedModerationKey
     });
 
@@ -461,9 +460,6 @@ Parse.Cloud.define("textChat-create", async (req) => {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
             spec.creator = await getProfileOfUser(user, confId);
-            if (spec.mode) {
-                delete spec.mode;
-            }
             if (spec.isModeration) {
                 spec.mode = "moderation";
             }
