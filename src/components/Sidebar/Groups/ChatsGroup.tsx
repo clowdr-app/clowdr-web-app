@@ -325,7 +325,8 @@ export default function ChatsGroup(props: Props) {
                 chats: data
             });
         }
-    }, [conf, conf.id, mChat]);
+        // state.watchedChatIds is required so that active chats updates
+    }, [conf, conf.id, mChat, state.watchedChatIds]);
 
     useSafeAsync(async () => mUser?.watched ?? null, (data: WatchedItems | null) => {
         if (data) {
