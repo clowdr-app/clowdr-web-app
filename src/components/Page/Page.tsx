@@ -38,6 +38,7 @@ import WatchedItems from "../Pages/WatchedItems/WatchedItems";
 import About from '../Pages/About/About';
 import Legal from '../Pages/Legal/Legal';
 import Help from '../Pages/Help/Help';
+import Moderation from '../Pages/Moderation/Moderation';
 import ModerationHub from '../Pages/ModerationHub/ModerationHub';
 import ModerationChat from '../Pages/ChatView/ModerationChat';
 
@@ -109,7 +110,7 @@ function Page(props: Props) {
                     <Route path="/moderation/:chatId" component={(p: RouteComponentProps<any>) =>
                         <ModerationChat chatId={p.match.params.chatId} />
                     } />
-                    <Route path="/moderation" component={ComingSoon} />
+                    <Route path="/moderation" component={Moderation} />
 
                     <Route exact path="/" component={LoggedInWelcome} />
                     <Route path="/signup" component={() =>

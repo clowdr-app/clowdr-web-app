@@ -1,0 +1,39 @@
+@import "../../../styles/util.scss";
+@import "../../../styles/form.scss";
+
+$gutter     : mm(10);
+$main-width : mm(150);
+
+.moderation {
+    display: flex;
+    flex-direction: row;
+
+    .moderation-new-channel {
+        @include basic-form;
+
+        flex-grow: 1;
+
+        form {
+            .invite-moderators-control {
+                display: flex;
+                flex-direction: row;
+                margin: mm(2) 0;
+
+                &__multiselect {
+                    flex-grow: 1;
+                    --rmsc-border: #000;
+                    --rmsc-gray: #666;
+                    --rmsc-h: 42px;
+                }
+                &__button {
+                    flex-shrink: 1;
+                    margin-left: mm(4);
+                }
+            }
+        }
+    }
+
+    .moderation-existing-channels {
+        padding: 0 mm(10);
+    }
+}
