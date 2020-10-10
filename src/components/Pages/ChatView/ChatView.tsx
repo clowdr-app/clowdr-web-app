@@ -3,7 +3,7 @@ import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/Data
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import React, { useCallback, useEffect, useState } from "react";
 import MultiSelect from "react-multi-select-component";
-import { Link } from "react-router-dom";
+import { Link, Redirect } from "react-router-dom";
 import { MemberDescriptor } from "../../../classes/Chat";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import { ActionButton } from "../../../contexts/HeadingContext";
@@ -43,6 +43,8 @@ export default function ChatView(props: Props) {
     const [members, setMembers] = useState<Array<RenderMemberDescriptor> | null>(null);
     const [isDM, setIsDM] = useState<boolean | null>(null);
     const [isAutoWatch, setIsAutoWatch] = useState<boolean | null>(null);
+    const [isModeration, setIsModeration] = useState<boolean | null>(null);
+    const [isModerationHub, setIsModerationHub] = useState<boolean | null>(null);
     const [isAnnouncements, setIsAnnouncements] = useState<boolean | null>(null);
     const [isPrivate, setIsPrivate] = useState<boolean | null>(null);
     const [allUsers, setAllUsers] = useState<Array<UserOption> | null>(null);
@@ -72,6 +74,8 @@ export default function ChatView(props: Props) {
                 isDM: chatSD.isDM,
                 isAutoWatch: chatD.autoWatchEnabled,
                 isAnnouncements: chatD.isAnnouncements,
+                isModeration: chatD.isModeration,
+                isModerationHub: chatD.isModerationHub,
                 isPrivate: chatD.isPrivate
             };
         }
@@ -82,6 +86,8 @@ export default function ChatView(props: Props) {
                 isDM: null,
                 isAutoWatch: null,
                 isAnnouncements: null,
+                isModeration: null,
+                isModerationHub: null,
                 isPrivate: null
             };
         }
@@ -91,6 +97,8 @@ export default function ChatView(props: Props) {
         isDM: boolean | null,
         isAutoWatch: boolean | null,
         isAnnouncements: boolean | null,
+        isModeration: boolean | null,
+        isModerationHub: boolean | null,
         isPrivate: boolean | null
     }) => {
         setChatName(data.name);
@@ -98,6 +106,8 @@ export default function ChatView(props: Props) {
         setIsDM(data.isDM);
         setIsAutoWatch(data.isAutoWatch);
         setIsAnnouncements(data.isAnnouncements);
+        setIsModeration(data.isModeration);
+        setIsModerationHub(data.isModerationHub);
         setIsPrivate(data.isPrivate);
     }, [props.chatId, mChat]);
 
@@ -409,52 +419,56 @@ export default function ChatView(props: Props) {
         }
     }
 
-    return <div className={`chat-view${showPanel !== "chat" ? " show-panel" : ""}`}>
-        {showPanel === "members"
-            ? <div className="members-list">
-                {members
-                    ? <ul className="members">
+    return isModeration
+        ? <Redirect to={`/moderation/${props.chatId}`} />
+        : isModerationHub
+            ? <Redirect to={`/moderation/hub`} />
+            : <div className={`chat-view${showPanel !== "chat" ? " show-panel" : ""}`}>
+                {showPanel === "members"
+                    ? <div className="members-list">
                         {members
-                            .sort((x, y) => x.displayName.localeCompare(y.displayName))
-                            .map(mem => {
-                                const icon = <i className={`fa${mem.isOnline ? 's' : 'r'} fa-circle ${mem.isOnline ? 'online' : ''}`}></i>;
-                                return <li key={mem.profileId}>
-                                    <Link to={`/profile/${mem.profileId}`}>{icon}<span>{mem.displayName}</span></Link>
-                                </li>;
-                            })}
-                    </ul>
-                    : <LoadingSpinner message="Loading members" />
+                            ? <ul className="members">
+                                {members
+                                    .sort((x, y) => x.displayName.localeCompare(y.displayName))
+                                    .map(mem => {
+                                        const icon = <i className={`fa${mem.isOnline ? 's' : 'r'} fa-circle ${mem.isOnline ? 'online' : ''}`}></i>;
+                                        return <li key={mem.profileId}>
+                                            <Link to={`/profile/${mem.profileId}`}>{icon}<span>{mem.displayName}</span></Link>
+                                        </li>;
+                                    })}
+                            </ul>
+                            : <LoadingSpinner message="Loading members" />
+                        }
+                    </div>
+                    :
+                    showPanel === "invite"
+                        ? <div className="invite">
+                            <form onSubmit={async (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                            }}>
+                                {!isAdmin && !isManager ? <p>You may invite up to 20 people at a time.</p> : <></>}
+                                <label>Select users to invite:</label>
+                                <div className="invite-users-control">
+                                    <MultiSelect
+                                        className="invite-users-control__multiselect"
+                                        labelledBy="Invite users"
+                                        overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
+                                        options={usersLeftToInvite}
+                                        value={invites ?? []}
+                                        onChange={setInvites}
+                                    />
+                                </div>
+                                <div className="submit-container">
+                                    <AsyncButton
+                                        action={() => doInvite()}
+                                        content="Invite"
+                                        disabled={sendingInvites || !(invites && invites.length > 0 && (isAdmin || isManager || invites.length <= 20))} />
+                                </div>
+                            </form>
+                        </div>
+                        : <></>
                 }
-            </div>
-            :
-            showPanel === "invite"
-                ? <div className="invite">
-                    <form onSubmit={async (ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                    }}>
-                        {!isAdmin && !isManager ? <p>You may invite up to 20 people at a time.</p> : <></>}
-                        <label>Select users to invite:</label>
-                        <div className="invite-users-control">
-                            <MultiSelect
-                                className="invite-users-control__multiselect"
-                                labelledBy="Invite users"
-                                overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
-                                options={usersLeftToInvite}
-                                value={invites ?? []}
-                                onChange={setInvites}
-                            />
-                        </div>
-                        <div className="submit-container">
-                            <AsyncButton
-                                action={() => doInvite()}
-                                content="Invite"
-                                disabled={sendingInvites || !(invites && invites.length > 0 && (isAdmin || isManager || invites.length <= 20))} />
-                        </div>
-                    </form>
-                </div>
-                : <></>
-        }
-        {chat}
-    </div>;
+                {chat}
+            </div>;
 }
