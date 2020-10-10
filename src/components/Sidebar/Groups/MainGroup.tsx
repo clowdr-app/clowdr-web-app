@@ -14,7 +14,7 @@ export default function MainMenuGroup() {
         const mainMenuItems: MenuGroupItems = [
             { key: "watched-items", element: <MenuItem title="Followed stuff" label="Followed stuff" action="/watched" /> },
             { key: "exhibits", element: <MenuItem title="Exhibition" label="Exhibition" action="/exhibits" /> },
-            { key: "profile", element: <MenuItem title="Profile" label="Profile" action="/profile" /> },
+            { key: "profile", element: <MenuItem title={`Profile (${mUser.displayName})`} label={`Profile (${mUser.displayName})`} action="/profile" /> },
             { key: "contact-moderators", element: <MenuItem title="Contact moderators" label="Contact moderators" action="/moderation" /> },
         ];
         if (isAdmin || isManager) {
