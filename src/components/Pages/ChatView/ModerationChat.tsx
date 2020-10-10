@@ -118,6 +118,14 @@ export default function ModerationChat(props: Props) {
 
     const actionButtons: Array<ActionButton> = [];
 
+    if (isAdmin || isManager) {
+        actionButtons.push({
+            label: "Back to moderation hub",
+            icon: <i className="fas fa-arrow-left"></i>,
+            action: "/moderation/hub"
+        });
+    }
+
     const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
     const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
     useSafeAsync(async () => {
@@ -257,40 +265,42 @@ export default function ModerationChat(props: Props) {
         }
     }
 
-    if (chatDesc?.isModeration && chatDesc.isActive && !markingCompletedP) {
-        actionButtons.push({
-            label: "Mark completed",
-            icon: <i className="fas fa-check-circle" />,
-            action: async (ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
+    if (isAdmin || isManager) {
+        if (chatDesc?.isModeration && chatDesc.isActive && !markingCompletedP) {
+            actionButtons.push({
+                label: "Mark completed",
+                icon: <i className="fas fa-check-circle" />,
+                action: async (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
 
-                try {
-                    assert(mChat);
-                    const p = makeCancelable(mChat.markModerationChatCompleted(props.chatId));
-                    setMarkingCompletedP(p);
-                    await p.promise;
-                    addNotification("Channel marked completed");
-                }
-                catch (e) {
-                    if (!e.isCanceled) {
-                        addError("Sorry, we could not mark channel completed. Please try again later.");
+                    try {
+                        assert(mChat);
+                        const p = makeCancelable(mChat.markModerationChatCompleted(props.chatId));
+                        setMarkingCompletedP(p);
+                        await p.promise;
+                        addNotification("Channel marked completed");
                     }
-                }
+                    catch (e) {
+                        if (!e.isCanceled) {
+                            addError("Sorry, we could not mark channel completed. Please try again later.");
+                        }
+                    }
 
-                setMarkingCompletedP(null);
-            }
-        });
-    }
-    else if (markingCompletedP) {
-        actionButtons.push({
-            label: "",
-            icon: <LoadingSpinner message="Marking" />,
-            action: (ev) => {
-                ev.stopPropagation();
-                ev.preventDefault();
-            }
-        });
+                    setMarkingCompletedP(null);
+                }
+            });
+        }
+        else if (markingCompletedP) {
+            actionButtons.push({
+                label: "",
+                icon: <LoadingSpinner message="Marking" />,
+                action: (ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                }
+            });
+        }
     }
 
     useHeading({
