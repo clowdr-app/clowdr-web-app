@@ -426,6 +426,7 @@ async function createTextChat(data) {
     acl.setPublicReadAccess(false);
     acl.setPublicWriteAccess(false);
 
+    let memberProfiles;
     if (data.isPrivate) {
         if (!data.members) {
             throw new Error("Must specify initial members for a private chat.");
@@ -434,7 +435,7 @@ async function createTextChat(data) {
             throw new Error("A DM must have exactly two members.");
         }
 
-        const memberProfiles = await Promise.all(data.members.map(memberId => getUserProfileById(memberId, data.conference.id)));
+        memberProfiles = await Promise.all(data.members.map(memberId => getUserProfileById(memberId, data.conference.id)));
         memberProfiles.forEach(memberProfile => {
             acl.setReadAccess(memberProfile.get("user").id, true);
         });
@@ -480,7 +481,9 @@ async function createTextChat(data) {
             body = `${data.creator.get("displayName")} has reported a message in ${channel.get("name")}`;
         }
         else {
-            body = `${data.creator.get("displayName")} has requested help.`;
+            const modProfiles = memberProfiles.filter(x => x.id !== data.creator.id);
+            const modNames = modProfiles.reduce((acc, x) => `${acc}, ${x.get("displayName")}`, "").substr(2);
+            body = `${data.creator.get("displayName")} has requested help${modNames.length > 0 ? ` from ${modNames}` : ""}.`;
         }
 
         await modHubChannel.messages.create({
