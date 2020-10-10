@@ -399,7 +399,8 @@ async function createTextChat(data) {
         autoWatch: data.autoWatch,
         twilioID: data.twilioID,
         mirrored: data.mirrored,
-        creator: data.creator
+        creator: data.creator,
+        relatedModerationKey: data.relatedModerationKey
     });
 
     const confId = newObject.get("conference").id;
@@ -444,7 +445,8 @@ const createTextChatSchema = {
     autoWatch: "boolean",
     members: "[string]?",
     twilioID: "string?",
-    mirrored: "boolean?"
+    mirrored: "boolean?",
+    relatedModerationKey: "string?"
 };
 
 Parse.Cloud.define("textChat-create", async (req) => {
