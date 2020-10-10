@@ -1,5 +1,5 @@
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
-import React, { ReactElement, useCallback, useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import "./AsyncButton.scss";
 
@@ -46,7 +46,6 @@ export default function AsyncButton(props: Props) {
 
     useEffect(() => {
         if (actionState.state === "pending") {
-            console.log("2. Running");
             setActionState({ state: "running" });
 
             setIsRunning(true);
@@ -56,12 +55,10 @@ export default function AsyncButton(props: Props) {
 
             p.promise
                 .then(() => {
-                    console.log("3. Not pending");
                     setActionState({ state: "notpending" });
                     setIsRunning(false);
                 })
                 .catch(error => {
-                    console.log(`3. Rejected (isCanceled: ${error.isCanceled})`);
                     if (!error.isCanceled) {
                         setActionState({ state: "rejected" });
                         setIsRunning(false);
@@ -75,7 +72,6 @@ export default function AsyncButton(props: Props) {
         event.stopPropagation();
 
         if (actionState.state === "notpending" && !props.disabled) {
-            console.log("1. Pending");
             setActionState({ state: "pending" });
         }
     }
