@@ -1,5 +1,5 @@
-import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
-import React, { ReactElement, useEffect, useState } from "react";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import React, { ReactElement, useCallback, useEffect, useState } from "react";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import "./AsyncButton.scss";
 
@@ -35,53 +35,49 @@ type ActionState =
 export default function AsyncButton(props: Props) {
 
     const [actionState, setActionState] = useState<ActionState>({ state: "notpending" } as NotPending);
+    const [actionP, setActionP] = useState<CancelablePromise<void> | null>(null);
+
+    const setIsRunning = props.setIsRunning ?? ((b: boolean) => { });
+    const action = props.action ?? (async () => { });
 
     useEffect(() => {
-        let cancel: () => void = () => { };
+        return actionP?.cancel;
+    }, [actionP]);
 
+    useEffect(() => {
         if (actionState.state === "pending") {
-            if (!props.action) {
-                setActionState({ state: "notpending" });
-                if (props.setIsRunning) {
-                    props.setIsRunning(false);
-                }
-            }
-            else {
-                setActionState({ state: "running" });
+            console.log("2. Running");
+            setActionState({ state: "running" });
 
-                if (props.setIsRunning) {
-                    props.setIsRunning(true);
-                }
+            setIsRunning(true);
 
-                const p = makeCancelable(props.action());
-                cancel = p.cancel;
+            const p = makeCancelable(action());
+            setActionP(p);
 
-                p.promise
-                    .then(() => {
-                        setActionState({ state: "notpending" });
-                        if (props.setIsRunning) {
-                            props.setIsRunning(false);
-                        }
-                    })
-                    .catch(error => {
-                        if (!error.isCanceled) {
-                            setActionState({ state: "rejected" });
-                            if (props.setIsRunning) {
-                                props.setIsRunning(false);
-                            }
-                        }
-                    });
-            }
+            p.promise
+                .then(() => {
+                    console.log("3. Not pending");
+                    setActionState({ state: "notpending" });
+                    setIsRunning(false);
+                })
+                .catch(error => {
+                    console.log(`3. Rejected (isCanceled: ${error.isCanceled})`);
+                    if (!error.isCanceled) {
+                        setActionState({ state: "rejected" });
+                        setIsRunning(false);
+                    }
+                });
         }
-
-        return cancel;
-    }, [actionState, props]);
+    }, [action, actionState.state, setIsRunning]);
 
     function handleClick(event: React.FormEvent) {
         event.preventDefault();
         event.stopPropagation();
 
-        setActionState({ state: "pending" });
+        if (actionState.state === "notpending" && !props.disabled) {
+            console.log("1. Pending");
+            setActionState({ state: "pending" });
+        }
     }
 
     function getContents(): ReactElement | string | undefined {
