@@ -105,6 +105,7 @@ export async function renderMessage(
 
 export default function Message(props: {
     msg: RenderedMessage;
+    hideReportButton?: boolean;
 }): JSX.Element {
     const history = useHistory();
     const mChat = useMaybeChat();
@@ -183,44 +184,47 @@ export default function Message(props: {
                 >
                     {msg.body}
                 </ReactMarkdown>
-                <div className="report">
-                    {showReportConfirm || reporting
-                        ? <>
-                            {!reporting ? <span>Report?</span> : <></>}
-                            <AsyncButton
-                                content={reporting ? "Reporting" : "Yes"}
-                                className="yes"
-                                setIsRunning={setReporting}
-                                action={doReport}
-                            />
-                            {!reporting
-                                ? <button
-                                    title="No, do not report this message"
-                                    className="no"
-                                    onClick={(ev) => {
-                                        ev.preventDefault();
-                                        ev.stopPropagation();
-                                        setShowReportConfirm(false);
-                                    }}
-                                >
-                                    No
+                {!props.hideReportButton
+                    ? <div className="report">
+                        {showReportConfirm || reporting
+                            ? <>
+                                {!reporting ? <span>Report?</span> : <></>}
+                                <AsyncButton
+                                    content={reporting ? "Reporting" : "Yes"}
+                                    className="yes"
+                                    setIsRunning={setReporting}
+                                    action={doReport}
+                                />
+                                {!reporting
+                                    ? <button
+                                        title="No, do not report this message"
+                                        className="no"
+                                        onClick={(ev) => {
+                                            ev.preventDefault();
+                                            ev.stopPropagation();
+                                            setShowReportConfirm(false);
+                                        }}
+                                    >
+                                        No
                             </button>
-                                : <></>
-                            }
-                        </>
-                        : <button
-                            title="Report this message"
-                            onClick={(ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                setShowReportConfirm(true);
-                            }}
-                        >
-                            <i className="far fa-flag"></i>
-                            <i className="fas fa-flag"></i>
-                        </button>
-                    }
-                </div>
+                                    : <></>
+                                }
+                            </>
+                            : <button
+                                title="Report this message"
+                                onClick={(ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    setShowReportConfirm(true);
+                                }}
+                            >
+                                <i className="far fa-flag"></i>
+                                <i className="fas fa-flag"></i>
+                            </button>
+                        }
+                    </div>
+                    : <></>
+                }
             </div>
             <div className="reactions">
                 <div className="add-reaction">

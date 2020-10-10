@@ -38,6 +38,7 @@ import WatchedItems from "../Pages/WatchedItems/WatchedItems";
 import About from '../Pages/About/About';
 import Legal from '../Pages/Legal/Legal';
 import Help from '../Pages/Help/Help';
+import ModerationHub from '../Pages/ModerationHub/ModerationHub';
 
 interface Props {
     doLogin: doLoginF;
@@ -96,13 +97,19 @@ function Page(props: Props) {
             // TODO: Route for /program/new (conference manager and admin roles only)
 
             // TODO: Route for /watched (to see/edit watched items)
-            // TODO: Route for /moderators (to contact the conference mods)
+            // TODO: Route for /moderation (to contact the conference mods)
 
             return {
                 noHeading: false,
                 contents: <Switch>
-                    <Route path="/moderators" component={ComingSoon} />
                     <Route path="/program/new" component={ComingSoon} />
+
+                    <Route path="/moderation/hub" component={ModerationHub} />
+                    <Route path="/moderation/:chatId" component={(p: RouteComponentProps<any>) =>
+                        <ComingSoon />
+                        // <ChatView chatId={p.match.params.chatId} />}
+                    }/>
+                    <Route path="/moderation" component={ComingSoon} />
 
                     <Route exact path="/" component={LoggedInWelcome} />
                     <Route path="/signup" component={() =>
@@ -119,8 +126,8 @@ function Page(props: Props) {
                         <NewChat dmUserProfileId={undefined} />
                     } />
                     <Route path="/chat/:chatId" component={(p: RouteComponentProps<any>) =>
-                        <ChatView chatId={p.match.params.chatId} />}
-                    />
+                        <ChatView chatId={p.match.params.chatId} />
+                    } />
                     <Route path="/chat" component={AllChats} />
 
 
@@ -128,8 +135,8 @@ function Page(props: Props) {
                         <NewVideoRoom />
                     } />
                     <Route path="/room/:roomId" component={(p: RouteComponentProps<any>) =>
-                        <VideoRoom roomId={p.match.params.roomId} />}
-                    />
+                        <VideoRoom roomId={p.match.params.roomId} />
+                    } />
                     <Route path="/room" component={AllVideoRooms} />
 
 
@@ -154,8 +161,8 @@ function Page(props: Props) {
 
 
                     <Route path="/profile/:userProfileId" component={(p: RouteComponentProps<any>) =>
-                        <Profile userProfileId={p.match.params.userProfileId} />}
-                    />
+                        <Profile userProfileId={p.match.params.userProfileId} />
+                    } />
                     <Route path="/profile" component={() =>
                         <Redirect to={"/profile/" + mUser.id} />
                     } />

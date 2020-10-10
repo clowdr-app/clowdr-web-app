@@ -1,0 +1,13 @@
+.moderation-hub {
+    position: relative;
+    width   : 100%;
+    height  : 100%;
+
+    .all-channels {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+    }
+}

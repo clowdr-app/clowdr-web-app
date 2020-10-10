@@ -11,7 +11,7 @@ export default function NotFound() {
             <i className="fas fa-cat fa-5x icon"></i>
             <h2>Sorry, we couldn't find that page.</h2>
             <p>
-                If you keep seeing this error, please <Link to="/moderators">contact your conference organizers</Link>.
+                If you keep seeing this error, please <Link to="/moderation">contact your conference organizers</Link>.
             </p>
         </div>
     </div>;

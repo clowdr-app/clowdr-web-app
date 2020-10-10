@@ -1,5 +1,5 @@
 import Parse from "parse";
-import { TextChat } from "@clowdr-app/clowdr-db-schema";
+import { TextChat, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "../../IChannel";
 import Member from "./Member";
@@ -189,7 +189,9 @@ export default class Channel implements IChannel {
     async getRelatedModerationKey(): Promise<string | undefined> {
         return this.textChat.relatedModerationKey;
     }
-
+    getCreator(): Promise<UserProfile> {
+        return this.textChat.creator;
+    }
     getStatus(): 'joined' | undefined {
         const status = this.getCommonField('attributes');
         if (status === "invited") {

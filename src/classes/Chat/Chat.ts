@@ -1,5 +1,5 @@
 import assert from "assert";
-import { Conference, ConferenceConfiguration, UserProfile } from "@clowdr-app/clowdr-db-schema";
+import { Conference, ConferenceConfiguration, TextChat, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import DebugLogger from "@clowdr-app/clowdr-db-schema/build/DebugLogger";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "./IChannel";
@@ -8,6 +8,7 @@ import IMessage from "./IMessage";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
 import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
 import TwilioChatService, { ServiceEventArgs, ServiceEventNames } from "./Services/Twilio/ChatService";
+import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base";
 
 export type ChatDescriptor = {
     id: string;
@@ -15,6 +16,7 @@ export type ChatDescriptor = {
     status: 'joined' | undefined;
     autoWatchEnabled: boolean;
     isAnnouncements: boolean;
+    creator: UserProfile;
 } & ({
     isPrivate: boolean;
     isDM: false;
@@ -162,10 +164,12 @@ export default class Chat implements IChatManager {
         }
         const isModHub = await chan.getIsModerationHub();
         const isMod = await chan.getIsModeration();
+        const creator = await chan.getCreator();
         if (isModHub) {
             return {
                 id: chan.id,
                 friendlyName: chan.getName(),
+                creator,
                 status: chan.getStatus(),
                 autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                 isAnnouncements,
@@ -179,6 +183,7 @@ export default class Chat implements IChatManager {
             return {
                 id: chan.id,
                 friendlyName: chan.getName(),
+                creator,
                 status: chan.getStatus(),
                 autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                 isAnnouncements,
@@ -196,6 +201,7 @@ export default class Chat implements IChatManager {
                 return {
                     id: chan.id,
                     friendlyName: chan.getName(),
+                    creator,
                     status: chan.getStatus(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
@@ -211,6 +217,7 @@ export default class Chat implements IChatManager {
                 return {
                     id: chan.id,
                     friendlyName: chan.getName(),
+                    creator,
                     status: chan.getStatus(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
@@ -260,6 +267,20 @@ export default class Chat implements IChatManager {
         const channels = await this.twilioService.activeChannels();
         return (await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
             .filter(x => x.isModeration);
+    }
+
+    public async getModerationHubChat(): Promise<ChatDescriptor> {
+        assert(this.twilioService);
+        const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
+        assert(tc);
+        return this.convertToDescriptor(await this.twilioService.convertTextChatToChannel(tc));
+    }
+
+    public async getModerationHubChatId(): Promise<string> {
+        assert(this.twilioService);
+        const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
+        assert(tc);
+        return tc.id;
     }
 
     public async listChatMembers(chatId: string): Promise<Array<MemberDescriptor>> {

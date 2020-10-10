@@ -11,6 +11,7 @@ import { Picker as EmojiPicker } from 'emoji-mart';
 
 interface Props {
     chatId: string;
+    hideMessageReportButtons?: boolean;
 }
 
 export default function ChatFrame(props: Props) {
@@ -83,7 +84,7 @@ export default function ChatFrame(props: Props) {
     //       Twilio because the chat will try to load before User B has joined it.
 
     return <div className="chat-frame">
-        <MessageList chatId={props.chatId} />
+        <MessageList chatId={props.chatId} hideMessageReportButtons={props.hideMessageReportButtons} />
         {props.chatId !== announcementsChannelSid || isAdmin
             ? <div className="compose-message">
                 <textarea

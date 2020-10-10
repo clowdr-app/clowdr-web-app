@@ -7,7 +7,7 @@ import assert from 'assert';
  * Use this hook to access the current conference.
  */
 export default function useConference(): Conference {
-    let ctx = useContext(ConferenceContext);
+    const ctx = useContext(ConferenceContext);
     assert(ctx, "Conference should be defined.");
     return ctx;
 }

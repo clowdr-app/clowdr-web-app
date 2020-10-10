@@ -188,7 +188,7 @@ export default class TwilioChatService implements IChatService {
         return result;
     }
 
-    private async convertTextChatToChannel(tc: TextChat): Promise<Channel> {
+    public async convertTextChatToChannel(tc: TextChat): Promise<Channel> {
         assert(this.twilioClient);
         const c = await this.twilioClient.getChannelBySid(tc.twilioID);
         return new Channel(tc, { c }, this);

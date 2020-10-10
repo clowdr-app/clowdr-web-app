@@ -18,6 +18,7 @@ import Message, { RenderedMessage, renderMessage } from "./Message";
 
 interface Props {
     chatId: string;
+    hideMessageReportButtons?: boolean;
 }
 
 export default function MessageList(props: Props) {
@@ -155,7 +156,7 @@ export default function MessageList(props: Props) {
             scrollableTarget={props.chatId}
         >
             <div>
-                {renderedMessages.map(x => <Message key={x.sid} msg={x} />)}
+                {renderedMessages.map(x => <Message key={x.sid} msg={x} hideReportButton={props.hideMessageReportButtons} />)}
             </div>
         </InfiniteScroll>
     </div>;

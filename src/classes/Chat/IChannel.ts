@@ -1,3 +1,4 @@
+import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import { MemberDescriptor } from ".";
 import IMember from "./IMember";
@@ -27,6 +28,7 @@ export default interface IChannel {
     getIsModerationHub(): Promise<boolean>;
     getRelatedModerationKey(): Promise<string | undefined>;
     getStatus(): 'joined' | undefined;
+    getCreator(): Promise<UserProfile>;
     delete(): Promise<void>;
 
     getIsAutoWatchEnabled(): Promise<boolean>;

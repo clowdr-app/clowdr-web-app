@@ -73,6 +73,9 @@ export default class Channel implements IChannel {
     getIsAutoWatchEnabled(): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
+    getCreator(): Promise<UserProfile> {
+        throw new Error("Method not implemented.");
+    }
     setIsAutoWatchEnabled(value: boolean): Promise<void> {
         throw new Error("Method not implemented.");
     }
