@@ -58,6 +58,15 @@ export default class Channel implements IChannel {
     getIsPrivate(): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
+    getIsModeration(): Promise<boolean> {
+        throw new Error("Method not implemented");
+    }
+    getIsModerationHub(): Promise<boolean> {
+        throw new Error("Method not implemented");
+    }
+    getRelatedModerationKey(): Promise<string | undefined> {
+        throw new Error("Method not implemented");
+    }
     getStatus(): 'joined' | undefined {
         throw new Error("Method not implemented.");
     }

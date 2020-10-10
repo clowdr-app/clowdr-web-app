@@ -311,9 +311,8 @@ export default function ChatsGroup(props: Props) {
     }, [mChat, mUser, renderEmoji, state.activeChats]);
 
     useSafeAsync(async () => {
-        if (mChat && state.watchedChatIds) {
-            const watchedChatIds = state.watchedChatIds;
-            const chats = await Promise.all(watchedChatIds.map(id => mChat.getChat(id)));
+        if (mChat) {
+            const chats = await mChat.listWatchedChats();
             const chatsWithName: Array<SidebarChatDescriptor>
                 = await Promise.all(chats.map(x => upgradeChatDescriptor(conf, x)));
             return chatsWithName;
@@ -326,7 +325,7 @@ export default function ChatsGroup(props: Props) {
                 chats: data
             });
         }
-    }, [conf, conf.id, mChat, state.watchedChatIds]);
+    }, [conf, conf.id, mChat]);
 
     useSafeAsync(async () => mUser?.watched ?? null, (data: WatchedItems | null) => {
         if (data) {

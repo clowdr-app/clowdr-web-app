@@ -180,6 +180,16 @@ export default class Channel implements IChannel {
     async getIsPrivate(): Promise<boolean> {
         return !Object.keys(this.textChat.acl.permissionsById).some(x => x.startsWith("role:") && x.includes("attendee"));
     }
+    async getIsModeration(): Promise<boolean> {
+        return this.textChat.mode === "moderation" || this.textChat.mode === "moderation_completed";
+    }
+    async getIsModerationHub(): Promise<boolean> {
+        return this.textChat.mode === "moderation_hub";
+    }
+    async getRelatedModerationKey(): Promise<string | undefined> {
+        return this.textChat.relatedModerationKey;
+    }
+
     getStatus(): 'joined' | undefined {
         const status = this.getCommonField('attributes');
         if (status === "invited") {

@@ -23,6 +23,9 @@ export default interface IChannel {
     setName(value: string): Promise<void>;
     getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }>;
     getIsPrivate(): Promise<boolean>;
+    getIsModeration(): Promise<boolean>;
+    getIsModerationHub(): Promise<boolean>;
+    getRelatedModerationKey(): Promise<string | undefined>;
     getStatus(): 'joined' | undefined;
     delete(): Promise<void>;
 
