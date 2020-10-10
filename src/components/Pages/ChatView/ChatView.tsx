@@ -39,7 +39,6 @@ export default function ChatView(props: Props) {
     const mChat = useMaybeChat();
     const [chatName, setChatName] = useState<string>("Chat");
     const [showPanel, setShowPanel] = useState<"members" | "invite" | "chat">("chat");
-    const [chatMembersCount, setChatMembersCount] = useState<number | null>(null);
     const [members, setMembers] = useState<Array<RenderMemberDescriptor> | null>(null);
     const [isDM, setIsDM] = useState<boolean | null>(null);
     const [isAutoWatch, setIsAutoWatch] = useState<boolean | null>(null);
@@ -67,10 +66,8 @@ export default function ChatView(props: Props) {
             const chatD = await mChat.getChat(props.chatId);
             const chatSD = await upgradeChatDescriptor(conf, chatD);
             const { friendlyName } = computeChatDisplayName(chatSD, mUser);
-            const memberCount = await mChat.getChatMembersCount(props.chatId);
             return {
                 name: friendlyName,
-                count: memberCount,
                 isDM: chatSD.isDM,
                 isAutoWatch: chatD.autoWatchEnabled,
                 isAnnouncements: chatD.isAnnouncements,
@@ -82,7 +79,6 @@ export default function ChatView(props: Props) {
         else {
             return {
                 name: "Chat",
-                count: null,
                 isDM: null,
                 isAutoWatch: null,
                 isAnnouncements: null,
@@ -93,7 +89,6 @@ export default function ChatView(props: Props) {
         }
     }, (data: {
         name: string,
-        count: number | null,
         isDM: boolean | null,
         isAutoWatch: boolean | null,
         isAnnouncements: boolean | null,
@@ -102,7 +97,6 @@ export default function ChatView(props: Props) {
         isPrivate: boolean | null
     }) => {
         setChatName(data.name);
-        setChatMembersCount(data.count);
         setIsDM(data.isDM);
         setIsAutoWatch(data.isAutoWatch);
         setIsAnnouncements(data.isAnnouncements);
@@ -261,7 +255,7 @@ export default function ChatView(props: Props) {
             }
             else {
                 actionButtons.push({
-                    label: `Members${chatMembersCount ? ` (${chatMembersCount})` : ""}`,
+                    label: `Members${members ? ` (${members.length})` : ""}`,
                     icon: <i className="fas fa-user-friends"></i>,
                     action: (ev) => {
                         ev.stopPropagation();
@@ -363,12 +357,10 @@ export default function ChatView(props: Props) {
                     displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>"
                 };
                 setMembers(oldMembers => oldMembers ? [...oldMembers, newMember] : [newMember]);
-                setChatMembersCount(oldCount => oldCount ? oldCount + 1 : null);
             });
 
             const leftFunctionToOff = mChat.channelEventOn(props.chatId, "memberLeft", async (mem) => {
                 setMembers(oldMembers => oldMembers ? oldMembers.filter(x => x.profileId !== mem.profileId) : null);
-                setChatMembersCount(oldCount => oldCount ? oldCount - 1 : null);
             });
 
             const updateFunctionToOff = mChat.serviceEventOn("userUpdated", async (event) => {
