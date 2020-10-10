@@ -255,6 +255,12 @@ export default class Channel implements IChannel {
             reaction
         });
     }
+    async markCompleted(): Promise<void> {
+        if (this.textChat.mode === "moderation") {
+            this.textChat.mode = "moderation_completed";
+            await this.textChat.save();
+        }
+    }
     async subscribe(): Promise<void> {
         const channel = await this.upgrade();
         await channel._subscribe();

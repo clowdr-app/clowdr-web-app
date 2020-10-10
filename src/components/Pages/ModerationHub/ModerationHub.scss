@@ -1,3 +1,5 @@
+@import "../../../styles/util.scss";
+
 .moderation-hub {
     position: relative;
     width   : 100%;
@@ -9,5 +11,9 @@
         flex-wrap: wrap;
         justify-content: center;
         align-items: flex-start;
+
+        a.completed {
+            color: $gray-3;
+        }
     }
 }

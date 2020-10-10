@@ -25,7 +25,9 @@ export default function ModerationHub() {
     function renderChannelLink(channel: ChatDescriptor) {
         const moderationNamePrefix = "Moderation: ";
         return <li key={channel.id}>
-            <Link to={`/moderation/${channel.id}`}>
+            <Link
+                className={channel.isModeration && !channel.isActive ? "completed" : ""}
+                to={`/moderation/${channel.id}`}>
                 {channel.createdAt.toLocaleString(undefined, {
                     hour12: false,
                     month: "short",
@@ -36,6 +38,7 @@ export default function ModerationHub() {
                 &nbsp;-&nbsp;
                 {channel.friendlyName.substr(moderationNamePrefix.length)}
                 &nbsp;(created by {channel.creator.displayName})
+                {channel.isModeration && !channel.isActive ? <>&nbsp;- Completed</> : <></>}
             </Link>
         </li>;
     }

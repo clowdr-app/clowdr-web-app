@@ -1,6 +1,7 @@
 import { UserProfile, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import assert from "assert";
 import React, { useCallback, useEffect, useState } from "react";
 import MultiSelect from "react-multi-select-component";
 import { Link, Redirect } from "react-router-dom";
@@ -46,6 +47,12 @@ export default function ModerationChat(props: Props) {
     const [sendingInvites, setSendingInvites] = useState<boolean>(false);
     const [reportedChat, setReportedChat] = useState<ChatDescriptor | null>(null);
     const [reportedMessage, setReportedMessage] = useState<RenderedMessage | null>(null);
+    const [markingCompletedP, setMarkingCompletedP] = useState<CancelablePromise<void> | null>(null);
+    const [refetchChatDesc, setRefetchChatDesc] = useState<boolean>(false);
+
+    useEffect(() => {
+        return markingCompletedP?.cancel;
+    }, [markingCompletedP]);
 
     // Fetch all user profiles
     useSafeAsync(async () => {
@@ -57,7 +64,17 @@ export default function ModerationChat(props: Props) {
     }, setAllUsers, []);
 
     // Fetch chat info
-    useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, setChatDesc, [props.chatId, mChat]);
+    useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, (d) => {
+        setChatDesc(d);
+    }, [props.chatId, mChat, refetchChatDesc]);
+
+    // Subscribe to updates
+    const onTextChatUpdated = useCallback(function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
+        if (update.object.id === props.chatId) {
+            setRefetchChatDesc(x => !x);
+        }
+    }, [props.chatId]);
+    useDataSubscription("TextChat", onTextChatUpdated, () => { }, !chatDesc, conf);
 
     // Fetch members
     useSafeAsync(async () => {
@@ -240,14 +257,38 @@ export default function ModerationChat(props: Props) {
         }
     }
 
-    if (chatDesc?.isModeration && chatDesc.isActive) {
+    if (chatDesc?.isModeration && chatDesc.isActive && !markingCompletedP) {
         actionButtons.push({
             label: "Mark completed",
             icon: <i className="fas fa-check-circle" />,
-            action: (ev) => {
+            action: async (ev) => {
                 ev.preventDefault();
                 ev.stopPropagation();
-                alert("TODO"); // TODO
+
+                try {
+                    assert(mChat);
+                    const p = makeCancelable(mChat.markModerationChatCompleted(props.chatId));
+                    setMarkingCompletedP(p);
+                    await p.promise;
+                    addNotification("Channel marked completed");
+                }
+                catch (e) {
+                    if (!e.isCanceled) {
+                        addError("Sorry, we could not mark channel completed. Please try again later.");
+                    }
+                }
+
+                setMarkingCompletedP(null);
+            }
+        });
+    }
+    else if (markingCompletedP) {
+        actionButtons.push({
+            label: "",
+            icon: <LoadingSpinner message="Marking" />,
+            action: (ev) => {
+                ev.stopPropagation();
+                ev.preventDefault();
             }
         });
     }
