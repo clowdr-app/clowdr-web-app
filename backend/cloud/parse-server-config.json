@@ -31,5 +31,5 @@
     },
     "startLiveQueryServer": true,
     "allowCustomObjectId": true,
-    "cloud": "./cloud/main.js"
+    "cloud": "./main.js"
 }

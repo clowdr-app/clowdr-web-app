@@ -43,14 +43,8 @@ export default function Moderation() {
 
     // Fetch all moderator profiles
     useSafeAsync(async () => {
-        const profiles = await UserProfile.getAll(conference.id);
-        const moderatorProfiles = removeNull(await Promise.all(profiles.map(async profile => {
-            const b = await _Role.isUserInRoles(profile.userId, conference.id, ["manager", "admin"]);
-            if (b) {
-                return profile;
-            }
-            return null;
-        })));
+        const moderatorProfileIds = await _Role.userProfileIdsOfRoles(conference.id, ["admin", "manager"]);
+        const moderatorProfiles = removeNull(await Promise.all(moderatorProfileIds.map(x => UserProfile.get(x, conference.id))));
         return moderatorProfiles.map(x => ({
             value: x.id,
             label: x.displayName

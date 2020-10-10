@@ -495,7 +495,7 @@ async function resetPassword(data) {
  * @param {Parse.Cloud.FunctionRequest} req
  */
 async function handleResetPassword(req) {
-    let { params } = req
+    let { params } = req;
 
     const requestValidation = validateRequest(resetPasswordSchema, params);
     if (requestValidation.ok) {
@@ -519,6 +519,42 @@ async function getAutoWatchTextChats(conference, sessionToken) {
     query.equalTo("autoWatch", true);
     return await query.map(x => x, { sessionToken });
 }
+
+Parse.Cloud.define("users-in-roles", async (req) => {
+    let { params, user } = req;
+
+    const requestValidation = validateRequest({
+        conference: "string",
+        roles: "[string]"
+    }, params);
+    if (requestValidation.ok) {
+        const confId = params.conference;
+
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["attendee", "admin", "manager", "attendee"]);
+        if (authorized) {
+            const roleNames = params.roles;
+            const roleProfileIds
+                = (await
+                    new Parse.Query("_Role")
+                        .equalTo("conference", new Parse.Object("Conference", { id: confId }))
+                        .containedIn("name", roleNames.map(x => generateRoleDBName(confId, x)))
+                        .include("users")
+                        .map(role =>
+                            role.get("users")
+                                .query()
+                                .map(async _user => {
+                                    const p = await getProfileOfUser(_user, confId);
+                                    return p.id;
+                                }, { useMasterKey: true }),
+                            { useMasterKey: true })
+                ).reduce((acc, xs) => [...acc, ...xs], []);
+            return roleProfileIds;
+        }
+        return [];
+    } else {
+        throw new Error(requestValidation.error);
+    }
+});
 
 module.exports = {
     getUserById: getUserById,
