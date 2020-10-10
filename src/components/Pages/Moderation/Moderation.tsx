@@ -1,4 +1,5 @@
 import { UserProfile, _Role } from "@clowdr-app/clowdr-db-schema";
+import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 import React, { useState } from "react";
 import MultiSelect from "react-multi-select-component";
 import { Link, Redirect } from "react-router-dom";
@@ -43,7 +44,13 @@ export default function Moderation() {
     // Fetch all moderator profiles
     useSafeAsync(async () => {
         const profiles = await UserProfile.getAll(conference.id);
-        const moderatorProfiles = await Promise.all(profiles.filter(profile => _Role.isUserInRoles(profile.userId, conference.id, ["manager", "admin"])));
+        const moderatorProfiles = removeNull(await Promise.all(profiles.map(async profile => {
+            const b = await _Role.isUserInRoles(profile.userId, conference.id, ["manager", "admin"]);
+            if (b) {
+                return profile;
+            }
+            return null;
+        })));
         return moderatorProfiles.map(x => ({
             value: x.id,
             label: x.displayName
