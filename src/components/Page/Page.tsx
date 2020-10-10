@@ -94,6 +94,10 @@ function Page(props: Props) {
             </div>;
     }
 
+    const resetPasswordRoute = <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
+        <ResetPassword email={p.match.params.email} token={p.match.params.token} />
+    } />;
+
     const { noHeading, contents } = useMemo(() => {
         if (mConf && mUser) {
             // TODO: Route for /program/new (conference manager and admin roles only)
@@ -184,6 +188,8 @@ function Page(props: Props) {
                     <Route path="/legal" component={Legal} />
                     <Route path="/help" component={Help} />
 
+                    {resetPasswordRoute}
+
                     <Route path="/" component={NotFound} />
                 </Switch>
             };
@@ -191,10 +197,6 @@ function Page(props: Props) {
         else {
             const registerRoute = <Route path="/register/:conferenceId/:registrationId/:email" component={(p: RouteComponentProps<any>) =>
                 <Register conferenceId={p.match.params.conferenceId} registrationId={p.match.params.registrationId} email={p.match.params.email} />
-            } />;
-
-            const resetPasswordRoute = <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
-                <ResetPassword email={p.match.params.email} token={p.match.params.token} />
             } />;
 
             if (mConf) {

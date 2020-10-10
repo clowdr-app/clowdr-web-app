@@ -331,6 +331,11 @@ export default class TwilioChatService implements IChatService {
         }
     }
 
+    async getIsUserOnline(profileId: string): Promise<boolean | undefined> {
+        const user = await this.twilioClient?.getUser(profileId);
+        return user?.online;
+    }
+
 
     async on<K extends ServiceEventNames>(event: K, listener: (arg: ServiceEventArgs<K>) => void): Promise<() => void> {
         const _this = this;
