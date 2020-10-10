@@ -164,6 +164,7 @@ const defaultTwilioChatRoles = [
 ];
 
 const TWILIO_ANNOUNCEMENTS_CHANNEL_NAME = "Announcements";
+const TWILIO_MODERATIONHUB_CHANNEL_NAME = "Moderation Hub";
 
 async function getConferenceById(id) {
     let query = new Parse.Query("Conference");
@@ -216,6 +217,7 @@ Parse.Cloud.job("conference-create", async (request) => {
     let adminUserProfile = null;
     let twilioSubaccount = null;
     let announcementsChat = null;
+    let moderationHubChat = null;
     const configurationMap = new Map();
 
     async function cleanupOnFailure() {
@@ -223,8 +225,18 @@ Parse.Cloud.job("conference-create", async (request) => {
         let cleanupSuccess = true;
 
         try {
+            if (moderationHubChat) {
+                await moderationHubChat.remove({ useMasterKey: true });
+            }
+        }
+        catch (e2) {
+            console.error(`Failed to clean up moderation hub chat. ${e2}`);
+            cleanupSuccess = false;
+        }
+
+        try {
             if (announcementsChat) {
-                await announcementsChat.remove();
+                await announcementsChat.remove({ useMasterKey: true });
             }
         }
         catch (e2) {
@@ -785,17 +797,17 @@ Parse.Cloud.job("conference-create", async (request) => {
 
             // Create the announcements channel
             message(`Configuring announcements channel...`);
-            let twilioAccouncementsChannel = null;
+            let twilioAnnouncementsChannel = null;
             async function getAnnouncementsChannel() {
                 let channels = await twilioChatService.channels().list();
                 for (let channel of channels) {
                     if (channel.friendlyName === TWILIO_ANNOUNCEMENTS_CHANNEL_NAME) {
-                        twilioAccouncementsChannel = channel;
+                        twilioAnnouncementsChannel = channel;
                     }
                 }
             }
             async function createAnnouncementsChannel() {
-                twilioAccouncementsChannel = await twilioChatService.channels().create({
+                twilioAnnouncementsChannel = await twilioChatService.channels().create({
                     friendlyName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
                     uniqueName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
                     attributes: {},
@@ -803,10 +815,10 @@ Parse.Cloud.job("conference-create", async (request) => {
                 })
             }
             await getAnnouncementsChannel();
-            if (!twilioAccouncementsChannel) {
+            if (!twilioAnnouncementsChannel) {
                 await createAnnouncementsChannel();
             }
-            setConfiguration("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", twilioAccouncementsChannel.sid, true);
+            setConfiguration("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", twilioAnnouncementsChannel.sid, true);
             message(`Configured announcements channel.`);
 
             message(`Adding admin user to announcements channel...`);
@@ -815,7 +827,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 friendlyName: adminUserProfile.get("displayName"),
                 roleSid: twilioChatRoles.get("service admin").sid
             });
-            await twilioAccouncementsChannel.members().create({
+            await twilioAnnouncementsChannel.members().create({
                 identity: adminUserProfile.id,
                 roleSid: twilioChatRoles.get("announcements admin").sid
             });
@@ -825,11 +837,12 @@ Parse.Cloud.job("conference-create", async (request) => {
             {
                 const textChat = new Parse.Object("TextChat");
                 textChat.set("autoWatch", true);
-                textChat.set("twilioID", twilioAccouncementsChannel.sid);
+                textChat.set("twilioID", twilioAnnouncementsChannel.sid);
                 textChat.set("conference", conference);
                 textChat.set("mirrored", false);
                 textChat.set("isDM", false);
-                textChat.set("name", twilioAccouncementsChannel.friendlyName);
+                textChat.set("creator", adminUserProfile);
+                textChat.set("name", twilioAnnouncementsChannel.friendlyName);
 
                 const acl = new Parse.ACL();
                 acl.setPublicReadAccess(false);
@@ -844,6 +857,59 @@ Parse.Cloud.job("conference-create", async (request) => {
                 announcementsChat = await textChat.save(null, { useMasterKey: true });
             }
             message(`Created announcements text chat in Parse.`);
+
+            message(`Configuring moderation hub channel...`);
+            let twilioModerationHubChannel = null;
+            async function getModerationHubChannel() {
+                let channels = await twilioChatService.channels().list();
+                for (let channel of channels) {
+                    if (channel.friendlyName === TWILIO_MODERATIONHUB_CHANNEL_NAME) {
+                        twilioModerationHubChannel = channel;
+                    }
+                }
+            }
+            async function createModerationHubChannel() {
+                twilioModerationHubChannel = await twilioChatService.channels().create({
+                    friendlyName: TWILIO_MODERATIONHUB_CHANNEL_NAME,
+                    uniqueName: TWILIO_MODERATIONHUB_CHANNEL_NAME,
+                    attributes: {},
+                    type: "private"
+                })
+            }
+            await getModerationHubChannel();
+            if (!twilioModerationHubChannel) {
+                await createModerationHubChannel();
+            }
+            await twilioModerationHubChannel.members().create({
+                identity: adminUserProfile.id,
+                roleSid: twilioChatRoles.get("channel user").sid
+            });
+            message(`Configured moderation hub channel.`);
+
+            message(`Creating moderation hub text chat in Parse.`);
+            {
+                const textChat = new Parse.Object("TextChat");
+                textChat.set("autoWatch", true);
+                textChat.set("twilioID", twilioModerationHubChannel.sid);
+                textChat.set("conference", conference);
+                textChat.set("mirrored", false);
+                textChat.set("isDM", false);
+                textChat.set("mode", "moderation_hub");
+                textChat.set("creator", adminUserProfile);
+                textChat.set("name", twilioModerationHubChannel.friendlyName);
+
+                const acl = new Parse.ACL();
+                acl.setPublicReadAccess(false);
+                acl.setPublicWriteAccess(false);
+                acl.setRoleReadAccess(managerRole, true);
+                acl.setRoleWriteAccess(managerRole, true);
+                acl.setRoleReadAccess(adminRole, true);
+                acl.setRoleWriteAccess(adminRole, true);
+                textChat.setACL(acl);
+
+                moderationHubChat = await textChat.save(null, { useMasterKey: true });
+            }
+            message(`Created moderation hub text chat in Parse.`);
 
             // Configure SendGrid
             message(`Configuring SendGrid...`);

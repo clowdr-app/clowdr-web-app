@@ -31,6 +31,10 @@ async function ensureTwilioUsersExist(service, profiles) {
     }));
 }
 
+const validChannelModes = [
+    "moderation_hub", "moderation", "moderation_completed", "ordinary"
+];
+
 Parse.Cloud.beforeSave("TextChat", async (req) => {
     const textChat = req.object;
     const conference = textChat.get("conference");
@@ -40,16 +44,37 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
         textChat.set("mirrored", false);
     }
 
-    const acl = textChat.getACL();
+    // May be undefined or null
+    if (!textChat.get("mode")) {
+        textChat.set("mode", "ordinary");
+    }
+
+    let isDM = textChat.get("isDM");
+    const mode = textChat.get("mode");
+    if (!validChannelModes.includes(mode)) {
+        throw new Error("Invalid mode");
+    }
+    const isModerationHub = mode === "moderation_hub";
+    const isModeration = mode === "moderation" || mode === "moderation_completed";
+
+    let acl = textChat.getACL();
     const attendeeRole = await getRoleByName(conference.id, "attendee");
     const managerRole = await getRoleByName(conference.id, "manager");
     const adminRole = await getRoleByName(conference.id, "admin");
 
-    const isPrivate = !acl.getRoleReadAccess(attendeeRole);
+    let isPrivate;
+    if (isModeration || isModerationHub) {
+        isPrivate = true;
+        acl.setRoleReadAccess(attendeeRole, false);
+        acl.setRoleWriteAccess(attendeeRole, false);
+    }
+    else {
+        isPrivate = !acl.getRoleReadAccess(attendeeRole);
+    }
+
     const userIdsWithAccess = Object.keys(acl.permissionsById).filter(x => !x.startsWith("role:"));
     const profilesWithAccess = await Promise.all(userIdsWithAccess.map(userId => getProfileOfUserId(userId, conference.id)));
     assert(profilesWithAccess.every(profile => !!profile));
-    const isDM = textChat.get("isDM");
 
     if (!textChat.isNew()) {
         assert(req.original, "Why does the original text chat not exist on this request?");
@@ -63,9 +88,24 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
         const originalName = originalTextChat.get("name");
         const originalMirrored = originalTextChat.get("mirrored");
         const originalTwilioID = originalTextChat.get("twilioID");
+        const originalMode = originalTextChat.get("mode");
+        const originalCreator = originalTextChat.get("creator");
 
         if (originalConference.id !== conference.id) {
             throw new Error("Cannot change the associated conference.");
+        }
+
+        if (originalMode === "moderation_hub" ||
+            originalMode === "ordinary" ||
+            originalMode === "moderation_completed") {
+            if (mode !== originalMode) {
+                throw new Error("Invalid mode transition.");
+            }
+        }
+        else if (originalMode === "moderation") {
+            if (mode !== "moderation" && mode !== "moderation_completed") {
+                throw new Error("Invalid mode transition.");
+            }
         }
 
         if (originalIsPrivate !== isPrivate) {
@@ -97,9 +137,17 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
         if (originalTwilioID && originalTwilioID !== textChat.get("twilioID")) {
             throw new Error("Cannot change to a different Twilio ID.");
         }
+
+        if (originalCreator.id !== textChat.get("creator").id) {
+            throw new Error("Cannot change creator!");
+        }
     }
 
-    if (isDM) {
+    if (isModerationHub || isModeration) {
+        isDM = false;
+        textChat.set("isDM", false);
+    }
+    else if (isDM) {
         if (!isPrivate) {
             throw new Error("DMs must be private.");
         }
@@ -125,13 +173,18 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
     }
     textChat.set("name", name);
 
-    const announcementsSIDConfig = await getConferenceConfigurationByKey(conference, "TWILIO_ANNOUNCEMENTS_CHANNEL_SID");
-    const announcementsSID = announcementsSIDConfig.get("value");
-    if (textChat.get("twilioID") && textChat.get("twilioID") === announcementsSID) {
+    if (isModerationHub || isModeration) {
         textChat.set("autoWatch", true);
     }
-    else if (isDM) {
-        textChat.set("autoWatch", true);
+    else {
+        const announcementsSIDConfig = await getConferenceConfigurationByKey(conference, "TWILIO_ANNOUNCEMENTS_CHANNEL_SID");
+        const announcementsSID = announcementsSIDConfig.get("value");
+        if (textChat.get("twilioID") && textChat.get("twilioID") === announcementsSID) {
+            textChat.set("autoWatch", true);
+        }
+        else if (isDM) {
+            textChat.set("autoWatch", true);
+        }
     }
 
     const config = await getConfig(conference.id);
@@ -198,8 +251,10 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             // with Twilio even if something goes wrong.
             const newACL = new Parse.ACL();
             textChat.setACL(newACL);
-            newACL.setRoleWriteAccess(managerRole, true);
-            newACL.setRoleReadAccess(managerRole, true);
+            if (!isModeration) {
+                newACL.setRoleWriteAccess(managerRole, true);
+                newACL.setRoleReadAccess(managerRole, true);
+            }
             newACL.setRoleWriteAccess(adminRole, true);
             newACL.setRoleReadAccess(adminRole, true);
 
@@ -247,7 +302,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
                     const userIsManager = await isUserInRoles(user.id, conference.id, ["admin", "manager"]);
                     await callWithRetry(() => membersProp.create({
                         identity: profile.id,
-                        roleSid: userIsManager ? channelAdminRole.sid : channelUserRole.sid
+                        roleSid: userIsManager && !isModerationHub ? channelAdminRole.sid : channelUserRole.sid
                     }));
                     newACL.setReadAccess(user.id, true);
                 }
@@ -286,8 +341,10 @@ Parse.Cloud.afterSave("TextChat", async (req) => {
         else {
             // Follow ACL users to determine who to force to watch this chat
             const keys = Object.keys(acl.permissionsById);
+            // Exclude existing users from the auto watch process in case they unfollowed already
+            const excludeKeys = textChat.isNew() ? [] : Object.keys(req.original.getACL().permissionsById);
             await Promise.all(keys.map(async key => {
-                if (!key.startsWith("role:")) {
+                if (!key.startsWith("role:") && !excludeKeys.includes(key)) {
                     // Key is a user id
                     const user = await getUserById(key);
                     const profile = await getProfileOfUser(user, conference.id);
@@ -333,13 +390,16 @@ Parse.Cloud.beforeDelete("TextChat", async (req) => {
 });
 
 async function createTextChat(data) {
+    // TODO: Reject modhub mode
+
     const newObject = new Parse.Object("TextChat", {
         name: data.name,
         conference: data.conference,
         isDM: data.isDM,
         autoWatch: data.autoWatch,
         twilioID: data.twilioID,
-        mirrored: data.mirrored
+        mirrored: data.mirrored,
+        creator: data.creator
     });
 
     const confId = newObject.get("conference").id;
@@ -378,6 +438,7 @@ async function createTextChat(data) {
 const createTextChatSchema = {
     name: "string",
     conference: "string",
+    isModeration: "boolean?",
     isPrivate: "boolean",
     isDM: "boolean",
     autoWatch: "boolean",
@@ -397,6 +458,16 @@ Parse.Cloud.define("textChat-create", async (req) => {
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
+            spec.creator = await getProfileOfUser(user, confId);
+            if (spec.mode) {
+                delete spec.mode;
+            }
+            if (spec.isModeration) {
+                spec.mode = "moderation";
+            }
+            else {
+                spec.mode = "ordinary";
+            }
             const result = await createTextChat(spec);
             return result.id;
         }
