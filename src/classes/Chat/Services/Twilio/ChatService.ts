@@ -11,6 +11,7 @@ import { Channel as TwilioChannel } from "twilio-chat/lib/channel";
 import { User as TwilioUser } from "twilio-chat/lib/user";
 import { MemberDescriptor } from "../../Chat";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
+import { v4 as uuidv4 } from "uuid";
 
 export default class TwilioChatService implements IChatService {
     private twilioToken: string | null = null;
@@ -220,9 +221,9 @@ export default class TwilioChatService implements IChatService {
     }
 
     async createChannel(invite: Array<string>, isPrivate: boolean, title: string): Promise<Channel> {
-        assert(this.conference);
-        assert(this.profile);
-        assert(invite.length > 0);
+        assert(this.conference, "No conference");
+        assert(this.profile, "No profile");
+        assert(invite.length > 0, "No invites");
 
         const newTCId: string = await Parse.Cloud.run("textChat-create", {
             name: title,
@@ -232,6 +233,25 @@ export default class TwilioChatService implements IChatService {
             autoWatch: false,
             members: [...invite, this.profile.id]
         });
+        return this.getChannel(newTCId);
+    }
+
+    async createModerationChannel(invite: Array<string>, relatedModerationKey?: string, initialMessage?: string): Promise<Channel> {
+        assert(this.conference, "No conference");
+        assert(this.profile, "No profile");
+
+        const newTCId: string = await Parse.Cloud.run("textChat-create", {
+            name: `Moderation: ${uuidv4()}`,
+            conference: this.conference.id,
+            isModeration: true,
+            isPrivate: true,
+            isDM: false,
+            autoWatch: true,
+            members: [...invite, this.profile.id],
+            relatedModerationKey,
+            initialMessage
+        });
+
         return this.getChannel(newTCId);
     }
 

@@ -10,7 +10,7 @@ export default interface IMessage {
     timestamp: Date;
     attributes: object;
     memberSid: string;
-    getMember(): Promise<IMember>;
+    getMember(): Promise<IMember | "system">;
     remove(): Promise<void>;
     updateBody(body: string): Promise<void>;
     updateAttributes(attributes: object): Promise<this>;

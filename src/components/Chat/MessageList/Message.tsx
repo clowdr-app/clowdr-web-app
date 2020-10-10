@@ -19,6 +19,8 @@ import useUserProfile from "../../../hooks/useUserProfile";
 import IMessage from "../../../classes/Chat/IMessage";
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
+import AsyncButton from "../../AsyncButton/AsyncButton";
+import IMember from "../../../classes/Chat/IMember";
 
 export type RenderedMessage = {
     chatSid: string;
@@ -26,7 +28,7 @@ export type RenderedMessage = {
     sid: string;
     body: string;
     profileId: string | null;
-    profileName: string | null;
+    profileName: string;
     profilePhotoUrl: string | null;
     profileFlair: Flair | undefined;
     time: string;
@@ -49,9 +51,23 @@ export async function renderMessage(
     chatName?: string
 ) {
     const body = message.body;
-    const member = await message.getMember();
-    const memberProfileId = member.profileId;
-    const profile = await UserProfile.get(memberProfileId, conf.id);
+    const _member: "system" | IMember = await message.getMember();
+    let memberProfileId: string | undefined;
+    let profile: UserProfile | null | undefined;
+    let member: "System" | "Unknown" | IMember;
+    if (typeof _member !== "string") {
+        memberProfileId = _member.profileId;
+        profile = await UserProfile.get(memberProfileId, conf.id);
+        if (!profile) {
+            member = "Unknown";
+        }
+        else {
+            member = _member;
+        }
+    }
+    else {
+        member = "System";
+    }
     const time = message.timestamp;
     const now = Date.now();
     const isOver24HrOld = (now - time.getTime()) > (1000 * 60 * 60 * 24);
@@ -65,7 +81,7 @@ export async function renderMessage(
                 ids: reactorIds[reaction],
                 names: await Promise.all(reactorIds[reaction].map(async (aProfileId: string) => {
                     const aProfile = await UserProfile.get(aProfileId, conf.id);
-                    return aProfile?.id === userProfile.id ? "You" : aProfile?.displayName ?? "<Unknown>";
+                    return aProfile?.id === userProfile.id ? "You" : aProfile?.displayName ?? `<Unknown>`;
                 }))
             };
         }
@@ -78,7 +94,7 @@ export async function renderMessage(
         body,
         profileFlair: flair,
         profileId: profile?.id ?? null,
-        profileName: profile?.id === userProfile.id ? "You" : profile?.displayName ?? null,
+        profileName: profile?.id === userProfile.id ? "You" : profile?.displayName ?? `<${member}>`,
         profilePhotoUrl,
         time: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
         index: message.index,
@@ -95,6 +111,8 @@ export default function Message(props: {
     const userProfile = useUserProfile();
     const msg = props.msg;
     const [pickEmojiForMsgSid, setPickEmojiForMsgSid] = useState<string | null>(null);
+    const [showReportConfirm, setShowReportConfirm] = useState<boolean>(false);
+    const [reporting, setReporting] = useState<boolean>(false);
 
     function toggleAddReaction(msgSid: string) {
         if (pickEmojiForMsgSid) {
@@ -108,7 +126,29 @@ export default function Message(props: {
     const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
     const renderEmoji = (text: any) => doEmojify(text.value);
 
-    return <div className="chat-message" key={msg.index}>
+    async function doReport() {
+        if (!mChat) {
+            const errMsg = "Sorry, we were unable to report this message. The chat service is currently unavailable.";
+            addError(errMsg);
+            throw new Error(errMsg);
+        }
+        try {
+            const newModChat = await mChat.createModerationChat([], `${msg.chatSid}:${msg.sid}`);
+            if (!newModChat) {
+                const errMsg = "Sorry, we were unable to report this message. It may have been removed from the channel but cached in your browser.";
+                addError(errMsg);
+                throw new Error(errMsg);
+            }
+            history.push(`/moderation/${newModChat.id}`);
+        }
+        catch (e) {
+            const errMsg = `Sorry, we were unable to report this message. ${e}.`;
+            addError(errMsg);
+            throw new Error(errMsg);
+        }
+    }
+
+    return <div className={`chat-message${showReportConfirm ? " highlight" : ""}`} key={msg.index}>
         <div className="profile" onClick={(ev) => {
             ev.preventDefault();
             ev.stopPropagation();
@@ -121,7 +161,7 @@ export default function Message(props: {
             }
         }}>
             {msg.profilePhotoUrl
-                ? <img src={msg.profilePhotoUrl} alt={(msg.profileName ?? "Unknown") + "'s avatar"} />
+                ? <img src={msg.profilePhotoUrl} alt={`${msg.profileName}'s avatar`} />
                 : <img src={defaultProfilePic} alt="default avatar" />
             }
             {msg.profileFlair ? <FlairChip flair={msg.profileFlair} small /> : <></>}
@@ -143,6 +183,44 @@ export default function Message(props: {
                 >
                     {msg.body}
                 </ReactMarkdown>
+                <div className="report">
+                    {showReportConfirm || reporting
+                        ? <>
+                            {!reporting ? <span>Report?</span> : <></>}
+                            <AsyncButton
+                                content={reporting ? "Reporting" : "Yes"}
+                                className="yes"
+                                setIsRunning={setReporting}
+                                action={doReport}
+                            />
+                            {!reporting
+                                ? <button
+                                    title="No, do not report this message"
+                                    className="no"
+                                    onClick={(ev) => {
+                                        ev.preventDefault();
+                                        ev.stopPropagation();
+                                        setShowReportConfirm(false);
+                                    }}
+                                >
+                                    No
+                            </button>
+                                : <></>
+                            }
+                        </>
+                        : <button
+                            title="Report this message"
+                            onClick={(ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                setShowReportConfirm(true);
+                            }}
+                        >
+                            <i className="far fa-flag"></i>
+                            <i className="fas fa-flag"></i>
+                        </button>
+                    }
+                </div>
             </div>
             <div className="reactions">
                 <div className="add-reaction">

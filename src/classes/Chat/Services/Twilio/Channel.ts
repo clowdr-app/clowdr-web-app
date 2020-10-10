@@ -134,9 +134,14 @@ export default class Channel implements IChannel {
         // const channel = await this.upgrade();
         // await channel.removeMember(member.sid);
     }
-    async getMember(memberProfileId: string): Promise<Member> {
+    async getMember(memberProfileId: string | null): Promise<Member | "system"> {
         const channel = await this.upgrade();
-        return new Member(await channel.getMemberBySid(memberProfileId));
+        if (memberProfileId) {
+            return new Member(await channel.getMemberBySid(memberProfileId));
+        }
+        else {
+            return "system";
+        }
     }
     getName(): string {
         return this.getCommonField('friendlyName');

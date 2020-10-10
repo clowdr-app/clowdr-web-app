@@ -176,6 +176,12 @@ export default class Chat implements IChatManager {
         return this.convertToDescriptor(channel);
     }
 
+    public async createModerationChat(specificModerators: Array<string>, relatedModerationKey?: string, initialMessage?: string): Promise<ChatDescriptor | undefined> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.createModerationChannel(specificModerators, relatedModerationKey, initialMessage);
+        return this.convertToDescriptor(channel);
+    }
+
     public async listAllChats(): Promise<Array<ChatDescriptor>> {
         assert(this.twilioService);
         const channels = await this.twilioService.allChannels();

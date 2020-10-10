@@ -8,6 +8,11 @@
 
     margin: 1em 0 1em 0;
 
+    &.highlight {
+        background-color: lighten($color-3, 35);
+        border: 3px solid $color-3;
+    }
+
     .profile {
         width     : 50px;
         min-width : 50px;
@@ -36,11 +41,11 @@
 
             width                : 100%;
             display              : grid;
-            grid-template-columns: min-content auto auto;
+            grid-template-columns: min-content auto auto min-content;
             grid-template-rows   : auto auto;
             grid-template-areas  :
-                "time name ."
-                "body body body";
+                "time name . report"
+                "body body body body";
 
             .goto-overlay {
                 z-index      : 2;
@@ -121,6 +126,67 @@
 
                 p:last-child {
                     margin-bottom: 0.2em;
+                }
+            }
+
+            .report {
+                grid-area: report;
+                font-size: 85%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: flex-end;
+
+                button {
+                    display: inline;
+                    border: none;
+                    background: none;
+                    padding: 0;
+                    margin: 0 2px 0 0;
+
+                    .fas {
+                        display: none;
+                    }
+
+                    &.yes {
+                        margin: 0.2em 0.4em 0 0.4em;
+                        padding: 0.2em 0.4em 0.2em 0.4em;
+                        background-color: $color-5;
+                        color: white;
+
+                        &:hover {
+                            color: white;
+                            background-color: lighten($color-5, 20);
+                        }
+
+                        &[disabled] {
+                            background-color: $gray-2;
+                        }
+                    }
+
+                    &.no {
+                        margin: 0.2em 0.2em 0 0;
+                        padding: 0.2em 0.4em 0.2em 0.4em;
+                        background-color: $primary;
+                        color: white;
+
+                        &:hover {
+                            color: white;
+                            background-color: lighten($primary, 20);
+                        }
+                    }
+
+                    &:hover {
+                        color: $primary;
+                        
+                        .far {
+                            display: none;
+                        }
+
+                        .fas {
+                            display: inline-block;
+                        }
+                    }
                 }
             }
         }

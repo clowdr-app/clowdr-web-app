@@ -281,6 +281,8 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             const memberProfileIds = [];
             await Promise.all(membersWithProfiles.map(async member => {
                 if (!profileIdsWithAccess.includes(member.member.identity)) {
+                    // TODO: Is this line broken? It seems to be untested and failed once in experiments
+                    //       The function call may be wrong
                     await member.remove();
                     newACL.setReadAccess(member.profile.get("user").id, false);
                 }
@@ -342,7 +344,7 @@ Parse.Cloud.afterSave("TextChat", async (req) => {
             // Follow ACL users to determine who to force to watch this chat
             const keys = Object.keys(acl.permissionsById);
             // Exclude existing users from the auto watch process in case they unfollowed already
-            const excludeKeys = textChat.isNew() ? [] : Object.keys(req.original.getACL().permissionsById);
+            const excludeKeys = textChat.isNew() || !req.original ? [] : Object.keys(req.original.getACL().permissionsById);
             await Promise.all(keys.map(async key => {
                 if (!key.startsWith("role:") && !excludeKeys.includes(key)) {
                     // Key is a user id
@@ -390,7 +392,20 @@ Parse.Cloud.beforeDelete("TextChat", async (req) => {
 });
 
 async function createTextChat(data) {
-    const newObject = new Parse.Object("TextChat", {
+    if (data.mode === "moderation" && data.relatedModerationKey) {
+        const existingTC
+            = await new Parse.Query("TextChat")
+                .equalTo("conference", data.conference)
+                .equalTo("mode", "moderation")
+                .equalTo("creator", data.creator)
+                .equalTo("relatedModerationKey", data.relatedModerationKey)
+                .first({ useMasterKey: true });
+        if (existingTC) {
+            return existingTC;
+        }
+    }
+
+    let newObject = new Parse.Object("TextChat", {
         name: data.name,
         conference: data.conference,
         isDM: data.isDM,
@@ -410,7 +425,7 @@ async function createTextChat(data) {
     const acl = new Parse.ACL();
     acl.setPublicReadAccess(false);
     acl.setPublicWriteAccess(false);
-    
+
     if (data.isPrivate) {
         if (!data.members) {
             throw new Error("Must specify initial members for a private chat.");
@@ -431,7 +446,59 @@ async function createTextChat(data) {
     acl.setRoleWriteAccess(adminRole, true);
     newObject.setACL(acl);
 
-    await newObject.save(null, { useMasterKey: true });
+    newObject = await newObject.save(null, { useMasterKey: true });
+
+    let targetChannel;
+    let modHubChannel;
+    const newMode = newObject.get("mode");
+
+    if (newMode === "moderation" || data.initialMessage) {
+        const config = await getConfig(newObject.get("conference").id);
+        const accountSID = config.TWILIO_ACCOUNT_SID;
+        const accountAuth = config.TWILIO_AUTH_TOKEN;
+        const twilioClient = Twilio(accountSID, accountAuth);
+        const serviceSID = config.TWILIO_CHAT_SERVICE_SID;
+        const service = twilioClient.chat.services(serviceSID);
+        targetChannel = service.channels(newObject.get("twilioID"));
+
+        if (newMode === "moderation") {
+            const modHubChat = await (
+                new Parse.Query("TextChat")
+                    .equalTo("conference", newObject.get("conference"))
+                    .equalTo("mode", "moderation_hub")
+                    .first({ useMasterKey: true }));
+            assert(modHubChat);
+            modHubChannel = service.channels(modHubChat.get("twilioID"));
+        }
+    }
+
+    if (newMode === "moderation") {
+        let body;
+        if (newObject.get("relatedModerationKey")) {
+            body = "A message has been reported and requires moderation.";
+        }
+        else {
+            body = "An attendee has requested help.";
+        }
+
+        await modHubChannel.messages.create({
+            from: "system",
+            body,
+            attributes: JSON.stringify({
+                moderationChat: newObject.id
+            }),
+            xTwilioWebhookEnabled: true
+        });
+    }
+
+    if (data.initialMessage) {
+        await targetChannel.messages.create({
+            from: newObject.get("creator").id,
+            body: data.initialMessage,
+            xTwilioWebhookEnabled: true
+        });
+    }
+
     return newObject;
 }
 
@@ -445,7 +512,8 @@ const createTextChatSchema = {
     members: "[string]?",
     twilioID: "string?",
     mirrored: "boolean?",
-    relatedModerationKey: "string?"
+    relatedModerationKey: "string?",
+    initialMessage: "string?"
 };
 
 Parse.Cloud.define("textChat-create", async (req) => {
