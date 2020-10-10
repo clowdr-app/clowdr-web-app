@@ -39,6 +39,7 @@ import About from '../Pages/About/About';
 import Legal from '../Pages/Legal/Legal';
 import Help from '../Pages/Help/Help';
 import ModerationHub from '../Pages/ModerationHub/ModerationHub';
+import ModerationChat from '../Pages/ChatView/ModerationChat';
 
 interface Props {
     doLogin: doLoginF;
@@ -106,9 +107,8 @@ function Page(props: Props) {
 
                     <Route path="/moderation/hub" component={ModerationHub} />
                     <Route path="/moderation/:chatId" component={(p: RouteComponentProps<any>) =>
-                        <ComingSoon />
-                        // <ChatView chatId={p.match.params.chatId} />}
-                    }/>
+                        <ModerationChat chatId={p.match.params.chatId} />
+                    } />
                     <Route path="/moderation" component={ComingSoon} />
 
                     <Route exact path="/" component={LoggedInWelcome} />

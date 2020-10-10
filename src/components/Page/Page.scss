@@ -14,13 +14,19 @@
 
     h1 {
         i {
-            font-size: 50%;
+            font-size     : 50%;
             vertical-align: middle;
-            margin: 0 0.8em 0 0;
+            margin        : 0 0.8em 0 0;
         }
 
-        i.fas.online {
-            color: $color-5;
+        i.fas {
+            &.online {
+                color: $color-5;
+            }
+
+            &.moderation {
+                color: $secondary;
+            }
         }
 
         margin: 0.3em 0 0.3em 0;
