@@ -353,6 +353,11 @@ export default class Chat implements IChatManager {
     // TODO: Edit channel
     // TODO: Delete channel
 
+    async getIsUserOnline(profileId: string): Promise<boolean | undefined> {
+        assert(this.twilioService);
+        return await this.twilioService.getIsUserOnline(profileId);
+    }
+
     // These have to be done via our Twilio Backend for permissions control
     async inviteUsers(chatId: string, userProfileIds: string[]): Promise<void> {
         assert(this.twilioService);

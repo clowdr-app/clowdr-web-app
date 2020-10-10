@@ -45,11 +45,15 @@ export default function Moderation() {
     useSafeAsync(async () => {
         const moderatorProfileIds = await _Role.userProfileIdsOfRoles(conference.id, ["admin", "manager"]);
         const moderatorProfiles = removeNull(await Promise.all(moderatorProfileIds.map(x => UserProfile.get(x, conference.id))));
-        return moderatorProfiles.map(x => ({
-            value: x.id,
-            label: x.displayName
-        })).filter(x => x.value !== currentUserProfile.id);
-    }, setAllModerators, []);
+        const userOptions = await Promise.all(moderatorProfiles.map(async userProfile => {
+            const online = await mChat?.getIsUserOnline(userProfile.id);
+            return {
+                value: userProfile.id,
+                label: `${userProfile.displayName} ${online ? "(online)" : "(offline)"}`,
+            };
+        }));
+        return userOptions.filter(x => x.value !== currentUserProfile.id);
+    }, setAllModerators, [mChat, conference.id, currentUserProfile.id]);
 
     useSafeAsync(async () => mChat ? (await mChat.listAllModerationChats()).filter(x => x.creator.id === currentUserProfile.id) : null, setAllModChats, [mChat]);
 
