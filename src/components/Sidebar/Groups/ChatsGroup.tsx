@@ -18,6 +18,7 @@ import useSafeAsync from '../../../hooks/useSafeAsync';
 import { addNotification } from '../../../classes/Notifications/Notifications';
 import ReactMarkdown from 'react-markdown';
 import { emojify } from 'react-emojione';
+import { useLocation } from 'react-router-dom';
 
 type ChatGroupTasks
     = "loadingActiveChats"
@@ -27,6 +28,8 @@ export type SidebarChatDescriptor = {
     id: string;
     friendlyName: string;
     status: 'joined' | undefined;
+    isModeration: boolean;
+    isModerationHub: boolean;
 } & ({
     isDM: false;
 } | {
@@ -250,6 +253,7 @@ export default function ChatsGroup(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
     const mChat = useMaybeChat();
+    const location = useLocation();
     const logger = useLogger("ChatsGroup");
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
         tasks: new Set([
@@ -278,7 +282,11 @@ export default function ChatsGroup(props: Props) {
                 return {
                     id: c.id,
                     f: await mChat.channelEventOn(c.id, "messageAdded", (msg) => {
-                        if (msg.author !== mUser?.id) {
+                        if (msg.author !== mUser?.id
+                            && !location.pathname.includes(`/chat/${c.id}`)
+                            && !location.pathname.includes(`/moderation/${c.id}`)
+                            && (!c.isModerationHub || !location.pathname.includes("/moderation/hub"))
+                        ) {
                             const isAnnouncement = c.friendlyName === "Announcements";
                             const title = isAnnouncement ? "" : `**${mUser ? computeChatDisplayName(c, mUser).friendlyName : c.friendlyName}**\n\n`;
                             const body = `${title}${msg.body}`;
@@ -289,11 +297,29 @@ export default function ChatsGroup(props: Props) {
                                     }}
                                 >
                                     {body}
-                                </ReactMarkdown>, isAnnouncement ? undefined :
-                                {
-                                    url: `/chat/${c.id}`,
-                                    text: "Go to chat"
-                                },
+                                </ReactMarkdown>,
+                                isAnnouncement
+                                    ? undefined
+                                    : c.isModerationHub
+                                        ? (msg.attributes?.moderationChat
+                                            ? {
+                                                url: `/moderation/${msg.attributes.moderationChat}`,
+                                                text: "Go to moderation channel"
+                                            }
+                                            : {
+                                                url: `/moderation/hub`,
+                                                text: "Go to moderation hub"
+                                            }
+                                        )
+                                        : c.isModeration
+                                            ? {
+                                                url: `/moderation/${c.id}`,
+                                                text: "Go to moderation channel"
+                                            }
+                                            : {
+                                                url: `/chat/${c.id}`,
+                                                text: "Go to chat"
+                                            },
                                 3000
                             );
                         }
@@ -308,11 +334,11 @@ export default function ChatsGroup(props: Props) {
             };
         }
         return () => { };
-    }, [mChat, mUser, renderEmoji, state.activeChats]);
+    }, [location.pathname, mChat, mUser, renderEmoji, state.activeChats]);
 
     useSafeAsync(async () => {
         if (mChat) {
-            const chats = await mChat.listWatchedChats();
+            const chats = await mChat.listWatchedChatsUnfiltered();
             const chatsWithName: Array<SidebarChatDescriptor>
                 = await Promise.all(chats.map(x => upgradeChatDescriptor(conf, x)));
             return chatsWithName;
@@ -549,7 +575,9 @@ export default function ChatsGroup(props: Props) {
                 chats = state.activeChats as Array<SidebarChatDescriptor>;
             }
 
-            chats = chats.sort((x, y) => x.friendlyName.localeCompare(y.friendlyName));
+            chats = chats
+                .filter(x => !x.isModeration && !x.isModerationHub)
+                .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName));
 
             const chatMenuItems: MenuGroupItems = [];
             for (const chat of chats) {

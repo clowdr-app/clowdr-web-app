@@ -33,7 +33,7 @@ export default class Message implements IMessage {
     get timestamp(): Date {
         return this.twilioMessage.timestamp;
     }
-    get attributes(): object {
+    get attributes(): any {
         return this.twilioMessage.attributes;
     }
     get memberSid(): string {
@@ -48,7 +48,7 @@ export default class Message implements IMessage {
     updateBody(body: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    updateAttributes(attributes: object): Promise<this> {
+    updateAttributes(attributes: any): Promise<this> {
         throw new Error("Method not implemented.");
     }
 }

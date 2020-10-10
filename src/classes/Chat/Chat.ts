@@ -269,6 +269,11 @@ export default class Chat implements IChatManager {
             .filter(x => x.isModeration);
     }
 
+    public async listWatchedChatsUnfiltered(): Promise<Array<ChatDescriptor>> {
+        const channels = await this.twilioService?.activeChannels();
+        return (await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []));
+    }
+
     public async getModerationHubChat(): Promise<ChatDescriptor> {
         assert(this.twilioService);
         const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
