@@ -10,6 +10,7 @@
         "classNames": [
             "AttachmentType",
             "Conference",
+            "ConferenceConfiguration",
             "Flair",
             "PrivilegedConferenceDetails",
             "ProgramPerson",
@@ -22,7 +23,10 @@
             "TextChat",
             "TextChatMessage",
             "UserProfile",
-            "VideoRoom"
+            "VideoRoom",
+            "WatchedItems",
+            "YouTubeFeed",
+            "ZoomRoom"
         ]
     },
     "startLiveQueryServer": true,
