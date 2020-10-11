@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import SplitterLayout from "react-splitter-layout";
 import { ChatDescriptor } from "../../../classes/Chat";
+import useChats from "../../../hooks/useChats";
 import useHeading from "../../../hooks/useHeading";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
@@ -10,17 +11,17 @@ import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import "./ModerationHub.scss";
 
 export default function ModerationHub() {
+    useHeading("Moderation Hub");
     const mChat = useMaybeChat();
     const [modHubId, setModHubId] = useState<string | null>(null);
     const [chatSize, setChatSize] = useState(30);
+    const allChats = useChats();
     const [allModChats, setAllModChats] = useState<Array<ChatDescriptor> | null>(null);
     const [watchedModChats, setWatchedModChats] = useState<Array<ChatDescriptor> | null>(null);
 
     useSafeAsync(async () => mChat?.getModerationHubChatId() ?? null, setModHubId, [mChat]);
-    useSafeAsync(async () => mChat ? mChat.listAllModerationChats() : null, setAllModChats, [mChat]);
-    useSafeAsync(async () => mChat ? mChat.listAllWatchedModerationChats() : null, setWatchedModChats, [mChat]);
-
-    useHeading("Moderation Hub");
+    useSafeAsync(async () => mChat ? mChat.listAllModerationChats() : null, setAllModChats, [mChat, allChats]);
+    useSafeAsync(async () => mChat ? mChat.listAllWatchedModerationChats() : null, setWatchedModChats, [mChat, allChats]);
 
     function renderChannelLink(channel: ChatDescriptor) {
         const moderationNamePrefix = "Moderation: ";
