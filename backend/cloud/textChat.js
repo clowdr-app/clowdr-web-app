@@ -277,19 +277,20 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             const invites = await invitesProp.list();
             await Promise.all(invites.map(invite => invite.remove()));
 
-            const profileIdsWithAccess = profilesWithAccess.map(x => x.id);
-            const memberProfileIds = [];
-            await Promise.all(membersWithProfiles.map(async member => {
-                if (!profileIdsWithAccess.includes(member.member.identity)) {
-                    // TODO: Is this line broken? It seems to be untested and failed once in experiments
-                    //       The function call may be wrong
-                    await member.remove();
-                    newACL.setReadAccess(member.profile.get("user").id, false);
-                }
-                else {
-                    memberProfileIds.push(member.member.identity);
-                }
-            }));
+            const memberProfileIds = membersWithProfiles.map(async member => member.member.identity);
+            // TODO: do we ever actually want to kick based on ACLs?
+            // const profileIdsWithAccess = profilesWithAccess.map(x => x.id);
+            // await Promise.all(membersWithProfiles.map(async member => {
+            //     if (!profileIdsWithAccess.includes(member.member.identity)) {
+            //         // TODO: Is this line broken? It seems to be untested and failed once in experiments
+            //         //       The function call may be wrong
+            //         await member.remove();
+            //         newACL.setReadAccess(member.profile.get("user").id, false);
+            //     }
+            //     else {
+            //         memberProfileIds.push(member.member.identity);
+            //     }
+            // }));
 
             const roles = await service.roles.list();
             const channelAdminRole = roles.find(x => x.friendlyName === "channel admin");

@@ -35,20 +35,15 @@ async function getRoleByName(confId, roleName) {
     return await roleQ.first({ useMasterKey: true });
 }
 
-/**
- * Note: Also used by things like textChat-create - edit with caution.
- */
 async function configureDefaultProgramACLs(object) {
     const confId = object.get("conference").id;
     const adminRole = await getRoleByName(confId, "admin");
-    const managerRole = await getRoleByName(confId, "manager");
     const attendeeRole = await getRoleByName(confId, "attendee");
 
     const acl = new Parse.ACL();
     acl.setPublicReadAccess(false);
     acl.setPublicWriteAccess(false);
     acl.setRoleReadAccess(attendeeRole, true);
-    acl.setRoleWriteAccess(managerRole, true);
     acl.setRoleWriteAccess(adminRole, true);
     object.setACL(acl);
 }

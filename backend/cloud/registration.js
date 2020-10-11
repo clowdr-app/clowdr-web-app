@@ -21,12 +21,10 @@ async function getRegistrationById(id) {
 async function configureDefaultRegistrationACLs(object) {
     const confId = object.get("conference").id;
     const adminRole = await getRoleByName(confId, "admin");
-    const managerRole = await getRoleByName(confId, "manager");
 
     const acl = new Parse.ACL();
     acl.setPublicReadAccess(false);
     acl.setPublicWriteAccess(false);
-    acl.setRoleWriteAccess(managerRole, true);
     acl.setRoleWriteAccess(adminRole, true);
     object.setACL(acl);
 }
@@ -94,7 +92,7 @@ async function handleCreateRegistration(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -104,7 +102,7 @@ async function handleCreateRegistration(req) {
                 }
                 delete spec.roleName;
             }
-            
+
             if (!("newRole" in spec) || !spec.newRole) {
                 spec.newRole = "attendee";
             }
@@ -238,7 +236,7 @@ async function handleSendRegistrationEmails(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });

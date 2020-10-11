@@ -66,7 +66,7 @@ async function handleCreateAttachmentType(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -128,7 +128,7 @@ async function handleCreateTrack(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -191,7 +191,7 @@ async function handleCreatePerson(req) {
         const confId = params.conference;
 
         // TODO: Auth check: Allow authors to edit their own peron records
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -347,7 +347,7 @@ async function handleCreateItem(req) {
         const confId = params.conference;
 
         // TODO: Auth check: Allow authors to edit their own item records
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -419,7 +419,7 @@ async function handleCreateItemAttachment(req) {
         const confId = params.conference;
 
         // TODO: Auth check: Allow authors to edit their own ItemAttachment records
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -485,7 +485,7 @@ async function handleCreateSession(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -554,7 +554,7 @@ async function handleCreateSessionEvent(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin", "manager"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });

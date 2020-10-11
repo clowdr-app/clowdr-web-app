@@ -44,16 +44,16 @@ export default function AllChats() {
                 assert(chat.isDM);
                 const otherProfileId = [chat.member1.profileId, chat.member2.profileId].find(profileId => profileId !== currentProfile.id);
                 const otherProfile = userProfiles?.find(profile => profile.id === otherProfileId);
-                const online = otherProfileId ? onlineStatus?.get(otherProfileId) : false;
+                const online = otherProfileId ? onlineStatus?.get(otherProfileId) ?? false : false;
                 const profileLink = `/profile/${otherProfileId}`;
-                const flairs = await otherProfile?.flairObjects;
+                const flairs = await otherProfile?.flairObjects ?? [];
                 return otherProfile
                     ? {
                         text: otherProfile.displayName,
                         link: `/chat/${chat.id}`,
                         key: otherProfile.id,
                         renderData: { online, profileLink, flairs },
-                    } as ColumnItem<DMData>
+                    }
                     : null;
             });
         return removeNull(await Promise.all(items ?? []));
@@ -76,7 +76,7 @@ export default function AllChats() {
                     link: `/chat/new/${profile.id}`,
                     key: profile.id,
                     renderData: { online, profileLink, flairs },
-                } as ColumnItem<DMData>
+                }
             });
         return await Promise.all(items ?? []);
     }, setAllOtherUserItems, [allChats, userProfiles, currentProfile.id, onlineStatus]);
@@ -94,7 +94,7 @@ export default function AllChats() {
                     link: `/chat/${chat.id}`,
                     key: chat.id,
                     renderData: undefined,
-                } as ColumnItem
+                }
             }) ?? [];
         setAllOtherChatsItems(items);
     }, [allChats]);

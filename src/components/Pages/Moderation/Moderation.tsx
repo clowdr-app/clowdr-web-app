@@ -86,7 +86,7 @@ export default function Moderation() {
             renderData: undefined,
             text: channelName(channel),
             link: `/moderation/${channel.id}`
-        } as ColumnItem)))
+        })))
     }, [modChannels]);
 
     /**

@@ -68,7 +68,7 @@ export default function ChatView() {
                     renderData: room,
                     text: room.room.name,
                     link: `/room/${room.room.id}`,
-                } as ColumnItem<RoomData>
+                }
             })
         setRoomItems(items);
     }, [rooms]);
@@ -83,7 +83,7 @@ export default function ChatView() {
                     renderData: room,
                     text: room.room.name,
                     link: `/room/${room.room.id}`,
-                } as ColumnItem<RoomData>
+                }
             });
         setProgramRoomItems(items);
     }, [rooms]);

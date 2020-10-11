@@ -416,7 +416,6 @@ Parse.Cloud.job("conference-create", async (request) => {
             conferenceACL.setPublicReadAccess(true);
             conferenceACL.setPublicWriteAccess(false);
             conferenceACL.setRoleWriteAccess(adminRole, true);
-            conferenceACL.setRoleWriteAccess(managerRole, true);
             conferenceO.setACL(conferenceACL);
             await conferenceO.save(null, { useMasterKey: true });
             message(`Set conference roles.`);
@@ -909,7 +908,6 @@ Parse.Cloud.job("conference-create", async (request) => {
                 acl.setPublicReadAccess(false);
                 acl.setPublicWriteAccess(false);
                 acl.setRoleReadAccess(managerRole, true);
-                acl.setRoleWriteAccess(managerRole, true);
                 acl.setRoleReadAccess(adminRole, true);
                 acl.setRoleWriteAccess(adminRole, true);
                 textChat.setACL(acl);

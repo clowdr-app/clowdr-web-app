@@ -55,7 +55,7 @@ export default function ModerationHub() {
                 renderData: { completed: channel.isModeration && !channel.isActive, created: channel.createdAt },
                 text: channelName(channel),
                 link: `/moderation/${channel.id}`
-            } as ColumnItem<ModerationChannelData>)))
+            })))
     }, [modChannels, watchedModChannels]);
 
     useEffect(() => {
@@ -64,7 +64,7 @@ export default function ModerationHub() {
             renderData: { completed: channel.isModeration && !channel.isActive, created: channel.createdAt },
             text: channelName(channel),
             link: `/moderation/${channel.id}`
-        } as ColumnItem<ModerationChannelData>)))
+        })))
     }, [watchedModChannels]);
 
     function modChannelRenderer(item: ColumnItem<ModerationChannelData>): JSX.Element {

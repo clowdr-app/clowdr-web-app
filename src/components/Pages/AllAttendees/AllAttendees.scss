@@ -1,4 +1,14 @@
+@import "../../../styles/util.scss";
+
 .all-participants {
     column-count: 3;
     column-fill: auto;
+
+    .admin-buttons {
+        display: flex;
+        column-gap: mm(3);
+
+        &__button {
+        }
+    }
 }
