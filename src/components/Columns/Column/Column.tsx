@@ -15,6 +15,7 @@ interface Props<RenderData> {
     loadingMessage?: string;
     emptyMessage?: string;
     items?: Item<RenderData>[];
+    sort?(a: Item<RenderData>, b: Item<RenderData>): number;
     itemRenderer: ItemRenderer<RenderData>;
     children?: JSX.Element;
 }
@@ -32,7 +33,7 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
         ? props.items.length > 0
             ? props.items
             .filter(item => item.text.toLowerCase().includes(searchString.toLowerCase()))
-            .sort((a, b) => a.text.localeCompare(b.text))
+            .sort((a, b) => props.sort ? props.sort(a, b) : a.text.localeCompare(b.text))
             .map(item => {
                 return <li key={item.key} className="column-item">
                     {props.itemRenderer.render(item)}
