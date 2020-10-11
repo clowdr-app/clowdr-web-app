@@ -5,7 +5,7 @@ import useConference from "../../../hooks/useConference";
 import useDataSubscription from "../../../hooks/useDataSubscription";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
-import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
+import Column, { FontAwesomeIconItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
 import "./AllParticipants.scss";
 
 export default function AllParticipants() {
@@ -13,7 +13,7 @@ export default function AllParticipants() {
 
     const conference = useConference();
     const [userProfiles, setUserProfiles] = useState<Array<UserProfile> | null>(null);
-    const [userProfileItems, setUserProfileItems] = useState<ColumnItem[] | undefined>();
+    const [userProfileItems, setUserProfileItems] = useState<ColumnItem<{icon?: string}>[] | undefined>();
 
     // Subscribe to all user profiles
     useSafeAsync(async () => UserProfile.getAll(conference.id), setUserProfiles, [conference.id]);
@@ -44,14 +44,15 @@ export default function AllParticipants() {
             return {
                 text: profile.displayName,
                 link: `/profile/${profile.id}`,
-            } as ColumnItem;
+                renderData: {icon: "fas fa-user"},
+            } as ColumnItem<{icon?: string}>;
         });
         setUserProfileItems(profileItems);
-    }, [userProfiles])
+    }, [userProfiles]);
 
     return <Column
         className="all-participants"
         items={userProfileItems}
-        itemRenderer={new DefaultItemRenderer()}
+        itemRenderer={new FontAwesomeIconItemRenderer()}
         loadingMessage="Loading participants" />
 }

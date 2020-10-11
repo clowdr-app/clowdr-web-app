@@ -1,0 +1,29 @@
+@import "../../../styles/util.scss";
+
+.column {
+    &__search {
+        &__icon {
+            padding: mm(2) mm(2) mm(2) 0;
+        }
+
+        &__input {
+            border: 1px solid $gray-0;
+            border-radius: 4px;
+            padding: mm(1) mm(3);
+        }
+    }
+
+    ul {
+        margin-top: mm(3);
+        padding: 0;
+    }
+
+    .column-item {
+        list-style-type: none;
+        padding: 0;
+
+        &__icon {
+            padding: mm(2);
+        }
+    }
+}

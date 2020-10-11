@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
+import "./Column.scss";
 
 export interface Item<RenderData = undefined> {
     key: string;
@@ -18,17 +19,28 @@ interface Props<RenderData> {
 }
 
 export default function Column<RenderData = undefined>(props: Props<RenderData>) {
-    const items = props.items
-    ? props.items.map(item => {
-        return <li key={item.key} className="column__item">
-            {props.itemRenderer.render(item)}
-        </li>;
-    })
-    : <LoadingSpinner message={props.loadingMessage} />;
 
-    return <div className={`columns ${props.className}`}>
+    let [searchString, setSearchString] = useState<string>("");
+
+    const search = <div className="column__search">
+        <i className="fas fa-search column__search__icon"></i>
+        <input className="column__search__input" defaultValue={searchString} onChange={e => setSearchString(e.target.value)} type="search" />
+    </div>
+
+    const items = props.items
+        ? props.items
+            .filter(item => item.text.toLowerCase().includes(searchString.toLowerCase()))
+            .map(item => {
+                return <li key={item.key} className="column-item">
+                    {props.itemRenderer.render(item)}
+                </li>;
+            })
+        : <LoadingSpinner message={props.loadingMessage} />;
+
+    return <div className={`column ${props.className}`}>
         {props.children}
-        <ul className="column" >
+        {search}
+        <ul className="column__items" >
             {items}
         </ul>
     </div>
@@ -47,7 +59,7 @@ export class DefaultItemRenderer implements ItemRenderer<undefined> {
 export class FontAwesomeIconItemRenderer implements ItemRenderer<{ icon?: string }> {
     render(item: Item<{ icon?: string }>): JSX.Element {
         return <>
-            <i className={item.renderData.icon}></i>
+            <i className={`${item.renderData.icon} column-item__icon`}></i>
             {item.link ? <Link to={item.link}>{item.text}</Link> : <>{item.text}</>}
         </>
     }
