@@ -1,20 +1,15 @@
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
+import React, { useEffect, useState } from "react";
 import { ChatDescriptor } from "../../../classes/Chat";
 import useConference from "../../../hooks/useConference";
 import useHeading from "../../../hooks/useHeading";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import useUserProfile from "../../../hooks/useUserProfile";
-import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
+import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
+import Columns from "../../Columns/Columns";
 import "./AllChats.scss";
-
-type Rendered1to1Chat = {
-    dmExists: boolean,
-    name: string,
-    el: JSX.Element
-};
 
 export default function ChatView() {
     useHeading("All Chats");
@@ -25,106 +20,84 @@ export default function ChatView() {
     const [allProfiles, setAllProfiles] = useState<Array<UserProfile> | null>(null);
     const [allTwilioChats, setAllChats] = useState<Array<ChatDescriptor> | null>(null);
 
+    const [dmChatItems, setDmChatItems] = useState<ColumnItem[] | undefined>();
+    const [allOtherUserItems, setAllOtherUserItems] = useState<ColumnItem[] | undefined>();
+    const [allOtherChatsItems, setAllOtherChatsItems] = useState<ColumnItem[] | undefined>();
+
     useSafeAsync(async () => UserProfile.getAll(conference.id), setAllProfiles, [conference.id]);
     useSafeAsync(async () => mChat ? mChat.listAllChats() : null, setAllChats, [mChat]);
 
-    let profileEl;
-    if (allProfiles) {
-        const profileEls = allProfiles.flatMap(profile => {
-            if (profile.id === currentProfile.id) {
-                return [];
-            }
+    useEffect(() => {
+        const items = removeNull(allTwilioChats
+            ?.filter(chat =>
+                chat.isDM &&
+                chat.friendlyName.includes(currentProfile.id))
+            ?.map(chat => {
+                const profile = allProfiles?.find(profile => chat.friendlyName.includes(profile.id));
+                return profile
+                    ? {
+                        text: profile.displayName,
+                        link: `/chat/${chat.id}`,
+                        key: profile.id,
+                        renderData: undefined,
+                    } as ColumnItem
+                    : null;
+            }) ?? []);
+        setDmChatItems(items);
+    }, [allTwilioChats, allProfiles, currentProfile.id])
 
-            const dmChat = allTwilioChats?.find(x =>
-                x.isDM &&
-                x.friendlyName.includes(currentProfile.id) &&
-                x.friendlyName.includes(profile.id));
-            return [{
-                dmExists: !!dmChat,
-                name: profile.displayName,
-                el: <li key={profile.id}>
-                    {dmChat
-                        ? <Link to={`/chat/${dmChat.id}`}>{profile.displayName}</Link>
-                        : <Link to={`/chat/new/${profile.id}`}>{profile.displayName}</Link>
-                    }
-                </li>
-            }];
-        });
-
-        function sortDMs(x: Rendered1to1Chat, y: Rendered1to1Chat): number {
-            if (x.dmExists) {
-                if (y.dmExists) {
-                    return x.name.localeCompare(y.name);
-                }
-                else {
-                    return -1;
-                }
-            }
-            else {
-                if (y.dmExists) {
-                    return 1;
-                }
-                else {
-                    return x.name.localeCompare(y.name);
-                }
-            }
-        }
-
-        profileEl = <ul>{profileEls.sort(sortDMs).reduce<{
-            split: boolean,
-            els: Array<JSX.Element>
-        }>((acc, x, idx) => {
-            if (!x.dmExists) {
-                if (!acc.split) {
-                    if (idx > 0) {
-                        return {
-                            split: true,
-                            els: [...acc.els, <hr key="dm-split" />, x.el]
-                        };
-                    }
-                }
-
+    useEffect(() => {
+        const items = allProfiles
+            ?.filter(profile => !allTwilioChats
+                ?.some(chat => chat.isDM && chat.friendlyName.includes(profile.id)))
+            ?.map(profile => {
                 return {
-                    split: true,
-                    els: [...acc.els, x.el]
-                };
-            }
-            else {
+                    text: profile.displayName,
+                    link: `/chat/new/${profile.id}`,
+                    key: profile.id,
+                    renderData: undefined,
+                } as ColumnItem
+            }) ?? [];
+        setAllOtherUserItems(items);
+    }, [allTwilioChats, allProfiles, currentProfile.id]);
+
+    useEffect(() => {
+        const items = allTwilioChats
+            ?.filter(chat => !chat.isDM)
+            ?.map(chat => {
                 return {
-                    split: false, els: [...acc.els, x.el]
-                };
-            }
-        }, {
-            split: false,
-            els: []
-        }).els}</ul>;
-    }
-    else {
-        profileEl = <LoadingSpinner message="Loading users" />;
-    }
+                    text: chat.friendlyName,
+                    link: `/chat/${chat.id}`,
+                    key: chat.id,
+                    renderData: undefined,
+                } as ColumnItem
+            }) ?? [];
+        setAllOtherChatsItems(items);
+    }, [allTwilioChats]);
 
-    let othersEl;
-    if (allTwilioChats) {
-        const otherEls = allTwilioChats
-            .filter(x => !x.isDM)
-            .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName))
-            .map(x => <li key={x.id}><Link to={`/chat/${x.id}`}>{x.friendlyName}</Link></li>);
-        othersEl = <ul>
-            {otherEls}
-        </ul>;
-    }
-    else {
-        othersEl = <LoadingSpinner message="Loading all chats" />;
-    }
-
-    return <div className="all-chats">
-        <div className="col">
-            <h4>All users</h4>
-            {profileEl}
-        </div>
-        <div className="col">
-            <h4>All other chats</h4>
-            {othersEl}
-        </div>
-    </div>;
+    return <Columns className="all-chats">
+        <>
+            <Column
+                className="col"
+                items={dmChatItems}
+                itemRenderer={new DefaultItemRenderer()}
+                loadingMessage="Loading direct messages">
+                <h2>Direct messages</h2>
+            </Column>
+            <Column
+                className="col"
+                items={allOtherUserItems}
+                itemRenderer={new DefaultItemRenderer()}
+                loadingMessage="Loading users">
+                <h2>Users</h2>
+            </Column>
+            <Column
+                className="col"
+                items={allOtherChatsItems}
+                itemRenderer={new DefaultItemRenderer()}
+                loadingMessage="Loading chats">
+                <h2>Chats</h2>
+            </Column>
+        </>
+    </Columns>;
 }

@@ -41,6 +41,7 @@ import Help from '../Pages/Help/Help';
 import Moderation from '../Pages/Moderation/Moderation';
 import ModerationHub from '../Pages/ModerationHub/ModerationHub';
 import ModerationChat from '../Pages/ChatView/ModerationChat';
+import AllParticipants from '../Pages/AllParticipants/AllParticipants';
 
 interface Props {
     doLogin: doLoginF;
@@ -94,11 +95,12 @@ function Page(props: Props) {
             </div>;
     }
 
-    const resetPasswordRoute = <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
-        <ResetPassword email={p.match.params.email} token={p.match.params.token} />
-    } />;
-
     const { noHeading, contents } = useMemo(() => {
+
+        const resetPasswordRoute = <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
+            <ResetPassword email={p.match.params.email} token={p.match.params.token} />
+        } />;
+
         if (mConf && mUser) {
             // TODO: Route for /program/new (conference manager and admin roles only)
 
@@ -123,6 +125,7 @@ function Page(props: Props) {
 
                     <Route path="/watched" component={WatchedItems} />
                     <Route path="/exhibits" component={Exhibits} />
+                    <Route path="/participants" component={AllParticipants} />
 
                     <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
                         <NewChat dmUserProfileId={p.match.params.userProfileId} />
