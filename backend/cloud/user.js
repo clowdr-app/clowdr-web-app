@@ -567,7 +567,7 @@ Parse.Cloud.define("user-ban", async (req) => {
         const confId = params.conference;
         const conf = new Parse.Object("Conference", { id: confId });
 
-        const authorized = true || !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const targetProfile = await getUserProfileById(params.target, confId);
             if (targetProfile) {
