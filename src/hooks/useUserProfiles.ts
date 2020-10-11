@@ -1,4 +1,4 @@
-import { Conference, UserProfile } from "@clowdr-app/clowdr-db-schema";
+import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { useCallback, useState } from "react";
 import useConference from "./useConference";
