@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 
 export interface Item<RenderData = undefined> {
+    key: string;
     text: string;
     link?: string;
     renderData: RenderData;
@@ -13,13 +14,13 @@ interface Props<RenderData> {
     loadingMessage?: string;
     items?: Item<RenderData>[];
     itemRenderer: ItemRenderer<RenderData>;
-    children: JSX.Element;
+    children?: JSX.Element;
 }
 
 export default function Column<RenderData = undefined>(props: Props<RenderData>) {
     const items = props.items
     ? props.items.map(item => {
-        return <li className="column__item">
+        return <li key={item.key} className="column__item">
             {props.itemRenderer.render(item)}
         </li>;
     })
