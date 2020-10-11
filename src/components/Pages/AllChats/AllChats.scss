@@ -1,7 +1,40 @@
+@import "../../../styles/util.scss";
+
 .all-chats {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    display        : flex;
+    flex-direction : row;
+    flex-wrap      : wrap;
     justify-content: center;
-    align-items: flex-start;
+    align-items    : flex-start;
+
+    .user-info {
+        display: flex;
+        align-items: center;
+
+        .online-indicator {
+            color        : $gray-0;
+            font-size    : 50%;
+            padding-right: mm(2);
+
+            &.online {
+                color: $color-5;
+            }
+        }
+
+        .profile-icon {
+            font-size: 80%;
+            padding  : mm(2);
+        }
+    }
+
+    .flair-box {
+        display    : flex;
+        gap        : mm(2);
+        margin-left: mm(4);
+
+        .flair-container {
+            flex-grow  : 0;
+            flex-shrink: 1;
+        }
+    }
 }

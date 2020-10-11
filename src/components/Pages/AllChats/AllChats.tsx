@@ -1,72 +1,93 @@
-import { UserProfile } from "@clowdr-app/clowdr-db-schema";
+import { Flair } from "@clowdr-app/clowdr-db-schema";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 import assert from "assert";
 import React, { useEffect, useState } from "react";
-import { ChatDescriptor } from "../../../classes/Chat";
-import useConference from "../../../hooks/useConference";
+import { Link } from "react-router-dom";
 import useHeading from "../../../hooks/useHeading";
-import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
+import useChats from "../../../hooks/useChats";
 import useUserProfile from "../../../hooks/useUserProfile";
+import useUserProfiles from "../../../hooks/useUserProfiles";
 import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
 import Columns from "../../Columns/Columns";
+import FlairChip from "../../Profile/FlairChip/FlairChip";
 import "./AllChats.scss";
+import useOnlineStatus from "../../../hooks/useOnlineStatus";
 
-export default function ChatView() {
+interface DMData {
+    online: boolean;
+    profileLink: string;
+    flairs: Flair[];
+}
+
+export default function AllChats() {
     useHeading("All Chats");
 
-    const conference = useConference();
-    const mChat = useMaybeChat();
     const currentProfile = useUserProfile();
-    const [allProfiles, setAllProfiles] = useState<Array<UserProfile> | null>(null);
-    const [allTwilioChats, setAllChats] = useState<Array<ChatDescriptor> | null>(null);
+    const userProfiles = useUserProfiles();
+    const allChats = useChats();
+    const onlineStatus = useOnlineStatus(userProfiles ?? []);
 
-    const [dmChatItems, setDmChatItems] = useState<ColumnItem[] | undefined>();
-    const [allOtherUserItems, setAllOtherUserItems] = useState<ColumnItem[] | undefined>();
+    const [dmChatItems, setDmChatItems] = useState<ColumnItem<DMData>[] | undefined>();
+    const [allOtherUserItems, setAllOtherUserItems] = useState<ColumnItem<DMData>[] | undefined>();
     const [allOtherChatsItems, setAllOtherChatsItems] = useState<ColumnItem[] | undefined>();
 
-    useSafeAsync(async () => UserProfile.getAll(conference.id), setAllProfiles, [conference.id]);
-    useSafeAsync(async () => mChat ? mChat.listAllChats() : null, setAllChats, [mChat]);
-
-    useEffect(() => {
-        const items = removeNull(allTwilioChats
+    useSafeAsync(async () => {
+        if (!allChats || !userProfiles || !currentProfile) {
+            return undefined;
+        }
+        const items = allChats
             ?.filter(chat =>
                 chat.isDM &&
                 (chat.member1.profileId === currentProfile.id || chat.member2.profileId === currentProfile.id))
-            ?.map(chat => {
+            ?.map(async chat => {
                 assert(chat.isDM);
                 const otherProfileId = [chat.member1.profileId, chat.member2.profileId].find(profileId => profileId !== currentProfile.id);
-                const otherProfile = allProfiles?.find(profile => profile.id === otherProfileId);
+                const otherProfile = userProfiles?.find(profile => profile.id === otherProfileId);
+                const online = otherProfileId ? onlineStatus?.get(otherProfileId) : false;
+                const profileLink = `/profile/${otherProfileId}`;
+                const flairs = await otherProfile?.flairObjects;
                 return otherProfile
                     ? {
                         text: otherProfile.displayName,
                         link: `/chat/${chat.id}`,
                         key: otherProfile.id,
-                        renderData: undefined,
-                    } as ColumnItem
+                        renderData: { online, profileLink, flairs },
+                    } as ColumnItem<DMData>
                     : null;
-            }) ?? []);
-        setDmChatItems(items);
-    }, [allTwilioChats, allProfiles, currentProfile.id])
+            });
+        return removeNull(await Promise.all(items ?? []));
+    }, setDmChatItems, [allChats, userProfiles, currentProfile.id, onlineStatus])
 
-    useEffect(() => {
-        const items = allProfiles
-            ?.filter(profile => !allTwilioChats
+    useSafeAsync(async () => {
+        if (!allChats || !userProfiles || !currentProfile) {
+            return undefined;
+        }
+        const items = userProfiles
+            ?.filter(profile => !allChats
                 ?.some(chat => chat.isDM && (chat.member1.profileId === profile.id || chat.member2.profileId === profile.id)))
-            ?.map(profile => {
+            ?.sort((a, b) => a.displayName.localeCompare(b.displayName))
+            ?.map(async profile => {
+                const online = onlineStatus?.get(profile.id) ?? false;
+                const profileLink = `/profile/${profile.id}`;
+                const flairs = await profile.flairObjects;
                 return {
                     text: profile.displayName,
                     link: `/chat/new/${profile.id}`,
                     key: profile.id,
-                    renderData: undefined,
-                } as ColumnItem
-            }) ?? [];
-        setAllOtherUserItems(items);
-    }, [allTwilioChats, allProfiles, currentProfile.id]);
+                    renderData: { online, profileLink, flairs },
+                } as ColumnItem<DMData>
+            });
+        return await Promise.all(items ?? []);
+    }, setAllOtherUserItems, [allChats, userProfiles, currentProfile.id, onlineStatus]);
 
     useEffect(() => {
-        const items = allTwilioChats
+        if (!allChats) {
+            return;
+        }
+        const items = allChats
             ?.filter(chat => !chat.isDM)
+            ?.sort((a, b) => a.friendlyName.localeCompare(b.friendlyName))
             ?.map(chat => {
                 return {
                     text: chat.friendlyName,
@@ -76,21 +97,40 @@ export default function ChatView() {
                 } as ColumnItem
             }) ?? [];
         setAllOtherChatsItems(items);
-    }, [allTwilioChats]);
+    }, [allChats]);
+
+
+    function dmRenderer(item: ColumnItem<DMData>): JSX.Element {
+        const data = item.renderData;
+        return <>
+            <div className="user-info">
+                <i className={`fa${data.online ? 's' : 'r'} fa-circle ${data.online ? 'online' : ''} online-indicator`}></i>
+                <Link to={data.profileLink} title="View profile" className="profile-icon"><i className={`fas fa-user`}></i></Link>
+                <Link to={item.link ?? ""} title="Chat">{item.text}</Link>
+            </div>
+            <div className="flair-box">
+                {data.flairs.map((flair, i) =>
+                    <div className="flair-container" key={i}>
+                        <FlairChip flair={flair} small />
+                    </div>
+                )}
+            </div>
+        </>;
+    }
 
     return <Columns className="all-chats">
         <>
             <Column
                 className="col"
                 items={dmChatItems}
-                itemRenderer={new DefaultItemRenderer()}
+                itemRenderer={{ render: dmRenderer }}
                 loadingMessage="Loading direct messages">
                 <h2>Direct messages</h2>
             </Column>
             <Column
                 className="col"
                 items={allOtherUserItems}
-                itemRenderer={new DefaultItemRenderer()}
+                itemRenderer={{ render: dmRenderer }}
                 loadingMessage="Loading users">
                 <h2>Users</h2>
             </Column>

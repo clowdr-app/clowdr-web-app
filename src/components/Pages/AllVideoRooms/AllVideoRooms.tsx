@@ -1,7 +1,9 @@
 import { ContentFeed, UserProfile, VideoRoom } from "@clowdr-app/clowdr-db-schema";
-import React, { useEffect, useState } from "react";
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useConference from "../../../hooks/useConference";
+import useDataSubscription from "../../../hooks/useDataSubscription";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
@@ -18,18 +20,43 @@ export default function ChatView() {
     useHeading("All Rooms");
 
     const conference = useConference();
+    const [videoRooms, setVideoRooms] = useState<Array<VideoRoom> | null>(null);
     const [rooms, setRooms] = useState<Array<RoomData> | null>(null);
     const [roomItems, setRoomItems] = useState<Array<ColumnItem<RoomData>> | undefined>();
     const [programRoomItems, setProgramRoomItems] = useState<Array<ColumnItem<RoomData>> | undefined>();
 
     useSafeAsync(async () => {
-        const _rooms = await VideoRoom.getAll(conference.id);
-        return Promise.all(_rooms.map(async room => {
-            const participants = await room.participantProfiles;
-            const relatedContentFeeds = await ContentFeed.getAllByVideoRoom(room.id, conference.id);
-            return { room, participants, contentFeeds: relatedContentFeeds };
-        }));
-    }, setRooms, [conference.id]);
+        return videoRooms
+            ? Promise.all(videoRooms.map(async room => {
+                const participants = await room.participantProfiles;
+                const relatedContentFeeds = await ContentFeed.getAllByVideoRoom(room.id, conference.id);
+                return { room, participants, contentFeeds: relatedContentFeeds };
+            }))
+            : null;
+    }, setRooms, [videoRooms, conference.id]);
+
+    // Subscribe to VideoRooms
+    useSafeAsync(async () => VideoRoom.getAll(conference.id), setVideoRooms, [conference.id]);
+
+    const onVideoRoomUpdated = useCallback(function _onVideoRoomUpdated(ev: DataUpdatedEventDetails<"VideoRoom">) {
+        setVideoRooms(existing => {
+            const updated = Array.from(existing ?? []);
+            const idx = updated?.findIndex(x => x.id === ev.object.id);
+            let item = ev.object as VideoRoom;
+            if (idx === -1) {
+                updated.push(item);
+            } else {
+                updated.splice(idx, 1, item);
+            }
+            return updated;
+        });
+    }, []);
+
+    const onVideoRoomDeleted = useCallback(function _onVideoRoomDeleted(ev: DataDeletedEventDetails<"VideoRoom">) {
+        setVideoRooms(existing => (existing ?? []).filter(item => item.id !== ev.objectId));
+    }, []);
+
+    useDataSubscription("VideoRoom", onVideoRoomUpdated, onVideoRoomDeleted, !videoRooms, conference);
 
     useEffect(() => {
         const items = rooms
@@ -83,9 +110,9 @@ export default function ChatView() {
     function roomRenderer(item: ColumnItem<RoomData>): JSX.Element {
         const data = item.renderData;
         return <>
-            <Link to={`/room/${data.room.id}`}>{data.room.name}</Link>
+            <Link to={`/room/${data.room.id}`}><i className="fas fa-video room-item__icon"></i>{data.room.name}</Link>
             {data.participants.length > 0
-                ? <ul>
+                ? <ul className="room-item__participants">
                     {data.participants.map(participant =>
                         <li key={participant.id}>
                             {participant.displayName}

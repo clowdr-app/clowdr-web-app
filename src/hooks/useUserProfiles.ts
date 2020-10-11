@@ -1,21 +1,14 @@
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
-import React, { useCallback, useEffect, useState } from "react";
-import useConference from "../../../hooks/useConference";
-import useDataSubscription from "../../../hooks/useDataSubscription";
-import useHeading from "../../../hooks/useHeading";
-import useSafeAsync from "../../../hooks/useSafeAsync";
-import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
-import "./AllParticipants.scss";
+import { useCallback, useState } from "react";
+import useConference from "./useConference";
+import useDataSubscription from "./useDataSubscription";
+import useSafeAsync from "./useSafeAsync";
 
-export default function AllParticipants() {
-    useHeading("All participants");
-
-    const conference = useConference();
+export default function useUserProfiles(): Array<UserProfile> | null {
     const [userProfiles, setUserProfiles] = useState<Array<UserProfile> | null>(null);
-    const [userProfileItems, setUserProfileItems] = useState<ColumnItem[] | undefined>();
+    const conference = useConference();
 
-    // Subscribe to all user profiles
     useSafeAsync(async () => UserProfile.getAll(conference.id), setUserProfiles, [conference.id]);
 
     const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(ev: DataUpdatedEventDetails<"UserProfile">) {
@@ -38,20 +31,5 @@ export default function AllParticipants() {
 
     useDataSubscription("UserProfile", onUserProfileUpdated, onUserProfileDeleted, !userProfiles, conference);
 
-    // Compute list items from user profiles
-    useEffect(() => {
-        const profileItems = userProfiles?.map(profile => {
-            return {
-                text: profile.displayName,
-                link: `/profile/${profile.id}`,
-            } as ColumnItem;
-        });
-        setUserProfileItems(profileItems);
-    }, [userProfiles])
-
-    return <Column
-        className="all-participants"
-        items={userProfileItems}
-        itemRenderer={new DefaultItemRenderer()}
-        loadingMessage="Loading participants" />
+    return userProfiles;
 }
