@@ -1,5 +1,6 @@
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
+import assert from "assert";
 import React, { useEffect, useState } from "react";
 import { ChatDescriptor } from "../../../classes/Chat";
 import useConference from "../../../hooks/useConference";
@@ -31,14 +32,16 @@ export default function ChatView() {
         const items = removeNull(allTwilioChats
             ?.filter(chat =>
                 chat.isDM &&
-                chat.friendlyName.includes(currentProfile.id))
+                (chat.member1.profileId === currentProfile.id || chat.member2.profileId === currentProfile.id))
             ?.map(chat => {
-                const profile = allProfiles?.find(profile => chat.friendlyName.includes(profile.id));
-                return profile
+                assert(chat.isDM);
+                const otherProfileId = [chat.member1.profileId, chat.member2.profileId].find(profileId => profileId !== currentProfile.id);
+                const otherProfile = allProfiles?.find(profile => profile.id === otherProfileId);
+                return otherProfile
                     ? {
-                        text: profile.displayName,
+                        text: otherProfile.displayName,
                         link: `/chat/${chat.id}`,
-                        key: profile.id,
+                        key: otherProfile.id,
                         renderData: undefined,
                     } as ColumnItem
                     : null;
@@ -49,7 +52,7 @@ export default function ChatView() {
     useEffect(() => {
         const items = allProfiles
             ?.filter(profile => !allTwilioChats
-                ?.some(chat => chat.isDM && chat.friendlyName.includes(profile.id)))
+                ?.some(chat => chat.isDM && (chat.member1.profileId === profile.id || chat.member2.profileId === profile.id)))
             ?.map(profile => {
                 return {
                     text: profile.displayName,
