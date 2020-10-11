@@ -14,4 +14,8 @@ $main-width : mm(150);
     }
 
     @include basic-form;
+
+    p {
+        margin: 1em 0 0 0;
+    }
 }

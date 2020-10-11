@@ -117,7 +117,12 @@ export default function Register(props: Props) {
         return <>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <p>Welcome to Clowdr. Please choose a password to complete your registration for {_conference.name}.</p>
-                <p>If you have used Clowdr before, enter your existing password.</p>
+                {/* TODO: Make this Code of Conduct link a public ConferenceConfiguration*/}
+                <p>
+                    This conference has a <a href="https://cscw.acm.org/2020/index.php/code-of-conduct/">Code of Conduct</a>.
+                    By registering for this conference you are agreeing to the <a href="https://cscw.acm.org/2020/index.php/code-of-conduct/">Code of Conduct</a>. The conference organisers may
+                    revoke your access to the conference at any time if they determine you have breached the <a href="https://cscw.acm.org/2020/index.php/code-of-conduct/">Code of Conduct</a>.
+                </p>
                 <label htmlFor="email">Email</label>
                 <input name="email" type="email" value={props.email} disabled />
                 <label htmlFor="email">Repeat your email</label>
@@ -130,6 +135,7 @@ export default function Register(props: Props) {
                     required: true
                 })} />
                 {errors.fullName && "Full name required."}
+                {/* TODO: Enable this message for future conferences: <p>If you have previously used Clowdr with the email address above, please enter your existing password.</p> */}
                 <label htmlFor="password">Choose a password</label>
                 <input name="password" type="password" ref={register({
                     required: "Password required",
@@ -148,6 +154,15 @@ export default function Register(props: Props) {
                     validate: (value) => value === watch("password")
                 })} />
                 {errors["password-repeat"] && "Must match your chosen password."}
+                <p>
+                    Clowdr is free and open-source software and not a
+                    legal entity. Your data is held by the conference and
+                    processed by the Clowdr software. You can&nbsp;
+                    <Link to="/legal">find out more on this page.</Link>&nbsp;
+                    The Clowdr development team are currently unpaid volunteers
+                    and will do their best to make the conference run smoothly
+                    for you.
+                </p>
                 <div className="submit-container">
                     <input type="submit" value="Register" />
                 </div>

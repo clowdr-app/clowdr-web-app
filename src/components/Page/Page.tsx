@@ -101,11 +101,14 @@ function Page(props: Props) {
             <ResetPassword email={p.match.params.email} token={p.match.params.token} />
         } />;
 
+        const footerRoutes = [
+            <Route path="/about" component={About} />,
+            <Route path="/legal" component={Legal} />,
+            <Route path="/help" component={Help} />
+        ];
+
         if (mConf && mUser) {
             // TODO: Route for /program/new (conference manager and admin roles only)
-
-            // TODO: Route for /watched (to see/edit watched items)
-            // TODO: Route for /moderation (to contact the conference mods)
 
             return {
                 noHeading: false,
@@ -187,9 +190,7 @@ function Page(props: Props) {
                         <AdminTools />
                     } />
 
-                    <Route path="/about" component={About} />
-                    <Route path="/legal" component={Legal} />
-                    <Route path="/help" component={Help} />
+                    {footerRoutes}
 
                     {resetPasswordRoute}
 
@@ -221,6 +222,7 @@ function Page(props: Props) {
                     noHeading: true,
                     contents: <Switch>
                         <Route path="/signup" component={() => signUpComponent} />
+                        {footerRoutes}
                         {registerRoute}
                         {resetPasswordRoute}
                         <Route path="/forgotPassword/:email?" component={(p: RouteComponentProps<any>) =>
@@ -233,6 +235,7 @@ function Page(props: Props) {
                 return {
                     noHeading: true,
                     contents: <Switch>
+                        {footerRoutes}
                         {registerRoute}
                         {resetPasswordRoute}
                         <Route path="/" component={() =>

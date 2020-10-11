@@ -8,7 +8,7 @@ it easier to run interactive and engaging virtual conferences. Imagine
 that your conference attendees could interact by video and text and
 easily drift between different conversations in different rooms. Now
 imagine that this app also integrated your conference program (directly
-imported from <a href="https://conf.researchr.org">conf.researchr.org</a>),
+imported from [conf.researchr.org](https://conf.researchr.org)),
 and let attendees see who else is watching the same content. We were
 unable to find a technology platform that allowed for these interactions,
 so we built CLOWDR.
@@ -16,7 +16,7 @@ so we built CLOWDR.
 CLOWDR is a community-driven effort to create a new platform to support
 Conferences Located Online by using Digital Resources. CLOWDR lets your
 virtual conference attendees still be "present" in the virtual conference
-by engaging with each other through text and video chat <i>directly</i>
+by engaging with each other through text and video chat *directly*
 integrated with your conference program. CLOWDR is an open source PaaS
 project that is designed to be easy to deploy and scale: it runs
 entirely in the cloud.
@@ -64,7 +64,7 @@ CLOWDR is created by
 [Crista Lopes](https://www.ics.uci.edu/~lopes/), 
 [Benjamin Pierce](https://www.cis.upenn.edu/~bcpierce/),
 [Ed Nutting](https://github.com/ednutting) and
-[Ross Gardiner](https://github.com/rossng)
+[Ross Gardiner](https://github.com/rossng).
 
 CLOWDR was made possible thanks to support by the
 [National Science Foundation](https://www.nsf.gov/) under awards
