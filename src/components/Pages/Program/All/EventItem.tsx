@@ -56,6 +56,14 @@ export default function EventItem(props: Props) {
 
     return <div
         className={`event${isNow ? " now" : ""}`}
+        tabIndex={0}
+        onKeyPress={(ev) => {
+            if (ev.key === "Enter") {
+                ev.preventDefault();
+                ev.stopPropagation();
+                history.push(`/event/${props.event.id}`);
+            }
+        }}
         onClick={(ev) => {
             ev.preventDefault();
             ev.stopPropagation();
@@ -66,8 +74,34 @@ export default function EventItem(props: Props) {
             <h2 className="title">
                 {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
             </h2>
-            {props.session ? <Link className="session-info" to={`/session/${props.session.id}`}>{props.session.title}</Link> : <></>}
-            {props.track ? <Link className="track-info" to={`/track/${props.track.id}`}>{props.track.name}</Link> : <></>}
+            {props.session ? <Link
+                className="session-info"
+                to={`/session/${props.session.id}`}
+                onClick={(ev) => {
+                    ev.stopPropagation();
+                }}
+                onKeyPress={(ev) => {
+                    if (ev.key === "Enter") {
+                        ev.stopPropagation();
+                    }
+                }}
+            >
+                {props.session.title}
+            </Link> : <></>}
+            {props.track ? <Link
+                className="track-info"
+                to={`/track/${props.track.id}`}
+                onClick={(ev) => {
+                    ev.stopPropagation();
+                }}
+                onKeyPress={(ev) => {
+                    if (ev.key === "Enter") {
+                        ev.stopPropagation();
+                    }
+                }}
+            >
+                {props.track.name}
+            </Link> : <></>}
         </div>
         {item ? <Item item={item} /> : <LoadingSpinner />}
     </div>;
