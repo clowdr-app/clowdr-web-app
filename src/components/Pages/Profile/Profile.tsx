@@ -17,7 +17,14 @@ export default function Profile(props: Props) {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [editing, setEditing] = useState(true);
 
-    useHeading(profile ? profile.displayName : "Profile");
+    useHeading({
+        title: profile ? profile.displayName : "Profile",
+        buttons: profile && profile.id !== loggedInUserProfile.id ? [{
+            label: `Send DM`,
+            icon: <i className="fas fa-envelope" />,
+            action: `/chat/new/${profile.id}`
+        }] : []
+    });
 
     useEffect(() => {
         let cancel: () => void = () => { };
