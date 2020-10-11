@@ -94,11 +94,12 @@ function Page(props: Props) {
             </div>;
     }
 
-    const resetPasswordRoute = <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
-        <ResetPassword email={p.match.params.email} token={p.match.params.token} />
-    } />;
-
     const { noHeading, contents } = useMemo(() => {
+
+        const resetPasswordRoute = <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
+            <ResetPassword email={p.match.params.email} token={p.match.params.token} />
+        } />;
+
         if (mConf && mUser) {
             // TODO: Route for /program/new (conference manager and admin roles only)
 
