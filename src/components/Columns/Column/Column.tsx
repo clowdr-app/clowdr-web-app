@@ -13,6 +13,7 @@ export interface Item<RenderData = undefined> {
 interface Props<RenderData> {
     className?: string;
     loadingMessage?: string;
+    emptyMessage?: string;
     items?: Item<RenderData>[];
     itemRenderer: ItemRenderer<RenderData>;
     children?: JSX.Element;
@@ -28,7 +29,8 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
     </div>
 
     const items = props.items
-        ? props.items
+        ? props.items.length > 0
+            ? props.items
             .filter(item => item.text.toLowerCase().includes(searchString.toLowerCase()))
             .sort((a, b) => a.text.localeCompare(b.text))
             .map(item => {
@@ -36,11 +38,12 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
                     {props.itemRenderer.render(item)}
                 </li>;
             })
+            : <p>{props.emptyMessage}</p>
         : <LoadingSpinner message={props.loadingMessage} />;
 
     return <div className={`column ${props.className}`}>
         {props.children}
-        {search}
+        {props.items && props.items.length > 0 && search}
         <ul className="column__items" >
             {items}
         </ul>

@@ -1,6 +1,6 @@
 import { ConferenceConfiguration, UserProfile, _Role } from "@clowdr-app/clowdr-db-schema";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import MultiSelect from "react-multi-select-component";
 import { Link, Redirect } from "react-router-dom";
@@ -14,6 +14,7 @@ import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import useUserProfile from "../../../hooks/useUserProfile";
 import AsyncButton from "../../AsyncButton/AsyncButton";
+import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import "./Moderation.scss";
 
@@ -33,8 +34,10 @@ export default function Moderation() {
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
     const [initialMessage, setInitialMessage] = useState<string>("");
     const [isCreating, setIsCreating] = useState<boolean>(false);
-    const [allModChats, setAllModChats] = useState<Array<ChatDescriptor> | null>(null);
+    const [modChannels, setModChannels] = useState<Array<ChatDescriptor> | null>(null);
     const [customNotice, setCustomNotice] = useState<string | null>(null);
+
+    const [modChannelItems, setModChannelItems] = useState<Array<ColumnItem> | undefined>();
 
     const actionButtons: Array<ActionButton> = [];
 
@@ -63,7 +66,28 @@ export default function Moderation() {
         return userOptions.filter(x => x.value !== currentUserProfile.id);
     }, setAllModerators, [mChat, conference.id, currentUserProfile.id]);
 
-    useSafeAsync(async () => mChat ? (await mChat.listAllModerationChats()).filter(x => x.creator.id === currentUserProfile.id) : null, setAllModChats, [mChat]);
+    // Fetch all moderation channels
+    useSafeAsync(async () => mChat ? (await mChat.listAllModerationChats()).filter(x => x.creator.id === currentUserProfile.id) : null, setModChannels, [mChat]);
+
+    const moderationNamePrefix = "Moderation: ";
+    useEffect(() => {
+        function channelName(channel: ChatDescriptor) {
+            return `${channel.createdAt.toLocaleString(undefined, {
+                hour12: false,
+                month: "short",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit"
+            })} - ${channel.friendlyName.substr(moderationNamePrefix.length)}`
+        };
+
+        setModChannelItems(modChannels?.map(channel => ({
+            key: channel.id,
+            renderData: undefined,
+            text: channelName(channel),
+            link: `/moderation/${channel.id}`
+        } as ColumnItem)))
+    }, [modChannels]);
 
     /**
      * Check whether the state is currently valid for the form to be submitted.
@@ -145,26 +169,23 @@ export default function Moderation() {
         }
     </div>;
 
-    function renderChannelLink(channel: ChatDescriptor) {
-        const moderationNamePrefix = "Moderation: ";
-        return <li key={channel.id}>
-            <Link to={`/moderation/${channel.id}`}>
-                {channel.friendlyName.substr(moderationNamePrefix.length)}
+    function modChannelRenderer(item: ColumnItem): JSX.Element {
+        return item.link
+            ? <Link to={item.link}>
+                {item.text}
             </Link>
-        </li>;
+            : <>{item.text}</>;
     }
 
     const existingChannels = <div className="moderation-existing-channels">
-        <h2>Existing moderation channels</h2>
-        {allModChats
-            ? allModChats.length === 0
-                ? <p>You haven't created any moderation chats.</p>
-                : <ul>
-                    {allModChats
-                        .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName))
-                        .map(renderChannelLink)}
-                </ul>
-            : <LoadingSpinner message="Loading moderation channels" />}
+        <Column
+            className="moderation-existing-channels"
+            loadingMessage="Loading moderation channels"
+            emptyMessage="You have not yet contacted the moderators."
+            itemRenderer={{ render: modChannelRenderer }}
+            items={modChannelItems}>
+            <h2>Existing moderation channels</h2>
+        </Column>
     </div>;
 
     return newChannelSID
