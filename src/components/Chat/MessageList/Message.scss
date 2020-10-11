@@ -10,7 +10,7 @@
 
     &.highlight {
         background-color: lighten($color-3, 35);
-        border: 3px solid $color-3;
+        border          : 3px solid $color-3;
     }
 
     .profile {
@@ -41,11 +41,11 @@
 
             width                : 100%;
             display              : grid;
-            grid-template-columns: min-content auto auto min-content;
+            grid-template-columns: min-content auto auto min-content min-content;
             grid-template-rows   : auto auto;
             grid-template-areas  :
-                "time name . report"
-                "body body body body";
+                "time name . delete report"
+                "body body body body body";
 
             .goto-overlay {
                 z-index      : 2;
@@ -63,10 +63,10 @@
 
                 cursor          : pointer;
                 background-color: rgba($gray-1, 0.9);
-                transition: opacity ease-in-out 0.1s;
+                transition      : opacity ease-in-out 0.1s;
 
                 &:hover {
-                    opacity   : 1;
+                    opacity: 1;
                 }
 
                 a,
@@ -74,12 +74,12 @@
                     color       : white;
                     border-color: white;
                     background  : none;
-                    transition: color ease-in-out 0.1s, border-color ease-in-out 0.1s;
+                    transition  : color ease-in-out 0.1s, border-color ease-in-out 0.1s;
 
                     &:hover {
                         color       : $color-3;
                         border-color: $color-3;
-                        background: none;
+                        background  : none;
                     }
                 }
             }
@@ -129,33 +129,41 @@
                 }
             }
 
+            .delete {
+                grid-area      : delete;
+            }
+
             .report {
-                grid-area: report;
-                font-size: 85%;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
+                grid-area      : report;
+            }
+
+            .delete,
+            .report {
+                font-size      : 85%;
+                display        : flex;
+                flex-direction : row;
+                align-items    : center;
                 justify-content: flex-end;
 
                 button {
-                    display: inline;
-                    border: none;
+                    display   : inline;
+                    border    : none;
                     background: none;
-                    padding: 0;
-                    margin: 0 2px 0 0;
+                    padding   : 0;
+                    margin    : 0 2px 0 0;
 
                     .fas {
                         display: none;
                     }
 
                     &.yes {
-                        margin: 0.2em 0.4em 0 0.4em;
-                        padding: 0.2em 0.4em 0.2em 0.4em;
+                        margin          : 0.2em 0.4em 0 0.4em;
+                        padding         : 0.2em 0.4em 0.2em 0.4em;
                         background-color: $color-5;
-                        color: white;
+                        color           : white;
 
                         &:hover {
-                            color: white;
+                            color           : white;
                             background-color: lighten($color-5, 20);
                         }
 
@@ -165,20 +173,20 @@
                     }
 
                     &.no {
-                        margin: 0.2em 0.2em 0 0;
-                        padding: 0.2em 0.4em 0.2em 0.4em;
+                        margin          : 0.2em 0.2em 0 0;
+                        padding         : 0.2em 0.4em 0.2em 0.4em;
                         background-color: $primary;
-                        color: white;
+                        color           : white;
 
                         &:hover {
-                            color: white;
+                            color           : white;
                             background-color: lighten($primary, 20);
                         }
                     }
 
                     &:hover {
                         color: $primary;
-                        
+
                         .far {
                             display: none;
                         }
@@ -191,8 +199,7 @@
             }
         }
 
-        .moderation {
-        }
+        .moderation {}
 
         .reactions {
             display        : flex;

@@ -10,8 +10,6 @@ export default class Message implements IMessage {
     ) {
     }
 
-    // TODO: Reactions
-
     get sid(): string {
         return this.twilioMessage.sid;
     }
@@ -42,8 +40,8 @@ export default class Message implements IMessage {
     getMember(): Promise<Member | "system"> {
         return this.channel.getMember(this.twilioMessage.memberSid);
     }
-    remove(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async remove(): Promise<void> {
+        await this.twilioMessage.remove();
     }
     updateBody(body: string): Promise<void> {
         throw new Error("Method not implemented.");

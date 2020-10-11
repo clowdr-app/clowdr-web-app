@@ -21,6 +21,7 @@ import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import IMember from "../../../classes/Chat/IMember";
+import useUserRoles from "../../../hooks/useUserRoles";
 
 export type RenderedMessage = {
     chatSid: string;
@@ -43,7 +44,8 @@ export type RenderedMessage = {
             ids: Array<string>;
             names: Array<string>
         }
-    }
+    },
+    remove: () => Promise<void>
 };
 
 export async function renderMessage(
@@ -114,7 +116,8 @@ export async function renderMessage(
         time: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
         index: message.index,
         reactions,
-        moderation
+        moderation,
+        remove: () => message.remove()
     };
     return result;
 }
@@ -122,14 +125,18 @@ export async function renderMessage(
 export default function Message(props: {
     msg: RenderedMessage;
     hideReportButton?: boolean;
+    hideDeleteButton?: boolean;
 }): JSX.Element {
     const history = useHistory();
     const mChat = useMaybeChat();
     const userProfile = useUserProfile();
+    const { isAdmin, isManager } = useUserRoles();
     const msg = props.msg;
     const [pickEmojiForMsgSid, setPickEmojiForMsgSid] = useState<string | null>(null);
     const [showReportConfirm, setShowReportConfirm] = useState<boolean>(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
     const [reporting, setReporting] = useState<boolean>(false);
+    const [deleting, setDeleting] = useState<boolean>(false);
 
     function toggleAddReaction(msgSid: string) {
         if (pickEmojiForMsgSid) {
@@ -165,9 +172,25 @@ export default function Message(props: {
         }
     }
 
+    async function doDelete() {
+        if (!mChat) {
+            const errMsg = "Sorry, we were unable to delete this message. The chat service is currently unavailable.";
+            addError(errMsg);
+            throw new Error(errMsg);
+        }
+        try {
+            await msg.remove();
+        }
+        catch (e) {
+            const errMsg = `Sorry, we were unable to delete this message. ${e}.`;
+            addError(errMsg);
+            throw new Error(errMsg);
+        }
+    }
+
     const moderationNamePrefix = "Moderation: ";
 
-    return <div className={`chat-message${showReportConfirm ? " highlight" : ""}`} key={msg.index}>
+    return <div className={`chat-message${showReportConfirm || showDeleteConfirm ? " highlight" : ""}`} key={msg.index}>
         <div className="profile" onClick={(ev) => {
             ev.preventDefault();
             ev.stopPropagation();
@@ -205,7 +228,9 @@ export default function Message(props: {
                 >
                     {msg.body}
                 </ReactMarkdown>
-                {!props.hideReportButton && msg.profileId !== userProfile.id
+                {!props.hideReportButton
+                    && msg.profileId !== userProfile.id
+                    && !showDeleteConfirm
                     ? <div className="report">
                         {showReportConfirm || reporting
                             ? <>
@@ -241,6 +266,49 @@ export default function Message(props: {
                             >
                                 <i className="far fa-flag"></i>
                                 <i className="fas fa-flag"></i>
+                            </button>
+                        }
+                    </div>
+                    : <></>
+                }
+                {(isAdmin || isManager || msg.profileId === userProfile.id)
+                    && !props.hideDeleteButton
+                    && !showReportConfirm
+                    ? <div className="delete">
+                        {showDeleteConfirm || deleting
+                            ? <>
+                                {!deleting ? <span>Delete?</span> : <></>}
+                                <AsyncButton
+                                    content={deleting ? "Deleting" : "Yes"}
+                                    className="yes"
+                                    setIsRunning={setDeleting}
+                                    action={doDelete}
+                                />
+                                {!deleting
+                                    ? <button
+                                        title="No, do not delete this message"
+                                        className="no"
+                                        onClick={(ev) => {
+                                            ev.preventDefault();
+                                            ev.stopPropagation();
+                                            setShowDeleteConfirm(false);
+                                        }}
+                                    >
+                                        No
+                            </button>
+                                    : <></>
+                                }
+                            </>
+                            : <button
+                                title="Delete this message"
+                                onClick={(ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    setShowDeleteConfirm(true);
+                                }}
+                            >
+                                <i className="far fa-trash-alt"></i>
+                                <i className="fas fa-trash-alt"></i>
                             </button>
                         }
                     </div>
