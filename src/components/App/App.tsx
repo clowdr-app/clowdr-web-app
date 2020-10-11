@@ -19,6 +19,7 @@ import Chat from "../../classes/Chat/Chat";
 import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../hooks/useDataSubscription";
 import Video from "../../classes/Video/Video";
+import { addError } from "../../classes/Notifications/Notifications";
 
 type AppTasks
     = "beginLoadConference"
@@ -124,6 +125,14 @@ export default function App() {
 
     // TODO: Top-level <Route /> detection of `/conference/:confId` to bypass the conference selector
 
+    useEffect(() => {
+        const name = LocalStorage_Conference.wasBannedFromName;
+        if (name) {
+            addError("You were banned from " + name);
+            LocalStorage_Conference.wasBannedFromName = null;
+        }
+    }, []);
+
     // Initial update of conference
     useEffect(() => {
         async function updateConference() {
@@ -174,6 +183,17 @@ export default function App() {
                             profile = await UserProfile.getByUserId(user.id, appState.conferenceId);
                             if (profile) {
                                 sessionToken = user.getSessionToken();
+
+                                if (profile.isBanned) {
+                                    profile = null;
+                                    LocalStorage_Conference.currentConferenceId = null;
+                                    if (cache.IsInitialised) {
+                                        cache.deleteDatabase(false);
+                                    }
+                                    addError("You have been banned from the selected conference.");
+                                    LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
+                                    window.location.reload();
+                                }
                             }
 
                             isAdmin = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin"]);
@@ -205,7 +225,7 @@ export default function App() {
         }
 
         updateUser();
-    }, [appState.conferenceId, appState.tasks, logger]);
+    }, [appState.conference, appState.conferenceId, appState.tasks, logger]);
 
     // Update chat
     useEffect(() => {
@@ -315,7 +335,18 @@ export default function App() {
             const parseUser = await _User.logIn(email, password);
             const cache = await Caches.get(appState.conference.id);
             await cache.updateUserAuthenticated({ authed: true, sessionToken: parseUser.sessionToken });
-            const profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
+            let profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
+
+            if (profile?.isBanned) {
+                profile = null;
+                LocalStorage_Conference.currentConferenceId = null;
+                if (cache.IsInitialised) {
+                    cache.deleteDatabase(false);
+                }
+                addError("You have been banned from the selected conference.");
+                LocalStorage_Conference.wasBannedFromName = appState.conference.name;
+                window.location.reload();
+            }
 
             const isAdmin = await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["admin"]);
             const isManager = isAdmin || await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["manager"]);

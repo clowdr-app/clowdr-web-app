@@ -4,6 +4,7 @@
  */
 export default class LocalStorage {
     private static readonly currentConferenceIdKey = "currentConferenceId";
+    private static readonly wasBannedFromNameKey = "wasBannedFromName";
 
     static get currentConferenceId(): string | null {
         return localStorage.getItem(LocalStorage.currentConferenceIdKey);
@@ -14,6 +15,18 @@ export default class LocalStorage {
         }
         else {
             localStorage.removeItem(LocalStorage.currentConferenceIdKey);
+        }
+    }
+
+    static get wasBannedFromName(): string | null {
+        return localStorage.getItem(LocalStorage.wasBannedFromNameKey);
+    }
+    static set wasBannedFromName(value: string | null) {
+        if (value) {
+            localStorage.setItem(LocalStorage.wasBannedFromNameKey, value);
+        }
+        else {
+            localStorage.removeItem(LocalStorage.wasBannedFromNameKey);
         }
     }
 }
