@@ -105,8 +105,8 @@ export default function AllChats() {
         return <>
             <div className="user-info">
                 <i className={`fa${data.online ? 's' : 'r'} fa-circle ${data.online ? 'online' : ''} online-indicator`}></i>
-                <Link to={data.profileLink} className="profile-icon"><i className={`fas fa-address-card`}></i></Link>
-                <Link to={item.link ?? ""}>{item.text}</Link>
+                <Link to={data.profileLink} title="View profile" className="profile-icon"><i className={`fas fa-user`}></i></Link>
+                <Link to={item.link ?? ""} title="Chat">{item.text}</Link>
             </div>
             <div className="flair-box">
                 {data.flairs.map((flair, i) =>

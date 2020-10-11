@@ -15,7 +15,7 @@ export default function MainMenuGroup() {
             { key: "watched-items", element: <MenuItem title="Followed items" label="Followed items" action="/watched" /> },
             { key: "exhibits", element: <MenuItem title="Exhibition" label="Exhibition" action="/exhibits" /> },
             { key: "profile", element: <MenuItem title={`Profile (${mUser.displayName})`} label={`Profile (${mUser.displayName})`} action="/profile" /> },
-            { key: "participants", element: <MenuItem title="Participants" label="Participants" action="/participants" /> },
+            { key: "attendees", element: <MenuItem title="Attendees" label="Attendees" action="/attendees" /> },
             { key: "contact-moderators", element: <MenuItem title="Contact moderators" label="Contact moderators" action="/moderation" /> },
         ];
         if (isAdmin || isManager) {

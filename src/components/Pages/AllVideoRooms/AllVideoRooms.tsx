@@ -83,9 +83,9 @@ export default function ChatView() {
     function roomRenderer(item: ColumnItem<RoomData>): JSX.Element {
         const data = item.renderData;
         return <>
-            <Link to={`/room/${data.room.id}`}>{data.room.name}</Link>
+            <Link to={`/room/${data.room.id}`}><i className="fas fa-video room-item__icon"></i>{data.room.name}</Link>
             {data.participants.length > 0
-                ? <ul>
+                ? <ul className="room-item__participants">
                     {data.participants.map(participant =>
                         <li key={participant.id}>
                             {participant.displayName}

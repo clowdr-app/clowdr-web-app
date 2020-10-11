@@ -1,7 +1,22 @@
+@import "../../../styles/util.scss";
+
 .all-rooms {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     align-items: flex-start;
+
+    .room-item {
+        &__icon {
+            font-size: 80%;
+            padding-right: mm(2);
+        }
+
+        &__participants {
+            font-size: 80%;
+            list-style-type: disc;
+            margin: mm(0) mm(5);
+        }
+    }
 }

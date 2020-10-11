@@ -41,7 +41,7 @@ import Help from '../Pages/Help/Help';
 import Moderation from '../Pages/Moderation/Moderation';
 import ModerationHub from '../Pages/ModerationHub/ModerationHub';
 import ModerationChat from '../Pages/ChatView/ModerationChat';
-import AllParticipants from '../Pages/AllParticipants/AllParticipants';
+import AllAttendees from '../Pages/AllAttendees/AllAttendees';
 
 interface Props {
     doLogin: doLoginF;
@@ -125,7 +125,7 @@ function Page(props: Props) {
 
                     <Route path="/watched" component={WatchedItems} />
                     <Route path="/exhibits" component={Exhibits} />
-                    <Route path="/participants" component={AllParticipants} />
+                    <Route path="/attendees" component={AllAttendees} />
 
                     <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
                         <NewChat dmUserProfileId={p.match.params.userProfileId} />

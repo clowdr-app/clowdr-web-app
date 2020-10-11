@@ -30,6 +30,7 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
     const items = props.items
         ? props.items
             .filter(item => item.text.toLowerCase().includes(searchString.toLowerCase()))
+            .sort((a, b) => a.text.localeCompare(b.text))
             .map(item => {
                 return <li key={item.key} className="column-item">
                     {props.itemRenderer.render(item)}

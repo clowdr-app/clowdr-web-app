@@ -10,11 +10,21 @@ export default function useOnlineStatus(userProfiles: UserProfile[]): Map<string
     useSafeAsync(async () => {
         const newStatuses = new Map(onlineStatus);
         await Promise.all(userProfiles?.map(async profile => {
-            const online = await mChat?.getIsUserOnline(profile.id);
-            if (online !== undefined) {
-                newStatuses.set(profile.id, online);
-            } else if (onlineStatus.has(profile.id)) {
-                newStatuses.delete(profile.id);
+            try {
+                const online = await mChat?.getIsUserOnline(profile.id);
+                if (online !== undefined) {
+                    newStatuses.set(profile.id, online);
+                } else if (onlineStatus.has(profile.id)) {
+                    newStatuses.delete(profile.id);
+                }
+            } catch (e) {
+                // Suppress error from Twilio caused by race condition:
+                // when a user signs up, we receive an updated list of
+                // user profiles but the corresponding Twilio user has
+                // not yet been created.
+                if (!e.toString().toLowerCase().includes("not found")) {
+                    throw e;
+                }
             }
         }));
         return newStatuses;
