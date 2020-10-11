@@ -42,6 +42,7 @@ import Moderation from '../Pages/Moderation/Moderation';
 import ModerationHub from '../Pages/ModerationHub/ModerationHub';
 import ModerationChat from '../Pages/ChatView/ModerationChat';
 import AllAttendees from '../Pages/AllAttendees/AllAttendees';
+import useUserRoles from '../../hooks/useUserRoles';
 
 interface Props {
     doLogin: doLoginF;
@@ -52,6 +53,7 @@ interface Props {
 function Page(props: Props) {
     const mConf = useMaybeConference();
     const mUser = useMaybeUserProfile();
+    const { isAdmin, isManager } = useUserRoles();
 
     const [heading, _setHeading] = useState<HeadingState>({ title: "Clowdr" });
     document.title = heading.title;
@@ -115,7 +117,7 @@ function Page(props: Props) {
                 contents: <Switch>
                     <Route path="/program/new" component={ComingSoon} />
 
-                    <Route path="/moderation/hub" component={ModerationHub} />
+                    {(isAdmin || isManager) ? <Route path="/moderation/hub" component={ModerationHub} /> : <Redirect to="/" />}
                     <Route path="/moderation/:chatId" component={(p: RouteComponentProps<any>) =>
                         <ModerationChat chatId={p.match.params.chatId} />
                     } />

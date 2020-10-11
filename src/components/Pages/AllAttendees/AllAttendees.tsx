@@ -1,5 +1,6 @@
 import { _Role } from "@clowdr-app/clowdr-db-schema";
 import React, { useCallback, useEffect, useState } from "react";
+import Parse from "parse";
 import { Link } from "react-router-dom";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import useConference from "../../../hooks/useConference";

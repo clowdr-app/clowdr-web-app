@@ -2,7 +2,7 @@
 // ^ for eslint
 
 const { validateRequest } = require("./utils");
-const { isUserInRoles } = require("./role");
+const { isUserInRoles, getRoleByName } = require("./role");
 const { getConfig } = require("./config");
 const { getUserProfileById } = require("./user");
 
@@ -59,17 +59,29 @@ async function handlePromoteAttendeeToManager(targetProfile, conference) {
         = await new Parse.Query("TextChat")
             .equalTo("conference", conference)
             .equalTo("mode", "moderation_hub")
-            .get({ useMasterKey: true });
+            .first({ useMasterKey: true });
     const moderationHubChannelSID = moderationHubTextChat.get("twilioID");
-    await service.channels(moderationHubChannelSID).members(targetProfile.id).update({
-        roleSid: channelUserRole.sid
-    });
+    try {
+        await service.channels(moderationHubChannelSID).members.create({
+            identity: targetProfile.id,
+            roleSid: channelUserRole.sid,
+        });
+    } catch (e) {
+        await service.channels(moderationHubChannelSID).members(targetProfile.id).update({
+            roleSid: channelUserRole.sid,
+        });
+    }
 
     // Give target user channel-level announcements-admin role for announcements channel
     const announcementsChannelSID = config.TWILIO_ANNOUNCEMENTS_CHANNEL_SID;
     await service.channels(announcementsChannelSID).members(targetProfile.id).update({
         roleSid: announcementsAdminRole.sid
     });
+
+    const managerRole = await getRoleByName(conference.id, "manager");
+    const managerUsers = managerRole.relation("users");
+    managerUsers.add(targetProfile.get("user"));
+    await managerRole.save(null, { useMasterKey: true });
 }
 
 Parse.Cloud.define("promote", async (request) => {
@@ -126,8 +138,12 @@ async function handleDemoteManagerToAttendee(targetProfile, conference) {
     assert(serviceUserRole);
     assert(announcementsUserRole);
 
-    // Reverse promotions
+    const managerRole = await getRoleByName(conference.id, "manager");
+    const managerUsers = managerRole.relation("users");
+    managerUsers.remove(targetProfile.get("user"));
+    await managerRole.save(null, { useMasterKey: true });
 
+    // Reverse promotions
     const announcementsChannelSID = config.TWILIO_ANNOUNCEMENTS_CHANNEL_SID;
 
     // Promote user to service-level admin
@@ -138,7 +154,7 @@ async function handleDemoteManagerToAttendee(targetProfile, conference) {
         = await new Parse.Query("TextChat")
             .equalTo("conference", conference)
             .equalTo("mode", "moderation_hub")
-            .get({ useMasterKey: true });
+            .first({ useMasterKey: true });
     const moderationHubChannelSID = moderationHubTextChat.get("twilioID");
     await service.channels(moderationHubChannelSID).members(targetProfile.id).remove();
 

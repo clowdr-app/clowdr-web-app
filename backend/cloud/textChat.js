@@ -251,10 +251,8 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             // with Twilio even if something goes wrong.
             const newACL = new Parse.ACL();
             textChat.setACL(newACL);
-            if (!isModeration) {
-                newACL.setRoleWriteAccess(managerRole, true);
-                newACL.setRoleReadAccess(managerRole, true);
-            }
+            newACL.setRoleWriteAccess(managerRole, true);
+            newACL.setRoleReadAccess(managerRole, true);
             newACL.setRoleWriteAccess(adminRole, true);
             newACL.setRoleReadAccess(adminRole, true);
 
@@ -277,7 +275,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             const invites = await invitesProp.list();
             await Promise.all(invites.map(invite => invite.remove()));
 
-            const memberProfileIds = membersWithProfiles.map(async member => member.member.identity);
+            const memberProfileIds = membersWithProfiles.map(member => member.member.identity);
             // TODO: do we ever actually want to kick based on ACLs?
             // const profileIdsWithAccess = profilesWithAccess.map(x => x.id);
             // await Promise.all(membersWithProfiles.map(async member => {
@@ -458,7 +456,9 @@ async function createTextChat(data) {
     else {
         acl.setRoleReadAccess(attendeeRole, true);
     }
+    acl.setRoleReadAccess(managerRole, true);
     acl.setRoleWriteAccess(managerRole, true);
+    acl.setRoleReadAccess(adminRole, true);
     acl.setRoleWriteAccess(adminRole, true);
     newObject.setACL(acl);
 

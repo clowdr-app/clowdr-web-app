@@ -178,7 +178,20 @@ export default function App() {
                     if (appState.conferenceId) {
                         if (user && user.id) {
                             const cache = await Caches.get(appState.conferenceId);
-                            await cache.updateUserAuthenticated({ authed: true, sessionToken: user.getSessionToken() });
+
+                            isAdmin = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin"]);
+                            isManager = isAdmin || await _Role.isUserInRoles(user.id, appState.conferenceId, ["manager"]);
+
+                            const previousManagerOrAdmin = LocalStorage_Conference.wasManagerOrAdmin;
+                            const previousUserId = LocalStorage_Conference.previousUserId;
+
+                            await cache.updateUserAuthenticated(
+                                { authed: true, sessionToken: user.getSessionToken() },
+                                previousManagerOrAdmin !== isManager || previousUserId !== user.id
+                                );
+
+                            LocalStorage_Conference.wasManagerOrAdmin = isManager;
+                            LocalStorage_Conference.previousUserId = previousUserId;
 
                             profile = await UserProfile.getByUserId(user.id, appState.conferenceId);
                             if (profile) {
@@ -195,9 +208,6 @@ export default function App() {
                                     window.location.reload();
                                 }
                             }
-
-                            isAdmin = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin"]);
-                            isManager = isAdmin || await _Role.isUserInRoles(user.id, appState.conferenceId, ["manager"]);
                         }
                     }
 
@@ -334,7 +344,21 @@ export default function App() {
 
             const parseUser = await _User.logIn(email, password);
             const cache = await Caches.get(appState.conference.id);
-            await cache.updateUserAuthenticated({ authed: true, sessionToken: parseUser.sessionToken });
+
+            const previousManagerOrAdmin = LocalStorage_Conference.wasManagerOrAdmin;
+            const previousUserId = LocalStorage_Conference.previousUserId;
+
+            const isAdmin = await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["admin"]);
+            const isManager = isAdmin || await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["manager"]);
+
+            await cache.updateUserAuthenticated(
+                { authed: true, sessionToken: parseUser.sessionToken },
+                previousManagerOrAdmin !== isManager || previousUserId !== parseUser.user.id
+                );
+
+            LocalStorage_Conference.wasManagerOrAdmin = isManager;
+            LocalStorage_Conference.previousUserId = previousUserId;
+
             let profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
 
             if (profile?.isBanned) {
@@ -347,9 +371,6 @@ export default function App() {
                 LocalStorage_Conference.wasBannedFromName = appState.conference.name;
                 window.location.reload();
             }
-
-            const isAdmin = await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["admin"]);
-            const isManager = isAdmin || await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["manager"]);
 
             dispatchAppUpdate([
                 {
@@ -380,7 +401,7 @@ export default function App() {
         try {
             if (appState.conference) {
                 const cache = await Caches.get(appState.conference.id);
-                cache.updateUserAuthenticated({ authed: false });
+                cache.updateUserAuthenticated({ authed: false }, false);
             }
         }
         finally {
