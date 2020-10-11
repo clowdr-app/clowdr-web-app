@@ -4,7 +4,8 @@
         "shortName": "SC2",
         "welcomeText": "# Welcome\nThis is some opening welcome text.",
         "loggedInText": "# Welcome\nThis is some logged-in welcome text.",
-        "signUpEnabled": true
+        "signUpEnabled": true,
+        "moderationCustomNotice": "# Some markdown\n[With a link](http://www.example.org)"
     },
     "admin": {
         "username": "sc2-admin",

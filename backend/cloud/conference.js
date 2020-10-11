@@ -20,6 +20,7 @@ const createConferenceRequestSchema = {
 
         // Conference Configuration
         signUpEnabled: "boolean",
+        moderationCustomNotice: "string?",
 
         // Privileged Conference Details
         loggedInText: "string"
@@ -455,6 +456,12 @@ Parse.Cloud.job("conference-create", async (request) => {
 
             // Set Sign-up enabled
             await setConfiguration("SignUpEnabled", params.conference.signUpEnabled.toString(), undefined, true);
+
+            // Set moderation custom notice
+            await setConfiguration("MODERATION_CUSTOM_NOTICE",
+                params.conference.moderationCustomNotice
+                    ? params.conference.moderationCustomNotice
+                    : "<null>", true, false);
 
             // Create the flairs
             async function createFlair(label, color, tooltip, priortiy) {

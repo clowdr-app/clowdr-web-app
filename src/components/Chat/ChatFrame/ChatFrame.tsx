@@ -1,6 +1,4 @@
-import { ConferenceConfiguration } from "@clowdr-app/clowdr-db-schema";
 import React, { useRef, useState } from "react";
-import useConference from "../../../hooks/useConference";
 import useLogger from "../../../hooks/useLogger";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
@@ -16,7 +14,6 @@ interface Props {
 }
 
 export default function ChatFrame(props: Props) {
-    const conference = useConference();
     const mChat = useMaybeChat();
     const logger = useLogger("Chat Frame");
     const [newMsgText, setNewMsgText] = useState("");

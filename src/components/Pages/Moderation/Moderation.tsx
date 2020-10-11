@@ -1,6 +1,7 @@
-import { UserProfile, _Role } from "@clowdr-app/clowdr-db-schema";
+import { ConferenceConfiguration, UserProfile, _Role } from "@clowdr-app/clowdr-db-schema";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import MultiSelect from "react-multi-select-component";
 import { Link, Redirect } from "react-router-dom";
 import Toggle from "react-toggle";
@@ -33,6 +34,7 @@ export default function Moderation() {
     const [initialMessage, setInitialMessage] = useState<string>("");
     const [isCreating, setIsCreating] = useState<boolean>(false);
     const [allModChats, setAllModChats] = useState<Array<ChatDescriptor> | null>(null);
+    const [customNotice, setCustomNotice] = useState<string | null>(null);
 
     const actionButtons: Array<ActionButton> = [];
 
@@ -40,6 +42,12 @@ export default function Moderation() {
         title: "Contact moderators",
         buttons: actionButtons
     });
+
+    // Fetch custom notice
+    useSafeAsync(async () => {
+        const config = await ConferenceConfiguration.getByKey("MODERATION_CUSTOM_NOTICE", conference.id);
+        return config.length > 0 ? config[0].value !== "<null>" ? config[0].value : null : null;
+    }, setCustomNotice, [conference.id]);
 
     // Fetch all moderator profiles
     useSafeAsync(async () => {
@@ -162,7 +170,14 @@ export default function Moderation() {
     return newChannelSID
         ? <Redirect to={`/moderation/${newChannelSID}`} />
         : <div className="moderation">
-            {newChannelForm}
-            {existingChannels}
+            {customNotice
+                ? <div className="notice">
+                    <ReactMarkdown>{customNotice}</ReactMarkdown>
+                </div>
+                : <></>}
+            <div className="columns">
+                {newChannelForm}
+                {existingChannels}
+            </div>
         </div>;
 }
