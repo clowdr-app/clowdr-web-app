@@ -556,7 +556,7 @@ Parse.Cloud.define("users-in-roles", async (req) => {
     }
 });
 
-Parse.Cloud.define("user-kick", async (req) => {
+Parse.Cloud.define("user-ban", async (req) => {
     let { params, user } = req;
 
     const requestValidation = validateRequest({
@@ -567,11 +567,11 @@ Parse.Cloud.define("user-kick", async (req) => {
         const confId = params.conference;
         const conf = new Parse.Object("Conference", { id: confId });
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = true || !!user && await isUserInRoles(user.id, confId, ["admin"]);
         if (authorized) {
             const targetProfile = await getUserProfileById(params.target, confId);
             if (targetProfile) {
-                const targetUser = targetProfile.get("user");
+                const targetUser = await targetProfile.get("user").fetch({ useMasterKey: true });
                 await new Parse.Query("_Role")
                     .equalTo("conference", conf)
                     .map(async role => {
@@ -587,14 +587,24 @@ Parse.Cloud.define("user-kick", async (req) => {
                 const chatServiceSID = config.TWILIO_CHAT_SERVICE_SID;
                 const chatService = twilioClient.chat.services(chatServiceSID);
 
-                await chatService.users(targetProfile.id).remove();
+                try {
+                    await chatService.users(targetProfile.id).remove();
+                }
+                catch (e) {
+                    const msg = e.toString().toLowerCase();
+                    // Already been kicked from Twilio? Or never joined?
+                    if (!msg.includes("requested resource") || !msg.includes("not found")) {
+                        throw e;
+                    }
+                }
 
                 const twilioVideoRooms = await twilioClient.video.rooms.list();
                 await Promise.all(twilioVideoRooms.map(async twilioRoom => {
                     const participants = await twilioRoom.participants().list();
                     if (participants.some(participant => participant.identity === targetProfile.id)) {
                         await twilioRoom
-                            .participants(targetProfile.id)
+                            .participants()
+                            .get(targetProfile.id)
                             .update({ status: "disconnected" });
                     }
                 }));
@@ -612,36 +622,49 @@ Parse.Cloud.define("user-kick", async (req) => {
                     .equalTo("conference", conf)
                     .map(async item => {
                         const acl = item.getACL();
-                        acl.setReadAccess(targetUser.id, false);
-                        acl.setWriteAccess(targetUser.id, false);
-                        await item.save(null, { useMasterKey: true });
+                        if (acl.getReadAccess(targetUser) || acl.getWriteAccess(targetUser)) {
+                            acl.setReadAccess(targetUser, false);
+                            acl.setWriteAccess(targetUser, false);
+                            await item.save(null, { useMasterKey: true });
+                        }
                     }, { useMasterKey: true });
 
                 await new Parse.Query("ProgramItemAttachment")
                     .equalTo("conference", conf)
                     .map(async item => {
                         const acl = item.getACL();
-                        acl.setReadAccess(targetUser.id, false);
-                        acl.setWriteAccess(targetUser.id, false);
-                        await item.save(null, { useMasterKey: true });
+                        if (acl.getReadAccess(targetUser) || acl.getWriteAccess(targetUser)) {
+                            acl.setReadAccess(targetUser, false);
+                            acl.setWriteAccess(targetUser, false);
+                            await item.save(null, { useMasterKey: true });
+                        }
                     }, { useMasterKey: true });
 
                 await new Parse.Query("TextChat")
                     .equalTo("conference", conf)
                     .map(async item => {
                         const acl = item.getACL();
-                        acl.setReadAccess(targetUser.id, false);
-                        acl.setWriteAccess(targetUser.id, false);
-                        await item.save(null, { useMasterKey: true });
+                        if (acl.getReadAccess(targetUser) || acl.getWriteAccess(targetUser)) {
+                            if (item.get("isDM")) {
+                                await item.destroy({ useMasterKey: true });
+                            }
+                            else {
+                                acl.setReadAccess(targetUser, false);
+                                acl.setWriteAccess(targetUser, false);
+                                await item.save(null, { useMasterKey: true });
+                            }
+                        }
                     }, { useMasterKey: true });
 
                 await new Parse.Query("VideoRoom")
                     .equalTo("conference", conf)
                     .map(async item => {
                         const acl = item.getACL();
-                        acl.setReadAccess(targetUser.id, false);
-                        acl.setWriteAccess(targetUser.id, false);
-                        await item.save(null, { useMasterKey: true });
+                        if (acl.getReadAccess(targetUser) || acl.getWriteAccess(targetUser)) {
+                            acl.setReadAccess(targetUser, false);
+                            acl.setWriteAccess(targetUser, false);
+                            await item.save(null, { useMasterKey: true });
+                        }
                     }, { useMasterKey: true });
 
                 await new Parse.Query("Registration")
