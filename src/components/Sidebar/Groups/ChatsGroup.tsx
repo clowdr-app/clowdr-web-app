@@ -622,13 +622,20 @@ export default function ChatsGroup(props: Props) {
     const onUserProfileUpdated = useCallback(async function _onUserProfileUpdated(update: DataUpdatedEventDetails<"UserProfile">) {
         dispatchUpdate({
             action: "updateAllUsers",
-            update: (old) => old?.map(x =>
-                x.id === update.object.id
-                    ? {
-                        id: x.id,
-                        name: (update.object as UserProfile).displayName
-                    }
-                    : x) ?? null
+            update: (existing) => {
+                const updated = Array.from(existing ?? []);
+                const idx = updated?.findIndex(x => x.id === update.object.id);
+                const item = {
+                    id: update.object.id,
+                    name: (update.object as UserProfile).displayName
+                };
+                if (idx === -1) {
+                    updated.push(item);
+                } else {
+                    updated.splice(idx, 1, item);
+                }
+                return updated;
+            }
         });
     }, []);
 
