@@ -1,0 +1,23 @@
+@mixin markdown-limits {
+    h1,
+    h2,
+    h3 {
+        font-size  : 105%;
+        font-weight: bold;
+    }
+
+    h4,
+    h5,
+    h6 {
+        font-size  : 90%;
+        font-weight: bold;
+    }
+
+    img {
+        max-width: 100px;
+    }
+
+    p:last-child {
+        margin-bottom: 0.2em;
+    }
+}

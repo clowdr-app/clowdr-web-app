@@ -32,7 +32,8 @@ export type RenderedMessage = {
     profileName: string;
     profilePhotoUrl: string | null;
     profileFlair: Flair | undefined;
-    time: string;
+    time: number;
+    timeStr: string;
     index: number;
     isDM?: boolean;
     moderation?: {
@@ -113,7 +114,8 @@ export async function renderMessage(
         profileId: profile?.id ?? null,
         profileName: profile?.id === userProfile.id ? "You" : profile?.displayName ?? `<${member}>`,
         profilePhotoUrl,
-        time: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
+        time: time.getTime(),
+        timeStr: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
         index: message.index,
         reactions,
         moderation,
@@ -222,7 +224,7 @@ export default function Message(props: {
                     {msg.chatName ? (msg.isDM ? `DM: ` : `#${msg.chatName} / `) : ""}
                     {msg.profileName ?? "<Unknown>"}
                 </div>
-                <div className="time">{msg.time}</div>
+                <div className="time">{msg.timeStr}</div>
 
                 {showProfileOptions
                     ? <div className="view-profile-options">

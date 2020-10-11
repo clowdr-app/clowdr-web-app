@@ -144,9 +144,6 @@ export default function WatchedItemsPage() {
 
     // WATCH_TODO: (repeated, non-sticky) Fetch watched tracks, sessions and events
     // WATCH_TODO: Subscribe to changes in tracks, sessions and events
-
-    // WATCH_TODO: Column of recent messages in followed chats, auto-updating
-    // WATCH_TODO: Column of rooms being followed
     // WATCH_TODO: Column of tracks/sessions/events being followed
 
     return <div className="watched-Items">
@@ -157,7 +154,13 @@ export default function WatchedItemsPage() {
         <div className="columns">
             <div className="column messages">
                 <div className="messages-inner">
-                    {messages ? messages.map(x => <Message key={x.sid} msg={x} />) : <LoadingSpinner message="Loading chats" />}
+                    {messages
+                        ? messages.length === 0
+                            ? <>No recent chat messages from followed chats.</>
+                            : messages
+                            .sort((x, y) => x.time < y.time ? -1 : x.time === y.time ? 0 : 1)
+                            .map(x => <Message key={x.sid} msg={x} />)
+                        : <LoadingSpinner message="Loading chats" />}
                 </div>
             </div>
             <div className="column rooms">

@@ -1,4 +1,5 @@
 @import "../../../styles/util.scss";
+@import "../../../styles/markdown-limits.scss";
 
 .chat-message {
     width: 100%;
@@ -114,27 +115,7 @@
                 z-index  : 1;
                 grid-area: body;
 
-                h1,
-                h2,
-                h3 {
-                    font-size  : 105%;
-                    font-weight: bold;
-                }
-
-                h4,
-                h5,
-                h6 {
-                    font-size  : 90%;
-                    font-weight: bold;
-                }
-
-                img {
-                    max-width: 100px;
-                }
-
-                p:last-child {
-                    margin-bottom: 0.2em;
-                }
+                @include markdown-limits;
             }
 
             .delete {
