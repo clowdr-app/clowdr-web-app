@@ -8,6 +8,7 @@ import useUserRoles from "../../../hooks/useUserRoles";
 import MessageList from "../MessageList/MessageList";
 import "./ChatFrame.scss";
 import { Picker as EmojiPicker } from 'emoji-mart';
+import { ChatDescriptor } from "../../../classes/Chat";
 
 interface Props {
     chatId: string;
@@ -22,16 +23,10 @@ export default function ChatFrame(props: Props) {
     const [newMsgEnabled, setNewMsgEnabled] = useState(true);
     const msgBoxRef = useRef<HTMLTextAreaElement>(null);
     const { isAdmin } = useUserRoles();
-    const [announcementsChannelSid, setAnnouncementsChannelSid] = useState<string | null>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [tc, setTC] = useState<ChatDescriptor | null>(null);
 
-    useSafeAsync(async () => {
-        const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", conference.id);
-        if (configs.length > 0) {
-            return configs[0].value;
-        }
-        return null;
-    }, setAnnouncementsChannelSid, [conference.id]);
+    useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, setTC, [mChat, props.chatId]);
 
     async function sendMessage(ev: React.KeyboardEvent<HTMLTextAreaElement>) {
         if (ev.key === "Enter" && !ev.shiftKey) {
@@ -85,7 +80,7 @@ export default function ChatFrame(props: Props) {
 
     return <div className="chat-frame">
         <MessageList chatId={props.chatId} hideMessageReportButtons={props.hideMessageReportButtons} />
-        {props.chatId !== announcementsChannelSid || isAdmin
+        {!tc?.isAnnouncements || isAdmin
             ? <div className="compose-message">
                 <textarea
                     ref={msgBoxRef}
