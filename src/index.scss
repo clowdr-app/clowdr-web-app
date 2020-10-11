@@ -23,10 +23,11 @@ body {
     button,
     input[type=submit],
     .button {
-        display    : inline-block;
-        border     : 1px solid $gray-1;
-        background : none;
-        line-height: 3ex;
+        display      : inline-block;
+        border       : 1px solid $gray-1;
+        border-radius: 5px;
+        background   : none;
+        line-height  : 3ex;
 
         color     : $gray-1;
         padding   : 0.3em;
@@ -54,11 +55,11 @@ body {
         outline-offset: 0;
     }
 
-    * > i.fa-star {
+    *>i.fa-star {
         color: rgba(230, 164, 0, 0.788);
     }
 
-    *:hover > i.fa-star {
+    *:hover>i.fa-star {
         color: gold;
     }
 
@@ -91,7 +92,7 @@ body {
     }
 }
 
-.splitter-layout > .layout-splitter {
+.splitter-layout>.layout-splitter {
     background-color: rgba($primary, 0.8);
 
     &:hover {

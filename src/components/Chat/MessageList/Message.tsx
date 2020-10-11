@@ -137,6 +137,7 @@ export default function Message(props: {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
     const [reporting, setReporting] = useState<boolean>(false);
     const [deleting, setDeleting] = useState<boolean>(false);
+    const [showProfileOptions, setShowProfileOptions] = useState<boolean>(false);
 
     function toggleAddReaction(msgSid: string) {
         if (pickEmojiForMsgSid) {
@@ -195,11 +196,13 @@ export default function Message(props: {
             ev.preventDefault();
             ev.stopPropagation();
 
-            if (msg.profileId) {
-                history.push(`/profile/${msg.profileId}`);
-            }
-            else {
-                addNotification("User is not known - they may have been deleted.");
+            if (msg.profileId !== userProfile.id) {
+                if (msg.profileId) {
+                    setShowProfileOptions(!showProfileOptions);
+                }
+                else {
+                    addNotification("User is not known - they may have been deleted.");
+                }
             }
         }}>
             {msg.profilePhotoUrl
@@ -220,14 +223,31 @@ export default function Message(props: {
                     {msg.profileName ?? "<Unknown>"}
                 </div>
                 <div className="time">{msg.time}</div>
-                <ReactMarkdown
-                    className="body"
-                    renderers={{
-                        text: renderEmoji
-                    }}
-                >
-                    {msg.body}
-                </ReactMarkdown>
+
+                {showProfileOptions
+                    ? <div className="view-profile-options">
+                        <Link className="button" to={`/profile/${msg.profileId}`}>
+                            View {msg.profileName}'s profile
+                        </Link>
+                        <Link className="button" to={`/chat/new/${msg.profileId}`}>
+                            DM {msg.profileName}
+                        </Link>
+                        <button onClick={(ev) => {
+                            ev.stopPropagation();
+                            ev.preventDefault();
+                            setShowProfileOptions(false);
+                        }}>
+                            Cancel
+                        </button>
+                    </div>
+                    : <ReactMarkdown
+                        className="body"
+                        renderers={{
+                            text: renderEmoji
+                        }}
+                    >
+                        {msg.body}
+                    </ReactMarkdown>}
                 {!props.hideReportButton
                     && msg.profileId !== userProfile.id
                     && !showDeleteConfirm

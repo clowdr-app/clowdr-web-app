@@ -404,6 +404,20 @@ async function createTextChat(data) {
             return existingTC;
         }
     }
+    else if (data.isDM && data.members && data.members.length === 2) {
+        const existingTC
+            = await new Parse.Query("TextChat")
+                .equalTo("conference", data.conference)
+                .equalTo("isDM", true)
+                .equalTo("name",
+                    data.members[0].localeCompare(data.members[1]) === -1
+                        ? `${data.members[0]}-${data.members[1]}`
+                        : `${data.members[1]}-${data.members[0]}`)
+                .first({ useMasterKey: true });
+        if (existingTC) {
+            return existingTC;
+        }
+    }
 
     let newObject = new Parse.Object("TextChat", {
         name: data.name,
