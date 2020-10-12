@@ -191,7 +191,7 @@ export default function App() {
                                 );
 
                             LocalStorage_Conference.wasManagerOrAdmin = isManager;
-                            LocalStorage_Conference.previousUserId = previousUserId;
+                            LocalStorage_Conference.previousUserId = user.id;
 
                             profile = await UserProfile.getByUserId(user.id, appState.conferenceId);
                             if (profile) {
@@ -357,7 +357,7 @@ export default function App() {
                 );
 
             LocalStorage_Conference.wasManagerOrAdmin = isManager;
-            LocalStorage_Conference.previousUserId = previousUserId;
+            LocalStorage_Conference.previousUserId = parseUser.user.id;
 
             let profile = await UserProfile.getByUserId(parseUser.user.id, appState.conference.id);
 
