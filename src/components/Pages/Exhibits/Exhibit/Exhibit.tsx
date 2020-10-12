@@ -52,7 +52,7 @@ export default function Exhibit(props: ExhibitProps) {
             : <ExhibitAttachment attachments={attachments} />}
 
         <div className="view-item">
-            <Link to={`/item/${props.programItem.id}`} className="button">View {props.programItem.title}</Link>
+            <Link to={`/item/${props.programItem.id}`} className="button">View this item</Link>
         </div>
     </article>;
 }

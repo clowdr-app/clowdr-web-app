@@ -92,10 +92,11 @@ export default function ViewContentFeed(props: Props) {
                                 already and join in the app. We suggest joining through the Zoom app if possible.
                         </p>
                             <a className="button"
+                                style={{ marginRight: "1em", fontWeight: "bold" }}
                                 href={zoomRoom.url}
                                 rel="noopener noreferrer"
                                 target="_blank">
-                                Join by Zoom App
+                                Join by Zoom App (recommended)
                         </a>
                             {(zoomDetails && joinZoom)
                                 ? <div className="zoom-frame-container">

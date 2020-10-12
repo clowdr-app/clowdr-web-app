@@ -45,6 +45,8 @@ async function getConference(name) {
     return undefined;
 }
 
+/////// TODO: Handle mapping sessionId/eventId and saving that mapping!
+
 async function createConference(conferenceData) {
     const existingConfId = await getConference(conferenceData.conference.name);
     if (existingConfId) {
@@ -115,11 +117,13 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
 
     const results = {};
     for (const data of datas) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+
         data.conference = confId;
         let finalData = { ...data };
         delete finalData.id;
 
-        console.log(`Creating ${objectName}: ${data[keyName]}`);
+        console.log(`Creating or getting ${objectName}: ${data[keyName]}`);
         let shouldCreate = true;
         if (tableName && verifyByField) {
             let existing;
@@ -168,7 +172,7 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
                 }
             }
             catch (e) {
-                console.warn(`Creating ${tableName}: ${data[keyName]} failed`, e);
+                console.error(`Creating ${tableName}: ${data[keyName]} failed`, e);
             }
         }
     }
@@ -355,31 +359,50 @@ async function main() {
     Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
     const confId = regsOnly ? await getConference(conferenceData.conference.name) : await createConference(conferenceData);
+    console.log(`Conference id: ${confId}`);
 
     const adminUser = await Parse.User.logIn(conferenceData.admin.username, conferenceData.admin.password);
     const adminSessionToken = adminUser.getSessionToken();
+    console.log(`Admin user id: ${adminUser.id}`);
 
     if (!regsOnly) {
+        // TODO: For updates: Load in the ID maps and use them to pre-remap the id fields so they can be merged with existing data
+
         // TODO: An object might have the same key but its other fields could have changed
         //       so it may still need updating
         const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
+        console.log(`YouTube feeds:\n${JSON.stringify(youtubeFeeds)}`);
+
         const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
+        console.log(`Zoom rooms:\n${JSON.stringify(zoomRooms)}`);
+
         const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
+        console.log(`Text chats:\n${JSON.stringify(textChats)}`);
+
         remapObjects(textChats, "textChat", videoRoomsData);
         const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
+        console.log(`Video rooms:\n${JSON.stringify(videoRooms)}`);
+
         remapObjects(youtubeFeeds, "youtube", contentFeedsData);
         remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
         remapObjects(textChats, "textChat", contentFeedsData);
         remapObjects(videoRooms, "videoRoom", contentFeedsData);
         const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id", "ContentFeed", "name");
+        console.log(`Content feeds:\n${JSON.stringify(contentFeeds)}`);
+
         remapObjects(contentFeeds, "feed", tracksData);
         remapObjects(contentFeeds, "feed", itemsData);
         remapObjects(contentFeeds, "feed", sessionsData);
         remapObjects(contentFeeds, "feed", eventsData);
 
         const attachmentTypes = await createObjects(confId, adminSessionToken, attachmentTypesData, "attachmentType", "name", "AttachmentType", "name");
+        console.log(`Attachment types:\n${JSON.stringify(attachmentTypes)}`);
+
         const tracks = await createObjects(confId, adminSessionToken, tracksData, "track", "name", "ProgramTrack", "name");
+        console.log(`Tracks:\n${JSON.stringify(tracks)}`);
+
         const persons = await createObjects(confId, adminSessionToken, personsData, "person", "name", "ProgramPerson", "name");
+        console.log(`Persons:\n${JSON.stringify(persons)}`);
 
         remapObjects(tracks, "track", itemsData);
         itemsData.forEach(item => {
@@ -387,21 +410,24 @@ async function main() {
                 return persons[authorName.toLowerCase()];
             });
         });
-        const items = await createObjects(confId, adminSessionToken, itemsData, "item", "title", "ProgramItem", "title");
+        const items = await createObjects(confId, adminSessionToken, itemsData, "item", "id", "ProgramItem", "id");
+        console.log(`Items:\n${JSON.stringify(items)}`);
 
         remapObjects(items, "programItem", itemAttachmentsData);
         remapObjects(attachmentTypes, "attachmentType", itemAttachmentsData);
-        // TODO: Merge attachments based on the url and the item they point to
         const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url");
+        console.log(`Item attachments:\n${JSON.stringify(itemAttachments)}`);
 
         remapObjects(tracks, "track", sessionsData);
-        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "title", "ProgramSession", "title");
+        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "id", "ProgramSession", "id");
+        console.log(`Sessions:\n${JSON.stringify(sessions)}`);
 
-        // TODO: Multi-key merge: The session title and item title must be the same for the event to be considered the same event
         remapObjects(sessions, "session", eventsData);
         remapObjects(items, "item", eventsData);
-        const events = await createObjects(confId, adminSessionToken, eventsData, "event", "startTime");
+        const events = await createObjects(confId, adminSessionToken, eventsData, "event", "id", "ProgramSessionEvent", "id");
+        console.log(`Events:\n${JSON.stringify(events)}`);
     }
 
     const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name", "Registration", "email");
+    console.log(`Registrations:\n${JSON.stringify(registrations)}`);
 }

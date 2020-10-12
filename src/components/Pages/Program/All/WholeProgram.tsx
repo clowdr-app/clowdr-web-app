@@ -46,10 +46,25 @@ export default function WholeProgram() {
 
     const columns: Array<JSX.Element> = [];
     if (tracks) {
+        // TODO: What a collosal hack - this is supposed to be encoded by a "priority" column on tracks
+        //       in the database
+        const CSCW_TRACK_ORDERING = [
+            "Keynotes",
+            "Papers",
+            "Panels",
+            "Special Events",
+            "Posters",
+            "Demos",
+            "Doctoral Consortium",
+            "Workshops",
+            "UIST Papers",
+        ];
         const trackEntries
             = Array.from(tracks.values())
                     .sort((x, y) => {
-                        return x.name.localeCompare(y.name);
+                        const xIdx = CSCW_TRACK_ORDERING.indexOf(x.name);
+                        const yIdx = CSCW_TRACK_ORDERING.indexOf(y.name);
+                        return xIdx < yIdx ? -1 : xIdx === yIdx ? 0 : 1;
                     });
 
         for (const track of trackEntries) {

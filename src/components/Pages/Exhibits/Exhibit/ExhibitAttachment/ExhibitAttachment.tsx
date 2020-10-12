@@ -13,8 +13,8 @@ interface Props {
 
 export default function ExhibitAttachment(props: Props) {
     const conference = useConference();
-    let [attachmentTypes, setAttachmentTypes] = useState<AttachmentType[] | undefined>();
-    let [bestAttachment, setBestAttachment] = useState<ProgramItemAttachment | undefined>();
+    const [attachmentTypes, setAttachmentTypes] = useState<AttachmentType[] | undefined>();
+    const [bestAttachment, setBestAttachment] = useState<ProgramItemAttachment | undefined>();
 
     useSafeAsync(async () => await AttachmentType.getAll(conference.id), setAttachmentTypes, [conference]);
 
@@ -43,6 +43,7 @@ export default function ExhibitAttachment(props: Props) {
 
         const videoTypeIds = attachmentTypes?.filter(attachmentType => attachmentType.name === "Video").map(attachmentType => attachmentType.id);
         const posterTypeIds = attachmentTypes?.filter(attachmentType => attachmentType.name === "Poster").map(attachmentType => attachmentType.id);
+        const paperTypeIds = attachmentTypes?.filter(attachmentType => attachmentType.name === "Paper").map(attachmentType => attachmentType.id);
 
         const videoAttachments = props.attachments.filter(attachment => videoTypeIds?.includes(attachment.attachmentTypeId));
         if (videoAttachments.length > 0) {
@@ -53,6 +54,12 @@ export default function ExhibitAttachment(props: Props) {
         const posterAttachments = props.attachments.filter(attachment => posterTypeIds?.includes(attachment.attachmentTypeId));
         if (posterAttachments.length > 0) {
             setBestAttachment(posterAttachments[0]);
+            return;
+        }
+
+        const paperAttachments = props.attachments.filter(attachment => paperTypeIds?.includes(attachment.attachmentTypeId));
+        if (paperAttachments.length > 0) {
+            setBestAttachment(paperAttachments[0]);
             return;
         }
 
