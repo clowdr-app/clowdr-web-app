@@ -12,7 +12,7 @@ import { daysIntoYear } from "../../../../classes/Utils";
 interface Props {
     session: ProgramSession;
     overrideTitle?: string;
-    includeEvents?: string[];
+    includeEvents?: string[] | undefined;
 }
 
 export default function SessionGroup(props: Props) {

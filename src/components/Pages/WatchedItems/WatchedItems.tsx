@@ -13,10 +13,9 @@ import Message, { RenderedMessage, renderMessage } from "../../Chat/MessageList/
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import { addError } from "../../../classes/Notifications/Notifications";
 import { Link } from "react-router-dom";
-import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
+import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
 import TrackMarker from "../Program/All/TrackMarker";
 import SessionGroup from "../Program/All/SessionGroup";
-import { SSL_OP_ALL } from "constants";
 
 function renderTrack(item: ColumnItem<ProgramTrack>): JSX.Element {
     return <>
@@ -220,34 +219,36 @@ export default function WatchedItemsPage() {
     useDataSubscription("ProgramSessionEvent", onProgramSessionEventUpdated, onProgramSessionEventDeleted, !programSessionEvents, conference);
 
     // Get pairs of session and event from individual watched events
-    const [programPartialSessions, setProgramPartialSessions] = useState<{session: ProgramSession, event: ProgramSessionEvent}[] | undefined>();
+    const [programPartialSessions, setProgramPartialSessions] = useState<{ session: ProgramSession, event: ProgramSessionEvent }[] | undefined>();
     useSafeAsync(async () => {
         if (!programSessionEvents) {
             return undefined;
         }
-        const sessions = await Promise.all(programSessionEvents?.map(async event => ({session: await event.session, event})) );
+        const sessions = await Promise.all(programSessionEvents?.map(async event => ({ session: await event.session, event })));
         return sessions;
     }, setProgramPartialSessions, [programSessionEvents]);
 
-    const watchedSessions = useMemo<Map<ProgramSession, string[] | undefined> | undefined>(() => {
+    const watchedSessions = useMemo<Map<string, { session: ProgramSession, events: string[] | undefined }> | undefined>(() => {
         if (!programSessions || !programPartialSessions) {
             return undefined;
         }
 
-        const fullSessions: Map<ProgramSession, string[] | undefined> = new Map(programSessions?.map(session => [session, undefined]));
+        const fullSessions: Map<string, { session: ProgramSession, events: string[] | undefined }> = new Map(programSessions?.map(session => [session.id, { session, events: undefined }]));
 
         for (let partialSession of programPartialSessions) {
-            if (fullSessions.has(partialSession.session)) {
-                const existingEvents = fullSessions.get(partialSession.session);
-                if (existingEvents === undefined) {
+            if (fullSessions.has(partialSession.session.id)) {
+                const existingEvents = fullSessions.get(partialSession.session.id);
+                if (existingEvents?.events === undefined) {
                     // Full session already included
                     continue;
                 } else {
-                    existingEvents.push(partialSession.event.id);
-                    fullSessions.set(partialSession.session, existingEvents);
+                    // Partial session already included
+                    existingEvents.events?.push(partialSession.event.id);
+                    fullSessions.set(partialSession.session.id, existingEvents);
                 }
             } else {
-                fullSessions.set(partialSession.session, [partialSession.event.id]);
+                // Session not yet included
+                fullSessions.set(partialSession.session.id, { session: partialSession.session, events: [partialSession.event.id] });
             }
         }
 
@@ -261,21 +262,17 @@ export default function WatchedItemsPage() {
 
         const items = [];
 
-        for (let [session, events] of watchedSessions) {
+        for (let [sessionId, { session, events }] of watchedSessions) {
             items.push({
-                key: session.id,
+                key: sessionId,
                 text: session.title,
-                link: `/session/${session.id}`,
+                link: `/session/${sessionId}`,
                 renderData: { session: session, includeEvents: events },
             });
         }
 
         return items;
     }, [watchedSessions]);
-
-    // WATCH_TODO: (repeated, non-sticky) Fetch watched tracks, sessions and events
-    // WATCH_TODO: Subscribe to changes in tracks, sessions and events
-    // WATCH_TODO: Column of tracks/sessions/events being followed
 
     return <div className="watched-items">
         <p className="info">
