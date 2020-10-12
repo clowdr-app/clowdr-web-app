@@ -4,4 +4,19 @@
     position: relative;
     width   : 100%;
     height  : 100%;
+
+    &>.session {
+        display: none;
+    }
+
+    &.events-list {
+        &>.session {
+            display: block;
+        }
+
+        &>.splitter-layout,
+        &>p {
+            display: none;
+        }
+    }
 }

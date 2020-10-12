@@ -1,6 +1,6 @@
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { ContentFeed, ProgramSession, WatchedItems } from "@clowdr-app/clowdr-db-schema";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import SessionGroup from "../All/SessionGroup";
 import useConference from "../../../../hooks/useConference";
@@ -14,6 +14,7 @@ import SplitterLayout from "react-splitter-layout";
 import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import useUserProfile from "../../../../hooks/useUserProfile";
+import ChatFrame from "../../../Chat/ChatFrame/ChatFrame";
 
 interface Props {
     sessionId: string;
@@ -25,6 +26,9 @@ export default function ViewSession(props: Props) {
     const [session, setSession] = useState<ProgramSession | null>(null);
     const [feed, setFeed] = useState<ContentFeed | null>(null);
     const [chatSize, setChatSize] = useState(30);
+    const [showEventsList, setShowEventsList] = useState<boolean>(false);
+    const [textChatId, setTextChatId] = useState<string | false | null>(null);
+    const [shouldDoRefresh, setShouldDoRefresh] = useState<boolean>(true);
 
     // Initial data fetch
     useSafeAsync(
@@ -36,6 +40,51 @@ export default function ViewSession(props: Props) {
         async () => (await session?.feed) ?? null,
         setFeed,
         [session]);
+
+    useSafeAsync(
+        async () => {
+            if (!shouldDoRefresh) {
+                return undefined;
+            }
+
+            if (session) {
+                const events = await session.events;
+                const now = Date.now();
+                const liveEvent = events.find(event => event.startTime.getTime() < now && event.endTime.getTime() > now);
+                if (liveEvent) {
+                    const liveItem = await liveEvent.item;
+                    const liveFeed = await liveItem.feed;
+                    if (liveFeed) {
+                        if (liveFeed.textChatId) {
+                            return liveFeed.textChatId;
+                        }
+                        else if (liveFeed.videoRoomId) {
+                            const liveVideoRoom = await liveFeed.videoRoom;
+                            const liveChat = await liveVideoRoom?.textChat;
+                            if (liveChat) {
+                                return liveChat.id;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            return null;
+        },
+        (data) => {
+            setShouldDoRefresh(!data);
+            setTextChatId(data);
+        },
+        [session, shouldDoRefresh]);
+
+    useEffect(() => {
+        const t = setInterval(() => {
+            setShouldDoRefresh(true);
+        }, 1000 * 30);
+        return () => {
+            clearInterval(t);
+        };
+    }, []);
 
     // Subscribe to data updates
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
@@ -160,15 +209,22 @@ export default function ViewSession(props: Props) {
         });
     }
 
+    buttons.push({
+        label: showEventsList ? "Back to session" : "Events in this session",
+        icon: <i className="fas fa-eye"></i>,
+        action: (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            setShowEventsList(!showEventsList);
+        }
+    });
+
     useHeading({
         title: session?.title ?? "Session",
         buttons: buttons.length > 0 ? buttons : undefined
     });
 
-    // TODO: Render the content feed(s) above the session events list
-    // We will allow 1 video and/or 1 chat feed per content feed
-
-    const sessionEl = <div className="whole-program single-track single-session">
+    const eventsListEl = <div className="whole-program single-track single-session">
         {session
             ? <SessionGroup
                 key={session.id}
@@ -178,29 +234,45 @@ export default function ViewSession(props: Props) {
             : <LoadingSpinner />}
     </div>;
 
-    return <div className="view-session">
-        <SplitterLayout
-            vertical={true}
-            percentage={true}
-            ref={component => { component?.setState({ secondaryPaneSize: chatSize }) }}
-            onSecondaryPaneSizeChange={newSize => setChatSize(newSize)}
-        >
-            <div className="split top-split">
-                <button onClick={() => setChatSize(100)}>
-                    &#9650;
+    const isLive = session && session.startTime.getTime() < Date.now() && session.endTime.getTime() > Date.now();
+    const isPermanent = !feed || feed.videoRoomId || feed.textChatId || feed.youtubeId;
+
+    return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
+        {showEventsList ? eventsListEl : <></>}
+        {session
+            ? (isLive || isPermanent)
+                ? <SplitterLayout
+                    vertical={true}
+                    percentage={true}
+                    ref={component => { component?.setState({ secondaryPaneSize: chatSize }) }}
+                    onSecondaryPaneSizeChange={newSize => setChatSize(newSize)}
+                >
+                    <div className="split top-split">
+                        <button onClick={() => setChatSize(100)}>
+                            &#9650;
                     </button>
-                <div className="embedded-content">
-                    {!feed
-                        ? <LoadingSpinner />
-                        : <ViewContentFeed feed={feed} />}
-                </div>
-            </div>
-            <div className="split bottom-split">
-                {sessionEl}
-                <button onClick={() => setChatSize(0)}>
-                    &#9660;
-                </button>
-            </div>
-        </SplitterLayout>
+                        <div className="embedded-content">
+                            {!feed
+                                ? <LoadingSpinner />
+                                : <ViewContentFeed feed={feed} />}
+                        </div>
+                    </div>
+                    <div className="split bottom-split">
+                        {textChatId
+                            ? <ChatFrame chatId={textChatId} />
+                            : isLive
+                                ? (textChatId === false
+                                    ? <p>The current event does not have a text chat.</p>
+                                    : <LoadingSpinner message="Loading text chat" />)
+                                : <p>This session is no longer live. Please choose a specific event to participate in its conversation.</p>
+                        }
+                        <button onClick={() => setChatSize(0)}>
+                            &#9660;
+                        </button>
+                    </div>
+                </SplitterLayout>
+                : <p>This session is no longer live. Please choose a specific event from the list available via the menu button above.</p>
+            : <LoadingSpinner message="Loading session" />
+        }
     </div>;
 }
