@@ -68,6 +68,8 @@ export default function ViewContentFeed(props: Props) {
         return undefined;
     }
 
+    // TODO: Limit zoom room height by available panel height
+
     return <div className={`content-feed${youTubeFeed &&
         youTubeFeed !== "not present"
         ? " youtube"

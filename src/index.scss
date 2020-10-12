@@ -139,6 +139,14 @@ body {
         }
     }
 
+    &.top-split {
+        padding-bottom: 1.1em;
+    }
+
+    &.bottom-split {
+        padding-top: 1.1em;
+    }
+
     &.top-split button {
         bottom: 0;
     }

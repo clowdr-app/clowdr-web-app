@@ -51,6 +51,8 @@ export default function ChatView(props: Props) {
     const { isAdmin, isManager } = useUserRoles();
     const [sendingInvites, setSendingInvites] = useState<boolean>(false);
 
+    // TODO: Profile button picking wrong person's name - same 3 members of a DM problem
+
     // Fetch all user profiles
     useSafeAsync(async () => {
         const profiles = await UserProfile.getAll(conf.id);

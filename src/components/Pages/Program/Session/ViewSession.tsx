@@ -24,7 +24,8 @@ export default function ViewSession(props: Props) {
     const conference = useConference();
     const userProfile = useUserProfile();
     const [session, setSession] = useState<ProgramSession | null>(null);
-    const [feed, setFeed] = useState<ContentFeed | null>(null);
+    const [sessionFeed, setSessionFeed] = useState<ContentFeed | null>(null);
+    const [eventFeed, setEventFeed] = useState<ContentFeed | null>(null);
     const [chatSize, setChatSize] = useState(30);
     const [showEventsList, setShowEventsList] = useState<boolean>(false);
     const [textChatId, setTextChatId] = useState<string | false | null>(null);
@@ -38,7 +39,7 @@ export default function ViewSession(props: Props) {
 
     useSafeAsync(
         async () => (await session?.feed) ?? null,
-        setFeed,
+        setSessionFeed,
         [session]);
 
     useSafeAsync(
@@ -56,24 +57,43 @@ export default function ViewSession(props: Props) {
                     const liveFeed = await liveItem.feed;
                     if (liveFeed) {
                         if (liveFeed.textChatId) {
-                            return liveFeed.textChatId;
+                            return {
+                                ef: await liveEvent.feed ?? null,
+                                tc: liveFeed.textChatId as string | false | null
+                            };
                         }
                         else if (liveFeed.videoRoomId) {
                             const liveVideoRoom = await liveFeed.videoRoom;
                             const liveChat = await liveVideoRoom?.textChat;
                             if (liveChat) {
-                                return liveChat.id;
+                                return {
+                                    ef: await liveEvent.feed ?? null,
+                                    tc: liveChat.id as string | false | null
+                                };
                             }
                         }
                     }
+                    return {
+                        ef: await liveEvent.feed ?? null,
+                        tc: false as string | false | null
+                    };
                 }
-                return false;
+                return {
+                    ef: null,
+                    tc: false as string | false | null
+                };
             }
-            return null;
+            return {
+                ef: null,
+                tc: null as string | false | null
+            };
         },
-        (data) => {
+        (data: {
+            ef: ContentFeed | null,
+            tc: string | false | null
+        }) => {
             setShouldDoRefresh(!data);
-            setTextChatId(data);
+            setTextChatId(data.tc);
         },
         [session, shouldDoRefresh]);
 
@@ -108,19 +128,19 @@ export default function ViewSession(props: Props) {
     }, [session]);
 
     const onContentFeedUpdated = useCallback(function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
-        if (feed && ev.object.id === feed.id) {
-            setFeed(ev.object as ContentFeed);
+        if (sessionFeed && ev.object.id === sessionFeed.id) {
+            setSessionFeed(ev.object as ContentFeed);
         }
-    }, [feed]);
+    }, [sessionFeed]);
 
     const onContentFeedDeleted = useCallback(function _onContentFeedDeleted(ev: DataDeletedEventDetails<"ContentFeed">) {
-        if (feed && ev.objectId === feed.id) {
-            setFeed(null);
+        if (sessionFeed && ev.objectId === sessionFeed.id) {
+            setSessionFeed(null);
         }
-    }, [feed]);
+    }, [sessionFeed]);
 
     useDataSubscription("ProgramSession", onSessionUpdated, onSessionDeleted, !session, conference);
-    useDataSubscription("ContentFeed", onContentFeedUpdated, onContentFeedDeleted, !feed, conference);
+    useDataSubscription("ContentFeed", onContentFeedUpdated, onContentFeedDeleted, !sessionFeed, conference);
 
     const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
     const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
@@ -242,8 +262,12 @@ export default function ViewSession(props: Props) {
             : <LoadingSpinner />}
     </div>;
 
-    const isLive = session && session.startTime.getTime() < Date.now() && session.endTime.getTime() > Date.now();
-    const isPermanent = !feed || feed.videoRoomId || feed.textChatId || feed.youtubeId;
+    // TODO: Handle both a Zoom and a YouTube feed at session level
+
+    // TODO: Make this configurable
+    // Showing session feed prior to session starting (20mins)
+    const isLive = session && session.startTime.getTime() - (20 * 60 * 1000) < Date.now() && session.endTime.getTime() > Date.now();
+    const isPermanent = !sessionFeed || sessionFeed.videoRoomId || sessionFeed.textChatId || sessionFeed.youtubeId;
 
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
         {showEventsList ? eventsListEl : <></>}
@@ -260,18 +284,20 @@ export default function ViewSession(props: Props) {
                             &#9650;
                     </button>
                         <div className="embedded-content">
-                            {!feed
+                            {!sessionFeed
                                 ? <LoadingSpinner />
-                                : <ViewContentFeed feed={feed} />}
+                                : <ViewContentFeed feed={sessionFeed} />}
                         </div>
                     </div>
                     <div className="split bottom-split">
                         {textChatId
-                            ? <ChatFrame chatId={textChatId} />
+                            ? /* TODO: Display chat name */
+                              <ChatFrame chatId={textChatId} />
                             : isLive
                                 ? (textChatId === false
                                     ? <p>The current event does not have a text chat.</p>
                                     : <LoadingSpinner message="Loading text chat" />)
+                                // TODO: Show time until next event starts
                                 : <p>This session is not currently live. Please choose a specific event to participate in its conversation.</p>
                         }
                         <button onClick={() => setChatSize(0)}>

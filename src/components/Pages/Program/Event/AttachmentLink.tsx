@@ -58,7 +58,7 @@ export default function AttachmentLink(props: Props) {
         if (displayAsLink) {
             if (url) {
                 // TODO: Display a file/link type icon?
-                return <a href={url}>{attachmentType.name}</a>
+                return <a href={url} target="_blank" rel="noopener noreferrer">{attachmentType.name}</a>
             }
         }
     }

@@ -129,6 +129,12 @@ export default function ViewItem(props: Props) {
                         ? <>
                             <h2>{feed.name}</h2>
                             <ViewContentFeed feed={feed} />
+                            <div className="content-feed">
+                                {textChatId
+                                    ? <ChatFrame chatId={textChatId} />
+                                    : <></>
+                                }
+                            </div>
                             <hr />
                         </>
                         : <></>)}

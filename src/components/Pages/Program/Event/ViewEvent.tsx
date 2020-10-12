@@ -254,16 +254,18 @@ export default function ViewEvent(props: Props) {
                 </div>
                 : <LoadingSpinner message="Loading session feed" />
             : <></>}
-        {!isLive ?
-            eventFeed
-                ? (eventFeed !== "not present"
+        {/* TODO: Re-enable this for splash?
+         {eventFeed
+            ? (eventFeed !== "not present"
+                ? !isLive || (eventFeed.youtubeId || eventFeed.zoomRoomId)
                     ? <div className="event-feed">
                         <h2>{eventFeed.name}</h2>
                         <ViewContentFeed feed={eventFeed} />
                     </div>
-                    : <></>)
-                : <LoadingSpinner message="Loading event feed" />
-            : <></>}
+                    : <></>
+                : <></>)
+            : <LoadingSpinner message="Loading event feed" />
+        } */}
         {item
             ? <ViewItem
                 item={item}

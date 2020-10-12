@@ -42,8 +42,8 @@ export default function NewVideoRoom() {
     }
 
     const capacityEl = <>
-        <label htmlFor="capacity">Capacity</label>
-        <input type="number" min="2" max="50" defaultValue={capacity} onChange={(ev) => setCapacity(ev.target.valueAsNumber)} />
+        <label htmlFor="capacity">Capacity {isAdmin || isManager ? "(max. 50)" : "(max. 10)"}</label>
+        <input type="number" min="2" max={isAdmin || isManager ? "50" : "10"} defaultValue={capacity} onChange={(ev) => setCapacity(ev.target.valueAsNumber)} />
     </>;
     const privateEl = <>
         <label htmlFor="is-private">Private?</label>
