@@ -4,6 +4,7 @@ import "./FlairInput.scss";
 import FlairChip from '../../Profile/FlairChip/FlairChip';
 import useSafeAsync from '../../../hooks/useSafeAsync';
 import useConference from '../../../hooks/useConference';
+import useUserRoles from '../../../hooks/useUserRoles';
 
 interface Props {
     name: string;
@@ -15,15 +16,31 @@ interface Props {
 export default function FlairInput(props: Props) {
     const conference = useConference();
     const [allFlairs, setAllFlairs] = useState<Flair[]>([]);
+    const { isAdmin, isManager } = useUserRoles();
 
     useSafeAsync(async () => {
-        return await Flair.getAll(conference.id);
+        let results = await Flair.getAll(conference.id);
+        if (!isAdmin) {
+            results = results.filter(x =>
+                x.label.toLowerCase() !== "admin"
+            );
+        }
+        if (!isManager) {
+            results = results.filter(x =>
+                x.label.toLowerCase() !== "manager"
+                && x.label.toLowerCase() !== "moderator"
+                && x.label.toLowerCase() !== "mod"
+            );
+        }
+        return results;
     }, setAllFlairs, []);
 
     const isSelected = (flair: Flair) => props.flairs.find(x => x.id === flair.id) !== undefined;
 
     return <div className="flair-input">
-        {allFlairs.map((flair, i) =>
+        {allFlairs
+            .sort((x, y) => x.label.localeCompare(y.label))
+            .map((flair, i) =>
             <div className="chip-container" key={i}>
                 <FlairChip
                     flair={flair}
