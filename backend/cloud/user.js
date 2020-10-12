@@ -531,22 +531,25 @@ Parse.Cloud.define("users-in-roles", async (req) => {
         const authorized = !!user && await isUserInRoles(user.id, confId, ["attendee", "admin", "manager"]);
         if (authorized) {
             const roleNames = params.roles;
+
+            async function ___getUsersInRole(role) {
+                const userIds = await Promise.all(await role
+                    .get("users")
+                    .query()
+                    .map(async _user => {
+                        const p = await getProfileOfUser(_user, confId);
+                        return p.id;
+                    }, { useMasterKey: true }));
+                return userIds;
+            }
             const roleProfileIds
-                = (await
-                    new Parse.Query("_Role")
+                = await new Parse.Query("_Role")
                         .equalTo("conference", new Parse.Object("Conference", { id: confId }))
                         .containedIn("name", roleNames.map(x => generateRoleDBName(confId, x)))
                         .include("users")
-                        .map(role =>
-                            role.get("users")
-                                .query()
-                                .map(async _user => {
-                                    const p = await getProfileOfUser(_user, confId);
-                                    return p.id;
-                                }, { useMasterKey: true }),
-                            { useMasterKey: true })
-                ).reduce((acc, xs) => [...acc, ...xs], []);
-            return roleProfileIds;
+                        .map(___getUsersInRole);
+            const results = await Promise.all(roleProfileIds);
+            return results.reduce((acc, xs) => [...acc, ...xs], []);
         }
         return [];
     } else {
