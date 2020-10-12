@@ -248,7 +248,7 @@ function Page(props: Props) {
                 };
             }
         }
-    }, [mConf, mUser, props, showSignUp]);
+    }, [isAdmin, isManager, mConf, mUser, props, showSignUp]);
 
     return <>
         {noHeading ? <></> : <header className="page-header">

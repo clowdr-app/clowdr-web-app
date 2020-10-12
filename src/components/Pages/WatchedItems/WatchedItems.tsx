@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import useHeading from "../../../hooks/useHeading";
 import useUserProfile from "../../../hooks/useUserProfile";
-import { VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import { ProgramTrack, VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import "./WatchedItems.scss";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
@@ -13,6 +13,15 @@ import Message, { RenderedMessage, renderMessage } from "../../Chat/MessageList/
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import { addError } from "../../../classes/Notifications/Notifications";
 import { Link } from "react-router-dom";
+import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
+import TrackMarker from "../Program/All/TrackMarker";
+
+function renderTrack(item: ColumnItem<ProgramTrack>): JSX.Element {
+    return <>
+        <TrackMarker track={item.renderData} small={true} />
+        { item.link ? <Link to={item.link}>{item.text}</Link> : item.text}
+    </>;
+}
 
 export default function WatchedItemsPage() {
     const conference = useConference();
@@ -22,6 +31,7 @@ export default function WatchedItemsPage() {
     const [activeChats, setActiveChats] = useState<Array<SidebarChatDescriptor> | null>(null);
     const [rooms, setRooms] = useState<Array<VideoRoom> | null>(null);
     const [messages, setMessages] = useState<Array<RenderedMessage> | null>(null);
+    const [programTracks, setProgramTracks] = useState<Array<ProgramTrack> | null>(null);
 
     useHeading("Followed Items");
 
@@ -142,6 +152,34 @@ export default function WatchedItemsPage() {
     }, []);
     useDataSubscription("VideoRoom", onRoomUpdated, onRoomDeleted, !rooms, conference);
 
+    // Fetch tracks
+    useSafeAsync(async () => watchedItems?.watchedTrackObjects ?? null, setProgramTracks, [watchedItems]);
+
+    // Subscribe to watched track updates
+    const onTrackUpdated = useCallback(async function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
+        setProgramTracks(existing => existing ? existing.map(x => x.id === ev.object.id ? ev.object as ProgramTrack : x) : existing);
+    }, []);
+
+    const onTrackDeleted = useCallback(function _onTrackDeleted(ev: DataDeletedEventDetails<"ProgramTrack">) {
+        setProgramTracks(oldRooms => oldRooms?.filter(x => x.id !== ev.objectId) ?? null);
+    }, []);
+    useDataSubscription("ProgramTrack", onTrackUpdated, onTrackDeleted, !programTracks, conference);
+
+    const programTrackItems = useMemo<Array<ColumnItem<ProgramTrack>> | undefined>(() => {
+        if (!programTracks) {
+            return undefined;
+        }
+
+        return programTracks?.map(track => {
+            return {
+                text: track.name,
+                link: `/track/${track.id}`,
+                key: track.id,
+                renderData: track,
+            };
+        });
+    }, [programTracks]);
+
     // WATCH_TODO: (repeated, non-sticky) Fetch watched tracks, sessions and events
     // WATCH_TODO: Subscribe to changes in tracks, sessions and events
     // WATCH_TODO: Column of tracks/sessions/events being followed
@@ -158,8 +196,8 @@ export default function WatchedItemsPage() {
                         ? messages.length === 0
                             ? <>No recent chat messages from followed chats.</>
                             : messages
-                            .sort((x, y) => x.time < y.time ? -1 : x.time === y.time ? 0 : 1)
-                            .map(x => <Message key={x.sid} msg={x} />)
+                                .sort((x, y) => x.time < y.time ? -1 : x.time === y.time ? 0 : 1)
+                                .map(x => <Message key={x.sid} msg={x} />)
                         : <LoadingSpinner message="Loading chats" />}
                 </div>
             </div>
@@ -173,12 +211,22 @@ export default function WatchedItemsPage() {
                         </div>)
                     : <LoadingSpinner message="Loading rooms" />}
             </div>
-            <div className="column tracks">
-                TODO: Followed tracks list
-            </div>
-            <div className="column sessions">
-                TODO: Followed sessions/events list
-            </div>
+            <Column
+                className="column tracks"
+                itemRenderer={{ render: renderTrack }}
+                emptyMessage="You are not following any program tracks."
+                loadingMessage="Loading program tracks"
+                items={programTrackItems}
+            >
+                <h2>Tracks</h2>
+            </Column>
+            <Column
+                className="column sessions"
+                itemRenderer={new DefaultItemRenderer()}
+                emptyMessage="You are not following any sessions or events."
+                loadingMessage="Loading sessions and events">
+                <h2>Sessions and events</h2>
+            </Column>
         </div>
     </div>;
 }
