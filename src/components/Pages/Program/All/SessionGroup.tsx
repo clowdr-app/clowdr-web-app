@@ -12,6 +12,7 @@ import { daysIntoYear } from "../../../../classes/Utils";
 interface Props {
     session: ProgramSession;
     overrideTitle?: string;
+    includeEvents?: string[];
 }
 
 export default function SessionGroup(props: Props) {
@@ -57,7 +58,9 @@ export default function SessionGroup(props: Props) {
             : [];
 
     for (const event of eventEntries) {
-        rows.push(<EventItem key={event.id} event={event} />);
+        if (!props.includeEvents || props.includeEvents.includes(event.id)) {
+            rows.push(<EventItem key={event.id} event={event} />);
+        }
     }
 
     function fmtDate(date: Date) {

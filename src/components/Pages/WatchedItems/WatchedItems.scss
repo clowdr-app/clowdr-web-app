@@ -1,6 +1,6 @@
 @import "../../../styles/util.scss";
 
-.watched-Items {
+.watched-items {
     .info {
         flex-basis  : 100%;
         width       : 100%;
@@ -42,10 +42,10 @@
 
             &.rooms {
                 .room-item {
-                    width: 100%;
+                    width         : 100%;
                     flex-direction: row;
-                    display: flex;
-                    margin: 0.2em 0;
+                    display       : flex;
+                    margin        : 0.2em 0;
 
                     span:first-child {
                         margin-right: auto;
@@ -55,6 +55,29 @@
                         margin: 0 0 0 0.3em;
                     }
                 }
+            }
+
+            &.sessions {
+                max-height: 70vh;
+                overflow-y: auto;
+
+                .session {
+                    font-size: 80%;
+                    padding: mm(2);
+
+                    &:hover {
+                        background-color: rgba($color: #000000, $alpha: 0.05);
+                    }
+
+                    h2 {
+                        font-size: 100%;
+                    }
+                }
+            }
+
+            &.tracks {
+                max-height: 70vh;
+                overflow-y: auto;
             }
         }
     }

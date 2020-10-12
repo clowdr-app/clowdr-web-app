@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import useHeading from "../../../hooks/useHeading";
 import useUserProfile from "../../../hooks/useUserProfile";
-import { ProgramTrack, VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import { ProgramSession, ProgramSessionEvent, ProgramTrack, VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import "./WatchedItems.scss";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
@@ -15,12 +15,23 @@ import { addError } from "../../../classes/Notifications/Notifications";
 import { Link } from "react-router-dom";
 import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
 import TrackMarker from "../Program/All/TrackMarker";
+import SessionGroup from "../Program/All/SessionGroup";
+import { SSL_OP_ALL } from "constants";
 
 function renderTrack(item: ColumnItem<ProgramTrack>): JSX.Element {
     return <>
         <TrackMarker track={item.renderData} small={true} />
         { item.link ? <Link to={item.link}>{item.text}</Link> : item.text}
     </>;
+}
+
+function renderSession(item: ColumnItem<SessionItemData>): JSX.Element {
+    return <SessionGroup session={item.renderData.session} includeEvents={item.renderData.includeEvents} />;
+}
+
+interface SessionItemData {
+    session: ProgramSession;
+    includeEvents: string[] | undefined;
 }
 
 export default function WatchedItemsPage() {
@@ -31,7 +42,6 @@ export default function WatchedItemsPage() {
     const [activeChats, setActiveChats] = useState<Array<SidebarChatDescriptor> | null>(null);
     const [rooms, setRooms] = useState<Array<VideoRoom> | null>(null);
     const [messages, setMessages] = useState<Array<RenderedMessage> | null>(null);
-    const [programTracks, setProgramTracks] = useState<Array<ProgramTrack> | null>(null);
 
     useHeading("Followed Items");
 
@@ -153,6 +163,7 @@ export default function WatchedItemsPage() {
     useDataSubscription("VideoRoom", onRoomUpdated, onRoomDeleted, !rooms, conference);
 
     // Fetch tracks
+    const [programTracks, setProgramTracks] = useState<Array<ProgramTrack> | null>(null);
     useSafeAsync(async () => watchedItems?.watchedTrackObjects ?? null, setProgramTracks, [watchedItems]);
 
     // Subscribe to watched track updates
@@ -180,11 +191,93 @@ export default function WatchedItemsPage() {
         });
     }, [programTracks]);
 
+    // Fetch watched sessions
+    const [programSessions, setProgramSessions] = useState<Array<ProgramSession> | null>(null);
+    useSafeAsync(async () => watchedItems?.watchedSessionObjects ?? null, setProgramSessions, [watchedItems]);
+
+    // Subscribe to watched session updates
+    const onProgramSessionUpdated = useCallback(async function _onProgramSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
+        setProgramSessions(existing => existing ? existing.map(x => x.id === ev.object.id ? ev.object as ProgramSession : x) : existing);
+    }, []);
+
+    const onProgramSessionDeleted = useCallback(function _onProgramSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
+        setProgramSessions(oldRooms => oldRooms?.filter(x => x.id !== ev.objectId) ?? null);
+    }, []);
+    useDataSubscription("ProgramSession", onProgramSessionUpdated, onProgramSessionDeleted, !programSessions, conference);
+
+    // Fetch watched events
+    const [programSessionEvents, setProgramSessionEvents] = useState<Array<ProgramSessionEvent> | null>(null);
+    useSafeAsync(async () => watchedItems?.watchedEventObjects ?? null, setProgramSessionEvents, [watchedItems]);
+
+    // Subscribe to watched event updates
+    const onProgramSessionEventUpdated = useCallback(async function _onProgramSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
+        setProgramSessionEvents(existing => existing ? existing.map(x => x.id === ev.object.id ? ev.object as ProgramSessionEvent : x) : existing);
+    }, []);
+
+    const onProgramSessionEventDeleted = useCallback(function _onProgramSessionEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {
+        setProgramSessionEvents(oldRooms => oldRooms?.filter(x => x.id !== ev.objectId) ?? null);
+    }, []);
+    useDataSubscription("ProgramSessionEvent", onProgramSessionEventUpdated, onProgramSessionEventDeleted, !programSessionEvents, conference);
+
+    // Get pairs of session and event from individual watched events
+    const [programPartialSessions, setProgramPartialSessions] = useState<{session: ProgramSession, event: ProgramSessionEvent}[] | undefined>();
+    useSafeAsync(async () => {
+        if (!programSessionEvents) {
+            return undefined;
+        }
+        const sessions = await Promise.all(programSessionEvents?.map(async event => ({session: await event.session, event})) );
+        return sessions;
+    }, setProgramPartialSessions, [programSessionEvents]);
+
+    const watchedSessions = useMemo<Map<ProgramSession, string[] | undefined> | undefined>(() => {
+        if (!programSessions || !programPartialSessions) {
+            return undefined;
+        }
+
+        const fullSessions: Map<ProgramSession, string[] | undefined> = new Map(programSessions?.map(session => [session, undefined]));
+
+        for (let partialSession of programPartialSessions) {
+            if (fullSessions.has(partialSession.session)) {
+                const existingEvents = fullSessions.get(partialSession.session);
+                if (existingEvents === undefined) {
+                    // Full session already included
+                    continue;
+                } else {
+                    existingEvents.push(partialSession.event.id);
+                    fullSessions.set(partialSession.session, existingEvents);
+                }
+            } else {
+                fullSessions.set(partialSession.session, [partialSession.event.id]);
+            }
+        }
+
+        return fullSessions;
+    }, [programPartialSessions, programSessions]);
+
+    const programSessionItems = useMemo<Array<ColumnItem<SessionItemData>> | undefined>(() => {
+        if (!watchedSessions) {
+            return undefined;
+        }
+
+        const items = [];
+
+        for (let [session, events] of watchedSessions) {
+            items.push({
+                key: session.id,
+                text: session.title,
+                link: `/session/${session.id}`,
+                renderData: { session: session, includeEvents: events },
+            });
+        }
+
+        return items;
+    }, [watchedSessions]);
+
     // WATCH_TODO: (repeated, non-sticky) Fetch watched tracks, sessions and events
     // WATCH_TODO: Subscribe to changes in tracks, sessions and events
     // WATCH_TODO: Column of tracks/sessions/events being followed
 
-    return <div className="watched-Items">
+    return <div className="watched-items">
         <p className="info">
             On this page you will find recent messages from chats you are following (including all direct messages and announcements)
             as well as lists of the breakout rooms, tracks, sessions and events you are following.
@@ -222,9 +315,11 @@ export default function WatchedItemsPage() {
             </Column>
             <Column
                 className="column sessions"
-                itemRenderer={new DefaultItemRenderer()}
+                itemRenderer={{ render: renderSession }}
                 emptyMessage="You are not following any sessions or events."
-                loadingMessage="Loading sessions and events">
+                loadingMessage="Loading sessions and events"
+                items={programSessionItems}
+                sort={(a, b) => a.renderData.session.startTime.getTime() - b.renderData.session.endTime.getTime()}>
                 <h2>Sessions and events</h2>
             </Column>
         </div>
