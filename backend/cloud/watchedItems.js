@@ -27,37 +27,67 @@
 // });
 
 Parse.Cloud.job("migrate-watchedItems-isBanned-addToUserProfile", async (request) => {
-    const { params, headers, log, message } = request;
+    const { message: _message } = request;
+    const message = (msg) => {
+        console.log(msg);
+        _message(msg);
+    };
 
     message("Migrating existing user profiles - adding watched items and isBanned...");
 
-    async function migrateProfile(profile) {
-        if (!profile.get("watched")) {
-            const user = profile.get("user");
-            const conference = profile.get("conference");
-            let newWatchedItems = new Parse.Object("WatchedItems", {
-                conference
-            });
-            let newWatchedItemsACL = new Parse.ACL();
-            newWatchedItemsACL.setPublicReadAccess(false);
-            newWatchedItemsACL.setPublicWriteAccess(false);
-            newWatchedItemsACL.setReadAccess(user, true);
-            newWatchedItemsACL.setWriteAccess(user, true);
-            newWatchedItems.setACL(newWatchedItemsACL);
-            newWatchedItems = await newWatchedItems.save(null, { useMasterKey: true });
-            profile.set("watched", newWatchedItems);
-            profile.set("isBanned", false);
-            await profile.save(null, { useMasterKey: true });
-            // And re-save to trigger the beforeSave event to setup auto watches
-            await newWatchedItems.save(null, { useMasterKey: true });
+    try {
+        async function migrateProfile(profile) {
+            if (!profile.get("watched")) {
+                message(`Migrating ${profile.id}`);
+
+                const user = profile.get("user");
+                const conference = profile.get("conference");
+                let newWatchedItems = new Parse.Object("WatchedItems", {
+                    conference
+                });
+                let newWatchedItemsACL = new Parse.ACL();
+                newWatchedItemsACL.setPublicReadAccess(false);
+                newWatchedItemsACL.setPublicWriteAccess(false);
+                newWatchedItemsACL.setReadAccess(user, true);
+                newWatchedItemsACL.setWriteAccess(user, true);
+                newWatchedItems.setACL(newWatchedItemsACL);
+
+                message(`Migrating ${profile.id} - Point 1`);
+
+                newWatchedItems = await newWatchedItems.save(null, { useMasterKey: true });
+
+                message(`Migrating ${profile.id} - Point 2`);
+
+                profile.set("watched", newWatchedItems);
+                profile.set("isBanned", false);
+
+                message(`Migrating ${profile.id} - Point 3`);
+
+                await profile.save(null, { useMasterKey: true });
+
+                message(`Migrating ${profile.id} - Point 4`);
+
+                // And re-save to trigger the beforeSave event to setup auto watches
+                await newWatchedItems.save(null, { useMasterKey: true });
+
+                message(`Migrated ${profile.id}`);
+            }
+            else {
+                message(`Ignoring ${profile.id}`);
+            }
         }
+
+        const existingUserProfiles = new Parse.Query("UserProfile");
+        await existingUserProfiles.each(migrateProfile, {
+            useMasterKey: true
+        });
+
+        message("Finished migration: adding watched items to existing user profiles.");
     }
-
-    const existingUserProfiles = new Parse.Query("UserProfile");
-    await existingUserProfiles.eachBatch((objs) => Promise.all(objs.map(migrateProfile)), {
-        batchSize: 10000,
-        useMasterKey: true
-    });
-
-    message("Finished migration: adding watched items to existing user profiles.");
+    catch (e) {
+        console.error("Error (error):" + e);
+        console.log("Error (log):" + e);
+        message("Error:" + e);
+        throw e;
+    }
 });

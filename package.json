@@ -140,7 +140,8 @@
         "migrate-profiles-addWatchedItems-isBanned": "node-env-run -E .env scripts/migrations/migrate-profiles-addWatchedItems-isBanned.js",
         "create-conference-production": "node-env-run -E .env.production.local scripts/create-conference.js -- -c J:/Clowdr/CSCW/DataSet1-Processed/cscw",
         "create-registrations-production": "node-env-run -E .env.production.local scripts/create-conference.js -- -r -c J:/Clowdr/CSCW/DataSet1-Processed/cscw",
-        "restore-schema-to-production-db-use-with-caution": "node-env-run -E .env.production.local scripts/restore-schema.js"
+        "restore-schema-to-production-db-use-with-caution": "node-env-run -E .env.production.local scripts/restore-schema.js",
+        "migrate-profiles-addWatchedItems-isBanned-production": "node-env-run -E .env.production.local scripts/migrations/migrate-profiles-addWatchedItems-isBanned.js"
     },
     "eslintConfig": {
         "extends": "react-app"
