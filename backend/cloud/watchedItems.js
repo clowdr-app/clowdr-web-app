@@ -26,10 +26,10 @@
 //     }
 // });
 
-Parse.Cloud.job("migrate-watchedItems-addToUserProfile", async (request) => {
+Parse.Cloud.job("migrate-watchedItems-isBanned-addToUserProfile", async (request) => {
     const { params, headers, log, message } = request;
 
-    message("Migrating existing user profiles - adding watched items...");
+    message("Migrating existing user profiles - adding watched items and isBanned...");
 
     async function migrateProfile(profile) {
         if (!profile.get("watched")) {
@@ -46,6 +46,7 @@ Parse.Cloud.job("migrate-watchedItems-addToUserProfile", async (request) => {
             newWatchedItems.setACL(newWatchedItemsACL);
             newWatchedItems = await newWatchedItems.save(null, { useMasterKey: true });
             profile.set("watched", newWatchedItems);
+            profile.set("isBanned", false);
             await profile.save(null, { useMasterKey: true });
             // And re-save to trigger the beforeSave event to setup auto watches
             await newWatchedItems.save(null, { useMasterKey: true });

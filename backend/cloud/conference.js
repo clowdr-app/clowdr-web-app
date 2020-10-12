@@ -830,7 +830,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             message(`Adding admin user to announcements channel...`);
             await twilioChatService.users().create({
                 identity: adminUserProfile.id,
-                friendlyName: adminUserProfile.get("displayName"),
+                friendlyName: "original-admin",
                 roleSid: twilioChatRoles.get("service admin").sid
             });
             await twilioAnnouncementsChannel.members().create({

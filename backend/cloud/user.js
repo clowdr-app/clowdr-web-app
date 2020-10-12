@@ -18,6 +18,7 @@ const {
 const { validateRequest } = require("./utils");
 const Config = require("./config")
 const { generateRoleDBName } = require("./role");
+const { v4: uuidv4 } = require("uuid");
 
 async function getUserByEmail(email) {
     let query = new Parse.Query(Parse.User);
@@ -153,12 +154,9 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
     // Adding the user will trigger our Twilio backend to add them to the announcements channel
     await twilioChatService.users.create({
         identity: newProfile.id,
-        friendlyName: newProfile.get("displayName"),
+        friendlyName: uuidv4(),
         xTwilioWebhookEnabled: true
     });
-
-    // And now we re-save the new watched items to trigger the beforeSave event
-    // which will now be able to set up the auto watches correctly
 
     const chatsToAutoWatch = await getAutoWatchTextChats(conference, user.getSessionToken());
     newWatchedItems.set("watchedChats", chatsToAutoWatch.map(x => x.id));

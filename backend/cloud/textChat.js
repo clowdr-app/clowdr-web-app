@@ -24,7 +24,7 @@ async function ensureTwilioUsersExist(service, profiles) {
         if (!existingUserProfileIds.includes(x.id)) {
             return service.users.create({
                 identity: x.id,
-                friendlyName: x.get("displayName")
+                friendlyName: uuidv4()
             });
         }
         return null;

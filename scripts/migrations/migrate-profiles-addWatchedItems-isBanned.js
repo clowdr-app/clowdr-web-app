@@ -11,7 +11,7 @@ async function main() {
     Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
     Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
-    await Parse.Cloud.startJob("migrate-watchedItems-addToUserProfile", {});
+    await Parse.Cloud.startJob("migrate-watchedItems-isBanned-addToUserProfile", {});
 }
 
 main();
