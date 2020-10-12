@@ -41,7 +41,7 @@ export default function FlairChip(props: Props) {
         className={classes.reduce((x, y) => `${x} ${y}`)}
         style={selectedStyles}
         onClick={props.onClick}
-        title={f.label}
+        title={f.tooltip}
     >
         <span>{label}</span>
     </div>;
