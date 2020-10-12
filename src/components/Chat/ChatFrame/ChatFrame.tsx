@@ -7,6 +7,8 @@ import MessageList from "../MessageList/MessageList";
 import "./ChatFrame.scss";
 import { Picker as EmojiPicker } from 'emoji-mart';
 import { ChatDescriptor } from "../../../classes/Chat";
+import ReactDOM from "react-dom";
+import useEmojiPicker from "../../../hooks/useEmojiPicker";
 
 interface Props {
     chatId: string;
@@ -16,14 +18,31 @@ interface Props {
 export default function ChatFrame(props: Props) {
     const mChat = useMaybeChat();
     const logger = useLogger("Chat Frame");
+    const emoji = useEmojiPicker();
     const [newMsgText, setNewMsgText] = useState("");
     const [newMsgEnabled, setNewMsgEnabled] = useState(true);
     const msgBoxRef = useRef<HTMLTextAreaElement>(null);
     const { isAdmin } = useUserRoles();
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [tc, setTC] = useState<ChatDescriptor | null>(null);
+    const emojiButton = useRef<HTMLButtonElement | null>(null);
+    const [emojiButtonPosition, setEmojiButtonPosition] = useState<{ bottom: number, right: number } | null>(null);
 
     useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, setTC, [mChat, props.chatId]);
+
+    const getEmojiPickerOffset = () => {
+        if (emojiButton && emojiButton.current) {
+            var rect = emojiButton.current.getBoundingClientRect();
+            var win = emojiButton.current.ownerDocument.defaultView;
+
+            setEmojiButtonPosition({
+                bottom: win ? win.innerHeight - rect.top - 20 : 0,
+                right: win ? win.innerWidth - rect.left - 20 : 0,
+            });
+        } else {
+            setEmojiButtonPosition(null);
+        }
+    }
 
     async function sendMessage(ev: React.KeyboardEvent<HTMLTextAreaElement>) {
         if (ev.key === "Enter" && !ev.shiftKey) {
@@ -89,23 +108,32 @@ export default function ChatFrame(props: Props) {
                     disabled={!newMsgEnabled}>
                 </textarea>
                 <div className="add-emoji">
-                    {showEmojiPicker
-                        ? <EmojiPicker
-                            showPreview={false}
-                            useButton={false}
-                            title="Pick a reaction"
-                            onSelect={async (ev) => {
-                                setShowEmojiPicker(false);
-                                const emojiId = (ev as any).native;
-                                setNewMsgText(newMsgText + emojiId);
-                            }}
-                        />
+                    {showEmojiPicker && emoji?.element
+                        ? ReactDOM.createPortal(
+                            <EmojiPicker
+                                style={{
+                                    zIndex: 999,
+                                    position: 'absolute',
+                                    bottom: `${emojiButtonPosition?.bottom ?? 0}px`,
+                                    right: `${emojiButtonPosition?.right ?? 0}px`
+                                }}
+                                showPreview={false}
+                                useButton={false}
+                                title="Pick a reaction"
+                                onSelect={async (ev) => {
+                                    setShowEmojiPicker(false);
+                                    const emojiId = (ev as any).native;
+                                    setNewMsgText(newMsgText + emojiId);
+                                }}
+                            />, emoji.element)
                         : <></>
                     }
                     <button
                         onClick={(ev) => {
+                            getEmojiPickerOffset();
                             setShowEmojiPicker(!showEmojiPicker);
-                        }}>
+                        }}
+                        ref={emojiButton}>
                         <i className="fas fa-smile-beam"></i>+
                     </button>
                 </div>

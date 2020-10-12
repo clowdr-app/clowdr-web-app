@@ -9,6 +9,7 @@ import UserProfileContext from '../../contexts/UserProfileContext';
 import ChatContext from '../../contexts/ChatContext';
 import VideoContext from '../../contexts/VideoContext';
 import UserRolesContext from "../../contexts/UserRolesContext";
+import EmojiContext from '../../contexts/EmojiContext';
 import useLogger from '../../hooks/useLogger';
 import Caches from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache";
 import { Conference, UserProfile, _Role, _User } from "@clowdr-app/clowdr-db-schema";
@@ -188,7 +189,7 @@ export default function App() {
                             await cache.updateUserAuthenticated(
                                 { authed: true, sessionToken: user.getSessionToken() },
                                 previousManagerOrAdmin !== isManager || previousUserId !== user.id
-                                );
+                            );
 
                             LocalStorage_Conference.wasManagerOrAdmin = isManager;
                             LocalStorage_Conference.previousUserId = user.id;
@@ -354,7 +355,7 @@ export default function App() {
             await cache.updateUserAuthenticated(
                 { authed: true, sessionToken: parseUser.sessionToken },
                 previousManagerOrAdmin !== isManager || previousUserId !== parseUser.user.id
-                );
+            );
 
             LocalStorage_Conference.wasManagerOrAdmin = isManager;
             LocalStorage_Conference.previousUserId = parseUser.user.id;
@@ -498,6 +499,8 @@ export default function App() {
             appClassNames.push(sidebarOpen ? "sidebar-open" : "sidebar-closed");
         }
 
+        const emojiPickerElement = document.getElementById("emoji-picker");
+
         // TODO: Wrap this in an error boundary to handle null cache/conference/user and unexpected errors
 
         const appClassName = appClassNames.reduce((x, y) => `${x} ${y}`);
@@ -508,8 +511,10 @@ export default function App() {
                     <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
                         <VideoContext.Provider value={videoReady ? Video.instance() : null}>
                             <UserRolesContext.Provider value={appState.userRoles}>
-                                {sidebar}
-                                {page}
+                                <EmojiContext.Provider value={{ element: emojiPickerElement}}>
+                                    {sidebar}
+                                    {page}
+                                </EmojiContext.Provider>
                             </UserRolesContext.Provider>
                         </VideoContext.Provider>
                     </ChatContext.Provider>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import "./Message.scss";
 
 // @ts-ignore
@@ -22,6 +22,8 @@ import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import IMember from "../../../classes/Chat/IMember";
 import useUserRoles from "../../../hooks/useUserRoles";
+import useEmojiPicker from "../../../hooks/useEmojiPicker";
+import ReactDOM from "react-dom";
 
 export type RenderedMessage = {
     chatSid: string;
@@ -140,6 +142,25 @@ export default function Message(props: {
     const [reporting, setReporting] = useState<boolean>(false);
     const [deleting, setDeleting] = useState<boolean>(false);
     const [showProfileOptions, setShowProfileOptions] = useState<boolean>(false);
+
+    const emoji = useEmojiPicker();
+    const emojiButton = useRef<HTMLButtonElement | null>(null);
+    const [emojiButtonPosition, setEmojiButtonPosition] = useState<{ bottom: number, left: number } | null>(null);
+
+
+    const getEmojiPickerOffset = () => {
+        if (emojiButton && emojiButton.current) {
+            var rect = emojiButton.current.getBoundingClientRect();
+            var win = emojiButton.current.ownerDocument.defaultView;
+
+            setEmojiButtonPosition({
+                bottom: win ? win.innerHeight - rect.top : 0,
+                left: rect.left + (win?.scrollX ?? 0) + 20,
+            });
+        } else {
+            setEmojiButtonPosition(null);
+        }
+    }
 
     function toggleAddReaction(msgSid: string) {
         if (pickEmojiForMsgSid) {
@@ -348,28 +369,39 @@ export default function Message(props: {
                 </div>
                 :
                 <div className="reactions"><div className="add-reaction">
-                    {pickEmojiForMsgSid === msg.sid
-                        ? <EmojiPicker
-                            showPreview={false}
-                            useButton={false}
-                            title="Pick a reaction"
-                            onSelect={async (ev) => {
-                                setPickEmojiForMsgSid(null);
-                                const emojiId = ev.colons ?? ev.id;
-                                assert(emojiId);
-                                try {
-                                    assert((await mChat?.addReaction(msg.chatSid, msg.sid, emojiId))?.ok);
-                                }
-                                catch (e) {
-                                    console.error(e);
-                                    addError("Sorry, we could not add your reaction.");
-                                }
-                            }}
-                        />
+                    {pickEmojiForMsgSid === msg.sid && emoji?.element
+                        ? ReactDOM.createPortal(
+                            <EmojiPicker
+                                style={{
+                                    zIndex: 999,
+                                    position: 'absolute',
+                                    bottom: `${emojiButtonPosition?.bottom ?? 0}px`,
+                                    left: `${emojiButtonPosition?.left ?? 0}px`
+                                }}
+                                showPreview={false}
+                                useButton={false}
+                                title="Pick a reaction"
+                                onSelect={async (ev) => {
+                                    setPickEmojiForMsgSid(null);
+                                    const emojiId = ev.colons ?? ev.id;
+                                    assert(emojiId);
+                                    try {
+                                        assert((await mChat?.addReaction(msg.chatSid, msg.sid, emojiId))?.ok);
+                                    }
+                                    catch (e) {
+                                        console.error(e);
+                                        addError("Sorry, we could not add your reaction.");
+                                    }
+                                }}
+                            />, emoji.element)
                         : <></>}
                     <button
                         className="new"
-                        onClick={(ev) => toggleAddReaction(msg.sid)}
+                        ref={emojiButton}
+                        onClick={(ev) => {
+                            getEmojiPickerOffset();
+                            toggleAddReaction(msg.sid);
+                        }}
                     >
                         <i className="fas fa-smile-beam"></i>+
                     </button>
