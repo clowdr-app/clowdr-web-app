@@ -7,6 +7,7 @@ const Twilio = require("twilio");
 
 const { validateRequest } = require("./utils");
 const { generateRoleDBName, getRoleByName, isUserInRoles } = require("./role");
+const assert = require("assert");
 
 /**
  * All the information needed to initialise a fresh conference.
@@ -802,119 +803,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             message(`Configured Twilio chat service.`);
 
             // Create the announcements channel
-            message(`Configuring announcements channel...`);
-            let twilioAnnouncementsChannel = null;
-            async function getAnnouncementsChannel() {
-                let channels = await twilioChatService.channels().list();
-                for (let channel of channels) {
-                    if (channel.friendlyName === TWILIO_ANNOUNCEMENTS_CHANNEL_NAME) {
-                        twilioAnnouncementsChannel = channel;
-                    }
-                }
-            }
-            async function createAnnouncementsChannel() {
-                twilioAnnouncementsChannel = await twilioChatService.channels().create({
-                    friendlyName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
-                    uniqueName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
-                    attributes: {},
-                    type: "public"
-                })
-            }
-            await getAnnouncementsChannel();
-            if (!twilioAnnouncementsChannel) {
-                await createAnnouncementsChannel();
-            }
-            setConfiguration("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", twilioAnnouncementsChannel.sid, true);
-            message(`Configured announcements channel.`);
-
-            message(`Adding admin user to announcements channel...`);
-            await twilioChatService.users().create({
-                identity: adminUserProfile.id,
-                friendlyName: "original-admin",
-                roleSid: twilioChatRoles.get("service admin").sid
-            });
-            await twilioAnnouncementsChannel.members().create({
-                identity: adminUserProfile.id,
-                roleSid: twilioChatRoles.get("announcements admin").sid
-            });
-            message(`Added admin user to announcements channel.`);
-
-            message(`Creating announcements text chat in Parse...`);
-            {
-                const textChat = new Parse.Object("TextChat");
-                textChat.set("autoWatch", true);
-                textChat.set("twilioID", twilioAnnouncementsChannel.sid);
-                textChat.set("conference", conference);
-                textChat.set("mirrored", false);
-                textChat.set("isDM", false);
-                textChat.set("creator", adminUserProfile);
-                textChat.set("name", twilioAnnouncementsChannel.friendlyName);
-
-                const acl = new Parse.ACL();
-                acl.setPublicReadAccess(false);
-                acl.setPublicWriteAccess(false);
-                acl.setRoleReadAccess(managerRole, true);
-                acl.setRoleWriteAccess(managerRole, true);
-                acl.setRoleReadAccess(adminRole, true);
-                acl.setRoleWriteAccess(adminRole, true);
-                acl.setRoleReadAccess(attendeeRole, true);
-                textChat.setACL(acl);
-
-                announcementsChat = await textChat.save(null, { useMasterKey: true });
-            }
-            message(`Created announcements text chat in Parse.`);
-
-            message(`Configuring moderation hub channel...`);
-            let twilioModerationHubChannel = null;
-            async function getModerationHubChannel() {
-                let channels = await twilioChatService.channels().list();
-                for (let channel of channels) {
-                    if (channel.friendlyName === TWILIO_MODERATIONHUB_CHANNEL_NAME) {
-                        twilioModerationHubChannel = channel;
-                    }
-                }
-            }
-            async function createModerationHubChannel() {
-                twilioModerationHubChannel = await twilioChatService.channels().create({
-                    friendlyName: TWILIO_MODERATIONHUB_CHANNEL_NAME,
-                    uniqueName: TWILIO_MODERATIONHUB_CHANNEL_NAME,
-                    attributes: {},
-                    type: "private"
-                })
-            }
-            await getModerationHubChannel();
-            if (!twilioModerationHubChannel) {
-                await createModerationHubChannel();
-            }
-            await twilioModerationHubChannel.members().create({
-                identity: adminUserProfile.id,
-                roleSid: twilioChatRoles.get("channel user").sid
-            });
-            message(`Configured moderation hub channel.`);
-
-            message(`Creating moderation hub text chat in Parse.`);
-            {
-                const textChat = new Parse.Object("TextChat");
-                textChat.set("autoWatch", true);
-                textChat.set("twilioID", twilioModerationHubChannel.sid);
-                textChat.set("conference", conference);
-                textChat.set("mirrored", false);
-                textChat.set("isDM", false);
-                textChat.set("mode", "moderation_hub");
-                textChat.set("creator", adminUserProfile);
-                textChat.set("name", twilioModerationHubChannel.friendlyName);
-
-                const acl = new Parse.ACL();
-                acl.setPublicReadAccess(false);
-                acl.setPublicWriteAccess(false);
-                acl.setRoleReadAccess(managerRole, true);
-                acl.setRoleReadAccess(adminRole, true);
-                acl.setRoleWriteAccess(adminRole, true);
-                textChat.setACL(acl);
-
-                moderationHubChat = await textChat.save(null, { useMasterKey: true });
-            }
-            message(`Created moderation hub text chat in Parse.`);
+            ({ announcementsChat, moderationHubChat } = await configureGlobalChats(message, twilioChatService, setConfiguration, adminUserProfile, twilioChatRoles, conference, managerRole, adminRole, attendeeRole));
 
             // Configure SendGrid
             message(`Configuring SendGrid...`);
@@ -1029,6 +918,278 @@ Parse.Cloud.define("conference-setLoggedInText", async (req) => {
     }
 
     return false;
+});
+
+async function configureGlobalChats(message, twilioChatService, setConfiguration, adminUserProfile, twilioChatRoles, conference, managerRole, adminRole, attendeeRole) {
+    message(`Configuring announcements channel...`);
+    let twilioAnnouncementsChannel = null;
+    async function getAnnouncementsChannel() {
+        let channels = await twilioChatService.channels().list();
+        for (let channel of channels) {
+            if (channel.friendlyName === TWILIO_ANNOUNCEMENTS_CHANNEL_NAME) {
+                twilioAnnouncementsChannel = channel;
+            }
+        }
+    }
+    async function createAnnouncementsChannel() {
+        twilioAnnouncementsChannel = await twilioChatService.channels().create({
+            friendlyName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
+            uniqueName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
+            attributes: {},
+            type: "public"
+        });
+    }
+    await getAnnouncementsChannel();
+    if (!twilioAnnouncementsChannel) {
+        await createAnnouncementsChannel();
+    }
+    setConfiguration("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", twilioAnnouncementsChannel.sid, true);
+    message(`Configured announcements channel.`);
+
+    message(`Adding admin user to announcements channel...`);
+    try {
+        await twilioChatService.users().create({
+            identity: adminUserProfile.id,
+            friendlyName: "original-admin",
+            roleSid: twilioChatRoles.get("service admin").sid
+        });
+    }
+    catch (e) {
+        if (!e.toString().toLowerCase().includes("user already exists")) {
+            throw e;
+        }
+    }
+    await twilioAnnouncementsChannel.members().create({
+        identity: adminUserProfile.id,
+        roleSid: twilioChatRoles.get("announcements admin").sid
+    });
+    message(`Added admin user to announcements channel.`);
+
+    message(`Creating announcements text chat in Parse...`);
+    let announcementsChat;
+    {
+        const textChat = new Parse.Object("TextChat");
+        textChat.set("autoWatch", true);
+        textChat.set("twilioID", twilioAnnouncementsChannel.sid);
+        textChat.set("conference", conference);
+        textChat.set("mirrored", false);
+        textChat.set("isDM", false);
+        textChat.set("creator", adminUserProfile);
+        textChat.set("name", twilioAnnouncementsChannel.friendlyName);
+
+        const acl = new Parse.ACL();
+        acl.setPublicReadAccess(false);
+        acl.setPublicWriteAccess(false);
+        acl.setRoleReadAccess(managerRole, true);
+        acl.setRoleWriteAccess(managerRole, true);
+        acl.setRoleReadAccess(adminRole, true);
+        acl.setRoleWriteAccess(adminRole, true);
+        acl.setRoleReadAccess(attendeeRole, true);
+        textChat.setACL(acl);
+
+        announcementsChat = await textChat.save(null, { useMasterKey: true });
+    }
+    message(`Created announcements text chat in Parse.`);
+
+    message(`Configuring moderation hub channel...`);
+    let twilioModerationHubChannel = null;
+    async function getModerationHubChannel() {
+        let channels = await twilioChatService.channels().list();
+        for (let channel of channels) {
+            if (channel.friendlyName === TWILIO_MODERATIONHUB_CHANNEL_NAME) {
+                twilioModerationHubChannel = channel;
+            }
+        }
+    }
+    async function createModerationHubChannel() {
+        twilioModerationHubChannel = await twilioChatService.channels().create({
+            friendlyName: TWILIO_MODERATIONHUB_CHANNEL_NAME,
+            uniqueName: TWILIO_MODERATIONHUB_CHANNEL_NAME,
+            attributes: {},
+            type: "private"
+        });
+    }
+    await getModerationHubChannel();
+    if (!twilioModerationHubChannel) {
+        await createModerationHubChannel();
+    }
+    await twilioModerationHubChannel.members().create({
+        identity: adminUserProfile.id,
+        roleSid: twilioChatRoles.get("channel user").sid
+    });
+    message(`Configured moderation hub channel.`);
+
+    let moderationHubChat;
+    message(`Creating moderation hub text chat in Parse.`);
+    {
+        const textChat = new Parse.Object("TextChat");
+        textChat.set("autoWatch", true);
+        textChat.set("twilioID", twilioModerationHubChannel.sid);
+        textChat.set("conference", conference);
+        textChat.set("mirrored", false);
+        textChat.set("isDM", false);
+        textChat.set("mode", "moderation_hub");
+        textChat.set("creator", adminUserProfile);
+        textChat.set("name", twilioModerationHubChannel.friendlyName);
+
+        const acl = new Parse.ACL();
+        acl.setPublicReadAccess(false);
+        acl.setPublicWriteAccess(false);
+        acl.setRoleReadAccess(managerRole, true);
+        acl.setRoleReadAccess(adminRole, true);
+        acl.setRoleWriteAccess(adminRole, true);
+        textChat.setACL(acl);
+
+        moderationHubChat = await textChat.save(null, { useMasterKey: true });
+    }
+    message(`Created moderation hub text chat in Parse.`);
+    return { announcementsChat, moderationHubChat };
+}
+
+Parse.Cloud.job("regenerate-global-chats", async (request) => {
+    const { params, message: _message } = request;
+    const message = (msg) => {
+        console.log(msg);
+        _message(msg);
+    };
+
+    // Stuff we re-use but doesn't directly need cleaning up
+    let twilioSubaccountClient = null;
+    let twilioChatService = null;
+
+    // Stuff to be cleaned up if creation fails
+    let conference = null;
+    const roleMap = new Map();
+    let adminUser = null;
+    let adminUserProfile = null;
+    const configurationMap = new Map();
+
+    try {
+        message("Starting...");
+
+        message("Validating parameters");
+
+        let requestValidation = validateRequest({
+            conference: "string",
+            adminUserId: "string"
+        }, params);
+        if (requestValidation.ok) {
+            conference = await new Parse.Object("Conference", { id: params.conference }).fetch({ useMasterKey: true });
+            assert(conference);
+
+            await new Parse.Query("_Role")
+                .equalTo("conference", conference)
+                .each(role => {
+                    roleMap.set(role.get("name").split("-")[1], role);
+                }, { useMasterKey: true });
+
+            const adminRole = roleMap.get("admin");
+            const managerRole = roleMap.get("manager");
+            const attendeeRole = roleMap.get("attendee");
+            assert(adminRole);
+            assert(managerRole);
+            assert(attendeeRole);
+
+            // Helper function re-used throughout
+            async function setConfiguration(key, value, attendeeRead, publicRead) {
+                message(`Creating configuration: ${key}`);
+                const acl = new Parse.ACL();
+                acl.setPublicReadAccess(false);
+                acl.setPublicWriteAccess(false);
+                if (publicRead) {
+                    acl.setPublicReadAccess(true);
+                }
+                else if (attendeeRead) {
+                    acl.setRoleReadAccess(attendeeRole, true);
+                }
+                else {
+                    acl.setRoleReadAccess(adminRole, true);
+                }
+                acl.setRoleWriteAccess(adminRole, true);
+
+                const configurationO = new Parse.Object("ConferenceConfiguration");
+                configurationO.setACL(acl);
+                const configuration = await configurationO.save({
+                    key: key,
+                    value: value,
+                    conference: conference
+                }, {
+                    useMasterKey: true
+                });
+
+                configurationMap.set(key, configuration);
+
+                message(`Created configuration: ${key}`);
+                return configuration;
+            }
+
+            adminUser = await new Parse.Object("_User", { id: params.adminUserId }).fetch({ useMasterKey: true });
+            assert(adminUser);
+
+            adminUserProfile = await
+                new Parse.Query("UserProfile")
+                    .equalTo("conference", conference)
+                    .equalTo("user", adminUser)
+                    .first({ useMasterKey: true });
+            assert(adminUserProfile);
+
+            async function getTwilioSubaccountClient() {
+                const TWILIO_ACCOUNT_SID
+                    = (await new Parse.Query("ConferenceConfiguration")
+                        .equalTo("conference", conference)
+                        .equalTo("key", "TWILIO_ACCOUNT_SID")
+                        .first({ useMasterKey: true })).get("value");
+                const TWILIO_AUTH_TOKEN
+                    = (await new Parse.Query("ConferenceConfiguration")
+                        .equalTo("conference", conference)
+                        .equalTo("key", "TWILIO_AUTH_TOKEN")
+                        .first({ useMasterKey: true })).get("value");
+
+                twilioSubaccountClient = Twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+            }
+            await getTwilioSubaccountClient();
+
+            async function getTwilioChatService() {
+                let services = await twilioSubaccountClient.chat.services.list();
+                for (let service of services) {
+                    if (service.friendlyName === "main") {
+                        twilioChatService = service;
+                    }
+                }
+            }
+            await getTwilioChatService();
+            assert(twilioChatService);
+
+            const twilioChatRoles = new Map();
+            async function getChatRoles() {
+                message(`Getting chat roles`);
+                const roles = await twilioChatService.roles().list();
+                message(`Got chat roles, processing them...`);
+                for (let role of roles) {
+                    twilioChatRoles.set(role.friendlyName, role);
+                }
+                message(`Obtained and processed chat roles`);
+            }
+            await getChatRoles();
+
+            await Promise.all((await twilioChatService.users().list()).map(x => x.remove()));
+
+            // Create the announcements channel
+            await configureGlobalChats(message, twilioChatService, setConfiguration, adminUserProfile, twilioChatRoles, conference, managerRole, adminRole, attendeeRole);
+
+            message(conference.id);
+        }
+        else {
+            console.error("ERROR: " + requestValidation.error);
+            message(requestValidation.error);
+            throw new Error(requestValidation.error);
+        }
+    }
+    catch (e) {
+        console.error("ERROR: " + e.stack, e);
+        message(e);
+        throw e;
+    }
 });
 
 module.exports = {
