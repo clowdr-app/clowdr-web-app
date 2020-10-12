@@ -272,14 +272,14 @@ export default function ViewSession(props: Props) {
                                 ? (textChatId === false
                                     ? <p>The current event does not have a text chat.</p>
                                     : <LoadingSpinner message="Loading text chat" />)
-                                : <p>This session is no longer live. Please choose a specific event to participate in its conversation.</p>
+                                : <p>This session is not currently live. Please choose a specific event to participate in its conversation.</p>
                         }
                         <button onClick={() => setChatSize(0)}>
                             &#9660;
                         </button>
                     </div>
                 </SplitterLayout>
-                : <p>This session is no longer live. Please choose a specific event from the list available via the menu button above.</p>
+                : <p>This session is not currently live. Please choose a specific event from the list available via the menu button above.</p>
             : <LoadingSpinner message="Loading session" />
         }
     </div>;
