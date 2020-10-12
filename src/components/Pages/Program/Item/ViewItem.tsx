@@ -7,6 +7,7 @@ import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
+import ChatFrame from "../../../Chat/ChatFrame/ChatFrame";
 import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import AuthorsList from "../AuthorsList";
@@ -16,6 +17,7 @@ import "./ViewItem.scss";
 interface Props {
     item: ProgramItem | string;
     heading?: HeadingState;
+    textChatFeedOnly?: boolean;
 }
 
 export default function ViewItem(props: Props) {
@@ -34,6 +36,24 @@ export default function ViewItem(props: Props) {
     useSafeAsync(async () => item ? await item.authorPerons : null, setAuthors, [item]);
     useSafeAsync(async () => item ? await item.attachments : null, setAttachments, [item]);
     useSafeAsync(async () => (await item?.feed) ?? null, setFeed, [item]);
+
+    const [textChatId, setTextChatId] = useState<string | null>(null);
+    useSafeAsync(async () => {
+        const itemFeed = await item?.feed;
+        if (itemFeed) {
+            if (itemFeed.textChatId) {
+                return itemFeed.textChatId;
+            }
+            else if (itemFeed.videoRoomId) {
+                const itemVideoRoom = await itemFeed.videoRoom;
+                const roomTextChat = await itemVideoRoom?.textChat;
+                if (roomTextChat) {
+                    return roomTextChat.id;
+                }
+            }
+        }
+        return null;
+    }, setTextChatId, [item]);
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);
@@ -95,13 +115,23 @@ export default function ViewItem(props: Props) {
     return <div className="program-item">
         {item && authors
             ? <>
-                {feed
-                    ? <>
-                        <h2>{feed.name}</h2>
-                        <ViewContentFeed feed={feed} />
-                        <hr />
-                    </>
-                    : <></>}
+                {props.textChatFeedOnly ?
+                    (textChatId
+                        ? <>
+                            <div className="content-feed">
+                                <ChatFrame chatId={textChatId} />
+                            </div>
+                            <hr />
+                        </>
+                        : <></>
+                    )
+                    : (feed
+                        ? <>
+                            <h2>{feed.name}</h2>
+                            <ViewContentFeed feed={feed} />
+                            <hr />
+                        </>
+                        : <></>)}
                 <div className="info">
                     <ReactMarkdown className="abstract">{item.abstract}</ReactMarkdown>
                     <AuthorsList authors={authors} />

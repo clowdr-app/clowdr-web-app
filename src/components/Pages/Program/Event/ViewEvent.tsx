@@ -1,6 +1,6 @@
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { ProgramItem, ProgramSession, ProgramSessionEvent, ContentFeed, WatchedItems } from "@clowdr-app/clowdr-db-schema";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
@@ -37,6 +37,24 @@ export default function ViewEvent(props: Props) {
     useSafeAsync(async () => await event?.session ?? null, setSession, [event]);
     useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session]);
     useSafeAsync(async () => event ? ((await event.feed) ?? "not present") : null, setEventFeed, [event]);
+
+    const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false);
+    useEffect(() => {
+        const _now = Date.now();
+        if (event && _now < event.endTime.getTime()) {
+            const tDist =
+                _now < event.startTime.getTime()
+                    ? (_now - event.startTime.getTime())
+                    : (_now - event.endTime.getTime());
+            const t = setTimeout(() => {
+                setRefreshTrigger(old => !old);
+            }, Math.max(3000, tDist / 2));
+            return () => {
+                clearTimeout(t);
+            };
+        }
+        return () => { };
+    }, [event, refreshTrigger]);
 
     // Subscribe to data updates
     const onSessionEventUpdated = useCallback(function _onSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
@@ -225,27 +243,36 @@ export default function ViewEvent(props: Props) {
     // TODO: Offer to auto-move to the session's next event 30 secs before the
     //       end of the current event
 
+    const renderNow = Date.now();
+    const isLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
     return <div className="program-event">
-        {sessionFeed
-            ? <div className="session-feed">
-                <h2>{sessionFeed.name}</h2>
-                <ViewContentFeed feed={sessionFeed} />
-            </div>
-            : <LoadingSpinner message="Loading session feed" />}
-        {eventFeed
-            ? (eventFeed !== "not present"
-                ? <div className="event-feed">
-                    <h2>{eventFeed.name}</h2>
-                    <ViewContentFeed feed={eventFeed} />
+        {isLive ?
+            sessionFeed
+                ? <div className="session-feed">
+                    <h2>{sessionFeed.name}</h2>
+                    <ViewContentFeed feed={sessionFeed} />
                 </div>
-                : <></>)
-            : <LoadingSpinner message="Loading event feed" />}
+                : <LoadingSpinner message="Loading session feed" />
+            : <></>}
+        {!isLive ?
+            eventFeed
+                ? (eventFeed !== "not present"
+                    ? <div className="event-feed">
+                        <h2>{eventFeed.name}</h2>
+                        <ViewContentFeed feed={eventFeed} />
+                    </div>
+                    : <></>)
+                : <LoadingSpinner message="Loading event feed" />
+            : <></>}
         {item
-            ? <ViewItem item={item} heading={{
-                title: item?.title ?? "Event",
-                subtitle: event ? <>{fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}</> : undefined,
-                buttons: buttons.length > 0 ? buttons : undefined
-            }} />
+            ? <ViewItem
+                item={item}
+                textChatFeedOnly={isLive}
+                heading={{
+                    title: item?.title ?? "Event",
+                    subtitle: event ? <>{fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}</> : undefined,
+                    buttons: buttons.length > 0 ? buttons : undefined
+                }} />
             : <LoadingSpinner />}
     </div>;
 }

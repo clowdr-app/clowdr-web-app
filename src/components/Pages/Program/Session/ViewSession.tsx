@@ -78,13 +78,21 @@ export default function ViewSession(props: Props) {
         [session, shouldDoRefresh]);
 
     useEffect(() => {
-        const t = setInterval(() => {
-            setShouldDoRefresh(true);
-        }, 1000 * 30);
-        return () => {
-            clearInterval(t);
-        };
-    }, []);
+        const _now = Date.now();
+        if (session && _now < session.endTime.getTime()) {
+            const tDist =
+                _now < session.startTime.getTime()
+                    ? (_now - session.startTime.getTime())
+                    : (_now - session.endTime.getTime());
+            const t = setInterval(() => {
+                setShouldDoRefresh(true);
+            }, Math.max(3000, tDist / 2));
+            return () => {
+                clearInterval(t);
+            };
+        }
+        return () => { };
+    }, [session, shouldDoRefresh]);
 
     // Subscribe to data updates
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
