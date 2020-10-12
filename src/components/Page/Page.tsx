@@ -117,7 +117,7 @@ function Page(props: Props) {
                 contents: <Switch>
                     <Route path="/program/new" component={ComingSoon} />
 
-                    {(isAdmin || isManager) ? <Route path="/moderation/hub" component={ModerationHub} /> : <Redirect to="/" />}
+                    <Route path="/moderation/hub" component={(isAdmin || isManager) ? ModerationHub : NotFound} />
                     <Route path="/moderation/:chatId" component={(p: RouteComponentProps<any>) =>
                         <ModerationChat chatId={p.match.params.chatId} />
                     } />

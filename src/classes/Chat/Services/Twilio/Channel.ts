@@ -154,7 +154,8 @@ export default class Channel implements IChannel {
         if (this.textChat.isDM) {
             assert(this.service.conference);
             const channel = await this.upgrade();
-            const members = await channel.getMembers();
+            const name = this.getName();
+            const members = (await channel.getMembers()).filter(x => name.includes(x.identity));
             const [member1, member2] = members.map(x => new Member(x));
 
             const [member1Online, member2Online] = await Promise.all([
