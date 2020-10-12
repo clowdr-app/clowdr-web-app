@@ -1,7 +1,9 @@
 @import "../../../styles/util.scss";
 
 .flair-input {
-    display: flex;
+    display  : flex;
+    flex-wrap: wrap;
+    row-gap  : 0.7em;
 
     .chip-container {
         margin-right: mm(3);

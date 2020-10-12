@@ -5,6 +5,7 @@
     display       : flex;
     flex-direction: column;
     padding       : mm(5);
+    width         : 100%;
 
     a.exhibit__title {
         color: inherit;
@@ -13,6 +14,7 @@
     .view-item {
         margin-top: auto;
         text-align: right;
+
         .button {
             margin-top: mm(5);
         }
