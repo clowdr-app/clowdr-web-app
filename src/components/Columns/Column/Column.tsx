@@ -31,14 +31,16 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
 
     const items = props.items
         ? props.items.length > 0
-            ? props.items
-            .filter(item => item.text.toLowerCase().includes(searchString.toLowerCase()))
-            .sort((a, b) => props.sort ? props.sort(a, b) : a.text.localeCompare(b.text))
-            .map(item => {
-                return <li key={item.key} className="column-item">
-                    {props.itemRenderer.render(item)}
-                </li>;
-            })
+            ? (searchString.length >= 3 ?
+                props.items
+                    .filter(item => item.text.toLowerCase().includes(searchString.toLowerCase()))
+                : props.items
+            ).sort((a, b) => props.sort ? props.sort(a, b) : a.text.localeCompare(b.text))
+                .map(item => {
+                    return <li key={item.key} className="column-item">
+                        {props.itemRenderer.render(item)}
+                    </li>;
+                })
             : <p>{props.emptyMessage}</p>
         : <LoadingSpinner message={props.loadingMessage} />;
 
