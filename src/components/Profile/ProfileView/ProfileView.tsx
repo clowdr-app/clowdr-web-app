@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import FlairChip from "../FlairChip/FlairChip";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
+import LocalStorage from "../../../classes/LocalStorage/ProfileEditing";
 
 interface Props {
     profile: UserProfile;
@@ -16,6 +17,8 @@ interface Props {
 
 export default function ProfileView(props: Props) {
     const p = props.profile;
+
+    LocalStorage.justSavedProfile = false;
 
     const [flairs, setFlairs] = useState<Flair[]>([]);
 

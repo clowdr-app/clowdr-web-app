@@ -6,6 +6,7 @@ import ProfileView from "../../Profile/ProfileView/ProfileView";
 import useConference from "../../../hooks/useConference";
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import LocalStorage from "../../../classes/LocalStorage/ProfileEditing";
 
 interface Props {
     userProfileId: string;
@@ -15,7 +16,7 @@ export default function Profile(props: Props) {
     const loggedInUserProfile = useUserProfile();
     const conference = useConference();
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [editing, setEditing] = useState(true);
+    const [editing, setEditing] = useState(!LocalStorage.justSavedProfile);
 
     useHeading({
         title: profile ? profile.displayName : "Profile",

@@ -72,37 +72,33 @@ export default function Register(props: Props) {
     }
 
     async function onSubmit(data: FormData) {
-        async function _onSubmit() {
+        try {
+            setStatus({ state: "waiting" });
+            const p = makeCancelable(doRegister(data));
+
+            let ok: boolean | string = false;
             try {
-                setStatus({ state: "waiting" });
-                const p = makeCancelable(doRegister(data));
-
-                let ok: boolean | string = false;
-                try {
-                    ok = await p.promise;
-                }
-                catch (e) {
-                    ok = false;
-                    console.error("Failed to register", e);
-                }
-
-                setStatus(ok && ok !== "Use existing password" ? { state: "registered" } : { state: "notwaiting" });
-
-                if (!ok) {
-                    addError("Registration failed.");
-                }
-                else if (ok === "Use existing password") {
-                    addError("You already have a Clowdr account, but you need to register a new profile for this conference. Please use your existing Clowdr password.");
-                }
+                ok = await p.promise;
             }
             catch (e) {
-                if (!e.isCanceled) {
-                    throw e;
-                }
+                ok = false;
+                console.error("Failed to register", e);
+            }
+
+            setStatus(ok && ok !== "Use existing password" ? { state: "registered" } : { state: "notwaiting" });
+
+            if (!ok) {
+                addError("Registration failed.");
+            }
+            else if (ok === "Use existing password") {
+                addError("You already have a Clowdr account, but you need to register a new profile for this conference. Please use your existing Clowdr password.");
             }
         }
-
-        _onSubmit();
+        catch (e) {
+            if (!e.isCanceled) {
+                throw e;
+            }
+        }
     }
 
     const goToSignInButton =

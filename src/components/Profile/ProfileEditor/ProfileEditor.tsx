@@ -9,8 +9,10 @@ import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 // TODO: import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
 import "./ProfileEditor.scss";
-import AsyncButton from "../../AsyncButton/AsyncButton";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
+import { useForm } from "react-hook-form";
+import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import LocalStorage from "../../../classes/LocalStorage/ProfileEditing";
 
 interface Props {
     profile: UserProfile;
@@ -24,6 +26,9 @@ function sameObjects(xs: { id: string }[], ys: { id: string }[]) {
 
 export default function ProfileEditor(props: Props) {
     const p = props.profile;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { register, handleSubmit, watch, errors } = useForm<FormData>();
 
     const [displayName, setDisplayName] = useState(p.displayName);
     const [realName, setRealName] = useState(p.realName);
@@ -73,6 +78,8 @@ export default function ProfileEditor(props: Props) {
         p.primaryFlairId = primaryFlair?.id;
         p.bio = bio;
 
+        LocalStorage.justSavedProfile = true;
+
         await p.save();
     };
 
@@ -117,6 +124,24 @@ export default function ProfileEditor(props: Props) {
         p.bio !== bio ||
         !sameObjects(originalFlairs, modifiedFlairs);
 
+    async function onSubmit(data: FormData) {
+        try {
+            setIsSaving(true);
+            const promise = makeCancelable(saveProfile());
+
+            await promise.promise;
+            setIsSaving(false);
+            addNotification("Profile saved.");
+        }
+        catch (e) {
+            if (!e.isCanceled) {
+                setIsSaving(false);
+                addError("Sorry, an error occurred and we were unable to save your profile.");
+                throw e;
+            }
+        }
+    }
+
     return <div className="profile-editor">
         <div className="content">
             <div className="photo">
@@ -141,7 +166,7 @@ export default function ProfileEditor(props: Props) {
                     </label>
                 </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit(onSubmit)}>
                 {makeTextInput("Real Name", realName, setRealName)}
                 {makeTextInput("Display Name", displayName, setDisplayName)}
                 <label htmlFor="pronouns">Pronouns</label>
@@ -189,19 +214,10 @@ export default function ProfileEditor(props: Props) {
                 <div className="submit-container">
                     <button
                         type="button"
-                        disabled={isFormDirty}
                         title={isFormDirty ? "Please save your profile info." : undefined}
                         onClick={props.setViewing}
                     >Preview</button>
-                    <AsyncButton content="Save" action={async () => {
-                        try {
-                            await saveProfile();
-                            addNotification("Profile saved.");
-                        }
-                        catch {
-                            addError("Sorry, an error occurred and we were unable to save your profile.");
-                        }
-                    }} setIsRunning={setIsSaving} />
+                    <input type="submit" value="Save" />
                 </div>
             </form>
         </div>
