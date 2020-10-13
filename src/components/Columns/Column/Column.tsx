@@ -22,7 +22,7 @@ interface Props<RenderData> {
 
 export default function Column<RenderData = undefined>(props: Props<RenderData>) {
 
-    let [searchString, setSearchString] = useState<string>("");
+    const [searchString, setSearchString] = useState<string>("");
 
     const search = <div className="column__search">
         <i className="fas fa-search column__search__icon"></i>
@@ -58,14 +58,5 @@ export interface ItemRenderer<RenderData> {
 export class DefaultItemRenderer implements ItemRenderer<undefined> {
     render(item: Item<undefined>): JSX.Element {
         return item.link ? <Link to={item.link}>{item.text}</Link> : <>{item.text}</>;
-    }
-}
-
-export class FontAwesomeIconItemRenderer implements ItemRenderer<{ icon?: string }> {
-    render(item: Item<{ icon?: string }>): JSX.Element {
-        return <>
-            <i className={`${item.renderData.icon} column-item__icon`}></i>
-            {item.link ? <Link to={item.link}>{item.text}</Link> : <>{item.text}</>}
-        </>
     }
 }
