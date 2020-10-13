@@ -64,11 +64,6 @@ export default function Sidebar(props: Props) {
         {sideBarHeading}
     </div>
 
-    const mainMenuGroup: JSX.Element = <MainMenuGroup />;
-    const chatsExpander: JSX.Element = <ChatsGroup minSearchLength={minSearchLength} />;
-    const roomsExpander: JSX.Element = <RoomsGroup minSearchLength={minSearchLength} />;
-    const programExpander: JSX.Element = <ProgramGroup minSearchLength={minSearchLength} />;
-
     return <>
         {!props.open ? sideBarButton : <></>}
         <div
@@ -79,10 +74,15 @@ export default function Sidebar(props: Props) {
             {headerBar}
             <div className="sidebar-scrollable">
                 <div className="menu">
-                    {mainMenuGroup}
-                    {chatsExpander}
-                    {roomsExpander}
-                    {programExpander}
+                    {mUser ?
+                        <>
+                            <MainMenuGroup />
+                            <ChatsGroup minSearchLength={minSearchLength} />
+                            <RoomsGroup minSearchLength={minSearchLength} />
+                            <ProgramGroup minSearchLength={minSearchLength} />
+                        </>
+                        : <></>
+                    }
                 </div>
 
                 <FooterLinks doLogout={mUser ? props.doLogout : undefined} />
