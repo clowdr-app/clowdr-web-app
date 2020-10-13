@@ -329,7 +329,7 @@ export default function RoomsGroup(props: Props) {
                 dispatchUpdate({ action: "searchRooms", search: null });
             }
         },
-        { type: "link", label: "Show all rooms", icon: "fas fa-person-booth", url: "/room" },
+        { type: "link", label: "Show all rooms", icon: "fas fa-mug-hot", url: "/room" },
         { type: "link", label: "Create new room", icon: "fas fa-plus", url: "/room/new" }
     ];
 
