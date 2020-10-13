@@ -27,6 +27,7 @@ ReactDOM.render(
         <BrowserRouter basename={process.env.PUBLIC_URL}>
             <ToastContainer limit={3} />
             <App />
+            {/*<>This site is down for maintenance. Please try again in a few minutes.</>*/}
         </BrowserRouter>
     </React.StrictMode>,
     document.getElementById('root')

@@ -28,7 +28,7 @@ export default function ViewSession(props: Props) {
     const [chatSize, setChatSize] = useState(30);
     const [showEventsList, setShowEventsList] = useState<boolean>(false);
     const [textChatId, setTextChatId] = useState<string | false | null>(null);
-    const [shouldDoRefresh, setShouldDoRefresh] = useState<boolean>(true);
+    const [previousSessionId, setPreviousSessionId] = useState<string | null>(session?.id ?? null);
 
     // Initial data fetch
     useSafeAsync(
@@ -43,7 +43,7 @@ export default function ViewSession(props: Props) {
 
     useSafeAsync(
         async () => {
-            if (!shouldDoRefresh) {
+            if (previousSessionId === session?.id) {
                 return undefined;
             }
 
@@ -56,45 +56,26 @@ export default function ViewSession(props: Props) {
                     const liveFeed = await liveItem.feed;
                     if (liveFeed) {
                         if (liveFeed.textChatId) {
-                            return {
-                                ef: await liveEvent.feed ?? null,
-                                tc: liveFeed.textChatId as string | false | null
-                            };
+                            return liveFeed.textChatId;
                         }
                         else if (liveFeed.videoRoomId) {
                             const liveVideoRoom = await liveFeed.videoRoom;
                             const liveChat = await liveVideoRoom?.textChat;
                             if (liveChat) {
-                                return {
-                                    ef: await liveEvent.feed ?? null,
-                                    tc: liveChat.id as string | false | null
-                                };
+                                return liveChat.id;
                             }
                         }
                     }
-                    return {
-                        ef: await liveEvent.feed ?? null,
-                        tc: false as string | false | null
-                    };
                 }
-                return {
-                    ef: null,
-                    tc: false as string | false | null
-                };
+                return false;
             }
-            return {
-                ef: null,
-                tc: null as string | false | null
-            };
+            return null;
         },
-        (data: {
-            ef: ContentFeed | null,
-            tc: string | false | null
-        }) => {
-            setShouldDoRefresh(!data);
-            setTextChatId(data.tc);
+        (data: string | false | null) => {
+            setPreviousSessionId(session?.id ?? null);
+            setTextChatId(data);
         },
-        [session, shouldDoRefresh]);
+        [session, session?.id, previousSessionId]);
 
     useEffect(() => {
         const _now = Date.now();
@@ -104,14 +85,14 @@ export default function ViewSession(props: Props) {
                     ? (_now - session.startTime.getTime())
                     : (_now - session.endTime.getTime());
             const t = setInterval(() => {
-                setShouldDoRefresh(true);
+                setPreviousSessionId(null);
             }, Math.max(3000, tDist / 2));
             return () => {
                 clearInterval(t);
             };
         }
         return () => { };
-    }, [session, shouldDoRefresh]);
+    }, [session, previousSessionId]);
 
     // Subscribe to data updates
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
@@ -261,18 +242,16 @@ export default function ViewSession(props: Props) {
             : <LoadingSpinner />}
     </div>;
 
-    // TODO: Handle both a Zoom and a YouTube feed at session level
-
     // TODO: Make this configurable
     // Showing session feed prior to session starting (20mins)
-    const isLive = session && session.startTime.getTime() - (20 * 60 * 1000) < Date.now() && session.endTime.getTime() > Date.now();
-    const isPermanent = !sessionFeed || sessionFeed.videoRoomId || sessionFeed.textChatId || sessionFeed.youtubeId;
+    const isPreShow = session && session.startTime.getTime() - (20 * 60 * 1000) < Date.now();
+    const isLive = session && session.startTime.getTime() < Date.now() && session.endTime.getTime() > Date.now();
+    // const isPermanent = !sessionFeed || sessionFeed.videoRoomId || sessionFeed.textChatId || sessionFeed.youtubeId;
 
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
         {showEventsList ? eventsListEl : <></>}
         {session
-            ? (isLive || isPermanent)
-                ? <SplitterLayout
+            ? <SplitterLayout
                     vertical={true}
                     percentage={true}
                     ref={component => { component?.setState({ secondaryPaneSize: chatSize }) }}
@@ -285,7 +264,7 @@ export default function ViewSession(props: Props) {
                         <div className="embedded-content">
                             {!sessionFeed
                                 ? <LoadingSpinner />
-                                : <ViewContentFeed feed={sessionFeed} />}
+                                : <ViewContentFeed feed={sessionFeed} hideZoom={!isLive && !isPreShow} />}
                         </div>
                     </div>
                     <div className="split bottom-split">
@@ -304,7 +283,6 @@ export default function ViewSession(props: Props) {
                         </button>
                     </div>
                 </SplitterLayout>
-                : <p>This session is not currently live. Please choose a specific event from the list available via the menu button above.</p>
             : <LoadingSpinner message="Loading session" />
         }
     </div>;

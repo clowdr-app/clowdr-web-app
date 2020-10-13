@@ -246,14 +246,12 @@ export default function ViewEvent(props: Props) {
     const renderNow = Date.now();
     const isLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
     return <div className="program-event">
-        {isLive ?
-            sessionFeed
-                ? <div className="session-feed">
-                    <h2>{sessionFeed.name}</h2>
-                    <ViewContentFeed feed={sessionFeed} />
-                </div>
-                : <LoadingSpinner message="Loading session feed" />
-            : <></>}
+        {sessionFeed
+            ? <div className="session-feed">
+                <h2>{sessionFeed.name}</h2>
+                <ViewContentFeed feed={sessionFeed} hideZoom={!isLive} />
+            </div>
+            : <LoadingSpinner message="Loading session feed" />}
         {/* TODO: Re-enable this for splash?
          {eventFeed
             ? (eventFeed !== "not present"

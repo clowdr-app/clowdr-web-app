@@ -361,10 +361,10 @@ export default function ChatView(props: Props) {
 
     useHeading({
         title: chatName,
-        icon: dmInfo && members
-            ? (members[0].profileId === mUser.id
-                ? (members[1].isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>)
-                : (members[0].isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>))
+        icon: dmInfo && dmInfo.isDM
+            ? (dmInfo.member1.profileId === mUser.id
+                ? (dmInfo.member2.isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>)
+                : (dmInfo.member1.isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>))
             : undefined,
         buttons: actionButtons
     });

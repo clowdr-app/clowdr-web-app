@@ -10,6 +10,17 @@
         align-items    : center;
     }
 
+    &.youtube.zoom {
+        flex-wrap: wrap;
+
+        .zoom {
+            width: 100%;
+        }
+
+        .video-player {            
+        }
+    }
+
     margin: mm(5);
 
     h3 {

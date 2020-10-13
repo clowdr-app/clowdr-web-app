@@ -191,7 +191,7 @@ export default function ViewTrack(props: Props) {
                         &#9660;
                     </button>
                     <div className="embedded-content">
-                        <ViewContentFeed feed={feed} />
+                        <ViewContentFeed feed={feed} hideZoom={false} />
                     </div>
                 </div>
             </SplitterLayout>

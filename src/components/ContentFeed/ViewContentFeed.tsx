@@ -12,6 +12,7 @@ import useUserProfile from "../../hooks/useUserProfile";
 
 interface Props {
     feed: ContentFeed;
+    hideZoom: boolean;
 }
 
 export default function ViewContentFeed(props: Props) {
@@ -46,7 +47,7 @@ export default function ViewContentFeed(props: Props) {
         [feed]);
 
     useSafeAsync(
-        async () => joinZoom ? await Parse.Cloud.run("zoom-generate-signature", { meetingNumber: zoomRoomToMeetingDetails(zoomRoom)?.meetingNumber, conference: conf.id }) : undefined,
+        async () => joinZoom ? await Parse.Cloud.run("zoom-generate-signature", { meetingNumber: zoomRoomToMeetingDetails()?.meetingNumber, conference: conf.id }) : undefined,
         setZoomDetails,
         [joinZoom]);
 
@@ -58,7 +59,7 @@ export default function ViewContentFeed(props: Props) {
         }
     }
 
-    function zoomRoomToMeetingDetails(zoomRoom: ZoomRoom | "not present" | null): { meetingNumber: string, password: string } | undefined {
+    function zoomRoomToMeetingDetails(): { meetingNumber: string, password: string } | undefined {
         if (zoomRoom && zoomRoom !== "not present") {
             const url = new URL(zoomRoom.url);
             const meetingNumber = url.pathname.slice(3);
@@ -70,53 +71,65 @@ export default function ViewContentFeed(props: Props) {
 
     // TODO: Limit zoom room height by available panel height
 
-    return <div className={`content-feed${youTubeFeed &&
-        youTubeFeed !== "not present"
-        ? " youtube"
-        : zoomRoom && zoomRoom !== "not present"
-            ? " zoom"
-            : ""}`}>
+    let className = "content-feed";
+    if (youTubeFeed && youTubeFeed !== "not present") {
+        className += " youtube";
+    }
+    if (zoomRoom && zoomRoom !== "not present") {
+        className += " zoom";
+    }
+    return <div className={className}>
+        {!props.hideZoom && zoomRoom && zoomRoom !== "not present"
+            ? <div className="zoom">
+                <h3>Connect to Zoom</h3>
+                <p>
+                    This content is available from Zoom. You may choose to join directly in your browser
+                    (only compatible with Chrome and Edge), or install the Zoom application if you haven't
+                    already and join in the app. We suggest joining through the Zoom app if possible.
+                        </p>
+                <a className="button"
+                    style={{ marginRight: "1em", fontWeight: "bold" }}
+                    href={zoomRoom.url}
+                    rel="noopener noreferrer"
+                    target="_blank">
+                    Join by Zoom App (recommended)
+                        </a>
+                {(zoomDetails && joinZoom)
+                    ? <div className="zoom-frame-container">
+                        <IframeResizer
+                            className="zoom-frame"
+                            title="zoom-frame"
+                            src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${zoomRoomToMeetingDetails()?.meetingNumber}&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${zoomDetails.apiKey}&userName=${user.displayName}`}
+                            allowFullScreen={true}
+                            frameBorder="0"
+                            onLoad={(event) => {
+                                // @ts-ignore
+                                handleZoomFrameRedirect(event.target.contentWindow.location.href);
+                            }}
+                            style={{ width: '1px', minWidth: '100%', minHeight: '60vh' }}
+                            allow="microphone; camera" />
+                    </div>
+                    : <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>Join Zoom in browser</button>}
+            </div>
+            : <></>
+        }
+        {youTubeFeed && youTubeFeed !== "not present"
+            ? <ReactPlayer className="video-player"
+                width="" height="" playsinline controls={true} muted={false}
+                volume={1} url={`https://www.youtube.com/watch?v=${youTubeFeed.videoId}`}
+            />
+            : <></>
+        }
+        {videoRoom && videoRoom !== "not present"
+            ? <VideoGrid room={videoRoom} />
+            : <></>
+        }
         {textChat && textChat !== "not present"
             ? <ChatFrame chatId={textChat.id} />
-            : videoRoom && videoRoom !== "not present"
-                ? <VideoGrid room={videoRoom} />
-                : youTubeFeed && youTubeFeed !== "not present"
-                    ? <ReactPlayer className="video-player"
-                        width="" height="" playsinline controls={true} muted={false}
-                        volume={1} url={`https://www.youtube.com/watch?v=${youTubeFeed.videoId}`}
-                    />
-                    : zoomRoom && zoomRoom !== "not present"
-                        ? <div>
-                            <h3>Connect to Zoom</h3>
-                            <p>
-                                This content is available from Zoom. You may choose to join directly in your browser
-                                (only compatible with Chrome and Edge), or install the Zoom application if you haven't
-                                already and join in the app. We suggest joining through the Zoom app if possible.
-                        </p>
-                            <a className="button"
-                                style={{ marginRight: "1em", fontWeight: "bold" }}
-                                href={zoomRoom.url}
-                                rel="noopener noreferrer"
-                                target="_blank">
-                                Join by Zoom App (recommended)
-                        </a>
-                            {(zoomDetails && joinZoom)
-                                ? <div className="zoom-frame-container">
-                                    <IframeResizer
-                                        className="zoom-frame"
-                                        title="zoom-frame"
-                                        src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${zoomRoomToMeetingDetails(zoomRoom)?.meetingNumber}&password=${zoomRoomToMeetingDetails(zoomRoom)?.password}&apiKey=${zoomDetails.apiKey}&userName=${user.displayName}`}
-                                        allowFullScreen={true}
-                                        frameBorder="0"
-                                        onLoad={(event) => {
-                                            // @ts-ignore
-                                            handleZoomFrameRedirect(event.target.contentWindow.location.href);
-                                        }}
-                                        style={{ width: '1px', minWidth: '100%', minHeight: '60vh' }}
-                                        allow="microphone; camera" />
-                                </div>
-                                : <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>Join Zoom in browser</button>}
-                        </div>
-                        : <div className="invalid">Unfortunately this is an invalid or unsupported feed configuration.</div>
-        }</div>;
+            : <></>
+        }
+        {(props.hideZoom || !zoomRoom) && !youTubeFeed && !videoRoom && !textChat
+            && <>There is currently no content to display. The content may be scheduled for a particular time later on.</>
+        }
+    </div>;
 }

@@ -17,6 +17,11 @@ const argv = yargs
         description: "Only create registrations.",
         type: "boolean"
     })
+    .option("identities-map", {
+        alias: "i",
+        description: "Map of input identities to Parse identities from a previous upload run.",
+        type: "string"
+    })
     .help()
     .alias("help", "h")
     .argv;
@@ -44,8 +49,6 @@ async function getConference(name) {
     }
     return undefined;
 }
-
-/////// TODO: Handle mapping sessionId/eventId and saving that mapping!
 
 async function createConference(conferenceData) {
     const existingConfId = await getConference(conferenceData.conference.name);
@@ -101,6 +104,7 @@ async function createConference(conferenceData) {
 }
 
 const objectCache = {};
+let previousIds = {};
 
 async function createObjects(confId, adminSessionToken, datas, objectName, keyName, tableName, verifyByField) {
     let tableCache = tableName && objectCache[tableName];
@@ -110,15 +114,18 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
         existingQ.equalTo("conference", new Parse.Object("Conference", { id: confId }));
         await existingQ.eachBatch(xs => {
             xs.forEach(x => {
-                tableCache[x.get(verifyByField).toLowerCase()] = x.id;
+                if (verifyByField === "id") {
+                    tableCache[x.id] = x.id;
+                }
+                else {
+                    tableCache[x.get(verifyByField).toLowerCase()] = x.id;
+                }
             });
         }, { batchSize: 1000, useMasterKey: true });
     }
 
     const results = {};
     for (const data of datas) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-
         data.conference = confId;
         let finalData = { ...data };
         delete finalData.id;
@@ -150,6 +157,8 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
         }
 
         if (shouldCreate) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+
             try {
                 const id = await Parse.Cloud.run(`${objectName}-create`, finalData, {
                     sessionToken: adminSessionToken
@@ -193,6 +202,57 @@ function remapObjects(sourceMap, targetKey, targetDatas) {
 async function main() {
     const rootPath = argv.conference;
     const regsOnly = argv.registration;
+    const previousIdsFile = argv["identities-map"];
+
+    if (previousIdsFile) {
+        // const lines = fs.readFileSync(previousIdsFile).toString().split("\n");
+        // for (let idx = 0; idx < lines.length; idx++) {
+        //     if (lines[idx].startsWith("{")) {
+        //         const tableName = lines[idx - 1].split(":")[0].toLowerCase();
+        //         switch (tableName) {
+        //             case "youtube feeds":
+        //                 // Ignore
+        //                 break;
+        //             case "zoom rooms":
+        //                 // Ignore
+        //                 break;
+        //             case "text chats":
+        //                 // Ignore
+        //                 break;
+        //             case "video rooms":
+        //                 // Ignore
+        //                 break;
+        //             case "content feeds":
+        //                 // Ignore
+        //                 break;
+        //             case "attachment types":
+        //                 // Ignore
+        //                 break;
+        //             case "tracks":
+        //                 // Ignore
+        //                 break;
+        //             case "persons":
+        //                 // Ignore
+        //                 break;
+        //             case "items":
+        //                 previousIds.items = JSON.parse(lines[idx]);
+        //                 break;
+        //             case "item attachments":
+        //                 // Ignore
+        //                 break;
+        //             case "sessions":
+        //                 previousIds.sessions = JSON.parse(lines[idx]);
+        //                 break;
+        //             case "events":
+        //                 previousIds.events = JSON.parse(lines[idx]);
+        //                 break;
+        //             default:
+        //                 break;
+        //         }
+        //     }
+        //     // previousIds = JSON.parse();
+        // }
+    }
 
     let conferenceData = readConferenceData(rootPath);
 
@@ -224,7 +284,6 @@ async function main() {
                         };
                         zoomRoomsData.push(feed);
                     }
-                    content = contentFeedsData.find(x => x.zoomRoom === feed.id && x.name === item.feed.name);
                     if (!content) {
                         content = {
                             id: contentFeedsData.length,
@@ -233,8 +292,11 @@ async function main() {
                         };
                         contentFeedsData.push(content);
                     }
+                    else {
+                        content.zoomRoom = feed.id;
+                    }
                 }
-                else if (item.feed.youtube) {
+                if (item.feed.youtube) {
                     let feed = youtubeFeedsData.find(x => x.videoId === item.feed.youtube);
                     if (!feed) {
                         feed = {
@@ -243,7 +305,6 @@ async function main() {
                         };
                         youtubeFeedsData.push(feed);
                     }
-                    content = contentFeedsData.find(x => x.youtube === feed.id && x.name === item.feed.name);
                     if (!content) {
                         content = {
                             id: contentFeedsData.length,
@@ -252,35 +313,37 @@ async function main() {
                         };
                         contentFeedsData.push(content);
                     }
+                    else {
+                        content.youtube = feed.id;
+                    }
                 }
-                else if (item.feed.videoRoom) {
-                    content = contentFeedsData.find(x => x.name === item.feed.name);
-                    if (!content) {
-                        let textChatId = undefined;
-                        if (item.feed.textChat) {
-                            textChatId = textChatsData.find(x => x.name === item.feed.name)?.id;
-                            if (!textChatId) {
-                                textChatId = textChatsData.length;
-                                const newTextChat = {
-                                    id: textChatsData.length,
-                                    name: item.feed.name,
-                                    autoWatch: false,
-                                    isPrivate: false,
-                                    isDM: false
-                                };
-                                textChatsData.push(newTextChat);
-                            }
+                if (item.feed.videoRoom) {
+                    let textChatId = undefined;
+                    if (item.feed.textChat) {
+                        textChatId = textChatsData.find(x => x.name === item.feed.name)?.id;
+                        if (!textChatId) {
+                            textChatId = textChatsData.length;
+                            const newTextChat = {
+                                id: textChatsData.length,
+                                name: item.feed.name,
+                                autoWatch: false,
+                                isPrivate: false,
+                                isDM: false
+                            };
+                            textChatsData.push(newTextChat);
                         }
-                        const newVideoRoom = {
-                            id: videoRoomsData.length,
-                            name: item.feed.name,
-                            capacity: 50,
-                            ephemeral: false,
-                            isPrivate: false,
-                            textChat: textChatId
-                        };
-                        videoRoomsData.push(newVideoRoom);
+                    }
+                    const newVideoRoom = {
+                        id: videoRoomsData.length,
+                        name: item.feed.name,
+                        capacity: 50,
+                        ephemeral: false,
+                        isPrivate: false,
+                        textChat: textChatId
+                    };
+                    videoRoomsData.push(newVideoRoom);
 
+                    if (!content) {
                         content = {
                             id: contentFeedsData.length,
                             name: newVideoRoom.name,
@@ -288,25 +351,29 @@ async function main() {
                         };
                         contentFeedsData.push(content);
                     }
+                    else {
+                        content.videoRoom = newVideoRoom.id;
+                    }
                 }
                 else if (item.feed.textChat) {
-                    content = contentFeedsData.find(x => x.name === item.feed.name);
+                    const newTextChat = {
+                        id: textChatsData.length,
+                        name: item.feed.name,
+                        autoWatch: false,
+                        isPrivate: false,
+                        isDM: false
+                    };
+                    textChatsData.push(newTextChat);
                     if (!content) {
-                        const newTextChat = {
-                            id: textChatsData.length,
-                            name: item.feed.name,
-                            autoWatch: false,
-                            isPrivate: false,
-                            isDM: false
-                        };
-                        textChatsData.push(newTextChat);
-
                         content = {
                             id: contentFeedsData.length,
                             name: newTextChat.name,
                             textChat: newTextChat.id
                         };
                         contentFeedsData.push(content);
+                    }
+                    else {
+                        content.textChat = newTextChat.id;
                     }
                 }
 
@@ -366,8 +433,6 @@ async function main() {
     console.log(`Admin user id: ${adminUser.id}`);
 
     if (!regsOnly) {
-        // TODO: For updates: Load in the ID maps and use them to pre-remap the id fields so they can be merged with existing data
-
         // TODO: An object might have the same key but its other fields could have changed
         //       so it may still need updating
         const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
@@ -410,7 +475,10 @@ async function main() {
                 return persons[authorName.toLowerCase()];
             });
         });
-        const items = await createObjects(confId, adminSessionToken, itemsData, "item", "id", "ProgramItem", "id");
+
+        // TODO: For updates: Load in the ID maps and use them to pre-remap the id fields so they can be merged with existing data
+
+        const items = await createObjects(confId, adminSessionToken, itemsData, "item", "id", "ProgramItem", "title");
         console.log(`Items:\n${JSON.stringify(items)}`);
 
         remapObjects(items, "programItem", itemAttachmentsData);
@@ -419,12 +487,12 @@ async function main() {
         console.log(`Item attachments:\n${JSON.stringify(itemAttachments)}`);
 
         remapObjects(tracks, "track", sessionsData);
-        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "id", "ProgramSession", "id");
+        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "id");
         console.log(`Sessions:\n${JSON.stringify(sessions)}`);
 
         remapObjects(sessions, "session", eventsData);
         remapObjects(items, "item", eventsData);
-        const events = await createObjects(confId, adminSessionToken, eventsData, "event", "id", "ProgramSessionEvent", "id");
+        const events = await createObjects(confId, adminSessionToken, eventsData, "event", "id");
         console.log(`Events:\n${JSON.stringify(events)}`);
     }
 
