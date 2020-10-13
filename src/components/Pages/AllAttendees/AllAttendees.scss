@@ -1,14 +1,15 @@
 @import "../../../styles/util.scss";
 
 .all-participants {
-    column-count: 3;
-    column-fill: auto;
+    column-count: 1;
+    column-fill : auto;
+    max-width: 500px;
 
-    .admin-buttons {
-        display: flex;
-        column-gap: mm(3);
+    .column-item {
+        display  : flex;
+        flex-wrap: wrap;
+        margin-bottom: 0.4em;
 
-        &__button {
         .flair-box {
             display    : flex;
             gap        : mm(2);
@@ -20,6 +21,14 @@
                 flex-shrink: 1;
             }
         }
+
+        .admin-buttons {
+            display   : flex;
+            column-gap: mm(3);
+            width     : auto;
+            margin-left: auto;
+
+            &__button {}
         }
     }
 }

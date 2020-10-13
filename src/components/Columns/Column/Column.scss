@@ -1,6 +1,8 @@
 @import "../../../styles/util.scss";
 
 .column {
+    min-width: 300px;
+
     &__search {
         &__icon {
             padding: mm(2) mm(2) mm(2) 0;
