@@ -15,6 +15,7 @@ import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import useUserProfile from "../../../../hooks/useUserProfile";
 import ChatFrame from "../../../Chat/ChatFrame/ChatFrame";
+import { generateTimeText } from "../../../../classes/Utils";
 
 interface Props {
     sessionId: string;
@@ -248,6 +249,7 @@ export default function ViewSession(props: Props) {
     const isLive = session && session.startTime.getTime() < Date.now() && session.endTime.getTime() > Date.now();
     // const isPermanent = !sessionFeed || sessionFeed.videoRoomId || sessionFeed.textChatId || sessionFeed.youtubeId;
 
+    const sessionStartTimeText = session ? generateTimeText(session.startTime.getTime(), Date.now()) : null;
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
         {showEventsList ? eventsListEl : <></>}
         {session
@@ -269,14 +271,15 @@ export default function ViewSession(props: Props) {
                     </div>
                     <div className="split bottom-split">
                         {textChatId
-                            ? /* TODO: Display chat name */
-                              <ChatFrame chatId={textChatId} />
+                            ? <ChatFrame chatId={textChatId} showChatName={true} />
                             : isLive
                                 ? (textChatId === false
                                     ? <p>The current event does not have a text chat.</p>
                                     : <LoadingSpinner message="Loading text chat" />)
                                 // TODO: Show time until next event starts
-                                : <p>This session is not currently live. Please choose a specific event to participate in its conversation.</p>
+                            : session.endTime.getTime() <= Date.now()
+                                ? <p>This session has ended. Please choose a specific event to participate in its conversation.</p>
+                                : <p>This session starts in {sessionStartTimeText?.distance} {sessionStartTimeText?.units}. Please choose a specific event to participate in its conversation.</p>
                         }
                         <button onClick={() => setChatSize(0)}>
                             &#9660;

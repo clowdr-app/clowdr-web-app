@@ -7,6 +7,7 @@ import useLogger from "../../hooks/useLogger";
 import useDataSubscription from "../../hooks/useDataSubscription";
 import TrackMarker from "../Pages/Program/All/TrackMarker";
 import useMaybeUserProfile from "../../hooks/useMaybeUserProfile";
+import { generateTimeText } from "../../classes/Utils";
 
 interface Props {
     sessions: Array<ProgramSession>;
@@ -86,17 +87,6 @@ interface GroupRenderData {
 
 interface RenderData {
     groups: Array<GroupRenderData>;
-}
-
-function generateTimeText(startTime: number, now: number) {
-    let distance = startTime - now;
-    let units = "minutes";
-    distance = Math.floor(distance / (1000 * 60)); // Convert to minutes
-    if (distance >= 60) {
-        distance = Math.floor(distance / 60);
-        units = "hour" + (distance > 1 ? "s" : "");
-    }
-    return { distance, units };
 }
 
 export default function ProgramList(props: Props) {

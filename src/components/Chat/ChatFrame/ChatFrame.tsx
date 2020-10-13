@@ -13,6 +13,7 @@ import useEmojiPicker from "../../../hooks/useEmojiPicker";
 interface Props {
     chatId: string;
     hideMessageReportButtons?: boolean;
+    showChatName?: boolean;
 }
 
 export default function ChatFrame(props: Props) {
@@ -94,7 +95,7 @@ export default function ChatFrame(props: Props) {
     //       all without changing the page url, then you might get an Access Forbidden error from
     //       Twilio because the chat will try to load before User B has joined it.
 
-    return <div className="chat-frame">
+    const chatEl = <div className="chat-frame">
         <MessageList chatId={props.chatId} hideMessageReportButtons={props.hideMessageReportButtons} />
         {!tc?.isAnnouncements || isAdmin
             ? <div className="compose-message">
@@ -135,10 +136,17 @@ export default function ChatFrame(props: Props) {
                         }}
                         ref={emojiButton}>
                         <i className="fas fa-smile-beam"></i>+
-                    </button>
+            </button>
                 </div>
             </div>
             : <></>
         }
     </div>;
+
+    return props.showChatName
+        ? <div className="named-chat-wrapper">
+            {tc && <div className="chat-name">{tc.friendlyName}</div>}
+            {chatEl}
+        </div>
+        : chatEl;
 }
