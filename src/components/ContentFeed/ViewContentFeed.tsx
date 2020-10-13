@@ -74,7 +74,7 @@ export default function ViewContentFeed(props: Props) {
         youTubeFeed !== "not present"
         ? " youtube"
         : zoomRoom && zoomRoom !== "not present"
-            ? "zoom"
+            ? " zoom"
             : ""}`}>
         {textChat && textChat !== "not present"
             ? <ChatFrame chatId={textChat.id} />
