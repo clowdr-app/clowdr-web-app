@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import { PrivilegedConferenceDetails } from "@clowdr-app/clowdr-db-schema";
+import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import React, { useCallback, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import useConference from "../../../hooks/useConference";
+import useDataSubscription from "../../../hooks/useDataSubscription";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 
@@ -15,7 +18,8 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
 
 export default function LoggedInWelcome() {
     const conference = useConference();
-    const [contents, setContents] = useState<string>("You are logged in. Loading conference information...");
+    const defaultContents = "You are logged in. Loading conference information...";
+    const [contents, setContents] = useState<string>(defaultContents);
 
     useHeading(conference.name);
 
@@ -23,6 +27,15 @@ export default function LoggedInWelcome() {
         const details = await conference.details;
         return details.find(x => x.key === "LOGGED_IN_TEXT")?.value;
     }, setContents, [conference]);
+
+    const onTextUpdated = useCallback(function _onTextUpdate(update: DataUpdatedEventDetails<"PrivilegedConferenceDetails">) {
+        const details = update.object as PrivilegedConferenceDetails;
+        if (details.conferenceId === conference.id && details.key === "LOGGED_IN_TEXT") {
+            setContents(details.value);
+        }
+    }, [conference.id]);
+
+    useDataSubscription("PrivilegedConferenceDetails", onTextUpdated, () => { }, contents === "You are logged in. Loading conference information...", conference);
 
     return <section aria-labelledby="page-title" tabIndex={0}>
         <ReactMarkdown source={contents} escapeHtml={true} />
