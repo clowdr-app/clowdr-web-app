@@ -244,12 +244,13 @@ export default function ViewEvent(props: Props) {
     //       end of the current event
 
     const renderNow = Date.now();
-    const isLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
+    const eventIsLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
+    const sessionIsLive = !!session && session.startTime.getTime() < renderNow && session.endTime.getTime() > renderNow;
     return <div className="program-event">
         {sessionFeed
             ? <div className="session-feed">
                 <h2>{sessionFeed.name}</h2>
-                <ViewContentFeed feed={sessionFeed} hideZoom={!isLive} />
+                <ViewContentFeed feed={sessionFeed} hideZoom={!eventIsLive} />
             </div>
             : <LoadingSpinner message="Loading session feed" />}
         {/* TODO: Re-enable this for splash?
@@ -267,7 +268,8 @@ export default function ViewEvent(props: Props) {
         {item
             ? <ViewItem
                 item={item}
-                textChatFeedOnly={isLive}
+                // TODO: For SPLASH: && eventHasEnded
+                textChatFeedOnly={eventIsLive || sessionIsLive}
                 heading={{
                     title: item?.title ?? "Event",
                     subtitle: event ? <>{fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}</> : undefined,
