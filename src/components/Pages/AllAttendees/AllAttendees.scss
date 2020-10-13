@@ -9,6 +9,17 @@
         column-gap: mm(3);
 
         &__button {
+        .flair-box {
+            display    : flex;
+            gap        : mm(2);
+            margin-left: mm(8);
+            width      : 100%;
+
+            .flair-container {
+                flex-grow  : 0;
+                flex-shrink: 1;
+            }
+        }
         }
     }
 }

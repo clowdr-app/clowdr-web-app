@@ -1,5 +1,5 @@
-import { _Role } from "@clowdr-app/clowdr-db-schema";
-import React, { useCallback, useEffect, useState } from "react";
+import { Flair, _Role } from "@clowdr-app/clowdr-db-schema";
+import React, { useCallback, useState } from "react";
 import Parse from "parse";
 import { Link } from "react-router-dom";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
@@ -12,10 +12,12 @@ import useUserRoles from "../../../hooks/useUserRoles";
 import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
 import ConfirmButton from "../../ConfirmButton/ConfirmButton";
 import "./AllAttendees.scss";
+import FlairChip from "../../Profile/FlairChip/FlairChip";
 
 interface AttendeeRenderData {
     icon?: string;
     profileId: string;
+    flairs: Flair[];
 }
 
 export default function AllAttendees() {
@@ -31,17 +33,24 @@ export default function AllAttendees() {
     const [managers, setManagers] = useState<string[] | undefined>();
 
     // Compute list items from user profiles
-    useEffect(() => {
-        const profileItems = userProfiles?.map(profile => {
-            return {
-                key: profile.id,
-                text: profile.displayName,
-                link: `/profile/${profile.id}`,
-                renderData: { icon: "fas fa-user", profileId: profile.id },
-            };
-        });
-        setUserProfileItems(profileItems);
-    }, [userProfiles]);
+    useSafeAsync(async () => {
+        if (userProfiles) {
+            return Promise.all(userProfiles.map(async _profile => {
+                const flairs = await _profile.flairObjects;
+                return {
+                    key: _profile.id,
+                    text: _profile.displayName,
+                    link: `/profile/${_profile.id}`,
+                    renderData: {
+                        icon: "fas fa-user",
+                        profileId: _profile.id,
+                        flairs
+                    },
+                };
+            }));
+        }
+        return undefined;
+    }, setUserProfileItems, [userProfiles]);
 
     useSafeAsync(async () => await _Role.userProfileIdsOfRoles(conference.id, ["admin"]), setAdmins, [conference.id]);
     useSafeAsync(async () => await _Role.userProfileIdsOfRoles(conference.id, ["manager"]), setManagers, [conference.id]);
@@ -91,12 +100,21 @@ export default function AllAttendees() {
         const isManager = managers && managers.includes(profileId);
         return <>
             <i className={`${item.renderData.icon} column-item__icon`}></i>
-            {item.link ? <Link to={item.link}>{item.text}</Link> : <>{item.text}</>}
-            { isAdmin && !isSelf && <div className="admin-buttons">
+            <div className="name">
+                {item.link ? <Link to={item.link}>{item.text}</Link> : <>{item.text}</>}
+            </div>
+            {isAdmin && !isSelf && <div className="admin-buttons">
                 <ConfirmButton className="admin-buttons__button" text="Ban" action={() => ban(profileId)} />
                 {isAttendee && <ConfirmButton className="admin-buttons__button" text="Promote to manager" action={() => promote(profileId)} />}
                 {isManager && <ConfirmButton className="admin-buttons__button" text="Demote to attendee" action={() => demote(profileId)} />}
             </div>}
+            <div className="flair-box">
+                {item.renderData.flairs.map((flair, i) =>
+                    <div className="flair-container" key={i}>
+                        <FlairChip flair={flair} small />
+                    </div>
+                )}
+            </div>
         </>
     }, [profile.id, admins, managers, isAdmin, ban, promote, demote]);
 
