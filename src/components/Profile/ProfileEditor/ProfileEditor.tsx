@@ -16,7 +16,6 @@ import LocalStorage from "../../../classes/LocalStorage/ProfileEditing";
 
 interface Props {
     profile: UserProfile;
-    setViewing: () => void;
 }
 
 function sameObjects(xs: { id: string }[], ys: { id: string }[]) {
@@ -212,11 +211,6 @@ export default function ProfileEditor(props: Props) {
                 {/* <p>If you are an author of an item at this conference, please select your name below.</p> */}
                 {/* TODO: CSCW didn't like this: <ProgramPersonSelector setProgramPersonId={setProgramPersonId} disabled={isSaving} /> */}
                 <div className="submit-container">
-                    <button
-                        type="button"
-                        title={isFormDirty ? "Please save your profile info." : undefined}
-                        onClick={props.setViewing}
-                    >Preview</button>
                     <input type="submit" value="Save" />
                 </div>
             </form>

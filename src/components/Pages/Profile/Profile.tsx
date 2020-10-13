@@ -56,7 +56,7 @@ export default function Profile(props: Props) {
     if (props.userProfileId === loggedInUserProfile.id) {
         element = <>
             {editing
-                ? <ProfileEditor profile={loggedInUserProfile} setViewing={() => setEditing(false)} />
+                ? <ProfileEditor profile={loggedInUserProfile} />
                 : <ProfileView profile={loggedInUserProfile} setEditing={() => setEditing(true)} />
             }
         </>;
