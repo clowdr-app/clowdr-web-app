@@ -104,8 +104,16 @@ export default function ViewVideoRoom(props: Props) {
         try {
             const p = makeCancelable((async () => {
                 const watched = await currentUserProfile.watched;
+                let doSave = false;
                 if (!watched.watchedRooms.includes(props.roomId)) {
                     watched.watchedRooms.push(props.roomId);
+                    doSave = true;
+                }
+                if (chat && chat !== "not present" && !watched.watchedChats.includes(chat.id)) {
+                    watched.watchedChats.push(chat.id);
+                    doSave = true;
+                }
+                if (doSave) {
                     await watched.save();
                 }
             })());
@@ -127,8 +135,16 @@ export default function ViewVideoRoom(props: Props) {
         try {
             const p = makeCancelable((async () => {
                 const watched = await currentUserProfile.watched;
+                let doSave = false;
                 if (watched.watchedRooms.includes(props.roomId)) {
                     watched.watchedRooms = watched.watchedRooms.filter(x => x !== props.roomId);
+                    doSave = true;
+                }
+                if (chat && chat !== "not present" && watched.watchedChats.includes(chat.id)) {
+                    watched.watchedChats = watched.watchedChats.filter(x => x !== chat.id);
+                    doSave = true;
+                }
+                if (doSave) {
                     await watched.save();
                 }
             })());
