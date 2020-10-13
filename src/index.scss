@@ -93,6 +93,7 @@ body {
 }
 
 .splitter-layout>.layout-splitter {
+    height          : 6px !important;
     background-color: rgba($primary, 0.8);
 
     &:hover {
@@ -113,6 +114,7 @@ body {
         right           : 0;
         width           : 100%;
         border          : none;
+        border-radius   : 0;
         background-color: rgba($secondary, 0.8);
         cursor          : pointer;
         font-size       : mm(2);
@@ -149,10 +151,14 @@ body {
 
     &.top-split button {
         bottom: 0;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
     }
 
     &.bottom-split button {
         top: 0;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
     }
 }
 
