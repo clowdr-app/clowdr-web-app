@@ -7,7 +7,7 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
-import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
+// TODO: import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
 import "./ProfileEditor.scss";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
@@ -35,7 +35,7 @@ export default function ProfileEditor(props: Props) {
     const [bio, setBio] = useState(p.bio);
     const [modifiedFlairs, setModifiedFlairs] = useState<Flair[]>([]);
     const [originalFlairs, setOriginalFlairs] = useState<Flair[]>([]);
-    const [programPersonId, setProgramPersonId] = useState<string | undefined>(undefined);
+    // TODO: const [programPersonId, setProgramPersonId] = useState<string | undefined>(undefined);
     const [isSaving, setIsSaving] = useState<boolean>(false);
 
     useSafeAsync(async () => {
@@ -46,18 +46,19 @@ export default function ProfileEditor(props: Props) {
     }, []);
 
     const saveProfile = async () => {
-        // Update the associated program person
-        if (programPersonId !== undefined) {
-            const ok = await Parse.Cloud.run("person-set-profile", {
-                programPerson: programPersonId === "" ? undefined : programPersonId,
-                profile: p.id,
-                conference: (await p.conference).id,
-            }) as boolean;
+        // TODO: CSCW didn't like this:
+        // TODO: Update the associated program person
+        // if (programPersonId !== undefined) {
+        //     const ok = await Parse.Cloud.run("person-set-profile", {
+        //         programPerson: programPersonId === "" ? undefined : programPersonId,
+        //         profile: p.id,
+        //         conference: (await p.conference).id,
+        //     }) as boolean;
 
-            if (!ok) {
-                throw new Error("Could not save associated program authors.");
-            }
-        }
+        //     if (!ok) {
+        //         throw new Error("Could not save associated program authors.");
+        //     }
+        // }
 
         const primaryFlair = modifiedFlairs.length > 0 ? modifiedFlairs.sort((x, y) => x.priority > y.priority ? -1 : x.priority === y.priority ? 0 : 1)[0] : undefined;
 
@@ -182,9 +183,9 @@ export default function ProfileEditor(props: Props) {
                     value={bio}
                     disabled={isSaving}
                 />
-                <label>Program Author</label>
-                <p>If you are an author of an item at this conference, please select your name below.</p>
-                <ProgramPersonSelector setProgramPersonId={setProgramPersonId} disabled={isSaving} />
+                {/* <label>Program Author</label> */}
+                {/* <p>If you are an author of an item at this conference, please select your name below.</p> */}
+                {/* TODO: CSCW didn't like this: <ProgramPersonSelector setProgramPersonId={setProgramPersonId} disabled={isSaving} /> */}
                 <div className="submit-container">
                     <button
                         type="button"
