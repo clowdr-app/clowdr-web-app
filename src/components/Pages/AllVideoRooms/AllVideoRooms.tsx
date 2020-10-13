@@ -130,7 +130,7 @@ export default function ChatView() {
                 itemRenderer={{ render: roomRenderer }}
                 items={roomItems}
                 loadingMessage="Loading rooms">
-                <h2>Rooms</h2>
+                <h2>Breakout rooms</h2>
             </Column>
             <Column
                 className="col"
