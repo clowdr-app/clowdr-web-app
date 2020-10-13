@@ -138,12 +138,12 @@
             }
 
             &.img {
-                margin: 0.4em 0 0 0;
+                margin    : 0.4em 0 0 0;
                 text-align: center;
             }
 
             img {
-                max-width: 100%;
+                max-width : 100%;
                 max-height: $max-logo-height;
             }
         }
@@ -359,19 +359,28 @@
                     display: block;
 
                     ul {
-                        margin         : 1ex 0 0.4ex 0;
-                        columns        : 2;
-                        -webkit-columns: 2;
-                        -moz-columns   : 2;
-                        font-size      : 80%;
+                        margin   : 1ex 0 0.4ex 0;
+                        columns  : 2;
+                        font-size: 80%;
+                        padding  : 0 0 0 2em;
 
                         li {
                             list-style-type: disc;
 
-                            &.plus-bullet {
-                                list-style-type: '+';
-                                padding-left   : 0.5em;
+                            div {
+                                display       : inline-block;
+                                vertical-align: middle;
                             }
+                        }
+                    }
+
+                    .plus-bullet {
+                        font-size   : 80%;
+                        padding-left: 1em;
+
+                        &::before {
+                            content     : "+";
+                            margin-right: 0.5em;
                         }
                     }
                 }
@@ -443,8 +452,8 @@
 
                     button.watch {
                         padding: 0;
-                        margin: 0;
-                        border: none;
+                        margin : 0;
+                        border : none;
                     }
 
                     .track {
@@ -454,16 +463,16 @@
                         margin-left : 0.25em;
                         margin-right: 0;
 
-                        grid-template-rows: 1fr auto 1fr;
+                        grid-template-rows   : 1fr auto 1fr;
                         grid-template-columns: 0.5em auto auto 0.5em;
-                        grid-template-areas: 
+                        grid-template-areas  :
                             ". . . ."
                             ". track session ."
                             ". . . .";
 
                         svg {
                             grid-area: track;
-                            margin: 0.3em;
+                            margin   : 0.3em;
                         }
 
                         span {

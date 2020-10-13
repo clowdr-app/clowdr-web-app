@@ -348,7 +348,14 @@ export default function RoomsGroup(props: Props) {
             if (!noRooms) {
                 let roomMenuItems: MenuGroupItems = [];
                 roomMenuItems = roomMenuItems.concat(activeRooms.map(room => {
-                    const morePeopleCount = room.participants.length - maxRoomParticipantsToList;
+                    let participants = room.participants;
+                    participants = participants.concat(participants);
+                    participants = participants.concat(participants);
+                    participants = participants.concat(participants);
+                    participants = participants.concat(participants);
+                    participants = participants.concat(participants);
+                    participants = participants.concat(participants);
+                    const morePeopleCount = participants.length - maxRoomParticipantsToList;
                     return {
                         key: room.room.id,
                         element: <MenuItem
@@ -356,18 +363,20 @@ export default function RoomsGroup(props: Props) {
                             label={room.room.name}
                             icon={< i className="fas fa-video" ></i >}
                             action={`/room/${room.room.id}`} >
-                            <ul>
-                                {room.participants
-                                    .slice(0, Math.min(room.participants.length, maxRoomParticipantsToList))
-                                    .map(x => <li key={x.id}>{x.displayName}</li>)}
+                            <>
+                                <ul>
+                                    {participants
+                                        .slice(0, Math.min(participants.length, maxRoomParticipantsToList))
+                                        .map(x => <li key={x.id}><div>{x.displayName}</div></li>)}
+                                </ul>
                                 {morePeopleCount > 0
-                                    ? <li
+                                    ? <div
                                         key="more-participants"
                                         className="plus-bullet">
                                         {morePeopleCount} more {morePeopleCount === 1 ? "person" : "people"}...
-                                    </li>
+                                    </div>
                                     : <></>}
-                            </ul>
+                            </>
                         </MenuItem>
                     };
                 }));
