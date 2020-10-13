@@ -33,6 +33,14 @@ type UserOption = {
     value: string;
 }
 
+type DMInfo = {
+    isDM: false
+} | {
+    isDM: true,
+    member1: MemberDescriptor & { displayName: string },
+    member2: MemberDescriptor & { displayName: string }
+};
+
 export default function ChatView(props: Props) {
     const conf = useConference();
     const mUser = useUserProfile();
@@ -40,7 +48,7 @@ export default function ChatView(props: Props) {
     const [chatName, setChatName] = useState<string>("Chat");
     const [showPanel, setShowPanel] = useState<"members" | "invite" | "chat">("chat");
     const [members, setMembers] = useState<Array<RenderMemberDescriptor> | null>(null);
-    const [isDM, setIsDM] = useState<boolean | null>(null);
+    const [dmInfo, setDMInfo] = useState<DMInfo | null>(null);
     const [isAutoWatch, setIsAutoWatch] = useState<boolean | null>(null);
     const [isModeration, setIsModeration] = useState<boolean | null>(null);
     const [isModerationHub, setIsModerationHub] = useState<boolean | null>(null);
@@ -50,8 +58,6 @@ export default function ChatView(props: Props) {
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
     const { isAdmin, isManager } = useUserRoles();
     const [sendingInvites, setSendingInvites] = useState<boolean>(false);
-
-    // TODO: Profile button picking wrong person's name - same 3 members of a DM problem
 
     // Fetch all user profiles
     useSafeAsync(async () => {
@@ -68,20 +74,37 @@ export default function ChatView(props: Props) {
             const chatD = await mChat.getChat(props.chatId);
             const chatSD = await upgradeChatDescriptor(conf, chatD);
             const { friendlyName } = computeChatDisplayName(chatSD, mUser);
-            return {
-                name: friendlyName,
-                isDM: chatSD.isDM,
-                isAutoWatch: chatD.autoWatchEnabled,
-                isAnnouncements: chatD.isAnnouncements,
-                isModeration: chatD.isModeration,
-                isModerationHub: chatD.isModerationHub,
-                isPrivate: chatD.isPrivate
-            };
+            if (chatSD.isDM) {
+                return {
+                    name: friendlyName,
+                    dmInfo: {
+                        isDM: true,
+                        member1: chatSD.member1,
+                        member2: chatSD.member2
+                    },
+                    isAutoWatch: chatD.autoWatchEnabled,
+                    isAnnouncements: chatD.isAnnouncements,
+                    isModeration: chatD.isModeration,
+                    isModerationHub: chatD.isModerationHub,
+                    isPrivate: chatD.isPrivate
+                };
+            }
+            else {
+                return {
+                    name: friendlyName,
+                    dmInfo: { isDM: false } as DMInfo,
+                    isAutoWatch: chatD.autoWatchEnabled,
+                    isAnnouncements: chatD.isAnnouncements,
+                    isModeration: chatD.isModeration,
+                    isModerationHub: chatD.isModerationHub,
+                    isPrivate: chatD.isPrivate
+                };
+            }
         }
         else {
             return {
                 name: "Chat",
-                isDM: null,
+                dmInfo: null,
                 isAutoWatch: null,
                 isAnnouncements: null,
                 isModeration: null,
@@ -91,7 +114,7 @@ export default function ChatView(props: Props) {
         }
     }, (data: {
         name: string,
-        isDM: boolean | null,
+        dmInfo: DMInfo | null,
         isAutoWatch: boolean | null,
         isAnnouncements: boolean | null,
         isModeration: boolean | null,
@@ -99,7 +122,7 @@ export default function ChatView(props: Props) {
         isPrivate: boolean | null
     }) => {
         setChatName(data.name);
-        setIsDM(data.isDM);
+        setDMInfo(data.dmInfo);
         setIsAutoWatch(data.isAutoWatch);
         setIsAnnouncements(data.isAnnouncements);
         setIsModeration(data.isModeration);
@@ -244,11 +267,11 @@ export default function ChatView(props: Props) {
     }
     else {
         if (members) {
-            if (isDM === true) {
+            if (dmInfo?.isDM === true) {
                 const otherMember
-                    = members[0].profileId === mUser.id
-                        ? members[1]
-                        : members[0];
+                    = dmInfo.member1.profileId === mUser.id
+                        ? dmInfo.member2
+                        : dmInfo.member1;
                 actionButtons.push({
                     label: `View ${otherMember.displayName}'s profile`,
                     icon: <i className="fas fa-eye"></i>,
@@ -270,7 +293,7 @@ export default function ChatView(props: Props) {
         }
 
         // isDM could be null...
-        if (isDM === false && usersLeftToInvite.length > 0 && isPrivate) {
+        if (dmInfo?.isDM === false && usersLeftToInvite.length > 0 && isPrivate) {
             actionButtons.push({
                 label: "Invite",
                 icon: <i className="fas fa-envelope"></i>,
@@ -284,7 +307,7 @@ export default function ChatView(props: Props) {
         }
     }
 
-    if (isDM === false && isAnnouncements !== null && !isAnnouncements) {
+    if (dmInfo?.isDM === false && isAnnouncements !== null && !isAnnouncements) {
         if (isFollowing !== null) {
             if (isFollowing) {
                 actionButtons.push({
@@ -338,7 +361,7 @@ export default function ChatView(props: Props) {
 
     useHeading({
         title: chatName,
-        icon: isDM && members
+        icon: dmInfo && members
             ? (members[0].profileId === mUser.id
                 ? (members[1].isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>)
                 : (members[0].isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>))

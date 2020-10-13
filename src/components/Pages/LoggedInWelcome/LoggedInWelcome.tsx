@@ -11,7 +11,7 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
  * Note that `escapeHtml` must be turned on for this to be safe. By default, react-markdown will sanitize hrefs to remove
  * e.g. javascript: links.
  * remark-parse[2] is the Markdown parser and by default it supports GitHub Flavored Markdown (GFM).
- * 
+ *
  * [1] https://www.npmjs.com/package/react-markdown
  * [2] https://github.com/remarkjs/remark/tree/main/packages/remark-parse
 */
