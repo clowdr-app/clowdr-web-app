@@ -64,10 +64,6 @@ export default function AllChats() {
             return undefined;
         }
         const items = userProfiles
-            ?.filter(profile => !allChats
-                ?.some(chat => chat.isDM && (
-                    (chat.member1.profileId === profile.id && chat.member2.profileId === currentProfile.id) || 
-                    (chat.member1.profileId === currentProfile.id && chat.member2.profileId === profile.id))))
             ?.sort((a, b) => a.displayName.localeCompare(b.displayName))
             ?.map(async profile => {
                 const online = onlineStatus?.get(profile.id) ?? false;
