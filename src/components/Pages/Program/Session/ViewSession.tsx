@@ -25,7 +25,6 @@ export default function ViewSession(props: Props) {
     const userProfile = useUserProfile();
     const [session, setSession] = useState<ProgramSession | null>(null);
     const [sessionFeed, setSessionFeed] = useState<ContentFeed | null>(null);
-    const [eventFeed, setEventFeed] = useState<ContentFeed | null>(null);
     const [chatSize, setChatSize] = useState(30);
     const [showEventsList, setShowEventsList] = useState<boolean>(false);
     const [textChatId, setTextChatId] = useState<string | false | null>(null);
