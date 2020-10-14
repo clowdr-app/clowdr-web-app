@@ -17,6 +17,7 @@ import FlairChip from "../../Profile/FlairChip/FlairChip";
 interface AttendeeRenderData {
     icon?: string;
     profileId: string;
+    isBanned: boolean;
     flairs: Flair[];
 }
 
@@ -44,6 +45,7 @@ export default function AllAttendees() {
                     renderData: {
                         icon: "fas fa-user",
                         profileId: _profile.id,
+                        isBanned: _profile.isBanned,
                         flairs
                     },
                 };
@@ -98,15 +100,16 @@ export default function AllAttendees() {
         const isSelf = profileId === profile.id;
         const isAttendee = admins && managers && !admins.includes(profileId) && !managers.includes(profileId);
         const isManager = managers && managers.includes(profileId);
+        const isBanned = item.renderData.isBanned;
         return <>
             <i className={`${item.renderData.icon} column-item__icon`}></i>
-            <div className="name">
+            <div className={`name ${isBanned ? " banned" : ""}`}>
                 {item.link ? <Link to={item.link}>{item.text}</Link> : <>{item.text}</>}
             </div>
             {isAdmin && !isSelf && <div className="admin-buttons">
-                <ConfirmButton className="admin-buttons__button" text="Ban" action={() => ban(profileId)} />
-                {isAttendee && <ConfirmButton className="admin-buttons__button" text="Promote to manager" action={() => promote(profileId)} />}
-                {isManager && <ConfirmButton className="admin-buttons__button" text="Demote to attendee" action={() => demote(profileId)} />}
+                {!isBanned && <ConfirmButton className="admin-buttons__button" text="Ban" action={() => ban(profileId)} />}
+                {!isBanned && isAttendee && <ConfirmButton className="admin-buttons__button" text="Promote to manager" action={() => promote(profileId)} />}
+                {!isBanned && isManager && <ConfirmButton className="admin-buttons__button" text="Demote to attendee" action={() => demote(profileId)} />}
             </div>}
             <div className="flair-box">
                 {item.renderData.flairs.map((flair, i) =>

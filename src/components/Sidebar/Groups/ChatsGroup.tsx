@@ -58,6 +58,7 @@ type FilteredSidebarChatDescriptor
 export type SidebarUserDescriptor = {
     id: string;
     name: string;
+    isBanned: boolean;
 };
 
 interface ChatsGroupState {
@@ -101,6 +102,7 @@ async function filterChats(
         const filteredUsers = allUsers.filter(x =>
             x.name.toLowerCase().includes(search)
             && x.id !== currentUserProfileId
+            && !x.isBanned
         );
         const filteredChats: FilteredChatDescriptor[]
             = allChats
@@ -432,7 +434,8 @@ export default function ChatsGroup(props: Props) {
             action: "updateAllUsers",
             update: () => data.map(x => ({
                 id: x.id,
-                name: x.displayName
+                name: x.displayName,
+                isBanned: x.isBanned
             }))
         });
     }, [conf.id]);
@@ -627,9 +630,11 @@ export default function ChatsGroup(props: Props) {
             update: (existing) => {
                 const updated = Array.from(existing ?? []);
                 const idx = updated?.findIndex(x => x.id === update.object.id);
+                const profile = update.object as UserProfile;
                 const item = {
-                    id: update.object.id,
-                    name: (update.object as UserProfile).displayName
+                    id: profile.id,
+                    name: profile.displayName,
+                    isBanned: profile.isBanned
                 };
                 if (idx === -1) {
                     updated.push(item);

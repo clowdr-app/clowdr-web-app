@@ -206,7 +206,7 @@ export default function App() {
                                     }
                                     addError("You have been banned from the selected conference.");
                                     LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
-                                    window.location.reload();
+                                    window.location.replace("/");
                                 }
                             }
                         }
@@ -311,17 +311,30 @@ export default function App() {
             dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
         }
     }, [appState.conference, appState.conferenceId]);
-    const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(value: DataUpdatedEventDetails<"UserProfile">) {
+    const onUserProfileUpdated = useCallback(async function _onUserProfileUpdated(value: DataUpdatedEventDetails<"UserProfile">) {
         if (appState.sessionToken && appState.profile && value.object.id === appState.profile.id) {
-            dispatchAppUpdate([
-                {
-                    action: "setUserProfile",
-                    data: {
-                        profile: value.object as UserProfile,
-                        sessionToken: appState.sessionToken
-                    }
+            const profile = value.object as UserProfile;
+            if (profile.isBanned) {
+                LocalStorage_Conference.currentConferenceId = null;
+                const cache = await Caches.get(profile.conferenceId);
+                if (cache.IsInitialised) {
+                    cache.deleteDatabase(false);
                 }
-            ]);
+                addError("You have been banned from the selected conference.");
+                LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
+                window.location.replace("/");
+            }
+            else {
+                dispatchAppUpdate([
+                    {
+                        action: "setUserProfile",
+                        data: {
+                            profile: value.object as UserProfile,
+                            sessionToken: appState.sessionToken
+                        }
+                    }
+                ]);
+            }
         }
     }, [appState.profile, appState.sessionToken]);
 
@@ -370,7 +383,7 @@ export default function App() {
                 }
                 addError("You have been banned from the selected conference.");
                 LocalStorage_Conference.wasBannedFromName = appState.conference.name;
-                window.location.reload();
+                window.location.replace("/");
             }
 
             dispatchAppUpdate([

@@ -68,10 +68,12 @@ export default function NewChat(props: Props) {
     // Fetch all user profiles
     useSafeAsync(async () => {
         const profiles = await UserProfile.getAll(conference.id);
-        return profiles.map(x => ({
-            value: x.id,
-            label: x.displayName
-        })).filter(x => x.value !== currentUserProfile.id);
+        return profiles
+            .filter(x => !x.isBanned)
+            .map(x => ({
+                value: x.id,
+                label: x.displayName
+            })).filter(x => x.value !== currentUserProfile.id);
     }, setAllUsers, []);
 
     /**

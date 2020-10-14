@@ -50,10 +50,12 @@ export default function ViewVideoRoom(props: Props) {
         [room]);
     useSafeAsync(async () => {
         const profiles = await UserProfile.getAll(conference.id);
-        return profiles.map(x => ({
-            value: x.id,
-            label: x.displayName
-        })).filter(x => x.value !== currentUserProfile.id);
+        return profiles
+            .filter(x => !x.isBanned)
+            .map(x => ({
+                value: x.id,
+                label: x.displayName
+            })).filter(x => x.value !== currentUserProfile.id);
     }, setAllUsers, []);
 
     const actionButtons: Array<ActionButton> = [];
@@ -223,7 +225,7 @@ export default function ViewVideoRoom(props: Props) {
                     addError(`Failed to invite some users: ${fails.map(x => allUsers?.find(u => u.value === x)?.label ?? ", <Unknown>").reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}`);
                 }
                 else {
-                    addNotification("Successfully invited selected users.", );
+                    addNotification("Successfully invited selected users.",);
                 }
                 setShowInvite(false);
                 setInviting(null);
@@ -241,29 +243,29 @@ export default function ViewVideoRoom(props: Props) {
 
     const inviteEl
         = inviting
-        ? <LoadingSpinner message="Inviting users, please wait" />
-        : <>
-        <p>
-            By inviting users to join this room you will give them access to
-            participate in the room but not to invite more people.
+            ? <LoadingSpinner message="Inviting users, please wait" />
+            : <>
+                <p>
+                    By inviting users to join this room you will give them access to
+                    participate in the room but not to invite more people.
         </p>
-        <form onSubmit={(ev) => doInviteUsers(ev)}>
-            <label>Select users to invite:</label>
-            <div className="invite-users-control">
-                <MultiSelect
-                    className="invite-users-control__multiselect"
-                    labelledBy="Invite users"
-                    overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
-                    options={allUsers?.filter(x => !room?.userIdsWithAccess?.includes(x.value)) ?? []}
-                    value={invites ?? []}
-                    onChange={setInvites}
-                />
-            </div>
-            <div className="submit-container">
-                <button>Invite</button>
-            </div>
-        </form>
-    </>;
+                <form onSubmit={(ev) => doInviteUsers(ev)}>
+                    <label>Select users to invite:</label>
+                    <div className="invite-users-control">
+                        <MultiSelect
+                            className="invite-users-control__multiselect"
+                            labelledBy="Invite users"
+                            overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
+                            options={allUsers?.filter(x => !room?.userIdsWithAccess?.includes(x.value)) ?? []}
+                            value={invites ?? []}
+                            onChange={setInvites}
+                        />
+                    </div>
+                    <div className="submit-container">
+                        <button>Invite</button>
+                    </div>
+                </form>
+            </>;
 
     // TODO: Members list (action button)
 

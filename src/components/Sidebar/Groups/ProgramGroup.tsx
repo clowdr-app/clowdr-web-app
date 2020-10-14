@@ -503,7 +503,7 @@ export default function ProgramGroup(props: Props) {
     ];
 
     if (mUser) {
-        let program: JSX.Element;
+        let _program: JSX.Element | null = null;
         if (state.sessions && state.events &&
             (state.filteredSessions.length > 0 || state.filteredEvents.length > 0)) {
             const programTimeBoundaries: Array<number> = [
@@ -533,16 +533,19 @@ export default function ProgramGroup(props: Props) {
                             && x.startTime.getTime() <= startLimit
                         );
 
-            program = <ProgramList
-                sessions={sessions}
-                events={events}
-                timeBoundaries={programTimeBoundaries}
-                watchedSessions={state.watchedSessionIds ?? undefined}
-                watchedEvents={state.watchedEventIds ?? undefined}
-            />;
+            if (events.length > 0 || sessions.length > 0) {
+                _program = <ProgramList
+                    sessions={sessions}
+                    events={events}
+                    timeBoundaries={programTimeBoundaries}
+                    watchedSessions={state.watchedSessionIds ?? undefined}
+                    watchedEvents={state.watchedEventIds ?? undefined}
+                />;
+            }
         }
-        else {
-            program = <>
+
+        if (!_program) {
+            _program = <>
                 {state.sessions && state.events ? <span className="menu-group">No upcoming events in the next 2 hours.</span> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-program",
@@ -550,6 +553,8 @@ export default function ProgramGroup(props: Props) {
                 }]} />
             </>;
         }
+
+        const program = _program;
 
         programExpander
             = <MenuExpander

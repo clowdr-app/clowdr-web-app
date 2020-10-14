@@ -9,6 +9,10 @@
         flex-wrap: wrap;
         margin-bottom: 0.4em;
 
+        .name.banned {
+            text-decoration: line-through;
+        }
+
         .flair-box {
             display    : flex;
             gap        : mm(2);
