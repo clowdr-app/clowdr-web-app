@@ -991,6 +991,8 @@ async function configureGlobalChats(message, twilioChatService, setConfiguration
     }
     message(`Created announcements text chat in Parse.`);
 
+    // TODO: How do we trigger the Twilio backend to refresh its cache?
+
     message(`Configuring moderation hub channel...`);
     let twilioModerationHubChannel = null;
     async function getModerationHubChannel() {
@@ -1013,10 +1015,18 @@ async function configureGlobalChats(message, twilioChatService, setConfiguration
     if (!twilioModerationHubChannel) {
         await createModerationHubChannel();
     }
-    await twilioModerationHubChannel.members().create({
-        identity: adminUserProfile.id,
-        roleSid: twilioChatRoles.get("channel user").sid
-    });
+    try {
+        await twilioModerationHubChannel.members().create({
+            identity: adminUserProfile.id,
+            roleSid: twilioChatRoles.get("channel user").sid
+        });
+    }
+    catch (e) {
+        await twilioModerationHubChannel.members().update({
+            identity: adminUserProfile.id,
+            roleSid: twilioChatRoles.get("channel user").sid
+        });
+    }
     message(`Configured moderation hub channel.`);
 
     let moderationHubChat;

@@ -14,8 +14,8 @@ async function main() {
     Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
     await Parse.Cloud.startJob("regenerate-global-chats", {
-        conference: "17XdxehHk3",
-        adminUserId: "FVIpRYE9dN",
+        conference: "F4PE0fjZxu", // CSCW: "17XdxehHk3",
+        adminUserId: "qihEeQ0htg", // CSCW: "FVIpRYE9dN",
         twilio: {
             MASTER_SID: process.env.TWILIO_MASTER_SID,
             MASTER_AUTH_TOKEN: process.env.TWILIO_MASTER_AUTH_TOKEN

@@ -96,6 +96,9 @@ Parse.Cloud.define("promote", async (request) => {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
             spec.target = await getUserProfileById(spec.target, confId);
+            if (!spec.target) {
+                throw new Error("User profile not found");
+            }
             const targetUser = spec.target.get("user");
             if (await isUserInRoles(targetUser.id, confId, ["attendee"]) && spec.newRole === "manager") {
                 await handlePromoteAttendeeToManager(spec.target, spec.conference);
@@ -115,7 +118,6 @@ const demoteSchema = {
     target: "string",
     newRole: "string"
 };
-
 
 /**
  * @param {Pointer} targetProfile

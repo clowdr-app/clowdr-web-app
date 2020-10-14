@@ -336,7 +336,7 @@ async function main() {
                     const newVideoRoom = {
                         id: videoRoomsData.length,
                         name: item.feed.name,
-                        capacity: 50,
+                        capacity: item.feed.roomCapacity ?? 50,
                         ephemeral: false,
                         isPrivate: false,
                         textChat: textChatId
