@@ -117,8 +117,6 @@ export default function ChatView(props: Props) {
             }
         }
 
-        addError("Sorry, we could not load the desired chat.");
-
         return undefined;
     }, (data: {
         name: string,
