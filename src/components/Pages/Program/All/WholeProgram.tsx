@@ -10,14 +10,7 @@ import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/cl
 import Toggle from "react-toggle";
 import ScheduleView from "./ScheduleView";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
-
-export type WholeProgramData = {
-    tracks: Array<ProgramTrack>;
-    sessions: Array<ProgramSession>;
-    events: Array<ProgramSessionEvent>;
-    authors: Array<ProgramPerson>;
-    items: Array<ProgramItem>;
-}
+import { WholeProgramData } from "../WholeProgramData";
 
 export default function WholeProgram() {
     const conference = useConference();
@@ -30,7 +23,6 @@ export default function WholeProgram() {
     // Fetch data
     useSafeAsync(
         async () => {
-            console.log(`Fetching all data for ${conference.id}`);
             const [tracks, sessions, events, authors, items]
                 = await Promise.all<
                     Array<ProgramTrack>,
@@ -194,9 +186,6 @@ export default function WholeProgram() {
     }, [data]);
 
     const schedule = useMemo(() => {
-        if (data) {
-            console.log("Schedule rendered");
-        }
         return data ? <ScheduleView data={data} /> : <LoadingSpinner />
     }, [data]);
 

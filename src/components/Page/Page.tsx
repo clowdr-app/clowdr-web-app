@@ -103,11 +103,17 @@ function Page(props: Props) {
             <ResetPassword email={p.match.params.email} token={p.match.params.token} />
         } />;
 
-        const footerRoutes = <>
+        // Note: If you try to fix the local development "error" about "all
+        // children must have a key" caused by the array of routes below and
+        // React being stupid, know that the entire app will become rendered as
+        // a single double-quote character ("). No warnings or errors during
+        // build or runtime, just a single double quote character to mess with
+        // your mind.
+        const footerRoutes = [
             <Route path="/about" component={About} />,
             <Route path="/legal" component={Legal} />,
             <Route path="/help" component={Help} />
-        </>;
+        ];
 
         if (mConf && mUser) {
             // TODO: Route for /program/new (conference manager and admin roles only)

@@ -1,7 +1,7 @@
 import React, {  } from "react";
 import { daysIntoYear } from "../../../../classes/Utils";
 import EventItem from "./EventItem";
-import { WholeProgramData } from "./WholeProgram";
+import { WholeProgramData } from "../WholeProgramData";
 
 interface Props {
     data: WholeProgramData;

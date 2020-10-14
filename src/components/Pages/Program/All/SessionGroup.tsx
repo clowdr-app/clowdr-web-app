@@ -8,7 +8,7 @@ import EventItem from "./EventItem";
 import { Link } from "react-router-dom";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import { daysIntoYear } from "../../../../classes/Utils";
-import { WholeProgramData } from "./WholeProgram";
+import { WholeProgramData } from "../WholeProgramData";
 
 interface Props {
     session: ProgramSession;

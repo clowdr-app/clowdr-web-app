@@ -7,7 +7,7 @@ import useSafeAsync from "../../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import { Link, useHistory } from "react-router-dom";
 import Item from "./Item";
-import { WholeProgramData } from "./WholeProgram";
+import { WholeProgramData } from "../WholeProgramData";
 
 interface Props {
     event: ProgramSessionEvent;

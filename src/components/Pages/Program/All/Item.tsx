@@ -6,7 +6,7 @@ import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import AuthorsList from "../AuthorsList";
-import { WholeProgramData } from "./WholeProgram";
+import { WholeProgramData } from "../WholeProgramData";
 
 interface Props {
     item: ProgramItem;

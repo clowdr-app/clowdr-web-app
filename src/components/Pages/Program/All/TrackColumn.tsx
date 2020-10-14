@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import TrackMarker from "./TrackMarker";
 import Item from "./Item";
-import { WholeProgramData } from "./WholeProgram";
+import { WholeProgramData } from "../WholeProgramData";
 
 interface Props {
     track: ProgramTrack;
