@@ -142,9 +142,15 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
     newProfile.setACL(newProfileACl);
     newProfile = await newProfile.save(null, { useMasterKey: true });
 
-    let newRoleUsersRel = newRole.relation("users");
-    newRoleUsersRel.add(user);
-    newRole.save(null, { useMasterKey: true });
+    let attendeeRoleUsersRel = attendeeRole.relation("users");
+    attendeeRoleUsersRel.add(user);
+    attendeeRole.save(null, { useMasterKey: true });
+
+    if (newRoleName !== "attendee") {
+        let newRoleUsersRel = newRole.relation("users");
+        newRoleUsersRel.add(user);
+        newRole.save(null, { useMasterKey: true });
+    }
 
     const twilioAccountSID = (await getConferenceConfigurationByKey(conference, "TWILIO_ACCOUNT_SID")).get("value");
     const twilioAuthToken = (await getConferenceConfigurationByKey(conference, "TWILIO_AUTH_TOKEN")).get("value");
