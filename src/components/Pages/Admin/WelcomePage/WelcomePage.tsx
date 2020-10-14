@@ -73,7 +73,11 @@ export default function AdminWelcomePage() {
                             selectedTab={selectedTab}
                             onTabChange={setSelectedTab}
                             generateMarkdownPreview={(markdown: string) =>
-                                Promise.resolve(<ReactMarkdown source={markdown} />)
+                                Promise.resolve(<ReactMarkdown
+                                    linkTarget="_blank"
+                                    escapeHtml={true}
+                                    source={markdown}
+                                />)
                             }
                             childProps={{
                                 writeButton: {

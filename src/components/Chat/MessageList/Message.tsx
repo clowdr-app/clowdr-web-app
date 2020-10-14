@@ -265,6 +265,8 @@ export default function Message(props: {
                     </div>
                     : <ReactMarkdown
                         className="body"
+                        linkTarget="_blank"
+                        escapeHtml={true}
                         renderers={{
                             text: renderEmoji
                         }}

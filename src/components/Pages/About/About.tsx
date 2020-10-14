@@ -2,7 +2,9 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function About() {
-    return <ReactMarkdown>
+    return <ReactMarkdown
+        linkTarget="_blank"
+    >
 {`[CLOWDR](https://www.clowdr.org/) is an [open source platform](https://github.com/clowdr-app) to make
 it easier to run interactive and engaging virtual conferences. Imagine
 that your conference attendees could interact by video and text and

@@ -2,7 +2,9 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function Legal() {
-    return <ReactMarkdown>
+    return <ReactMarkdown
+        linkTarget="_blank"
+    >
         {`## Who are we
 
 Clowdr is not currently a legal entity, it's just an [open source project](https://github.com/clowdr-app).

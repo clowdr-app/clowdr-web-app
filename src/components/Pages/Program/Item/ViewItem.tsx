@@ -134,7 +134,13 @@ export default function ViewItem(props: Props) {
                         </>
                         : <></>)}
                 <div className="info">
-                    <ReactMarkdown className="abstract">{item.abstract}</ReactMarkdown>
+                    <ReactMarkdown
+                        linkTarget="_blank"
+                        escapeHtml={true}
+                        className="abstract"
+                    >
+                        {item.abstract}
+                    </ReactMarkdown>
                     <AuthorsList authors={authors} />
                 </div>
                 {attachmentEls.length > 0

@@ -193,7 +193,12 @@ export default function Moderation() {
         : <div className="moderation">
             {customNotice
                 ? <div className="notice">
-                    <ReactMarkdown>{customNotice}</ReactMarkdown>
+                    <ReactMarkdown
+                        linkTarget="_blank"
+                        escapeHtml={true}
+                    >
+                        {customNotice}
+                    </ReactMarkdown>
                 </div>
                 : <></>}
             <div className="columns">

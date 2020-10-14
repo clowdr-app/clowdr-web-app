@@ -65,7 +65,11 @@ export default function ProfileView(props: Props) {
                     ? <div className="country">{p.country}</div>
                     : <></>}
                 <div className="bio">
-                    <ReactMarkdown source={p.bio} escapeHtml={true} />
+                    <ReactMarkdown 
+                        linkTarget="_blank"
+                        escapeHtml={true}
+                        source={p.bio}
+                    />
                 </div>
                 {p.webpage ? <a className="webpage" href={p.webpage}>{p.webpage}</a> : <></>}
                 {props.setEditing

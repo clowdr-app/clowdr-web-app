@@ -358,6 +358,8 @@ export default function ChatsGroup(props: Props) {
                             const body = `${title}${msg.body}`;
                             addNotification(
                                 <ReactMarkdown
+                                    linkTarget="_blank"
+                                    escapeHtml={true}
                                     renderers={{
                                         text: renderEmoji
                                     }}

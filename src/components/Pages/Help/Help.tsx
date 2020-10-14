@@ -2,7 +2,9 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function Help() {
-    return <ReactMarkdown>
+    return <ReactMarkdown
+        linkTarget="_blank"
+    >
 {`Clowdr is experimental open-source software, developed by volunteers
 specifically for conferences like this one. For more information about
 how to get the most of this platform, see the
