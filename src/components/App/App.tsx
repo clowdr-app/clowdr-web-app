@@ -336,7 +336,7 @@ export default function App() {
                 ]);
             }
         }
-    }, [appState.profile, appState.sessionToken]);
+    }, [appState.conference, appState.profile, appState.sessionToken]);
 
     useDataSubscription(
         "Conference",

@@ -9,7 +9,7 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
 const sgMail = require("@sendgrid/mail");
-const Config = require("./config.js")
+const Config = require("./config.js");
 
 // **** Registration **** //
 
@@ -208,7 +208,7 @@ async function sendRegistrationEmails(data) {
                 try {
                     await registration.save("invitationSentDate", new Date(), { useMasterKey: true });
                     return { to: message.to, success: true };
-                } catch(reason) {
+                } catch (reason) {
                     console.error(`Failed to record that a registration invitation was sent to ${email}.`, reason)
                     return { to: message.to, success: false, reason }
                 }
@@ -252,6 +252,125 @@ async function handleSendRegistrationEmails(req) {
     }
 }
 Parse.Cloud.define("registration-send-emails", handleSendRegistrationEmails);
+
+Parse.Cloud.define("registration-create-many", async (req) => {
+    const { params, user } = req;
+
+    const requestValidation = validateRequest({
+        conference: "string"
+    }, params);
+    if (requestValidation.ok) {
+        const confId = params.conference;
+
+        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        if (authorized) {
+            if (!("registrations" in params)) {
+                throw new Error("Registrations not provided");
+            }
+            const registrations = params.registrations;
+            if (!(registrations instanceof Array)) {
+                throw new Error("Registrations must be an array.");
+            }
+
+            const validRoles = ["attendee", "manager", "admin"];
+            registrations.forEach((registration, idx) => {
+                if (!("email" in registration)) {
+                    throw new Error(`Email missing @${idx}`);
+                }
+                if (!("name" in registration)) {
+                    throw new Error(`Name missing @${idx}`);
+                }
+                if (!("country" in registration)) {
+                    throw new Error(`Country missing @${idx}`);
+                }
+                if (!("affiliation" in registration)) {
+                    throw new Error(`Affiliation missing @${idx}`);
+                }
+                if (!("newRole" in registration) && !("roleName" in registration)) {
+                    throw new Error(`New role missing @${idx}`);
+                }
+
+                if ("roleName" in registration) {
+                    registration.newRole = registration.roleName;
+                    delete registration.roleName;
+                }
+
+                if (typeof registration.email !== "string") {
+                    throw new Error(`Email is of invalid type @${idx}`);
+                }
+                if (typeof registration.name !== "string") {
+                    throw new Error(`Name is of invalid type @${idx}`);
+                }
+                if (typeof registration.country !== "string") {
+                    throw new Error(`Country is of invalid type @${idx}`);
+                }
+                if (typeof registration.affiliation !== "string") {
+                    throw new Error(`Affiliation is of invalid type @${idx}`);
+                }
+                if (typeof registration.newRole !== "string") {
+                    throw new Error(`New role is of invalid type @${idx}`);
+                }
+
+                if (!registration.email || registration.email.trim() === "") {
+                    throw new Error(`Email blank @${idx}`);
+                }
+                if (!registration.name || registration.name.trim() === "") {
+                    throw new Error(`Name blank @${idx}`);
+                }
+                if (!registration.country || registration.country.trim() === "") {
+                    throw new Error(`Country blank @${idx}`);
+                }
+                if (!registration.affiliation || registration.affiliation.trim() === "") {
+                    throw new Error(`Affiliation blank @${idx}`);
+                }
+                if (!registration.newRole || registration.newRole.trim() === "") {
+                    throw new Error(`New role blank @${idx}`);
+                }
+
+                registration.email = registration.email.trim().toLowerCase();
+                registration.name = registration.name.trim();
+                registration.affiliation = registration.affiliation.trim();
+                registration.country = registration.country.trim();
+                registration.newRole = registration.newRole.trim().toLowerCase();
+
+                if (!validRoles.includes(registration.newRole)) {
+                    throw new Error(`New role invalid @${idx}`);
+                }
+            });
+
+            const results = await Promise.all(registrations.map(async (registration, idx) => {
+                try {
+                    const spec = registration;
+                    spec.conference = new Parse.Object("Conference", { id: confId });
+
+                    if (!("newRole" in spec) || !spec.newRole) {
+                        spec.newRole = "attendee";
+                    }
+
+                    spec.newRole = spec.newRole.toLowerCase();
+                    const result = await createRegistration(spec);
+                    if (result === true) {
+                        return { index: idx, result: true };
+                    }
+                    else {
+                        return { index: idx, result: result.id };
+                    }
+                }
+                catch (e) {
+                    return { index: idx, result: false };
+                }
+            }));
+
+            return results;
+        }
+        else {
+            throw new Error("Permission denied");
+        }
+    }
+    else {
+        throw new Error(requestValidation.error);
+    }
+});
 
 module.exports = {
     getRegistrationById
