@@ -16,6 +16,7 @@ import { useLocation } from 'react-router-dom';
 
 interface Props {
     minSearchLength: number;
+    onItemClicked?: () => void;
 }
 
 type ProgramGroupTasks
@@ -549,7 +550,7 @@ export default function ProgramGroup(props: Props) {
                 {state.sessions && state.events ? <span className="menu-group">No upcoming events in the next 2 hours.</span> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-program",
-                    element: <MenuItem title="View whole program" label="Whole program" icon={<i className="far fa-calendar"></i>} action="/program" bold={true} />
+                    element: <MenuItem title="View whole program" label="Whole program" icon={<i className="far fa-calendar"></i>} action="/program" bold={true} onClick={props.onItemClicked} />
                 }]} />
             </>;
         }

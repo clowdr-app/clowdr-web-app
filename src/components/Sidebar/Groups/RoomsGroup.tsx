@@ -15,6 +15,7 @@ import { useLocation } from 'react-router-dom';
 
 interface Props {
     minSearchLength: number;
+    onItemClicked?: () => void;
 }
 
 type RoomsGroupTasks
@@ -356,7 +357,8 @@ export default function RoomsGroup(props: Props) {
                             title={room.room.name}
                             label={room.room.name}
                             icon={< i className="fas fa-video" ></i >}
-                            action={`/room/${room.room.id}`} >
+                            action={`/room/${room.room.id}`}
+                            onClick={props.onItemClicked}>
                             <>
                                 <ul>
                                     {participants
@@ -381,7 +383,8 @@ export default function RoomsGroup(props: Props) {
                             title={room.room.name}
                             label={room.room.name}
                             icon={< i className="fas fa-video" ></i >}
-                            action={`/room/${room.room.id}`} />
+                            action={`/room/${room.room.id}`}
+                            onClick={props.onItemClicked} />
                     };
                 }));
                 roomsEl = <MenuGroup items={roomMenuItems} />;
@@ -393,7 +396,7 @@ export default function RoomsGroup(props: Props) {
                 {state.allRooms ? <></> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-rooms",
-                    element: <MenuItem title="View all rooms" label="All rooms" icon={<i className="fas fa-person-booth"></i>} action="/room" bold={true} />
+                    element: <MenuItem title="View all rooms" label="All rooms" icon={<i className="fas fa-person-booth"></i>} action="/room" bold={true} onClick={props.onItemClicked} />
                 }]} />
             </>;
         }

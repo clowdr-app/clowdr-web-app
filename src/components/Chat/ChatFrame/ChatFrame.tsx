@@ -100,6 +100,7 @@ export default function ChatFrame(props: Props) {
         {!tc?.isAnnouncements || isAdmin
             ? <div className="compose-message">
                 <textarea
+                    autoFocus={true}
                     ref={msgBoxRef}
                     name="message" id="message"
                     placeholder="Type a message [Enter to send, Shift+Enter for newline]"

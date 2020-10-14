@@ -33,7 +33,7 @@
 
     @media only screen and (max-width: $break-md) {
         &.sidebar-open {
-            grid-template-columns: 100% 0%;
+            grid-template-columns: 100% 0% 0% 0%;
         }
 
         &.sidebar-closed {
@@ -48,6 +48,11 @@
 
         .page {
             grid-area: page;
+
+            @media only screen and (max-width: $break-md) {
+                width: 0;
+                padding: 0;
+            }
         }
 
         .sidebar {

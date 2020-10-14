@@ -8,6 +8,7 @@ interface Props {
     bold?: boolean
     action: string | ((event: React.MouseEvent<HTMLButtonElement>) => void);
     children?: JSX.Element,
+    onClick?: () => void;
 }
 
 export default function MenuItem(props: Props) {
@@ -23,7 +24,7 @@ export default function MenuItem(props: Props) {
             : <></>}
     </>;
     if (typeof props.action === "string") {
-        return <Link className="menu-item" aria-label={props.label} to={props.action}>
+        return <Link className="menu-item" aria-label={props.label} to={props.action} onClick={props.onClick}>
             {contents}
         </Link>;
     }

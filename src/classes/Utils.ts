@@ -34,3 +34,7 @@ export function generateTimeText(startTime: number, now: number) {
     }
     return { distance, units };
 }
+
+export function isBelowMediumBreakpoint() {
+    return window.matchMedia("(max-width: 768px)").matches;
+}

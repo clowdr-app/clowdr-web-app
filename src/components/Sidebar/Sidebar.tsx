@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './Sidebar.scss';
 import useConference from '../../hooks/useConference';
 import useMaybeUserProfile from '../../hooks/useMaybeUserProfile';
 import FooterLinks from '../FooterLinks/FooterLinks';
 import { Link } from 'react-router-dom';
-import { handleParseFileURLWeirdness } from '../../classes/Utils';
+import { handleParseFileURLWeirdness, isBelowMediumBreakpoint } from '../../classes/Utils';
 import useSafeAsync from '../../hooks/useSafeAsync';
 import ChatsGroup from './Groups/ChatsGroup';
 import RoomsGroup from './Groups/RoomsGroup';
@@ -64,6 +64,12 @@ export default function Sidebar(props: Props) {
         {sideBarHeading}
     </div>
 
+    const onItemClicked = useCallback(() => {
+        if (isBelowMediumBreakpoint() && props.toggleSidebar) {
+            props.toggleSidebar();
+        }
+    }, [props])
+
     return <>
         {!props.open ? sideBarButton : <></>}
         <div
@@ -76,10 +82,10 @@ export default function Sidebar(props: Props) {
                 <div className="menu">
                     {mUser ?
                         <>
-                            <MainMenuGroup />
-                            <ChatsGroup minSearchLength={minSearchLength} />
-                            <RoomsGroup minSearchLength={minSearchLength} />
-                            <ProgramGroup minSearchLength={minSearchLength} />
+                            <MainMenuGroup onItemClicked={onItemClicked} />
+                            <ChatsGroup minSearchLength={minSearchLength} onItemClicked={onItemClicked} />
+                            <RoomsGroup minSearchLength={minSearchLength} onItemClicked={onItemClicked} />
+                            <ProgramGroup minSearchLength={minSearchLength} onItemClicked={onItemClicked} />
                         </>
                         : <></>
                     }

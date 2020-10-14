@@ -311,7 +311,8 @@ export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserP
 }
 
 interface Props {
-    minSearchLength: number
+    minSearchLength: number;
+    onItemClicked?: () => void;
 }
 
 export default function ChatsGroup(props: Props) {
@@ -723,7 +724,8 @@ export default function ChatsGroup(props: Props) {
                             label={friendlyName}
                             icon={icon}
                             action={path}
-                            bold={false} />
+                            bold={false}
+                            onClick={props.onItemClicked} />
                 });
             }
 
@@ -734,7 +736,7 @@ export default function ChatsGroup(props: Props) {
                 {state.allChats ? <></> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-chat",
-                    element: <MenuItem title="View all chats" label="All chats" icon={<i className="fas fa-users"></i>} action="/chat" bold={true} />
+                    element: <MenuItem title="View all chats" label="All chats" icon={<i className="fas fa-users"></i>} action="/chat" bold={true} onClick={props.onItemClicked} />
                 }]} />
             </>;
         }
