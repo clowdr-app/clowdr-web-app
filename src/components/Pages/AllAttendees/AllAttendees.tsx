@@ -107,7 +107,7 @@ export default function AllAttendees() {
                 {item.link ? <Link to={item.link}>{item.text}</Link> : <>{item.text}</>}
             </div>
             {isAdmin && !isSelf && <div className="admin-buttons">
-                {!isBanned && <ConfirmButton className="admin-buttons__button" text="Ban" action={() => ban(profileId)} />}
+                {!isBanned && (isAttendee || isManager) && <ConfirmButton className="admin-buttons__button" text="Ban" action={() => ban(profileId)} />}
                 {!isBanned && isAttendee && <ConfirmButton className="admin-buttons__button" text="Promote to manager" action={() => promote(profileId)} />}
                 {!isBanned && isManager && <ConfirmButton className="admin-buttons__button" text="Demote to attendee" action={() => demote(profileId)} />}
             </div>}
