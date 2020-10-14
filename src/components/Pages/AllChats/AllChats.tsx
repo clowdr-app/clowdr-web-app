@@ -109,7 +109,7 @@ export default function AllChats() {
             <div className="flair-box">
                 {data.flairs.map((flair, i) =>
                     <div className="flair-container" key={i}>
-                        <FlairChip flair={flair} small />
+                        <FlairChip flair={flair} />
                     </div>
                 )}
             </div>

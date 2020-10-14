@@ -53,7 +53,7 @@ export default function ProfileView(props: Props) {
                     <div className="flair-box">
                         {flairs.map((flair, i) =>
                             <div className="flair-container" key={i}>
-                                <FlairChip flair={flair} small />
+                                <FlairChip flair={flair} />
                             </div>
                         )}
                     </div>

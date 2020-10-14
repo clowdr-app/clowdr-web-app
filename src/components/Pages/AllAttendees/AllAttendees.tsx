@@ -64,7 +64,7 @@ export default function AllAttendees() {
                 target: profileId,
                 newRole: "manager",
             });
-            addNotification("Promoted user to manager.");
+            addNotification("Promoted user to manager, please switch page and back to see changes (no need to refresh).");
         } catch (e) {
             addError(`Failed to promote user. Error: ${e}`, 20000);
         }
@@ -77,7 +77,7 @@ export default function AllAttendees() {
                 target: profileId,
                 newRole: "attendee",
             });
-            addNotification("Demoted user to attendee.");
+            addNotification("Demoted user to attendee, please switch page and back to see changes (no need to refresh).");
         } catch (e) {
             addError(`Failed to demote user. Error: ${e}`, 20000);
         }
@@ -114,7 +114,7 @@ export default function AllAttendees() {
             <div className="flair-box">
                 {item.renderData.flairs.map((flair, i) =>
                     <div className="flair-container" key={i}>
-                        <FlairChip flair={flair} small />
+                        <FlairChip flair={flair} />
                     </div>
                 )}
             </div>
