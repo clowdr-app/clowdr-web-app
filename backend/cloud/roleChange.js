@@ -78,6 +78,12 @@ async function handlePromoteAttendeeToManager(targetProfile, conference) {
         roleSid: announcementsAdminRole.sid
     });
 
+    const watchedItems = await targetProfile.get("watched").fetch({ useMasterKey: true });
+    if (!watchedItems.get("watchedChats").includes(moderationHubTextChat.id)) {
+        watchedItems.set("watchedChats", [...watchedItems.get("watchedChats"), moderationHubTextChat.id]);
+        watchedItems.save(null, { useMasterKey: true });
+    }
+
     const managerRole = await getRoleByName(conference.id, "manager");
     const managerUsers = managerRole.relation("users");
     managerUsers.add(targetProfile.get("user"));
@@ -157,6 +163,13 @@ async function handleDemoteManagerToAttendee(targetProfile, conference) {
             .equalTo("conference", conference)
             .equalTo("mode", "moderation_hub")
             .first({ useMasterKey: true });
+
+    const watchedItems = await targetProfile.get("watched").fetch({ useMasterKey: true });
+    if (watchedItems.get("watchedChats").includes(moderationHubTextChat.id)) {
+        watchedItems.set("watchedChats", watchedItems.get("watchedChats").filter(x => x !== moderationHubTextChat.id));
+        watchedItems.save(null, { useMasterKey: true });
+    }
+
     const moderationHubChannelSID = moderationHubTextChat.get("twilioID");
     await service.channels(moderationHubChannelSID).members(targetProfile.id).remove();
 
