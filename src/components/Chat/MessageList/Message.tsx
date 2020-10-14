@@ -78,8 +78,12 @@ export async function renderMessage(
         member = _member === "system" ? "System" : "Unknown";
     }
     const time = message.timestamp;
-    const now = Date.now();
-    const isOver24HrOld = (now - time.getTime()) > (1000 * 60 * 60 * 24);
+    const nowD = new Date();
+    const isDifferentDay = nowD.getDate() !== time.getDate();
+    const isDifferentMonth = nowD.getMonth() !== time.getMonth();
+    const isDifferentYear = nowD.getFullYear() !== time.getFullYear();
+    const isDifferentDate = isDifferentDay || isDifferentMonth || isDifferentYear;
+
     const flair = await profile?.primaryFlair;
     const profilePhotoUrl = handleParseFileURLWeirdness(profile?.profilePhoto);
     const reactorIds = (message.attributes as any)?.reactions ?? {};
@@ -106,6 +110,21 @@ export async function renderMessage(
         }
     }
 
+    let dateFormat: Intl.DateTimeFormatOptions | undefined;
+    if (isDifferentYear) {
+        dateFormat = {
+            year: "numeric",
+            month: "short",
+            day: "2-digit"
+        };
+    }
+    else if (isDifferentMonth || isDifferentDay) {
+        dateFormat = {
+            month: "short",
+            day: "2-digit"
+        };
+    }
+
     const result: RenderedMessage = {
         chatSid,
         chatName,
@@ -117,7 +136,9 @@ export async function renderMessage(
         profileName: profile?.id === userProfile.id ? "You" : profile?.displayName ?? `<${member}>`,
         profilePhotoUrl,
         time: time.getTime(),
-        timeStr: (isOver24HrOld ? time.toLocaleDateString() : "") + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
+        timeStr: 
+            (isDifferentDate ? time.toLocaleDateString(undefined, dateFormat) + " " : "")
+            + time.toLocaleTimeString().split(":").slice(0, 2).join(":"),
         index: message.index,
         reactions,
         moderation,

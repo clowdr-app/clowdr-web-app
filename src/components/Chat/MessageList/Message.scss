@@ -42,7 +42,7 @@
 
             width                : 100%;
             display              : grid;
-            grid-template-columns: min-content auto auto min-content min-content;
+            grid-template-columns: 5em auto auto min-content min-content;
             grid-template-rows   : auto auto;
             grid-template-areas  :
                 "time name . delete report"
@@ -98,7 +98,7 @@
                 display    : inline;
                 grid-area  : name;
                 font-weight: 600;
-                margin-left: 3em;
+                margin-left: 1.5em;
                 color      : $gray-2;
                 font-size  : 85%;
             }
