@@ -584,7 +584,7 @@ export default function ChatsGroup(props: Props) {
         }
     }, [watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, state.tasks.has("loadingActiveChats"), conf);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, state.tasks.has("loadingActiveChats"), conf);
 
     const onTextChatUpdated = useCallback(async function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
         if (mChat) {

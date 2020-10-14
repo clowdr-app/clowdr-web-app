@@ -129,7 +129,7 @@ export default function ViewItem(props: Props) {
                     : (feed
                         ? <>
                             {props.showFeedName ? <h2>{feed.name}</h2> : <></>}
-                            <ViewContentFeed feed={feed} hideZoom={false} />
+                            <ViewContentFeed feed={feed} hideZoomOrVideo={false} />
                             <hr />
                         </>
                         : <></>)}

@@ -168,7 +168,7 @@ export default function ChatView(props: Props) {
         }
     }, [props.chatId, mUser.watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conf);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conf);
 
     const onTextChatUpdated = useCallback(function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
         if (update.object.id === props.chatId) {
@@ -176,7 +176,7 @@ export default function ChatView(props: Props) {
         }
     }, [props.chatId]);
 
-    useDataSubscription("TextChat", onTextChatUpdated, () => { }, isAutoWatch === null, conf);
+    useDataSubscription("TextChat", onTextChatUpdated, null, isAutoWatch === null, conf);
 
     const doFollow = useCallback(async function _doFollow() {
         try {

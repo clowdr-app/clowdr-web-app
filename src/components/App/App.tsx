@@ -328,14 +328,14 @@ export default function App() {
     useDataSubscription(
         "Conference",
         onConferenceUpdated,
-        () => { },
+        null,
         appState.tasks.has("beginLoadConference") || appState.tasks.has("loadingConference"),
         appState.conference);
 
     useDataSubscription(
         "UserProfile",
         onUserProfileUpdated,
-        () => { },
+        null,
         appState.tasks.has("beginLoadCurrentUser") || appState.tasks.has("loadingCurrentUser"),
         appState.conference);
 

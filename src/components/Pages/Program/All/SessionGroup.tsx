@@ -8,44 +8,50 @@ import EventItem from "./EventItem";
 import { Link } from "react-router-dom";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import { daysIntoYear } from "../../../../classes/Utils";
+import { WholeProgramData } from "./WholeProgram";
 
 interface Props {
     session: ProgramSession;
+    data?: WholeProgramData;
     overrideTitle?: string;
     includeEvents?: string[] | undefined;
 }
 
 export default function SessionGroup(props: Props) {
     const conference = useConference();
-    const [events, setEvents] = useState<Array<ProgramSessionEvent> | null>(null);
+    const [events, setEvents] = useState<Array<ProgramSessionEvent> | null>(props.data?.events.filter(x => x.sessionId === props.session.id) ?? null);
 
     // Fetch data
-    useSafeAsync(async () => await props.session.events, setEvents, [props.session]);
+    useSafeAsync(async () => events ?? await props.session.events,
+        setEvents,
+        [props.session.id, props.data?.events]);
 
     // Subscribe to changes
     const onSessionEventUpdated = useCallback(function _onEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
-        const newEvents = Array.from(events ?? []);
-        const idx = newEvents.findIndex(x => x.id === ev.object.id);
-        if (idx === -1) {
-            const event = ev.object as ProgramSessionEvent;
-            if (event.sessionId === props.session.id) {
-                newEvents.push(ev.object as ProgramSessionEvent);
-                setEvents(newEvents);
+        setEvents(oldEvents => {
+            const newEvents = Array.from(oldEvents ?? []);
+            const idx = newEvents.findIndex(x => x.id === ev.object.id);
+            if (idx === -1) {
+                const event = ev.object as ProgramSessionEvent;
+                if (event.sessionId === props.session.id) {
+                    newEvents.push(ev.object as ProgramSessionEvent);
+                }
             }
-        }
-        else {
-            newEvents.splice(idx, 1, ev.object as ProgramSessionEvent)
-            setEvents(newEvents);
-        }
-    }, [props.session.id, events]);
+            else {
+                newEvents.splice(idx, 1, ev.object as ProgramSessionEvent)
+            }
+            return newEvents;
+        });
+    }, [props.session.id]);
 
     const onSessionEventDeleted = useCallback(function _onEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {
-        if (events) {
-            setEvents(events.filter(x => x.id !== ev.objectId));
-        }
-    }, [events]);
+        setEvents(oldEvents => oldEvents?.filter(x => x.id !== ev.objectId) ?? null);
+    }, []);
 
-    useDataSubscription("ProgramSessionEvent", onSessionEventUpdated, onSessionEventDeleted, !events, conference);
+    useDataSubscription("ProgramSessionEvent",
+        !!props.data ? null : onSessionEventUpdated,
+        !!props.data ? null : onSessionEventDeleted,
+        !events, conference);
 
     const rows: Array<JSX.Element> = [];
     const eventEntries
@@ -59,7 +65,7 @@ export default function SessionGroup(props: Props) {
 
     for (const event of eventEntries) {
         if (!props.includeEvents || props.includeEvents.includes(event.id)) {
-            rows.push(<EventItem key={event.id} event={event} />);
+            rows.push(<EventItem key={event.id} event={event} data={props.data} />);
         }
     }
 

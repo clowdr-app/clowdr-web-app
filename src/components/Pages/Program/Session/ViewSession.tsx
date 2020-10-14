@@ -29,7 +29,7 @@ export default function ViewSession(props: Props) {
     const [chatSize, setChatSize] = useState(30);
     const [showEventsList, setShowEventsList] = useState<boolean>(false);
     const [textChatId, setTextChatId] = useState<string | false | null>(null);
-    const [previousSessionId, setPreviousSessionId] = useState<string | null>(session?.id ?? null);
+    const [refreshTime, setRefreshTime] = useState<number | null>(null);
     const [events, setEvents] = useState<Array<ProgramSessionEvent> | null>(null);
 
     // Initial data fetch
@@ -50,25 +50,33 @@ export default function ViewSession(props: Props) {
 
     useSafeAsync(
         async () => {
-            if (previousSessionId === session?.id) {
-                return undefined;
-            }
-
-            if (session && events) {
-                const now = Date.now();
-                const liveEvent = events.find(event => event.startTime.getTime() < now && event.endTime.getTime() > now);
-                if (liveEvent) {
-                    const liveItem = await liveEvent.item;
-                    const liveFeed = await liveItem.feed;
-                    if (liveFeed) {
-                        if (liveFeed.textChatId) {
-                            return liveFeed.textChatId;
-                        }
-                        else if (liveFeed.videoRoomId) {
-                            const liveVideoRoom = await liveFeed.videoRoom;
-                            const liveChat = await liveVideoRoom?.textChat;
-                            if (liveChat) {
-                                return liveChat.id;
+            if (session && events && sessionFeed) {
+                if (sessionFeed.textChatId) {
+                    return sessionFeed.textChatId;
+                }
+                else if (sessionFeed.videoRoomId) {
+                    const vidRoom = await sessionFeed.videoRoom;
+                    const tc = await vidRoom?.textChat;
+                    if (tc) {
+                        return tc.id;
+                    }
+                }
+                else {
+                    const now = Date.now();
+                    const liveEvent = events.find(event => event.startTime.getTime() < now && event.endTime.getTime() > now);
+                    if (liveEvent) {
+                        const liveItem = await liveEvent.item;
+                        const liveFeed = await liveItem.feed;
+                        if (liveFeed) {
+                            if (liveFeed.textChatId) {
+                                return liveFeed.textChatId;
+                            }
+                            else if (liveFeed.videoRoomId) {
+                                const liveVideoRoom = await liveFeed.videoRoom;
+                                const liveChat = await liveVideoRoom?.textChat;
+                                if (liveChat) {
+                                    return liveChat.id;
+                                }
                             }
                         }
                     }
@@ -78,10 +86,9 @@ export default function ViewSession(props: Props) {
             return null;
         },
         (data: string | false | null) => {
-            setPreviousSessionId(session?.id ?? null);
             setTextChatId(data);
         },
-        [session, session?.id, events, previousSessionId]);
+        [session, session?.id, events, refreshTime, sessionFeed]);
 
     useEffect(() => {
         const _now = Date.now();
@@ -99,14 +106,14 @@ export default function ViewSession(props: Props) {
             }
             const tDist = nextEpoch - _now;
             const t = setTimeout(() => {
-                setPreviousSessionId(null);
-            }, Math.max(3000, tDist / 2));
+                setRefreshTime(_now);
+            }, Math.max(5000, tDist / 2));
             return () => {
                 clearTimeout(t);
             };
         }
         return () => { };
-    }, [session, events, previousSessionId]);
+    }, [session, events]);
 
     // Subscribe to data updates
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
@@ -174,7 +181,7 @@ export default function ViewSession(props: Props) {
         }
     }, [props.sessionId, userProfile.watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conference);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conference);
 
     const doFollow = useCallback(async function _doFollow() {
         try {
@@ -292,7 +299,6 @@ export default function ViewSession(props: Props) {
         session &&
         session.startTime.getTime() < Date.now() &&
         session.endTime.getTime() > Date.now();
-    // const isPermanent = !sessionFeed || sessionFeed.videoRoomId || sessionFeed.textChatId || sessionFeed.youtubeId;
 
     const sessionStartTimeText = session ? generateTimeText(session.startTime.getTime(), Date.now()) : null;
     const sessionMessage = session
@@ -316,7 +322,7 @@ export default function ViewSession(props: Props) {
                     <div className="embedded-content">
                         {!sessionFeed
                             ? <LoadingSpinner />
-                            : <ViewContentFeed feed={sessionFeed} hideZoom={(!isLive && !isPreShow) && sessionMessage("content")} />}
+                            : <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={(!isLive && !isPreShow) && sessionMessage("content")} hideTextChat={true} />}
                     </div>
                 </div>
                 <div className="split bottom-split">

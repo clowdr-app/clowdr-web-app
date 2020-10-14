@@ -9,10 +9,6 @@ import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import Exhibit from "./Exhibit/Exhibit";
 import "./Exhibits.scss";
 
-interface ExhibitsProps {
-
-}
-
 export default function Exhibits() {
     const conference = useConference();
     const [programItems, setProgramItems] = useState<ProgramItem[] | undefined>();
@@ -26,10 +22,10 @@ export default function Exhibits() {
 
     // Subscribe to ProgramItem updates
     const onProgramItemUpdated = useCallback(function _onProgramItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
-        setProgramItems(programItems => {
-            const newProgramItems = Array.from(programItems ?? []);
+        setProgramItems(oldProgramItems => {
+            const newProgramItems = Array.from(oldProgramItems ?? []);
             const idx = newProgramItems?.findIndex(x => x.id === ev.object.id);
-            let updatedProgramItem = ev.object as ProgramItem;
+            const updatedProgramItem = ev.object as ProgramItem;
             if (idx === -1 && updatedProgramItem.exhibit) {
                 newProgramItems.push(updatedProgramItem);
             } else {
@@ -44,7 +40,7 @@ export default function Exhibits() {
     }, []);
 
     const onProgramItemDeleted = useCallback(function _onProgramItemDeleted(ev: DataDeletedEventDetails<"ProgramItem">) {
-        setProgramItems(programItems => (programItems ?? []).filter(item => item.id !== ev.objectId));
+        setProgramItems(oldProgramItems => (oldProgramItems ?? []).filter(item => item.id !== ev.objectId));
     }, []);
 
     useDataSubscription("ProgramItem", onProgramItemUpdated, onProgramItemDeleted, !programItems, conference);

@@ -210,7 +210,7 @@ export default function RoomsGroup(props: Props) {
         }
     }, [watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, !state.watchedRoomIds, conf);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, !state.watchedRoomIds, conf);
 
 
     // Initial fetch of rooms

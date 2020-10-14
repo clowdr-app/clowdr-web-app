@@ -74,7 +74,7 @@ export default function ModerationChat(props: Props) {
             setRefetchChatDesc(x => !x);
         }
     }, [props.chatId]);
-    useDataSubscription("TextChat", onTextChatUpdated, () => { }, !chatDesc, conf);
+    useDataSubscription("TextChat", onTextChatUpdated, null, !chatDesc, conf);
 
     // Fetch members
     useSafeAsync(async () => {
@@ -139,7 +139,7 @@ export default function ModerationChat(props: Props) {
         }
     }, [props.chatId, mUser.watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conf);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conf);
 
     const doFollow = useCallback(async function _doFollow() {
         try {

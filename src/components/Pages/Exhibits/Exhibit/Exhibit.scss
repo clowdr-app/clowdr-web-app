@@ -9,6 +9,17 @@
 
     a.exhibit__title {
         color: inherit;
+
+        h2 {
+            display: inline;
+            vertical-align: middle;
+        }
+
+        i {
+            font-size: 80%;
+            vertical-align: middle;
+            margin-right: 0.6em;
+        }
     }
 
     .view-item {

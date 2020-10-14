@@ -98,7 +98,7 @@ export default function ViewVideoRoom(props: Props) {
         }
     }, [props.roomId, currentUserProfile.watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conference);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conference);
 
     const doFollow = useCallback(async function _doFollow() {
         try {

@@ -63,7 +63,7 @@ export default function WatchedItemsPage() {
     const onWatchedItemsUpdated = useCallback(async function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
         setWatchedItems(oldItems => oldItems?.id === update.object.id ? update.object as WatchedItems : oldItems);
     }, []);
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, !watchedItems, conference);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, !watchedItems, conference);
 
     // Subscribe to chat messages
     useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { ProgramItem, ProgramSession, ProgramSessionEvent, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
+import { ProgramItem, ProgramSession, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import { DataUpdatedEventDetails, DataDeletedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
@@ -9,64 +9,70 @@ import { Link } from "react-router-dom";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import TrackMarker from "./TrackMarker";
 import Item from "./Item";
+import { WholeProgramData } from "./WholeProgram";
 
 interface Props {
     track: ProgramTrack;
+    data?: WholeProgramData;
 }
 
 export default function TrackColumn(props: Props) {
     const conference = useConference();
-    const [sessions, setSessions] = useState<Array<ProgramSession> | null>(null);
+    const [sessions, setSessions] = useState<Array<ProgramSession> | null>(props.data?.sessions?.filter(x => x.trackId === props.track.id) ?? null);
     const [items, setItems] = useState<Array<ProgramItem> | null>(null);
 
     // Fetch data
-    useSafeAsync(async () => await props.track.sessions, setSessions, [props.track]);
+    useSafeAsync(
+        async () => sessions ?? await props.track.sessions,
+        setSessions,
+        [props.track.id, props.data?.sessions]);
     useSafeAsync(async () => {
-        const _items = await props.track.items;
-        const events: Map<string, ProgramSessionEvent[]> = new Map();
+        const _items = props.data?.items?.filter(x => x.trackId === props.track.id) ?? await props.track.items;
+        const events: Map<string, number> = new Map();
         await Promise.all(_items.map(async x => {
-            events.set(x.id, await x.events);
+            events.set(x.id, (props.data?.events?.filter(y => y.itemId === x.id) ?? await x.events).length);
         }));
-        return _items.filter(x => !events.get(x.id)?.length);
-    }, setItems, [props.track]);
+        return _items.filter(x => !events.get(x.id));
+    }, setItems, [props.track.id]);
 
     // Subscribe to changes
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
-        const newSessions = Array.from(sessions ?? []);
-        const idx = newSessions.findIndex(x => x.id === ev.object.id);
-        if (idx === -1) {
-            const session = ev.object as ProgramSession;
-            if (session.trackId === props.track.id) {
-                newSessions.push(ev.object as ProgramSession);
-                setSessions(newSessions);
+        setSessions(oldSessions => {
+            const newSessions = Array.from(oldSessions ?? []);
+            const idx = newSessions.findIndex(x => x.id === ev.object.id);
+            if (idx === -1) {
+                const session = ev.object as ProgramSession;
+                if (session.trackId === props.track.id) {
+                    newSessions.push(ev.object as ProgramSession);
+                }
             }
-        }
-        else {
-            newSessions.splice(idx, 1, ev.object as ProgramSession);
-            setSessions(newSessions);
-        }
-    }, [props.track.id, sessions]);
+            else {
+                newSessions.splice(idx, 1, ev.object as ProgramSession);
+            }
+            return newSessions;
+        });
+    }, [props.track.id]);
 
     const onSessionDeleted = useCallback(function _onSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
-        if (sessions) {
-            setSessions(sessions.filter(x => x.id !== ev.objectId));
-        }
-    }, [sessions]);
+        setSessions(oldSessions => oldSessions?.filter(x => x.id !== ev.objectId) ?? null);
+    }, []);
 
-    useDataSubscription("ProgramSession", onSessionUpdated, onSessionDeleted, !sessions, conference);
+    useDataSubscription("ProgramSession",
+        !!props.data ? null : onSessionUpdated,
+        !!props.data ? null : onSessionDeleted,
+        !sessions, conference);
 
     const rows: Array<JSX.Element> = [];
     const sessionEntries
-        = sessions
-            ? sessions.sort((x, y) => {
+        = sessions?.sort((x, y) => {
                 return x.startTime < y.startTime ? -1
                     : x.startTime === y.startTime ? 0
                         : 1;
             })
-            : [];
+            ?? [];
 
     for (const session of sessionEntries) {
-        rows.push(<SessionGroup key={session.id} session={session} />);
+        rows.push(<SessionGroup key={session.id} session={session} data={props.data} />);
     }
 
     if (items && items.length > 0) {
@@ -74,7 +80,7 @@ export default function TrackColumn(props: Props) {
             rows.push(<hr key="unscheduled-divider" />);
             const _rows: Array<JSX.Element> = [];
             for (const item of items.sort((x, y) => x.title.localeCompare(y.title))) {
-                _rows.push(<Item key={item.id} item={item} clickable={true} />);
+                _rows.push(<Item key={item.id} item={item} clickable={true} data={props.data} />);
             }
             rows.push(<div key="unscheduled-items" className="session">
                 <h2 className="title">Unscheduled items</h2>
@@ -85,7 +91,7 @@ export default function TrackColumn(props: Props) {
         }
         else {
             for (const item of items.sort((x, y) => x.title.localeCompare(y.title))) {
-                rows.push(<Item key={item.id} item={item} clickable={true} />);
+                rows.push(<Item key={item.id} item={item} clickable={true} data={props.data} />);
             }
         }
     }

@@ -79,7 +79,7 @@ export default function ViewTrack(props: Props) {
         }
     }, [props.trackId, userProfile.watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conference);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conference);
 
     const doFollow = useCallback(async function _doFollow() {
         try {
@@ -191,7 +191,7 @@ export default function ViewTrack(props: Props) {
                         &#9660;
                     </button>
                     <div className="embedded-content">
-                        <ViewContentFeed feed={feed} hideZoom={false} />
+                        <ViewContentFeed feed={feed} hideZoomOrVideo={false} />
                     </div>
                 </div>
             </SplitterLayout>

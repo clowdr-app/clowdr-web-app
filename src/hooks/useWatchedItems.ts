@@ -17,7 +17,7 @@ export default function useWatchedItems(): WatchedItems | null {
         setWatchedItems(old => old?.id === ev.object.id ? ev.object as WatchedItems : null);
     }, []);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => {}, !watchedItems, conference);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, !watchedItems, conference);
 
     return watchedItems;
 }

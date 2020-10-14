@@ -6,36 +6,44 @@ import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import AuthorsList from "../AuthorsList";
+import { WholeProgramData } from "./WholeProgram";
 
 interface Props {
     item: ProgramItem;
+    data?: WholeProgramData;
     clickable?: boolean;
 }
 
 export default function Item(props: Props) {
     const item = props.item;
     const conference = useConference();
-    const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(null);
+    const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(props.data?.authors?.filter(x => item.authors.includes(x.id)) ?? null);
     const history = useHistory();
 
-    useSafeAsync(async () => item ? await item.authorPerons : null, setAuthors, [item]);
+    useSafeAsync(
+        async () => authors ?? await item.authorPerons,
+        setAuthors,
+        [item, props.data?.authors]);
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
-        const newAuthors = Array.from(authors ?? []);
-        const idx = newAuthors.findIndex(x => x.id === ev.object.id);
-        if (idx > -1) {
-            newAuthors.splice(idx, 1, ev.object as ProgramPerson)
-            setAuthors(newAuthors);
-        }
-    }, [authors]);
+        setAuthors(oldAuthors => {
+            const newAuthors = Array.from(oldAuthors ?? []);
+            const idx = newAuthors.findIndex(x => x.id === ev.object.id);
+            if (idx > -1) {
+                newAuthors.splice(idx, 1, ev.object as ProgramPerson)
+            }
+            return newAuthors;
+        });
+    }, []);
 
     const onAuthorDeleted = useCallback(function _onAuthorDeleted(ev: DataDeletedEventDetails<"ProgramPerson">) {
-        if (authors) {
-            setAuthors(authors.filter(x => x.id !== ev.objectId));
-        }
-    }, [authors]);
+        setAuthors(oldAuthors => oldAuthors?.filter(x => x.id !== ev.objectId) ?? null);
+    }, []);
 
-    useDataSubscription("ProgramPerson", onAuthorUpdated, onAuthorDeleted, !authors, conference);
+    useDataSubscription("ProgramPerson",
+        !!props.data ? null : onAuthorUpdated,
+        !!props.data ? null : onAuthorDeleted,
+        !authors, conference);
 
     return <div
         className={`program-item${props.clickable ? " clickable" : ""}`}

@@ -12,7 +12,8 @@ import useUserProfile from "../../hooks/useUserProfile";
 
 interface Props {
     feed: ContentFeed;
-    hideZoom: string | false;
+    hideZoomOrVideo: string | false;
+    hideTextChat?: boolean;
 }
 
 export default function ViewContentFeed(props: Props) {
@@ -75,11 +76,11 @@ export default function ViewContentFeed(props: Props) {
     if (youTubeFeed && youTubeFeed !== "not present") {
         className += " youtube";
     }
-    if (zoomRoom && zoomRoom !== "not present") {
+    if (!props.hideZoomOrVideo && zoomRoom && zoomRoom !== "not present") {
         className += " zoom";
     }
     return <div className={className}>
-        {!props.hideZoom && zoomRoom && zoomRoom !== "not present"
+        {!props.hideZoomOrVideo && zoomRoom && zoomRoom !== "not present"
             ? <div className="zoom">
                 <h3>Connect to Zoom</h3>
                 <p>
@@ -120,19 +121,19 @@ export default function ViewContentFeed(props: Props) {
             />
             : <></>
         }
-        {videoRoom && videoRoom !== "not present"
+        {!props.hideZoomOrVideo && videoRoom && videoRoom !== "not present"
             ? <VideoGrid room={videoRoom} />
             : <></>
         }
-        {textChat && textChat !== "not present"
+        {!props.hideTextChat && textChat && textChat !== "not present"
             ? <ChatFrame chatId={textChat.id} />
             : <></>
         }
-        {(props.hideZoom || !zoomRoom || zoomRoom === "not present") &&
+        {(props.hideZoomOrVideo || !zoomRoom || zoomRoom === "not present") &&
             (!youTubeFeed || youTubeFeed === "not present") &&
-            (!videoRoom || videoRoom === "not present") &&
-            (!textChat || textChat === "not present")
-            ? <>{props.hideZoom}</>
+            (props.hideZoomOrVideo || !videoRoom || videoRoom === "not present") &&
+            (props.hideTextChat || !textChat || textChat === "not present")
+            ? <>{props.hideZoomOrVideo}</>
             : <></>
         }
     </div>;

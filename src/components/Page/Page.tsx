@@ -103,11 +103,11 @@ function Page(props: Props) {
             <ResetPassword email={p.match.params.email} token={p.match.params.token} />
         } />;
 
-        const footerRoutes = [
+        const footerRoutes = <>
             <Route path="/about" component={About} />,
             <Route path="/legal" component={Legal} />,
             <Route path="/help" component={Help} />
-        ];
+        </>;
 
         if (mConf && mUser) {
             // TODO: Route for /program/new (conference manager and admin roles only)

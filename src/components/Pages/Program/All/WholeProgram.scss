@@ -7,13 +7,16 @@
 }
 
 .whole-program {
-    display              : grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    grid-auto-rows       : min-content;
-    grid-column-gap      : 1em;
-    grid-row-gap         : 8ex;
+    &.tracks>.schedule {
+        display: none;
+    }
 
-    &.schedule {
+    &.schedule>.tracks {
+        display: none;
+    }
+
+    &>.schedule {
+        display: grid;
         grid-template-columns: 100%;
         grid-auto-rows       : auto;
         grid-column-gap      : 0;
@@ -22,6 +25,14 @@
         hr {
             border-color: $color-3;
         }
+    }
+
+    &>.tracks {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-auto-rows       : min-content;
+        grid-column-gap      : 1em;
+        grid-row-gap         : 8ex;
     }
 
     p {
@@ -106,7 +117,7 @@
 
         &>.content {
             &>.program-item {
-                padding      : 0.5em;
+                padding: 0.5em;
             }
         }
     }

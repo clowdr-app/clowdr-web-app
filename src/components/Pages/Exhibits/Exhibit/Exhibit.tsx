@@ -1,4 +1,4 @@
-import { ProgramItem, ProgramItemAttachment } from "@clowdr-app/clowdr-db-schema";
+import { ProgramItem, ProgramItemAttachment, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
@@ -16,17 +16,23 @@ interface ExhibitProps {
 export default function Exhibit(props: ExhibitProps) {
     const conference = useConference();
     const [attachments, setAttachments] = useState<ProgramItemAttachment[] | undefined>();
+    const [track, setTrack] = useState<ProgramTrack | undefined>();
 
     // Fetch initial ProgramItemAttachments
     useSafeAsync(
         async () => (await ProgramItemAttachment.getAll(conference.id)).filter(attachment => attachment.programItemId === props.programItem.id),
-        setAttachments, [conference.id]);
+        setAttachments, [props.programItem.id, conference.id]);
+
+    useSafeAsync(
+        async () => await props.programItem.track,
+        setTrack,
+        [props.programItem.id]);
 
     // Subscribe to ProgramItemAttachment updates
     const onProgramItemAttachmentUpdated = useCallback(function _onProgramItemAttachmentUpdated(ev: DataUpdatedEventDetails<"ProgramItemAttachment">) {
-        setAttachments(attachments => {
-            let updatedAttachment = ev.object as ProgramItemAttachment;
-            let newAttachments = (attachments ?? []).filter(attachment => attachment.id !== updatedAttachment.id);
+        setAttachments(oldAttachments => {
+            const updatedAttachment = ev.object as ProgramItemAttachment;
+            const newAttachments = (oldAttachments ?? []).filter(attachment => attachment.id !== updatedAttachment.id);
 
             if (updatedAttachment.programItemId === props.programItem.id) {
                 newAttachments.push(updatedAttachment);
@@ -37,14 +43,17 @@ export default function Exhibit(props: ExhibitProps) {
     }, [props.programItem]);
 
     const onProgramItemAttachmentDeleted = useCallback(function _onProgramItemAttachmentDeleted(ev: DataDeletedEventDetails<"ProgramItemAttachment">) {
-        setAttachments(attachments => (attachments ?? []).filter(attachment => attachment.id !== ev.objectId));
+        setAttachments(oldAttachments => (oldAttachments ?? []).filter(attachment => attachment.id !== ev.objectId));
     }, []);
 
     useDataSubscription("ProgramItemAttachment", onProgramItemAttachmentUpdated, onProgramItemAttachmentDeleted, !attachments, conference);
 
     return <article className="exhibit" aria-labelledby={`exhibit-${props.programItem.id}__title`}>
         <Link to={`/item/${props.programItem.id}`} className="exhibit__title">
-            <h2 id={`exhibit-${props.programItem.id}__title`}>{props.programItem.title}</h2>
+            <i className="fas fa-circle" style={{ color: track?.colour }}></i>
+            <h2 id={`exhibit-${props.programItem.id}__title`}>
+                {props.programItem.title}
+            </h2>
         </Link>
         <ExhibitAuthorsList item={props.programItem} />
         {attachments?.length === 0

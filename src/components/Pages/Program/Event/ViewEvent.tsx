@@ -38,23 +38,23 @@ export default function ViewEvent(props: Props) {
     useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session]);
     useSafeAsync(async () => event ? ((await event.feed) ?? "not present") : null, setEventFeed, [event]);
 
-    const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false);
+    const [refreshTime, setRefreshTime] = useState<number>(0);
     useEffect(() => {
         const _now = Date.now();
-        if (event && _now < event.endTime.getTime()) {
+        if (event && _now < event.endTime.getTime() + (60 * 1000)) {
             const tDist =
                 _now < event.startTime.getTime()
                     ? (event.startTime.getTime() - _now)
                     : (event.endTime.getTime() - _now);
             const t = setTimeout(() => {
-                setRefreshTrigger(old => !old);
-            }, Math.max(3000, tDist / 2));
+                setRefreshTime(_now);
+            }, Math.max(5000, tDist / 2));
             return () => {
                 clearTimeout(t);
             };
         }
         return () => { };
-    }, [event, refreshTrigger]);
+    }, [event, refreshTime]);
 
     // Subscribe to data updates
     const onSessionEventUpdated = useCallback(function _onSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
@@ -145,7 +145,7 @@ export default function ViewEvent(props: Props) {
         }
     }, [props.eventId, userProfile.watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, isFollowing === null, conference);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conference);
 
     const doFollow = useCallback(async function _doFollow() {
         try {
@@ -250,7 +250,8 @@ export default function ViewEvent(props: Props) {
         {sessionFeed
             ? <div className="session-feed">
                 <h2>{sessionFeed.name}</h2>
-                {eventIsLive || sessionFeed.youtubeId ? <ViewContentFeed feed={sessionFeed} hideZoom={!eventIsLive && "Sorry, something has gone wrong and we are unable to show you the session feed for this event."} /> : <></>}
+                {eventIsLive || sessionFeed.youtubeId
+                    ? <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={!eventIsLive && "Sorry, something has gone wrong and we are unable to show you the session feed for this event."} /> : <></>}
             </div>
             : <LoadingSpinner message="Loading session feed" />}
         {/* TODO: Re-enable this for splash?

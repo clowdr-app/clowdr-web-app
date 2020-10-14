@@ -280,14 +280,14 @@ export default function ProgramList(props: Props) {
     useDataSubscription(
         "ProgramTrack",
         onDataUpdated,
-        () => { },
+        null,
         false,
         conf);
 
     useDataSubscription(
         "ProgramItem",
         onDataUpdated,
-        () => { },
+        null,
         false,
         conf);
 

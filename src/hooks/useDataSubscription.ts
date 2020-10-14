@@ -9,13 +9,13 @@ export default function useDataSubscription<
     K extends CachedSchemaKeys
 >(
     tableName: K,
-    onDataUpdated: (ev: DataUpdatedEventDetails<K>) => void,
-    onDataDeleted: (ev: DataDeletedEventDetails<K>) => void,
+    onDataUpdated: ((ev: DataUpdatedEventDetails<K>) => void) | null,
+    onDataDeleted: ((ev: DataDeletedEventDetails<K>) => void) | null,
     loading: boolean,
     _conference: Data.Conference | null
 ) {
     useEffect(() => {
-        if (!loading && _conference) {
+        if (!loading && _conference && (onDataUpdated || onDataDeleted)) {
             const conference = _conference;
 
             let cancel: () => void = () => { };
@@ -148,8 +148,12 @@ export default function useDataSubscription<
                     cancel = promise.cancel;
                     const evs = await promise.promise;
                     const unsubscribes: Array<() => void> = [];
-                    unsubscribes.push(evs[0].subscribe(onDataUpdated));
-                    unsubscribes.push(evs[1].subscribe(onDataDeleted));
+                    if (onDataUpdated) {
+                        unsubscribes.push(evs[0].subscribe(onDataUpdated));
+                    }
+                    if (onDataDeleted) {
+                        unsubscribes.push(evs[1].subscribe(onDataDeleted));
+                    }
                     unsubscribe = () => {
                         for (const _unsubscribe of unsubscribes) {
                             _unsubscribe();

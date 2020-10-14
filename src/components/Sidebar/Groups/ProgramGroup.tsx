@@ -447,7 +447,7 @@ export default function ProgramGroup(props: Props) {
         }
     }, [watchedId]);
 
-    useDataSubscription("WatchedItems", onWatchedItemsUpdated, () => { }, !state.watchedSessionIds, conf);
+    useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, !state.watchedSessionIds, conf);
 
 
     // Subscribe to program data events
