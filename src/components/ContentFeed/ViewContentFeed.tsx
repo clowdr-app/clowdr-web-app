@@ -12,7 +12,7 @@ import useUserProfile from "../../hooks/useUserProfile";
 
 interface Props {
     feed: ContentFeed;
-    hideZoom: boolean;
+    hideZoom: string | false;
 }
 
 export default function ViewContentFeed(props: Props) {
@@ -128,8 +128,12 @@ export default function ViewContentFeed(props: Props) {
             ? <ChatFrame chatId={textChat.id} />
             : <></>
         }
-        {(props.hideZoom || !zoomRoom) && !youTubeFeed && !videoRoom && !textChat
-            && <>There is currently no content to display. The content may be scheduled for a particular time later on.</>
+        {(props.hideZoom || !zoomRoom || zoomRoom === "not present") &&
+            (!youTubeFeed || youTubeFeed === "not present") &&
+            (!videoRoom || videoRoom === "not present") &&
+            (!textChat || textChat === "not present")
+            ? <>{props.hideZoom}</>
+            : <></>
         }
     </div>;
 }

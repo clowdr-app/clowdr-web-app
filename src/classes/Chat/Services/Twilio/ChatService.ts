@@ -215,7 +215,14 @@ export default class TwilioChatService implements IChatService {
         if (this.profile) {
             const watched = await this.profile.watched;
             const watchedChats = await watched.watchedChatObjects;
-            return Promise.all(watchedChats.map(tc => this.convertTextChatToChannel(tc)));
+            return removeNull(await Promise.all(watchedChats.map(tc => {
+                try {
+                    return this.convertTextChatToChannel(tc);
+                }
+                catch {
+                    return null;
+                }
+            })));
         }
         return [];
     }

@@ -18,6 +18,7 @@ interface Props {
     item: ProgramItem | string;
     heading?: HeadingState;
     textChatFeedOnly?: boolean;
+    showFeedName?: boolean;
 }
 
 export default function ViewItem(props: Props) {
@@ -127,14 +128,8 @@ export default function ViewItem(props: Props) {
                     )
                     : (feed
                         ? <>
-                            <h2>{feed.name}</h2>
+                            {props.showFeedName ? <h2>{feed.name}</h2> : <></>}
                             <ViewContentFeed feed={feed} hideZoom={false} />
-                            <div className="content-feed">
-                                {textChatId
-                                    ? <ChatFrame chatId={textChatId} />
-                                    : <></>
-                                }
-                            </div>
                             <hr />
                         </>
                         : <></>)}

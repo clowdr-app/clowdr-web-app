@@ -348,13 +348,7 @@ export default function RoomsGroup(props: Props) {
             if (!noRooms) {
                 let roomMenuItems: MenuGroupItems = [];
                 roomMenuItems = roomMenuItems.concat(activeRooms.map(room => {
-                    let participants = room.participants;
-                    participants = participants.concat(participants);
-                    participants = participants.concat(participants);
-                    participants = participants.concat(participants);
-                    participants = participants.concat(participants);
-                    participants = participants.concat(participants);
-                    participants = participants.concat(participants);
+                    const participants = room.participants;
                     const morePeopleCount = participants.length - maxRoomParticipantsToList;
                     return {
                         key: room.room.id,

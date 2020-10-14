@@ -1,5 +1,6 @@
 import { TextChat } from "@clowdr-app/clowdr-db-schema";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { useCallback, useState } from "react";
 import { ChatDescriptor } from "../classes/Chat";
 import useConference from "./useConference";
@@ -19,7 +20,7 @@ export default function useChats(): Array<ChatDescriptor> | null {
         setChats(existing => {
             const updated = Array.from(existing ?? []);
             const idx = updated?.findIndex(x => x.id === ev.object.id);
-            let item = ev.object as TextChat;
+            const item = ev.object as TextChat;
             if (idx === -1) {
                 updated.push(item);
             } else {
@@ -39,7 +40,7 @@ export default function useChats(): Array<ChatDescriptor> | null {
         if (!mChat || !allChats) {
             return null;
         }
-        return Promise.all(allChats?.map(async chat => await mChat.getChat(chat.id)));
+        return removeNull(await Promise.all(allChats?.map(chat => mChat.getChat(chat.id))));
     }, setChatDescriptors, [mChat, allChats]);
 
     return allChatDescriptors;

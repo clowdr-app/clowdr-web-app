@@ -60,7 +60,7 @@ export async function renderMessage(
     chatName?: string
 ) {
     const body = message.body;
-    const _member: "system" | IMember = await message.getMember();
+    const _member: "unknown" | "system" | IMember = await message.getMember();
     let memberProfileId: string | undefined;
     let profile: UserProfile | null | undefined;
     let member: "System" | "Unknown" | IMember;
@@ -75,7 +75,7 @@ export async function renderMessage(
         }
     }
     else {
-        member = "System";
+        member = _member === "system" ? "System" : "Unknown";
     }
     const time = message.timestamp;
     const now = Date.now();

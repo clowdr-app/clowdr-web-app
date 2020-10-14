@@ -44,8 +44,8 @@ export default function ViewEvent(props: Props) {
         if (event && _now < event.endTime.getTime()) {
             const tDist =
                 _now < event.startTime.getTime()
-                    ? (_now - event.startTime.getTime())
-                    : (_now - event.endTime.getTime());
+                    ? (event.startTime.getTime() - _now)
+                    : (event.endTime.getTime() - _now);
             const t = setTimeout(() => {
                 setRefreshTrigger(old => !old);
             }, Math.max(3000, tDist / 2));
@@ -250,7 +250,7 @@ export default function ViewEvent(props: Props) {
         {sessionFeed
             ? <div className="session-feed">
                 <h2>{sessionFeed.name}</h2>
-                <ViewContentFeed feed={sessionFeed} hideZoom={!eventIsLive} />
+                {eventIsLive || sessionFeed.youtubeId ? <ViewContentFeed feed={sessionFeed} hideZoom={!eventIsLive && "Sorry, something has gone wrong and we are unable to show you the session feed for this event."} /> : <></>}
             </div>
             : <LoadingSpinner message="Loading session feed" />}
         {/* TODO: Re-enable this for splash?
@@ -267,6 +267,7 @@ export default function ViewEvent(props: Props) {
         } */}
         {item
             ? <ViewItem
+                showFeedName={true}
                 item={item}
                 // TODO: For SPLASH: && eventHasEnded
                 textChatFeedOnly={eventIsLive || sessionIsLive}

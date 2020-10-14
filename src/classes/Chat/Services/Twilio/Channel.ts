@@ -134,13 +134,18 @@ export default class Channel implements IChannel {
         // const channel = await this.upgrade();
         // await channel.removeMember(member.sid);
     }
-    async getMember(memberProfileId: string | null): Promise<Member | "system"> {
-        const channel = await this.upgrade();
-        if (memberProfileId) {
-            return new Member(await channel.getMemberBySid(memberProfileId));
+    async getMember(memberProfileId: string | null): Promise<Member | "system" | "unknown"> {
+        try {
+            const channel = await this.upgrade();
+            if (memberProfileId) {
+                return new Member(await channel.getMemberBySid(memberProfileId));
+            }
+            else {
+                return "system";
+            }
         }
-        else {
-            return "system";
+        catch {
+            return "unknown";
         }
     }
     getName(): string {
@@ -151,30 +156,35 @@ export default class Channel implements IChannel {
         await channel.updateFriendlyName(value);
     }
     async getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
-        if (this.textChat.isDM) {
-            assert(this.service.conference);
-            const channel = await this.upgrade();
-            const name = this.getName();
-            const members = (await channel.getMembers()).filter(x => name.includes(x.identity));
-            const [member1, member2] = members.map(x => new Member(x));
+        try {
+            if (this.textChat.isDM) {
+                assert(this.service.conference);
+                const channel = await this.upgrade();
+                const name = this.getName();
+                const members = (await channel.getMembers()).filter(x => name.includes(x.identity));
+                const [member1, member2] = members.map(x => new Member(x));
 
-            const [member1Online, member2Online] = await Promise.all([
-                member1.getOnlineStatus(),
-                member2.getOnlineStatus()
-            ]);
+                const [member1Online, member2Online] = await Promise.all([
+                    member1.getOnlineStatus(),
+                    member2.getOnlineStatus()
+                ]);
 
-            return {
-                member1: {
-                    profileId: member1.profileId,
-                    isOnline: member1Online
-                },
-                member2: {
-                    profileId: member2.profileId,
-                    isOnline: member2Online
-                }
-            };
+                return {
+                    member1: {
+                        profileId: member1.profileId,
+                        isOnline: member1Online
+                    },
+                    member2: {
+                        profileId: member2.profileId,
+                        isOnline: member2Online
+                    }
+                };
+            }
+            else {
+                return false;
+            }
         }
-        else {
+        catch {
             return false;
         }
     }
@@ -223,20 +233,28 @@ export default class Channel implements IChannel {
         await channel.delete();
     }
     async getMessage(messageSid: string, messageIndex: number): Promise<Message | null> {
-        const channel = await this.upgrade();
-        const msgs = await channel.getMessages(1, messageIndex);
-        if (msgs.items.length > 0) {
-            if (msgs.items[0].sid === messageSid) {
-                return new Message(msgs.items[0], this);
+        try {
+            const channel = await this.upgrade();
+            const msgs = await channel.getMessages(1, messageIndex);
+            if (msgs.items.length > 0) {
+                if (msgs.items[0].sid === messageSid) {
+                    return new Message(msgs.items[0], this);
+                }
             }
+        }
+        catch {
         }
         return null;
     }
-    async getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {
-        // TODO: Process and attach reactions
-        const channel = await this.upgrade();
-        const pages = await channel.getMessages(pageSize, anchor, direction);
-        return new MappedPaginator(pages, msg => new Message(msg, this));
+    async getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message> | null> {
+        try {
+            const channel = await this.upgrade();
+            const pages = await channel.getMessages(pageSize, anchor, direction);
+            return new MappedPaginator(pages, msg => new Message(msg, this));
+        }
+        catch {
+            return null;
+        }
     }
     async sendMessage(message: string): Promise<number> {
         const channel = await this.upgrade();

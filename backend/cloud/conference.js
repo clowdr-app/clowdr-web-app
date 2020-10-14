@@ -1092,35 +1092,69 @@ Parse.Cloud.job("regenerate-global-chats", async (request) => {
 
             // Helper function re-used throughout
             async function setConfiguration(key, value, attendeeRead, publicRead) {
-                message(`Creating configuration: ${key}`);
-                const acl = new Parse.ACL();
-                acl.setPublicReadAccess(false);
-                acl.setPublicWriteAccess(false);
-                if (publicRead) {
-                    acl.setPublicReadAccess(true);
+                try {
+                    const existing =
+                        await new Parse.Query("ConferenceConfiguration")
+                            .equalTo("conference", conference)
+                            .equalTo("key", "TWILIO_ANNOUNCEMENTS_CHANNEL_SID")
+                            .first({ useMasterKey: true });
+                    if (existing) {
+                        message(`Got existing configuration: ${key}`);
+                        const acl = new Parse.ACL();
+                        acl.setPublicReadAccess(false);
+                        acl.setPublicWriteAccess(false);
+                        if (publicRead) {
+                            acl.setPublicReadAccess(true);
+                        }
+                        else if (attendeeRead) {
+                            acl.setRoleReadAccess(attendeeRole, true);
+                        }
+                        else {
+                            acl.setRoleReadAccess(adminRole, true);
+                        }
+                        acl.setRoleWriteAccess(adminRole, true);
+                        existing.setACL(acl);
+                        existing.save({ value }, { useMasterKey: true });
+                        message(`Updated configuration: ${key}`);
+                        configurationMap.set(key, existing);
+                        return existing;
+                    }
                 }
-                else if (attendeeRead) {
-                    acl.setRoleReadAccess(attendeeRole, true);
+                // tslint:disable-next-line:no-empty
+                catch (e) {
                 }
-                else {
-                    acl.setRoleReadAccess(adminRole, true);
+
+                {
+                    message(`Creating configuration: ${key}`);
+                    const acl = new Parse.ACL();
+                    acl.setPublicReadAccess(false);
+                    acl.setPublicWriteAccess(false);
+                    if (publicRead) {
+                        acl.setPublicReadAccess(true);
+                    }
+                    else if (attendeeRead) {
+                        acl.setRoleReadAccess(attendeeRole, true);
+                    }
+                    else {
+                        acl.setRoleReadAccess(adminRole, true);
+                    }
+                    acl.setRoleWriteAccess(adminRole, true);
+
+                    const configurationO = new Parse.Object("ConferenceConfiguration");
+                    configurationO.setACL(acl);
+                    const configuration = await configurationO.save({
+                        key: key,
+                        value: value,
+                        conference: conference
+                    }, {
+                        useMasterKey: true
+                    });
+
+                    configurationMap.set(key, configuration);
+
+                    message(`Created configuration: ${key}`);
+                    return configuration;
                 }
-                acl.setRoleWriteAccess(adminRole, true);
-
-                const configurationO = new Parse.Object("ConferenceConfiguration");
-                configurationO.setACL(acl);
-                const configuration = await configurationO.save({
-                    key: key,
-                    value: value,
-                    conference: conference
-                }, {
-                    useMasterKey: true
-                });
-
-                configurationMap.set(key, configuration);
-
-                message(`Created configuration: ${key}`);
-                return configuration;
             }
 
             adminUser = await new Parse.Object("_User", { id: params.adminUserId }).fetch({ useMasterKey: true });

@@ -144,7 +144,9 @@
         "restore-schema-to-production-db-use-with-caution": "node-env-run -E .env.production.local scripts/restore-schema.js",
         "migrate-profiles-addWatchedItems-isBanned-production": "node-env-run -E .env.production.local scripts/migrations/migrate-profiles-addWatchedItems-isBanned.js",
         "regenerate-global-chats": "node-env-run -E .env scripts/regenerate-global-chats.js",
-        "regenerate-global-chats-production": "node-env-run -E .env.production.local scripts/regenerate-global-chats.js"
+        "cleanup-watched-items": "node-env-run -E .env scripts/cleanup-watched-items.js",
+        "regenerate-global-chats-production": "node-env-run -E .env.production.local scripts/regenerate-global-chats.js",
+        "cleanup-watched-items-production": "node-env-run -E .env.production.local scripts/cleanup-watched-items.js"
     },
     "eslintConfig": {
         "extends": "react-app"

@@ -21,6 +21,16 @@ export function generateTimeText(startTime: number, now: number) {
     if (distance >= 60) {
         distance = Math.floor(distance / 60);
         units = "hour" + (distance > 1 ? "s" : "");
+
+        if (distance >= 24) {
+            distance = Math.floor(distance / 24);
+            units = "day" + (distance > 1 ? "s" : "");
+
+            if (distance >= 7) {
+                distance = Math.floor(distance / 7);
+                units = "week" + (distance > 1 ? "s" : "");
+            }
+        }
     }
     return { distance, units };
 }

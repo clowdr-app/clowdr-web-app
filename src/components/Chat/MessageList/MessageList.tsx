@@ -84,7 +84,9 @@ export default function MessageList(props: Props) {
         if (mChat) {
             try {
                 const pager = await mChat.getMessages(props.chatId);
-                return { messages: pager.items, pager };
+                if (pager) {
+                    return { messages: pager.items, pager };
+                }
             }
             catch (e) {
                 console.error("Failed to fetch chat messages.", e);

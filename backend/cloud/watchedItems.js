@@ -1,6 +1,9 @@
 /* global Parse */
 // ^ for eslint
 
+const { validateRequest } = require("./utils");
+const assert = require("assert");
+
 //const { getAutoWatchTextChats } = require("./user");
 // Dunno why but Live Query just doesn't respond with correct data when using this
 // so I'm giving up on it for now. It may not be desirable anyway - e.g. people
@@ -88,6 +91,48 @@ Parse.Cloud.job("migrate-watchedItems-isBanned-addToUserProfile", async (request
         console.error("Error (error):" + e);
         console.log("Error (log):" + e);
         message("Error:" + e);
+        throw e;
+    }
+});
+
+Parse.Cloud.job("clean-watched-items", async (request) => {
+    const { params, message: _message } = request;
+    const message = (msg) => {
+        console.log(msg);
+        _message(msg);
+    };
+
+    let conference = null;
+
+    try {
+        message("Starting...");
+
+        message("Validating parameters");
+
+        let requestValidation = validateRequest({
+            conference: "string"
+        }, params);
+        if (requestValidation.ok) {
+            conference = await new Parse.Object("Conference", { id: params.conference }).fetch({ useMasterKey: true });
+            assert(conference);
+
+            const allTextChatIds
+                = await new Parse.Query("TextChat")
+                    .equalTo("conference", conference)
+                    .map(x => x.id, { useMasterKey: true });
+
+            await new Parse.Query("WatchedItems")
+                .equalTo("conference", conference)
+                .map(async watched => {
+                    const watchedChatIds = watched.get("watchedChats");
+                    watched.set("watchedChats", watchedChatIds.filter(x => allTextChatIds.includes(x)));
+                    await watched.save(null, { useMasterKey: true });
+                }, { useMasterKey: true });
+        }
+    }
+    catch (e) {
+        console.error("ERROR: " + e.stack, e);
+        message(e);
         throw e;
     }
 });

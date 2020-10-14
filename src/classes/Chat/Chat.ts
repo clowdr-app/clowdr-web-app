@@ -9,6 +9,7 @@ import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
 import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
 import TwilioChatService, { ServiceEventArgs, ServiceEventNames } from "./Services/Twilio/ChatService";
 import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base";
+import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 
 export type ChatDescriptor = {
     id: string;
@@ -158,52 +159,18 @@ export default class Chat implements IChatManager {
         return this.teardownPromise ?? Promise.resolve();
     }
 
-    public async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor> {
-        const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", this.conference.id);
-        let isAnnouncements = false;
-        if (configs.length > 0) {
-            isAnnouncements = configs[0].value === chan.sid;
-        }
-        const isModHub = await chan.getIsModerationHub();
-        const isMod = await chan.getIsModeration();
-        const creator = await chan.getCreator();
-        const createdAt = await chan.getCreatedAt();
-        if (isModHub) {
-            return {
-                id: chan.id,
-                friendlyName: chan.getName(),
-                creator,
-                createdAt,
-                status: chan.getStatus(),
-                autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
-                isAnnouncements,
-                isModeration: false,
-                isModerationHub: true,
-                isDM: false,
-                isPrivate: true
-            };
-        }
-        else if (isMod) {
-            return {
-                id: chan.id,
-                friendlyName: chan.getName(),
-                creator,
-                createdAt,
-                status: chan.getStatus(),
-                autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
-                isAnnouncements,
-                isModeration: isMod,
-                isModerationHub: false,
-                isActive: !await chan.getIsModerationCompleted(),
-                relatedModerationKey: await chan.getRelatedModerationKey(),
-                isDM: false,
-                isPrivate: true
-            };
-        }
-        else {
-            const isDM = await chan.getIsDM();
-            const isPrivate = await chan.getIsPrivate();
-            if (isDM) {
+    public async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor | null> {
+        try {
+            const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", this.conference.id);
+            let isAnnouncements = false;
+            if (configs.length > 0) {
+                isAnnouncements = configs[0].value === chan.sid;
+            }
+            const isModHub = await chan.getIsModerationHub();
+            const isMod = await chan.getIsModeration();
+            const creator = await chan.getCreator();
+            const createdAt = await chan.getCreatedAt();
+            if (isModHub) {
                 return {
                     id: chan.id,
                     friendlyName: chan.getName(),
@@ -212,42 +179,81 @@ export default class Chat implements IChatManager {
                     status: chan.getStatus(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
-                    isPrivate: true,
                     isModeration: false,
+                    isModerationHub: true,
+                    isDM: false,
+                    isPrivate: true
+                };
+            }
+            else if (isMod) {
+                return {
+                    id: chan.id,
+                    friendlyName: chan.getName(),
+                    creator,
+                    createdAt,
+                    status: chan.getStatus(),
+                    autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
+                    isAnnouncements,
+                    isModeration: isMod,
                     isModerationHub: false,
-                    isDM: true,
-                    member1: isDM.member1,
-                    member2: isDM.member2
+                    isActive: !await chan.getIsModerationCompleted(),
+                    relatedModerationKey: await chan.getRelatedModerationKey(),
+                    isDM: false,
+                    isPrivate: true
                 };
             }
             else {
-                return {
-                    id: chan.id,
-                    friendlyName: chan.getName(),
-                    creator,
-                    createdAt,
-                    status: chan.getStatus(),
-                    autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
-                    isAnnouncements,
-                    isModeration: false,
-                    isModerationHub: false,
-                    isDM: false,
-                    isPrivate
-                };
+                const isDM = await chan.getIsDM();
+                const isPrivate = await chan.getIsPrivate();
+                if (isDM) {
+                    return {
+                        id: chan.id,
+                        friendlyName: chan.getName(),
+                        creator,
+                        createdAt,
+                        status: chan.getStatus(),
+                        autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
+                        isAnnouncements,
+                        isPrivate: true,
+                        isModeration: false,
+                        isModerationHub: false,
+                        isDM: true,
+                        member1: isDM.member1,
+                        member2: isDM.member2
+                    };
+                }
+                else {
+                    return {
+                        id: chan.id,
+                        friendlyName: chan.getName(),
+                        creator,
+                        createdAt,
+                        status: chan.getStatus(),
+                        autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
+                        isAnnouncements,
+                        isModeration: false,
+                        isModerationHub: false,
+                        isDM: false,
+                        isPrivate
+                    };
+                }
             }
+        }
+        catch {
+            return null;
         }
     }
 
     public async createChat(members: Array<string>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
         assert(this.twilioService);
         const channel = await this.twilioService.createChannel(members, isPrivate, title);
-        return this.convertToDescriptor(channel);
+        return await this.convertToDescriptor(channel) ?? undefined;
     }
 
     public async createModerationChat(specificModerators: Array<string>, relatedModerationKey?: string, initialMessage?: string): Promise<ChatDescriptor | undefined> {
         assert(this.twilioService);
         const channel = await this.twilioService.createModerationChannel(specificModerators, relatedModerationKey, initialMessage);
-        return this.convertToDescriptor(channel);
+        return await this.convertToDescriptor(channel) ?? undefined;
     }
 
     public async markModerationChatCompleted(chatId: string): Promise<void> {
@@ -257,82 +263,149 @@ export default class Chat implements IChatManager {
     }
 
     public async listAllChats(): Promise<Array<ChatDescriptor>> {
-        assert(this.twilioService);
-        const channels = await this.twilioService.allChannels();
-        return (await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
-            .filter(x => !x.isModeration && !x.isModerationHub);
+        try {
+            assert(this.twilioService);
+            const channels = await this.twilioService.allChannels();
+            return (removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
+                .filter(x => !x.isModeration && !x.isModerationHub));
+        }
+        catch {
+            return [];
+        }
     }
 
     public async listAllModerationChats(): Promise<Array<ChatDescriptor>> {
-        assert(this.twilioService);
-        const channels = await this.twilioService.allChannels();
-        return (await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
-            .filter(x => x.isModeration);
+        try {
+            assert(this.twilioService);
+            const channels = await this.twilioService.allChannels();
+            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
+                .filter(x => x.isModeration);
+        }
+        catch {
+            return [];
+        }
     }
 
     public async listWatchedChats(): Promise<Array<ChatDescriptor>> {
-        const channels = await this.twilioService?.activeChannels();
-        return (await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
-            .filter(x => !x.isModeration && !x.isModerationHub);
+        try {
+            const channels = await this.twilioService?.activeChannels();
+            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
+                .filter(x => !x.isModeration && !x.isModerationHub);
+        }
+        catch {
+            return [];
+        }
     }
 
     public async listAllWatchedModerationChats(): Promise<Array<ChatDescriptor>> {
-        assert(this.twilioService);
-        const channels = await this.twilioService.activeChannels();
-        return (await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
-            .filter(x => x.isModeration);
+        try {
+            assert(this.twilioService);
+            const channels = await this.twilioService.activeChannels();
+            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
+                .filter(x => x.isModeration);
+        }
+        catch {
+            return [];
+        }
     }
 
     public async listWatchedChatsUnfiltered(): Promise<Array<ChatDescriptor>> {
-        const channels = await this.twilioService?.activeChannels();
-        return (await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []));
+        try {
+            const channels = await this.twilioService?.activeChannels();
+            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []));
+        }
+        catch {
+            return [];
+        }
     }
 
-    public async getModerationHubChat(): Promise<ChatDescriptor> {
-        assert(this.twilioService);
-        const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
-        assert(tc);
-        return this.convertToDescriptor(await this.twilioService.convertTextChatToChannel(tc));
+    public async getModerationHubChat(): Promise<ChatDescriptor | null> {
+        try {
+            assert(this.twilioService);
+            const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
+            assert(tc);
+            return this.convertToDescriptor(await this.twilioService.convertTextChatToChannel(tc));
+        }
+        catch {
+            return null;
+        }
     }
 
-    public async getModerationHubChatId(): Promise<string> {
-        assert(this.twilioService);
-        const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
-        assert(tc);
-        return tc.id;
+    public async getModerationHubChatId(): Promise<string | null> {
+        try {
+            assert(this.twilioService);
+            const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
+            assert(tc);
+            return tc.id;
+        }
+        catch {
+            return null;
+        }
     }
 
     public async listChatMembers(chatId: string): Promise<Array<MemberDescriptor>> {
-        assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatId);
-        const members = await channel.members();
-        return await Promise.all(members.map(async member => ({
-            profileId: member.profileId,
-            isOnline: await member.getOnlineStatus()
-        })));
+        try {
+            assert(this.twilioService);
+            const channel = await this.twilioService.getChannel(chatId);
+            const members = await channel.members();
+            return removeNull(await Promise.all(members.map(async member => {
+                try {
+                    return {
+                        profileId: member.profileId,
+                        isOnline: await member.getOnlineStatus()
+                    }
+                }
+                catch {
+                    return null;
+                }
+            })));
+        }
+        catch {
+            return [];
+        }
     }
 
     public async getChatMembersCount(chatId: string): Promise<number> {
-        assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatId);
-        return channel.membersCount();
+        try {
+            assert(this.twilioService);
+            const channel = await this.twilioService.getChannel(chatId);
+            return channel.membersCount();
+        }
+        catch {
+            return -1;
+        }
     }
 
     // These can be done directly against the Twilio API
-    async getChat(chatId: string): Promise<ChatDescriptor> {
-        assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatId);
-        return this.convertToDescriptor(channel);
+    async getChat(chatId: string): Promise<ChatDescriptor | null> {
+        try {
+            assert(this.twilioService);
+            const channel = await this.twilioService.getChannel(chatId);
+            return this.convertToDescriptor(channel);
+        }
+        catch {
+            return null;
+        }
     }
     async getMessage(chatId: string, messageSid: string, messageIdx: number): Promise<IMessage | null> {
-        assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatId);
-        return channel.getMessage(messageSid, messageIdx);
+        try {
+            assert(this.twilioService);
+            const channel = await this.twilioService.getChannel(chatId);
+            return channel.getMessage(messageSid, messageIdx);
+        }
+        catch {
+            return null;
+        }
     }
-    async getMessages(chatId: string, limit: number = 40): Promise<Paginator<IMessage>> {
-        assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatId);
-        return channel.getMessages(limit);
+    async getMessages(chatId: string, limit: number = 40): Promise<Paginator<IMessage> | null> {
+        try {
+            assert(this.twilioService);
+            const channel = await this.twilioService.getChannel(chatId);
+            return channel.getMessages(limit);
+        }
+        catch {
+            return null;
+        }
     }
     async sendMessage(chatId: string, message: string): Promise<number> {
         assert(this.twilioService);
@@ -354,8 +427,13 @@ export default class Chat implements IChatManager {
     // TODO: Delete channel
 
     async getIsUserOnline(profileId: string): Promise<boolean | undefined> {
-        assert(this.twilioService);
-        return await this.twilioService.getIsUserOnline(profileId);
+        try {
+            assert(this.twilioService);
+            return await this.twilioService.getIsUserOnline(profileId);
+        }
+        catch {
+            return undefined;
+        }
     }
 
     // These have to be done via our Twilio Backend for permissions control
@@ -380,27 +458,45 @@ export default class Chat implements IChatManager {
     // TODO: Mirrored channels
 
     async channelEventOn<K extends ChannelEventNames>(chatId: string, event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
-        assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatId);
-        return channel.on(event, listener);
+        try {
+            assert(this.twilioService);
+            const channel = await this.twilioService.getChannel(chatId);
+            return channel.on(event, listener);
+        }
+        catch {
+            return () => { };
+        }
     }
 
     async channelEventOff(chatId: string, event: ChannelEventNames, listener: () => void): Promise<void> {
-        assert(this.twilioService);
-        const channel = await this.twilioService.getChannel(chatId);
-        channel.off(event, listener);
+        try {
+            assert(this.twilioService);
+            const channel = await this.twilioService.getChannel(chatId);
+            channel.off(event, listener);
+        }
+        catch {
+        }
     }
 
     // TODO: Something, perhaps the App component, should subscribe to the error events
 
     async serviceEventOn<K extends ServiceEventNames>(event: K, listener: (arg: ServiceEventArgs<K>) => void): Promise<() => void> {
-        assert(this.twilioService);
-        return this.twilioService.on(event, listener);
+        try {
+            assert(this.twilioService);
+            return this.twilioService.on(event, listener);
+        }
+        catch {
+            return () => { };
+        }
     }
 
     async serviceEventOff(event: ServiceEventNames, listener: () => void): Promise<void> {
-        assert(this.twilioService);
-        this.twilioService.off(event, listener);
+        try {
+            assert(this.twilioService);
+            this.twilioService.off(event, listener);
+        }
+        catch {
+        }
     }
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string): Promise<boolean> {

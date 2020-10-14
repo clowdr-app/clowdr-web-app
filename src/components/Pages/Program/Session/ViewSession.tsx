@@ -1,5 +1,5 @@
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
-import { ContentFeed, ProgramSession, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import { ContentFeed, ProgramSession, ProgramSessionEvent, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import React, { useCallback, useEffect, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import SessionGroup from "../All/SessionGroup";
@@ -30,6 +30,7 @@ export default function ViewSession(props: Props) {
     const [showEventsList, setShowEventsList] = useState<boolean>(false);
     const [textChatId, setTextChatId] = useState<string | false | null>(null);
     const [previousSessionId, setPreviousSessionId] = useState<string | null>(session?.id ?? null);
+    const [events, setEvents] = useState<Array<ProgramSessionEvent> | null>(null);
 
     // Initial data fetch
     useSafeAsync(
@@ -43,13 +44,17 @@ export default function ViewSession(props: Props) {
         [session]);
 
     useSafeAsync(
+        async () => (await session?.events) ?? null,
+        setEvents,
+        [session]);
+
+    useSafeAsync(
         async () => {
             if (previousSessionId === session?.id) {
                 return undefined;
             }
 
-            if (session) {
-                const events = await session.events;
+            if (session && events) {
                 const now = Date.now();
                 const liveEvent = events.find(event => event.startTime.getTime() < now && event.endTime.getTime() > now);
                 if (liveEvent) {
@@ -76,24 +81,32 @@ export default function ViewSession(props: Props) {
             setPreviousSessionId(session?.id ?? null);
             setTextChatId(data);
         },
-        [session, session?.id, previousSessionId]);
+        [session, session?.id, events, previousSessionId]);
 
     useEffect(() => {
         const _now = Date.now();
-        if (session && _now < session.endTime.getTime()) {
-            const tDist =
-                _now < session.startTime.getTime()
-                    ? (_now - session.startTime.getTime())
-                    : (_now - session.endTime.getTime());
-            const t = setInterval(() => {
+        if (session && events && _now < session.endTime.getTime() + (60 * 1000)) {
+            let nextEpoch = session.startTime.getTime();
+            if (_now > nextEpoch) {
+                nextEpoch = session.endTime.getTime();
+                const currentEvents
+                    = events
+                        .filter(ev => ev.startTime.getTime() < _now && ev.endTime.getTime() > _now)
+                        .sort((x, y) => x.endTime.getTime() < y.endTime.getTime() ? -1 : 1);
+                if (currentEvents.length > 0) {
+                    nextEpoch = currentEvents[0].endTime.getTime();
+                }
+            }
+            const tDist = nextEpoch - _now;
+            const t = setTimeout(() => {
                 setPreviousSessionId(null);
             }, Math.max(3000, tDist / 2));
             return () => {
-                clearInterval(t);
+                clearTimeout(t);
             };
         }
         return () => { };
-    }, [session, previousSessionId]);
+    }, [session, events, previousSessionId]);
 
     // Subscribe to data updates
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
@@ -108,6 +121,30 @@ export default function ViewSession(props: Props) {
         }
     }, [session]);
 
+    const onEventUpdated = useCallback(function _onEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
+        if (session) {
+            setEvents(oldEvents => {
+                const newEvents = Array.from(oldEvents ?? []);
+                const idx = newEvents.findIndex(x => x.id === ev.object.id);
+                if (idx === -1) {
+                    const event = ev.object as ProgramSessionEvent;
+                    if (event.sessionId === session.id) {
+                        newEvents.push(ev.object as ProgramSessionEvent);
+                        setEvents(newEvents);
+                    }
+                }
+                else {
+                    newEvents.splice(idx, 1, ev.object as ProgramSessionEvent)
+                }
+                return newEvents;
+            });
+        }
+    }, [session]);
+
+    const onEventDeleted = useCallback(function _onEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {
+        setEvents(oldEvents => oldEvents ? oldEvents.filter(x => x.id !== ev.objectId) : null);
+    }, []);
+
     const onContentFeedUpdated = useCallback(function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
         if (sessionFeed && ev.object.id === sessionFeed.id) {
             setSessionFeed(ev.object as ContentFeed);
@@ -121,6 +158,7 @@ export default function ViewSession(props: Props) {
     }, [sessionFeed]);
 
     useDataSubscription("ProgramSession", onSessionUpdated, onSessionDeleted, !session, conference);
+    useDataSubscription("ProgramSessionEvent", onEventUpdated, onEventDeleted, !events, conference);
     useDataSubscription("ContentFeed", onContentFeedUpdated, onContentFeedDeleted, !sessionFeed, conference);
 
     const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
@@ -245,47 +283,56 @@ export default function ViewSession(props: Props) {
 
     // TODO: Make this configurable
     // Showing session feed prior to session starting (20mins)
-    const isPreShow = session && session.startTime.getTime() - (20 * 60 * 1000) < Date.now();
-    const isLive = session && session.startTime.getTime() < Date.now() && session.endTime.getTime() > Date.now();
+    const isPreShow =
+        session &&
+        session.startTime.getTime() - (20 * 60 * 1000) < Date.now() &&
+        session.startTime.getTime() > Date.now() &&
+        session.endTime.getTime() > Date.now();
+    const isLive =
+        session &&
+        session.startTime.getTime() < Date.now() &&
+        session.endTime.getTime() > Date.now();
     // const isPermanent = !sessionFeed || sessionFeed.videoRoomId || sessionFeed.textChatId || sessionFeed.youtubeId;
 
     const sessionStartTimeText = session ? generateTimeText(session.startTime.getTime(), Date.now()) : null;
+    const sessionMessage = session
+        ? session.endTime.getTime() <= Date.now()
+            ? (filler: string) => `This session has ended. Please choose a specific event to participate in its conversation.`
+            : (filler: string) => `This session starts in ${sessionStartTimeText?.distance} ${sessionStartTimeText?.units}. Each event's ${filler} will appear here and update throughout the session.`
+        : (filler: string) => "";
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
         {showEventsList ? eventsListEl : <></>}
         {session
             ? <SplitterLayout
-                    vertical={true}
-                    percentage={true}
-                    ref={component => { component?.setState({ secondaryPaneSize: chatSize }) }}
-                    onSecondaryPaneSizeChange={newSize => setChatSize(newSize)}
-                >
-                    <div className="split top-split">
-                        <button onClick={() => setChatSize(100)}>
-                            &#9650;
+                vertical={true}
+                percentage={true}
+                ref={component => { component?.setState({ secondaryPaneSize: chatSize }) }}
+                onSecondaryPaneSizeChange={newSize => setChatSize(newSize)}
+            >
+                <div className="split top-split">
+                    <button onClick={() => setChatSize(100)}>
+                        &#9650;
                     </button>
-                        <div className="embedded-content">
-                            {!sessionFeed
-                                ? <LoadingSpinner />
-                                : <ViewContentFeed feed={sessionFeed} hideZoom={!isLive && !isPreShow} />}
-                        </div>
+                    <div className="embedded-content">
+                        {!sessionFeed
+                            ? <LoadingSpinner />
+                            : <ViewContentFeed feed={sessionFeed} hideZoom={(!isLive && !isPreShow) && sessionMessage("content")} />}
                     </div>
-                    <div className="split bottom-split">
-                        {textChatId
-                            ? <ChatFrame chatId={textChatId} showChatName={true} />
-                            : isLive
-                                ? (textChatId === false
-                                    ? <p>The current event does not have a text chat.</p>
-                                    : <LoadingSpinner message="Loading text chat" />)
-                                // TODO: Show time until next event starts
-                            : session.endTime.getTime() <= Date.now()
-                                ? <p>This session has ended. Please choose a specific event to participate in its conversation.</p>
-                                : <p>This session starts in {sessionStartTimeText?.distance} {sessionStartTimeText?.units}. Please choose a specific event to participate in its conversation.</p>
-                        }
-                        <button onClick={() => setChatSize(0)}>
-                            &#9660;
+                </div>
+                <div className="split bottom-split">
+                    {textChatId
+                        ? <ChatFrame chatId={textChatId} showChatName={true} />
+                        : isLive
+                            ? (textChatId === false
+                                ? <p>The current event does not have a text chat.</p>
+                                : <LoadingSpinner message="Loading text chat" />)
+                            : <p>{sessionMessage("discussion/Q&A")}</p>
+                    }
+                    <button onClick={() => setChatSize(0)}>
+                        &#9660;
                         </button>
-                    </div>
-                </SplitterLayout>
+                </div>
+            </SplitterLayout>
             : <LoadingSpinner message="Loading session" />
         }
     </div>;

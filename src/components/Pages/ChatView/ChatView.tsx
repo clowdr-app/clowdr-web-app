@@ -72,46 +72,52 @@ export default function ChatView(props: Props) {
     useSafeAsync(async () => {
         if (mChat) {
             const chatD = await mChat.getChat(props.chatId);
-            const chatSD = await upgradeChatDescriptor(conf, chatD);
-            const { friendlyName } = computeChatDisplayName(chatSD, mUser);
-            if (chatSD.isDM) {
-                return {
-                    name: friendlyName,
-                    dmInfo: {
-                        isDM: true,
-                        member1: chatSD.member1,
-                        member2: chatSD.member2
-                    },
-                    isAutoWatch: chatD.autoWatchEnabled,
-                    isAnnouncements: chatD.isAnnouncements,
-                    isModeration: chatD.isModeration,
-                    isModerationHub: chatD.isModerationHub,
-                    isPrivate: chatD.isPrivate
-                };
+            if (chatD) {
+                const chatSD = await upgradeChatDescriptor(conf, chatD);
+                const { friendlyName } = computeChatDisplayName(chatSD, mUser);
+                if (chatSD.isDM) {
+                    return {
+                        name: friendlyName,
+                        dmInfo: {
+                            isDM: true,
+                            member1: chatSD.member1,
+                            member2: chatSD.member2
+                        },
+                        isAutoWatch: chatD.autoWatchEnabled,
+                        isAnnouncements: chatD.isAnnouncements,
+                        isModeration: chatD.isModeration,
+                        isModerationHub: chatD.isModerationHub,
+                        isPrivate: chatD.isPrivate
+                    };
+                }
+                else {
+                    return {
+                        name: friendlyName,
+                        dmInfo: { isDM: false } as DMInfo,
+                        isAutoWatch: chatD.autoWatchEnabled,
+                        isAnnouncements: chatD.isAnnouncements,
+                        isModeration: chatD.isModeration,
+                        isModerationHub: chatD.isModerationHub,
+                        isPrivate: chatD.isPrivate
+                    };
+                }
             }
             else {
                 return {
-                    name: friendlyName,
-                    dmInfo: { isDM: false } as DMInfo,
-                    isAutoWatch: chatD.autoWatchEnabled,
-                    isAnnouncements: chatD.isAnnouncements,
-                    isModeration: chatD.isModeration,
-                    isModerationHub: chatD.isModerationHub,
-                    isPrivate: chatD.isPrivate
+                    name: "Chat",
+                    dmInfo: null,
+                    isAutoWatch: null,
+                    isAnnouncements: null,
+                    isModeration: null,
+                    isModerationHub: null,
+                    isPrivate: null
                 };
             }
         }
-        else {
-            return {
-                name: "Chat",
-                dmInfo: null,
-                isAutoWatch: null,
-                isAnnouncements: null,
-                isModeration: null,
-                isModerationHub: null,
-                isPrivate: null
-            };
-        }
+
+        addError("Sorry, we could not load the desired chat.");
+
+        return undefined;
     }, (data: {
         name: string,
         dmInfo: DMInfo | null,

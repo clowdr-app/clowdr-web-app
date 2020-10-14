@@ -589,18 +589,20 @@ export default function ChatsGroup(props: Props) {
     const onTextChatUpdated = useCallback(async function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
         if (mChat) {
             const chat = await mChat.getChat(update.object.id);
-            const updates: Array<ChatsGroupUpdate> = [{
-                action: "updateAllChats",
-                chats: [chat]
-            }];
-            if (state.watchedChatIds?.includes(chat.id)) {
-                const chatD = await upgradeChatDescriptor(conf, chat);
-                updates.push({
-                    action: "updateActiveChats",
-                    chats: [chatD]
-                });
+            if (chat) {
+                const updates: Array<ChatsGroupUpdate> = [{
+                    action: "updateAllChats",
+                    chats: [chat]
+                }];
+                if (state.watchedChatIds?.includes(chat.id)) {
+                    const chatD = await upgradeChatDescriptor(conf, chat);
+                    updates.push({
+                        action: "updateActiveChats",
+                        chats: [chatD]
+                    });
+                }
+                dispatchUpdate(updates);
             }
-            dispatchUpdate(updates);
         }
     }, [conf, mChat, state.watchedChatIds]);
 

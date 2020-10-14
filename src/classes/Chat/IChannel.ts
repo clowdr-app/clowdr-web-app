@@ -37,7 +37,7 @@ export default interface IChannel {
     setIsAutoWatchEnabled(value: boolean): Promise<void>;
 
     getMessage(messageSid: string, messageIndex: number): Promise<IMessage | null>;
-    getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<IMessage>>
+    getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<IMessage> | null>;
     sendMessage(message: string): Promise<number>;
     addReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined>;
     removeReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined>;

@@ -16,6 +16,7 @@ import { Link } from "react-router-dom";
 import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
 import TrackMarker from "../Program/All/TrackMarker";
 import SessionGroup from "../Program/All/SessionGroup";
+import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 
 function renderTrack(item: ColumnItem<ProgramTrack>): JSX.Element {
     return <>
@@ -50,7 +51,7 @@ export default function WatchedItemsPage() {
     useSafeAsync(async () => {
         if (mChat && watchedItems?.watchedChats) {
             const watchedChatIds = watchedItems?.watchedChats;
-            const chats = await Promise.all(watchedChatIds.map(id => mChat.getChat(id)));
+            const chats = removeNull(await Promise.all(watchedChatIds.map(id => mChat.getChat(id))));
             const chatsWithName: Array<SidebarChatDescriptor>
                 = await Promise.all(chats.map(x => upgradeChatDescriptor(conference, x)));
             return chatsWithName;
@@ -134,12 +135,15 @@ export default function WatchedItemsPage() {
             try {
                 return (await Promise.all(activeChats.map(async c => {
                     const chatName = computeChatDisplayName(c, userProfile).friendlyName;
-                    const msgs = (await mChat.getMessages(c.id, 5)).items;
-                    return Promise.all(msgs
-                        .filter(x => x.author !== userProfile.id)
-                        .map(x => renderMessage(conference, userProfile, c.id, x, c.isDM, chatName))
-                    );
-                }))).reduce<RenderedMessage[]>((acc, xs) => acc.concat(xs), []);
+                    const msgs = (await mChat.getMessages(c.id, 5))?.items;
+                    if (msgs) {
+                        return Promise.all(msgs
+                            .filter(x => x.author !== userProfile.id)
+                            .map(x => renderMessage(conference, userProfile, c.id, x, c.isDM, chatName))
+                        );
+                    }
+                    return null;
+                }))).reduce<RenderedMessage[]>((acc, xs) => xs ? acc.concat(xs) : [], []);
             }
             catch (e) {
                 console.error("Failed to fetch chat messages.", e);
@@ -235,7 +239,7 @@ export default function WatchedItemsPage() {
 
         const fullSessions: Map<string, { session: ProgramSession, events: string[] | undefined }> = new Map(programSessions?.map(session => [session.id, { session, events: undefined }]));
 
-        for (let partialSession of programPartialSessions) {
+        for (const partialSession of programPartialSessions) {
             if (fullSessions.has(partialSession.session.id)) {
                 const existingEvents = fullSessions.get(partialSession.session.id);
                 if (existingEvents?.events === undefined) {
@@ -262,12 +266,12 @@ export default function WatchedItemsPage() {
 
         const items = [];
 
-        for (let [sessionId, { session, events }] of watchedSessions) {
+        for (const [sessionId, { session, events }] of watchedSessions) {
             items.push({
                 key: sessionId,
                 text: session.title,
                 link: `/session/${sessionId}`,
-                renderData: { session: session, includeEvents: events },
+                renderData: { session, includeEvents: events },
             });
         }
 

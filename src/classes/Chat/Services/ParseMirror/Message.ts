@@ -29,7 +29,7 @@ export default class Message implements IMessage {
     get memberSid(): string {
         throw new Error("Method not implemented.");
     }
-    getMember(): Promise<Member | "system"> {
+    getMember(): Promise<Member | "system" | "unknown"> {
         throw new Error("Method not implemented.");
     }
     remove(): Promise<void> {

@@ -40,6 +40,8 @@ interface ProgramGroupState {
 
     notifiedSessionIds: Array<string>;
     notifiedEventIds: Array<string>;
+
+    lastRefresh: number;
 }
 
 type ProgramGroupUpdate
@@ -56,6 +58,7 @@ type ProgramGroupUpdate
     | { action: "setWatchedTrackIds"; ids: Array<string> | null }
     | { action: "addNotifiedSessionIds"; ids: Array<string> }
     | { action: "addNotifiedEventIds"; ids: Array<string> }
+    | { action: "updateTime" }
     ;
 
 async function filterSessionsAndEvents(
@@ -97,24 +100,11 @@ async function filterSessionsAndEvents(
         return [sessions, events];
     }
     else {
-        const now = Date.now();
-        const twoHours = 2 * 60 * 60 * 1000;
-        const endLimit = now;
-        const startLimit = now + twoHours;
-
-        const sessions = allSessions
-            .filter(x => x.endTime.getTime() >= endLimit
-                && x.startTime.getTime() <= startLimit);
-
-        // TODO: When do we want to display events in the sidebar? CSCW didn't want them - maybe make this configurable
-        // const events = allEvents
-        //     .filter(x => x.endTime.getTime() >= endLimit
-        //         && x.startTime.getTime() <= startLimit);
-
-        // const eventsSessionIds = [...new Set(events.map(x => x.sessionId))];
+        // const eventsSessionIds = [...new Set(allEvents.map(x => x.sessionId))];
         // sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
 
-        return [sessions, []];
+        /*[sessions, events]*/
+        return [allSessions, []];
     }
 }
 
@@ -132,12 +122,16 @@ function nextSidebarState(currentState: ProgramGroupState, updates: ProgramGroup
         watchedTrackIds: currentState.watchedTrackIds,
         notifiedSessionIds: currentState.notifiedSessionIds,
         notifiedEventIds: currentState.notifiedEventIds,
+        lastRefresh: currentState.lastRefresh
     };
 
     let sessionsOrEventsUpdated = false;
 
     function doUpdate(update: ProgramGroupUpdate) {
         switch (update.action) {
+            case "updateTime":
+                nextState.lastRefresh = Date.now();
+                break;
             case "searchProgram":
                 nextState.programSearch = update.search?.length ? update.search : null;
                 break;
@@ -261,6 +255,8 @@ export default function ProgramGroup(props: Props) {
 
         notifiedSessionIds: [],
         notifiedEventIds: [],
+
+        lastRefresh: Date.now()
     });
 
     // Initial fetch of complete program
@@ -306,7 +302,7 @@ export default function ProgramGroup(props: Props) {
         if (state.sessions) {
             for (const session of state.sessions) {
                 if (!state.notifiedSessionIds.includes(session.id)) {
-                const dist = Math.abs(session.startTime.getTime() - now);
+                    const dist = Math.abs(session.startTime.getTime() - now);
                     if (dist < 1000 * 60 * 1.5) {
                         const path = `/session/${session.id}`;
                         if (!location.pathname.includes(path)) {
@@ -361,12 +357,9 @@ export default function ProgramGroup(props: Props) {
     // Refresh the view every few mins
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (!state.programSearch) {
-                dispatchUpdate({
-                    action: "searchProgram",
-                    search: null
-                });
-            }
+            dispatchUpdate({
+                action: "updateTime"
+            });
 
             notifyWatchedItems();
         }, 1000 * 60 * 1 /* 1 mins */);
@@ -517,9 +510,32 @@ export default function ProgramGroup(props: Props) {
                 0.1, 0.5, 3, 15, 30, 60, 120
             ];
 
+            const now = Date.now();
+            const twoHours = 2 * 60 * 60 * 1000;
+            const endLimit = now;
+            const startLimit = now + twoHours;
+
+            const sessions
+                = state.programSearch && state.programSearch.length >= props.minSearchLength
+                    ? state.filteredSessions
+                    : state.filteredSessions
+                        .filter(x =>
+                            x.endTime.getTime() >= endLimit
+                            && x.startTime.getTime() <= startLimit
+                        );
+
+            const events
+                = state.programSearch && state.programSearch.length >= props.minSearchLength
+                    ? state.filteredEvents
+                    : state.filteredEvents
+                        .filter(x =>
+                            x.endTime.getTime() >= endLimit
+                            && x.startTime.getTime() <= startLimit
+                        );
+
             program = <ProgramList
-                sessions={state.filteredSessions}
-                events={state.filteredEvents}
+                sessions={sessions}
+                events={events}
                 timeBoundaries={programTimeBoundaries}
                 watchedSessions={state.watchedSessionIds ?? undefined}
                 watchedEvents={state.watchedEventIds ?? undefined}

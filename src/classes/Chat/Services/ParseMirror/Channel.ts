@@ -91,7 +91,7 @@ export default class Channel implements IChannel {
     getMessage(messageSid: string, messageIndex: number): Promise<Message | null> {
         throw new Error("Method not implemented.");
     }
-    getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message>> {
+    getMessages(pageSize?: number, anchor?: number, direction?: string): Promise<Paginator<Message> | null> {
         throw new Error("Method not implemented.");
     }
     sendMessage(message: string): Promise<number> {
