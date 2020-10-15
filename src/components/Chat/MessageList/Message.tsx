@@ -460,7 +460,7 @@ export default function Message(props: {
                                     }
                                 }}
                             >
-                                <span>{doEmojify(reaction)}</span>
+                                <span>{doEmojify(reaction.replace("-", "_"))}</span>
                                 <span>{msg.reactions[reaction].ids.length}</span>
                             </button>
                         </Tooltip>;
