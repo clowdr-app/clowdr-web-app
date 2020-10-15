@@ -243,6 +243,10 @@ export default function ViewEvent(props: Props) {
     // TODO: Offer to auto-move to the session's next event 30 secs before the
     //       end of the current event
 
+    const subtitle
+        = event
+            ? <>{fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}{event.chair ? <>&nbsp;&middot;&nbsp;Chaired by {event.chair}</> : <></>}</>
+            : undefined;
     const renderNow = Date.now();
     const eventIsLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
     const sessionIsLive = !!session && session.startTime.getTime() < renderNow && session.endTime.getTime() > renderNow;
@@ -277,7 +281,7 @@ export default function ViewEvent(props: Props) {
                 textChatFeedOnly={(eventIsLive || sessionIsLive) && !!(sessionFeed?.videoRoomId || sessionFeed?.youtubeId || sessionFeed?.zoomRoomId)}
                 heading={{
                     title: item?.title ?? "Event",
-                    subtitle: event ? <>{fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}</> : undefined,
+                    subtitle,
                     buttons: buttons.length > 0 ? buttons : undefined
                 }} />
             : <LoadingSpinner />}

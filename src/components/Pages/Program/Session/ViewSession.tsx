@@ -273,8 +273,21 @@ export default function ViewSession(props: Props) {
         }
     });
 
+    let subtitle: JSX.Element | undefined;
+    if (session?.chair) {
+        subtitle = <>Session chaired by {session.chair}</>;
+    }
+    else {
+        const now = Date.now();
+        const liveEvent = events?.find(event => event.startTime.getTime() < now && event.endTime.getTime() > now);
+        if (liveEvent?.chair) {
+            subtitle = <>Current event chaired by {liveEvent.chair}</>;
+        }
+    }
+
     useHeading({
         title: session?.title ?? "Session",
+        subtitle,
         buttons: buttons.length > 0 ? buttons : undefined
     });
 
