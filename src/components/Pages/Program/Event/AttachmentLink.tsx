@@ -11,12 +11,13 @@ import "./AttachmentLink.scss";
 
 interface Props {
     attachment: ProgramItemAttachment;
+    showVideo?: boolean;
 }
 
 export default function AttachmentLink(props: Props) {
     const conference = useConference();
     const [attachmentType, setAttachmentType] = useState<AttachmentType | null>(null);
-    const [showVideo, setShowVideo] = useState<boolean>(false);
+    const [showVideo, setShowVideo] = useState<boolean>(!!props.showVideo);
 
     useSafeAsync(async () => await props.attachment.attachmentType, setAttachmentType, [props.attachment.attachmentType]);
 

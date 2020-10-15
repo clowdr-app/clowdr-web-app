@@ -107,7 +107,7 @@ export default function ViewItem(props: Props) {
     let attachmentEls: Array<JSX.Element> = [];
 
     if (attachments) {
-        attachmentEls = attachments.map(x => <AttachmentLink key={x.id} attachment={x} />);
+        attachmentEls = attachments.map(x => <AttachmentLink key={x.id} attachment={x} showVideo={true} />);
     }
 
     // TODO: posterImage?
