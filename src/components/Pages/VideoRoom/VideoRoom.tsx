@@ -55,7 +55,9 @@ export default function ViewVideoRoom(props: Props) {
             .map(x => ({
                 value: x.id,
                 label: x.displayName
-            })).filter(x => x.value !== currentUserProfile.id);
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label))
+            .filter(x => x.value !== currentUserProfile.id);
     }, setAllUsers, []);
 
     const actionButtons: Array<ActionButton> = [];

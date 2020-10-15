@@ -7,16 +7,20 @@ $main-width : mm(150);
 .new-chat {
     @include basic-form;
 
-    form {    
+    form {
         .invite-users-control {
             display: flex;
             flex-direction: row;
-    
+
             &__multiselect {
                 flex-grow: 1;
                 --rmsc-border: #000;
                 --rmsc-gray: #666;
                 --rmsc-h: 42px;
+
+                .dropdown-content .panel-content {
+                    max-height: 40vh;
+                }
             }
             &__button {
                 flex-shrink: 1;

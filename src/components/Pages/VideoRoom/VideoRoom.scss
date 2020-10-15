@@ -26,6 +26,10 @@ $main-width : mm(150);
                     --rmsc-border: #000;
                     --rmsc-gray  : #666;
                     --rmsc-h     : 42px;
+
+                    .dropdown-content .panel-content {
+                        max-height: 40vh;
+                    }
                 }
 
                 &__button {
