@@ -197,7 +197,8 @@ Activate your Clowdr profile for ${conferenceName} at: ${link}
 
 We recommend that before the start of the conference's technical program on Monday, October 19, you should:
 
-- Fill out your Clowdr profile to help others find you- Familiarize yourself with Clowdr’s features
+- Fill out your Clowdr profile to help others find you
+- Familiarize yourself with Clowdr’s features
 - Check out the conference program and follow events (papers, posters, panels) you wish to attend
 
 Need help? Email: helpdesk@cscw.acm.org
@@ -213,7 +214,8 @@ https://cscw.acm.org`;
 <p><a href="${link}">Activate your Clowdr profile for ${conferenceName} now!</a></p>
 <p>We recommend that before the start of the conference's technical program on Monday, October 19, you should:</p>
 <ul>
-<li>Fill out your Clowdr profile to help others find you- Familiarize yourself with Clowdr’s features</li>
+<li>Fill out your Clowdr profile to help others find you</li>
+<li>Familiarize yourself with Clowdr’s features</li>
 <li>Check out the conference program and follow events (papers, posters, panels) you wish to attend</li>
 </ul>
 <p>Need help? Email: helpdesk@cscw.acm.org</p>
