@@ -143,6 +143,7 @@ export default function Login(props: LoginProps) {
             ? <LoadingSpinner message="Signing in, please wait" />
             : <>
                 <p>Please log in or sign up to join the conference</p>
+                <p>Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari and Opera are not supported at this time. Most features will also work in Firefox and Chrome mobile.</p>
                 {form}
                 <p><Link to={`/forgotPassword/${email}`}>Forgotten your password?</Link></p>
             </>

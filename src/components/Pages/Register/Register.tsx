@@ -159,6 +159,11 @@ export default function Register(props: Props) {
                     and will do their best to make the conference run smoothly
                     for you.
                 </p>
+                <p>
+                    Clowdr requires the use of the Firefox, Chrome or Edge
+                    browsers. Safari and Opera are not supported at this time.
+                    Most features will also work in Firefox and Chrome mobile.
+                </p>
                 <div className="submit-container">
                     <input type="submit" value="Register" />
                 </div>
