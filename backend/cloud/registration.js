@@ -187,17 +187,48 @@ async function sendRegistrationEmails(data) {
         data.conference = await data.conference.fetch({ useMasterKey: true });
 
         let conferenceName = data.conference.get("name");
-        let messageText = `${conferenceName} is fast approaching! You have registered but you haven't yet activated your Clowdr profile. ${conferenceName} is using Clowdr to provide an interactive virtual conference experience. The Clowdr app gives you access to the conference program, live sessions, networking and more.`
-        let greeting = `Best wishes from the ${conferenceName} team`
+        let conferenceShortName = data.conference.get("shortName");
+        // TODO: Remove CSCW hard-coded references inc. dates and times
+        let messageText = `Welcome to ${conferenceShortName}: ${conferenceName}!
+
+${conferenceShortName} will be using a new platform called Clowdr to provide an interactive virtual conference experience. Clowdr provides access to the conference program, live sessions, networking, and more.
+
+Activate your Clowdr profile for ${conferenceName} at: ${link}
+
+We recommend that before the start of the conference's technical program on Monday, October 19, you should:
+
+- Fill out your Clowdr profile to help others find you- Familiarize yourself with Clowdr’s features
+- Check out the conference program and follow events (papers, posters, panels) you wish to attend
+
+Need help? Email: helpdesk@cscw.acm.org
+
+We look forward to seeing you at ${conferenceShortName}!
+
+Sincerely,
+The ${conferenceShortName} Virtual Program Chairs
+https://cscw.acm.org`;
+
+        let messageHTML = `<h2>Welcome to ${conferenceShortName}: ${conferenceName}!</h2>
+<p>${conferenceShortName} will be using a new platform called Clowdr to provide an interactive virtual conference experience. Clowdr provides access to the conference program, live sessions, networking, and more.</p>
+<p><a href="${link}">Activate your Clowdr profile for ${conferenceName} now!</a></p>
+<p>We recommend that before the start of the conference's technical program on Monday, October 19, you should:</p>
+<ul>
+<li>Fill out your Clowdr profile to help others find you- Familiarize yourself with Clowdr’s features</li>
+<li>Check out the conference program and follow events (papers, posters, panels) you wish to attend</li>
+</ul>
+<p>Need help? Email: helpdesk@cscw.acm.org</p>
+<p>We look forward to seeing you at ${conferenceShortName}!</p>
+<p>Sincerely,<br/>
+The ${conferenceShortName} Virtual Program Chairs<br/>
+<a href="https://cscw.acm.org">https://cscw.acm.org</a>
+</p>`;
 
         let message = {
             to: email,
             from: config.SENDGRID_SENDER,
             subject: `Action required for ${conferenceName}: activate your Clowdr profile`,
-            text: `${messageText}\n\nActivate your Clowdr profile at ${link}\n\n${greeting}`,
-            html: `<p>${messageText}</p>
-            <p><a href="${link}">Activate your Clowdr profile for ${conferenceName} now!</a></p>
-            <p>${greeting}</p>`
+            text: messageText,
+            html: messageHTML
         };
 
         console.log(`Sending email to ${email}`);
