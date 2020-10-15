@@ -159,6 +159,18 @@ async function grantAccessToVideoRoom(room, userProfile, write, sessionToken) {
     }
     room.setACL(acl);
     await room.save(null, { sessionToken: sessionToken });
+
+    let tc = room.get("textChat");
+    if (tc) {
+        tc = await tc.fetch({ sessionToken: sessionToken });
+        const tcACL = tc.getACL();
+        tcACL.setReadAccess(user, true);
+        if (write) {
+            tcACL.setWriteAccess(user, true);
+        }
+        tc.setACL(tcACL);
+        await tc.save(null, { sessionToken: sessionToken });
+    }
 }
 
 const inviteToVideoRoomSchema = {
