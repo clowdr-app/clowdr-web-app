@@ -247,13 +247,16 @@ export default function ViewEvent(props: Props) {
     const eventIsLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
     const sessionIsLive = !!session && session.startTime.getTime() < renderNow && session.endTime.getTime() > renderNow;
     return <div className="program-event">
-        {sessionFeed
-            ? <div className="session-feed">
-                <h2>{sessionFeed.name}</h2>
-                {eventIsLive || sessionFeed.youtubeId
-                    ? <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={!eventIsLive && "Sorry, something has gone wrong and we are unable to show you the session feed for this event."} /> : <></>}
-            </div>
-            : <LoadingSpinner message="Loading session feed" />}
+        {sessionIsLive || (sessionFeed && sessionFeed.youtubeId)
+            ? sessionFeed
+                ? <div className="session-feed">
+                    <h2>{sessionFeed.name}</h2>
+                    {eventIsLive || sessionFeed.youtubeId
+                        ? <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={!eventIsLive && "Sorry, something has gone wrong and we are unable to show you the session feed for this event."} />
+                        : <>This event is part of an ongoing live session. Please join the session to participate.</>}
+                </div>
+                : <LoadingSpinner message="Loading session feed" />
+            : <></>}
         {/* TODO: Re-enable this for splash?
          {eventFeed
             ? (eventFeed !== "not present"

@@ -40,7 +40,7 @@ export default function ViewItem(props: Props) {
 
     const [textChatId, setTextChatId] = useState<string | null>(null);
     useSafeAsync(async () => {
-        const itemFeed = await item?.feed;
+        const itemFeed = feed;
         if (itemFeed) {
             if (itemFeed.textChatId) {
                 return itemFeed.textChatId;
@@ -54,7 +54,7 @@ export default function ViewItem(props: Props) {
             }
         }
         return null;
-    }, setTextChatId, [item]);
+    }, setTextChatId, [feed]);
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);
@@ -130,6 +130,9 @@ export default function ViewItem(props: Props) {
                         ? <>
                             {props.showFeedName ? <h2>{feed.name}</h2> : <></>}
                             <ViewContentFeed feed={feed} hideZoomOrVideo={false} />
+                            <div className="content-feed">
+                                {!feed.textChatId && textChatId ? <ChatFrame chatId={textChatId} /> : <></>}
+                            </div>
                             <hr />
                         </>
                         : <></>)}

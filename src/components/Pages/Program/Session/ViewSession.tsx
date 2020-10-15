@@ -304,7 +304,7 @@ export default function ViewSession(props: Props) {
     const sessionMessage = session
         ? session.endTime.getTime() <= Date.now()
             ? (filler: string) => `This session has ended. Please choose a specific event to participate in its conversation.`
-            : (filler: string) => `This session starts in ${sessionStartTimeText?.distance} ${sessionStartTimeText?.units}. Each event's ${filler} will appear here and update throughout the session.`
+            : (filler: string) => `This session starts in ${sessionStartTimeText?.distance} ${sessionStartTimeText?.units}. ${filler} will appear here and update throughout the session.`
         : (filler: string) => "";
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
         {showEventsList ? eventsListEl : <></>}
@@ -322,7 +322,7 @@ export default function ViewSession(props: Props) {
                     <div className="embedded-content">
                         {!sessionFeed
                             ? <LoadingSpinner />
-                            : <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={(!isLive && !isPreShow) && sessionMessage("content")} hideTextChat={true} />}
+                            : <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={(!isLive && !isPreShow) && sessionMessage("The session's content")} hideTextChat={true} />}
                     </div>
                 </div>
                 <div className="split bottom-split">
@@ -332,7 +332,7 @@ export default function ViewSession(props: Props) {
                             ? (textChatId === false
                                 ? <p>The current event does not have a text chat.</p>
                                 : <LoadingSpinner message="Loading text chat" />)
-                            : <p>{sessionMessage("discussion/Q&A")}</p>
+                            : <p>{sessionMessage("Each event's discussion/Q&A")}</p>
                     }
                     <button onClick={() => setChatSize(0)}>
                         &#9660;
