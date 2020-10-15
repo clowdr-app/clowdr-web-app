@@ -149,11 +149,14 @@ export default class Channel implements IChannel {
         }
     }
     getName(): string {
-        return this.getCommonField('friendlyName');
+        return this.textChat.name;
     }
     async setName(value: string): Promise<void> {
-        const channel = await this.upgrade();
-        await channel.updateFriendlyName(value);
+        throw new Error("Method not implemented");
+        // const channel = await this.upgrade();
+        // await channel.updateFriendlyName(value);
+        // // TODO: Set name
+        // this.textChat.name = value;
     }
     async getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
         try {
