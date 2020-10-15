@@ -136,7 +136,9 @@ function nextSidebarState(currentState: RoomsGroupState, updates: RoomsGroupUpda
             nextState.tasks.delete("loadingAllRooms");
 
             for (const room of nextState.allRooms) {
-                if (!nextState.currentLocation.includes(`/room/${room.room.id}`)) {
+                if (!nextState.currentLocation.includes(`/room/${room.room.id}`) &&
+                    nextState.watchedRoomIds?.includes(room.room.id)
+                ) {
                     const oldRoom = currentState.allRooms?.find(x => x.room.id === room.room.id);
                     if (oldRoom) {
                         room.participants.forEach(p => {
@@ -340,7 +342,7 @@ export default function RoomsGroup(props: Props) {
         if (state.filteredRooms.length > 0) {
             const roomSearchValid = state.roomSearch && state.roomSearch.length >= props.minSearchLength;
             let activeRooms = state.filteredRooms.filter(x => x.participants.length > 0);
-            let inactiveRooms = state.filteredRooms.filter(x => x.participants.length === 0 && (roomSearchValid || !x.isFeedRoom));
+            let inactiveRooms = state.filteredRooms.filter(x => x.participants.length === 0 && (roomSearchValid || !x.isFeedRoom || state.watchedRoomIds?.includes(x.room.id)));
             activeRooms = activeRooms.sort((x, y) => x.room.name.localeCompare(y.room.name));
             inactiveRooms = inactiveRooms.sort((x, y) => x.room.name.localeCompare(y.room.name));
 
