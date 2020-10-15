@@ -16,6 +16,7 @@ interface Props {
 export default function AttachmentLink(props: Props) {
     const conference = useConference();
     const [attachmentType, setAttachmentType] = useState<AttachmentType | null>(null);
+    const [showVideo, setShowVideo] = useState<boolean>(false);
 
     useSafeAsync(async () => await props.attachment.attachmentType, setAttachmentType, [props.attachment.attachmentType]);
 
@@ -48,7 +49,9 @@ export default function AttachmentLink(props: Props) {
             }
             else if (attachmentType.fileTypes.includes("video")) {
                 // Display as an embedded video
-                return <ReactPlayer className="video-player" width="" height="" playsinline controls={true} muted={false} volume={1} url={url} />;
+                return showVideo
+                    ? <ReactPlayer className="video-player" width="" height="" playsinline controls={true} muted={false} volume={1} url={url} />
+                    : <button onClick={() => { setShowVideo(true); }}>Reveal Video</button>;
             }
             else {
                 displayAsLink = true;
@@ -58,7 +61,7 @@ export default function AttachmentLink(props: Props) {
         if (displayAsLink) {
             if (url) {
                 // TODO: Display a file/link type icon?
-                return <a href={url} target="_blank" rel="noopener noreferrer">{attachmentType.name}</a>
+                return <a className="button" href={url} target="_blank" rel="noopener noreferrer">Visit Link</a>
             }
         }
     }
