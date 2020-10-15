@@ -1,4 +1,4 @@
-import { ProgramItem, ProgramPerson } from "@clowdr-app/clowdr-db-schema";
+import { ProgramItem, ProgramPerson, ProgramSessionEvent } from "@clowdr-app/clowdr-db-schema";
 import { DataUpdatedEventDetails, DataDeletedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
 import { useHistory } from "react-router-dom";
@@ -18,12 +18,27 @@ export default function Item(props: Props) {
     const item = props.item;
     const conference = useConference();
     const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(props.data?.authors?.filter(x => item.authors.includes(x.id)) ?? null);
+    const [singleEvent, setSingleEvent] = useState<ProgramSessionEvent | "none" | "multiple" | null>(null);
     const history = useHistory();
 
     useSafeAsync(
         async () => authors ?? await item.authorPerons,
         setAuthors,
         [item, props.data?.authors]);
+
+    useSafeAsync(
+        async () => {
+            const events = await props.item.events;
+            if (events.length === 1) {
+                return events[0];
+            }
+            else if (events.length === 0) {
+                return "none";
+            }
+            else {
+                return "multiple";
+            }
+        }, setSingleEvent, []);
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         setAuthors(oldAuthors => {
@@ -51,7 +66,12 @@ export default function Item(props: Props) {
             if (props.clickable) {
                 ev.preventDefault();
                 ev.stopPropagation();
-                history.push(`/item/${item.id}`);
+                if (singleEvent && singleEvent !== "none" && singleEvent !== "multiple") {
+                    history.push(`/event/${singleEvent.id}`);
+                }
+                else {
+                    history.push(`/item/${item.id}`);
+                }
             }
         }}
     >

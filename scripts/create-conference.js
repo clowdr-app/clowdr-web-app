@@ -157,7 +157,7 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
         }
 
         if (shouldCreate) {
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             try {
                 const id = await Parse.Cloud.run(`${objectName}-create`, finalData, {

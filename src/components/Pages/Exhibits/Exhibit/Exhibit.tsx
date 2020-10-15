@@ -1,4 +1,4 @@
-import { ProgramItem, ProgramItemAttachment, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
+import { ProgramItem, ProgramItemAttachment, ProgramSessionEvent, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
@@ -17,11 +17,26 @@ export default function Exhibit(props: ExhibitProps) {
     const conference = useConference();
     const [attachments, setAttachments] = useState<ProgramItemAttachment[] | undefined>();
     const [track, setTrack] = useState<ProgramTrack | undefined>();
+    const [singleEvent, setSingleEvent] = useState<ProgramSessionEvent | "none" | "multiple" | null>(null);
 
     // Fetch initial ProgramItemAttachments
     useSafeAsync(
         async () => (await ProgramItemAttachment.getAll(conference.id)).filter(attachment => attachment.programItemId === props.programItem.id),
         setAttachments, [props.programItem.id, conference.id]);
+
+    useSafeAsync(
+        async () => {
+            const events = await props.programItem.events;
+            if (events.length === 1) {
+                return events[0];
+            }
+            else if (events.length === 0) {
+                return "none";
+            }
+            else {
+                return "multiple";
+            }
+        }, setSingleEvent, []);
 
     useSafeAsync(
         async () => await props.programItem.track,
@@ -61,7 +76,10 @@ export default function Exhibit(props: ExhibitProps) {
             : <ExhibitAttachment attachments={attachments} />}
 
         <div className="view-item">
-            <Link to={`/item/${props.programItem.id}`} className="button">View this item</Link>
+            {singleEvent && singleEvent !== "none" && singleEvent !== "multiple"
+                ? <Link to={`/event/${singleEvent.id}`} className="button">View this item</Link>
+                : <Link to={`/item/${props.programItem.id}`} className="button">View this item</Link>
+            }
         </div>
     </article>;
 }
