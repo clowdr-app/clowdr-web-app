@@ -194,6 +194,7 @@ async function sendRegistrationEmails(data) {
 ${conferenceShortName} will be using a new platform called Clowdr to provide an interactive virtual conference experience. Clowdr provides access to the conference program, live sessions, networking, and more.
 
 Activate your Clowdr profile for ${conferenceName} at: ${link}
+Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari is not supported at this time.
 
 We recommend that before the start of the conference's technical program on Monday, October 19, you should:
 
@@ -211,7 +212,10 @@ https://cscw.acm.org`;
 
         let messageHTML = `<h2>Welcome to ${conferenceShortName}: ${conferenceName}!</h2>
 <p>${conferenceShortName} will be using a new platform called Clowdr to provide an interactive virtual conference experience. Clowdr provides access to the conference program, live sessions, networking, and more.</p>
-<p><a href="${link}">Activate your Clowdr profile for ${conferenceName} now!</a></p>
+<p>
+<a href="${link}">Activate your Clowdr profile for ${conferenceName} now!</a><br/>
+Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari is not supported at this time.
+</p>
 <p>We recommend that before the start of the conference's technical program on Monday, October 19, you should:</p>
 <ul>
 <li>Fill out your Clowdr profile to help others find you</li>
