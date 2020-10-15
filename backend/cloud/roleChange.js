@@ -202,10 +202,12 @@ async function handleDemoteManagerToAttendee(targetProfile, conference) {
         .equalTo("mode", "moderation")
         .containedIn("twilioID", memberChannelSIDs)
         .map(async tc => {
-            const acl = tc.getACL();
-            acl.setReadAccess(targetUser, true);
-            acl.setWriteAccess(targetUser, false);
-            await tc.save(null, { useMasterKey: true });
+            if (tc.get("mode") === "moderation") {
+                const acl = tc.getACL();
+                acl.setReadAccess(targetUser, true);
+                acl.setWriteAccess(targetUser, false);
+                await tc.save(null, { useMasterKey: true });
+            }
         }, {
             useMasterKey: true
         });
