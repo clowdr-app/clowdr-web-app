@@ -330,7 +330,7 @@ export default function ViewSession(props: Props) {
                         ? <ChatFrame chatId={textChatId} showChatName={true} />
                         : isLive
                             ? (textChatId === false
-                                ? <p>The current event does not have a text chat.</p>
+                                ? <p>The current event does not have a Clowdr text chat. The conversation may be taking place in another platform.</p>
                                 : <LoadingSpinner message="Loading text chat" />)
                             : <p>{sessionMessage("Each event's discussion/Q&A")}</p>
                     }

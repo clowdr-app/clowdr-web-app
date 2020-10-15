@@ -274,7 +274,7 @@ export default function ViewEvent(props: Props) {
                 showFeedName={true}
                 item={item}
                 // TODO: For SPLASH: && eventHasEnded
-                textChatFeedOnly={eventIsLive || sessionIsLive}
+                textChatFeedOnly={(eventIsLive || sessionIsLive) && !!(sessionFeed?.videoRoomId || sessionFeed?.youtubeId || sessionFeed?.zoomRoomId)}
                 heading={{
                     title: item?.title ?? "Event",
                     subtitle: event ? <>{fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}</> : undefined,
