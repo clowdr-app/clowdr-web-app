@@ -1,9 +1,10 @@
 import { UserProfile, WatchedItems, TextChat } from "@clowdr-app/clowdr-db-schema";
-import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import assert from "assert";
 import React, { useCallback, useEffect, useState } from "react";
 import MultiSelect from "react-multi-select-component";
-import { Link, Redirect } from "react-router-dom";
+import { Link, Redirect, useHistory } from "react-router-dom";
 import { MemberDescriptor } from "../../../classes/Chat";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import { ActionButton } from "../../../contexts/HeadingContext";
@@ -41,23 +42,37 @@ type DMInfo = {
     member2: MemberDescriptor & { displayName: string }
 };
 
+type ExtendedChatInfo = {
+    name: string,
+    dmInfo: DMInfo
+    isAutoWatch: boolean
+    isAnnouncements: boolean
+    isModeration: boolean
+    isModerationHub: boolean
+    isPrivate: boolean
+    creator: UserProfile
+};
+
 export default function ChatView(props: Props) {
     const conf = useConference();
     const mUser = useUserProfile();
     const mChat = useMaybeChat();
-    const [chatName, setChatName] = useState<string>("Chat");
+    const history = useHistory();
+    // const [chatName, setChatName] = useState<string>("Chat");
     const [showPanel, setShowPanel] = useState<"members" | "invite" | "chat">("chat");
     const [members, setMembers] = useState<Array<RenderMemberDescriptor> | null>(null);
-    const [dmInfo, setDMInfo] = useState<DMInfo | null>(null);
-    const [isAutoWatch, setIsAutoWatch] = useState<boolean | null>(null);
-    const [isModeration, setIsModeration] = useState<boolean | null>(null);
-    const [isModerationHub, setIsModerationHub] = useState<boolean | null>(null);
-    const [isAnnouncements, setIsAnnouncements] = useState<boolean | null>(null);
-    const [isPrivate, setIsPrivate] = useState<boolean | null>(null);
+    // const [dmInfo, setDMInfo] = useState<DMInfo | null>(null);
+    // const [isAutoWatch, setIsAutoWatch] = useState<boolean | null>(null);
+    // const [isModeration, setIsModeration] = useState<boolean | null>(null);
+    // const [isModerationHub, setIsModerationHub] = useState<boolean | null>(null);
+    // const [isAnnouncements, setIsAnnouncements] = useState<boolean | null>(null);
+    // const [isPrivate, setIsPrivate] = useState<boolean | null>(null);
+    const [chatInfo, setChatInfo] = useState<ExtendedChatInfo | null>(null);
     const [allUsers, setAllUsers] = useState<Array<UserOption> | null>(null);
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
     const { isAdmin, isManager } = useUserRoles();
     const [sendingInvites, setSendingInvites] = useState<boolean>(false);
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
     // Fetch all user profiles
     useSafeAsync(async () => {
@@ -89,7 +104,8 @@ export default function ChatView(props: Props) {
                         isAnnouncements: chatD.isAnnouncements,
                         isModeration: chatD.isModeration,
                         isModerationHub: chatD.isModerationHub,
-                        isPrivate: chatD.isPrivate
+                        isPrivate: chatD.isPrivate,
+                        creator: chatD.creator
                     };
                 }
                 else {
@@ -100,41 +116,18 @@ export default function ChatView(props: Props) {
                         isAnnouncements: chatD.isAnnouncements,
                         isModeration: chatD.isModeration,
                         isModerationHub: chatD.isModerationHub,
-                        isPrivate: chatD.isPrivate
+                        isPrivate: chatD.isPrivate,
+                        creator: chatD.creator
                     };
                 }
             }
             else {
-                return {
-                    name: "Chat",
-                    dmInfo: null,
-                    isAutoWatch: null,
-                    isAnnouncements: null,
-                    isModeration: null,
-                    isModerationHub: null,
-                    isPrivate: null
-                };
+                return null;
             }
         }
 
         return undefined;
-    }, (data: {
-        name: string,
-        dmInfo: DMInfo | null,
-        isAutoWatch: boolean | null,
-        isAnnouncements: boolean | null,
-        isModeration: boolean | null,
-        isModerationHub: boolean | null,
-        isPrivate: boolean | null
-    }) => {
-        setChatName(data.name);
-        setDMInfo(data.dmInfo);
-        setIsAutoWatch(data.isAutoWatch);
-        setIsAnnouncements(data.isAnnouncements);
-        setIsModeration(data.isModeration);
-        setIsModerationHub(data.isModerationHub);
-        setIsPrivate(data.isPrivate);
-    }, [props.chatId, mChat]);
+    }, setChatInfo, [props.chatId, mChat]);
 
     // Fetch members
     useSafeAsync(async () => {
@@ -172,11 +165,24 @@ export default function ChatView(props: Props) {
 
     const onTextChatUpdated = useCallback(function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
         if (update.object.id === props.chatId) {
-            setIsAutoWatch((update.object as TextChat).autoWatch);
+            const tc = update.object as TextChat;
+            setChatInfo(oldChatInfo => oldChatInfo ?
+                {
+                    ...oldChatInfo,
+                    name: tc.name,
+                    isAutoWatch: tc.autoWatch
+                } : null);
         }
     }, [props.chatId]);
 
-    useDataSubscription("TextChat", onTextChatUpdated, null, isAutoWatch === null, conf);
+    const onTextChatDeleted = useCallback(function _onTextChatDeleted(update: DataDeletedEventDetails<"TextChat">) {
+        if (update.objectId === props.chatId) {
+            addNotification("Chat deleted.");
+            history.push("/");
+        }
+    }, [history, props.chatId]);
+
+    useDataSubscription("TextChat", onTextChatUpdated, onTextChatDeleted, !chatInfo, conf);
 
     const doFollow = useCallback(async function _doFollow() {
         try {
@@ -273,11 +279,11 @@ export default function ChatView(props: Props) {
     }
     else {
         if (members) {
-            if (dmInfo?.isDM === true) {
+            if (chatInfo?.dmInfo?.isDM === true) {
                 const otherMember
-                    = dmInfo.member1.profileId === mUser.id
-                        ? dmInfo.member2
-                        : dmInfo.member1;
+                    = chatInfo?.dmInfo.member1.profileId === mUser.id
+                        ? chatInfo?.dmInfo.member2
+                        : chatInfo?.dmInfo.member1;
                 actionButtons.push({
                     label: `View ${otherMember.displayName}'s profile`,
                     icon: <i className="fas fa-eye"></i>,
@@ -299,7 +305,7 @@ export default function ChatView(props: Props) {
         }
 
         // isDM could be null...
-        if (dmInfo?.isDM === false && usersLeftToInvite.length > 0 && isPrivate) {
+        if (chatInfo?.dmInfo?.isDM === false && usersLeftToInvite.length > 0 && chatInfo?.isPrivate) {
             actionButtons.push({
                 label: "Invite",
                 icon: <i className="fas fa-envelope"></i>,
@@ -313,7 +319,10 @@ export default function ChatView(props: Props) {
         }
     }
 
-    if (dmInfo?.isDM === false && isAnnouncements !== null && !isAnnouncements) {
+    if (chatInfo &&
+        chatInfo.dmInfo?.isDM === false &&
+        chatInfo.isAnnouncements !== null &&
+        !chatInfo.isAnnouncements) {
         if (isFollowing !== null) {
             if (isFollowing) {
                 actionButtons.push({
@@ -339,8 +348,8 @@ export default function ChatView(props: Props) {
             }
         }
 
-        if (isAutoWatch !== null && (isAdmin || isManager)) {
-            if (isAutoWatch) {
+        if (chatInfo.isAutoWatch !== null && (isAdmin || isManager)) {
+            if (chatInfo.isAutoWatch) {
                 actionButtons.push({
                     label: changingAutoWatch ? "Changing" : "Disable auto-follow",
                     icon: changingAutoWatch ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
@@ -365,12 +374,38 @@ export default function ChatView(props: Props) {
         }
     }
 
+    if (chatInfo) {
+        if ((isManager || isAdmin || chatInfo.creator.id === mUser.id)
+        && !chatInfo?.dmInfo.isDM) {
+            actionButtons.push({
+                label: isDeleting ? "Deleting" : "Delete chat",
+                icon: isDeleting ? <LoadingSpinner message="" /> : <i className="fas fa-trash-alt" />,
+                action: (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+
+                    try {
+                        assert(mChat, "Chat not available");
+                        setIsDeleting(true);
+                        mChat?.deleteChat(props.chatId).catch(e => {
+                            addError(`Failed to delete chat. ${e}`);
+                            setIsDeleting(false);
+                        });
+                    }
+                    catch (e) {
+                        addError(`Failed to delete chat. ${e}`);
+                    }
+                }
+            });
+        }
+    }
+
     useHeading({
-        title: chatName,
-        icon: dmInfo && dmInfo.isDM
-            ? (dmInfo.member1.profileId === mUser.id
-                ? (dmInfo.member2.isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>)
-                : (dmInfo.member1.isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>))
+        title: chatInfo ? chatInfo.name : "Chat",
+        icon: chatInfo?.dmInfo && chatInfo?.dmInfo.isDM
+            ? (chatInfo.dmInfo.member1.profileId === mUser.id
+                ? (chatInfo.dmInfo.member2.isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>)
+                : (chatInfo.dmInfo.member1.isOnline ? <i className="fas fa-circle online"></i> : <i className="far fa-circle"></i>))
             : undefined,
         buttons: actionButtons
     });
@@ -442,9 +477,11 @@ export default function ChatView(props: Props) {
         }
     }
 
-    return isModeration
+    return !chatInfo
+        ? <LoadingSpinner />
+        : chatInfo.isModeration
         ? <Redirect to={`/moderation/${props.chatId}`} />
-        : isModerationHub
+        : chatInfo.isModerationHub
             ? <Redirect to={`/moderation/hub`} />
             : <div className={`chat-view${showPanel !== "chat" ? " show-panel" : ""}`}>
                 {showPanel === "members"

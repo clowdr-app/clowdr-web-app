@@ -391,6 +391,16 @@ Parse.Cloud.beforeDelete("TextChat", async (req) => {
             }
         }
 
+        await new Parse.Query("ContentFeed")
+            .equalTo("conference", conference)
+            .map(async feed => {
+                const feedChat = feed.get("textChat");
+                if (feedChat && feedChat.id === textChat.id) {
+                    feed.unset("textChat");
+                    await feed.save(null, { useMasterKey: true });
+                }
+            }, { useMasterKey: true });
+
         await new Parse.Query("WatchedItems")
             .equalTo("conference", conference)
             .map(async watched => {

@@ -16,8 +16,10 @@ import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/
 import assert from "assert";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import useMaybeVideo from "../../../hooks/useMaybeVideo";
-import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../../hooks/useDataSubscription";
+import useUserRoles from "../../../hooks/useUserRoles";
+import { useHistory } from "react-router-dom";
 
 interface Props {
     roomId: string;
@@ -32,6 +34,7 @@ export default function ViewVideoRoom(props: Props) {
     const conference = useConference();
     const currentUserProfile = useUserProfile();
     const mVideo = useMaybeVideo();
+    const history = useHistory();
     const [size, setSize] = useState(30);
     const [room, setRoom] = useState<VideoRoom | null>(null);
     const [chat, setChat] = useState<TextChat | "not present" | null>(null);
@@ -39,6 +42,8 @@ export default function ViewVideoRoom(props: Props) {
     const [allUsers, setAllUsers] = useState<Array<UserOption> | null>(null);
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
     const [inviting, setInviting] = useState<CancelablePromise<unknown> | null>(null);
+    const { isAdmin, isManager } = useUserRoles();
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
     useSafeAsync(
         async () => await VideoRoom.get(props.roomId, conference.id),
@@ -103,6 +108,22 @@ export default function ViewVideoRoom(props: Props) {
     }, [props.roomId, currentUserProfile.watchedId]);
 
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conference);
+
+    const onRoomUpdated = useCallback(function _onRoomUpdated(update: DataUpdatedEventDetails<"VideoRoom">) {
+        if (update.object.id === props.roomId) {
+            setRoom(update.object as VideoRoom);
+        }
+    }, [props.roomId]);
+
+    const onRoomDeleted = useCallback(function _onRoomDeleted(update: DataDeletedEventDetails<"VideoRoom">) {
+        if (update.objectId === props.roomId) {
+            addNotification("Room deleted.");
+            history.push("/");
+        }
+    }, [history, props.roomId]);
+
+    useDataSubscription("VideoRoom", onRoomUpdated, onRoomDeleted, !room, conference);
+
 
     const doFollow = useCallback(async function _doFollow() {
         try {
@@ -190,6 +211,29 @@ export default function ViewVideoRoom(props: Props) {
                     }
                 });
             }
+        }
+
+        const acl = room.acl.permissionsById;
+        if (acl[currentUserProfile.id]?.write || isAdmin || isManager) {
+            actionButtons.push({
+                label: isDeleting ? "Deleting" : "Delete room",
+                icon: isDeleting ? <LoadingSpinner message="" /> : <i className="fas fa-trash-alt" />,
+                action: (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+
+                    try {
+                        setIsDeleting(true);
+                        room.delete().catch(e => {
+                            addError(`Failed to delete room. ${e}`);
+                            setIsDeleting(false);
+                        });
+                    }
+                    catch (e) {
+                        addError(`Failed to delete room. ${e}`);
+                    }
+                }
+            });
         }
     }
 

@@ -232,8 +232,7 @@ export default class Channel implements IChannel {
         return this.textChat.save();
     }
     async delete(): Promise<void> {
-        const channel = await this.upgrade();
-        await channel.delete();
+        await this.textChat.delete();
     }
     async getMessage(messageSid: string, messageIndex: number): Promise<Message | null> {
         try {

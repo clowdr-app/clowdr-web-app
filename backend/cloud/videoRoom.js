@@ -4,6 +4,8 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
 const { getProfileOfUser, getUserProfileById } = require("./user");
+const { getConfig } = require("./config");
+const Twilio = require("twilio");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
 
@@ -32,6 +34,32 @@ Parse.Cloud.beforeDelete("VideoRoom", async (request) => {
         const room = request.object;
         const conference = room.get("conference");
 
+        // For some dumb reason, just fetching the text chat directly doesn't work...
+        const textChat = await new Parse.Query("TextChat").get(room.get("textChat").id, { useMasterKey: true });
+
+        await new Parse.Query("ContentFeed")
+            .equalTo("conference", conference)
+            .map(async feed => {
+                let save = false;
+                const feedRoom = feed.get("videoRoom");
+                const feedChat = feed.get("textChat");
+                if (feedRoom && feedRoom.id === room.id) {
+                    feed.unset("videoRoom");
+                    save = true;
+                }
+                if (textChat && feedChat && feedChat.id === textChat.id) {
+                    feed.unset("textChat");
+                    save = true;
+                }
+                if (save) {
+                    await feed.save(null, { useMasterKey: true });
+                }
+            }, { useMasterKey: true });
+
+        if (textChat && !textChat.get("isDM") && textChat.get("mode") === "ordinary") {
+            await textChat.destroy({ useMasterKey: true });
+        }
+    
         await new Parse.Query("WatchedItems")
             .equalTo("conference", conference)
             .map(async watched => {
@@ -39,6 +67,24 @@ Parse.Cloud.beforeDelete("VideoRoom", async (request) => {
                 watched.set("watchedRooms", watchedIds.filter(x => x !== room.id));
                 await watched.save(null, { useMasterKey: true });
             }, { useMasterKey: true });
+
+        const twilioID = room.get("twilioID");
+        if (twilioID) {
+            const config = await getConfig(conference.id);
+            const accountSID = config.TWILIO_ACCOUNT_SID;
+            const accountAuth = config.TWILIO_AUTH_TOKEN;
+            const twilioClient = Twilio(accountSID, accountAuth);
+            try {
+                await twilioClient.video.rooms(twilioID).update({
+                    status: "completed"
+                });
+            }
+            catch (e) {
+                if (!(e.toString().includes("resource") && e.toString().includes("not found"))) {
+                    throw e;
+                }
+            }
+        }
     }
     catch (e) {
         console.error(`Error deleting video room! ${e}`);

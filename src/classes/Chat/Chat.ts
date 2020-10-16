@@ -250,6 +250,17 @@ export default class Chat implements IChatManager {
         return await this.convertToDescriptor(channel) ?? undefined;
     }
 
+    public async deleteChat(chatId: string): Promise<void> {
+        try {
+            assert(this.twilioService);
+            const channel = await this.twilioService.getChannel(chatId);
+            await channel.delete();
+        }
+        catch (e) {
+            console.error("Failed to delete chat", e);
+        }
+    }
+
     public async createModerationChat(specificModerators: Array<string>, relatedModerationKey?: string, initialMessage?: string): Promise<ChatDescriptor | undefined> {
         assert(this.twilioService);
         const channel = await this.twilioService.createModerationChannel(specificModerators, relatedModerationKey, initialMessage);
