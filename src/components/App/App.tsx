@@ -91,7 +91,9 @@ function nextAppState(currentState: AppState, updates: AppUpdate | Array<AppUpda
         doUpdate(updates);
     }
 
-    LocalStorage_Conference.currentConferenceId = nextState.conferenceId;
+    if (nextState.conferenceId !== currentState.conferenceId) {
+        LocalStorage_Conference.currentConferenceId = nextState.conferenceId;
+    }
 
     return nextState;
 }
@@ -179,34 +181,41 @@ export default function App() {
                     if (appState.conferenceId) {
                         if (user && user.id) {
                             const cache = await Caches.get(appState.conferenceId);
+                            if (!(await cache.Ready)) {
+                                LocalStorage_Conference.currentConferenceId = null;
+                                window.location.replace("/");
+                                window.location.reload();
+                            }
+                            else {
+                                isAdmin = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin"]);
+                                isManager = isAdmin || await _Role.isUserInRoles(user.id, appState.conferenceId, ["manager"]);
 
-                            isAdmin = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin"]);
-                            isManager = isAdmin || await _Role.isUserInRoles(user.id, appState.conferenceId, ["manager"]);
+                                const previousManagerOrAdmin = LocalStorage_Conference.wasManagerOrAdmin;
+                                const previousUserId = LocalStorage_Conference.previousUserId;
 
-                            const previousManagerOrAdmin = LocalStorage_Conference.wasManagerOrAdmin;
-                            const previousUserId = LocalStorage_Conference.previousUserId;
+                                await cache.updateUserAuthenticated(
+                                    { authed: true, sessionToken: user.getSessionToken() },
+                                    previousManagerOrAdmin !== isManager || previousUserId !== user.id
+                                );
 
-                            await cache.updateUserAuthenticated(
-                                { authed: true, sessionToken: user.getSessionToken() },
-                                previousManagerOrAdmin !== isManager || previousUserId !== user.id
-                            );
+                                LocalStorage_Conference.wasManagerOrAdmin = isManager;
+                                LocalStorage_Conference.previousUserId = user.id;
 
-                            LocalStorage_Conference.wasManagerOrAdmin = isManager;
-                            LocalStorage_Conference.previousUserId = user.id;
+                                profile = await UserProfile.getByUserId(user.id, appState.conferenceId);
+                                if (profile) {
+                                    sessionToken = user.getSessionToken();
 
-                            profile = await UserProfile.getByUserId(user.id, appState.conferenceId);
-                            if (profile) {
-                                sessionToken = user.getSessionToken();
-
-                                if (profile.isBanned) {
-                                    profile = null;
-                                    LocalStorage_Conference.currentConferenceId = null;
-                                    if (cache.IsInitialised) {
-                                        cache.deleteDatabase(false);
+                                    if (profile.isBanned) {
+                                        profile = null;
+                                        LocalStorage_Conference.currentConferenceId = null;
+                                        if (cache.IsInitialised) {
+                                            cache.deleteDatabase(false);
+                                        }
+                                        addError("You have been banned from the selected conference.");
+                                        LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
+                                        window.location.replace("/");
+                                        window.location.reload();
                                     }
-                                    addError("You have been banned from the selected conference.");
-                                    LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
-                                    window.location.replace("/");
                                 }
                             }
                         }
@@ -323,6 +332,7 @@ export default function App() {
                 addError("You have been banned from the selected conference.");
                 LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
                 window.location.replace("/");
+                window.location.reload();
             }
             else {
                 dispatchAppUpdate([
@@ -384,6 +394,7 @@ export default function App() {
                 addError("You have been banned from the selected conference.");
                 LocalStorage_Conference.wasBannedFromName = appState.conference.name;
                 window.location.replace("/");
+                window.location.reload();
             }
 
             dispatchAppUpdate([

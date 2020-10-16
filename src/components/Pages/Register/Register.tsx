@@ -34,17 +34,23 @@ export default function Register(props: Props) {
 
         async function getConference() {
             try {
-                const { promise, cancel } = makeCancelable(Conference.get(props.conferenceId).catch(async (reason) => {
-                    setLoadFailed(true);
-                    return null;
-                }));
+                const { promise, cancel } = makeCancelable(Conference.getAll()
+                    .then(xs => xs.find(x => x.id === props.conferenceId))
+                    .catch(async (reason) => {
+                        setLoadFailed(true);
+                        if (reason.toString().toLowerCase().includes("invalid session token")) {
+                            window.localStorage.clear();
+                            window.location.reload();
+                        }
+                        return null;
+                    }));
                 cancelConferencePromise = cancel;
 
                 const _conference = await promise;
                 if (!_conference) {
                     setLoadFailed(true);
                 }
-                setConference(_conference);
+                setConference(_conference ?? null);
                 cancelConferencePromise = () => { };
             }
             catch (e) {
