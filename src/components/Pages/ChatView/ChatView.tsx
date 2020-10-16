@@ -376,7 +376,10 @@ export default function ChatView(props: Props) {
 
     if (chatInfo) {
         if ((isManager || isAdmin || chatInfo.creator.id === mUser.id)
-        && !chatInfo?.dmInfo.isDM) {
+            && !chatInfo?.dmInfo.isDM
+            && !chatInfo?.isAnnouncements
+            && !chatInfo?.isModeration
+            && !chatInfo?.isModerationHub) {
             actionButtons.push({
                 label: isDeleting ? "Deleting" : "Delete chat",
                 icon: isDeleting ? <LoadingSpinner message="" /> : <i className="fas fa-trash-alt" />,
@@ -480,55 +483,55 @@ export default function ChatView(props: Props) {
     return !chatInfo
         ? <LoadingSpinner />
         : chatInfo.isModeration
-        ? <Redirect to={`/moderation/${props.chatId}`} />
-        : chatInfo.isModerationHub
-            ? <Redirect to={`/moderation/hub`} />
-            : <div className={`chat-view${showPanel !== "chat" ? " show-panel" : ""}`}>
-                {showPanel === "members"
-                    ? <div className="members-list">
-                        {members
-                            ? <ul className="members">
-                                {members
-                                    .sort((x, y) => x.displayName.localeCompare(y.displayName))
-                                    .map(mem => {
-                                        const icon = <i className={`fa${mem.isOnline ? 's' : 'r'} fa-circle ${mem.isOnline ? 'online' : ''}`}></i>;
-                                        return <li key={mem.profileId}>
-                                            <Link to={`/profile/${mem.profileId}`}>{icon}<span>{mem.displayName}</span></Link>
-                                        </li>;
-                                    })}
-                            </ul>
-                            : <LoadingSpinner message="Loading members" />
-                        }
-                    </div>
-                    :
-                    showPanel === "invite"
-                        ? <div className="invite">
-                            <form onSubmit={async (ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                            }}>
-                                {!isAdmin && !isManager ? <p>You may invite up to 20 people at a time.</p> : <></>}
-                                <label>Select users to invite:</label>
-                                <div className="invite-users-control">
-                                    <MultiSelect
-                                        className="invite-users-control__multiselect"
-                                        labelledBy="Invite users"
-                                        overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
-                                        options={usersLeftToInvite}
-                                        value={invites ?? []}
-                                        onChange={setInvites}
-                                    />
-                                </div>
-                                <div className="submit-container">
-                                    <AsyncButton
-                                        action={() => doInvite()}
-                                        content="Invite"
-                                        disabled={sendingInvites || !(invites && invites.length > 0 && (isAdmin || isManager || invites.length <= 20))} />
-                                </div>
-                            </form>
+            ? <Redirect to={`/moderation/${props.chatId}`} />
+            : chatInfo.isModerationHub
+                ? <Redirect to={`/moderation/hub`} />
+                : <div className={`chat-view${showPanel !== "chat" ? " show-panel" : ""}`}>
+                    {showPanel === "members"
+                        ? <div className="members-list">
+                            {members
+                                ? <ul className="members">
+                                    {members
+                                        .sort((x, y) => x.displayName.localeCompare(y.displayName))
+                                        .map(mem => {
+                                            const icon = <i className={`fa${mem.isOnline ? 's' : 'r'} fa-circle ${mem.isOnline ? 'online' : ''}`}></i>;
+                                            return <li key={mem.profileId}>
+                                                <Link to={`/profile/${mem.profileId}`}>{icon}<span>{mem.displayName}</span></Link>
+                                            </li>;
+                                        })}
+                                </ul>
+                                : <LoadingSpinner message="Loading members" />
+                            }
                         </div>
-                        : <></>
-                }
-                {chat}
-            </div>;
+                        :
+                        showPanel === "invite"
+                            ? <div className="invite">
+                                <form onSubmit={async (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                }}>
+                                    {!isAdmin && !isManager ? <p>You may invite up to 20 people at a time.</p> : <></>}
+                                    <label>Select users to invite:</label>
+                                    <div className="invite-users-control">
+                                        <MultiSelect
+                                            className="invite-users-control__multiselect"
+                                            labelledBy="Invite users"
+                                            overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
+                                            options={usersLeftToInvite}
+                                            value={invites ?? []}
+                                            onChange={setInvites}
+                                        />
+                                    </div>
+                                    <div className="submit-container">
+                                        <AsyncButton
+                                            action={() => doInvite()}
+                                            content="Invite"
+                                            disabled={sendingInvites || !(invites && invites.length > 0 && (isAdmin || isManager || invites.length <= 20))} />
+                                    </div>
+                                </form>
+                            </div>
+                            : <></>
+                    }
+                    {chat}
+                </div>;
 }
