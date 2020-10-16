@@ -202,9 +202,7 @@ export default function WholeProgram() {
             </label>
         </div>
         <div className={`whole-program${scheduleView ? " schedule" : " tracks"}`}>
-            <div className="schedule">
-                {schedule}
-            </div>
+            {schedule}
             <div className="tracks">
                 {columns}
             </div>

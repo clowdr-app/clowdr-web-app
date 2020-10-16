@@ -7,28 +7,60 @@
 }
 
 .whole-program {
-    &.tracks>.schedule {
+    &.tracks>.schedule-wrapper {
         display: none;
     }
 
-    &.schedule>.tracks {
+    &.schedule-wrapper>.tracks {
         display: none;
     }
 
-    &>.schedule {
-        display: grid;
-        grid-template-columns: 100%;
-        grid-auto-rows       : auto;
-        grid-column-gap      : 0;
-        grid-row-gap         : 0;
+    &>.schedule-wrapper {
+        .days {
+            display       : flex;
+            flex-direction: row;
+            column-gap    : 0.5em;
+            row-gap       : 0.5em;
 
-        hr {
-            border-color: $color-3;
+            .button {
+                background: none;
+
+                &:hover {
+                    background-color: lighten($color-3, 30);
+                    color           : darken($color-3, 30);
+                    border-color    : darken($color-3, 30);
+                }
+            }
+        }
+
+        .schedule {
+            display              : grid;
+            grid-template-columns: 100%;
+            grid-auto-rows       : auto;
+            grid-column-gap      : 0;
+            grid-row-gap         : 0;
+
+            hr {
+                border-color: $color-3;
+                padding     : 0;
+                margin      : 1em 0 0 0;
+            }
+
+            .back-to-top {
+                font-size : 90%;
+                font-style: italic;
+                padding   : 0;
+                margin    : 1em 0 1em 0;
+            }
+
+            .back-to-top+.session {
+                padding-top: 0;
+            }
         }
     }
 
     &>.tracks {
-        display: grid;
+        display              : grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         grid-auto-rows       : min-content;
         grid-column-gap      : 1em;
@@ -108,7 +140,13 @@
             text-align    : center;
             font-style    : italic;
             padding-bottom: 0.3em;
+            padding-left  : 0.7em;
+            padding-right : 0.7em;
             margin-bottom : 0.5em;
+
+            &.left-align {
+                text-align: left;
+            }
 
             a:hover {
                 text-decoration: underline;

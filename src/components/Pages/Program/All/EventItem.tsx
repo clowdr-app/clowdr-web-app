@@ -14,6 +14,7 @@ interface Props {
     data?: WholeProgramData;
     session?: ProgramSession;
     track?: ProgramTrack;
+    hideEventTime?: boolean;
 }
 
 export default function EventItem(props: Props) {
@@ -75,9 +76,12 @@ export default function EventItem(props: Props) {
         }}
     >
         <div className="heading">
-            <h2 className="title">
-                {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
-            </h2>
+            {!props.hideEventTime
+                ? <h2 className="title">
+                    {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
+                </h2>
+                : <></>
+            }
             {props.session ? <Link
                 className="session-info"
                 to={`/session/${props.session.id}`}
