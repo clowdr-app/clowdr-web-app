@@ -144,8 +144,10 @@
         "migrate-profiles-addWatchedItems-isBanned-production": "node-env-run -E .env.production.local scripts/migrations/migrate-profiles-addWatchedItems-isBanned.js",
         "regenerate-global-chats": "node-env-run -E .env scripts/regenerate-global-chats.js",
         "cleanup-watched-items": "node-env-run -E .env scripts/cleanup-watched-items.js",
+        "fix-session-start-times": "node-env-run -E .env scripts/fix-session-start-times.js",
         "regenerate-global-chats-production": "node-env-run -E .env.production.local scripts/regenerate-global-chats.js",
-        "cleanup-watched-items-production": "node-env-run -E .env.production.local scripts/cleanup-watched-items.js"
+        "cleanup-watched-items-production": "node-env-run -E .env.production.local scripts/cleanup-watched-items.js",
+        "fix-session-start-times-production": "node-env-run -E .env.production.local scripts/fix-session-start-times.js"
     },
     "eslintConfig": {
         "extends": "react-app"

@@ -15,7 +15,7 @@ import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import useUserProfile from "../../../../hooks/useUserProfile";
 import ChatFrame from "../../../Chat/ChatFrame/ChatFrame";
-import { generateTimeText } from "../../../../classes/Utils";
+import { daysIntoYear, generateTimeText } from "../../../../classes/Utils";
 
 interface Props {
     sessionId: string;
@@ -273,16 +273,44 @@ export default function ViewSession(props: Props) {
         }
     });
 
-    let subtitle: JSX.Element | undefined;
+    let chairStr: JSX.Element | undefined;
     if (session?.chair) {
-        subtitle = <>Session chaired by {session.chair}</>;
+        chairStr = <>Session chaired by {session.chair}</>;
     }
     else {
         const now = Date.now();
         const liveEvent = events?.find(event => event.startTime.getTime() < now && event.endTime.getTime() > now);
         if (liveEvent?.chair) {
-            subtitle = <>Current event chaired by {liveEvent.chair}</>;
+            chairStr = <>Current event chaired by {liveEvent.chair}</>;
         }
+    }
+
+    let subtitle: JSX.Element | undefined;
+    if (session) {
+        function fmtDate(date: Date) {
+            return date.toLocaleDateString(undefined, {
+                day: "numeric",
+                month: "short"
+            });
+        }
+
+        function fmtTime(date: Date) {
+            return date.toLocaleTimeString(undefined, {
+                hour12: false,
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        const startDay = daysIntoYear(session.startTime);
+        const endDay = daysIntoYear(session.endTime);
+        const isSameDay = startDay === endDay;
+        const endTimeStr = (!isSameDay ? fmtDate(session.endTime) : "") + " " + fmtTime(session.endTime);
+        subtitle =
+            <>
+                {fmtDate(session.startTime)}&nbsp;&middot;&nbsp;{fmtTime(session.startTime)}{` - ${endTimeStr}`}
+                {chairStr ? <>&nbsp;&middot;&nbsp;{chairStr}</> : <></>}
+            </>;
     }
 
     useHeading({

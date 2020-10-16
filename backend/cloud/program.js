@@ -4,6 +4,7 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 const { getProfileOfUser } = require("./user");
+const assert = require("assert");
 
 // TODO: Before delete of track/item/session/event: Cleanup unused content feed(s)
 // TODO: Before save: Give authors write access to their program items/events
@@ -577,3 +578,55 @@ async function handleCreateSessionEvent(req) {
     }
 }
 Parse.Cloud.define("event-create", handleCreateSessionEvent);
+
+Parse.Cloud.job("fix-session-start-times", async (request) => {
+    const { params, message: _message } = request;
+    const message = (msg) => {
+        console.log(msg);
+        _message(msg);
+    };
+
+    let conference = null;
+
+    try {
+        message("Starting...");
+
+        message("Validating parameters");
+
+        let requestValidation = validateRequest({
+            conference: "string"
+        }, params);
+        if (requestValidation.ok) {
+            conference = await new Parse.Object("Conference", { id: params.conference }).fetch({ useMasterKey: true });
+            assert(conference);
+
+            await new Parse.Query("ProgramSession")
+                .equalTo("conference", conference)
+                .map(async session => {
+                    const eventStartTimes
+                        = await new Parse.Query("ProgramSessionEvent")
+                            .equalTo("conference", conference)
+                            .equalTo("session", session)
+                            .map(event => event.get("startTime"),
+                                { useMasterKey: true });
+                    const orderedTimes
+                        = eventStartTimes.sort((x, y) =>
+                            x.getTime() < y.getTime()
+                                ? -1
+                                : x.getTime() === y.getTime()
+                                    ? 0 : 1);
+                    if (orderedTimes.length > 0) {
+                        const firstTime = orderedTimes[0];
+                        await session.save({ startTime: firstTime }, { useMasterKey: true });
+                    }
+                }, { useMasterKey: true });
+            
+            return "Done";
+        }
+    }
+    catch (e) {
+        console.error("ERROR: " + e.stack, e);
+        message(e);
+        throw e;
+    }
+});
