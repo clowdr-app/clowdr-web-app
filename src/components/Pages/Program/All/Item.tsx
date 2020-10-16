@@ -76,6 +76,6 @@ export default function Item(props: Props) {
         }}
     >
         <div className="abstract">{item.title}</div>
-        <AuthorsList authors={authors} />
+        <AuthorsList authors={authors} idOrdering={item.authors} />
     </div>;
 }

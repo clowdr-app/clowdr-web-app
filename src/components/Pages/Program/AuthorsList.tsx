@@ -4,13 +4,20 @@ import { Link } from "react-router-dom";
 import "./AuthorsList.scss";
 
 interface Props {
-    authors: Array<ProgramPerson> | null
+    authors: Array<ProgramPerson> | null;
+    idOrdering: Array<string>
 }
 
 export default function AuthorsList(props: Props) {
     let authorsEls: Array<JSX.Element> = [];
     if (props.authors) {
-        authorsEls = props.authors.map(author => {
+        authorsEls = props.authors
+            .sort((x, y) => {
+                const xIdx = props.idOrdering.indexOf(x.id);
+                const yIdx = props.idOrdering.indexOf(y.id);
+                return xIdx < yIdx ? -1 : xIdx > yIdx ? 1 : 0;
+            })
+            .map(author => {
             return <Link
                 key={author.id}
                 to={`/author/${author.id}`}

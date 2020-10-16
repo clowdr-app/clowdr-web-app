@@ -144,7 +144,7 @@ export default function ViewItem(props: Props) {
                     >
                         {item.abstract}
                     </ReactMarkdown>
-                    <AuthorsList authors={authors} />
+                    <AuthorsList authors={authors} idOrdering={item.authors} />
                 </div>
                 {attachmentEls.length > 0
                     ? <>
