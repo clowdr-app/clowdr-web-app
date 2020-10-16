@@ -193,13 +193,13 @@ async function sendRegistrationEmails(data) {
 
 ${conferenceShortName} will be using a new platform called Clowdr to provide an interactive virtual conference experience. Clowdr provides access to the conference program, live sessions, networking, and more.
 
-Activate your Clowdr profile for ${conferenceName} at: ${link}
+Activate your Clowdr profile for ${conferenceShortName} at: ${link}
 Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari is not supported at this time.
 
 We recommend that before the start of the conference's technical program on Monday, October 19, you should:
 
 - Fill out your Clowdr profile to help others find you
-- Familiarize yourself with Clowdr’s features
+- Familiarize yourself with Clowdr's features. The ${conferenceShortName} Social Chairs have put together a virtual treasure hunt to help you learn more. See http://www.quiz-maker.com/QVZ9P6QUP once you have completed your registration and updated your Clowdr profile!
 - Check out the conference program and follow events (papers, posters, panels) you wish to attend
 
 Need help? Email: helpdesk@cscw.acm.org
@@ -213,13 +213,13 @@ https://cscw.acm.org`;
         let messageHTML = `<h2>Welcome to ${conferenceShortName}: ${conferenceName}!</h2>
 <p>${conferenceShortName} will be using a new platform called Clowdr to provide an interactive virtual conference experience. Clowdr provides access to the conference program, live sessions, networking, and more.</p>
 <p>
-<a href="${link}">Activate your Clowdr profile for ${conferenceName} now!</a><br/>
+<a href="${link}">Activate your Clowdr profile for ${conferenceShortName} now!</a><br/>
 Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari is not supported at this time.
 </p>
 <p>We recommend that before the start of the conference's technical program on Monday, October 19, you should:</p>
 <ul>
 <li>Fill out your Clowdr profile to help others find you</li>
-<li>Familiarize yourself with Clowdr’s features</li>
+<li>Familiarize yourself with Clowdr's features. The ${conferenceShortName} Social Chairs have put together a virtual treasure hunt to help you learn more. <a href="http://www.quiz-maker.com/QVZ9P6QUP">Try the treasure hunt here</a> once you have completed your registration and updated your Clowdr profile!</li>
 <li>Check out the conference program and follow events (papers, posters, panels) you wish to attend</li>
 </ul>
 <p>Need help? Email: helpdesk@cscw.acm.org</p>
