@@ -112,6 +112,10 @@ function nextSidebarState(currentState: RoomsGroupState, updates: RoomsGroupUpda
             case "updateFilteredRooms":
                 nextState.filteredRooms = update.rooms;
                 break;
+            case "deleteRooms":
+                nextState.allRooms = nextState.allRooms?.filter(x => !update.rooms.includes(x.room.id)) ?? null;
+                nextState.filteredRooms = nextState.filteredRooms?.filter(x => !update.rooms.includes(x.room.id)) ?? null;
+                break;
             case "setWatchedRoomIds":
                 nextState.watchedRoomIds = update.ids;
                 break;
