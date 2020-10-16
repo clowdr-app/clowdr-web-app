@@ -73,7 +73,9 @@ async function createVideoRoom(data, user) {
     else {
         acl.setRoleReadAccess(attendeeRole, true);
     }
+    acl.setRoleReadAccess(managerRole, true);
     acl.setRoleWriteAccess(managerRole, true);
+    acl.setRoleReadAccess(adminRole, true);
     acl.setRoleWriteAccess(adminRole, true);
     newObject.setACL(acl);
 
@@ -169,7 +171,8 @@ async function grantAccessToVideoRoom(room, userProfile, write, sessionToken) {
             tcACL.setWriteAccess(user, true);
         }
         tc.setACL(tcACL);
-        await tc.save(null, { sessionToken: sessionToken });
+        // We have to force the write here because text chats get created/configured differently to video rooms
+        await tc.save(null, { useMasterKey: true });
     }
 }
 

@@ -44,6 +44,7 @@ async function configureDefaultProgramACLs(object) {
     acl.setPublicReadAccess(false);
     acl.setPublicWriteAccess(false);
     acl.setRoleReadAccess(attendeeRole, true);
+    acl.setRoleReadAccess(adminRole, true);
     acl.setRoleWriteAccess(adminRole, true);
     object.setACL(acl);
 }

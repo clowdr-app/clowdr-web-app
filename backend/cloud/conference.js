@@ -433,9 +433,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 else if (attendeeRead) {
                     acl.setRoleReadAccess(attendeeRole, true);
                 }
-                else {
-                    acl.setRoleReadAccess(adminRole, true);
-                }
+                acl.setRoleReadAccess(adminRole, true);
                 acl.setRoleWriteAccess(adminRole, true);
 
                 const configurationO = new Parse.Object("ConferenceConfiguration");
@@ -470,6 +468,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 acl.setPublicReadAccess(false);
                 acl.setPublicWriteAccess(false);
                 acl.setRoleReadAccess(attendeeRole, true);
+                acl.setRoleReadAccess(adminRole, true);
                 acl.setRoleWriteAccess(adminRole, true);
 
                 const flairO = new Parse.Object("Flair");
@@ -502,6 +501,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 loggedInACL.setPublicReadAccess(false);
                 loggedInACL.setPublicWriteAccess(false);
                 loggedInACL.setRoleReadAccess(attendeeRole, true);
+                loggedInACL.setRoleReadAccess(adminRole, true);
                 loggedInACL.setRoleWriteAccess(adminRole, true);
                 const loggedInTextO = new Parse.Object("PrivilegedConferenceDetails");
                 loggedInTextO.setACL(loggedInACL);
@@ -522,6 +522,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 newACL.setPublicReadAccess(false);
                 newACL.setPublicWriteAccess(false);
                 newACL.setRoleReadAccess(attendeeRole, true);
+                newACL.setRoleReadAccess(adminRole, true);
                 newACL.setRoleWriteAccess(adminRole, true);
                 let newDetails = new Parse.Object("PrivilegedConferenceDetails");
                 newDetails.setACL(newACL);
@@ -861,6 +862,7 @@ Parse.Cloud.define("conference-setSidebarBgColour", async (req) => {
                 newACL.setPublicReadAccess(false);
                 newACL.setPublicWriteAccess(false);
                 newACL.setRoleReadAccess(attendeeRole, true);
+                newACL.setRoleReadAccess(adminRole, true);
                 newACL.setRoleWriteAccess(adminRole, true);
                 let newDetails = new Parse.Object("PrivilegedConferenceDetails");
                 newDetails.setACL(newACL);
@@ -904,6 +906,7 @@ Parse.Cloud.define("conference-setLoggedInText", async (req) => {
                 newACL.setPublicReadAccess(false);
                 newACL.setPublicWriteAccess(false);
                 newACL.setRoleReadAccess(attendeeRole, true);
+                newACL.setRoleReadAccess(adminRole, true);
                 newACL.setRoleWriteAccess(adminRole, true);
                 let newDetails = new Parse.Object("PrivilegedConferenceDetails");
                 newDetails.setACL(newACL);
@@ -1119,9 +1122,7 @@ Parse.Cloud.job("regenerate-global-chats", async (request) => {
                         else if (attendeeRead) {
                             acl.setRoleReadAccess(attendeeRole, true);
                         }
-                        else {
-                            acl.setRoleReadAccess(adminRole, true);
-                        }
+                        acl.setRoleReadAccess(adminRole, true);
                         acl.setRoleWriteAccess(adminRole, true);
                         existing.setACL(acl);
                         existing.save({ value }, { useMasterKey: true });
@@ -1145,9 +1146,7 @@ Parse.Cloud.job("regenerate-global-chats", async (request) => {
                     else if (attendeeRead) {
                         acl.setRoleReadAccess(attendeeRole, true);
                     }
-                    else {
-                        acl.setRoleReadAccess(adminRole, true);
-                    }
+                    acl.setRoleReadAccess(adminRole, true);
                     acl.setRoleWriteAccess(adminRole, true);
 
                     const configurationO = new Parse.Object("ConferenceConfiguration");

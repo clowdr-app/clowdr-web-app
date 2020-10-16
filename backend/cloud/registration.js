@@ -25,6 +25,7 @@ async function configureDefaultRegistrationACLs(object) {
     const acl = new Parse.ACL();
     acl.setPublicReadAccess(false);
     acl.setPublicWriteAccess(false);
+    acl.setRoleReadAccess(adminRole, true);
     acl.setRoleWriteAccess(adminRole, true);
     object.setACL(acl);
 }
