@@ -2,7 +2,7 @@
 
 .all-chats {
     .user-info {
-        display: flex;
+        display    : flex;
         align-items: center;
 
         .online-indicator {
@@ -23,6 +23,8 @@
 
     .flair-box {
         display    : flex;
+        flex-wrap  : wrap;
+        row-gap    : .4em;
         gap        : mm(2);
         margin-left: mm(4);
 

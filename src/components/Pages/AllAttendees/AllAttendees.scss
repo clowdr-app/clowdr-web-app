@@ -1,12 +1,12 @@
 @import "../../../styles/util.scss";
 
 .all-participants {
-    column-fill : auto;
-    max-width: 800px;
+    column-fill: auto;
+    max-width  : 800px;
 
     .column-item {
-        display  : flex;
-        flex-wrap: wrap;
+        display      : flex;
+        flex-wrap    : wrap;
         margin-bottom: 0.4em;
 
         .name.banned {
@@ -15,6 +15,8 @@
 
         .flair-box {
             display    : flex;
+            flex-wrap  : wrap;
+            row-gap    : .4em;
             gap        : mm(2);
             margin-left: mm(8);
             width      : 100%;
@@ -26,9 +28,9 @@
         }
 
         .admin-buttons {
-            display   : flex;
-            column-gap: mm(3);
-            width     : auto;
+            display    : flex;
+            column-gap : mm(3);
+            width      : auto;
             margin-left: auto;
 
             &__button {}
