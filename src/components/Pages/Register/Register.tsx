@@ -39,8 +39,13 @@ export default function Register(props: Props) {
                     .catch(async (reason) => {
                         setLoadFailed(true);
                         if (reason.toString().toLowerCase().includes("invalid session token")) {
+                            try {
+                                await Parse.User.logOut();
+                            }
+                            catch {
+                            }
                             window.localStorage.clear();
-                            window.location.reload();
+                            addError("An error has occurred and the website cannot recover on its own. Please refresh the page. If you see this error again, please go to the Clowdr home page, delete your site data and then try again. If you continue to see this error or the loading message, please close your tab and contact your conference organiser for support.");
                         }
                         return null;
                     }));

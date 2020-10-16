@@ -183,8 +183,11 @@ export default function App() {
                             const cache = await Caches.get(appState.conferenceId);
                             if (!(await cache.Ready)) {
                                 LocalStorage_Conference.currentConferenceId = null;
-                                window.location.replace("/");
-                                window.location.reload();
+                                addError("Conference not available. Please go back to the home page and select a conference.");
+                                dispatchAppUpdate([{
+                                    action: "setConference",
+                                    conference: null
+                                }]);
                             }
                             else {
                                 isAdmin = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin"]);
@@ -213,8 +216,11 @@ export default function App() {
                                         }
                                         addError("You have been banned from the selected conference.");
                                         LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
-                                        window.location.replace("/");
-                                        window.location.reload();
+                                        addError("Conference not available. Please go back to the home page and select a conference.");
+                                        dispatchAppUpdate([{
+                                            action: "setConference",
+                                            conference: null
+                                        }]);
                                     }
                                 }
                             }
