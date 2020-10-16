@@ -12,7 +12,66 @@ const assert = require("assert");
 // TODO: Before save of ProgramItemAttachment: If type AttachmentType `isCoverImage`, update associated program item's `posterImage` field
 // TODO: Before delete of ProgramItemAttachment: If type AttachmentType `isCoverImage`, clear associated program item's `posterImage` field
 
-// WATCH_TODO: Before delete of track/session/event: Remove from user's watched items
+Parse.Cloud.beforeDelete("ProgramTrack", async (request) => {
+    // Don't prevent deleting stuff just because of an error
+    //   If things get deleted in the wrong order, the conference may even be missing
+    try {
+        const room = request.object;
+        const conference = room.get("conference");
+
+        await new Parse.Query("WatchedItems")
+            .equalTo("conference", conference)
+            .map(async watched => {
+                const watchedIds = watched.get("watchedTracks");
+                watched.set("watchedTracks", watchedIds.filter(x => x !== room.id));
+                await watched.save(null, { useMasterKey: true });
+            }, { useMasterKey: true });
+    }
+    catch (e) {
+        console.error(`Error deleting program track! ${e}`);
+    }
+});
+
+Parse.Cloud.beforeDelete("ProgramSession", async (request) => {
+    // Don't prevent deleting stuff just because of an error
+    //   If things get deleted in the wrong order, the conference may even be missing
+    try {
+        const room = request.object;
+        const conference = room.get("conference");
+
+        await new Parse.Query("WatchedItems")
+            .equalTo("conference", conference)
+            .map(async watched => {
+                const watchedIds = watched.get("watchedSessions");
+                watched.set("watchedSessions", watchedIds.filter(x => x !== room.id));
+                await watched.save(null, { useMasterKey: true });
+            }, { useMasterKey: true });
+    }
+    catch (e) {
+        console.error(`Error deleting program session! ${e}`);
+    }
+});
+
+Parse.Cloud.beforeDelete("ProgramSessionEvent", async (request) => {
+    // Don't prevent deleting stuff just because of an error
+    //   If things get deleted in the wrong order, the conference may even be missing
+    try {
+        const room = request.object;
+        const conference = room.get("conference");
+
+        await new Parse.Query("WatchedItems")
+            .equalTo("conference", conference)
+            .map(async watched => {
+                const watchedIds = watched.get("watchedEvents");
+                watched.set("watchedEvents", watchedIds.filter(x => x !== room.id));
+                await watched.save(null, { useMasterKey: true });
+            }, { useMasterKey: true });
+    }
+    catch (e) {
+        console.error(`Error deleting program session event! ${e}`);
+    }
+});
+
 
 /**
  * @typedef {Parse.Object} Pointer

@@ -12,7 +12,7 @@ async function main() {
     Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
     await Parse.Cloud.startJob("clean-watched-items", {
-        conference: "17XdxehHk3"
+        conference: "Fg87OIFxJo"
     });
 }
 

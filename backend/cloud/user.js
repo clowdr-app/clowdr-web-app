@@ -513,8 +513,7 @@ Parse.Cloud.define("user-reset-password", handleResetPassword)
 
 // CHAT_TODO: When upgrading a user to an admin, iterate over all their twilio channels
 //       and update their role SID. Also, update their service-level role SID.
-// CHAT_TODO: And likewise if upgrading them to a manager
-// CHAT_TODO: And likewise if downgrading them to a manager or attendee
+// CHAT_TODO: And likewise if downgrading them to a manager
 
 // Has to be here so the module loader doesn't land in a loop resulting in functions being undefined
 async function getAutoWatchTextChats(conference, sessionToken) {

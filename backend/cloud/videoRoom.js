@@ -6,7 +6,6 @@ const { isUserInRoles, getRoleByName } = require("./role");
 const { getProfileOfUser, getUserProfileById } = require("./user");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
-// WATCH_TODO: Before delete: Remove from user's watched items
 
 // Video rooms are created in Twilio only when they are first needed.
 // So they are created when a user requests an access token for a room -
@@ -25,6 +24,26 @@ async function getRoomById(roomId, confId) {
     q.equalTo("conference", new Parse.Object("Conference", { id: confId }));
     return await q.get(roomId, { useMasterKey: true });
 }
+
+Parse.Cloud.beforeDelete("VideoRoom", async (request) => {
+    // Don't prevent deleting stuff just because of an error
+    //   If things get deleted in the wrong order, the conference may even be missing
+    try {
+        const room = request.object;
+        const conference = room.get("conference");
+
+        await new Parse.Query("WatchedItems")
+            .equalTo("conference", conference)
+            .map(async watched => {
+                const watchedIds = watched.get("watchedRooms");
+                watched.set("watchedRooms", watchedIds.filter(x => x !== room.id));
+                await watched.save(null, { useMasterKey: true });
+            }, { useMasterKey: true });
+    }
+    catch (e) {
+        console.error(`Error deleting video room! ${e}`);
+    }
+});
 
 /**
  * @typedef {Object} VideoRoomSpec

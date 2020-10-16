@@ -16,7 +16,6 @@ const Twilio = require("twilio");
 // TODO: Before delete: Prevent delete if still in use anywhere
 // TODO: Before delete: Delete channel in Twilio
 // TODO: Before delete: Delete mirrored TextChatMessage
-// WATCH_TODO: Before delete: Remove from user's watched items
 
 async function ensureTwilioUsersExist(service, profiles) {
     const existingUserProfileIds = (await service.users.list()).map(x => x.identity);
@@ -365,37 +364,44 @@ Parse.Cloud.afterSave("TextChat", async (req) => {
 });
 
 Parse.Cloud.beforeDelete("TextChat", async (req) => {
-    const textChat = req.object;
-    const conference = textChat.get("conference");
+    // Don't prevent deleting stuff just because of an error
+    //   If things get deleted in the wrong order, the conference may even be missing
+    try {
+        const textChat = req.object;
+        const conference = textChat.get("conference");
 
-    const twilioID = textChat.get("twilioID");
-    if (twilioID) {
-        const config = await getConfig(conference.id);
-        const accountSID = config.TWILIO_ACCOUNT_SID;
-        const accountAuth = config.TWILIO_AUTH_TOKEN;
-        const twilioClient = Twilio(accountSID, accountAuth);
-        const serviceSID = config.TWILIO_CHAT_SERVICE_SID;
-        const service = twilioClient.chat.services(serviceSID);
-        const channel = service.channels(twilioID);
-        try {
-            await channel.remove();
-        }
-        catch (e) {
-            // "The requested resource /Services/SERVICE_ID/Channels/CHANNEL_ID was not found"
-            // Occurs if the channel was already deleted.
-            if (!(e.toString().includes("resource") && e.toString().includes("not found"))) {
-                throw e;
+        const twilioID = textChat.get("twilioID");
+        if (twilioID) {
+            const config = await getConfig(conference.id);
+            const accountSID = config.TWILIO_ACCOUNT_SID;
+            const accountAuth = config.TWILIO_AUTH_TOKEN;
+            const twilioClient = Twilio(accountSID, accountAuth);
+            const serviceSID = config.TWILIO_CHAT_SERVICE_SID;
+            const service = twilioClient.chat.services(serviceSID);
+            const channel = service.channels(twilioID);
+            try {
+                await channel.remove();
+            }
+            catch (e) {
+                // "The requested resource /Services/SERVICE_ID/Channels/CHANNEL_ID was not found"
+                // Occurs if the channel was already deleted.
+                if (!(e.toString().includes("resource") && e.toString().includes("not found"))) {
+                    throw e;
+                }
             }
         }
-    }
 
-    await new Parse.Query("WatchedItems")
-        .equalTo("conference", conference)
-        .map(async watched => {
-            const watchedChatIds = watched.get("watchedChats");
-            watched.set("watchedChats", watchedChatIds.filter(x => x !== textChat.id));
-            await watched.save(null, { useMasterKey: true });
-        }, { useMasterKey: true });
+        await new Parse.Query("WatchedItems")
+            .equalTo("conference", conference)
+            .map(async watched => {
+                const watchedChatIds = watched.get("watchedChats");
+                watched.set("watchedChats", watchedChatIds.filter(x => x !== textChat.id));
+                await watched.save(null, { useMasterKey: true });
+            }, { useMasterKey: true });
+    }
+    catch (e) {
+        console.error(`Error deleting text chat! ${e}`);
+    }
 });
 
 async function createTextChat(data) {
