@@ -21,6 +21,7 @@ import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/Data
 import useDataSubscription from "../../hooks/useDataSubscription";
 import Video from "../../classes/Video/Video";
 import { addError } from "../../classes/Notifications/Notifications";
+import { handleParseFileURLWeirdness } from "../../classes/Utils";
 
 type AppTasks
     = "beginLoadConference"
@@ -316,7 +317,7 @@ export default function App() {
     const onConferenceUpdated = useCallback(function _onConferenceUpdated(value: DataUpdatedEventDetails<"Conference">) {
         if (appState.conference && value.object.id === appState.conference.id) {
             const newConf = value.object as Conference;
-            if (appState.conference.headerImage !== newConf.headerImage ||
+            if (handleParseFileURLWeirdness(appState.conference.headerImage) !== handleParseFileURLWeirdness(newConf.headerImage) ||
                 appState.conference.name !== newConf.name ||
                 appState.conference.shortName !== newConf.shortName ||
                 appState.conference.welcomeText !== newConf.welcomeText) {
