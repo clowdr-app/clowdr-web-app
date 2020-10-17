@@ -130,7 +130,7 @@ export default function AllChats() {
                 items={allOtherUserItems}
                 itemRenderer={{ render: dmRenderer }}
                 loadingMessage="Loading users">
-                <h2>Users</h2>
+                <h2>Users {allOtherUserItems && <>({allOtherUserItems.filter(x => x.renderData.online).length} online)</>}</h2>
             </Column>
             <Column
                 className="col"
