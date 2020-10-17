@@ -190,8 +190,9 @@ export default function App() {
                                 }]);
                             }
                             else {
-                                isAdmin = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin"]);
-                                isManager = isAdmin || await _Role.isUserInRoles(user.id, appState.conferenceId, ["manager"]);
+                                const { admin: _isAdmin, manager: _isManager } = await _Role.isUserInRoles(user.id, appState.conferenceId, ["admin", "manager"]);
+                                isAdmin = _isAdmin;
+                                isManager = isAdmin || _isManager;
 
                                 const previousManagerOrAdmin = LocalStorage_Conference.wasManagerOrAdmin;
                                 const previousUserId = LocalStorage_Conference.previousUserId;
@@ -378,8 +379,8 @@ export default function App() {
             const previousManagerOrAdmin = LocalStorage_Conference.wasManagerOrAdmin;
             const previousUserId = LocalStorage_Conference.previousUserId;
 
-            const isAdmin = await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["admin"]);
-            const isManager = isAdmin || await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["manager"]);
+            const { admin: isAdmin, manager: _isManager } = await _Role.isUserInRoles(parseUser.user.id, appState.conference.id, ["admin", "manager"]);
+            const isManager = isAdmin || _isManager;
 
             await cache.updateUserAuthenticated(
                 { authed: true, sessionToken: parseUser.sessionToken },
