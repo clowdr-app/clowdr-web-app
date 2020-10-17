@@ -2,6 +2,7 @@
 // ^ for eslint
 
 const { validateRequest } = require("./utils");
+const { isUserInRoles, generateRoleDBName } = require("./role");
 const assert = require("assert");
 
 //const { getAutoWatchTextChats } = require("./user");
@@ -116,18 +117,36 @@ Parse.Cloud.job("clean-watched-items", async (request) => {
             conference = await new Parse.Object("Conference", { id: params.conference }).fetch({ useMasterKey: true });
             assert(conference);
 
-            const allTextChatIds
+            const allTextChats
                 = await new Parse.Query("TextChat")
                     .equalTo("conference", conference)
-                    .map(x => x.id, { useMasterKey: true });
+                    .map(x => x, { useMasterKey: true });
 
+            const attendeeRoleName = generateRoleDBName(conference.id, "attendee");
             await new Parse.Query("WatchedItems")
                 .equalTo("conference", conference)
                 .map(async watched => {
+                    const userId = Object.keys(watched.getACL().permissionsById).filter(x => !x.startsWith("role:"))[0];
+                    const isAdminOrManager = isUserInRoles(userId, conference.id, ["admin", "manager"]);
+
                     const watchedChatIds = watched.get("watchedChats");
-                    watched.set("watchedChats", watchedChatIds.filter(x => allTextChatIds.includes(x)));
+                    watched.set("watchedChats", watchedChatIds.filter(chatId => {
+                        const theChat = allTextChats.find(y => chatId === y.id);
+                        // The chat exists
+                        if (!theChat) {
+                            return false;
+                        }
+                        // And it is... * Public
+                        return theChat.getACL().getRoleReadAccess(attendeeRoleName)
+                            // * Or, a moderation channel and the user is a moderator
+                            || (isAdminOrManager && (theChat.get("mode") === "moderation_hub" || theChat.get("mode") === "moderation"))
+                            // * Or, a DM of which the user is one half.
+                            || (theChat.get("isDM") && Object.keys(theChat.getACL().permissionsById).includes(userId));
+                    }));
                     await watched.save(null, { useMasterKey: true });
                 }, { useMasterKey: true });
+            
+            message("Cleaned up watched items");
         }
     }
     catch (e) {

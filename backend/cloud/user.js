@@ -165,7 +165,14 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
     });
 
     const chatsToAutoWatch = await getAutoWatchTextChats(conference, user.getSessionToken());
-    newWatchedItems.set("watchedChats", chatsToAutoWatch.map(x => x.id));
+    const attendeeRoleName = generateRoleDBName(conference.id, "attendee");
+    newWatchedItems.set("watchedChats",
+        chatsToAutoWatch
+            .filter(x =>
+                x.getACL().getRoleReadAccess(attendeeRoleName)
+                || x.get("mode") === "moderation_hub"
+            )
+            .map(x => x.id));
     await newWatchedItems.save(null, { useMasterKey: true });
 
     // TODO: Link profile to program person (author)
@@ -549,10 +556,10 @@ Parse.Cloud.define("users-in-roles", async (req) => {
             }
             const roleProfileIds
                 = await new Parse.Query("_Role")
-                        .equalTo("conference", new Parse.Object("Conference", { id: confId }))
-                        .containedIn("name", roleNames.map(x => generateRoleDBName(confId, x)))
-                        .include("users")
-                        .map(___getUsersInRole);
+                    .equalTo("conference", new Parse.Object("Conference", { id: confId }))
+                    .containedIn("name", roleNames.map(x => generateRoleDBName(confId, x)))
+                    .include("users")
+                    .map(___getUsersInRole);
             const results = await Promise.all(roleProfileIds);
             return results.reduce((acc, xs) => [...acc, ...xs], []);
         }
