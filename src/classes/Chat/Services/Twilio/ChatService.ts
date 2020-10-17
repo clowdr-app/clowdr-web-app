@@ -19,7 +19,7 @@ export default class TwilioChatService implements IChatService {
     private profile: UserProfile | null = null;
     private sessionToken: string | null = null;
 
-    private twilioClient: Twilio.Client | null = null;
+    public twilioClient: Twilio.Client | null = null;
 
     private _REACT_APP_TWILIO_CALLBACK_URL: string | null = null;
 
@@ -339,7 +339,7 @@ export default class TwilioChatService implements IChatService {
     }
 
     async getIsUserOnline(profileId: string): Promise<boolean | undefined> {
-        const user = await this.twilioClient?.getUser(profileId);
+        const user = await this.twilioClient?.getUserDescriptor(profileId);
         return user?.online;
     }
 

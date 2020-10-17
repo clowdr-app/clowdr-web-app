@@ -51,13 +51,25 @@ export default class Channel implements IChannel {
     constructor(
         private textChat: TextChat,
         // We can't rely on `instanceof` to distinguish these types (argh!)
-        private channel: { c: TwilioChannel } | { d: TwilioChannelDescriptor },
+        private channel: null | { c: TwilioChannel } | { d: TwilioChannelDescriptor },
         private service: TwilioChatService
     ) {
     }
 
-    private getCommonField<K extends keyof ChannelOrDescriptor>(s: K): ChannelOrDescriptor[K] {
-        return 'c' in this.channel ? this.channel.c[s] : this.channel.d[s];
+    private async getCommonChannel(): Promise<{ c: TwilioChannel } | { d: TwilioChannelDescriptor }> {
+        if (!this.channel) {
+            const c = await this.service.twilioClient?.getChannelBySid(this.textChat.twilioID);
+            if (!c) {
+                throw new Error("Channel not found");
+            }
+            this.channel = { c };
+        }
+        return this.channel;
+    }
+
+    private async getCommonField<K extends keyof ChannelOrDescriptor>(s: K): Promise<ChannelOrDescriptor[K]> {
+        const commonC = await this.getCommonChannel();
+        return 'c' in commonC ? commonC.c[s] : commonC.d[s];
     }
 
     public get id(): string {
@@ -65,20 +77,21 @@ export default class Channel implements IChannel {
     }
 
     public get sid(): string {
-        return "c" in this.channel ? this.channel.c.sid : this.channel.d.sid;
+        return this.textChat.twilioID;
     }
 
     private async upgrade(): Promise<TwilioChannel> {
-        if ('d' in this.channel) {
-            this.channel = { c: await this.channel.d.getChannel() };
+        let commonC = await this.getCommonChannel();
+        if ('d' in commonC) {
+            commonC = this.channel = { c: await commonC.d.getChannel() };
         }
         try {
             // TODO: Where to put this? Putting it here can trigger either a
             // "conflicting member modification" error or a "member already
             // exists" error
-            if (this.channel.c.status !== "joined") {
+            if (commonC.c.status !== "joined") {
                 // console.log(`Joining chat: ${this.channel.c.sid}`);
-                await this.channel.c.join();
+                await commonC.c.join();
                 // console.log(`Joined chat: ${this.channel.c.sid}`);
             }
         }
@@ -89,15 +102,16 @@ export default class Channel implements IChannel {
                 throw e;
             }
         }
-        return this.channel.c;
+        return commonC.c;
     }
 
     async membersCount(): Promise<number> {
-        if ('c' in this.channel) {
-            return this.channel.c.getMembersCount();
+        const commonC = await this.getCommonChannel();
+        if ('c' in commonC) {
+            return commonC.c.getMembersCount();
         }
         else {
-            return this.channel.d.membersCount;
+            return commonC.d.membersCount;
         }
     }
     async members(): Promise<Array<Member>> {
@@ -162,23 +176,24 @@ export default class Channel implements IChannel {
         try {
             if (this.textChat.isDM) {
                 assert(this.service.conference);
-                const channel = await this.upgrade();
                 const name = this.getName();
-                const members = (await channel.getMembers()).filter(x => name.includes(x.identity));
-                const [member1, member2] = members.map(x => new Member(x));
+                const members = name.split("-");
 
                 const [member1Online, member2Online] = await Promise.all([
-                    member1.getOnlineStatus(),
-                    member2.getOnlineStatus()
+                    this.service.getIsUserOnline(members[0]),
+                    this.service.getIsUserOnline(members[1])
                 ]);
+
+                this.service.subscribeToUser(members[0]);
+                this.service.subscribeToUser(members[1]);
 
                 return {
                     member1: {
-                        profileId: member1.profileId,
+                        profileId: members[0],
                         isOnline: member1Online
                     },
                     member2: {
-                        profileId: member2.profileId,
+                        profileId: members[1],
                         isOnline: member2Online
                     }
                 };
@@ -211,18 +226,6 @@ export default class Channel implements IChannel {
     }
     getCreator(): Promise<UserProfile> {
         return this.textChat.creator;
-    }
-    getStatus(): 'joined' | undefined {
-        const status = this.getCommonField('attributes');
-        if (status === "invited") {
-            return undefined;
-        }
-        else if (status === "joined") {
-            return "joined";
-        }
-        else {
-            return undefined;
-        }
     }
     async getIsAutoWatchEnabled(): Promise<boolean> {
         return this.textChat.autoWatch;
@@ -264,14 +267,14 @@ export default class Channel implements IChannel {
     }
     async addReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
         return this.service.requestClowdrTwilioBackend("react", {
-            channel: 'c' in this.channel ? this.channel.c.sid : this.channel.d.sid,
+            channel: this.sid,
             message: messageSid,
             reaction
         });
     }
     async removeReaction(messageSid: string, reaction: string): Promise<{ ok: true } | undefined> {
         return this.service.requestClowdrTwilioBackend("tcaer", {
-            channel: 'c' in this.channel ? this.channel.c.sid : this.channel.d.sid,
+            channel: this.sid,
             message: messageSid,
             reaction
         });
@@ -346,8 +349,9 @@ export default class Channel implements IChannel {
     }
 
     async off(event: ChannelEventNames, listener: () => void) {
-        if ("c" in this.channel) {
-            this.channel.c.off(event, listener);
+        const commonC = await this.getCommonChannel();
+        if ("c" in commonC) {
+            commonC.c.off(event, listener);
         }
     }
 }

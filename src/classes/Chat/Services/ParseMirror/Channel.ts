@@ -70,9 +70,6 @@ export default class Channel implements IChannel {
     getRelatedModerationKey(): Promise<string | undefined> {
         throw new Error("Method not implemented");
     }
-    getStatus(): 'joined' | undefined {
-        throw new Error("Method not implemented.");
-    }
     getIsAutoWatchEnabled(): Promise<boolean> {
         throw new Error("Method not implemented.");
     }

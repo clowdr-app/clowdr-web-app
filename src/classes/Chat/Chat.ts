@@ -14,7 +14,6 @@ import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 export type ChatDescriptor = {
     id: string;
     friendlyName: string;
-    status: 'joined' | undefined;
     autoWatchEnabled: boolean;
     isAnnouncements: boolean;
     creator: UserProfile;
@@ -176,7 +175,6 @@ export default class Chat implements IChatManager {
                     friendlyName: chan.getName(),
                     creator,
                     createdAt,
-                    status: chan.getStatus(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
                     isModeration: false,
@@ -191,7 +189,6 @@ export default class Chat implements IChatManager {
                     friendlyName: chan.getName(),
                     creator,
                     createdAt,
-                    status: chan.getStatus(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
                     isModeration: isMod,
@@ -211,7 +208,6 @@ export default class Chat implements IChatManager {
                         friendlyName: chan.getName(),
                         creator,
                         createdAt,
-                        status: chan.getStatus(),
                         autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                         isAnnouncements,
                         isPrivate: true,
@@ -228,7 +224,6 @@ export default class Chat implements IChatManager {
                         friendlyName: chan.getName(),
                         creator,
                         createdAt,
-                        status: chan.getStatus(),
                         autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                         isAnnouncements,
                         isModeration: false,

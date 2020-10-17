@@ -28,7 +28,6 @@ export type SidebarChatDescriptor = {
     exists: true;
     id: string;
     friendlyName: string;
-    status: 'joined' | undefined;
     isModeration: boolean;
     isModerationHub: boolean;
 } & ({

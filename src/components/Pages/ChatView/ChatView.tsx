@@ -442,6 +442,29 @@ export default function ChatView(props: Props) {
                             }
                             : x)
                         : null);
+                    setChatInfo(oldInfo => {
+                        if (oldInfo?.dmInfo.isDM) {
+                            return {
+                                ...oldInfo,
+                                dmInfo: {
+                                    ...oldInfo.dmInfo,
+                                    member1: {
+                                        ...oldInfo.dmInfo.member1,
+                                        isOnline: oldInfo.dmInfo.member1.profileId === event.user.profileId
+                                            ? event.user.isOnline
+                                            : oldInfo.dmInfo.member1.isOnline
+                                    },
+                                    member2: {
+                                        ...oldInfo.dmInfo.member2,
+                                        isOnline: oldInfo.dmInfo.member2.profileId === event.user.profileId
+                                            ? event.user.isOnline
+                                            : oldInfo.dmInfo.member2.isOnline
+                                    }
+                                }
+                            };
+                        }
+                        return oldInfo;
+                    });
                 }
             });
 

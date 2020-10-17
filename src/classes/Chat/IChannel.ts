@@ -28,7 +28,6 @@ export default interface IChannel {
     getIsModerationCompleted(): Promise<boolean>;
     getIsModerationHub(): Promise<boolean>;
     getRelatedModerationKey(): Promise<string | undefined>;
-    getStatus(): 'joined' | undefined;
     getCreator(): Promise<UserProfile>;
     getCreatedAt(): Promise<Date>;
     delete(): Promise<void>;
