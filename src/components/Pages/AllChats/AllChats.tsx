@@ -116,6 +116,25 @@ export default function AllChats() {
         </>;
     }
 
+    function isOnlineSorter(x: ColumnItem<DMData>, y: ColumnItem<DMData>) {
+        if (x.renderData.online) {
+            if (y.renderData.online) {
+                return x.text.localeCompare(y.text);
+            }
+            else {
+                return -1;
+            }
+        }
+        else {
+            if (y.renderData.online) {
+                return 1;
+            }
+            else {
+                return x.text.localeCompare(y.text);
+            }
+        }
+    }
+
     return <Columns className="all-chats">
         <>
             <Column
@@ -128,6 +147,7 @@ export default function AllChats() {
             <Column
                 className="col"
                 items={allOtherUserItems}
+                sort={isOnlineSorter}
                 itemRenderer={{ render: dmRenderer }}
                 loadingMessage="Loading users">
                 <h2>Users {allOtherUserItems && <>({allOtherUserItems.filter(x => x.renderData.online).length} online)</>}</h2>

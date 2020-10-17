@@ -35,7 +35,7 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
                 props.items
                     .filter(item => item.text.toLowerCase().includes(searchString.toLowerCase()))
                 : props.items
-            ).sort((a, b) => props.sort ? props.sort(a, b) : a.text.localeCompare(b.text))
+            ).sort(props.sort ? props.sort : (a, b) => a.text.localeCompare(b.text))
                 .map(item => {
                     return <li key={item.key} className="column-item">
                         {props.itemRenderer.render(item)}
