@@ -4,6 +4,8 @@ import { styled, Theme } from '@material-ui/core/styles';
 import { CssBaseline } from '@material-ui/core';
 import { MuiThemeProvider } from '@material-ui/core/styles';
 
+import { Room as TwilioRoom } from 'twilio-video';
+
 import theme from '../VideoFrontend/theme';
 
 import Room from "../VideoFrontend/components/Room/Room";
@@ -53,6 +55,7 @@ function VideoGrid(props: Props) {
     const { stopVideo } = useLocalVideoToggle();
     const unmountRef = useRef<() => void>();
     const unloadRef = useRef<EventListener>();
+    const existingRoomRef = useRef<TwilioRoom | undefined>();
 
     useEffect(() => {
         function stop() {
@@ -102,6 +105,17 @@ function VideoGrid(props: Props) {
                 window.removeEventListener("beforeunload", unloadRef.current);
         }
     }, []);
+
+    useEffect(() => {
+        if (existingRoomRef.current &&
+            (room.sid !== existingRoomRef.current.sid ||
+                props.room.twilioID !== existingRoomRef.current.sid)) {
+            if (existingRoomRef.current.state === "connected") {
+                existingRoomRef.current.disconnect();
+            }
+        }
+        existingRoomRef.current = room;
+    }, [room.sid, room, props.room.id, props.room]);
 
     return <Container style={{ height: "100%" }}>
         {roomState === 'disconnected' ? (
