@@ -47,8 +47,6 @@ function VideoGrid(props: Props) {
     const roomState = useRoomState();
 
     // VIDEO_TODO: Stable grid layout
-    // VIDEO_TODO: Use local storage to remember previous enable/disable state of mic/cam
-    // VIDEO_TODO: Use local storage to remember previously selected device name
     // VIDEO_TODO: Before window unload warning about leaving
 
     const { stopAudio } = useLocalAudioToggle();
