@@ -41,12 +41,14 @@ export default function ChatView() {
     const onVideoRoomUpdated = useCallback(function _onVideoRoomUpdated(ev: DataUpdatedEventDetails<"VideoRoom">) {
         setVideoRooms(existing => {
             const updated = Array.from(existing ?? []);
-            const idx = updated?.findIndex(x => x.id === ev.object.id);
-            let item = ev.object as VideoRoom;
-            if (idx === -1) {
-                updated.push(item);
-            } else {
-                updated.splice(idx, 1, item);
+            for (const object of ev.objects) {
+                const idx = updated?.findIndex(x => x.id === object.id);
+                const item = object as VideoRoom;
+                if (idx === -1) {
+                    updated.push(item);
+                } else {
+                    updated.splice(idx, 1, item);
+                }
             }
             return updated;
         });

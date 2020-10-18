@@ -17,12 +17,14 @@ export default function useUserProfiles(): Array<UserProfile> | null {
     const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(ev: DataUpdatedEventDetails<"UserProfile">) {
         setUserProfiles(existing => {
             const updated = Array.from(existing ?? []);
-            const idx = updated?.findIndex(x => x.id === ev.object.id);
-            let item = ev.object as UserProfile;
-            if (idx === -1) {
-                updated.push(item);
-            } else {
-                updated.splice(idx, 1, item);
+            for (const object of ev.objects) {
+                const idx = updated?.findIndex(x => x.id === object.id);
+                const item = object as UserProfile;
+                if (idx === -1) {
+                    updated.push(item);
+                } else {
+                    updated.splice(idx, 1, item);
+                }
             }
             return updated;
         });

@@ -209,11 +209,13 @@ export default function RoomsGroup(props: Props) {
 
     const watchedId = mUser?.watchedId;
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === watchedId) {
-            dispatchUpdate({
-                action: "setWatchedRoomIds",
-                ids: (update.object as WatchedItems).watchedRooms
-            });
+        for (const object of update.objects) {
+            if (object.id === watchedId) {
+                dispatchUpdate({
+                    action: "setWatchedRoomIds",
+                    ids: (object as WatchedItems).watchedRooms
+                });
+            }
         }
     }, [watchedId]);
 
@@ -296,17 +298,23 @@ export default function RoomsGroup(props: Props) {
     // Subscribe to room updates
 
     const onRoomUpdated = useCallback(async function _onRoomUpdated(ev: DataUpdatedEventDetails<"VideoRoom">) {
-        const room = ev.object as VideoRoom;
-        const [participants, feeds] = await Promise.all([room.participantProfiles, room.feeds]);
-        const isFeedRoom = feeds.length > 0;
-        dispatchUpdate({
-            action: "updateAllRooms",
-            rooms: [{
-                room,
-                participants,
-                isFeedRoom
-            }]
-        });
+        const newRooms: FullRoomInfo[] =
+            await Promise.all(ev.objects.map(async (object) => {
+                const room = object as VideoRoom;
+                const [participants, feeds] = await Promise.all([room.participantProfiles, room.feeds]);
+                const isFeedRoom = feeds.length > 0;
+                return {
+                    room,
+                    participants,
+                    isFeedRoom
+                };
+            }));
+        if (newRooms.length > 0) {
+            dispatchUpdate({
+                action: "updateAllRooms",
+                rooms: newRooms
+            });
+        }
     }, []);
 
     const onRoomDeleted = useCallback(function _onRoomDeleted(ev: DataDeletedEventDetails<"VideoRoom">) {

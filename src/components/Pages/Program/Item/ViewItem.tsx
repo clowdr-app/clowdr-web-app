@@ -58,9 +58,15 @@ export default function ViewItem(props: Props) {
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);
-        const idx = newAuthors.findIndex(x => x.id === ev.object.id);
-        if (idx > -1) {
-            newAuthors.splice(idx, 1, ev.object as ProgramPerson)
+        let updated = false;
+        for (const object of ev.objects) {
+            const idx = newAuthors.findIndex(x => x.id === object.id);
+            if (idx > -1) {
+                newAuthors.splice(idx, 1, object as ProgramPerson)
+                updated = true;
+            }
+        }
+        if (updated) {
             setAuthors(newAuthors);
         }
     }, [authors]);
@@ -73,9 +79,15 @@ export default function ViewItem(props: Props) {
 
     const onAttachmentUpdated = useCallback(function _onAttachmentUpdated(ev: DataUpdatedEventDetails<"ProgramItemAttachment">) {
         const newAttachments = Array.from(attachments ?? []);
-        const idx = newAttachments.findIndex(x => x.id === ev.object.id);
-        if (idx > -1) {
-            newAttachments.splice(idx, 1, ev.object as ProgramItemAttachment)
+        let updated = false;
+        for (const object of ev.objects) {
+            const idx = newAttachments.findIndex(x => x.id === object.id);
+            if (idx > -1) {
+                newAttachments.splice(idx, 1, object as ProgramItemAttachment)
+                updated = true;
+            }
+        }
+        if (updated) {
             setAttachments(newAttachments);
         }
     }, [attachments]);
@@ -87,8 +99,10 @@ export default function ViewItem(props: Props) {
     }, [attachments]);
 
     const onContentFeedUpdated = useCallback(function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
-        if (feed && ev.object.id === feed.id) {
-            setFeed(ev.object as ContentFeed);
+        for (const object of ev.objects) {
+            if (feed && object.id === feed.id) {
+                setFeed(object as ContentFeed);
+            }
         }
     }, [feed]);
 

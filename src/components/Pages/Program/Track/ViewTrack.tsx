@@ -40,8 +40,10 @@ export default function ViewTrack(props: Props) {
 
     // Subscribe to data updates
     const onTrackUpdated = useCallback(function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
-        if (track && ev.object.id === track.id) {
-            setTrack(ev.object as ProgramTrack);
+        for (const object of ev.objects) {
+            if (track && object.id === track.id) {
+                setTrack(object as ProgramTrack);
+            }
         }
     }, [track]);
 
@@ -52,8 +54,10 @@ export default function ViewTrack(props: Props) {
     }, [track]);
 
     const onContentFeedUpdated = useCallback(function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
-        if (feed && ev.object.id === feed.id) {
-            setFeed(ev.object as ContentFeed);
+        for (const object of ev.objects) {
+            if (feed && object.id === feed.id) {
+                setFeed(object as ContentFeed);
+            }
         }
     }, [feed]);
 
@@ -74,8 +78,10 @@ export default function ViewTrack(props: Props) {
     }, setIsFollowing, [userProfile.watchedId, props.trackId]);
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === userProfile.watchedId) {
-            setIsFollowing((update.object as WatchedItems).watchedTracks.includes(props.trackId));
+        for (const object of update.objects) {
+            if (object.id === userProfile.watchedId) {
+                setIsFollowing((object as WatchedItems).watchedTracks.includes(props.trackId));
+            }
         }
     }, [props.trackId, userProfile.watchedId]);
 

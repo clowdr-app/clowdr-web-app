@@ -14,7 +14,7 @@ export default function useWatchedItems(): WatchedItems | null {
     useSafeAsync(async () => await profile.watched, setWatchedItems, [profile.watchedId]);
 
     const onWatchedItemsUpdated = useCallback(async function _onWatchedItemsUpdated(ev: DataUpdatedEventDetails<"WatchedItems">) {
-        setWatchedItems(old => old?.id === ev.object.id ? ev.object as WatchedItems : null);
+        setWatchedItems(old => old ? ev.objects.find(y => old.id === y.id) as (WatchedItems | undefined) ?? old : null);
     }, []);
 
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, !watchedItems, conference);

@@ -429,22 +429,24 @@ export default function ProgramGroup(props: Props) {
     // Subscribe to watched items changes
     const watchedId = mUser?.watchedId;
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === watchedId) {
-            const data = update.object as WatchedItems;
-            dispatchUpdate([
-                {
-                    action: "setWatchedSessionIds",
-                    ids: data.watchedSessions
-                },
-                {
-                    action: "setWatchedEventIds",
-                    ids: data.watchedEvents
-                },
-                {
-                    action: "setWatchedTrackIds",
-                    ids: data.watchedTracks
-                }
-            ]);
+        for (const object of update.objects) {
+            if (object.id === watchedId) {
+                const data = object as WatchedItems;
+                dispatchUpdate([
+                    {
+                        action: "setWatchedSessionIds",
+                        ids: data.watchedSessions
+                    },
+                    {
+                        action: "setWatchedEventIds",
+                        ids: data.watchedEvents
+                    },
+                    {
+                        action: "setWatchedTrackIds",
+                        ids: data.watchedTracks
+                    }
+                ]);
+            }
         }
     }, [watchedId]);
 
@@ -454,11 +456,11 @@ export default function ProgramGroup(props: Props) {
     // Subscribe to program data events
 
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
-        dispatchUpdate({ action: "updateSessions", sessions: [ev.object as ProgramSession] });
+        dispatchUpdate({ action: "updateSessions", sessions: ev.objects as ProgramSession[] });
     }, []);
 
     const onEventUpdated = useCallback(function _onEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
-        dispatchUpdate({ action: "updateEvents", events: [ev.object as ProgramSessionEvent] });
+        dispatchUpdate({ action: "updateEvents", events: ev.objects as ProgramSessionEvent[] });
     }, []);
 
     const onSessionDeleted = useCallback(function _onSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {

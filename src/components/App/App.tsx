@@ -315,43 +315,47 @@ export default function App() {
 
     // Subscribe to data updates for conference and profile
     const onConferenceUpdated = useCallback(function _onConferenceUpdated(value: DataUpdatedEventDetails<"Conference">) {
-        if (appState.conference && value.object.id === appState.conference.id) {
-            const newConf = value.object as Conference;
-            if (handleParseFileURLWeirdness(appState.conference.headerImage) !== handleParseFileURLWeirdness(newConf.headerImage) ||
-                appState.conference.name !== newConf.name ||
-                appState.conference.shortName !== newConf.shortName ||
-                appState.conference.welcomeText !== newConf.welcomeText) {
-                dispatchAppUpdate({ action: "setConference", conference: newConf });
+        for (const object of value.objects) {
+            if (appState.conference && object.id === appState.conference.id) {
+                const newConf = object as Conference;
+                if (handleParseFileURLWeirdness(appState.conference.headerImage) !== handleParseFileURLWeirdness(newConf.headerImage) ||
+                    appState.conference.name !== newConf.name ||
+                    appState.conference.shortName !== newConf.shortName ||
+                    appState.conference.welcomeText !== newConf.welcomeText) {
+                    dispatchAppUpdate({ action: "setConference", conference: newConf });
+                }
             }
-        }
-        else if (appState.conferenceId === value.object.id) {
-            dispatchAppUpdate({ action: "setConference", conference: value.object as Conference });
+            else if (appState.conferenceId === object.id) {
+                dispatchAppUpdate({ action: "setConference", conference: object as Conference });
+            }
         }
     }, [appState.conference, appState.conferenceId]);
     const onUserProfileUpdated = useCallback(async function _onUserProfileUpdated(value: DataUpdatedEventDetails<"UserProfile">) {
-        if (appState.sessionToken && appState.profile && value.object.id === appState.profile.id) {
-            const profile = value.object as UserProfile;
-            if (profile.isBanned) {
-                LocalStorage_Conference.currentConferenceId = null;
-                const cache = await Caches.get(profile.conferenceId);
-                if (cache.IsInitialised) {
-                    cache.deleteDatabase(false);
-                }
-                addError("You have been banned from the selected conference.");
-                LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
-                window.location.replace("/");
-                window.location.reload();
-            }
-            else {
-                dispatchAppUpdate([
-                    {
-                        action: "setUserProfile",
-                        data: {
-                            profile: value.object as UserProfile,
-                            sessionToken: appState.sessionToken
-                        }
+        for (const object of value.objects) {
+            if (appState.sessionToken && appState.profile && object.id === appState.profile.id) {
+                const profile = object as UserProfile;
+                if (profile.isBanned) {
+                    LocalStorage_Conference.currentConferenceId = null;
+                    const cache = await Caches.get(profile.conferenceId);
+                    if (cache.IsInitialised) {
+                        cache.deleteDatabase(false);
                     }
-                ]);
+                    addError("You have been banned from the selected conference.");
+                    LocalStorage_Conference.wasBannedFromName = appState.conference?.name ?? "the selected conference";
+                    window.location.replace("/");
+                    window.location.reload();
+                }
+                else {
+                    dispatchAppUpdate([
+                        {
+                            action: "setUserProfile",
+                            data: {
+                                profile: object as UserProfile,
+                                sessionToken: appState.sessionToken
+                            }
+                        }
+                    ]);
+                }
             }
         }
     }, [appState.conference, appState.profile, appState.sessionToken]);

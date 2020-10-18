@@ -46,13 +46,14 @@ export default function Exhibit(props: ExhibitProps) {
     // Subscribe to ProgramItemAttachment updates
     const onProgramItemAttachmentUpdated = useCallback(function _onProgramItemAttachmentUpdated(ev: DataUpdatedEventDetails<"ProgramItemAttachment">) {
         setAttachments(oldAttachments => {
-            const updatedAttachment = ev.object as ProgramItemAttachment;
-            const newAttachments = (oldAttachments ?? []).filter(attachment => attachment.id !== updatedAttachment.id);
-
-            if (updatedAttachment.programItemId === props.programItem.id) {
-                newAttachments.push(updatedAttachment);
+            let newAttachments = oldAttachments ?? [];
+            for (const object of ev.objects) {
+                const updatedAttachment = object as ProgramItemAttachment;
+                newAttachments = (oldAttachments ?? []).filter(attachment => attachment.id !== updatedAttachment.id);
+                if (updatedAttachment.programItemId === props.programItem.id) {
+                    newAttachments.push(updatedAttachment);
+                }
             }
-
             return newAttachments
         });
     }, [props.programItem]);

@@ -72,7 +72,7 @@ export default function ModerationChat(props: Props) {
 
     // Subscribe to updates
     const onTextChatUpdated = useCallback(function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
-        if (update.object.id === props.chatId) {
+        if (update.objects.some(x => x.id === props.chatId)) {
             setRefetchChatDesc(x => !x);
         }
     }, [props.chatId]);
@@ -136,8 +136,10 @@ export default function ModerationChat(props: Props) {
     }, setIsFollowing, [mUser.watchedId, props.chatId]);
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === mUser.watchedId) {
-            setIsFollowing((update.object as WatchedItems).watchedChats.includes(props.chatId));
+        for (const object of update.objects) {
+            if (object.id === mUser.watchedId) {
+                setIsFollowing((object as WatchedItems).watchedChats.includes(props.chatId));
+            }
         }
     }, [props.chatId, mUser.watchedId]);
 

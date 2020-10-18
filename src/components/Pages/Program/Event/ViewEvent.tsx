@@ -58,8 +58,10 @@ export default function ViewEvent(props: Props) {
 
     // Subscribe to data updates
     const onSessionEventUpdated = useCallback(function _onSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
-        if (event && ev.object.id === event.id) {
-            setEvent(ev.object as ProgramSessionEvent);
+        for (const object of ev.objects) {
+            if (event && object.id === event.id) {
+                setEvent(object as ProgramSessionEvent);
+            }
         }
     }, [event]);
 
@@ -70,8 +72,10 @@ export default function ViewEvent(props: Props) {
     }, [event]);
 
     const onItemUpdated = useCallback(function _onItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
-        if (item && ev.object.id === item.id) {
-            setItem(ev.object as ProgramItem);
+        for (const object of ev.objects) {
+            if (item && object.id === item.id) {
+                setItem(object as ProgramItem);
+            }
         }
     }, [item]);
 
@@ -82,8 +86,10 @@ export default function ViewEvent(props: Props) {
     }, [item]);
 
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
-        if (session && ev.object.id === session.id) {
-            setSession(ev.object as ProgramSession);
+        for (const object of ev.objects) {
+            if (session && object.id === session.id) {
+                setSession(object as ProgramSession);
+            }
         }
     }, [session]);
 
@@ -94,12 +100,14 @@ export default function ViewEvent(props: Props) {
     }, [session]);
 
     const onContentFeedUpdated = useCallback(function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
-        if (sessionFeed && ev.object.id === sessionFeed.id) {
-            setSessionFeed(ev.object as ContentFeed);
-        }
+        for (const object of ev.objects) {
+            if (sessionFeed && object.id === sessionFeed.id) {
+                setSessionFeed(object as ContentFeed);
+            }
 
-        if (eventFeed && eventFeed !== "not present" && ev.object.id === eventFeed.id) {
-            setEventFeed(ev.object as ContentFeed);
+            if (eventFeed && eventFeed !== "not present" && object.id === eventFeed.id) {
+                setEventFeed(object as ContentFeed);
+            }
         }
     }, [sessionFeed, eventFeed]);
 
@@ -140,8 +148,10 @@ export default function ViewEvent(props: Props) {
     }, setIsFollowing, [userProfile.watchedId, props.eventId]);
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === userProfile.watchedId) {
-            setIsFollowing((update.object as WatchedItems).watchedEvents.includes(props.eventId));
+        for (const object of update.objects) {
+            if (object.id === userProfile.watchedId) {
+                setIsFollowing((object as WatchedItems).watchedEvents.includes(props.eventId));
+            }
         }
     }, [props.eventId, userProfile.watchedId]);
 

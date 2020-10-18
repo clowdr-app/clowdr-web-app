@@ -37,7 +37,7 @@ export default function ProgramPersonSelector(props: Props) {
     // Fetch all program people
     useSafeAsync(async () => {
         const persons = await ProgramPerson.getAll(conference.id);
-        let people = await convert(persons);
+        const people = await convert(persons);
         people.unshift({ personId: "", personName: "None", profile: undefined });
         return people;
     }, setAllProgramPersons, [conference]);
@@ -45,8 +45,9 @@ export default function ProgramPersonSelector(props: Props) {
     const onPersonsUpdated = useCallback(async function _onPersonsUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         if (allProgramPersons) {
             setAllProgramPersons(await Promise.all(allProgramPersons.map(async person => {
-                if (person.personId === ev.object.id) {
-                    return (await convert([ev.object as ProgramPerson]))[0];
+                const newPerson = ev.objects.find(y => y.id === person.personId);
+                if (newPerson) {
+                    return (await convert([newPerson as ProgramPerson]))[0];
                 }
                 return person;
             })));

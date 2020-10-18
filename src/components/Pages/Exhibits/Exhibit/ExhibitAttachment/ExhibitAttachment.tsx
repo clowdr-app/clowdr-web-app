@@ -20,9 +20,15 @@ export default function ExhibitAttachment(props: Props) {
 
     const onAttachmentTypeUpdated = useCallback(function _onAttachmentTypeUpdated(ev: DataUpdatedEventDetails<"AttachmentType">) {
         const newAttachmentTypes = Array.from(attachmentTypes ?? []);
-        const idx = newAttachmentTypes.findIndex(x => x.id === ev.object.id);
-        if (idx > -1) {
-            newAttachmentTypes.splice(idx, 1, ev.object as AttachmentType)
+        let updated = false;
+        for (const object of ev.objects) {
+            const idx = newAttachmentTypes.findIndex(x => x.id === object.id);
+            if (idx > -1) {
+                newAttachmentTypes.splice(idx, 1, object as AttachmentType);
+                updated = true;
+            }
+        }
+        if (updated) {
             setAttachmentTypes(newAttachmentTypes);
         }
     }, [attachmentTypes]);

@@ -19,12 +19,14 @@ export default function useChats(): Array<ChatDescriptor> | null {
     const onChatsUpdated = useCallback(async function _onChatsUpdated(ev: DataUpdatedEventDetails<"TextChat">) {
         setChats(existing => {
             const updated = Array.from(existing ?? []);
-            const idx = updated?.findIndex(x => x.id === ev.object.id);
-            const item = ev.object as TextChat;
-            if (idx === -1) {
-                updated.push(item);
-            } else {
-                updated.splice(idx, 1, item);
+            for (const object of ev.objects) {
+                const idx = updated?.findIndex(x => x.id === object.id);
+                const item = object as TextChat;
+                if (idx === -1) {
+                    updated.push(item);
+                } else {
+                    updated.splice(idx, 1, item);
+                }
             }
             return updated;
         });

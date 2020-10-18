@@ -20,9 +20,15 @@ export default function ExhibitAuthorsList(props: ExhibitAuthorsListProps) {
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);
-        const idx = newAuthors.findIndex(x => x.id === ev.object.id);
-        if (idx > -1) {
-            newAuthors.splice(idx, 1, ev.object as ProgramPerson)
+        let updated = false;
+        for (const object of ev.objects) {
+            const idx = newAuthors.findIndex(x => x.id === object.id);
+            if (idx > -1) {
+                newAuthors.splice(idx, 1, object as ProgramPerson);
+                updated = true;
+            }
+        }
+        if (updated) {
             setAuthors(newAuthors);
         }
     }, [authors]);

@@ -32,15 +32,17 @@ export default function SessionGroup(props: Props) {
     const onSessionEventUpdated = useCallback(function _onEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
         setEvents(oldEvents => {
             const newEvents = Array.from(oldEvents ?? []);
-            const idx = newEvents.findIndex(x => x.id === ev.object.id);
-            if (idx === -1) {
-                const event = ev.object as ProgramSessionEvent;
-                if (event.sessionId === props.session.id) {
-                    newEvents.push(ev.object as ProgramSessionEvent);
+            for (const object of ev.objects) {
+                const idx = newEvents.findIndex(x => x.id === object.id);
+                if (idx === -1) {
+                    const event = object as ProgramSessionEvent;
+                    if (event.sessionId === props.session.id) {
+                        newEvents.push(object as ProgramSessionEvent);
+                    }
                 }
-            }
-            else {
-                newEvents.splice(idx, 1, ev.object as ProgramSessionEvent)
+                else {
+                    newEvents.splice(idx, 1, object as ProgramSessionEvent)
+                }
             }
             return newEvents;
         });
