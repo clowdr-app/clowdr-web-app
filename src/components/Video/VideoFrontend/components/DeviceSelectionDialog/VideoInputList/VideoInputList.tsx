@@ -6,7 +6,7 @@ import VideoTrack from '../../VideoTrack/VideoTrack';
 import useMediaStreamTrack from '../../../hooks/useMediaStreamTrack/useMediaStreamTrack';
 import useVideoContext from '../../../hooks/useVideoContext/useVideoContext';
 import { useVideoInputDevices } from '../../../hooks/deviceHooks/deviceHooks';
-import assert from 'assert';
+import LocalStorage_TwilioVideo from '../../../../../../classes/LocalStorage/TwilioVideo';
 
 const useStyles = makeStyles({
     preview: {
@@ -22,18 +22,18 @@ const useStyles = makeStyles({
 export default function VideoInputList() {
     const classes = useStyles();
     const videoInputDevices = useVideoInputDevices();
-    const { localVideoTrack: _localVideoTrack } = useVideoContext();
-    const mediaStreamTrack = useMediaStreamTrack(_localVideoTrack);
+    const { localVideoTrack } = useVideoContext();
+    const mediaStreamTrack = useMediaStreamTrack(localVideoTrack);
     const localVideoInputDeviceId = mediaStreamTrack?.getSettings().deviceId;
 
-    assert(_localVideoTrack);
-    const localVideoTrack = _localVideoTrack;
-
     function replaceTrack(newDeviceId: string) {
-        localVideoTrack.restart({
-            ...(DEFAULT_VIDEO_CONSTRAINTS as {}),
-            deviceId: { exact: newDeviceId },
-        });
+        if (localVideoTrack) {
+            LocalStorage_TwilioVideo.twilioVideoLastCamera = newDeviceId;
+            localVideoTrack.restart({
+                ...(DEFAULT_VIDEO_CONSTRAINTS as {}),
+                deviceId: { exact: newDeviceId },
+            });
+        }
     }
 
     return (

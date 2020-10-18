@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import Video, { LocalVideoTrack, LocalAudioTrack, CreateLocalTrackOptions } from 'twilio-video';
 import { useHasAudioInputDevices, useHasVideoInputDevices } from '../../../hooks/deviceHooks/deviceHooks';
 import { useMutex } from "react-context-mutex";
+import LocalStorage_TwilioVideo from '../../../../../../classes/LocalStorage/TwilioVideo';
 
 export default function useLocalTracks() {
     const [audioTrack, setAudioTrack] = useState<LocalAudioTrack>();
@@ -65,8 +66,11 @@ export default function useLocalTracks() {
                     video: hasVideo && {
                         ...(DEFAULT_VIDEO_CONSTRAINTS as {}),
                         name: `camera-${Date.now()}`,
+                        deviceId: LocalStorage_TwilioVideo.twilioVideoLastCamera ?? undefined,
                     },
-                    audio: hasAudio,
+                    audio: hasAudio && {
+                        deviceId: LocalStorage_TwilioVideo.twilioVideoLastMic ?? undefined,
+                    },
                 });
 
                 const _videoTrack = tracks.find(track => track.kind === 'video');
