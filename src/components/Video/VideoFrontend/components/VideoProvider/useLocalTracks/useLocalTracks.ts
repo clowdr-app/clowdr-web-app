@@ -2,6 +2,7 @@ import { DEFAULT_VIDEO_CONSTRAINTS } from '../../../constants';
 import { useCallback, useState } from 'react';
 import Video, { LocalVideoTrack, LocalAudioTrack, CreateLocalTrackOptions } from 'twilio-video';
 import { useHasAudioInputDevices, useHasVideoInputDevices } from '../../../hooks/deviceHooks/deviceHooks';
+import { useMutex } from "react-context-mutex";
 
 export default function useLocalTracks() {
     const [audioTrack, setAudioTrack] = useState<LocalAudioTrack>();
@@ -18,6 +19,8 @@ export default function useLocalTracks() {
             options.deviceId = { exact: deviceId };
         }
 
+        console.log("Running getLocalAudioTrack");
+
         return Video.createLocalAudioTrack(options).then(newTrack => {
             setAudioTrack(newTrack);
             return newTrack;
@@ -30,6 +33,8 @@ export default function useLocalTracks() {
             name: `camera-${Date.now()}`,
             ...newOptions,
         };
+
+        console.log("Running getLocalVideoTrack");
 
         return Video.createLocalVideoTrack(options).then(newTrack => {
             setVideoTrack(newTrack);
@@ -44,30 +49,45 @@ export default function useLocalTracks() {
         }
     }, [videoTrack]);
 
-    const getAudioAndVideoTracks = useCallback(() => {
-        if (!hasAudio && !hasVideo) return Promise.resolve();
-        if (audioTrack || videoTrack) return Promise.resolve();
+    const MutexRunner = useMutex();
+    const getAudioAndVideoTracksMutex = new MutexRunner("getAudioAndVideoTracks");
+    const getAudioAndVideoTracks = async () => {
+        return getAudioAndVideoTracksMutex.run(async () => {
+            getAudioAndVideoTracksMutex.lock();
+            try {
+                if (!hasAudio && !hasVideo) return Promise.resolve();
+                if (audioTrack || videoTrack) return Promise.resolve();
 
-        setIsAcquiringLocalTracks(true);
-        return Video.createLocalTracks({
-            video: hasVideo && {
-                ...(DEFAULT_VIDEO_CONSTRAINTS as {}),
-                name: `camera-${Date.now()}`,
-            },
-            audio: hasAudio,
-        })
-            .then(tracks => {
+                console.log("Running getAudioAndVideoTracks");
+
+                setIsAcquiringLocalTracks(true);
+                const tracks = await Video.createLocalTracks({
+                    video: hasVideo && {
+                        ...(DEFAULT_VIDEO_CONSTRAINTS as {}),
+                        name: `camera-${Date.now()}`,
+                    },
+                    audio: hasAudio,
+                });
+
                 const _videoTrack = tracks.find(track => track.kind === 'video');
                 const _audioTrack = tracks.find(track => track.kind === 'audio');
                 if (_videoTrack) {
+                    console.log("Running getAudioAndVideoTracks:setVideoTrack");
                     setVideoTrack(_videoTrack as LocalVideoTrack);
                 }
                 if (_audioTrack) {
+                    console.log("Running getAudioAndVideoTracks:setAudioTrack");
                     setAudioTrack(_audioTrack as LocalAudioTrack);
                 }
-            })
-            .finally(() => setIsAcquiringLocalTracks(false));
-    }, [hasAudio, hasVideo, audioTrack, videoTrack]);
+            }
+            finally {
+                setIsAcquiringLocalTracks(false);
+                getAudioAndVideoTracksMutex.unlock();
+            }
+        }, () => {
+        });
+    };
+
 
     return {
         audioTrack,

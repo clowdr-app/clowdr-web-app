@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { styled, Theme } from '@material-ui/core/styles';
 
 import { CssBaseline } from '@material-ui/core';
@@ -18,6 +18,8 @@ import AppStateProvider, { useAppState } from "../VideoFrontend/state";
 import useConnectionOptions from "../VideoFrontend/utils/useConnectionOptions/useConnectionOptions";
 import UnsupportedBrowserWarning from "../VideoFrontend/components/UnsupportedBrowserWarning/UnsupportedBrowserWarning";
 import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
+import useLocalAudioToggle from "../VideoFrontend/hooks/useLocalAudioToggle/useLocalAudioToggle";
+import useVideoContext from "../VideoFrontend/hooks/useVideoContext/useVideoContext";
 
 const Container = styled('div')({
     display: 'grid',
@@ -38,7 +40,58 @@ interface Props {
 }
 
 function VideoGrid(props: Props) {
+    const { room } = useVideoContext();
     const roomState = useRoomState();
+
+    // VIDEO_TODO: Stable grid layout
+    // VIDEO_TODO: Before window unload warning about leaving
+
+    const { stopAudio } = useLocalAudioToggle();
+    const unmountRef = useRef<() => void>();
+    const unloadRef = useRef<EventListener>();
+
+    useEffect(() => {
+        function stop() {
+            try {
+                stopAudio();
+            }
+            catch {
+            }
+
+            try {
+                if (roomState === "connected" || roomState === "reconnecting") {
+                    room.disconnect();
+                }
+            }
+            catch {
+            }
+        }
+
+        unmountRef.current = () => {
+            stop();
+        }
+        unloadRef.current = () => {
+            stop();
+        }
+    }, [room, roomState, stopAudio]);
+
+    useEffect(() => {
+        return () => {
+            if (unmountRef && unmountRef.current) {
+                unmountRef.current();
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (unloadRef && unloadRef.current) {
+            window.addEventListener("beforeunload", unloadRef.current);
+        }
+        return () => {
+            if (unloadRef && unloadRef.current)
+                window.removeEventListener("beforeunload", unloadRef.current);
+        }
+    }, []);
 
     return <Container style={{ height: "100%" }}>
         {roomState === 'disconnected' ? (

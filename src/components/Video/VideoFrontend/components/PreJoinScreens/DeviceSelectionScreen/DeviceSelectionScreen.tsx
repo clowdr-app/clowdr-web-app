@@ -2,7 +2,6 @@ import React from 'react';
 import { makeStyles, Typography, Grid, Button, Theme, Hidden } from '@material-ui/core';
 import LocalVideoPreview from './LocalVideoPreview/LocalVideoPreview';
 import SettingsMenu from './SettingsMenu/SettingsMenu';
-import { Steps } from '../PreJoinScreens';
 import ToggleAudioButton from '../../Buttons/ToggleAudioButton/ToggleAudioButton';
 import ToggleVideoButton from '../../Buttons/ToggleVideoButton/ToggleVideoButton';
 import { useAppState } from '../../../state';
@@ -55,10 +54,9 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 interface DeviceSelectionScreenProps {
     room: VideoRoom;
-    setStep: (step: Steps) => void;
 }
 
-export default function DeviceSelectionScreen({ room, setStep }: DeviceSelectionScreenProps) {
+export default function DeviceSelectionScreen({ room }: DeviceSelectionScreenProps) {
     const user = useUserProfile();
     const classes = useStyles();
     const { getToken, isFetching } = useAppState();

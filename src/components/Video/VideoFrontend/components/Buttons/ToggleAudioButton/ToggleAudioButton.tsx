@@ -8,19 +8,19 @@ import useLocalAudioToggle from '../../../hooks/useLocalAudioToggle/useLocalAudi
 import useVideoContext from '../../../hooks/useVideoContext/useVideoContext';
 
 export default function ToggleAudioButton(props: { disabled?: boolean; className?: string }) {
-  const [isAudioEnabled, toggleAudioEnabled] = useLocalAudioToggle();
-  const { localAudioTrack } = useVideoContext();
-  const hasAudioTrack = !!localAudioTrack;
+    const { isEnabled: isAudioEnabled, toggleAudioEnabled } = useLocalAudioToggle();
+    const { localAudioTrack } = useVideoContext();
+    const hasAudioTrack = !!localAudioTrack;
 
-  return (
-    <Button
-      className={props.className}
-      onClick={toggleAudioEnabled}
-      disabled={!hasAudioTrack || props.disabled}
-      startIcon={isAudioEnabled ? <MicIcon /> : <MicOffIcon />}
-      data-cy-audio-toggle
-    >
-      {!hasAudioTrack ? 'No Audio' : isAudioEnabled ? 'Mute' : 'Unmute'}
-    </Button>
-  );
+    return (
+        <Button
+            className={props.className}
+            onClick={toggleAudioEnabled}
+            disabled={!hasAudioTrack || props.disabled}
+            startIcon={isAudioEnabled ? <MicIcon /> : <MicOffIcon />}
+            data-cy-audio-toggle
+        >
+            {!hasAudioTrack ? 'No Audio' : isAudioEnabled ? 'Mute' : 'Unmute'}
+        </Button>
+    );
 }

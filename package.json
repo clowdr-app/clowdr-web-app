@@ -84,6 +84,7 @@
         "react-app-polyfill": "^1.0.6",
         "react-browser-detection": "^1.2.1",
         "react-color": "^2.18.1",
+        "react-context-mutex": "^1.0.8",
         "react-dev-utils": "^10.2.1",
         "react-dom": "^16.13.1",
         "react-emojione": "^5.0.1",
