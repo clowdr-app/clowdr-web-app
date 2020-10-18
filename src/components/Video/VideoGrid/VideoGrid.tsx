@@ -23,6 +23,7 @@ import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import useLocalAudioToggle from "../VideoFrontend/hooks/useLocalAudioToggle/useLocalAudioToggle";
 import useVideoContext from "../VideoFrontend/hooks/useVideoContext/useVideoContext";
 import useLocalVideoToggle from "../VideoFrontend/hooks/useLocalVideoToggle/useLocalVideoToggle";
+import { Prompt } from "react-router-dom";
 
 const Container = styled('div')({
     display: 'grid',
@@ -47,7 +48,7 @@ function VideoGrid(props: Props) {
     const roomState = useRoomState();
 
     // VIDEO_TODO: Stable grid layout
-    // VIDEO_TODO: Before window unload warning about leaving
+    // VIDEO_TODO: Style video room as grid by default
 
     const { stopAudio } = useLocalAudioToggle();
     const { stopVideo } = useLocalVideoToggle();
@@ -115,18 +116,24 @@ function VideoGrid(props: Props) {
         existingRoomRef.current = room;
     }, [room.sid, room, props.room.id, props.room]);
 
-    return <Container style={{ height: "100%" }}>
-        {roomState === 'disconnected' ? (
-            <PreJoinScreens room={props.room} />
-        ) : (
-                <Main>
-                    <ReconnectingNotification />
-                    <MobileTopMenuBar />
-                    <Room />
-                    <MenuBar />
-                </Main>
-            )}
-    </Container>;
+    return <>
+        <Prompt
+            when={roomState !== "disconnected"}
+            message='Are you sure you want to leave the video room?'
+        />
+        <Container style={{ height: "100%" }}>
+            {roomState === 'disconnected' ? (
+                <PreJoinScreens room={props.room} />
+            ) : (
+                    <Main>
+                        <ReconnectingNotification />
+                        <MobileTopMenuBar />
+                        <Room />
+                        <MenuBar />
+                    </Main>
+                )}
+        </Container>
+    </>;
 }
 
 function VideoGridVideoWrapper(props: Props) {
