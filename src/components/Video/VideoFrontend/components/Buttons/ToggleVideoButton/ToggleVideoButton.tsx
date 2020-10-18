@@ -8,7 +8,7 @@ import { useHasVideoInputDevices } from '../../../hooks/deviceHooks/deviceHooks'
 import useLocalVideoToggle from '../../../hooks/useLocalVideoToggle/useLocalVideoToggle';
 
 export default function ToggleVideoButton(props: { disabled?: boolean; className?: string }) {
-  const [isVideoEnabled, toggleVideoEnabled] = useLocalVideoToggle();
+    const { isEnabled: isVideoEnabled, toggleVideoEnabled } = useLocalVideoToggle();
   const lastClickTimeRef = useRef(0);
   const hasVideoDevices = useHasVideoInputDevices();
 

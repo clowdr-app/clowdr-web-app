@@ -15,7 +15,7 @@ import useVideoContext from '../../../hooks/useVideoContext/useVideoContext';
 
 export default function AttachVisibilityHandler() {
     const { room } = useVideoContext();
-    const [isVideoEnabled, toggleVideoEnabled] = useLocalVideoToggle();
+    const { isEnabled: isVideoEnabled, toggleVideoEnabled } = useLocalVideoToggle();
     const shouldRepublishVideoOnForeground = useRef(false);
 
     useEffect(() => {

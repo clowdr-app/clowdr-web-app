@@ -20,6 +20,7 @@ import UnsupportedBrowserWarning from "../VideoFrontend/components/UnsupportedBr
 import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import useLocalAudioToggle from "../VideoFrontend/hooks/useLocalAudioToggle/useLocalAudioToggle";
 import useVideoContext from "../VideoFrontend/hooks/useVideoContext/useVideoContext";
+import useLocalVideoToggle from "../VideoFrontend/hooks/useLocalVideoToggle/useLocalVideoToggle";
 
 const Container = styled('div')({
     display: 'grid',
@@ -44,9 +45,12 @@ function VideoGrid(props: Props) {
     const roomState = useRoomState();
 
     // VIDEO_TODO: Stable grid layout
+    // VIDEO_TODO: Use local storage to remember previous enable/disable state of mic/cam
+    // VIDEO_TODO: Use local storage to remember previously selected device name
     // VIDEO_TODO: Before window unload warning about leaving
 
     const { stopAudio } = useLocalAudioToggle();
+    const { stopVideo } = useLocalVideoToggle();
     const unmountRef = useRef<() => void>();
     const unloadRef = useRef<EventListener>();
 
@@ -54,6 +58,12 @@ function VideoGrid(props: Props) {
         function stop() {
             try {
                 stopAudio();
+            }
+            catch {
+            }
+
+            try {
+                stopVideo();
             }
             catch {
             }
@@ -73,7 +83,7 @@ function VideoGrid(props: Props) {
         unloadRef.current = () => {
             stop();
         }
-    }, [room, roomState, stopAudio]);
+    }, [room, roomState, stopAudio, stopVideo]);
 
     useEffect(() => {
         return () => {
