@@ -61,7 +61,16 @@ export default function WatchedItemsPage() {
 
     // Subscribe to watched items updates
     const onWatchedItemsUpdated = useCallback(async function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        setWatchedItems(oldItems => oldItems?.id === update.object.id ? update.object as WatchedItems : oldItems);
+        setWatchedItems(oldItems => {
+            if (oldItems) {
+                for (const object of update.objects) {
+                    if (object.id === oldItems.id) {
+                        return object as WatchedItems;
+                    }
+                }
+            }
+            return null;
+        });
     }, []);
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, !watchedItems, conference);
 
@@ -158,7 +167,7 @@ export default function WatchedItemsPage() {
 
     // Subscribe to watched rooms updates
     const onRoomUpdated = useCallback(async function _onRoomUpdated(update: DataUpdatedEventDetails<"VideoRoom">) {
-        setRooms(oldRooms => oldRooms ? oldRooms.map(x => x.id === update.object.id ? update.object as VideoRoom : x) : oldRooms);
+        setRooms(oldRooms => oldRooms ? oldRooms.map(x => update.objects.find(y => x.id === y.id) as (VideoRoom | undefined) ?? x) : oldRooms);
     }, []);
     const onRoomDeleted = useCallback(async function _onRoomDeleted(update: DataDeletedEventDetails<"VideoRoom">) {
         setRooms(oldRooms => oldRooms?.filter(x => x.id !== update.objectId) ?? null);
@@ -171,7 +180,7 @@ export default function WatchedItemsPage() {
 
     // Subscribe to watched track updates
     const onTrackUpdated = useCallback(async function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
-        setProgramTracks(existing => existing ? existing.map(x => x.id === ev.object.id ? ev.object as ProgramTrack : x) : existing);
+        setProgramTracks(existing => existing ? existing.map(x => ev.objects.find(y => x.id === y.id) as (ProgramTrack | undefined) ?? x) : existing);
     }, []);
 
     const onTrackDeleted = useCallback(function _onTrackDeleted(ev: DataDeletedEventDetails<"ProgramTrack">) {
@@ -200,7 +209,7 @@ export default function WatchedItemsPage() {
 
     // Subscribe to watched session updates
     const onProgramSessionUpdated = useCallback(async function _onProgramSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
-        setProgramSessions(existing => existing ? existing.map(x => x.id === ev.object.id ? ev.object as ProgramSession : x) : existing);
+        setProgramSessions(existing => existing ? existing.map(x => ev.objects.find(y => x.id === y.id) as (ProgramSession | undefined) ?? x) : existing);
     }, []);
 
     const onProgramSessionDeleted = useCallback(function _onProgramSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
@@ -214,7 +223,7 @@ export default function WatchedItemsPage() {
 
     // Subscribe to watched event updates
     const onProgramSessionEventUpdated = useCallback(async function _onProgramSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
-        setProgramSessionEvents(existing => existing ? existing.map(x => x.id === ev.object.id ? ev.object as ProgramSessionEvent : x) : existing);
+        setProgramSessionEvents(existing => existing ? existing.map(x => ev.objects.find(y => x.id === y.id) as (ProgramSessionEvent | undefined) ?? x) : existing);
     }, []);
 
     const onProgramSessionEventDeleted = useCallback(function _onProgramSessionEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {

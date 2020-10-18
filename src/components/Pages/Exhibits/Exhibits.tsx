@@ -24,15 +24,17 @@ export default function Exhibits() {
     const onProgramItemUpdated = useCallback(function _onProgramItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
         setProgramItems(oldProgramItems => {
             const newProgramItems = Array.from(oldProgramItems ?? []);
-            const idx = newProgramItems?.findIndex(x => x.id === ev.object.id);
-            const updatedProgramItem = ev.object as ProgramItem;
-            if (idx === -1 && updatedProgramItem.exhibit) {
-                newProgramItems.push(updatedProgramItem);
-            } else {
-                if (updatedProgramItem.exhibit) {
-                    newProgramItems.splice(idx, 1, updatedProgramItem);
+            for (const object of ev.objects) {
+                const idx = newProgramItems?.findIndex(x => x.id === object.id);
+                const updatedProgramItem = object as ProgramItem;
+                if (idx === -1 && updatedProgramItem.exhibit) {
+                    newProgramItems.push(updatedProgramItem);
                 } else {
-                    newProgramItems.splice(idx, 1);
+                    if (updatedProgramItem.exhibit) {
+                        newProgramItems.splice(idx, 1, updatedProgramItem);
+                    } else {
+                        newProgramItems.splice(idx, 1);
+                    }
                 }
             }
             return newProgramItems;

@@ -102,16 +102,20 @@ export default function ViewVideoRoom(props: Props) {
     }, setIsFollowing, [currentUserProfile.watchedId, props.roomId]);
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === currentUserProfile.watchedId) {
-            setIsFollowing((update.object as WatchedItems).watchedRooms.includes(props.roomId));
+        for (const object of update.objects) {
+            if (object.id === currentUserProfile.watchedId) {
+                setIsFollowing((object as WatchedItems).watchedRooms.includes(props.roomId));
+            }
         }
     }, [props.roomId, currentUserProfile.watchedId]);
 
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conference);
 
     const onRoomUpdated = useCallback(function _onRoomUpdated(update: DataUpdatedEventDetails<"VideoRoom">) {
-        if (update.object.id === props.roomId) {
-            setRoom(update.object as VideoRoom);
+        for (const object of update.objects) {
+            if (object.id === props.roomId) {
+                setRoom(object as VideoRoom);
+            }
         }
     }, [props.roomId]);
 

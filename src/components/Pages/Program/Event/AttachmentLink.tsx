@@ -22,8 +22,10 @@ export default function AttachmentLink(props: Props) {
     useSafeAsync(async () => await props.attachment.attachmentType, setAttachmentType, [props.attachment.attachmentType]);
 
     const onAttachmentTypeUpdated = useCallback(function _onAttachmentTypeUpdated(ev: DataUpdatedEventDetails<"AttachmentType">) {
-        if (attachmentType && ev.object.id === attachmentType.id) {
-            setAttachmentType(ev.object as AttachmentType);
+        for (const object of ev.objects) {
+            if (attachmentType && object.id === attachmentType.id) {
+                setAttachmentType(object as AttachmentType);
+            }
         }
     }, [attachmentType]);
 

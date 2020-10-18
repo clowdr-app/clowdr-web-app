@@ -48,12 +48,14 @@ export default function WholeProgram() {
             if (oldData) {
                 const oldTracks = oldData.tracks;
                 const newTracks = Array.from(oldTracks);
-                const idx = newTracks?.findIndex(x => x.id === ev.object.id);
-                if (idx === -1) {
-                    newTracks.push(ev.object as ProgramTrack);
-                }
-                else {
-                    newTracks.splice(idx, 1, ev.object as ProgramTrack);
+                for (const object of ev.objects) {
+                    const idx = newTracks?.findIndex(x => x.id === object.id);
+                    if (idx === -1) {
+                        newTracks.push(object as ProgramTrack);
+                    }
+                    else {
+                        newTracks.splice(idx, 1, object as ProgramTrack);
+                    }
                 }
                 return { ...oldData, tracks: newTracks };
             }
@@ -70,12 +72,14 @@ export default function WholeProgram() {
             if (oldData) {
                 const oldSessions = oldData.sessions;
                 const newSessions = Array.from(oldSessions);
-                const idx = newSessions?.findIndex(x => x.id === ev.object.id);
-                if (idx === -1) {
-                    newSessions.push(ev.object as ProgramSession);
-                }
-                else {
-                    newSessions.splice(idx, 1, ev.object as ProgramSession);
+                for (const object of ev.objects) {
+                    const idx = newSessions?.findIndex(x => x.id === object.id);
+                    if (idx === -1) {
+                        newSessions.push(object as ProgramSession);
+                    }
+                    else {
+                        newSessions.splice(idx, 1, object as ProgramSession);
+                    }
                 }
                 return { ...oldData, sessions: newSessions };
             }
@@ -92,12 +96,14 @@ export default function WholeProgram() {
             if (oldData) {
                 const oldSessionEvents = oldData.events;
                 const newSessionEvents = Array.from(oldSessionEvents);
-                const idx = newSessionEvents?.findIndex(x => x.id === ev.object.id);
-                if (idx === -1) {
-                    newSessionEvents.push(ev.object as ProgramSessionEvent);
-                }
-                else {
-                    newSessionEvents.splice(idx, 1, ev.object as ProgramSessionEvent);
+                for (const object of ev.objects) {
+                    const idx = newSessionEvents?.findIndex(x => x.id === object.id);
+                    if (idx === -1) {
+                        newSessionEvents.push(object as ProgramSessionEvent);
+                    }
+                    else {
+                        newSessionEvents.splice(idx, 1, object as ProgramSessionEvent);
+                    }
                 }
                 return { ...oldData, sessionevents: newSessionEvents };
             }
@@ -114,12 +120,14 @@ export default function WholeProgram() {
             if (oldData) {
                 const oldPersons = oldData.authors;
                 const newPersons = Array.from(oldPersons);
-                const idx = newPersons?.findIndex(x => x.id === ev.object.id);
-                if (idx === -1) {
-                    newPersons.push(ev.object as ProgramPerson);
-                }
-                else {
-                    newPersons.splice(idx, 1, ev.object as ProgramPerson);
+                for (const object of ev.objects) {
+                    const idx = newPersons?.findIndex(x => x.id === object.id);
+                    if (idx === -1) {
+                        newPersons.push(object as ProgramPerson);
+                    }
+                    else {
+                        newPersons.splice(idx, 1, object as ProgramPerson);
+                    }
                 }
                 return { ...oldData, persons: newPersons };
             }
@@ -136,12 +144,14 @@ export default function WholeProgram() {
             if (oldData) {
                 const oldItems = oldData.items;
                 const newItems = Array.from(oldItems);
-                const idx = newItems?.findIndex(x => x.id === ev.object.id);
-                if (idx === -1) {
-                    newItems.push(ev.object as ProgramItem);
-                }
-                else {
-                    newItems.splice(idx, 1, ev.object as ProgramItem);
+                for (const object of ev.objects) {
+                    const idx = newItems?.findIndex(x => x.id === object.id);
+                    if (idx === -1) {
+                        newItems.push(object as ProgramItem);
+                    }
+                    else {
+                        newItems.splice(idx, 1, object as ProgramItem);
+                    }
                 }
                 return { ...oldData, items: newItems };
             }

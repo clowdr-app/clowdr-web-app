@@ -581,11 +581,13 @@ export default function ChatsGroup(props: Props) {
 
     const watchedId = mUser?.watchedId;
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === watchedId) {
-            dispatchUpdate({
-                action: "setWatchedChatIds",
-                ids: (update.object as WatchedItems).watchedChats
-            });
+        for (const object of update.objects) {
+            if (object.id === watchedId) {
+                dispatchUpdate({
+                    action: "setWatchedChatIds",
+                    ids: (object as WatchedItems).watchedChats
+                });
+            }
         }
     }, [watchedId]);
 
@@ -593,19 +595,39 @@ export default function ChatsGroup(props: Props) {
 
     const onTextChatUpdated = useCallback(async function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
         if (mChat) {
-            const chat = await mChat.getChat(update.object.id);
-            if (chat) {
+            let newAllChats: Array<any> | null = null;
+            let newActiveChats: Array<any> | null = null;
+
+            for (const object of update.objects) {
+                const chat = await mChat.getChat(object.id);
+                if (chat) {
+                    if (state.watchedChatIds?.includes(chat.id)) {
+                        const chatD = await upgradeChatDescriptor(conf, chat);
+                        if (!newActiveChats) {
+                            newActiveChats = [];
+                        }
+                        newActiveChats.push(chatD);
+                    }
+                    if (!newAllChats) {
+                        newAllChats = [];
+                    }
+                    newAllChats.push(chat);
+                }
+            }
+
+            if (newAllChats) {
                 const updates: Array<ChatsGroupUpdate> = [{
                     action: "updateAllChats",
-                    chats: [chat]
+                    chats: newAllChats
                 }];
-                if (state.watchedChatIds?.includes(chat.id)) {
-                    const chatD = await upgradeChatDescriptor(conf, chat);
+
+                if (newActiveChats) {
                     updates.push({
                         action: "updateActiveChats",
-                        chats: [chatD]
+                        chats: newActiveChats
                     });
                 }
+
                 dispatchUpdate(updates);
             }
         }
@@ -631,17 +653,19 @@ export default function ChatsGroup(props: Props) {
             action: "updateAllUsers",
             update: (existing) => {
                 const updated = Array.from(existing ?? []);
-                const idx = updated?.findIndex(x => x.id === update.object.id);
-                const profile = update.object as UserProfile;
-                const item = {
-                    id: profile.id,
-                    name: profile.displayName,
-                    isBanned: profile.isBanned
-                };
-                if (idx === -1) {
-                    updated.push(item);
-                } else {
-                    updated.splice(idx, 1, item);
+                for (const object of update.objects) {
+                    const idx = updated?.findIndex(x => x.id === object.id);
+                    const profile = object as UserProfile;
+                    const item = {
+                        id: profile.id,
+                        name: profile.displayName,
+                        isBanned: profile.isBanned
+                    };
+                    if (idx === -1) {
+                        updated.push(item);
+                    } else {
+                        updated.splice(idx, 1, item);
+                    }
                 }
                 return updated;
             }

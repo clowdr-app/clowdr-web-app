@@ -39,15 +39,17 @@ export default function TrackColumn(props: Props) {
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
         setSessions(oldSessions => {
             const newSessions = Array.from(oldSessions ?? []);
-            const idx = newSessions.findIndex(x => x.id === ev.object.id);
-            if (idx === -1) {
-                const session = ev.object as ProgramSession;
-                if (session.trackId === props.track.id) {
-                    newSessions.push(ev.object as ProgramSession);
+            for (const object of ev.objects) {
+                const idx = newSessions.findIndex(x => x.id === object.id);
+                if (idx === -1) {
+                    const session = object as ProgramSession;
+                    if (session.trackId === props.track.id) {
+                        newSessions.push(object as ProgramSession);
+                    }
                 }
-            }
-            else {
-                newSessions.splice(idx, 1, ev.object as ProgramSession);
+                else {
+                    newSessions.splice(idx, 1, object as ProgramSession);
+                }
             }
             return newSessions;
         });

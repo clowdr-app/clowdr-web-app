@@ -29,9 +29,11 @@ export default function LoggedInWelcome() {
     }, setContents, [conference]);
 
     const onTextUpdated = useCallback(function _onTextUpdate(update: DataUpdatedEventDetails<"PrivilegedConferenceDetails">) {
-        const details = update.object as PrivilegedConferenceDetails;
-        if (details.conferenceId === conference.id && details.key === "LOGGED_IN_TEXT") {
-            setContents(details.value);
+        for (const object of update.objects) {
+            const details = object as PrivilegedConferenceDetails;
+            if (details.conferenceId === conference.id && details.key === "LOGGED_IN_TEXT") {
+                setContents(details.value);
+            }
         }
     }, [conference.id]);
 

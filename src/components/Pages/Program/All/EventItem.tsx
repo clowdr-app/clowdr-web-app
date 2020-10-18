@@ -30,7 +30,9 @@ export default function EventItem(props: Props) {
 
     // Subscribe to changes
     const onItemUpdated = useCallback(function _onItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
-        setItem(oldItem => oldItem && ev.object.id === oldItem.id ? ev.object as ProgramItem : null);
+        for (const object of ev.objects) {
+            setItem(oldItem => oldItem && object.id === oldItem.id ? object as ProgramItem : null);
+        }
     }, []);
 
     const onItemDeleted = useCallback(function _onItemDeleted(ev: DataDeletedEventDetails<"ProgramItem">) {

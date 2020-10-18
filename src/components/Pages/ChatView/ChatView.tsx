@@ -156,22 +156,26 @@ export default function ChatView(props: Props) {
     }, setIsFollowing, [mUser.watchedId, props.chatId]);
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === mUser.watchedId) {
-            setIsFollowing((update.object as WatchedItems).watchedChats.includes(props.chatId));
+        for (const object of update.objects) {
+            if (object.id === mUser.watchedId) {
+                setIsFollowing((object as WatchedItems).watchedChats.includes(props.chatId));
+            }
         }
     }, [props.chatId, mUser.watchedId]);
 
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conf);
 
     const onTextChatUpdated = useCallback(function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
-        if (update.object.id === props.chatId) {
-            const tc = update.object as TextChat;
-            setChatInfo(oldChatInfo => oldChatInfo ?
-                {
-                    ...oldChatInfo,
-                    name: tc.name,
-                    isAutoWatch: tc.autoWatch
-                } : null);
+        for (const object of update.objects) {
+            if (object.id === props.chatId) {
+                const tc = object as TextChat;
+                setChatInfo(oldChatInfo => oldChatInfo ?
+                    {
+                        ...oldChatInfo,
+                        name: tc.name,
+                        isAutoWatch: tc.autoWatch
+                    } : null);
+            }
         }
     }, [props.chatId]);
 

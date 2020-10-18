@@ -117,8 +117,10 @@ export default function ViewSession(props: Props) {
 
     // Subscribe to data updates
     const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
-        if (session && ev.object.id === session.id) {
-            setSession(ev.object as ProgramSession);
+        for (const object of ev.objects) {
+            if (session && object.id === session.id) {
+                setSession(object as ProgramSession);
+            }
         }
     }, [session]);
 
@@ -132,16 +134,18 @@ export default function ViewSession(props: Props) {
         if (session) {
             setEvents(oldEvents => {
                 const newEvents = Array.from(oldEvents ?? []);
-                const idx = newEvents.findIndex(x => x.id === ev.object.id);
-                if (idx === -1) {
-                    const event = ev.object as ProgramSessionEvent;
-                    if (event.sessionId === session.id) {
-                        newEvents.push(ev.object as ProgramSessionEvent);
-                        setEvents(newEvents);
+                for (const object of ev.objects) {
+                    const idx = newEvents.findIndex(x => x.id === object.id);
+                    if (idx === -1) {
+                        const event = object as ProgramSessionEvent;
+                        if (event.sessionId === session.id) {
+                            newEvents.push(object as ProgramSessionEvent);
+                            setEvents(newEvents);
+                        }
                     }
-                }
-                else {
-                    newEvents.splice(idx, 1, ev.object as ProgramSessionEvent)
+                    else {
+                        newEvents.splice(idx, 1, object as ProgramSessionEvent)
+                    }
                 }
                 return newEvents;
             });
@@ -153,8 +157,10 @@ export default function ViewSession(props: Props) {
     }, []);
 
     const onContentFeedUpdated = useCallback(function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
-        if (sessionFeed && ev.object.id === sessionFeed.id) {
-            setSessionFeed(ev.object as ContentFeed);
+        for (const object of ev.objects) {
+            if (sessionFeed && object.id === sessionFeed.id) {
+                setSessionFeed(object as ContentFeed);
+            }
         }
     }, [sessionFeed]);
 
@@ -176,8 +182,10 @@ export default function ViewSession(props: Props) {
     }, setIsFollowing, [userProfile.watchedId, props.sessionId]);
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        if (update.object.id === userProfile.watchedId) {
-            setIsFollowing((update.object as WatchedItems).watchedSessions.includes(props.sessionId));
+        for (const object of update.objects) {
+            if (object.id === userProfile.watchedId) {
+                setIsFollowing((object as WatchedItems).watchedSessions.includes(props.sessionId));
+            }
         }
     }, [props.sessionId, userProfile.watchedId]);
 

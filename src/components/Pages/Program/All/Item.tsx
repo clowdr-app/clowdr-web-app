@@ -43,9 +43,11 @@ export default function Item(props: Props) {
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         setAuthors(oldAuthors => {
             const newAuthors = Array.from(oldAuthors ?? []);
-            const idx = newAuthors.findIndex(x => x.id === ev.object.id);
-            if (idx > -1) {
-                newAuthors.splice(idx, 1, ev.object as ProgramPerson)
+            for (const object of ev.objects) {
+                const idx = newAuthors.findIndex(x => x.id === object.id);
+                if (idx > -1) {
+                    newAuthors.splice(idx, 1, object as ProgramPerson)
+                }
             }
             return newAuthors;
         });
