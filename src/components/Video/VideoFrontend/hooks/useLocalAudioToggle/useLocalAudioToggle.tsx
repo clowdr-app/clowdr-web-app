@@ -4,30 +4,15 @@ import useIsTrackEnabled from '../useIsTrackEnabled/useIsTrackEnabled';
 import useVideoContext from '../useVideoContext/useVideoContext';
 
 export default function useLocalAudioToggle() {
-    const { localTracks } = useVideoContext();
-    const audioTrack = localTracks.find(track => track.kind === 'audio') as LocalAudioTrack;
-    const isEnabled = useIsTrackEnabled(audioTrack);
+  const { localTracks } = useVideoContext();
+  const audioTrack = localTracks.find(track => track.kind === 'audio') as LocalAudioTrack;
+  const isEnabled = useIsTrackEnabled(audioTrack);
 
-    const toggleAudioEnabled = useCallback((enable?: boolean) => {
-        if (audioTrack) {
-            if (enable !== undefined) {
-                if (enable) {
-                    audioTrack.enable()
-                }
-                else {
-                    audioTrack.disable();
-                }
-            }
-            else {
-                if (audioTrack.isEnabled) {
-                    audioTrack.disable()
-                }
-                else {
-                    audioTrack.enable();
-                }
-            }
-        }
-    }, [audioTrack]);
+  const toggleAudioEnabled = useCallback(() => {
+    if (audioTrack) {
+      audioTrack.isEnabled ? audioTrack.disable() : audioTrack.enable();
+    }
+  }, [audioTrack]);
 
-    return [isEnabled, toggleAudioEnabled] as const;
+  return [isEnabled, toggleAudioEnabled] as const;
 }

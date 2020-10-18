@@ -1,44 +1,49 @@
 import { LocalVideoTrack, RemoteVideoTrack, TwilioError } from 'twilio-video';
+import { EventEmitter } from 'events';
 
 declare module 'twilio-video' {
-    interface LocalParticipant {
-        setBandwidthProfile: (bandwidthProfile: BandwidthProfileOptions) => void;
-        publishTrack(track: LocalTrack, options?: { priority: Track.Priority }): Promise<LocalTrackPublication>;
-    }
+  interface LocalParticipant {
+    setBandwidthProfile: (bandwidthProfile: BandwidthProfileOptions) => void;
+    publishTrack(track: LocalTrack, options?: { priority: Track.Priority }): Promise<LocalTrackPublication>;
+  }
 
-    interface VideoCodecSettings {
-        simulcast?: boolean;
-    }
+  interface VideoCodecSettings {
+    simulcast?: boolean;
+  }
 
-    interface LocalVideoTrack {
-        isSwitchedOff: undefined;
-        setPriority: undefined;
-    }
+  interface LocalTrackPublication {
+    setPriority: (priority: Track.Priority) => void;
+  }
 
-    interface RemoteVideoTrack {
-        isSwitchedOff: boolean;
-        setPriority: (priority: Track.Priority | null) => void;
-    }
+  interface LocalVideoTrack {
+    isSwitchedOff: undefined;
+    setPriority: undefined;
+  }
 
-    interface VideoBandwidthProfileOptions {
-        trackSwitchOffMode?: 'predicted' | 'detected' | 'disabled';
-    }
+  interface RemoteVideoTrack {
+    isSwitchedOff: boolean;
+    setPriority: (priority: Track.Priority | null) => void;
+  }
+
+  interface VideoBandwidthProfileOptions {
+    trackSwitchOffMode?: 'predicted' | 'detected' | 'disabled';
+  }
 }
 
 declare global {
-    interface Window {
-        visualViewport?: {
-            scale: number;
-        };
-    }
+  interface Window {
+    visualViewport?: {
+      scale: number;
+    };
+  }
 
-    interface MediaDevices {
-        getDisplayMedia(constraints: MediaStreamConstraints): Promise<MediaStream>;
-    }
+  interface MediaDevices {
+    getDisplayMedia(constraints: MediaStreamConstraints): Promise<MediaStream>;
+  }
 
-    interface HTMLMediaElement {
-        setSinkId?(sinkId: string): Promise<undefined>;
-    }
+  interface HTMLMediaElement {
+    setSinkId?(sinkId: string): Promise<undefined>;
+  }
 }
 
 export type Callback = (...args: any[]) => void;
@@ -46,3 +51,5 @@ export type Callback = (...args: any[]) => void;
 export type ErrorCallback = (error: TwilioError) => void;
 
 export type IVideoTrack = LocalVideoTrack | RemoteVideoTrack;
+
+export type RoomType = 'group' | 'group-small' | 'peer-to-peer' | 'go';

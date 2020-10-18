@@ -44,7 +44,6 @@ export default function useScreenShareParticipant() {
                 room.localParticipant.off('trackUnpublished', updateScreenShareParticipant);
             };
         }
-
         return () => { };
     }, [room]);
 

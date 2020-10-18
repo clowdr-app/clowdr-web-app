@@ -19,7 +19,6 @@ export default function useIsTrackEnabled(track: TrackType) {
                 track.off('disabled', setDisabled);
             };
         }
-
         return () => { };
     }, [track]);
 

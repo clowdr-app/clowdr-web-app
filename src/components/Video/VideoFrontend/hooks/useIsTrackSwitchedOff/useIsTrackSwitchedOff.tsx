@@ -23,7 +23,6 @@ export default function useIsTrackSwitchedOff(track: TrackType) {
                 track.off('switchedOn', handleSwitchedOn);
             };
         }
-
         return () => { };
     }, [track]);
 

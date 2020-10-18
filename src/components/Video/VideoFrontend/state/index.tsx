@@ -1,33 +1,29 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useReducer, useState } from 'react';
+import { RoomType } from '../types';
 import { TwilioError } from 'twilio-video';
-import { useLocation } from 'react-router-dom';
+import { settingsReducer, initialSettings, Settings, SettingsAction } from './settings/settingsReducer';
+import useMaybeVideo from '../../../../hooks/useMaybeVideo';
+import { VideoRoom } from '@clowdr-app/clowdr-db-schema';
+import assert from 'assert';
 
 export interface StateContextType {
     error: TwilioError | null;
     setError(error: TwilioError | null): void;
-    getToken(name: string, room: string, passcode?: string): Promise<string>;
-    user?: null | { displayName: undefined; photoURL: undefined; passcode?: string };
-    signIn?(passcode?: string): Promise<void>;
-    signOut?(): Promise<void>;
+    getToken(room: VideoRoom): Promise<{
+        token: string | null,
+        expiry: Date | null,
+        twilioRoomId: string | null
+    }>;
     isAuthReady?: boolean;
     isFetching: boolean;
     activeSinkId: string;
     setActiveSinkId(sinkId: string): void;
-    meeting?: string;
-    token?: string;
-    isEmbedded?: boolean;
+    settings: Settings;
+    dispatchSetting: React.Dispatch<SettingsAction>;
+    roomType?: RoomType;
 }
 
 export const StateContext = createContext<StateContextType>(null!);
-
-export interface AppStateProvider {
-    meeting?: string;
-    token?: string;
-    isEmbedded?: boolean;
-}
-function useQuery() {
-    return new URLSearchParams(useLocation().search);
-}
 
 /*
   The 'react-hooks/rules-of-hooks' linting rules prevent React Hooks fron being called
@@ -38,10 +34,11 @@ function useQuery() {
   included in the bundle that is produced (due to tree-shaking). Thus, in this instance, it
   is ok to call hooks inside if() statements.
 */
-export default function AppStateProvider(props: React.PropsWithChildren<AppStateProvider>) {
+export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     const [error, setError] = useState<TwilioError | null>(null);
     const [isFetching, setIsFetching] = useState(false);
     const [activeSinkId, setActiveSinkId] = useState('default');
+    const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
 
     let contextValue = {
         error,
@@ -49,47 +46,23 @@ export default function AppStateProvider(props: React.PropsWithChildren<AppState
         isFetching,
         activeSinkId,
         setActiveSinkId,
+        settings,
+        dispatchSetting,
     } as StateContextType;
 
-    if (props.isEmbedded) {
-        contextValue = {
-            ...contextValue,
-            isEmbedded: props.isEmbedded,
-        };
-    }
-    if (props.token && props.meeting) {
-        contextValue = {
-            ...contextValue,
-            meeting: props.meeting,
-            token: props.token,
-        };
-    }
-    const query = useQuery();
-    const roomId = query.get('roomId');
-    const token = query.get('token');
-    if (roomId && token) {
-        contextValue = {
-            ...contextValue,
-            meeting: roomId,
-            token,
-        };
-    }
-
+    const mVideo = useMaybeVideo();
     contextValue = {
         ...contextValue,
-        getToken: async (identity, roomName) => {
-            const headers = new window.Headers();
-            const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
-            const params = new window.URLSearchParams({ identity, roomName });
-
-            return fetch(`${endpoint}?${params}`, { headers }).then(res => res.text());
+        getToken: async (room) => {
+            assert(mVideo);
+            return await mVideo.fetchFreshToken(room);
         },
     };
 
-    const getToken: StateContextType['getToken'] = (name, room) => {
+    const getToken: StateContextType['getToken'] = (room) => {
         setIsFetching(true);
         return contextValue
-            .getToken(name, room)
+            .getToken(room)
             .then(res => {
                 setIsFetching(false);
                 return res;
@@ -106,10 +79,8 @@ export default function AppStateProvider(props: React.PropsWithChildren<AppState
 
 export function useAppState() {
     const context = useContext(StateContext);
-
     if (!context) {
         throw new Error('useAppState must be used within the AppStateProvider');
     }
-
     return context;
 }

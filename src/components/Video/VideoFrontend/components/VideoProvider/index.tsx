@@ -1,11 +1,11 @@
 import React, { createContext, ReactNode } from 'react';
 import {
-    CreateLocalTrackOptions,
-    ConnectOptions,
-    LocalAudioTrack,
-    LocalVideoTrack,
-    Room,
-    TwilioError,
+  CreateLocalTrackOptions,
+  ConnectOptions,
+  LocalAudioTrack,
+  LocalVideoTrack,
+  Room,
+  TwilioError,
 } from 'twilio-video';
 import { Callback, ErrorCallback } from '../../types';
 import { SelectedParticipantProvider } from './useSelectedParticipant/useSelectedParticipant';
@@ -16,8 +16,7 @@ import useHandleOnDisconnect from './useHandleOnDisconnect/useHandleOnDisconnect
 import useHandleTrackPublicationFailed from './useHandleTrackPublicationFailed/useHandleTrackPublicationFailed';
 import useLocalTracks from './useLocalTracks/useLocalTracks';
 import useRoom from './useRoom/useRoom';
-import useHandleOnConnect from './useHandleOnConnect/useHandleOnConnect';
-import { CancelablePromise } from '@clowdr-app/clowdr-db-schema/build/Util';
+import useScreenShareToggle from './useScreenShareToggle/useScreenShareToggle';
 
 /*
  *  The hooks used by the VideoProvider component are different than the hooks found in the 'hooks/' directory. The hooks
@@ -27,70 +26,77 @@ import { CancelablePromise } from '@clowdr-app/clowdr-db-schema/build/Util';
  */
 
 export interface IVideoContext {
-    room: Room;
-    localTracks: (LocalAudioTrack | LocalVideoTrack)[];
-    isConnecting: boolean;
-    connect: (token: string) => Promise<void>;
-    onError: ErrorCallback;
-    onConnect?: Callback;
-    onDisconnect: Callback;
-    getLocalVideoTrack: (newOptions?: CreateLocalTrackOptions) => CancelablePromise<LocalVideoTrack | undefined>;
-    getLocalAudioTrack: (deviceId?: string) => CancelablePromise<LocalAudioTrack | undefined>;
+  room: Room;
+  localTracks: (LocalAudioTrack | LocalVideoTrack)[];
+  isConnecting: boolean;
+  connect: (token: string) => Promise<void>;
+  onError: ErrorCallback;
+  onDisconnect: Callback;
+  getLocalVideoTrack: (newOptions?: CreateLocalTrackOptions) => Promise<LocalVideoTrack>;
+  getLocalAudioTrack: (deviceId?: string) => Promise<LocalAudioTrack>;
+  isAcquiringLocalTracks: boolean;
+  removeLocalVideoTrack: () => void;
+  isSharingScreen: boolean;
+  toggleScreenShare: () => void;
+  getAudioAndVideoTracks: () => Promise<void>;
 }
 
 export const VideoContext = createContext<IVideoContext>(null!);
 
 interface VideoProviderProps {
-    options?: ConnectOptions;
-    onError: ErrorCallback;
-    onConnect?: Callback;
-    onDisconnect?: Callback;
-    children: ReactNode;
+  options?: ConnectOptions;
+  onError: ErrorCallback;
+  onDisconnect?: Callback;
+  children: ReactNode;
 }
 
-export function VideoProvider({
-    options,
-    children,
-    onError = (err: any) => { },
-    onConnect = () => { },
-    onDisconnect = () => { },
-}: VideoProviderProps) {
-    const onErrorCallback = (error: TwilioError) => {
-        // Ed Nutting: For some reason, testing expects onError to be called,
-        //             and the test doesn't deal with the error being logged, so
-        //             yes, this has to be `console.log` instead of
-        //             `console.error`. See test 'the VideoProvider component'
-        //             'should call the onError function when there is an error'
-        console.log(`ERROR: ${error.message}`, error);
-        onError(error);
-    };
+export function VideoProvider({ options, children, onError = () => {}, onDisconnect = () => {} }: VideoProviderProps) {
+  const onErrorCallback = (error: TwilioError) => {
+    // tslint:disable-next-line:no-console
+    console.log(`ERROR: ${error.message}`, error);
+    onError(error);
+  };
 
-    // @ts-ignore
-    const { localTracks, getLocalVideoTrack, getLocalAudioTrack } = useLocalTracks(onError);
-    const { room, isConnecting, connect } = useRoom(localTracks, onErrorCallback, options);
+  const {
+    localTracks,
+    getLocalVideoTrack,
+    getLocalAudioTrack,
+    isAcquiringLocalTracks,
+    removeLocalVideoTrack,
+    getAudioAndVideoTracks,
+  } = useLocalTracks();
+  const { room, isConnecting, connect } = useRoom(localTracks, onErrorCallback, options);
 
-    // Register onError and onDisconnect callback functions.
-    useHandleRoomDisconnectionErrors(room, onError);
-    useHandleTrackPublicationFailed(room, onError);
-    useHandleOnConnect(room, onConnect);
-    useHandleOnDisconnect(room, onDisconnect);
+  // Register onError and onDisconnect callback functions.
+  useHandleRoomDisconnectionErrors(room, onError);
+  useHandleTrackPublicationFailed(room, onError);
+  useHandleOnDisconnect(room, onDisconnect);
+  const [isSharingScreen, toggleScreenShare] = useScreenShareToggle(room, onError);
 
-    return (
-        <VideoContext.Provider
-            value={{
-                room,
-                localTracks,
-                isConnecting,
-                onError: onErrorCallback,
-                onConnect,
-                onDisconnect,
-                getLocalVideoTrack,
-                getLocalAudioTrack,
-                connect,
-            }}
-        >
-            <SelectedParticipantProvider room={room}>{children}</SelectedParticipantProvider>
-            <AttachVisibilityHandler />
-        </VideoContext.Provider>
-    );
+  return (
+    <VideoContext.Provider
+      value={{
+        room,
+        localTracks,
+        isConnecting,
+        onError: onErrorCallback,
+        onDisconnect,
+        getLocalVideoTrack,
+        getLocalAudioTrack,
+        connect,
+        isAcquiringLocalTracks,
+        removeLocalVideoTrack,
+        isSharingScreen,
+        toggleScreenShare,
+        getAudioAndVideoTracks,
+      }}
+    >
+      <SelectedParticipantProvider room={room}>{children}</SelectedParticipantProvider>
+      {/*
+        The AttachVisibilityHandler component is using the useLocalVideoToggle hook
+        which must be used within the VideoContext Provider.
+      */}
+      <AttachVisibilityHandler />
+    </VideoContext.Provider>
+  );
 }

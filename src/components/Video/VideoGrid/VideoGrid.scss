@@ -1,154 +1,154 @@
-@import "../../../styles/util.scss";
-@import "../../../styles/form.scss";
+// @import "../../../styles/util.scss";
+// @import "../../../styles/form.scss";
 
-$gutter     : mm(10);
-$main-width : mm(150);
+// $gutter     : mm(10);
+// $main-width : mm(150);
 
-.enter-room-choices {
-    @include basic-form;
+// .enter-room-choices {
+//     @include basic-form;
 
-    display       : flex;
-    flex-direction: column;
-    align-items   : center;
+//     display       : flex;
+//     flex-direction: column;
+//     align-items   : center;
 
-    &>p {
-        max-width: $break-md;
-    }
+//     &>p {
+//         max-width: $break-md;
+//     }
 
-    &>form>button {
-        margin-top: 1em;
-    }
-}
+//     &>form>button {
+//         margin-top: 1em;
+//     }
+// }
 
-.video-grid {
-    width : 100%;
-    height: 100%;
+// .video-grid {
+//     width : 100%;
+//     height: 100%;
 
-    .controls {
-        position: absolute;
-        height  : auto;
-        bottom  : 20px;
-        width   : 100%;
-        left    : 0;
+//     .controls {
+//         position: absolute;
+//         height  : auto;
+//         bottom  : 20px;
+//         width   : 100%;
+//         left    : 0;
 
-        display        : flex;
-        justify-content: center;
-        align-items    : center;
-        flex-wrap      : wrap;
+//         display        : flex;
+//         justify-content: center;
+//         align-items    : center;
+//         flex-wrap      : wrap;
 
-        opacity   : 0;
-        transition: opacity 0.5s ease-in-out;
-        z-index: 5;
+//         opacity   : 0;
+//         transition: opacity 0.5s ease-in-out;
+//         z-index: 5;
 
-        &.showControls {
-            opacity: 1;
+//         &.showControls {
+//             opacity: 1;
 
-            .MuiIconButton-root {
-                background-color: rgba(255, 255, 255, 0.3);
-            }
-        }
-    }
+//             .MuiIconButton-root {
+//                 background-color: rgba(255, 255, 255, 0.3);
+//             }
+//         }
+//     }
 
-    .videoEmbed {
-        text-align: center;
-    }
+//     .videoEmbed {
+//         text-align: center;
+//     }
 
-    .videos {
-        padding              : 5px;
-        display              : grid;
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows   : auto;
-        justify-items        : center;
-        grid-gap             : 0.4em;
-        align-items          : stretch;
-        z-index: 1;
-    }
+//     .videos {
+//         padding              : 5px;
+//         display              : grid;
+//         grid-template-columns: repeat(4, 1fr);
+//         grid-template-rows   : auto;
+//         justify-items        : center;
+//         grid-gap             : 0.4em;
+//         align-items          : stretch;
+//         z-index: 1;
+//     }
 
-    @media only screen and (max-width: 1280px) {
-        .videos {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
+//     @media only screen and (max-width: 1280px) {
+//         .videos {
+//             grid-template-columns: repeat(3, 1fr);
+//         }
+//     }
 
-    .videos .participant {
-        display        : inline-flex;
-        position       : relative;
-        cursor         : pointer;
-        min-width      : 160px;
-        max-width      : 640px;
-        width          : 100%;
-        min-height     : 3em;
-        margin         : 0;
-        padding        : 0;
-        flex-flow      : column;
-        align-content  : center;
-        align-items    : center;
-        justify-content: center;
-        overflow       : hidden;
+//     .videos .participant {
+//         display        : inline-flex;
+//         position       : relative;
+//         cursor         : pointer;
+//         min-width      : 160px;
+//         max-width      : 640px;
+//         width          : 100%;
+//         min-height     : 3em;
+//         margin         : 0;
+//         padding        : 0;
+//         flex-flow      : column;
+//         align-content  : center;
+//         align-items    : center;
+//         justify-content: center;
+//         overflow       : hidden;
 
-        /** Because CSS borders on or around video produce weird white gaps in Chrome... **/
-        .border-provider {
-            border  : 2px solid $gray-2;
-            position: absolute;
-            top     : 0;
-            left    : 0;
-            right   : 0;
-            bottom  : 0;
-            z-index : 3;
-        }
+//         /** Because CSS borders on or around video produce weird white gaps in Chrome... **/
+//         .border-provider {
+//             border  : 2px solid $gray-2;
+//             position: absolute;
+//             top     : 0;
+//             left    : 0;
+//             right   : 0;
+//             bottom  : 0;
+//             z-index : 3;
+//         }
 
-        video {
-            filter: none;
-            width : 100%;
-        }
-    }
+//         video {
+//             filter: none;
+//             width : 100%;
+//         }
+//     }
 
-    .videos .participant.videoOff {
-        background: #A0A0A0;
-    }
+//     .videos .participant.videoOff {
+//         background: #A0A0A0;
+//     }
 
-    .videos .participant.videoOff video {
-        filter: blur(4px) grayscale(1) brightness(0.5);
-    }
+//     .videos .participant.videoOff video {
+//         filter: blur(4px) grayscale(1) brightness(0.5);
+//     }
 
-    .videos .participant svg {
-        stroke      : black;
-        stroke-width: 0.8px;
-    }
+//     .videos .participant svg {
+//         stroke      : black;
+//         stroke-width: 0.8px;
+//     }
 
-    .videos .participant.selected {
-        grid-column: 1 / 6;
-        max-width: 100%;
-        max-height: 80vh;
-    }
+//     .videos .participant.selected {
+//         grid-column: 1 / 6;
+//         max-width: 100%;
+//         max-height: 80vh;
+//     }
 
-    .videos .participant .infoContainer {
-        display        : flex;
-        justify-content: flex-end;
-        margin         : 0;
-        padding        : 0.3em;
-        background     : rgba(0, 0, 0, 0.4);
-        position       : absolute;
-        top            : 0;
-        z-index        : 2;
-        width          : 100%;
-        color          : white;
-        font-size      : 110%;
-        font-weight    : 300;
+//     .videos .participant .infoContainer {
+//         display        : flex;
+//         justify-content: flex-end;
+//         margin         : 0;
+//         padding        : 0.3em;
+//         background     : rgba(0, 0, 0, 0.4);
+//         position       : absolute;
+//         top            : 0;
+//         z-index        : 2;
+//         width          : 100%;
+//         color          : white;
+//         font-size      : 110%;
+//         font-weight    : 300;
 
-        &>svg {
-            margin-top   : 0.2em;
-            margin-bottom: -0.2em;
-        }
+//         &>svg {
+//             margin-top   : 0.2em;
+//             margin-bottom: -0.2em;
+//         }
 
-        .identity {
-            font-size   : inherit;
-            font-weight : inherit;
-            padding     : 0.1em 0.3em;
-            margin      : 0;
-            display     : flex;
-            align-items : center;
-            margin-right: auto;
-        }
-    }
-}
+//         .identity {
+//             font-size   : inherit;
+//             font-weight : inherit;
+//             padding     : 0.1em 0.3em;
+//             margin      : 0;
+//             display     : flex;
+//             align-items : center;
+//             margin-right: auto;
+//         }
+//     }
+// }
