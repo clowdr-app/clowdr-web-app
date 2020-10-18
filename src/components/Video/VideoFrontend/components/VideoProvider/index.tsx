@@ -1,11 +1,11 @@
 import React, { createContext, ReactNode } from 'react';
 import {
-  CreateLocalTrackOptions,
-  ConnectOptions,
-  LocalAudioTrack,
-  LocalVideoTrack,
-  Room,
-  TwilioError,
+    CreateLocalTrackOptions,
+    ConnectOptions,
+    LocalAudioTrack,
+    LocalVideoTrack,
+    Room,
+    TwilioError,
 } from 'twilio-video';
 import { Callback, ErrorCallback } from '../../types';
 import { SelectedParticipantProvider } from './useSelectedParticipant/useSelectedParticipant';
@@ -26,77 +26,80 @@ import useScreenShareToggle from './useScreenShareToggle/useScreenShareToggle';
  */
 
 export interface IVideoContext {
-  room: Room;
-  localTracks: (LocalAudioTrack | LocalVideoTrack)[];
-  isConnecting: boolean;
-  connect: (token: string) => Promise<void>;
-  onError: ErrorCallback;
-  onDisconnect: Callback;
-  getLocalVideoTrack: (newOptions?: CreateLocalTrackOptions) => Promise<LocalVideoTrack>;
-  getLocalAudioTrack: (deviceId?: string) => Promise<LocalAudioTrack>;
-  isAcquiringLocalTracks: boolean;
-  removeLocalVideoTrack: () => void;
-  isSharingScreen: boolean;
-  toggleScreenShare: () => void;
-  getAudioAndVideoTracks: () => Promise<void>;
+    room: Room;
+    localAudioTrack: LocalAudioTrack | undefined;
+    localVideoTrack: LocalVideoTrack | undefined;
+    isConnecting: boolean;
+    connect: (token: string) => Promise<void>;
+    onError: ErrorCallback;
+    onDisconnect: Callback;
+    getLocalVideoTrack: (newOptions?: CreateLocalTrackOptions) => Promise<LocalVideoTrack>;
+    getLocalAudioTrack: (deviceId?: string) => Promise<LocalAudioTrack>;
+    isAcquiringLocalTracks: boolean;
+    removeLocalVideoTrack: () => void;
+    isSharingScreen: boolean;
+    toggleScreenShare: () => void;
+    getAudioAndVideoTracks: () => Promise<void>;
 }
 
 export const VideoContext = createContext<IVideoContext>(null!);
 
 interface VideoProviderProps {
-  options?: ConnectOptions;
-  onError: ErrorCallback;
-  onDisconnect?: Callback;
-  children: ReactNode;
+    options?: ConnectOptions;
+    onError: ErrorCallback;
+    onDisconnect?: Callback;
+    children: ReactNode;
 }
 
-export function VideoProvider({ options, children, onError = () => {}, onDisconnect = () => {} }: VideoProviderProps) {
-  const onErrorCallback = (error: TwilioError) => {
-    // tslint:disable-next-line:no-console
-    console.log(`ERROR: ${error.message}`, error);
-    onError(error);
-  };
+export function VideoProvider({ options, children, onError = () => { }, onDisconnect = () => { } }: VideoProviderProps) {
+    const onErrorCallback = (error: TwilioError) => {
+        // tslint:disable-next-line:no-console
+        console.log(`ERROR: ${error.message}`, error);
+        onError(error);
+    };
 
-  const {
-    localTracks,
-    getLocalVideoTrack,
-    getLocalAudioTrack,
-    isAcquiringLocalTracks,
-    removeLocalVideoTrack,
-    getAudioAndVideoTracks,
-  } = useLocalTracks();
-  const { room, isConnecting, connect } = useRoom(localTracks, onErrorCallback, options);
-
-  // Register onError and onDisconnect callback functions.
-  useHandleRoomDisconnectionErrors(room, onError);
-  useHandleTrackPublicationFailed(room, onError);
-  useHandleOnDisconnect(room, onDisconnect);
-  const [isSharingScreen, toggleScreenShare] = useScreenShareToggle(room, onError);
-
-  return (
-    <VideoContext.Provider
-      value={{
-        room,
-        localTracks,
-        isConnecting,
-        onError: onErrorCallback,
-        onDisconnect,
+    const {
+        audioTrack: localAudioTrack,
+        videoTrack: localVideoTrack,
         getLocalVideoTrack,
         getLocalAudioTrack,
-        connect,
         isAcquiringLocalTracks,
         removeLocalVideoTrack,
-        isSharingScreen,
-        toggleScreenShare,
         getAudioAndVideoTracks,
-      }}
-    >
-      <SelectedParticipantProvider room={room}>{children}</SelectedParticipantProvider>
-      {/*
+    } = useLocalTracks();
+    const { room, isConnecting, connect } = useRoom(localAudioTrack, localVideoTrack, onErrorCallback, options);
+
+    // Register onError and onDisconnect callback functions.
+    useHandleRoomDisconnectionErrors(room, onError);
+    useHandleTrackPublicationFailed(room, onError);
+    useHandleOnDisconnect(room, onDisconnect);
+    const [isSharingScreen, toggleScreenShare] = useScreenShareToggle(room, onError);
+
+    return (
+        <VideoContext.Provider
+            value={{
+                room,
+                localAudioTrack,
+                localVideoTrack,
+                isConnecting,
+                onError: onErrorCallback,
+                onDisconnect,
+                getLocalVideoTrack,
+                getLocalAudioTrack,
+                connect,
+                isAcquiringLocalTracks,
+                removeLocalVideoTrack,
+                isSharingScreen,
+                toggleScreenShare,
+                getAudioAndVideoTracks,
+            }}
+        >
+            <SelectedParticipantProvider room={room}>{children}</SelectedParticipantProvider>
+            {/*
         The AttachVisibilityHandler component is using the useLocalVideoToggle hook
         which must be used within the VideoContext Provider.
       */}
-      <AttachVisibilityHandler />
-    </VideoContext.Provider>
-  );
+            <AttachVisibilityHandler />
+        </VideoContext.Provider>
+    );
 }

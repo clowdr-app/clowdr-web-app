@@ -4,7 +4,7 @@ export function useDevices() {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
 
   useEffect(() => {
-    const getDevices = () => navigator.mediaDevices.enumerateDevices().then(devices => setDevices(devices));
+    const getDevices = () => navigator.mediaDevices.enumerateDevices().then(_devices => setDevices(_devices));
     navigator.mediaDevices.addEventListener('devicechange', getDevices);
     getDevices();
 

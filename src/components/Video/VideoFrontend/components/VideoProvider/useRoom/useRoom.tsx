@@ -1,13 +1,17 @@
 import { Callback } from '../../../types';
 import EventEmitter from 'events';
 import { isMobile } from '../../../utils';
-import Video, { ConnectOptions, LocalTrack, Room } from 'twilio-video';
+import Video, { ConnectOptions, LocalAudioTrack, LocalTrack, LocalVideoTrack, Room } from 'twilio-video';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // @ts-ignore
 window.TwilioVideo = Video;
 
-export default function useRoom(localTracks: LocalTrack[], onError: Callback, options?: ConnectOptions) {
+export default function useRoom(
+    localAudioTrack: LocalAudioTrack | undefined,
+    localVideoTrack: LocalVideoTrack | undefined,
+    onError: Callback,
+    options?: ConnectOptions) {
     // @ts-ignore
     const [room, setRoom] = useState<Room>(new EventEmitter() as Room);
     const [isConnecting, setIsConnecting] = useState(false);
@@ -22,6 +26,7 @@ export default function useRoom(localTracks: LocalTrack[], onError: Callback, op
     const connect = useCallback(
         token => {
             setIsConnecting(true);
+            const localTracks = [localAudioTrack, localVideoTrack].filter(x => x !== undefined) as LocalTrack[];
             return Video.connect(token, { ...optionsRef.current, tracks: localTracks }).then(
                 newRoom => {
                     setRoom(newRoom);
@@ -68,7 +73,7 @@ export default function useRoom(localTracks: LocalTrack[], onError: Callback, op
                 }
             );
         },
-        [localTracks, onError]
+        [localAudioTrack, localVideoTrack, onError]
     );
 
     return { room, isConnecting, connect };
