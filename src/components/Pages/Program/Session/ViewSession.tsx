@@ -29,7 +29,7 @@ export default function ViewSession(props: Props) {
     const [chatSize, setChatSize] = useState(30);
     const [showEventsList, setShowEventsList] = useState<boolean>(false);
     const [textChatId, setTextChatId] = useState<string | false | null>(null);
-    const [refreshTime, setRefreshTime] = useState<number | null>(null);
+    const [specialRefreshTime, setMySpecialRefreshTime] = useState<number | null>(null);
     const [events, setEvents] = useState<Array<ProgramSessionEvent> | null>(null);
 
     // Initial data fetch
@@ -88,31 +88,15 @@ export default function ViewSession(props: Props) {
         (data: string | false | null) => {
             setTextChatId(data);
         },
-        [session, session?.id, events, refreshTime, sessionFeed]);
+        [session, session?.id, events, specialRefreshTime, sessionFeed]);
 
     useEffect(() => {
-        const _now = Date.now();
-        if (session && events && _now < session.endTime.getTime() + (60 * 1000)) {
-            // let nextEpoch = session.startTime.getTime();
-            // if (_now > nextEpoch) {
-            //     nextEpoch = session.endTime.getTime();
-            //     const currentEvents
-            //         = events
-            //             .filter(ev => ev.startTime.getTime() < _now && ev.endTime.getTime() > _now)
-            //             .sort((x, y) => x.endTime.getTime() < y.endTime.getTime() ? -1 : 1);
-            //     if (currentEvents.length > 0) {
-            //         nextEpoch = currentEvents[0].endTime.getTime();
-            //     }
-            // }
-            // const tDist = nextEpoch - _now;
-            const t = setInterval(() => {
-                setRefreshTime(_now);
-            }, 30000); // Math.max(5000, tDist / 2)
-            return () => {
-                clearInterval(t);
-            };
-        }
-        return () => { };
+        const t = setInterval(() => {
+            setMySpecialRefreshTime(Date.now());
+        }, 15000);
+        return () => {
+            clearInterval(t);
+        };
     }, [session, events]);
 
     // Subscribe to data updates

@@ -40,20 +40,12 @@ export default function ViewEvent(props: Props) {
 
     const [refreshTime, setRefreshTime] = useState<number>(0);
     useEffect(() => {
-        const _now = Date.now();
-        if (event && _now < event.endTime.getTime() + (60 * 1000)) {
-            // const tDist =
-            //     _now < event.startTime.getTime()
-            //         ? (event.startTime.getTime() - _now)
-            //         : (event.endTime.getTime() - _now);
-            const t = setInterval(() => {
-                setRefreshTime(_now);
-            }, 30000); // Math.max(5000, tDist / 2)
-            return () => {
-                clearInterval(t);
-            };
-        }
-        return () => { };
+        const t = setInterval(() => {
+            setRefreshTime(Date.now());
+        }, 15000);
+        return () => {
+            clearInterval(t);
+        };
     }, [event, refreshTime]);
 
     // Subscribe to data updates
