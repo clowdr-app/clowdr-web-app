@@ -69,7 +69,7 @@ export default function ScheduleView(props: Props) {
                 }
             }
             rows.push(
-                <SessionGroup session={session} data={props.data} key={session.id} hideEventTimes={true} showSessionTime={true} />
+                <SessionGroup session={session} data={props.data} key={session.id} hideEventTimes={false} showSessionTime={true} />
             );
             prevEventDay = currEventDay;
         }
