@@ -1,3 +1,4 @@
+import { Registration } from "@clowdr-app/clowdr-db-schema";
 import assert from "assert";
 import Parse from "parse";
 import React, { useState } from "react";
@@ -5,7 +6,10 @@ import { Redirect } from "react-router-dom";
 import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
 import useConference from "../../../../hooks/useConference";
 import useHeading from "../../../../hooks/useHeading";
+import useSafeAsync from "../../../../hooks/useSafeAsync";
 import useUserRoles from "../../../../hooks/useUserRoles";
+import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../../Columns/Column/Column";
+import Columns from "../../../Columns/Columns";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import "./Registration.scss";
 
@@ -44,6 +48,9 @@ export default function AdminRegistration(props: Props) {
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [newRegsData, setNewRegsData] = useState<any>(null);
+    const [existingRegs, setExistingRegs] = useState<Registration[] | null>(null);
+
+    useSafeAsync(async () => Registration.getAll(conference.id), setExistingRegs, [conference.id]);
 
     useHeading({
         title: "Admin: Registrations",
@@ -103,6 +110,22 @@ export default function AdminRegistration(props: Props) {
                 addError("Error when attempting to send registration emails.");
                 setIsSending(false);
             });
+    }
+
+    function regRenderer(item: ColumnItem<Registration>): JSX.Element {
+        const data = item.renderData;
+        const linkURL = `${process.env.REACT_APP_FRONTEND_URL}/register/${conference.id}/${data.id}/${data.email}`;
+        return <>
+            <div className="name">
+                {data.name}
+            </div>
+            <div className="email">
+                {data.email}
+            </div>
+            <div className="link">
+                <a href={linkURL}>{linkURL}</a>
+            </div>
+        </>;
     }
 
     const adminPanel = <>
@@ -167,18 +190,24 @@ type RegistrationSpec = {
         <h2>Send repeat registration emails</h2>
         <p>Send a repeat registration email to all users that have not yet registered. Includes users that have not yet received any registration email.</p>
         <p>{isSending ? <LoadingSpinner message="Sending emails" /> : <button disabled={isSending} onClick={() => sendRegistrationEmails(false)}>Send repeat registration emails</button>}</p>
+        <Columns className="admin-registrations">
+            <Column
+                className="col"
+                items={existingRegs?.map(reg => ({
+                    key: reg.id,
+                    text: reg.name,
+                    renderData: reg
+                })) ?? undefined}
+                itemRenderer={{ render: regRenderer }}
+                loadingMessage="Loading existing registrations">
+                <h2>Existing Registrations{existingRegs ? ` (${existingRegs.length})` : ""}</h2>
+            </Column>
+        </Columns>
     </>;
 
-    function contents() {
-        switch (isAdmin) {
-            case null:
-                return <LoadingSpinner key="Loading" />;
-            case true:
-                return adminPanel;
-            case false:
-                return <Redirect to="/notfound" />;
-        }
-    }
-
-    return <> { contents()} </>;
+    return isAdmin === null
+        ? <LoadingSpinner />
+        : isAdmin
+            ? adminPanel
+            : <Redirect to="/notfound" />;
 }

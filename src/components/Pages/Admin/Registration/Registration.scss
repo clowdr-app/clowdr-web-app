@@ -1,0 +1,18 @@
+.admin-registrations {
+    li {
+        display: flex;
+        flex-wrap: wrap;
+
+        .name {
+            min-width: 20em;
+            margin-right: 2em;
+        }
+        .email {
+            min-width: 20em;
+            margin-right: 2em;
+        }
+        .link {
+            min-width: 40em;
+        }
+    }
+}
