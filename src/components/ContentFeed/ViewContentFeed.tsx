@@ -79,6 +79,8 @@ export default function ViewContentFeed(props: Props) {
     if (!props.hideZoomOrVideo && zoomRoom && zoomRoom !== "not present") {
         className += " zoom";
     }
+    // TODO: Detect if the Zoom is a webinar and hide the Join In Browser thing
+    //       or somehow supply the user's email address to Zoom to join the webinar? Consent?
     return <div className={className}>
         {!props.hideZoomOrVideo && zoomRoom && zoomRoom !== "not present"
             ? <div className="zoom">
@@ -93,7 +95,7 @@ export default function ViewContentFeed(props: Props) {
                     href={zoomRoom.url}
                     rel="noopener noreferrer"
                     target="_blank">
-                    Join by Zoom App (recommended)
+                    Join by Zoom App
                         </a>
                 {(zoomDetails && joinZoom)
                     ? <div className="zoom-frame-container">
@@ -110,7 +112,7 @@ export default function ViewContentFeed(props: Props) {
                             style={{ width: '1px', minWidth: '100%', minHeight: '60vh' }}
                             allow="microphone; camera" />
                     </div>
-                    : <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>Join Zoom in browser</button>}
+                    : <></> /*<button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>Join Zoom in browser</button>*/}
             </div>
             : <></>
         }
