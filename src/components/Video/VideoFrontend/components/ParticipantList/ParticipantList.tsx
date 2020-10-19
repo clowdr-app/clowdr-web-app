@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import Participant from '../Participant/Participant';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import useMainParticipant from '../../hooks/useMainParticipant/useMainParticipant';
-import useParticipants from '../../hooks/useParticipants/useParticipants';
+import useParticipants, { ParticipantWithSlot } from '../../hooks/useParticipants/useParticipants';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import useSelectedParticipant from '../VideoProvider/useSelectedParticipant/useSelectedParticipant';
 import useScreenShareParticipant from '../../hooks/useScreenShareParticipant/useScreenShareParticipant';
@@ -37,10 +37,34 @@ const useStyles = makeStyles((theme: Theme) =>
                 display: 'flex',
             },
         },
+        gridContainer: {
+            gridArea: "1 / 1 / 1 / 3",
+            overflowX: "hidden",
+            overflowY: "auto",
+            [theme.breakpoints.down('sm')]: {
+                gridArea: "1 / 1 / 3 / 1",
+            }
+        },
+        gridInnerContainer: {
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr 1fr",
+            gridAutoRows: "1fr",
+            [theme.breakpoints.down('md')]: {
+                gridTemplateColumns: "1fr 1fr 1fr",
+            },
+            [theme.breakpoints.down('sm')]: {
+                gridTemplateColumns: "1fr 1fr",
+            },
+            [theme.breakpoints.down('xs')]: {
+                gridTemplateColumns: "1fr",
+            },
+        }
     })
 );
 
-export default function ParticipantList() {
+export default function ParticipantList(props: {
+    gridView: boolean
+}) {
     const classes = useStyles();
     const {
         room: { localParticipant },
@@ -49,7 +73,6 @@ export default function ParticipantList() {
     const [selectedParticipant, setSelectedParticipant] = useSelectedParticipant();
     const screenShareParticipant = useScreenShareParticipant();
     const mainParticipant = useMainParticipant();
-    const isRemoteParticipantScreenSharing = screenShareParticipant && screenShareParticipant !== localParticipant;
 
     const conference = useConference();
     const localUserProfile = useUserProfile();
@@ -57,44 +80,73 @@ export default function ParticipantList() {
     const [remoteProfiles, setRemoteProfiles] = useState<Array<UserProfile> | null>(null);
 
     useSafeAsync(async () => {
-        const profiles = await Promise.all(participants.map(participant => UserProfile.get(participant.identity, conference.id)));
+        const profiles = await Promise.all(
+            participants.map(participantWithSlot =>
+                UserProfile.get(participantWithSlot.participant.identity, conference.id)));
         return removeNull(profiles);
     }, setRemoteProfiles, [participants]);
 
-    if (participants.length === 0) return null; // Don't render this component if there are no remote participants.
+    function participantSorter(x: ParticipantWithSlot, y: ParticipantWithSlot): number {
+        return x.slot < y.slot ? -1 : x.slot === y.slot ? 0 : 1;
+    }
 
-    return (
-        <aside
-            className={clsx(classes.container, {
-                [classes.transparentBackground]: !isRemoteParticipantScreenSharing,
+    const participantsEl = <>
+        <Participant
+            participant={localParticipant}
+            profile={localUserProfile}
+            isLocalParticipant={true}
+            insideGrid={props.gridView}
+            slot={0}
+        />
+        {participants
+            .sort(participantSorter)
+            .map(participantWithSlot => {
+                const participant = participantWithSlot.participant;
+                const isSelected = participant === selectedParticipant;
+                const hideParticipant =
+                    participant === mainParticipant &&
+                    participant !== screenShareParticipant &&
+                    !isSelected &&
+                    participants.length > 1;
+                const remoteProfile = participant.identity === localParticipant.identity
+                    ? localUserProfile
+                    : remoteProfiles?.find(y => y.id === participant.identity);
+                return (
+                    <Participant
+                        key={participant.sid}
+                        participant={participant}
+                        profile={remoteProfile}
+                        isSelected={participant === selectedParticipant}
+                        onClick={() => setSelectedParticipant(participant)}
+                        hideParticipant={hideParticipant}
+                        slot={participantWithSlot.slot}
+                        insideGrid={props.gridView}
+                    />
+                );
             })}
-        >
-            <div className={classes.scrollContainer}>
-                <Participant
-                    participant={localParticipant}
-                    profile={localUserProfile}
-                    isLocalParticipant={true} />
-                {participants.map(participant => {
-                    const isSelected = participant === selectedParticipant;
-                    const hideParticipant =
-                        participant === mainParticipant &&
-                        participant !== screenShareParticipant &&
-                        !isSelected;
-                    const remoteProfile = participant.identity === localParticipant.identity
-                        ? localUserProfile
-                        : remoteProfiles?.find(y => y.id === participant.identity);
-                    return (
-                        <Participant
-                            key={participant.sid}
-                            participant={participant}
-                            profile={remoteProfile}
-                            isSelected={participant === selectedParticipant}
-                            onClick={() => setSelectedParticipant(participant)}
-                            hideParticipant={hideParticipant}
-                        />
-                    );
+    </>;
+
+    return props.gridView
+        ? (
+            <main
+                className={clsx(classes.gridContainer, {
+                    [classes.transparentBackground]: true,
+                }, "participants-grid-container")}
+            >
+                <div className={classes.gridInnerContainer}>
+                        {participantsEl}
+                </div>
+            </main>
+        )
+        : (
+            <aside
+                className={clsx(classes.container, {
+                    [classes.transparentBackground]: true,
                 })}
-            </div>
-        </aside>
-    );
+            >
+                <div className={classes.scrollContainer}>
+                    {participantsEl}
+                </div>
+            </aside>
+        );
 }

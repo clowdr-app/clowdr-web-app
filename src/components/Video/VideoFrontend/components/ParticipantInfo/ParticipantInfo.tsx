@@ -26,7 +26,6 @@ const useStyles = makeStyles((theme: Theme) =>
             alignItems: 'center',
             height: 0,
             overflow: 'hidden',
-            marginBottom: '2em',
             '& video': {
                 filter: 'none',
                 objectFit: 'contain !important',
@@ -34,7 +33,9 @@ const useStyles = makeStyles((theme: Theme) =>
             borderRadius: '4px',
             border: `${BORDER_SIZE}px solid rgb(245, 248, 255)`,
             paddingTop: `calc(${(9 / 16) * 100}% - ${BORDER_SIZE}px)`,
-            background: 'black',
+            background: 'black'
+        },
+        notContainedInGrid: {
             [theme.breakpoints.down('sm')]: {
                 height: theme.sidebarMobileHeight,
                 width: `${(theme.sidebarMobileHeight * 16) / 9}px`,
@@ -42,7 +43,7 @@ const useStyles = makeStyles((theme: Theme) =>
                 marginBottom: '0',
                 fontSize: '10px',
                 paddingTop: `${theme.sidebarMobileHeight - 2}px`,
-            },
+            }
         },
         innerContainer: {
             position: 'absolute',
@@ -146,6 +147,8 @@ interface ParticipantInfoProps {
     isSelected?: boolean;
     isLocalParticipant?: boolean;
     hideParticipant?: boolean;
+    slot?: number;
+    insideGrid: boolean;
 }
 
 export default function ParticipantInfo({
@@ -156,6 +159,8 @@ export default function ParticipantInfo({
     children,
     isLocalParticipant,
     hideParticipant,
+    slot,
+    insideGrid
 }: ParticipantInfoProps) {
     const publications = usePublications(participant);
 
@@ -178,7 +183,8 @@ export default function ParticipantInfo({
             className={clsx(classes.container, {
                 [classes.hideParticipant]: hideParticipant,
                 [classes.cursorPointer]: Boolean(onClick),
-            })}
+                [classes.notContainedInGrid]: !insideGrid
+            }, slot !== undefined ? `area-${slot}` : undefined)}
             onClick={onClick}
             data-cy-participant={participant.identity}
         >

@@ -6,8 +6,8 @@ import useMediaStreamTrack from '../../hooks/useMediaStreamTrack/useMediaStreamT
 import useVideoTrackDimensions from '../../hooks/useVideoTrackDimensions/useVideoTrackDimensions';
 
 const Video = styled('video')({
-  width: '100%',
-  height: '100%',
+  maxWidth: "100%",
+  maxHeight: "100%",
 });
 
 interface VideoTrackProps {

@@ -24,6 +24,7 @@ import useLocalAudioToggle from "../VideoFrontend/hooks/useLocalAudioToggle/useL
 import useVideoContext from "../VideoFrontend/hooks/useVideoContext/useVideoContext";
 import useLocalVideoToggle from "../VideoFrontend/hooks/useLocalVideoToggle/useLocalVideoToggle";
 import { Prompt } from "react-router-dom";
+import "./VideoGrid.scss";
 
 const Container = styled('div')({
     display: 'grid',
@@ -33,7 +34,6 @@ const Container = styled('div')({
 const Main = styled('main')(({ theme: _theme }: { theme: Theme }) => ({
     overflow: 'hidden',
     paddingBottom: `${_theme.footerHeight}px`, // Leave some space for the footer
-    background: 'black',
     [_theme.breakpoints.down('sm')]: {
         paddingBottom: `${_theme.mobileFooterHeight + _theme.mobileTopBarHeight}px`, // Leave some space for the mobile header and footer
     },
@@ -46,9 +46,6 @@ interface Props {
 function VideoGrid(props: Props) {
     const { room } = useVideoContext();
     const roomState = useRoomState();
-
-    // VIDEO_TODO: Stable grid layout
-    // VIDEO_TODO: Style video room as grid by default
 
     const { stopAudio } = useLocalAudioToggle();
     const { stopVideo } = useLocalVideoToggle();
@@ -82,7 +79,8 @@ function VideoGrid(props: Props) {
         unmountRef.current = () => {
             stop();
         }
-        unloadRef.current = () => {
+        unloadRef.current = (ev) => {
+            ev.preventDefault();
             stop();
         }
     }, [room, roomState, stopAudio, stopVideo]);
@@ -121,7 +119,7 @@ function VideoGrid(props: Props) {
             when={roomState !== "disconnected"}
             message='Are you sure you want to leave the video room?'
         />
-        <Container style={{ height: "100%" }}>
+        <Container style={{ height: "100%" }} className="video-grid">
             {roomState === 'disconnected' ? (
                 <PreJoinScreens room={props.room} />
             ) : (
@@ -150,7 +148,6 @@ function VideoGridVideoWrapper(props: Props) {
 
 export default function VideoGridStateWrapper(props: Props) {
     return <MuiThemeProvider theme={theme}>
-        <CssBaseline />
         <AppStateProvider>
             <VideoGridVideoWrapper {...props} />
         </AppStateProvider>

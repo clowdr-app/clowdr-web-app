@@ -14,6 +14,8 @@ interface ParticipantProps {
     isDominantSpeaker?: boolean;
     isLocalParticipant?: boolean;
     hideParticipant?: boolean;
+    slot?: number;
+    insideGrid: boolean;
 }
 
 export default function Participant({
@@ -25,6 +27,8 @@ export default function Participant({
     isSelected,
     isLocalParticipant,
     hideParticipant,
+    slot,
+    insideGrid
 }: ParticipantProps) {
     return (
         <ParticipantInfo
@@ -34,6 +38,8 @@ export default function Participant({
             isSelected={isSelected}
             isLocalParticipant={isLocalParticipant}
             hideParticipant={hideParticipant}
+            slot={slot}
+            insideGrid={insideGrid}
         >
             <ParticipantTracks
                 participant={participant}

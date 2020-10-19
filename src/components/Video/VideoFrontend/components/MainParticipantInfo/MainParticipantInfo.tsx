@@ -8,7 +8,6 @@ import Typography from '@material-ui/core/Typography';
 
 import useIsTrackSwitchedOff from '../../hooks/useIsTrackSwitchedOff/useIsTrackSwitchedOff';
 import usePublications from '../../hooks/usePublications/usePublications';
-import useScreenShareParticipant from '../../hooks/useScreenShareParticipant/useScreenShareParticipant';
 import useTrack from '../../hooks/useTrack/useTrack';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import useParticipantIsReconnecting from '../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting';
@@ -16,12 +15,14 @@ import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
 import { UserProfile } from '@clowdr-app/clowdr-db-schema';
 import useConference from '../../../../../hooks/useConference';
 import useSafeAsync from '../../../../../hooks/useSafeAsync';
+import useSelectedParticipant from '../VideoProvider/useSelectedParticipant/useSelectedParticipant';
 
 const useStyles = makeStyles((theme: Theme) => ({
     container: {
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
+        cursor: 'pointer',
     },
     identity: {
         background: 'rgba(0, 0, 0, 0.5)',
@@ -86,12 +87,13 @@ export default function MainParticipantInfo({ participant, children }: MainParti
     } = useVideoContext();
     const isLocal = localParticipant === participant;
 
-    const screenShareParticipant = useScreenShareParticipant();
-    const isRemoteParticipantScreenSharing = screenShareParticipant && screenShareParticipant !== localParticipant;
+    // const screenShareParticipant = useScreenShareParticipant();
+    // const isRemoteParticipantScreenSharing = screenShareParticipant && screenShareParticipant !== localParticipant;
 
     const publications = usePublications(participant);
     const videoPublication = publications.find(p => p.trackName.includes('camera'));
     const screenSharePublication = publications.find(p => p.trackName.includes('screen'));
+    const setSelectedParticipant = useSelectedParticipant()[1];
 
     const videoTrack = useTrack(screenSharePublication || videoPublication);
     const isVideoEnabled = Boolean(videoTrack);
@@ -111,8 +113,9 @@ export default function MainParticipantInfo({ participant, children }: MainParti
             data-cy-main-participant
             data-cy-participant={participant.identity}
             className={clsx(classes.container, {
-                [classes.fullWidth]: !isRemoteParticipantScreenSharing,
+                [classes.fullWidth]: false,
             })}
+            onClick={() => setSelectedParticipant(participant)}
         >
             <div className={classes.infoContainer}>
                 <div className={classes.identity}>
