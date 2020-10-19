@@ -167,6 +167,8 @@ async function sendRegistrationEmails(data) {
         regQ.doesNotExist("invitationSentDate");
     }
 
+    regQ.limit(10000);
+
     let registrations = await regQ.find({ useMasterKey: true });
 
     console.log(registrations);

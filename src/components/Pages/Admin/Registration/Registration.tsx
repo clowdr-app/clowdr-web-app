@@ -49,6 +49,7 @@ export default function AdminRegistration(props: Props) {
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [newRegsData, setNewRegsData] = useState<any>(null);
     const [existingRegs, setExistingRegs] = useState<Registration[] | null>(null);
+    const [sentRepeats, setSentRepeats] = useState<boolean>(false);
 
     useSafeAsync(async () => Registration.getAll(conference.id), setExistingRegs, [conference.id]);
 
@@ -91,6 +92,7 @@ export default function AdminRegistration(props: Props) {
 
     async function doSendRegistrationEmails(data: SendRegistrationEmailsData): Promise<SendRegistrationEmailsResponse> {
         setIsSending(true);
+        setSentRepeats(!data.sendOnlyUnsent);
         const response = await Parse.Cloud.run("registration-send-emails", data) as SendRegistrationEmailsResponse;
         return response;
     }
@@ -189,7 +191,11 @@ type RegistrationSpec = {
         <p>{isSending ? <LoadingSpinner message="Sending emails" /> : <button disabled={isSending} onClick={() => sendRegistrationEmails(true)}>Send initial registration emails</button>}</p>
         <h2>Send repeat registration emails</h2>
         <p>Send a repeat registration email to all users that have not yet registered. Includes users that have not yet received any registration email.</p>
-        <p>{isSending ? <LoadingSpinner message="Sending emails" /> : <button disabled={isSending} onClick={() => sendRegistrationEmails(false)}>Send repeat registration emails</button>}</p>
+        <p>{sentRepeats
+                ? <>You have alrerady sent repeat emails. Pressing this button again will send the same people another copy of their registration email. If this is what you would like to do, please refresh the page.</>
+                : isSending
+                ? <LoadingSpinner message="Sending emails" />
+                : <button disabled={isSending} onClick={() => sendRegistrationEmails(false)}>Send repeat registration emails</button>}</p>
         <Columns className="admin-registrations">
             <Column
                 className="col"
