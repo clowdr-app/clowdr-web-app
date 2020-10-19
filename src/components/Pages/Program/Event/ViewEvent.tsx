@@ -42,15 +42,15 @@ export default function ViewEvent(props: Props) {
     useEffect(() => {
         const _now = Date.now();
         if (event && _now < event.endTime.getTime() + (60 * 1000)) {
-            const tDist =
-                _now < event.startTime.getTime()
-                    ? (event.startTime.getTime() - _now)
-                    : (event.endTime.getTime() - _now);
-            const t = setTimeout(() => {
+            // const tDist =
+            //     _now < event.startTime.getTime()
+            //         ? (event.startTime.getTime() - _now)
+            //         : (event.endTime.getTime() - _now);
+            const t = setInterval(() => {
                 setRefreshTime(_now);
-            }, Math.max(5000, tDist / 2));
+            }, 30000); // Math.max(5000, tDist / 2)
             return () => {
-                clearTimeout(t);
+                clearInterval(t);
             };
         }
         return () => { };

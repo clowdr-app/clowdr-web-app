@@ -93,23 +93,23 @@ export default function ViewSession(props: Props) {
     useEffect(() => {
         const _now = Date.now();
         if (session && events && _now < session.endTime.getTime() + (60 * 1000)) {
-            let nextEpoch = session.startTime.getTime();
-            if (_now > nextEpoch) {
-                nextEpoch = session.endTime.getTime();
-                const currentEvents
-                    = events
-                        .filter(ev => ev.startTime.getTime() < _now && ev.endTime.getTime() > _now)
-                        .sort((x, y) => x.endTime.getTime() < y.endTime.getTime() ? -1 : 1);
-                if (currentEvents.length > 0) {
-                    nextEpoch = currentEvents[0].endTime.getTime();
-                }
-            }
-            const tDist = nextEpoch - _now;
-            const t = setTimeout(() => {
+            // let nextEpoch = session.startTime.getTime();
+            // if (_now > nextEpoch) {
+            //     nextEpoch = session.endTime.getTime();
+            //     const currentEvents
+            //         = events
+            //             .filter(ev => ev.startTime.getTime() < _now && ev.endTime.getTime() > _now)
+            //             .sort((x, y) => x.endTime.getTime() < y.endTime.getTime() ? -1 : 1);
+            //     if (currentEvents.length > 0) {
+            //         nextEpoch = currentEvents[0].endTime.getTime();
+            //     }
+            // }
+            // const tDist = nextEpoch - _now;
+            const t = setInterval(() => {
                 setRefreshTime(_now);
-            }, Math.max(5000, tDist / 2));
+            }, 30000); // Math.max(5000, tDist / 2)
             return () => {
-                clearTimeout(t);
+                clearInterval(t);
             };
         }
         return () => { };
