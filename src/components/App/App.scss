@@ -15,20 +15,15 @@
     height  : 100%;
 
     display              : grid;
-    grid-template-columns: auto;
 
     &.sidebar-open {
-        grid-template-areas:
-            "sidebar . page-header ."
-            "sidebar . . ."
-            "sidebar . page .";
-        grid-template-rows: minmax(3em, min-content) 10px auto;
         grid-template-columns: minmax(350px, 20%) 1em auto 1em;
+        grid-template-rows: 100%;
     }
 
     &.sidebar-closed {
         grid-template-columns: 20px 50px auto 20px;
-        grid-template-rows   : minmax(3em, min-content) 1em auto;
+        grid-template-rows   : 100%;
     }
 
     @media only screen and (max-width: $break-md) {
@@ -42,12 +37,30 @@
     }
 
     &.sidebar-open {
-        .page-header {
-            grid-area: page-header;
-        }
 
-        .page {
-            grid-area: page;
+        .page-wrapper {
+            display: grid;
+            grid-template-rows: minmax(3em, min-content) auto;
+            grid-template-columns: auto;
+
+            grid-row-start   : 1;
+            grid-row-end     : 2;
+            grid-column-start: 3;
+            grid-column-end  : 4;
+
+            .page-header {
+                grid-row-start   : 1;
+                grid-row-end     : 2;
+                grid-column-start: 1;
+                grid-column-end  : 2;
+            }
+
+            .page {
+                grid-row-start   : 2;
+                grid-row-end     : 3;
+                grid-column-start: 1;
+                grid-column-end  : 2;
+            }
 
             @media only screen and (max-width: $break-md) {
                 width: 0;
@@ -56,28 +69,48 @@
         }
 
         .sidebar {
-            grid-area: sidebar;
+            grid-row-start   : 1;
+            grid-row-end     : 2;
+            grid-column-start: 1;
+            grid-column-end  : 2;
         }
     }
 
 
     &.sidebar-closed {
-        .page {
-            grid-row-start   : 3;
-            grid-row-end     : 4;
+        .page-wrapper {
+            display: grid;
+            grid-template-rows: minmax(3em, min-content) auto;
+            grid-template-columns: 30px auto;
+            
+            @media only screen and (max-width: $break-md) {
+                grid-template-columns: 50px auto;
+            }
+
+            z-index: 1;
+
+            grid-row-start   : 1;
+            grid-row-end     : 2;
             grid-column-start: 2;
             grid-column-end  : 4;
+
+            .page-header {
+                grid-row-start   : 1;
+                grid-row-end     : 2;
+                grid-column-start: 2;
+                grid-column-end  : 3;
+            }
+
+            .page {
+                grid-row-start   : 2;
+                grid-row-end     : 3;
+                grid-column-start: 1;
+                grid-column-end  : 3;
+            }
 
             @media only screen and (max-width: $break-md) {
                 grid-column-start: 1;
             }
-        }
-
-        .page-header {
-            grid-row-start   : 1;
-            grid-row-end     : 2;
-            grid-column-start: 3;
-            grid-column-end  : 4;
         }
 
         .sidebar-button {
@@ -85,6 +118,8 @@
             grid-row-end     : 2;
             grid-column-start: 1;
             grid-column-end  : 3;
+
+            z-index: 2;
         }
     }
 }

@@ -256,7 +256,7 @@ function Page(props: Props) {
         }
     }, [isAdmin, isManager, mConf, mUser, props, showSignUp]);
 
-    return <>
+    return <div className="page-wrapper">
         {noHeading ? <></> : <header className="page-header">
             <h1 id="page-title" className="banner" aria-level={1}>
                 {heading.icon ? heading.icon : <></>}
@@ -270,7 +270,7 @@ function Page(props: Props) {
                 {contents}
             </HeadingContext.Provider>
         </main>
-    </>;
+    </div>;
 }
 
 export default Page;
