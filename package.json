@@ -134,23 +134,26 @@
         "test": "npm run init-test-data && npm run run-test",
         "run-test": "node scripts/test.js",
         "debug-test": "node scripts/test.js --runInBand --maxConcurrency=1 --no-cache",
-        "init-test-data": "node-env-run -E .env scripts/test-db.js",
+
         "blank-db": "node-env-run -E .env scripts/blank-db.js",
-        "deploy": "deployator",
         "create-conference1": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample1",
         "create-conference2": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/sample2",
-        "create-conference-cscw-test": "node-env-run -E .env scripts/create-conference.js -- -c J:/Clowdr/CSCW/2020-10-15-Final/cscw",
+        "create-demo-conference": "node-env-run -E .env scripts/create-conference.js -- -c ./scripts/sample-specs/demo",
+
         "restore-schema": "node-env-run -E .env scripts/restore-schema.js",
         "migrate-profiles-addWatchedItems-isBanned": "node-env-run -E .env scripts/migrations/migrate-profiles-addWatchedItems-isBanned.js",
-        "create-conference-production": "node-env-run -E .env.production.local scripts/create-conference.js -- -c J:/Clowdr/CSCW/2020-10-15-Final/cscw",
-        "restore-schema-to-production-db-use-with-caution": "node-env-run -E .env.production.local scripts/restore-schema.js",
-        "migrate-profiles-addWatchedItems-isBanned-production": "node-env-run -E .env.production.local scripts/migrations/migrate-profiles-addWatchedItems-isBanned.js",
         "regenerate-global-chats": "node-env-run -E .env scripts/regenerate-global-chats.js",
         "cleanup-watched-items": "node-env-run -E .env scripts/cleanup-watched-items.js",
         "fix-session-start-times": "node-env-run -E .env scripts/fix-session-start-times.js",
+
+        "create-demo-conference-production": "node-env-run -E .env.production.local scripts/create-conference.js -- -c ./scripts/sample-specs/demo",
+
+        "restore-schema-to-production-db-use-with-caution": "node-env-run -E .env.production.local scripts/restore-schema.js",
+        "migrate-profiles-addWatchedItems-isBanned-production": "node-env-run -E .env.production.local scripts/migrations/migrate-profiles-addWatchedItems-isBanned.js",
         "regenerate-global-chats-production": "node-env-run -E .env.production.local scripts/regenerate-global-chats.js",
         "cleanup-watched-items-production": "node-env-run -E .env.production.local scripts/cleanup-watched-items.js",
-        "fix-session-start-times-production": "node-env-run -E .env.production.local scripts/fix-session-start-times.js"
+        "fix-session-start-times-production": "node-env-run -E .env.production.local scripts/fix-session-start-times.js",
+        "export-content-feed-chats-production": "node-env-run -E .env.production.local scripts/export-content-feed-chats.js"
     },
     "eslintConfig": {
         "extends": "react-app"

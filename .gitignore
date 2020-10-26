@@ -54,6 +54,7 @@ sample-program-data.js
 .parse.project
 
 scripts/dump-existing-users.js
+scripts/sample-specs/demo
 
 existing-users-dump.json
 
