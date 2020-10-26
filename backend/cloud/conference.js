@@ -534,32 +534,45 @@ Parse.Cloud.job("conference-create", async (request) => {
             }
             message("Created sidebar colour.");
 
-            // Create admin user
-            message("Creating admin user...");
-            {
-                const adminUserACL = new Parse.ACL();
-                adminUserACL.setPublicReadAccess(false);
-                adminUserACL.setPublicWriteAccess(false);
-                const adminUserO = new Parse.User();
-                adminUserO.setACL(adminUserACL);
-                adminUserO.setPassword(params.admin.password);
-                adminUser = await adminUserO.save({
-                    emailVerified: true,
-                    passwordSet: true,
-                    username: params.admin.username,
-                    email: params.admin.email.toLowerCase()
-                }, {
-                    useMasterKey: true
-                });
-                adminUserACL.setReadAccess(adminUser, true);
-                adminUserACL.setWriteAccess(adminUser, true);
-                await adminUser.save(null, { useMasterKey: true });
-
-                const adminRoleUsersRel = adminRole.relation("users");
-                adminRoleUsersRel.add(adminUser);
-                await adminRole.save(null, { useMasterKey: true });
+            // Check for existing admin user
+            message("Checking for existing admin user...");
+            adminUser = await
+                new Parse.Query("_User")
+                    .equalTo("username", params.admin.username)
+                    .first({ useMasterKey: true });
+            if (adminUser) {
+                message("Existing admin user found.");
             }
-            message("Created admin user.");
+            else {
+                // Create admin user
+                message("Creating admin user...");
+                {
+                    const adminUserACL = new Parse.ACL();
+                    adminUserACL.setPublicReadAccess(false);
+                    adminUserACL.setPublicWriteAccess(false);
+                    const adminUserO = new Parse.User();
+                    adminUserO.setACL(adminUserACL);
+                    adminUserO.setPassword(params.admin.password);
+                    adminUser = await adminUserO.save({
+                        emailVerified: true,
+                        passwordSet: true,
+                        username: params.admin.username,
+                        email: params.admin.email.toLowerCase()
+                    }, {
+                        useMasterKey: true
+                    });
+                    adminUserACL.setReadAccess(adminUser, true);
+                    adminUserACL.setWriteAccess(adminUser, true);
+                    await adminUser.save(null, { useMasterKey: true });
+                }
+                message("Created admin user.");
+            }
+
+            message("Adding admin user to admin role...");
+            const adminRoleUsersRel = adminRole.relation("users");
+            adminRoleUsersRel.add(adminUser);
+            await adminRole.save(null, { useMasterKey: true });
+            message("Added admin user to admin role.");
 
             // Create admin user profile
             message("Creating admin user profile...");
