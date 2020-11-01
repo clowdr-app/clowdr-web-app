@@ -277,8 +277,11 @@ export default function ViewSession(props: Props) {
         }
     }
 
+    const earliestStart = events?.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
+    const latestEnd = events?.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
+
     let subtitle: JSX.Element | undefined;
-    if (session) {
+    if (session && earliestStart && latestEnd) {
         function fmtDate(date: Date) {
             return date.toLocaleDateString(undefined, {
                 day: "numeric",
@@ -294,13 +297,13 @@ export default function ViewSession(props: Props) {
             });
         }
 
-        const startDay = daysIntoYear(session.startTime);
-        const endDay = daysIntoYear(session.endTime);
+        const startDay = daysIntoYear(earliestStart);
+        const endDay = daysIntoYear(latestEnd);
         const isSameDay = startDay === endDay;
-        const endTimeStr = (!isSameDay ? fmtDate(session.endTime) : "") + " " + fmtTime(session.endTime);
+        const endTimeStr = (!isSameDay ? fmtDate(latestEnd) : "") + " " + fmtTime(latestEnd);
         subtitle =
             <>
-                {fmtDate(session.startTime)}&nbsp;&middot;&nbsp;{fmtTime(session.startTime)}{` - ${endTimeStr}`}
+                {fmtDate(earliestStart)}&nbsp;&middot;&nbsp;{fmtTime(earliestStart)}{` - ${endTimeStr}`}
                 {chairStr ? <>&nbsp;&middot;&nbsp;{chairStr}</> : <></>}
             </>;
     }
@@ -324,21 +327,25 @@ export default function ViewSession(props: Props) {
     // TODO: Make this configurable
     // Showing session feed prior to session starting (20mins)
     const isPreShow =
-        session &&
-        session.startTime.getTime() - (20 * 60 * 1000) < Date.now() &&
-        session.startTime.getTime() > Date.now() &&
-        session.endTime.getTime() > Date.now();
+        session && earliestStart && latestEnd &&
+        earliestStart.getTime() - (20 * 60 * 1000) < Date.now() &&
+        earliestStart.getTime() > Date.now() &&
+        latestEnd.getTime() > Date.now();
     const isLive =
-        session &&
-        session.startTime.getTime() < Date.now() &&
-        session.endTime.getTime() > Date.now();
+        session && earliestStart && latestEnd &&
+        earliestStart.getTime() < Date.now() &&
+        latestEnd.getTime() > Date.now();
 
-    const sessionStartTimeText = session ? generateTimeText(session.startTime.getTime(), Date.now()) : null;
-    const sessionMessage = session
-        ? session.endTime.getTime() <= Date.now()
-            ? (filler: string) => `This session has ended. Please choose a specific event to participate in its conversation.`
-            : (filler: string) => `This session starts in ${sessionStartTimeText?.distance} ${sessionStartTimeText?.units}. ${filler} will appear here and update throughout the session.`
-        : (filler: string) => "";
+    const sessionStartTimeText
+        = session && earliestStart
+            ? generateTimeText(earliestStart.getTime(), Date.now())
+            : null;
+    const sessionMessage
+        = session && latestEnd
+            ? latestEnd.getTime() <= Date.now()
+                ? (filler: string) => `This session has ended. Please choose a specific event to participate in its conversation.`
+                : (filler: string) => `This session starts in ${sessionStartTimeText?.distance} ${sessionStartTimeText?.units}. ${filler} will appear here and update throughout the session.`
+            : (filler: string) => "";
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
         {showEventsList ? eventsListEl : <></>}
         {session

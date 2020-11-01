@@ -17,6 +17,7 @@ interface Props {
     includeEvents?: string[] | undefined;
     showSessionTime?: boolean;
     hideEventTimes?: boolean;
+    style?: React.CSSProperties;
 }
 
 export default function SessionGroup(props: Props) {
@@ -67,6 +68,9 @@ export default function SessionGroup(props: Props) {
             })
             : [];
 
+    const earliestStart = eventEntries.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
+    const latestEnd = eventEntries.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
+
     for (const event of eventEntries) {
         if (!props.includeEvents || props.includeEvents.includes(event.id)) {
             rows.push(<EventItem key={event.id} event={event} data={props.data} hideEventTime={props.hideEventTimes} />);
@@ -88,11 +92,11 @@ export default function SessionGroup(props: Props) {
         });
     }
 
-    const startDay = daysIntoYear(props.session.startTime);
-    const endDay = daysIntoYear(props.session.endTime);
+    const startDay = daysIntoYear(earliestStart);
+    const endDay = daysIntoYear(latestEnd);
     const isSameDay = startDay === endDay;
-    const startTimeStr = fmtDate(props.session.startTime) + (props.showSessionTime ? " " + fmtTime(props.session.startTime) : "");
-    const endTimeStr = (!isSameDay ? fmtDate(props.session.endTime) : "") + (props.showSessionTime ? " " + fmtTime(props.session.endTime) : "");
+    const startTimeStr = fmtDate(earliestStart) + (props.showSessionTime ? " " + fmtTime(earliestStart) : "");
+    const endTimeStr = (!isSameDay ? fmtDate(latestEnd) : "") + (props.showSessionTime ? " " + fmtTime(latestEnd) : "");
     const title =
         <>
             {props.showSessionTime || !isSameDay ? `${startTimeStr} - ${endTimeStr}` : `${startTimeStr}`}
@@ -104,7 +108,7 @@ export default function SessionGroup(props: Props) {
         rows.push(<div key="empty" className="event disabled"><div className="heading"><h2 className="title">This session contains no events.</h2></div></div>);
     }
 
-    return <div className="session">
+    return <div className="session" style={props.style}>
         <h2 className={`title${props.showSessionTime ? " left-align" : ""}`}>
             {props.overrideTitle
                 ? props.overrideTitle

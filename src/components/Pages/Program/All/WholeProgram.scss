@@ -1,6 +1,10 @@
 @import "../../../../styles/util";
 
 .whole-program-page {
+    height: 100%;
+    display: grid;
+    grid-auto-rows: min-content auto;
+
     .switcher {
         text-align: center;
     }
@@ -16,6 +20,10 @@
     }
 
     &>.schedule-wrapper {
+        height: 100%;
+        display: grid;
+        grid-auto-rows: min-content auto;
+
         .days {
             display       : flex;
             flex-direction: row;

@@ -164,36 +164,39 @@ export default function WholeProgram() {
     useDataSubscription("ProgramItem", onItemUpdated, onItemDeleted, !data, conference);
 
     const columns: Array<JSX.Element> = useMemo(() => {
-        let _columns: Array<JSX.Element> = [];
-        if (data) {
-            // TODO: What a collosal hack - this is supposed to be encoded by a "priority" column on tracks
-            //       in the database
-            const CSCW_TRACK_ORDERING = [
-                "Keynotes",
-                "Papers",
-                "Panels",
-                "Special Events",
-                "Posters",
-                "Demos",
-                "Doctoral Consortium",
-                "Workshops",
-                "UIST Papers",
-            ];
-            _columns
-                = data.tracks
-                    .sort((x, y) => {
-                        const xIdx = CSCW_TRACK_ORDERING.indexOf(x.name);
-                        const yIdx = CSCW_TRACK_ORDERING.indexOf(y.name);
-                        return xIdx < yIdx ? -1 : xIdx === yIdx ? 0 : 1;
-                    })
-                    .map(track => <TrackColumn key={track.id} track={track} data={data} />);
+        if (!scheduleView) {
+            let _columns: Array<JSX.Element> = [];
+            if (data) {
+                // TODO: What a collosal hack - this is supposed to be encoded by a "priority" column on tracks
+                //       in the database
+                const CSCW_TRACK_ORDERING = [
+                    "Keynotes",
+                    "Papers",
+                    "Panels",
+                    "Special Events",
+                    "Posters",
+                    "Demos",
+                    "Doctoral Consortium",
+                    "Workshops",
+                    "UIST Papers",
+                ];
+                _columns
+                    = data.tracks
+                        .sort((x, y) => {
+                            const xIdx = CSCW_TRACK_ORDERING.indexOf(x.name);
+                            const yIdx = CSCW_TRACK_ORDERING.indexOf(y.name);
+                            return xIdx < yIdx ? -1 : xIdx === yIdx ? 0 : 1;
+                        })
+                        .map(track => <TrackColumn key={track.id} track={track} data={data} />);
 
-            if (_columns.length === 0) {
-                _columns.push(<div key="empty">There are no tracks in this program.</div>);
+                if (_columns.length === 0) {
+                    _columns.push(<div key="empty">There are no tracks in this program.</div>);
+                }
             }
+            return _columns;
         }
-        return _columns;
-    }, [data]);
+        return [];
+    }, [data, scheduleView]);
 
     const schedule = useMemo(() => {
         return data ? <ScheduleView data={data} /> : <LoadingSpinner />
@@ -212,10 +215,12 @@ export default function WholeProgram() {
             </label>
         </div>
         <div className={`whole-program${scheduleView ? " schedule" : " tracks"}`}>
-            {schedule}
-            <div className="tracks">
-                {columns}
-            </div>
+            {scheduleView
+                ? schedule
+                : <div className="tracks">
+                    {columns}
+                </div>
+            }
         </div>
     </div>;
 }
