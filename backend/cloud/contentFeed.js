@@ -26,7 +26,8 @@ const createContentFeedSchema = {
     textChat: "string?",
     videoRoom: "string?",
     youtube: "string?",
-    zoomRoom: "string?"
+    zoomRoom: "string?",
+    originatingID: "string?"
 };
 
 /**
@@ -38,6 +39,45 @@ const createContentFeedSchema = {
  * @returns {Promise<Parse.Object>} - The new Content Feed
  */
 async function createContentFeed(data) {
+    let existing;
+    if (data.originatingID) {
+        existing
+        = await new Parse.Query("ContentFeed")
+            .equalTo("conference", data.conference)
+            .equalTo("originatingID", data.originatingID)
+            .first({ useMasterKey: true });
+    }
+    else {
+        existing
+        = await new Parse.Query("ContentFeed")
+            .equalTo("conference", data.conference)
+            .equalTo("name", data.name)
+            .first({ useMasterKey: true });
+    }
+
+    if (existing) {
+        if (!data.youtube) {
+            existing.unset("youtube");
+        }
+        if (!data.zoomRoom) {
+            existing.unset("zoomRoom");
+        }
+        if (!data.videoRoom) {
+            existing.unset("videoRoom");
+        }
+        if (!data.textChat) {
+            existing.unset("textChat");
+        }
+        await existing.save({
+            youtube: data.youtube,
+            zoomRoom: data.zoomRoom,
+            videoRoom: data.videoRoom,
+            textChat: data.textChat,
+            originatingID: data.originatingID
+        }, { useMasterKey: true });
+        return existing;
+    }
+
     const newObject = new Parse.Object("ContentFeed", data);
     await configureDefaultProgramACLs(newObject);
     await newObject.save(null, { useMasterKey: true });
@@ -82,3 +122,7 @@ async function handleCreateContentFeed(req) {
     }
 }
 Parse.Cloud.define("contentFeed-create", handleCreateContentFeed);
+
+module.exports = {
+    createContentFeed
+};

@@ -5,6 +5,7 @@ const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
 const { getProfileOfUser, getUserProfileById } = require("./user");
 const { getConfig } = require("./config");
+const { createTextChat } = require("./textChat");
 const Twilio = require("twilio");
 
 // TODO: Before delete: Kick any members, delete room in Twilio
@@ -174,16 +175,17 @@ async function handleCreateVideoRoom(req) {
             spec.capacity = Math.min(spec.capacity, 50);
 
             if (!spec.textChat) {
-                const newChatId = await Parse.Cloud.run("textChat-create", {
+                spec.textChat = await createTextChat({
                     autoWatch: false,
                     name: spec.name,
-                    conference: spec.conference.id,
+                    conference: spec.conference,
+                    creator: profile,
                     mirrored: false,
                     isDM: false,
                     isPrivate: spec.isPrivate,
+                    mode: "ordinary",
                     members: [profile.id]
-                }, { sessionToken: user.getSessionToken() });
-                spec.textChat = new Parse.Object("TextChat", { id: newChatId });
+                });
             }
             else {
                 spec.textChat = new Parse.Object("TextChat", { id: spec.textChat });
@@ -282,3 +284,7 @@ async function handleInviteToVideoRoom(req) {
     }
 }
 Parse.Cloud.define("videoRoom-invite", handleInviteToVideoRoom);
+
+module.exports = {
+    createVideoRoom
+};

@@ -43,6 +43,7 @@ import ModerationHub from '../Pages/ModerationHub/ModerationHub';
 import ModerationChat from '../Pages/ChatView/ModerationChat';
 import AllAttendees from '../Pages/AllAttendees/AllAttendees';
 import useUserRoles from '../../hooks/useUserRoles';
+import AdminProgramUpload from '../Pages/Admin/Program/ProgramUpload';
 
 interface Props {
     doLogin: doLoginF;
@@ -185,6 +186,7 @@ function Page(props: Props) {
                     <Route path="/profile" component={() =>
                         <Redirect to={"/profile/" + mUser.id} />
                     } />
+
                     <Route path="/admin/registration" component={() =>
                         <AdminRegistration />
                     } />
@@ -193,6 +195,9 @@ function Page(props: Props) {
                     } />
                     <Route path="/admin/welcome" component={() =>
                         <AdminWelcomePage />
+                    } />
+                    <Route path="/admin/program/upload" component={() =>
+                        <AdminProgramUpload />
                     } />
                     <Route path="/admin" component={() =>
                         <AdminTools />

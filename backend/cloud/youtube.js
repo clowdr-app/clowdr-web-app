@@ -28,6 +28,15 @@ const createYouTubeFeedSchema = {
  * @returns {Promise<Parse.Object>} - The new Youtube Feed
  */
 async function createYouTubeFeed(data) {
+    const existing
+        = await new Parse.Query("YouTubeFeed")
+            .equalTo("conference", data.conference)
+            .equalTo("videoId", data.videoId)
+            .first({ useMasterKey: true });
+    if (existing) {
+        return existing;
+    }
+
     const newObject = new Parse.Object("YouTubeFeed", data);
     await configureDefaultProgramACLs(newObject);
     await newObject.save(null, { useMasterKey: true });
@@ -60,3 +69,7 @@ async function handleCreateYouTubeFeed(req) {
     }
 }
 Parse.Cloud.define("youtubeFeed-create", handleCreateYouTubeFeed);
+
+module.exports = {
+    createYouTubeFeed
+};

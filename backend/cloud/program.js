@@ -4,7 +4,6 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 const { getProfileOfUser } = require("./user");
-const assert = require("assert");
 
 // TODO: Before delete of track/item/session/event: Cleanup unused content feed(s)
 // TODO: Before save: Give authors write access to their program items/events
@@ -111,6 +110,29 @@ const createAttachmentTypeSchema = {
  * @returns {Promise<Parse.Object>} - The new attachment type
  */
 async function createAttachmentType(data) {
+    const existing
+        = await new Parse.Query("AttachmentType")
+            .equalTo("conference", data.conference)
+            .equalTo("name", data.name)
+            .first({ useMasterKey: true });
+    if (existing) {
+        if (!data.extra) {
+            existing.unset("extra");
+        }
+        if (!data.fileTypes) {
+            existing.unset("fileTypes");
+        }
+        await existing.save({
+            supportsFile: data.supportsFile,
+            isCoverImage: data.isCoverImage,
+            displayAsLink: data.displayAsLink,
+            extra: data.extra,
+            ordinal: data.ordinal,
+            fileTypes: data.fileTypes,
+        }, { useMasterKey: true });
+        return existing;
+    }
+
     const newObject = new Parse.Object("AttachmentType", data);
     await configureDefaultProgramACLs(newObject);
     await newObject.save(null, { useMasterKey: true });
@@ -172,6 +194,23 @@ const createTrackSchema = {
  * @returns {Promise<Parse.Object>} - The new track
  */
 async function createProgramTrack(data) {
+    const existing
+        = await new Parse.Query("ProgramTrack")
+            .equalTo("conference", data.conference)
+            .equalTo("name", data.name)
+            .first({ useMasterKey: true });
+    if (existing) {
+        if (!data.feed) {
+            existing.unset("feed");
+        }
+        await existing.save({
+            shortName: data.shortName,
+            colour: data.colour,
+            feed: data.feed
+        }, { useMasterKey: true });
+        return existing;
+    }
+
     const newObject = new Parse.Object("ProgramTrack", data);
     await configureDefaultProgramACLs(newObject);
     await newObject.save(null, { useMasterKey: true });
@@ -220,6 +259,7 @@ Parse.Cloud.define("track-create", handleCreateTrack);
 
 const createPersonSchema = {
     name: "string",
+    affiliation: "string?",
     conference: "string",
     profile: "string?",
 };
@@ -233,6 +273,25 @@ const createPersonSchema = {
  * @returns {Promise<Parse.Object>} - The new person
  */
 async function createProgramPerson(data) {
+    const existing
+        = await new Parse.Query("ProgramPerson")
+            .equalTo("conference", data.conference)
+            .equalTo("name", data.name)
+            .first({ useMasterKey: true });
+    if (existing) {
+        if (!data.affiliation) {
+            existing.unset("affiliation");
+        }
+        if (!data.profile) {
+            existing.unset("profile");
+        }
+        await existing.save({
+            affiliation: data.affiliation,
+            profile: data.profile
+        }, { useMasterKey: true });
+        return existing;
+    }
+
     const newObject = new Parse.Object("ProgramPerson", data);
     // TODO: ACLs: Allow authors to edit their own peron records
     await configureDefaultProgramACLs(newObject);
@@ -369,13 +428,14 @@ Parse.Cloud.define("person-set-profile", handlePersonSetProfile);
  */
 
 const createItemSchema = {
-    "abstract": "string",
-    "exhibit": "boolean",
-    "title": "string",
-    "authors": "[string]?",
-    "conference": "string",
-    "feed": "string?",
-    "track": "string",
+    abstract: "string",
+    exhibit: "boolean",
+    title: "string",
+    authors: "[string]?",
+    conference: "string",
+    feed: "string?",
+    track: "string",
+    originatingID: "string?",
 };
 
 /**
@@ -387,6 +447,37 @@ const createItemSchema = {
  * @returns {Promise<Parse.Object>} - The new item
  */
 async function createProgramItem(data) {
+    let existing;
+    if (data.originatingID) {
+        existing
+            = await new Parse.Query("ProgramItem")
+                .equalTo("conference", data.conference)
+                .equalTo("originatingID", data.originatingID)
+                .first({ useMasterKey: true });
+    }
+    else {
+        existing
+            = await new Parse.Query("ProgramItem")
+                .equalTo("conference", data.conference)
+                .equalTo("title", data.title)
+                .first({ useMasterKey: true });
+    }
+    if (existing) {
+        if (!data.feed) {
+            existing.unset("feed");
+        }
+        await existing.save({
+            abstract: data.abstract,
+            exhibit: data.exhibit,
+            title: data.title,
+            authors: data.authors ? data.authors : [],
+            feed: data.feed,
+            track: data.track,
+            originatingID: data.originatingID
+        }, { useMasterKey: true });
+        return existing;
+    }
+
     const newObject = new Parse.Object("ProgramItem", data);
     // TODO: ACLs: Allow authors to edit their own item records
     await configureDefaultProgramACLs(newObject);
@@ -512,12 +603,12 @@ Parse.Cloud.define("itemAttachment-create", handleCreateItemAttachment);
  */
 
 const createSessionSchema = {
-    endTime: "date",
-    startTime: "date",
     title: "string",
     conference: "string",
     feed: "string",
-    track: "string"
+    track: "string",
+    chair: "string?",
+    originatingID: "string?"
 };
 
 /**
@@ -529,6 +620,38 @@ const createSessionSchema = {
  * @returns {Promise<Parse.Object>} - The new Session
  */
 async function createProgramSession(data) {
+    let existing;
+    if (data.originatingID) {
+        existing
+            = await new Parse.Query("ProgramSession")
+                .equalTo("conference", data.conference)
+                .equalTo("originatingID", data.originatingID)
+                .first({ useMasterKey: true });
+    }
+    else {
+        existing
+            = await new Parse.Query("ProgramSession")
+                .equalTo("conference", data.conference)
+                .equalTo("title", data.title)
+                .first({ useMasterKey: true });
+    }
+    if (existing) {
+        if (!data.feed) {
+            existing.unset("feed");
+        }
+        if (!data.chair) {
+            existing.unset("chair");
+        }
+        await existing.save({
+            title: data.title,
+            feed: data.feed,
+            track: data.track,
+            chair: data.chair,
+            originatingID: data.originatingID,
+        }, { useMasterKey: true });
+        return existing;
+    }
+
     const newObject = new Parse.Object("ProgramSession", data);
     await configureDefaultProgramACLs(newObject);
     await newObject.save(null, { useMasterKey: true });
@@ -551,8 +674,6 @@ async function handleCreateSession(req) {
             spec.conference = new Parse.Object("Conference", { id: confId });
             spec.feed = new Parse.Object("ContentFeed", { id: spec.feed });
             spec.track = new Parse.Object("ProgramTrack", { id: spec.track });
-            spec.startTime = new Date(spec.startTime);
-            spec.endTime = new Date(spec.endTime);
             const result = await createProgramSession(spec);
             return result.id;
         }
@@ -586,7 +707,9 @@ const createSessionEventSchema = {
     conference: "string",
     feed: "string?",
     item: "string",
-    session: "string"
+    session: "string",
+    chair: "string?",
+    originatingID: "string?"
 };
 
 /**
@@ -598,6 +721,36 @@ const createSessionEventSchema = {
  * @returns {Promise<Parse.Object>} - The new SessionEvent
  */
 async function createProgramSessionEvent(data) {
+    let existing;
+    if (data.originatingID) {
+        existing
+            = await new Parse.Query("ProgramSessionEvent")
+                .equalTo("conference", data.conference)
+                .equalTo("originatingID", data.originatingID)
+                .first({ useMasterKey: true });
+    }
+    if (existing) {
+        if (!data.feed) {
+            existing.unset("feed");
+        }
+        if (!data.chair) {
+            existing.unset("chair");
+        }
+        if (!data.directLink) {
+            existing.unset("directLink");
+        }
+        await existing.save({
+            directLink: data.directLink,
+            endTime: data.endTime,
+            startTime: data.startTime,
+            feed: data.feed,
+            item: data.item,
+            session: data.session,
+            chair: data.chair
+        }, { useMasterKey: true });
+        return existing;
+    }
+
     const newObject = new Parse.Object("ProgramSessionEvent", data);
     await configureDefaultProgramACLs(newObject);
     await newObject.save(null, { useMasterKey: true });
@@ -638,54 +791,12 @@ async function handleCreateSessionEvent(req) {
 }
 Parse.Cloud.define("event-create", handleCreateSessionEvent);
 
-Parse.Cloud.job("fix-session-start-times", async (request) => {
-    const { params, message: _message } = request;
-    const message = (msg) => {
-        console.log(msg);
-        _message(msg);
-    };
-
-    let conference = null;
-
-    try {
-        message("Starting...");
-
-        message("Validating parameters");
-
-        let requestValidation = validateRequest({
-            conference: "string"
-        }, params);
-        if (requestValidation.ok) {
-            conference = await new Parse.Object("Conference", { id: params.conference }).fetch({ useMasterKey: true });
-            assert(conference);
-
-            await new Parse.Query("ProgramSession")
-                .equalTo("conference", conference)
-                .map(async session => {
-                    const eventStartTimes
-                        = await new Parse.Query("ProgramSessionEvent")
-                            .equalTo("conference", conference)
-                            .equalTo("session", session)
-                            .map(event => event.get("startTime"),
-                                { useMasterKey: true });
-                    const orderedTimes
-                        = eventStartTimes.sort((x, y) =>
-                            x.getTime() < y.getTime()
-                                ? -1
-                                : x.getTime() === y.getTime()
-                                    ? 0 : 1);
-                    if (orderedTimes.length > 0) {
-                        const firstTime = orderedTimes[0];
-                        await session.save({ startTime: firstTime }, { useMasterKey: true });
-                    }
-                }, { useMasterKey: true });
-            
-            return "Done";
-        }
-    }
-    catch (e) {
-        console.error("ERROR: " + e.stack, e);
-        message(e);
-        throw e;
-    }
-});
+module.exports = {
+    createAttachmentType,
+    createProgramItem,
+    createProgramItemAttachment,
+    createProgramPerson,
+    createProgramSession,
+    createProgramSessionEvent,
+    createProgramTrack
+};

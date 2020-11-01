@@ -641,5 +641,6 @@ async function getTextChatByName(name, confId) {
 }
 
 module.exports = {
-    getTextChatByName: getTextChatByName
+    getTextChatByName,
+    createTextChat
 };

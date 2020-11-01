@@ -30,6 +30,15 @@ const createZoomRoomSchema = {
  * @returns {Promise<Parse.Object>} - The new Zoom Room
  */
 async function createZoomRoom(data) {
+    const existing
+        = await new Parse.Query("ZoomRoom")
+            .equalTo("conference", data.conference)
+            .equalTo("url", data.url)
+            .first({ useMasterKey: true });
+    if (existing) {
+        return existing;
+    }
+
     const newObject = new Parse.Object("ZoomRoom", data);
     await configureDefaultProgramACLs(newObject);
     await newObject.save(null, { useMasterKey: true });
@@ -137,3 +146,7 @@ async function handleGenerateZoomSignature(req) {
     }
 }
 Parse.Cloud.define("zoom-generate-signature", handleGenerateZoomSignature);
+
+module.exports = {
+    createZoomRoom
+};
