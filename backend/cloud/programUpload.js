@@ -187,7 +187,7 @@ Parse.Cloud.define("import-program", async (request) => {
                     abstract: itemSpec.abstract,
                     exhibit: itemSpec.exhibit,
                     title: itemSpec.title,
-                    authors: itemSpec.authors,
+                    authors: itemSpec.authors.map(x => personsMap[x].id),
                     feed: itemSpec.feed ? feedsMap[itemSpec.feed] : undefined,
                     track: tracksMap[itemSpec.track],
                     originatingID: itemSpec.id,
