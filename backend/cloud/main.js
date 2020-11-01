@@ -1,4 +1,4 @@
-require("./cacheStatus")
+require("./clientCache")
 require("./conference")
 require("./config")
 require("./contentFeed")
