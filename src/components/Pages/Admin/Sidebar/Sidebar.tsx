@@ -95,7 +95,7 @@ export default function AdminSidebar() {
                 }
 
                 setIsSaving(false);
-            }, 10000);
+            }, 1 /*10000*/);
         }
     }
 

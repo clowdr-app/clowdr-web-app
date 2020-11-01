@@ -55,7 +55,7 @@ export default function AdminWelcomePage() {
                 }
 
                 setIsSaving(false);
-            }, 10000);
+            }, 1 /*10000*/);
         }
     }
 
