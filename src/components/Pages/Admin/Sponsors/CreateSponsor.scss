@@ -1,0 +1,15 @@
+@import "../../../../styles/util";
+@import "../../../../styles/form";
+
+$gutter    : mm(5);
+$main-width: 100%;
+
+.create-sponsor {
+    @include basic-form;
+
+    max-width: 50em;
+
+    .form-buttons {
+        margin: mm(3) 0;
+    }
+}
