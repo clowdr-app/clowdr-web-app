@@ -48,7 +48,7 @@ async function createSponsor(data, user) {
         { sessionToken: user.getSessionToken() }
     );
 
-    data.videoRoom = new Parse.Object("VideoRoom", { id: videoRoomId });
+    newSponsor.set({ videoRoom: new Parse.Object("VideoRoom", { id: videoRoomId }) });
 
     const adminRole = await getRoleByName(confId, "admin");
     const managerRole = await getRoleByName(confId, "manager");
@@ -79,8 +79,7 @@ async function handleCreateSponsor(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorised =
-            !!user && (await isUserInRoles(user.id, confId, ["admin"]));
+        const authorised = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
 
         if (authorised) {
             const spec = params;
