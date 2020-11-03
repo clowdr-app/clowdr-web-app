@@ -73,6 +73,15 @@ export default function ScheduleView(props: Props) {
                 }
                 group = groups[session.feed.youtubeId];
             }
+            else if (session.feed.zoomRoomId) {
+                if (!groups[session.feed.zoomRoomId]) {
+                    groups[session.feed.zoomRoomId] = {
+                        id: session.feed.zoomRoomId,
+                        sessions: [],
+                    }
+                }
+                group = groups[session.feed.zoomRoomId];
+            }
         }
 
         if (!group) {
