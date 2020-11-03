@@ -3,6 +3,7 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
+const { getUserProfileById } = require("./user");
 
 const createSponsorSchema = {
     name: "string",
@@ -63,6 +64,7 @@ async function createSponsor(data, user) {
     acl.setRoleWriteAccess(managerRole, false);
     acl.setRoleReadAccess(attendeeRole, true);
     acl.setRoleWriteAccess(attendeeRole, false);
+
     newSponsor.setACL(acl);
 
     await newSponsor.save(null, { useMasterKey: true });
@@ -91,3 +93,45 @@ async function handleCreateSponsor(req) {
     }
 }
 Parse.Cloud.define("create-sponsor", handleCreateSponsor);
+
+Parse.Cloud.afterSave("Sponsor", async request => {
+    const contentItems = await new Parse.Query("SponsorContent")
+        .equalTo("sponsor", request.object)
+        .find({ useMasterKey: true });
+
+    const confId = request.object.get("conference").id;
+
+    const representativeProfileIds = request.object.get("representativeProfileIds");
+    const representativeUserIds = await Promise.all(
+        representativeProfileIds.map(async representativeProfileId => {
+            const userProfile = await getUserProfileById(representativeProfileId, confId);
+            return userProfile.get("user").id;
+        })
+    );
+
+    const adminRole = await getRoleByName(confId, "admin");
+    const managerRole = await getRoleByName(confId, "manager");
+    const attendeeRole = await getRoleByName(confId, "attendee");
+
+    await Promise.all(
+        contentItems.map(contentItem => {
+            const acl = new Parse.ACL();
+            acl.setPublicReadAccess(false);
+            acl.setPublicWriteAccess(false);
+            acl.setRoleReadAccess(adminRole, true);
+            acl.setRoleWriteAccess(adminRole, true);
+            acl.setRoleReadAccess(managerRole, true);
+            acl.setRoleWriteAccess(managerRole, false);
+            acl.setRoleReadAccess(attendeeRole, true);
+            acl.setRoleWriteAccess(attendeeRole, false);
+
+            for (const representativeUserId of representativeUserIds) {
+                if (representativeUserId) {
+                    acl.setWriteAccess(representativeUserId, true);
+                }
+            }
+            contentItem.setACL(acl);
+            return contentItem.save(null, { useMasterKey: true });
+        })
+    );
+});
