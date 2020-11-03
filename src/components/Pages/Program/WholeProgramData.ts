@@ -28,3 +28,10 @@ export type SortedSessionData = {
     latestEnd: Date;
     eventsOfSession: SortedEventData[];
 };
+
+export type SortedTrackData = {
+    track: ProgramTrack;
+
+    sessionsOfTrack: SortedSessionData[];
+    itemsOfTrack: SortedItemData[];
+};

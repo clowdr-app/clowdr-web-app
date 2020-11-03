@@ -173,10 +173,10 @@ export default function ViewTrack(props: Props) {
         buttons
     });
 
-    const trackEl
-        = <div className="whole-program single-track">
-            {track ? <TrackColumn key={track.id} track={track} /> : <LoadingSpinner />}
-        </div>;
+    const trackEl = <></>; // TODO SPLASH
+        // = <div className="whole-program single-track">
+        //    {track ? <TrackColumn key={track.id} track={track} /> : <LoadingSpinner />}
+        // </div>;
 
     return !!feed
         ? <div className="view-track">

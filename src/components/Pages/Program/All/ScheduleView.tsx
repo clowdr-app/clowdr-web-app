@@ -55,6 +55,7 @@ export default function ScheduleView(props: Props) {
     }, [props.data.authors, props.data.events, props.data.items, sessions]);
 
 
+    // TODO SPLASH: Re-enable the day delimiters and the day links
     // function fmtDateForLink(date: Date) {
     //     return "day_" + date.toLocaleDateString().replace(/\//g, "_");
     // }

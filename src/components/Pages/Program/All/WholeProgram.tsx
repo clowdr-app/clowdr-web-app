@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import useConference from "../../../../hooks/useConference";
 import useHeading from "../../../../hooks/useHeading";
 import "./WholeProgram.scss"
@@ -11,11 +11,12 @@ import Toggle from "react-toggle";
 import ScheduleView from "./ScheduleView";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import { WholeProgramData } from "../WholeProgramData";
+import TracksView from "./TracksView";
 
 export default function WholeProgram() {
     const conference = useConference();
 
-    const [scheduleView, setScheduleView] = useState(true);
+    const [showScheduleView, setShowScheduleView] = useState(true);
     const [data, setData] = useState<WholeProgramData | null>(null);
 
     useHeading("Whole program");
@@ -163,40 +164,24 @@ export default function WholeProgram() {
     }, []);
     useDataSubscription("ProgramItem", onItemUpdated, onItemDeleted, !data, conference);
 
-    const columns: Array<JSX.Element> = useMemo(() => {
-        if (!scheduleView) {
-            let _columns: Array<JSX.Element> = [];
-            if (data) {
-                // TODO: What a collosal hack - this is supposed to be encoded by a "priority" column on tracks
-                //       in the database
-                const CSCW_TRACK_ORDERING = [
-                    "Keynotes",
-                    "Papers",
-                    "Panels",
-                    "Special Events",
-                    "Posters",
-                    "Demos",
-                    "Doctoral Consortium",
-                    "Workshops",
-                    "UIST Papers",
-                ];
-                _columns
-                    = data.tracks
-                        .sort((x, y) => {
-                            const xIdx = CSCW_TRACK_ORDERING.indexOf(x.name);
-                            const yIdx = CSCW_TRACK_ORDERING.indexOf(y.name);
-                            return xIdx < yIdx ? -1 : xIdx === yIdx ? 0 : 1;
-                        })
-                        .map(track => <TrackColumn key={track.id} track={track} data={data} />);
+    const [scheduleComponent, setScheduleComponent] = useState<JSX.Element | null>();
+    const [tracksComponent, setTracksComponent] = useState<JSX.Element | null>();
 
-                if (_columns.length === 0) {
-                    _columns.push(<div key="empty">There are no tracks in this program.</div>);
-                }
-            }
-            return _columns;
+    useSafeAsync(async () => {
+        let _scheduleComponent = scheduleComponent ? scheduleComponent : undefined;
+        if (showScheduleView && !_scheduleComponent && data) {
+            _scheduleComponent = <ScheduleView data={data} />;
         }
-        return [];
-    }, [data, scheduleView]);
+        return _scheduleComponent;
+    }, setScheduleComponent, [data, showScheduleView, scheduleComponent], "WholeProgram:setScheduleComponent");
+
+    useSafeAsync(async () => {
+        let _tracksComponent = tracksComponent ? tracksComponent : undefined;
+        if (!showScheduleView && !_tracksComponent && data) {
+            _tracksComponent = <TracksView data={data} />;
+        }
+        return _tracksComponent;
+    }, setTracksComponent, [data, showScheduleView, tracksComponent], "WholeProgram:setTracksComponent");
 
     return <div className="whole-program-page">
         <div className="switcher">
@@ -204,18 +189,17 @@ export default function WholeProgram() {
                 <span>Schedule</span>
                 <Toggle
                     icons={false}
-                    defaultChecked={!scheduleView}
-                    onChange={(ev) => setScheduleView(!ev.target.checked)}
+                    defaultChecked={!showScheduleView}
+                    onChange={(ev) => setShowScheduleView(!ev.target.checked)}
                 />
                 <span>Tracks</span>
             </label>
         </div>
-        <div className={`whole-program${scheduleView ? " schedule" : " tracks"}`}>
-            {scheduleView
-                ? data ? <ScheduleView data={data} /> : <LoadingSpinner />
-                : <div className="tracks">
-                    {columns}
-                </div>
+        <div className={`whole-program${showScheduleView ? " schedule" : " tracks"}`}>
+            {!data ? <LoadingSpinner />
+                : showScheduleView
+                    ? scheduleComponent ?? <LoadingSpinner message="Loading schedule view" />
+                    : tracksComponent ?? <LoadingSpinner message="Loading tracks view" />
             }
         </div>
     </div>;
