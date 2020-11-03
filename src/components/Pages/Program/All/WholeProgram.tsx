@@ -4,7 +4,7 @@ import useHeading from "../../../../hooks/useHeading";
 import "./WholeProgram.scss"
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import TrackColumn from "./TrackColumn";
-import { ProgramItem, ProgramPerson, ProgramSession, ProgramSessionEvent, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
+import { ContentFeed, ProgramItem, ProgramPerson, ProgramSession, ProgramSessionEvent, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import Toggle from "react-toggle";
@@ -24,21 +24,23 @@ export default function WholeProgram() {
     // Fetch data
     useSafeAsync(
         async () => {
-            const [tracks, sessions, events, authors, items]
+            const [tracks, sessions, events, authors, items, feeds]
                 = await Promise.all<
                     Array<ProgramTrack>,
                     Array<ProgramSession>,
                     Array<ProgramSessionEvent>,
                     Array<ProgramPerson>,
-                    Array<ProgramItem>
+                    Array<ProgramItem>,
+                    Array<ContentFeed>
                 >([
                     ProgramTrack.getAll(conference.id),
                     ProgramSession.getAll(conference.id),
                     ProgramSessionEvent.getAll(conference.id),
                     ProgramPerson.getAll(conference.id),
-                    ProgramItem.getAll(conference.id)
+                    ProgramItem.getAll(conference.id),
+                    ContentFeed.getAll(conference.id)
                 ]);
-            return { tracks, sessions, events, authors, items };
+            return { tracks, sessions, events, authors, items, feeds };
         },
         setData,
         [conference.id], "WholeProgram:setData");
@@ -195,7 +197,7 @@ export default function WholeProgram() {
                 <span>Tracks</span>
             </label>
         </div>
-        <div className={`whole-program${showScheduleView ? " schedule" : " tracks"}`}>
+        <div className={`whole-program tracks` /*${showScheduleView ? " schedule" : " tracks"}*/}>
             {!data ? <LoadingSpinner />
                 : showScheduleView
                     ? scheduleComponent ?? <LoadingSpinner message="Loading schedule view" />

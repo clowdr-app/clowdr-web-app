@@ -9,10 +9,8 @@ interface Props {
 }
 
 export default function ScheduleView(props: Props) {
-    const dayRows: Array<JSX.Element> = [];
+    // const dayRows: Array<JSX.Element> = [];
     const sessions = props.data.sessions;
-
-    // TODO: Group into columns based on content feeds sharing the same zoom/youtube source(s)
 
     const sortedSessions: SortedSessionData[] = useMemo(() => {
         if (sessions) {
@@ -24,6 +22,7 @@ export default function ScheduleView(props: Props) {
                     session,
                     earliestStart,
                     latestEnd,
+                    feed: props.data.feeds?.find(feed => feed.id === session.feedId),
                     eventsOfSession: eventsOfSession.map(event => {
                         const item = props.data.items.find(x => x.id === event.itemId);
                         assert(item);
@@ -42,9 +41,9 @@ export default function ScheduleView(props: Props) {
                                 : 1)
                 };
                 return sResult;
-            }).filter(x => x.eventsOfSession.length > 0);
-
-            // events
+            }).filter(x => x.eventsOfSession.length > 0
+                // TODO: SPLASH: Do we need this?: && x.feed && (x.feed.textChatId || x.feed.videoRoomId || x.feed.youtubeId || x.feed.zoomRoomId)
+            );
 
             return sessionsWithTimes.sort((x, y) => {
                 return x.earliestStart < y.earliestStart ? -1
@@ -54,61 +53,109 @@ export default function ScheduleView(props: Props) {
         }
 
         return [];
-    }, [props.data.authors, props.data.events, props.data.items, sessions]);
+    }, [props.data.authors, props.data.events, props.data.feeds, props.data.items, sessions]);
 
-
-    const rows: JSX.Element[] = [];
-    let prevEventDay: number | null = null;
+    const groups: { [k: string]: Array<SortedSessionData> } = {};
     for (const session of sortedSessions) {
-        const currEventDay = daysIntoYear(session.earliestStart);
-        if (prevEventDay !== currEventDay) {
-            rows.push(<hr key={"hr-" + currEventDay} />);
-            if (prevEventDay) {
-                rows.push(
-                    // eslint-disable-next-line jsx-a11y/anchor-has-content,jsx-a11y/anchor-is-valid
-                    <a className="back-to-top" key={currEventDay} id={fmtDateForLink(session.earliestStart)} href="#day-selector">Back to top</a>
-                );
+        let group;
+        if (session.feed) {
+            if (session.feed.youtubeId) {
+                if (!groups[session.feed.youtubeId]) {
+                    groups[session.feed.youtubeId] = [];
+                }
+                group = groups[session.feed.youtubeId];
             }
         }
-        rows.push(
-            <SessionGroup session={session} key={session.session.id} hideEventTimes={false} showSessionTime={true} />
-        );
-        prevEventDay = currEventDay;
-    }
 
-    function fmtDateForLink(date: Date) {
-        return "day_" + date.toLocaleDateString().replace(/\//g, "_");
-    }
-
-    if (sortedSessions.length > 0) {
-        function fmtDate(date: Date) {
-            return date.toLocaleDateString(undefined, {
-                day: "numeric",
-                month: "short"
-            });
+        if (!group) {
+            if (!groups["<!>NO_FEED<!>"]) {
+                groups["<!>NO_FEED<!>"] = [];
+            }
+            group = groups["<!>NO_FEED<!>"];
         }
 
-        const firstDate = sortedSessions[0].earliestStart;
-        const lastDate = sortedSessions[sortedSessions.length - 1].earliestStart;
-        const firstDay = daysIntoYear(firstDate);
-        const lastDay = daysIntoYear(lastDate);
-        const dayCount = lastDay < firstDay ? lastDay + (daysIntoYear(new Date(firstDate.getFullYear(), 11, 31)) - firstDay) + 1 : (lastDay - firstDay) + 1;
-        const firstTime = firstDate.getTime();
-        const hr24 = 24 * 60 * 60 * 1000;
-        for (let dayIdx = 0; dayIdx < dayCount; dayIdx++) {
-            const dayDate = new Date(firstTime + (dayIdx * hr24));
-            dayRows.push(<div className="day" key={dayIdx}>
-                <a href={`#${fmtDateForLink(dayDate)}`} className="button">{fmtDate(dayDate)}</a>
-            </div>);
+        if (group) {
+            group.push(session);
         }
     }
 
-    return <div className="schedule-wrapper">
-        <div className="days" id="day-selector">
-            {dayRows}
-        </div>
-        <div className="schedule">
-            {rows}
-        </div>
+    // Should look similar to https://2020.splashcon.org/program/program-splash-2020
+
+    console.log("Schedule groups", groups);
+
+    const rows: JSX.Element[] = [];
+    // let prevEventDay: number | null = null;
+    // for (const session of sortedSessions) {
+    //     const currEventDay = daysIntoYear(session.earliestStart);
+    //     if (prevEventDay !== currEventDay) {
+    //         rows.push(<hr key={"hr-" + currEventDay} />);
+    //         if (prevEventDay) {
+    //             rows.push(
+    //                 // eslint-disable-next-line jsx-a11y/anchor-has-content,jsx-a11y/anchor-is-valid
+    //                 <a className="back-to-top" key={currEventDay} id={fmtDateForLink(session.earliestStart)} href="#day-selector">Back to top</a>
+    //             );
+    //         }
+    //     }
+    //     rows.push(
+    //         <SessionGroup session={session} key={session.session.id} hideEventTimes={false} showSessionTime={true} />
+    //     );
+    //     prevEventDay = currEventDay;
+    // }
+
+    for (const groupName of Object.keys(groups)) {
+        const groupSessions = groups[groupName];
+        const items: JSX.Element[] = [];
+        for (const session of groupSessions) {
+            items.push(<SessionGroup session={session} key={session.session.id} hideEventTimes={false} showSessionTime={true} />);
+        }
+        rows.push(<div className="track">
+            {groupName === "<!>NO_FEED<!>"
+                ? <></>
+                : <h2 className="title">
+                    {groupName}
+                </h2>}
+            <div className="content">
+                {items}
+            </div>
+        </div>);
+    }
+
+    // function fmtDateForLink(date: Date) {
+    //     return "day_" + date.toLocaleDateString().replace(/\//g, "_");
+    // }
+
+    // if (sortedSessions.length > 0) {
+    //     function fmtDate(date: Date) {
+    //         return date.toLocaleDateString(undefined, {
+    //             day: "numeric",
+    //             month: "short"
+    //         });
+    //     }
+
+    //     const firstDate = sortedSessions[0].earliestStart;
+    //     const lastDate = sortedSessions[sortedSessions.length - 1].earliestStart;
+    //     const firstDay = daysIntoYear(firstDate);
+    //     const lastDay = daysIntoYear(lastDate);
+    //     const dayCount = lastDay < firstDay ? lastDay + (daysIntoYear(new Date(firstDate.getFullYear(), 11, 31)) - firstDay) + 1 : (lastDay - firstDay) + 1;
+    //     const firstTime = firstDate.getTime();
+    //     const hr24 = 24 * 60 * 60 * 1000;
+    //     for (let dayIdx = 0; dayIdx < dayCount; dayIdx++) {
+    //         const dayDate = new Date(firstTime + (dayIdx * hr24));
+    //         dayRows.push(<div className="day" key={dayIdx}>
+    //             <a href={`#${fmtDateForLink(dayDate)}`} className="button">{fmtDate(dayDate)}</a>
+    //         </div>);
+    //     }
+    // }
+
+    return <div className="tracks">
+        {rows}
     </div>;
+    // return <div className="schedule-wrapper">
+    //     <div className="days" id="day-selector">
+    //         {dayRows}
+    //     </div>
+    //     <div className="schedule">
+    //         {rows}
+    //     </div>
+    // </div>;
 }
