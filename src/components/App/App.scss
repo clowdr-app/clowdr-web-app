@@ -15,15 +15,14 @@
     height  : 100%;
 
     display              : grid;
+    grid-template-rows   : min-content 1fr;
 
     &.sidebar-open {
         grid-template-columns: minmax(350px, 20%) 1em auto 1em;
-        grid-template-rows: 100%;
     }
 
     &.sidebar-closed {
         grid-template-columns: 20px 50px auto 20px;
-        grid-template-rows   : 100%;
     }
 
     @media only screen and (max-width: $break-md) {
@@ -44,7 +43,7 @@
             grid-template-columns: auto;
 
             grid-row-start   : 1;
-            grid-row-end     : 2;
+            grid-row-end     : 3;
             grid-column-start: 3;
             grid-column-end  : 4;
 
@@ -70,7 +69,7 @@
 
         .sidebar {
             grid-row-start   : 1;
-            grid-row-end     : 2;
+            grid-row-end     : 3;
             grid-column-start: 1;
             grid-column-end  : 2;
         }
@@ -90,7 +89,7 @@
             z-index: 1;
 
             grid-row-start   : 1;
-            grid-row-end     : 2;
+            grid-row-end     : 3;
             grid-column-start: 2;
             grid-column-end  : 4;
 

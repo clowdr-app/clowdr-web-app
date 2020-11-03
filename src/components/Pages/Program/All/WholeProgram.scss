@@ -127,7 +127,7 @@
         &>.content {
             display       : flex;
             flex-direction: column;
-            max-height    : 80ex;
+            max-height    : calc(100vh - 130px);
             overflow-x    : auto;
             overflow-y    : auto;
 
