@@ -29,6 +29,7 @@
             flex-direction: row;
             column-gap    : 0.5em;
             row-gap       : 0.5em;
+            overflow-x    : auto;
 
             .button {
                 background: none;
