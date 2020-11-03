@@ -1,0 +1,10 @@
+@import "../../../../styles/util.scss";
+
+.profile-selector {
+    select {
+        border-radius: 4px;
+        border       : 1px solid black;
+        width        : 100%;
+        padding      : mm(3);
+    }
+}

@@ -16,7 +16,10 @@ import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/
 import assert from "assert";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import useMaybeVideo from "../../../hooks/useMaybeVideo";
-import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import {
+    DataDeletedEventDetails,
+    DataUpdatedEventDetails,
+} from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../../hooks/useDataSubscription";
 import useUserRoles from "../../../hooks/useUserRoles";
 import { useHistory } from "react-router-dom";
@@ -28,7 +31,7 @@ interface Props {
 type UserOption = {
     label: string;
     value: string;
-}
+};
 
 export default function ViewVideoRoom(props: Props) {
     const conference = useConference();
@@ -48,22 +51,43 @@ export default function ViewVideoRoom(props: Props) {
     useSafeAsync(
         async () => await VideoRoom.get(props.roomId, conference.id),
         setRoom,
-        [props.roomId, conference.id], "VideoRoom:setRoom");
+        [props.roomId, conference.id],
+        "VideoRoom:VideoRoom.get"
+    );
     useSafeAsync(
-        async () => room ? ((await room.textChat) ?? "not present") : null,
+        async () => (room ? (await room.textChat) ?? "not present" : null),
         setChat,
-        [room], "VideoRoom:setChat");
-    useSafeAsync(async () => {
-        const profiles = await UserProfile.getAll(conference.id);
-        return profiles
-            .filter(x => !x.isBanned)
-            .map(x => ({
-                value: x.id,
-                label: x.displayName
-            }))
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .filter(x => x.value !== currentUserProfile.id);
-    }, setAllUsers, [], "VideoRoom:setAllUsers");
+        [room],
+        "VideoRoom:getTextChat"
+    );
+    useSafeAsync(
+        async () => await VideoRoom.get(props.roomId, conference.id),
+        setRoom,
+        [props.roomId, conference.id],
+        "VideoRoom:setRoom"
+    );
+    useSafeAsync(
+        async () => (room ? (await room.textChat) ?? "not present" : null),
+        setChat,
+        [room],
+        "VideoRoom:setChat"
+    );
+    useSafeAsync(
+        async () => {
+            const profiles = await UserProfile.getAll(conference.id);
+            return profiles
+                .filter(x => !x.isBanned)
+                .map(x => ({
+                    value: x.id,
+                    label: x.displayName,
+                }))
+                .sort((a, b) => a.label.localeCompare(b.label))
+                .filter(x => x.value !== currentUserProfile.id);
+        },
+        setAllUsers,
+        [],
+        "VideoRoom:setAllUsers"
+    );
 
     const actionButtons: Array<ActionButton> = [];
     if (mVideo && room && room.isPrivate) {
@@ -71,125 +95,144 @@ export default function ViewVideoRoom(props: Props) {
             actionButtons.push({
                 label: "Back to room",
                 icon: <i className="fas fa-video"></i>,
-                action: (ev) => {
+                action: ev => {
                     ev.stopPropagation();
                     ev.preventDefault();
 
                     setShowInvite(false);
-                }
+                },
             });
-        }
-        else {
+        } else {
             actionButtons.push({
                 label: "Invite",
                 icon: <i className="fas fa-envelope"></i>,
-                action: (ev) => {
+                action: ev => {
                     ev.stopPropagation();
                     ev.preventDefault();
 
                     setShowInvite(true);
-                }
+                },
             });
         }
     }
 
-
     const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
     const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
-    useSafeAsync(async () => {
-        const watched = await currentUserProfile.watched;
-        return watched.watchedRooms.includes(props.roomId);
-    }, setIsFollowing, [currentUserProfile.watchedId, props.roomId], "VideoRoom:setIsFollowing");
+    useSafeAsync(
+        async () => {
+            const watched = await currentUserProfile.watched;
+            return watched.watchedRooms.includes(props.roomId);
+        },
+        setIsFollowing,
+        [currentUserProfile.watchedId, props.roomId],
+        "VideoRoom:setIsFollowing"
+    );
 
-    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        for (const object of update.objects) {
-            if (object.id === currentUserProfile.watchedId) {
-                setIsFollowing((object as WatchedItems).watchedRooms.includes(props.roomId));
+    const onWatchedItemsUpdated = useCallback(
+        function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+            for (const object of update.objects) {
+                if (object.id === currentUserProfile.watchedId) {
+                    setIsFollowing((object as WatchedItems).watchedRooms.includes(props.roomId));
+                }
             }
-        }
-    }, [props.roomId, currentUserProfile.watchedId]);
+        },
+        [props.roomId, currentUserProfile.watchedId]
+    );
 
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conference);
 
-    const onRoomUpdated = useCallback(function _onRoomUpdated(update: DataUpdatedEventDetails<"VideoRoom">) {
-        for (const object of update.objects) {
-            if (object.id === props.roomId) {
-                setRoom(object as VideoRoom);
+    const onRoomUpdated = useCallback(
+        function _onRoomUpdated(update: DataUpdatedEventDetails<"VideoRoom">) {
+            for (const object of update.objects) {
+                if (object.id === props.roomId) {
+                    setRoom(object as VideoRoom);
+                }
             }
-        }
-    }, [props.roomId]);
+        },
+        [props.roomId]
+    );
 
-    const onRoomDeleted = useCallback(function _onRoomDeleted(update: DataDeletedEventDetails<"VideoRoom">) {
-        if (update.objectId === props.roomId) {
-            addNotification("Room deleted.");
-            history.push("/");
-        }
-    }, [history, props.roomId]);
+    const onRoomDeleted = useCallback(
+        function _onRoomDeleted(update: DataDeletedEventDetails<"VideoRoom">) {
+            if (update.objectId === props.roomId) {
+                addNotification("Room deleted.");
+                history.push("/");
+            }
+        },
+        [history, props.roomId]
+    );
 
     useDataSubscription("VideoRoom", onRoomUpdated, onRoomDeleted, !room, conference);
 
-
-    const doFollow = useCallback(async function _doFollow() {
-        try {
-            const p = makeCancelable((async () => {
-                const watched = await currentUserProfile.watched;
-                let doSave = false;
-                if (!watched.watchedRooms.includes(props.roomId)) {
-                    watched.watchedRooms.push(props.roomId);
-                    doSave = true;
-                }
-                if (chat && chat !== "not present" && !watched.watchedChats.includes(chat.id)) {
-                    watched.watchedChats.push(chat.id);
-                    doSave = true;
-                }
-                if (doSave) {
-                    await watched.save();
-                }
-            })());
-            setChangingFollow(p);
-            await p.promise;
-            setChangingFollow(null);
-        }
-        catch (e) {
-            if (!e.isCanceled) {
+    const doFollow = useCallback(
+        async function _doFollow() {
+            try {
+                const p = makeCancelable(
+                    (async () => {
+                        const watched = await currentUserProfile.watched;
+                        let doSave = false;
+                        if (!watched.watchedRooms.includes(props.roomId)) {
+                            watched.watchedRooms.push(props.roomId);
+                            doSave = true;
+                        }
+                        if (chat && chat !== "not present" && !watched.watchedChats.includes(chat.id)) {
+                            watched.watchedChats.push(chat.id);
+                            doSave = true;
+                        }
+                        if (doSave) {
+                            await watched.save();
+                        }
+                    })()
+                );
+                setChangingFollow(p);
+                await p.promise;
                 setChangingFollow(null);
-                throw e;
+            } catch (e) {
+                if (!e.isCanceled) {
+                    setChangingFollow(null);
+                    throw e;
+                }
             }
-        }
-        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.roomId, currentUserProfile.watchedId]);
+            // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [props.roomId, currentUserProfile.watchedId]
+    );
 
-    const doUnfollow = useCallback(async function _doFollow() {
-        try {
-            const p = makeCancelable((async () => {
-                const watched = await currentUserProfile.watched;
-                let doSave = false;
-                if (watched.watchedRooms.includes(props.roomId)) {
-                    watched.watchedRooms = watched.watchedRooms.filter(x => x !== props.roomId);
-                    doSave = true;
-                }
-                if (chat && chat !== "not present" && watched.watchedChats.includes(chat.id)) {
-                    watched.watchedChats = watched.watchedChats.filter(x => x !== chat.id);
-                    doSave = true;
-                }
-                if (doSave) {
-                    await watched.save();
-                }
-            })());
-            setChangingFollow(p);
-            await p.promise;
-            setChangingFollow(null);
-        }
-        catch (e) {
-            if (!e.isCanceled) {
+    const doUnfollow = useCallback(
+        async function _doFollow() {
+            try {
+                const p = makeCancelable(
+                    (async () => {
+                        const watched = await currentUserProfile.watched;
+                        let doSave = false;
+                        if (watched.watchedRooms.includes(props.roomId)) {
+                            watched.watchedRooms = watched.watchedRooms.filter(x => x !== props.roomId);
+                            doSave = true;
+                        }
+                        if (chat && chat !== "not present" && watched.watchedChats.includes(chat.id)) {
+                            watched.watchedChats = watched.watchedChats.filter(x => x !== chat.id);
+                            doSave = true;
+                        }
+                        if (doSave) {
+                            await watched.save();
+                        }
+                    })()
+                );
+                setChangingFollow(p);
+                await p.promise;
                 setChangingFollow(null);
-                throw e;
+            } catch (e) {
+                if (!e.isCanceled) {
+                    setChangingFollow(null);
+                    throw e;
+                }
             }
-        }
-        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.roomId, currentUserProfile.watchedId]);
+            // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [props.roomId, currentUserProfile.watchedId]
+    );
 
     if (room) {
         if (isFollowing !== null) {
@@ -197,22 +240,21 @@ export default function ViewVideoRoom(props: Props) {
                 actionButtons.push({
                     label: changingFollow ? "Changing" : "Unfollow room",
                     icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
-                    action: (ev) => {
+                    action: ev => {
                         ev.preventDefault();
                         ev.stopPropagation();
                         doUnfollow();
-                    }
+                    },
                 });
-            }
-            else {
+            } else {
                 actionButtons.push({
                     label: changingFollow ? "Changing" : "Follow room",
                     icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
-                    action: (ev) => {
+                    action: ev => {
                         ev.preventDefault();
                         ev.stopPropagation();
                         doFollow();
-                    }
+                    },
                 });
             }
         }
@@ -222,7 +264,7 @@ export default function ViewVideoRoom(props: Props) {
             actionButtons.push({
                 label: isDeleting ? "Deleting" : "Delete room",
                 icon: isDeleting ? <LoadingSpinner message="" /> : <i className="fas fa-trash-alt" />,
-                action: (ev) => {
+                action: ev => {
                     ev.preventDefault();
                     ev.stopPropagation();
 
@@ -232,19 +274,17 @@ export default function ViewVideoRoom(props: Props) {
                             addError(`Failed to delete room. ${e}`);
                             setIsDeleting(false);
                         });
-                    }
-                    catch (e) {
+                    } catch (e) {
                         addError(`Failed to delete room. ${e}`);
                     }
-                }
+                },
             });
         }
     }
 
-
     useHeading({
         title: room?.name ?? "Room",
-        buttons: actionButtons
+        buttons: actionButtons,
     });
 
     useEffect(() => inviting?.cancel, [inviting]);
@@ -262,7 +302,12 @@ export default function ViewVideoRoom(props: Props) {
                 assert(room);
                 assert(mVideo);
                 assert(invites);
-                const p = makeCancelable(mVideo.inviteToRoom(room, invites.map(x => x.value)));
+                const p = makeCancelable(
+                    mVideo.inviteToRoom(
+                        room,
+                        invites.map(x => x.value)
+                    )
+                );
                 setInviting(p);
                 const results = await p.promise;
                 const fails = [];
@@ -272,16 +317,19 @@ export default function ViewVideoRoom(props: Props) {
                     }
                 }
                 if (fails.length > 0) {
-                    addError(`Failed to invite some users: ${fails.map(x => allUsers?.find(u => u.value === x)?.label ?? ", <Unknown>").reduce((acc, x) => `${acc}, ${x}`, "").substr(2)}`);
-                }
-                else {
-                    addNotification("Successfully invited selected users.",);
+                    addError(
+                        `Failed to invite some users: ${fails
+                            .map(x => allUsers?.find(u => u.value === x)?.label ?? ", <Unknown>")
+                            .reduce((acc, x) => `${acc}, ${x}`, "")
+                            .substr(2)}`
+                    );
+                } else {
+                    addNotification("Successfully invited selected users.");
                 }
                 setShowInvite(false);
                 setInviting(null);
                 setInvites([]);
-            }
-            catch (e) {
+            } catch (e) {
                 if (!e.isCanceled) {
                     throw e;
                 }
@@ -291,54 +339,63 @@ export default function ViewVideoRoom(props: Props) {
         inviteUsers();
     }
 
-    const inviteEl
-        = inviting
-            ? <LoadingSpinner message="Inviting users, please wait" />
-            : <>
-                <p>
-                    By inviting users to join this room you will give them access to
-                    participate in the room but not to invite more people.
-        </p>
-                <form onSubmit={(ev) => doInviteUsers(ev)}>
-                    <label>Select users to invite:</label>
-                    <div className="invite-users-control">
-                        <MultiSelect
-                            className="invite-users-control__multiselect"
-                            labelledBy="Invite users"
-                            overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
-                            options={allUsers?.filter(x => !room?.userIdsWithAccess?.includes(x.value)) ?? []}
-                            value={invites ?? []}
-                            onChange={setInvites}
-                        />
-                    </div>
-                    <div className="submit-container">
-                        <button>Invite</button>
-                    </div>
-                </form>
-            </>;
+    const inviteEl = inviting ? (
+        <LoadingSpinner message="Inviting users, please wait" />
+    ) : (
+        <>
+            <p>
+                By inviting users to join this room you will give them access to participate in the room but not to
+                invite more people.
+            </p>
+            <form onSubmit={ev => doInviteUsers(ev)}>
+                <label>Select users to invite:</label>
+                <div className="invite-users-control">
+                    <MultiSelect
+                        className="invite-users-control__multiselect"
+                        labelledBy="Invite users"
+                        overrideStrings={{ allItemsAreSelected: "Everyone", selectAll: "Everyone" }}
+                        options={allUsers?.filter(x => !room?.userIdsWithAccess?.includes(x.value)) ?? []}
+                        value={invites ?? []}
+                        onChange={setInvites}
+                    />
+                </div>
+                <div className="submit-container">
+                    <button>Invite</button>
+                </div>
+            </form>
+        </>
+    );
 
     // TODO: Members list (action button)
 
-    return <div className={`video-room${showInvite ? " invite-view" : ""}`}>
-        {showInvite ? inviteEl : <></>}
-        <SplitterLayout
-            vertical={true}
-            percentage={true}
-            ref={component => { component?.setState({ secondaryPaneSize: size }) }}
-            onSecondaryPaneSizeChange={newSize => setSize(newSize)}
-        >
-            <div className="split top-split">
-                {room ? <VideoGrid room={room} /> : <LoadingSpinner />}
-                <button onClick={() => setSize(100)}>
-                    &#9650;
-                </button>
-            </div>
-            <div className="split bottom-split">
-                <button onClick={() => setSize(0)}>
-                    &#9660;
-                </button>
-                {chat ? chat !== "not present" ? <ChatFrame chatId={chat.id} /> : <>This room does not have a chat.</> : <LoadingSpinner />}
-            </div>
-        </SplitterLayout>
-    </div>;
+    return (
+        <div className={`video-room${showInvite ? " invite-view" : ""}`}>
+            {showInvite ? inviteEl : <></>}
+            <SplitterLayout
+                vertical={true}
+                percentage={true}
+                ref={component => {
+                    component?.setState({ secondaryPaneSize: size });
+                }}
+                onSecondaryPaneSizeChange={newSize => setSize(newSize)}
+            >
+                <div className="split top-split">
+                    {room ? <VideoGrid room={room} sponsorView={false} /> : <LoadingSpinner />}
+                    <button onClick={() => setSize(100)}>&#9650;</button>
+                </div>
+                <div className="split bottom-split">
+                    <button onClick={() => setSize(0)}>&#9660;</button>
+                    {chat ? (
+                        chat !== "not present" ? (
+                            <ChatFrame chatId={chat.id} />
+                        ) : (
+                            <>This room does not have a chat.</>
+                        )
+                    ) : (
+                        <LoadingSpinner />
+                    )}
+                </div>
+            </SplitterLayout>
+        </div>
+    );
 }

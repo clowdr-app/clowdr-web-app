@@ -4,9 +4,9 @@ import useHeading from "../../../hooks/useHeading";
 import useUserRoles from "../../../hooks/useUserRoles";
 
 export default function Tools() {
-    const { isAdmin } = useUserRoles();
+  const { isAdmin } = useUserRoles();
 
-    useHeading("Admin tools");
+  useHeading("Admin tools");
 
     return !isAdmin
         ? <Redirect to="/notfound" />
@@ -17,6 +17,7 @@ export default function Tools() {
                 <li><Link to="/admin/registration">Registrations</Link></li>
                 <li><Link to="/admin/sidebar">Sidebar (logo &amp; theme)</Link></li>
                 <li><Link to="/admin/welcome">Welcome (/landing) page</Link></li>
+                <li><Link to="/admin/sponsors">Sponsors</Link></li>
             </ul>
         </>;
 }

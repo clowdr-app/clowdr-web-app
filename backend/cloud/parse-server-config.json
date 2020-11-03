@@ -20,6 +20,8 @@
             "ProgramSession",
             "ProgramSessionEvent",
             "ProgramTrack",
+            "Sponsor",
+            "SponsorContent",
             "TextChat",
             "TextChatMessage",
             "UserProfile",

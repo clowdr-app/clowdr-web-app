@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import { styled, Theme } from '@material-ui/core/styles';
+import { styled, Theme } from "@material-ui/core/styles";
 
-import { CssBaseline } from '@material-ui/core';
-import { MuiThemeProvider } from '@material-ui/core/styles';
+import { CssBaseline } from "@material-ui/core";
+import { MuiThemeProvider } from "@material-ui/core/styles";
 
-import { Room as TwilioRoom } from 'twilio-video';
+import { Room as TwilioRoom } from "twilio-video";
 
-import theme from '../VideoFrontend/theme';
+import theme from "../VideoFrontend/theme";
 
 import Room from "../VideoFrontend/components/Room/Room";
 import ErrorDialog from "../VideoFrontend/components/ErrorDialog/ErrorDialog";
@@ -26,21 +26,22 @@ import useLocalVideoToggle from "../VideoFrontend/hooks/useLocalVideoToggle/useL
 import { Prompt } from "react-router-dom";
 import "./VideoGrid.scss";
 
-const Container = styled('div')({
-    display: 'grid',
-    gridTemplateRows: '1fr auto',
+const Container = styled("div")({
+    display: "grid",
+    gridTemplateRows: "1fr auto",
 });
 
-const Main = styled('main')(({ theme: _theme }: { theme: Theme }) => ({
-    overflow: 'hidden',
+const Main = styled("main")(({ theme: _theme }: { theme: Theme }) => ({
+    overflow: "hidden",
     paddingBottom: `${_theme.footerHeight}px`, // Leave some space for the footer
-    [_theme.breakpoints.down('sm')]: {
+    [_theme.breakpoints.down("sm")]: {
         paddingBottom: `${_theme.mobileFooterHeight + _theme.mobileTopBarHeight}px`, // Leave some space for the mobile header and footer
     },
 }));
 
 interface Props {
     room: VideoRoom;
+    sponsorView: boolean;
 }
 
 function VideoGrid(props: Props) {
@@ -57,32 +58,26 @@ function VideoGrid(props: Props) {
         function stop() {
             try {
                 stopAudio();
-            }
-            catch {
-            }
+            } catch {}
 
             try {
                 stopVideo();
-            }
-            catch {
-            }
+            } catch {}
 
             try {
                 if (roomState === "connected" || roomState === "reconnecting") {
                     room.disconnect();
                 }
-            }
-            catch {
-            }
+            } catch {}
         }
 
         unmountRef.current = () => {
             stop();
-        }
-        unloadRef.current = (ev) => {
+        };
+        unloadRef.current = ev => {
             ev.preventDefault();
             stop();
-        }
+        };
     }, [room, roomState, stopAudio, stopVideo]);
 
     useEffect(() => {
@@ -90,7 +85,7 @@ function VideoGrid(props: Props) {
             if (unmountRef && unmountRef.current) {
                 unmountRef.current();
             }
-        }
+        };
     }, []);
 
     useEffect(() => {
@@ -98,15 +93,15 @@ function VideoGrid(props: Props) {
             window.addEventListener("beforeunload", unloadRef.current);
         }
         return () => {
-            if (unloadRef && unloadRef.current)
-                window.removeEventListener("beforeunload", unloadRef.current);
-        }
+            if (unloadRef && unloadRef.current) window.removeEventListener("beforeunload", unloadRef.current);
+        };
     }, []);
 
     useEffect(() => {
-        if (existingRoomRef.current &&
-            (room.sid !== existingRoomRef.current.sid ||
-                props.room.twilioID !== existingRoomRef.current.sid)) {
+        if (
+            existingRoomRef.current &&
+            (room.sid !== existingRoomRef.current.sid || props.room.twilioID !== existingRoomRef.current.sid)
+        ) {
             if (existingRoomRef.current.state === "connected") {
                 existingRoomRef.current.disconnect();
             }
@@ -114,42 +109,45 @@ function VideoGrid(props: Props) {
         existingRoomRef.current = room;
     }, [room.sid, room, props.room.id, props.room]);
 
-    return <>
-        <Prompt
-            when={roomState !== "disconnected"}
-            message='Are you sure you want to leave the video room?'
-        />
-        <Container style={{ height: "100%" }} className="video-grid">
-            {roomState === 'disconnected' ? (
-                <PreJoinScreens room={props.room} />
-            ) : (
+    return (
+        <>
+            <Prompt when={roomState !== "disconnected"} message="Are you sure you want to leave the video room?" />
+            <Container style={{ height: "100%" }} className="video-grid">
+                {roomState === "disconnected" ? (
+                    <PreJoinScreens room={props.room} />
+                ) : (
                     <Main>
                         <ReconnectingNotification />
                         <MobileTopMenuBar />
-                        <Room />
+                        <Room sponsorView={props.sponsorView} />
                         <MenuBar />
                     </Main>
                 )}
-        </Container>
-    </>;
+            </Container>
+        </>
+    );
 }
 
 function VideoGridVideoWrapper(props: Props) {
     const { error, setError } = useAppState();
     const connectionOptions = useConnectionOptions();
 
-    return <UnsupportedBrowserWarning>
-        <VideoProvider options={connectionOptions} onError={setError}>
-            <ErrorDialog dismissError={() => setError(null)} error={error} />
-            <VideoGrid {...props} />
-        </VideoProvider>
-    </UnsupportedBrowserWarning>;
+    return (
+        <UnsupportedBrowserWarning>
+            <VideoProvider options={connectionOptions} onError={setError}>
+                <ErrorDialog dismissError={() => setError(null)} error={error} />
+                <VideoGrid {...props} />
+            </VideoProvider>
+        </UnsupportedBrowserWarning>
+    );
 }
 
 export default function VideoGridStateWrapper(props: Props) {
-    return <MuiThemeProvider theme={theme}>
-        <AppStateProvider>
-            <VideoGridVideoWrapper {...props} />
-        </AppStateProvider>
-    </MuiThemeProvider>;
+    return (
+        <MuiThemeProvider theme={theme}>
+            <AppStateProvider>
+                <VideoGridVideoWrapper {...props} />
+            </AppStateProvider>
+        </MuiThemeProvider>
+    );
 }

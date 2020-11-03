@@ -1,6 +1,6 @@
- .video-grid {
+.video-grid {
     // https://material-ui.com/customization/breakpoints/
-    
+
     $break-xs: 600px;
     $break-sm: 960px;
     $break-md: 1280px;
@@ -72,7 +72,7 @@
             .area-48 { grid-area: 25 / 1 / span 1 / span 1; } .area-49 { grid-area: 25 / 2 / span 1 / span 1; }
         }
 
-        @media only screen and (max-width: $break-xs) {
+        @mixin single-column {
             // 1 column
             .area-0  { grid-area: 1  / 1 / span 1 / span 1; }
             .area-1  { grid-area: 2  / 1 / span 1 / span 1; }
@@ -124,6 +124,14 @@
             .area-47 { grid-area: 48 / 1 / span 1 / span 1; }
             .area-48 { grid-area: 49 / 1 / span 1 / span 1; }
             .area-49 { grid-area: 50 / 1 / span 1 / span 1; }
+        }
+
+        @media only screen and (max-width: $break-xs) {
+            @include single-column;
+        }
+
+        &.single-column {
+            @include single-column;
         }
     }
  }

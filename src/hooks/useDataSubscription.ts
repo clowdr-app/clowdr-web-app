@@ -1,13 +1,14 @@
 import { useEffect } from "react";
-import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import {
+    DataDeletedEventDetails,
+    DataUpdatedEventDetails,
+} from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { ISimpleEvent } from "strongly-typed-events";
 import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { CachedSchemaKeys } from "@clowdr-app/clowdr-db-schema/build/DataLayer/WholeSchema";
 import * as Data from "@clowdr-app/clowdr-db-schema";
 
-export default function useDataSubscription<
-    K extends CachedSchemaKeys
->(
+export default function useDataSubscription<K extends CachedSchemaKeys>(
     tableName: K,
     onDataUpdated: ((ev: DataUpdatedEventDetails<K>) => void) | null,
     onDataDeleted: ((ev: DataDeletedEventDetails<K>) => void) | null,
@@ -18,8 +19,8 @@ export default function useDataSubscription<
         if (!loading && _conference && (onDataUpdated || onDataDeleted)) {
             const conference = _conference;
 
-            let cancel: () => void = () => { };
-            let unsubscribe: () => void = () => { };
+            let cancel: () => void = () => {};
+            let unsubscribe: () => void = () => {};
             async function subscribeToUpdates() {
                 try {
                     let promises: [
@@ -99,6 +100,18 @@ export default function useDataSubscription<
                                 Data.ProgramTrack.onDataDeleted(conference.id) as any,
                             ];
                             break;
+                        case "Sponsor":
+                            promises = [
+                                Data.Sponsor.onDataUpdated(conference.id) as any,
+                                Data.Sponsor.onDataDeleted(conference.id) as any,
+                            ];
+                            break;
+                        case "SponsorContent":
+                            promises = [
+                                Data.SponsorContent.onDataUpdated(conference.id) as any,
+                                Data.SponsorContent.onDataDeleted(conference.id) as any,
+                            ];
+                            break;
                         case "TextChat":
                             promises = [
                                 Data.TextChat.onDataUpdated(conference.id) as any,
@@ -159,14 +172,12 @@ export default function useDataSubscription<
                             _unsubscribe();
                         }
                     };
-                }
-                catch (e) {
+                } catch (e) {
                     if (!e.isCanceled) {
                         throw e;
                     }
-                }
-                finally {
-                    cancel = () => { };
+                } finally {
+                    cancel = () => {};
                 }
             }
 
@@ -177,6 +188,6 @@ export default function useDataSubscription<
                 cancel();
             };
         }
-        return () => { };
+        return () => {};
     }, [_conference, loading, onDataDeleted, onDataUpdated, tableName]);
 }
