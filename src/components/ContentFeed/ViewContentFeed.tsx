@@ -30,27 +30,27 @@ export default function ViewContentFeed(props: Props) {
     useSafeAsync(
         async () => feed ? ((await feed.textChat) ?? "not present") : null,
         setTextChat,
-        [feed]);
+        [feed], "ViewContentFeed:setTextChat");
 
     useSafeAsync(
         async () => feed ? ((await feed.videoRoom) ?? "not present") : null,
         setVideoRoom,
-        [feed]);
+        [feed], "ViewContentFeed:setVideoRoom");
 
     useSafeAsync(
         async () => feed ? ((await feed.youtube) ?? "not present") : null,
         setYouTubeFeed,
-        [feed]);
+        [feed], "ViewContentFeed:setYouTubeFeed");
 
     useSafeAsync(
         async () => feed ? ((await feed.zoomRoom) ?? "not present") : null,
         setZoomRoom,
-        [feed]);
+        [feed], "ViewContentFeed:setZoomRoom");
 
     useSafeAsync(
         async () => joinZoom ? await Parse.Cloud.run("zoom-generate-signature", { meetingNumber: zoomRoomToMeetingDetails()?.meetingNumber, conference: conf.id }) : undefined,
         setZoomDetails,
-        [joinZoom]);
+        [joinZoom], "ViewContentFeed:generate-zoom-signature");
 
     function handleZoomFrameRedirect(location: string) {
         // If the Zoom iframe has been redirected to about:blank, hide it

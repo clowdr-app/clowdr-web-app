@@ -57,7 +57,7 @@ export default function AllChats() {
                     : null;
             });
         return removeNull(await Promise.all(items ?? []));
-    }, setDmChatItems, [allChats, userProfiles, currentProfile.id, onlineStatus])
+    }, setDmChatItems, [allChats, userProfiles, currentProfile.id, onlineStatus], "AllChats:setDmChatItems");
 
     useSafeAsync(async () => {
         if (!allChats || !userProfiles || !currentProfile) {
@@ -77,7 +77,7 @@ export default function AllChats() {
                 }
             });
         return await Promise.all(items ?? []);
-    }, setAllOtherUserItems, [allChats, userProfiles, currentProfile.id, onlineStatus]);
+    }, setAllOtherUserItems, [allChats, userProfiles, currentProfile.id, onlineStatus], "AllChats:setAllOtherUserItems");
 
     useEffect(() => {
         if (!allChats) {

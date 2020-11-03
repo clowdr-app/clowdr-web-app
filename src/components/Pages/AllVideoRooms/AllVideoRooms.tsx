@@ -33,10 +33,10 @@ export default function ChatView() {
                 return { room, participants, contentFeeds: relatedContentFeeds };
             }))
             : null;
-    }, setRooms, [videoRooms, conference.id]);
+    }, setRooms, [videoRooms, conference.id], "AllVideoRooms:ChatView:setRooms");
 
     // Subscribe to VideoRooms
-    useSafeAsync(async () => VideoRoom.getAll(conference.id), setVideoRooms, [conference.id]);
+    useSafeAsync(async () => VideoRoom.getAll(conference.id), setVideoRooms, [conference.id], "AllVideoRooms:ChatView:setVideoRooms");
 
     const onVideoRoomUpdated = useCallback(function _onVideoRoomUpdated(ev: DataUpdatedEventDetails<"VideoRoom">) {
         setVideoRooms(existing => {

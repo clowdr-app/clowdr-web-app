@@ -106,7 +106,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
 
     const conference = useConference();
     const [participantProfile, setParticipantProfile] = useState<UserProfile | null>(null);
-    useSafeAsync(() => UserProfile.get(participant.identity, conference.id), setParticipantProfile, [participant.identity]);
+    useSafeAsync(() => UserProfile.get(participant.identity, conference.id), setParticipantProfile, [participant.identity], "MainParticipantInfo:setParticipantProfile");
 
     return (
         <div

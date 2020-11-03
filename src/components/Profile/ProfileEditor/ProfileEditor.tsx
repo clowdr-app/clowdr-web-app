@@ -47,7 +47,7 @@ export default function ProfileEditor(props: Props) {
     }, (flairs: Array<Flair>) => {
         setModifiedFlairs(flairs);
         setOriginalFlairs(flairs);
-    }, []);
+    }, [], "ProfileEditor:setModifiedFlairs/setOriginalFlairs");
 
     const saveProfile = async () => {
         // TODO: CSCW didn't like this:

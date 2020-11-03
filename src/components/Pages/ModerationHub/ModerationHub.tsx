@@ -31,9 +31,9 @@ export default function ModerationHub() {
     const [modChannelItems, setModChannelItems] = useState<Array<ColumnItem<ModerationChannelData>> | undefined>();
     const [watchedModChannelItems, setWatchedModChannelItems] = useState<Array<ColumnItem<ModerationChannelData>> | undefined>();
 
-    useSafeAsync(async () => mChat?.getModerationHubChatId() ?? null, setModHubId, [mChat]);
-    useSafeAsync(async () => mChat ? mChat.listAllModerationChats() : null, setModChannels, [mChat, allChats]);
-    useSafeAsync(async () => mChat ? mChat.listAllWatchedModerationChats() : null, setWatchedModChannels, [mChat, allChats, watchedItems?.watchedChats]);
+    useSafeAsync(async () => mChat?.getModerationHubChatId() ?? null, setModHubId, [mChat], "ModerationHub:setModHubId");
+    useSafeAsync(async () => mChat ? mChat.listAllModerationChats() : null, setModChannels, [mChat, allChats], "ModerationHub:listAllModerationChats");
+    useSafeAsync(async () => mChat ? mChat.listAllWatchedModerationChats() : null, setWatchedModChannels, [mChat, allChats, watchedItems?.watchedChats], "ModerationHub:listAllWatchedModerationChats");
 
     const moderationNamePrefix = "Moderation: ";
     function channelName(channel: ChatDescriptor) {

@@ -32,11 +32,11 @@ export default function ViewEvent(props: Props) {
     useSafeAsync(
         async () => await ProgramSessionEvent.get(props.eventId, conference.id),
         setEvent,
-        [props.eventId, conference.id]);
-    useSafeAsync(async () => await event?.item ?? null, setItem, [event]);
-    useSafeAsync(async () => await event?.session ?? null, setSession, [event]);
-    useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session]);
-    useSafeAsync(async () => event ? ((await event.feed) ?? "not present") : null, setEventFeed, [event]);
+        [props.eventId, conference.id], "ViewEvent:setEvent");
+    useSafeAsync(async () => await event?.item ?? null, setItem, [event], "ViewEvent:setItem");
+    useSafeAsync(async () => await event?.session ?? null, setSession, [event], "ViewEvent:setSession");
+    useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session], "ViewEvent:setSessionFeed");
+    useSafeAsync(async () => event ? ((await event.feed) ?? "not present") : null, setEventFeed, [event], "ViewEvent:setEventFeed");
 
     const [refreshTime, setRefreshTime] = useState<number>(0);
     useEffect(() => {
@@ -137,7 +137,7 @@ export default function ViewEvent(props: Props) {
     useSafeAsync(async () => {
         const watched = await userProfile.watched;
         return watched.watchedEvents.includes(props.eventId);
-    }, setIsFollowing, [userProfile.watchedId, props.eventId]);
+    }, setIsFollowing, [userProfile.watchedId, props.eventId], "ViewEvent:setIsFollowing");
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
         for (const object of update.objects) {

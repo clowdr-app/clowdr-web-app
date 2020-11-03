@@ -21,17 +21,17 @@ export default function ViewAuthor(props: Props) {
     useSafeAsync(
         async () => await ProgramPerson.get(props.authorId, conference.id),
         setAuthor,
-        [props.authorId, conference.id]);
+        [props.authorId, conference.id], "ViewAuthor:setAuthor");
 
     useSafeAsync(
         async () => await author?.profile ?? null,
         setProfile,
-        [author]);
+        [author], "ViewAuthor:setProfile");
 
     useSafeAsync(
         async () => (await author?.items ?? null)?.sort((x, y) => x.title.localeCompare(y.title)) ?? [],
         setItems,
-        [author]);
+        [author], "ViewAuthor:setItems");
 
     // TODO: Subscribe to live updates of profile and items
 

@@ -31,12 +31,12 @@ export default function ViewTrack(props: Props) {
     useSafeAsync(
         async () => await ProgramTrack.get(props.trackId, conference.id),
         setTrack,
-        [props.trackId, conference.id]);
+        [props.trackId, conference.id], "ViewTrack:setTrack");
 
     useSafeAsync(
         async () => (await track?.feed) ?? null,
         setFeed,
-        [track]);
+        [track], "ViewTrack:setFeed");
 
     // Subscribe to data updates
     const onTrackUpdated = useCallback(function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
@@ -75,7 +75,7 @@ export default function ViewTrack(props: Props) {
     useSafeAsync(async () => {
         const watched = await userProfile.watched;
         return watched.watchedTracks.includes(props.trackId);
-    }, setIsFollowing, [userProfile.watchedId, props.trackId]);
+    }, setIsFollowing, [userProfile.watchedId, props.trackId], "ViewTrack:setIsFollowing");
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
         for (const object of update.objects) {

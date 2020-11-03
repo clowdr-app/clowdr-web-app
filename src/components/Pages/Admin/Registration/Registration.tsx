@@ -51,7 +51,7 @@ export default function AdminRegistration(props: Props) {
     const [existingRegs, setExistingRegs] = useState<Registration[] | null>(null);
     const [sentRepeats, setSentRepeats] = useState<boolean>(false);
 
-    useSafeAsync(async () => Registration.getAll(conference.id), setExistingRegs, [conference.id]);
+    useSafeAsync(async () => Registration.getAll(conference.id), setExistingRegs, [conference.id], "Admin/Registration:getAll");
 
     useHeading({
         title: "Admin: Registrations",

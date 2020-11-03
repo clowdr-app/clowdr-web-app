@@ -25,7 +25,7 @@ export default function AdminSidebar() {
     useSafeAsync(async () => {
         const details = await conference.details;
         return details.find(x => x.key === "SIDEBAR_COLOUR")?.value ?? defaultSidebarColour;
-    }, setSidebarColour, [conference]);
+    }, setSidebarColour, [conference], "Admin/Sidebar:get SIDEBAR_COLOUR");
 
     const logoURL = handleParseFileURLWeirdness(conference.headerImage);
 

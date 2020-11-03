@@ -11,7 +11,7 @@ export default function useWatchedItems(): WatchedItems | null {
     const conference = useConference();
     const profile = useUserProfile();
 
-    useSafeAsync(async () => await profile.watched, setWatchedItems, [profile.watchedId]);
+    useSafeAsync(async () => await profile.watched, setWatchedItems, [profile.watchedId], "useWatchedItems:setWatchedItems");
 
     const onWatchedItemsUpdated = useCallback(async function _onWatchedItemsUpdated(ev: DataUpdatedEventDetails<"WatchedItems">) {
         setWatchedItems(old => old ? ev.objects.find(y => old.id === y.id) as (WatchedItems | undefined) ?? old : null);

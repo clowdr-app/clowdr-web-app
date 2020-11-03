@@ -14,7 +14,7 @@ export default function useChats(): Array<ChatDescriptor> | null {
     const mChat = useMaybeChat();
     const conference = useConference();
 
-    useSafeAsync(async () => await TextChat.getAll(conference.id), setChats, [conference.id]);
+    useSafeAsync(async () => await TextChat.getAll(conference.id), setChats, [conference.id], "useChats:setChats");
 
     const onChatsUpdated = useCallback(async function _onChatsUpdated(ev: DataUpdatedEventDetails<"TextChat">) {
         setChats(existing => {
@@ -43,7 +43,7 @@ export default function useChats(): Array<ChatDescriptor> | null {
             return null;
         }
         return removeNull(await Promise.all(allChats?.map(chat => mChat.getChat(chat.id))));
-    }, setChatDescriptors, [mChat, allChats]);
+    }, setChatDescriptors, [mChat, allChats], "useChats:setChatDescriptors");
 
     return allChatDescriptors;
 }

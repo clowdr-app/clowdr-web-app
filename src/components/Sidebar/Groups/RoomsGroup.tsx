@@ -205,7 +205,7 @@ export default function RoomsGroup(props: Props) {
                 ids: data.watchedRooms
             });
         }
-    }, [mUser?.watchedId]);
+    }, [mUser?.watchedId], "RoomsGroup:setWatchedRoomIds");
 
     const watchedId = mUser?.watchedId;
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {

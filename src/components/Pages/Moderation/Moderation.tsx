@@ -50,7 +50,7 @@ export default function Moderation() {
     useSafeAsync(async () => {
         const config = await ConferenceConfiguration.getByKey("MODERATION_CUSTOM_NOTICE", conference.id);
         return config.length > 0 ? config[0].value !== "<null>" ? config[0].value : null : null;
-    }, setCustomNotice, [conference.id]);
+    }, setCustomNotice, [conference.id], "Moderation:setCustomNotice");
 
     // Fetch all moderator profiles
     useSafeAsync(async () => {
@@ -64,10 +64,10 @@ export default function Moderation() {
             };
         }));
         return userOptions.filter(x => x.value !== currentUserProfile.id);
-    }, setAllModerators, [mChat, conference.id, currentUserProfile.id]);
+    }, setAllModerators, [mChat, conference.id, currentUserProfile.id], "Moderation:setAllModerators");
 
     // Fetch all moderation channels
-    useSafeAsync(async () => mChat ? (await mChat.listAllModerationChats()).filter(x => x.creator.id === currentUserProfile.id) : null, setModChannels, [mChat]);
+    useSafeAsync(async () => mChat ? (await mChat.listAllModerationChats()).filter(x => x.creator.id === currentUserProfile.id) : null, setModChannels, [mChat], "Moderation:setModChannels");
 
     const moderationNamePrefix = "Moderation: ";
     useEffect(() => {

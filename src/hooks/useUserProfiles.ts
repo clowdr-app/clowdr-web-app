@@ -12,7 +12,7 @@ export default function useUserProfiles(): Array<UserProfile> | null {
     useSafeAsync(async () => {
         const profiles = await UserProfile.getAll(conference.id);
         return profiles.filter(x => !x.isBanned);
-    }, setUserProfiles, [conference.id]);
+    }, setUserProfiles, [conference.id], "useUserProfiles:setUserProfiles");
 
     const onUserProfileUpdated = useCallback(function _onUserProfileUpdated(ev: DataUpdatedEventDetails<"UserProfile">) {
         setUserProfiles(existing => {

@@ -2,7 +2,6 @@ import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/cl
 import { ContentFeed, ProgramSession, ProgramSessionEvent, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import React, { useCallback, useEffect, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
-import SessionGroup from "../All/SessionGroup";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useHeading from "../../../../hooks/useHeading";
@@ -36,17 +35,17 @@ export default function ViewSession(props: Props) {
     useSafeAsync(
         async () => await ProgramSession.get(props.sessionId, conference.id),
         setSession,
-        [props.sessionId, conference.id]);
+        [props.sessionId, conference.id], "ViewSession:setSession");
 
     useSafeAsync(
         async () => (await session?.feed) ?? null,
         setSessionFeed,
-        [session]);
+        [session], "ViewSession:setSessionFeed");
 
     useSafeAsync(
         async () => (await session?.events) ?? null,
         setEvents,
-        [session]);
+        [session], "ViewSession:setEvents");
 
     useSafeAsync(
         async () => {
@@ -88,7 +87,8 @@ export default function ViewSession(props: Props) {
         (data: string | false | null) => {
             setTextChatId(data);
         },
-        [session, session?.id, events, specialRefreshTime, sessionFeed]);
+        [session, session?.id, events, specialRefreshTime, sessionFeed],
+        "ViewSession:setTextChatId");
 
     useEffect(() => {
         const t = setInterval(() => {
@@ -163,7 +163,7 @@ export default function ViewSession(props: Props) {
     useSafeAsync(async () => {
         const watched = await userProfile.watched;
         return watched.watchedSessions.includes(props.sessionId);
-    }, setIsFollowing, [userProfile.watchedId, props.sessionId]);
+    }, setIsFollowing, [userProfile.watchedId, props.sessionId], "ViewSession:setIsFollowing");
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
         for (const object of update.objects) {

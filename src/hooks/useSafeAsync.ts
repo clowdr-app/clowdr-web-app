@@ -4,21 +4,29 @@ import { DependencyList, useCallback, useEffect } from "react";
 export default function useSafeAsync<T>(
     generator: () => Promise<T | undefined>,
     setState: (newState: T) => void,
-    deps: DependencyList): void {
+    deps: DependencyList,
+    debugOrigin: string): void {
     const generatorCallback = useCallback(generator, deps);
     const setStateCallback = useCallback(setState, []);
+
+    // console.log(`useSafeAsync: called for ${debugOrigin}`);
 
     useEffect(() => {
         let cancel = () => { };
 
         async function execute() {
             try {
+                // console.log(`useSafeAsync: started executing for ${debugOrigin}`);
                 const p = makeCancelable(generatorCallback());
                 cancel = p.cancel;
                 const newV = await p.promise;
                 if (newV !== undefined) {
+                    // console.log(`useSafeAsync: started executing for ${debugOrigin}`);
                     setStateCallback(newV);
                 }
+                // else {
+                //     console.log(`useSafeAsync: No update from completed execution for ${debugOrigin}`);
+                // }
                 cancel = () => { };
             }
             catch (e) {

@@ -84,7 +84,7 @@ export default function ParticipantList(props: {
             participants.map(participantWithSlot =>
                 UserProfile.get(participantWithSlot.participant.identity, conference.id)));
         return removeNull(profiles);
-    }, setRemoteProfiles, [participants]);
+    }, setRemoteProfiles, [participants], "ParticipantList:setRemoteProfiles");
 
     function participantSorter(x: ParticipantWithSlot, y: ParticipantWithSlot): number {
         return x.slot < y.slot ? -1 : x.slot === y.slot ? 0 : 1;

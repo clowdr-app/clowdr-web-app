@@ -22,7 +22,7 @@ export default function Exhibit(props: ExhibitProps) {
     // Fetch initial ProgramItemAttachments
     useSafeAsync(
         async () => (await ProgramItemAttachment.getAll(conference.id)).filter(attachment => attachment.programItemId === props.programItem.id),
-        setAttachments, [props.programItem.id, conference.id]);
+        setAttachments, [props.programItem.id, conference.id], "Exhibit:setAttachments");
 
     useSafeAsync(
         async () => {
@@ -36,12 +36,12 @@ export default function Exhibit(props: ExhibitProps) {
             else {
                 return "multiple";
             }
-        }, setSingleEvent, []);
+        }, setSingleEvent, [], "Exhibit:setSingleEvent");
 
     useSafeAsync(
         async () => await props.programItem.track,
         setTrack,
-        [props.programItem.id]);
+        [props.programItem.id], "Exhibit:setTrack");
 
     // Subscribe to ProgramItemAttachment updates
     const onProgramItemAttachmentUpdated = useCallback(function _onProgramItemAttachmentUpdated(ev: DataUpdatedEventDetails<"ProgramItemAttachment">) {

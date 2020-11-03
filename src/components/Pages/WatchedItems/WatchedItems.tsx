@@ -47,7 +47,7 @@ export default function WatchedItemsPage() {
     useHeading("Followed Items");
 
     // Initial fetch of user's watched items
-    useSafeAsync(async () => userProfile.watched, setWatchedItems, [userProfile.watchedId]);
+    useSafeAsync(async () => userProfile.watched, setWatchedItems, [userProfile.watchedId], "WatchedItems:setWatchedItems");
 
     useSafeAsync(async () => {
         if (mChat && watchedItems?.watchedChats) {
@@ -58,7 +58,7 @@ export default function WatchedItemsPage() {
             return chatsWithName;
         }
         return undefined;
-    }, setActiveChats, [conference, conference.id, mChat, watchedItems?.watchedChats]);
+    }, setActiveChats, [conference, conference.id, mChat, watchedItems?.watchedChats], "WatchedItems:setActiveChats");
 
     // Subscribe to watched items updates
     const onWatchedItemsUpdated = useCallback(async function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
@@ -161,10 +161,10 @@ export default function WatchedItemsPage() {
             }
         }
         return undefined;
-    }, setMessages, [mChat, activeChats, messages]);
+    }, setMessages, [mChat, activeChats, messages], "WatchedItems:setMessages");
 
     // Fetch rooms
-    useSafeAsync(async () => watchedItems?.watchedRoomObjects ?? null, setRooms, [watchedItems?.watchedRooms]);
+    useSafeAsync(async () => watchedItems?.watchedRoomObjects ?? null, setRooms, [watchedItems?.watchedRooms], "WatchedItems:setRooms");
 
     // Subscribe to watched rooms updates
     const onRoomUpdated = useCallback(async function _onRoomUpdated(update: DataUpdatedEventDetails<"VideoRoom">) {
@@ -177,7 +177,7 @@ export default function WatchedItemsPage() {
 
     // Fetch tracks
     const [programTracks, setProgramTracks] = useState<Array<ProgramTrack> | null>(null);
-    useSafeAsync(async () => watchedItems?.watchedTrackObjects ?? null, setProgramTracks, [watchedItems]);
+    useSafeAsync(async () => watchedItems?.watchedTrackObjects ?? null, setProgramTracks, [watchedItems], "WatchedItems:setProgramTracks");
 
     // Subscribe to watched track updates
     const onTrackUpdated = useCallback(async function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
@@ -206,7 +206,7 @@ export default function WatchedItemsPage() {
 
     // Fetch watched sessions
     const [programSessions, setProgramSessions] = useState<Array<ProgramSession> | null>(null);
-    useSafeAsync(async () => watchedItems?.watchedSessionObjects ?? null, setProgramSessions, [watchedItems]);
+    useSafeAsync(async () => watchedItems?.watchedSessionObjects ?? null, setProgramSessions, [watchedItems], "WatchedItems:setProgramSessions");
 
     // Subscribe to watched session updates
     const onProgramSessionUpdated = useCallback(async function _onProgramSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
@@ -220,7 +220,7 @@ export default function WatchedItemsPage() {
 
     // Fetch watched events
     const [programSessionEvents, setProgramSessionEvents] = useState<Array<ProgramSessionEvent> | null>(null);
-    useSafeAsync(async () => watchedItems?.watchedEventObjects ?? null, setProgramSessionEvents, [watchedItems]);
+    useSafeAsync(async () => watchedItems?.watchedEventObjects ?? null, setProgramSessionEvents, [watchedItems], "WatchedItems:setProgramSessionEvents");
 
     // Subscribe to watched event updates
     const onProgramSessionEventUpdated = useCallback(async function _onProgramSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
@@ -240,7 +240,7 @@ export default function WatchedItemsPage() {
         }
         const sessions = await Promise.all(programSessionEvents?.map(async event => ({ session: await event.session, event })));
         return sessions;
-    }, setProgramPartialSessions, [programSessionEvents]);
+    }, setProgramPartialSessions, [programSessionEvents], "WatchedItems:setProgramPartialSessions");
 
     const watchedSessions = useMemo<Map<string, { session: ProgramSession, events: string[] | undefined }> | undefined>(() => {
         if (!programSessions || !programPartialSessions) {

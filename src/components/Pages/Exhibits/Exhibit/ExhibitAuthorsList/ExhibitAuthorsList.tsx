@@ -16,7 +16,7 @@ export default function ExhibitAuthorsList(props: ExhibitAuthorsListProps) {
     const item = props.item;
     const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(null);
 
-    useSafeAsync(async () => item ? await item.authorPerons : null, setAuthors, [item]);
+    useSafeAsync(async () => item ? await item.authorPerons : null, setAuthors, [item], "ExhibitAuthorsList:setAuthors");
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);

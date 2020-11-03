@@ -63,12 +63,12 @@ export default function ModerationChat(props: Props) {
                 value: x.id,
                 label: x.displayName
             })).filter(x => x.value !== mUser.id);
-    }, setAllUsers, []);
+    }, setAllUsers, [], "ModerationChat:setAllUsers");
 
     // Fetch chat info
     useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, (d) => {
         setChatDesc(d);
-    }, [props.chatId, mChat, refetchChatDesc]);
+    }, [props.chatId, mChat, refetchChatDesc], "ModerationChat:setChatDesc");
 
     // Subscribe to updates
     const onTextChatUpdated = useCallback(function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
@@ -91,14 +91,14 @@ export default function ModerationChat(props: Props) {
         else {
             return null;
         }
-    }, setMembers, [conf.id, props.chatId, mChat]);
+    }, setMembers, [conf.id, props.chatId, mChat], "ModerationChat:setMembers");
 
     // Fetch reported chat
     useSafeAsync(async () =>
         chatDesc?.isModeration && chatDesc.relatedModerationKey
             ? mChat?.getChat(chatDesc.relatedModerationKey.split(":")[0])
             : null,
-        setReportedChat, [mChat, chatDesc]);
+        setReportedChat, [mChat, chatDesc], "ModerationChat:setReportedChat");
 
     // Fetch reported message
     useSafeAsync(async () => {
@@ -113,8 +113,7 @@ export default function ModerationChat(props: Props) {
             }
         }
         return null;
-    },
-        setReportedMessage, [mChat, chatDesc, reportedChat]);
+    }, setReportedMessage, [mChat, chatDesc, reportedChat], "ModerationChat:setReportedMessage");
 
     const usersLeftToInvite = allUsers?.filter(x => !members?.some(y => y.profileId === x.value)) ?? [];
 
@@ -133,7 +132,7 @@ export default function ModerationChat(props: Props) {
     useSafeAsync(async () => {
         const watched = await mUser.watched;
         return watched.watchedChats.includes(props.chatId);
-    }, setIsFollowing, [mUser.watchedId, props.chatId]);
+    }, setIsFollowing, [mUser.watchedId, props.chatId], "ModerationChat:setIsFollowing");
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
         for (const object of update.objects) {

@@ -63,7 +63,7 @@ export default function NewChat(props: Props) {
             }
         }
         return result;
-    }, setInvites, [props.dmUserProfileId]);
+    }, setInvites, [props.dmUserProfileId], "NewChat:setInvites");
 
     // Fetch all user profiles
     useSafeAsync(async () => {
@@ -76,7 +76,7 @@ export default function NewChat(props: Props) {
             }))
             .sort((a, b) => a.label.localeCompare(b.label))
             .filter(x => x.value !== currentUserProfile.id);
-    }, setAllUsers, []);
+    }, setAllUsers, [], "NewChat:setAllUsers");
 
     /**
      * Check whether the state is currently valid for the form to be submitted.

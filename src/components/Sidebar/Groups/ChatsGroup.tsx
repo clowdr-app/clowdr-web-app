@@ -420,7 +420,7 @@ export default function ChatsGroup(props: Props) {
             });
         }
         // state.watchedChatIds is required so that active chats updates
-    }, [conf, conf.id, mChat, state.watchedChatIds]);
+    }, [conf, conf.id, mChat, state.watchedChatIds], "ChatsGroup:setActiveChats");
 
     useSafeAsync(async () => mUser?.watched ?? null, (data: WatchedItems | null) => {
         if (data) {
@@ -429,7 +429,7 @@ export default function ChatsGroup(props: Props) {
                 ids: data.watchedChats
             });
         }
-    }, [mUser?.watchedId]);
+    }, [mUser?.watchedId], "ChatsGroup:setWatchedChatIds");
 
     useSafeAsync(async () => UserProfile.getAll(conf.id), (data) => {
         dispatchUpdate({
@@ -440,7 +440,7 @@ export default function ChatsGroup(props: Props) {
                 isBanned: x.isBanned
             }))
         });
-    }, [conf.id]);
+    }, [conf.id], "ChatsGroup:updateAllUsers");
 
     // Initial fetch of all chats
     useEffect(() => {

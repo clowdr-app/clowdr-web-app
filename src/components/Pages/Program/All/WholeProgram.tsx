@@ -40,7 +40,7 @@ export default function WholeProgram() {
             return { tracks, sessions, events, authors, items };
         },
         setData,
-        [conference.id]);
+        [conference.id], "WholeProgram:setData");
 
     // Subscribe to changes
     const onTrackUpdated = useCallback(function _onTrackUpdated(ev: DataUpdatedEventDetails<"ProgramTrack">) {
@@ -197,8 +197,6 @@ export default function WholeProgram() {
         }
         return [];
     }, [data, scheduleView]);
-
-    console.log("Re-render!");
 
     return <div className="whole-program-page">
         <div className="switcher">

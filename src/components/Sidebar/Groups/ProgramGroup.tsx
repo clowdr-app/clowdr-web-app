@@ -424,7 +424,7 @@ export default function ProgramGroup(props: Props) {
                 }
             ]);
         }
-    }, [mUser?.watchedId]);
+    }, [mUser?.watchedId], "ProgramGroup:setWatched*");
 
     // Subscribe to watched items changes
     const watchedId = mUser?.watchedId;

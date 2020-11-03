@@ -33,7 +33,7 @@ export default function FlairInput(props: Props) {
             );
         }
         return results;
-    }, setAllFlairs, []);
+    }, setAllFlairs, [], "FlairInput:getAll");
 
     const isSelected = (flair: Flair) => props.flairs.find(x => x.id === flair.id) !== undefined;
 

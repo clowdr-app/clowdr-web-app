@@ -26,7 +26,7 @@ export default function LoggedInWelcome() {
     useSafeAsync(async () => {
         const details = await conference.details;
         return details.find(x => x.key === "LOGGED_IN_TEXT")?.value;
-    }, setContents, [conference]);
+    }, setContents, [conference], "LoggedInWelcome:setContents");
 
     const onTextUpdated = useCallback(function _onTextUpdate(update: DataUpdatedEventDetails<"PrivilegedConferenceDetails">) {
         for (const object of update.objects) {

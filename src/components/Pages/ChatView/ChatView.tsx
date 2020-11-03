@@ -83,7 +83,7 @@ export default function ChatView(props: Props) {
                 value: x.id,
                 label: x.displayName
             })).filter(x => x.value !== mUser.id);
-    }, setAllUsers, []);
+    }, setAllUsers, [], "ChatView:setAllUsers");
 
     // Fetch chat info
     useSafeAsync(async () => {
@@ -127,7 +127,7 @@ export default function ChatView(props: Props) {
         }
 
         return undefined;
-    }, setChatInfo, [props.chatId, mChat]);
+    }, setChatInfo, [props.chatId, mChat], "ChatView:setChatInfo");
 
     // Fetch members
     useSafeAsync(async () => {
@@ -142,7 +142,7 @@ export default function ChatView(props: Props) {
         else {
             return null;
         }
-    }, setMembers, [conf.id, props.chatId, mChat]);
+    }, setMembers, [conf.id, props.chatId, mChat], "ChatView:setMembers");
 
     const usersLeftToInvite = allUsers?.filter(x => !members?.some(y => y.profileId === x.value)) ?? [];
 
@@ -153,7 +153,7 @@ export default function ChatView(props: Props) {
     useSafeAsync(async () => {
         const watched = await mUser.watched;
         return watched.watchedChats.includes(props.chatId);
-    }, setIsFollowing, [mUser.watchedId, props.chatId]);
+    }, setIsFollowing, [mUser.watchedId, props.chatId], "ChatView:setIsFollowing");
 
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
         for (const object of update.objects) {

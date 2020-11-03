@@ -52,10 +52,10 @@ export default function AllAttendees() {
             }));
         }
         return undefined;
-    }, setUserProfileItems, [userProfiles]);
+    }, setUserProfileItems, [userProfiles], "AllAttendees:getProfiles with detail");
 
-    useSafeAsync(async () => await _Role.userProfileIdsOfRoles(conference.id, ["admin"]), setAdmins, [conference.id]);
-    useSafeAsync(async () => await _Role.userProfileIdsOfRoles(conference.id, ["manager"]), setManagers, [conference.id]);
+    useSafeAsync(async () => await _Role.userProfileIdsOfRoles(conference.id, ["admin"]), setAdmins, [conference.id], "AllAttendees:getAdmins");
+    useSafeAsync(async () => await _Role.userProfileIdsOfRoles(conference.id, ["manager"]), setManagers, [conference.id], "AllAttendees:getManagers");
 
     const promote = useCallback(async function _promote(profileId: string): Promise<void> {
         try {

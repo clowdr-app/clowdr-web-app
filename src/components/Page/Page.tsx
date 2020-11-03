@@ -79,7 +79,7 @@ function Page(props: Props) {
         else {
             return false;
         }
-    }, setShowSignUp, [mConf?.id]);
+    }, setShowSignUp, [mConf?.id], "Page:getConferenceConfiguration:SignUpEnabled");
 
     function renderActionButton(button: ActionButton): JSX.Element {
         if (typeof button.action === "string") {

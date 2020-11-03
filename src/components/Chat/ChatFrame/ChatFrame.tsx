@@ -29,7 +29,7 @@ export default function ChatFrame(props: Props) {
     const emojiButton = useRef<HTMLButtonElement | null>(null);
     const [emojiButtonPosition, setEmojiButtonPosition] = useState<{ bottom: number, right: number } | null>(null);
 
-    useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, setTC, [mChat, props.chatId]);
+    useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, setTC, [mChat, props.chatId], "ChatFrame:getChat");
 
     const getEmojiPickerOffset = () => {
         if (emojiButton && emojiButton.current) {

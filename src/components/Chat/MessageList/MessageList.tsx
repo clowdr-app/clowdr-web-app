@@ -106,13 +106,14 @@ export default function MessageList(props: Props) {
             setMessages([]);
             setMessagesPager(null);
         }
-    }, [mChat, props.chatId]);
+    }, [mChat, props.chatId], "MessageList:getMessages");
 
     useSafeAsync(async () =>
         Promise.all(messages.map(async message =>
             renderMessage(conf, userProfile, props.chatId, message))),
         setRenderedMessages,
-        [messages]
+        [messages],
+        "MessageList:renderMessages"
     );
 
     async function loadMoreMessages() {

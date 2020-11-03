@@ -28,7 +28,7 @@ export default function useOnlineStatus(userProfiles: UserProfile[]): Map<string
             }
         }));
         return newStatuses;
-    }, setOnlineStatus, [userProfiles, mChat])
+    }, setOnlineStatus, [userProfiles, mChat], "useOnlineStatus:setOnlineStatus");
 
     useEffect(() => {
         if (mChat) {

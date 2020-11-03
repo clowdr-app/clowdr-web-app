@@ -33,10 +33,10 @@ export default function ViewItem(props: Props) {
             ? await ProgramItem.get(props.item, conference.id)
             : props.item,
         setItem,
-        [props.item, conference.id]);
-    useSafeAsync(async () => item ? await item.authorPerons : null, setAuthors, [item]);
-    useSafeAsync(async () => item ? await item.attachments : null, setAttachments, [item]);
-    useSafeAsync(async () => (await item?.feed) ?? null, setFeed, [item]);
+        [props.item, conference.id], "ViewItem:setItem");
+    useSafeAsync(async () => item ? await item.authorPerons : null, setAuthors, [item], "ViewItem:setAuthors");
+    useSafeAsync(async () => item ? await item.attachments : null, setAttachments, [item], "ViewItem:setAttachments");
+    useSafeAsync(async () => (await item?.feed) ?? null, setFeed, [item], "ViewItem:setFeed");
 
     const [textChatId, setTextChatId] = useState<string | null>(null);
     useSafeAsync(async () => {
@@ -54,7 +54,7 @@ export default function ViewItem(props: Props) {
             }
         }
         return null;
-    }, setTextChatId, [feed]);
+    }, setTextChatId, [feed], "ViewItem:setTextChatId");
 
     const onAuthorUpdated = useCallback(function _onAuthorUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         const newAuthors = Array.from(authors ?? []);

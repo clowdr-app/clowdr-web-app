@@ -40,7 +40,7 @@ export default function ProgramPersonSelector(props: Props) {
         const people = await convert(persons);
         people.unshift({ personId: "", personName: "None", profile: undefined });
         return people;
-    }, setAllProgramPersons, [conference]);
+    }, setAllProgramPersons, [conference], "ProgramPersonSelector:setAllProgramPersons");
 
     const onPersonsUpdated = useCallback(async function _onPersonsUpdated(ev: DataUpdatedEventDetails<"ProgramPerson">) {
         if (allProgramPersons) {

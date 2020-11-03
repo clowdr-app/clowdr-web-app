@@ -18,7 +18,7 @@ export default function Exhibits() {
     // Fetch initial ProgramItems
     useSafeAsync(
         async () => (await ProgramItem.getAll(conference.id)).filter(programItem => programItem.exhibit),
-        setProgramItems, [conference.id]);
+        setProgramItems, [conference.id], "Exhibits:setProgramItems");
 
     // Subscribe to ProgramItem updates
     const onProgramItemUpdated = useCallback(function _onProgramItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {

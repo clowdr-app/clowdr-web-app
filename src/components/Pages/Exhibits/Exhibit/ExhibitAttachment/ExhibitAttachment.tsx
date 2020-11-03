@@ -16,7 +16,7 @@ export default function ExhibitAttachment(props: Props) {
     const [attachmentTypes, setAttachmentTypes] = useState<AttachmentType[] | undefined>();
     const [bestAttachment, setBestAttachment] = useState<ProgramItemAttachment | undefined>();
 
-    useSafeAsync(async () => await AttachmentType.getAll(conference.id), setAttachmentTypes, [conference]);
+    useSafeAsync(async () => await AttachmentType.getAll(conference.id), setAttachmentTypes, [conference], "ExhibitAttachment:setAttachmentTypes");
 
     const onAttachmentTypeUpdated = useCallback(function _onAttachmentTypeUpdated(ev: DataUpdatedEventDetails<"AttachmentType">) {
         const newAttachmentTypes = Array.from(attachmentTypes ?? []);

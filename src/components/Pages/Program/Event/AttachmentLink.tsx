@@ -19,7 +19,7 @@ export default function AttachmentLink(props: Props) {
     const [attachmentType, setAttachmentType] = useState<AttachmentType | null>(null);
     const [showVideo, setShowVideo] = useState<boolean>(!!props.showVideo);
 
-    useSafeAsync(async () => await props.attachment.attachmentType, setAttachmentType, [props.attachment.attachmentType]);
+    useSafeAsync(async () => await props.attachment.attachmentType, setAttachmentType, [props.attachment.attachmentType], "ViewAuthor:setAttachmentType");
 
     const onAttachmentTypeUpdated = useCallback(function _onAttachmentTypeUpdated(ev: DataUpdatedEventDetails<"AttachmentType">) {
         for (const object of ev.objects) {
