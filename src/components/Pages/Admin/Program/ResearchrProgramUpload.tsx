@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Redirect } from "react-router-dom";
 import useHeading from "../../../../hooks/useHeading";
 import useUserRoles from "../../../../hooks/useUserRoles";
-import "./ProgramUpload.scss";
+import "./ResearchrProgramUpload.scss";
 import useConference from "../../../../hooks/useConference";
 import "react-mde/lib/styles/css/react-mde-all.css";
 import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
@@ -13,6 +13,7 @@ import { parse as parseDate } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz';
 import MultiSelect from "react-multi-select-component";
 import { removeUndefined } from "@clowdr-app/clowdr-db-schema/build/Util";
+import { CompleteSpecs, TrackSpec, FeedSpec, ItemSpec, EventSpec, PersonSpec, SessionSpec } from "./UploadFormatTypes";
 
 function timeFromConfTime(date: string, time: string, timezone: string): Date {
     const localDateTime = parseDate(`${date} ${time}`, "yyyy/MM/dd HH:mm", new Date());
@@ -24,127 +25,89 @@ function removeHTMLEntities(str: string): string {
     return str.replace(/&amp;/g, "&").replace(/&amp;/g, "&");
 }
 
-
-type TrackSpec = {
-    shortName?: string,
-    name: string,
-    colour: string,
-    textChat?: boolean,
-};
-
-type FeedSpec = {
-    id: string,
-    name: string
-} & ({
-    videoRoom: boolean,
-    textChat?: boolean
-} | {
-    textChat: boolean
-} | {
-    zoomRoom: string
-} | {
-    youtube: string
-});
-
-type SessionSpec = {
-    id: string,
-    title: string,
-    chair?: string,
-    feed: string,
-    track: string,
-};
-
-type ItemSpec = {
-    id: string,
-    abstract: string,
-    exhibit: boolean,
-    title: string,
-    authors: string[],
-    track: string,
-    feed?: string,
-};
-
-type PersonSpec = {
-    name: string,
-    affiliation?: string
-};
-
-type EventSpec = {
-    id: string,
-    directLink?: string,
-    chair?: string;
-    endTime: Date,
-    startTime: Date,
-    item: string,
-    session: string,
-    feed?: string,
-};
-
-type AttachmentSpec = {
-    url: string,
-    attachmentType: string,
-    programItem: string,
-};
-
-type AttachmentTypeSpec = {
-    name: string;
-    displayAsLink: boolean;
-    isCoverImage: boolean;
-    ordinal: number;
-    supportsFile: boolean;
-    extra?: string;
-    fileTypes?: string[];
-};
-
-type CompleteSpecs = {
-    tracks: { [k: string]: TrackSpec | undefined };
-    feeds: { [k: string]: FeedSpec | undefined };
-    items: { [k: string]: ItemSpec | undefined };
-    events: { [k: string]: EventSpec | undefined };
-    persons: { [k: string]: PersonSpec | undefined };
-    sessions: { [k: string]: SessionSpec | undefined };
-    attachmentTypes: { [k: string]: AttachmentTypeSpec | undefined };
-};
-
-function processResearchrXMLsForDefaults(inputs: string[]) {
+function processResearchrXMLsForRooms(inputs: string[]) {
     const datas = [];
     const parser = new DOMParser();
     for (const input of inputs) {
         const dom = parser.parseFromString(input, "application/xml");
         datas.push(dom);
     }
-    const trackNames: Set<string> = new Set();
+
+    const roomNames: Set<string> = new Set();
+
     for (const data of datas) {
         const dataEvent = data.getElementsByTagName("event")[0];
         for (const dataSubevent of dataEvent.getElementsByTagName("subevent")) {
-            const dataSessionTrackEls = dataSubevent.getElementsByTagName("tracks")[0].getElementsByTagName("track");
-            for (const trackEl of dataSessionTrackEls) {
-                trackNames.add(trackEl.textContent ?? "<Unknown>");
+            const dataSessionRoomEls = dataSubevent.getElementsByTagName("room");
+            if (dataSessionRoomEls.length) {
+                const sessionRoom = dataSessionRoomEls[0].textContent;
+                if (sessionRoom) {
+                    roomNames.add(sessionRoom);
+                }
+            }
+        }
+    }
+
+    return {
+        roomNames
+    };
+}
+
+function processResearchrXMLsForDefaults(inputs: string[], roomNamesToInclude: Set<string>) {
+    const datas = [];
+    const parser = new DOMParser();
+    for (const input of inputs) {
+        const dom = parser.parseFromString(input, "application/xml");
+        datas.push(dom);
+    }
+
+    const trackNames: Set<string> = new Set();
+
+    for (const data of datas) {
+        const dataEvent = data.getElementsByTagName("event")[0];
+        for (const dataSubevent of dataEvent.getElementsByTagName("subevent")) {
+            const dataSessionRoomEls = dataSubevent.getElementsByTagName("room");
+            let skipSession = false;
+            if (dataSessionRoomEls.length) {
+                const sessionRoom = dataSessionRoomEls[0].textContent;
+                if (sessionRoom) {
+                    if (!roomNamesToInclude.has(sessionRoom)) {
+                        skipSession = true;
+                    }
+                }
             }
 
-            const dataTimeslots = dataSubevent.getElementsByTagName("timeslot");
-            for (const dataTimeslot of dataTimeslots) {
-                if (dataTimeslot.getElementsByTagName("event_id").length > 0) {
-                    const dataTimeslotTrackEls = dataTimeslot.getElementsByTagName("tracks")[0].getElementsByTagName("track");
-                    for (const trackEl of dataTimeslotTrackEls) {
-                        trackNames.add(trackEl.textContent ?? "<Unknown>");
+            if (!skipSession) {
+                const dataSessionTrackEls = dataSubevent.getElementsByTagName("tracks")[0].getElementsByTagName("track");
+                for (const trackEl of dataSessionTrackEls) {
+                    trackNames.add(trackEl.textContent ?? "<Unknown>");
+                }
+
+                const dataTimeslots = dataSubevent.getElementsByTagName("timeslot");
+                for (const dataTimeslot of dataTimeslots) {
+                    if (dataTimeslot.getElementsByTagName("event_id").length > 0) {
+                        const dataTimeslotTrackEls = dataTimeslot.getElementsByTagName("tracks")[0].getElementsByTagName("track");
+                        for (const trackEl of dataTimeslotTrackEls) {
+                            trackNames.add(trackEl.textContent ?? "<Unknown>");
+                        }
                     }
                 }
             }
         }
     }
+
     return {
         trackNames: Array.from(trackNames.values())
     };
 }
 
-// TODO: Input track-event default configs for text chats/video rooms
 function processResearchrXMLs(
     inputs: string[],
     trackVideomRoomDefaults: string[],
     trackTextChatDefaults: string[],
     trackExhibitDefaults: string[],
-    sessionFeeds: Map<string, { youtubeURL?: string; zoomURL?: string }>
+    sessionFeeds: Map<string, { youtubeURL?: string; zoomURL?: string }>,
+    roomsToInclude: Set<string>
 ): CompleteSpecs {
     const datas = [];
     const parser = new DOMParser();
@@ -183,125 +146,140 @@ function processResearchrXMLs(
             const sessionId = dataSessionSubeventIdEls[0].textContent;
             assert(sessionId);
 
-            outputTracks[sessionTrack] = {
-                name: sessionTrack,
-                colour: "rgba(0,0,0,0)",
-                shortName: sessionTrack
-            };
-
-            const session: SessionSpec = {
-                id: sessionId,
-                title: sessionTitle,
-                feed: sessionId,
-                track: sessionTrack,
-            };
-
-            assert(!outputSessions[sessionId]);
-            outputSessions[sessionId] = session;
-
-            const dataTimeslots = dataSubevent.getElementsByTagName("timeslot");
-            if (dataTimeslots.length > 0) {
-                for (const dataTimeslot of dataTimeslots) {
-                    const eventIdEls = dataTimeslot.getElementsByTagName("event_id");
-                    if (eventIdEls.length > 0) {
-                        const itemId = eventIdEls[0].textContent;
-                        assert(itemId);
-
-                        const dataEventTrackEls = dataTimeslot
-                            .getElementsByTagName("tracks")[0]
-                            .getElementsByTagName("track");
-                        const itemTrack = dataEventTrackEls[0].textContent;
-                        assert(itemTrack);
-                        outputTracks[itemTrack] = {
-                            name: itemTrack,
-                            colour: "rgba(0,0,0,0)",
-                            shortName: itemTrack
-                        };
-
-                        const dataDescriptionEls = dataTimeslot.getElementsByTagName("description");
-                        const itemAbstract = dataDescriptionEls[0].textContent;
-                        assert(itemAbstract);
-
-                        const dataTitleEls = dataTimeslot.getElementsByTagName("title");
-                        const itemTitle = dataTitleEls[0].textContent;
-                        assert(itemTitle);
-
-                        const dataSlotEls = dataTimeslot.getElementsByTagName("slot_id");
-                        const eventId = dataSlotEls[0].textContent;
-                        assert(eventId);
-
-                        const authors = [];
-                        let chair: string | undefined;
-                        const dataPersonsEls = dataTimeslot.getElementsByTagName("persons");
-                        if (dataPersonsEls.length > 0) {
-                            const dataPersonEls = dataPersonsEls[0].getElementsByTagName("person");
-                            for (const personEl of dataPersonEls) {
-                                const role = personEl.getElementsByTagName("role")[0].textContent;
-                                assert(role);
-                                let concatName
-                                    = personEl.getElementsByTagName("first_name")[0].textContent
-                                    + " "
-                                    + personEl.getElementsByTagName("last_name")[0].textContent;
-                                concatName = concatName.trim();
-                                if (role === "Session Chair") {
-                                    chair = concatName;
-                                }
-                                else if (role === "Author") {
-                                    outputPersons[concatName] = {
-                                        name: concatName,
-                                        affiliation: personEl.getElementsByTagName("affiliation")[0].textContent ?? undefined
-                                    };
-                                    authors.push(concatName);
-                                }
-                            }
+            let skipSession = false;
+            if (!sessionFeeds[sessionId]) {
+                const dataSessionRoomEls = dataSubevent.getElementsByTagName("room");
+                if (dataSessionRoomEls.length) {
+                    const sessionRoom = dataSessionRoomEls[0].textContent;
+                    if (sessionRoom) {
+                        if (!roomsToInclude.has(sessionRoom)) {
+                            skipSession = true;
                         }
-
-                        const trackDefaultsToVideoRoom = trackVideomRoomDefaults.includes(itemTrack);
-                        const trackDefaultsToTextChat = trackTextChatDefaults.includes(itemTrack);
-                        if (!outputFeeds[itemId]) {
-                            outputFeeds[itemId] = {
-                                id: itemId,
-                                name: `${itemTrack} - ${itemTitle}`,
-                                videoRoom: trackDefaultsToVideoRoom,
-                                textChat: trackDefaultsToTextChat
-                            };
-                        }
-
-                        if (!outputItems[itemId]) {
-                            outputItems[itemId] = {
-                                id: itemId,
-                                abstract: removeHTMLEntities(itemAbstract),
-                                authors,
-                                exhibit: trackExhibitDefaults.includes(itemTrack),
-                                title: itemTitle,
-                                track: itemTrack,
-                                feed: itemId
-                            };
-                        }
-
-                        const startDateStr = dataTimeslot.getElementsByTagName("date")[0].textContent;
-                        const endDateStr = dataTimeslot.getElementsByTagName("end_date")[0].textContent;
-                        const startTimeStr = dataTimeslot.getElementsByTagName("start_time")[0].textContent;
-                        const endTimeStr = dataTimeslot.getElementsByTagName("end_time")[0].textContent;
-                        assert(startDateStr);
-                        assert(endDateStr);
-                        assert(startTimeStr);
-                        assert(endTimeStr);
-
-                        assert(!outputEvents[eventId]);
-                        outputEvents[eventId] = {
-                            id: eventId,
-                            item: itemId,
-                            session: sessionId,
-                            startTime: timeFromConfTime(startDateStr, startTimeStr, timezone),
-                            endTime: timeFromConfTime(endDateStr, endTimeStr, timezone),
-                            chair
-                        };
                     }
                 }
             }
-            else {
-                throw new Error("Encountered a subevent with no timeslot(s)!");
+
+            if (!skipSession) {
+                outputTracks[sessionTrack] = {
+                    name: sessionTrack,
+                    colour: "rgba(0,0,0,0)",
+                    shortName: sessionTrack
+                };
+
+                const session: SessionSpec = {
+                    id: sessionId,
+                    title: sessionTitle,
+                    feed: sessionId,
+                    track: sessionTrack,
+                };
+
+                assert(!outputSessions[sessionId]);
+                outputSessions[sessionId] = session;
+
+                const dataTimeslots = dataSubevent.getElementsByTagName("timeslot");
+                if (dataTimeslots.length > 0) {
+                    for (const dataTimeslot of dataTimeslots) {
+                        const eventIdEls = dataTimeslot.getElementsByTagName("event_id");
+                        if (eventIdEls.length > 0) {
+                            const itemId = eventIdEls[0].textContent;
+                            assert(itemId);
+
+                            const dataEventTrackEls = dataTimeslot
+                                .getElementsByTagName("tracks")[0]
+                                .getElementsByTagName("track");
+                            const itemTrack = dataEventTrackEls[0].textContent;
+                            assert(itemTrack);
+                            outputTracks[itemTrack] = {
+                                name: itemTrack,
+                                colour: "rgba(0,0,0,0)",
+                                shortName: itemTrack
+                            };
+
+                            const dataDescriptionEls = dataTimeslot.getElementsByTagName("description");
+                            const itemAbstract = dataDescriptionEls[0].textContent;
+                            assert(itemAbstract);
+
+                            const dataTitleEls = dataTimeslot.getElementsByTagName("title");
+                            const itemTitle = dataTitleEls[0].textContent;
+                            assert(itemTitle);
+
+                            const dataSlotEls = dataTimeslot.getElementsByTagName("slot_id");
+                            const eventId = dataSlotEls[0].textContent;
+                            assert(eventId);
+
+                            const authors = [];
+                            let chair: string | undefined;
+                            const dataPersonsEls = dataTimeslot.getElementsByTagName("persons");
+                            if (dataPersonsEls.length > 0) {
+                                const dataPersonEls = dataPersonsEls[0].getElementsByTagName("person");
+                                for (const personEl of dataPersonEls) {
+                                    const role = personEl.getElementsByTagName("role")[0].textContent;
+                                    assert(role);
+                                    let concatName
+                                        = personEl.getElementsByTagName("first_name")[0].textContent
+                                        + " "
+                                        + personEl.getElementsByTagName("last_name")[0].textContent;
+                                    concatName = concatName.trim();
+                                    if (role === "Session Chair") {
+                                        chair = concatName;
+                                    }
+                                    else if (role === "Author") {
+                                        outputPersons[concatName] = {
+                                            name: concatName,
+                                            affiliation: personEl.getElementsByTagName("affiliation")[0].textContent ?? undefined
+                                        };
+                                        authors.push(concatName);
+                                    }
+                                }
+                            }
+
+                            const trackDefaultsToVideoRoom = trackVideomRoomDefaults.includes(itemTrack);
+                            const trackDefaultsToTextChat = trackTextChatDefaults.includes(itemTrack);
+                            if (!outputFeeds[itemId]) {
+                                outputFeeds[itemId] = {
+                                    id: itemId,
+                                    name: `${itemTrack} - ${itemTitle}`,
+                                    videoRoom: trackDefaultsToVideoRoom,
+                                    textChat: trackDefaultsToTextChat
+                                };
+                            }
+
+                            if (!outputItems[itemId]) {
+                                outputItems[itemId] = {
+                                    id: itemId,
+                                    abstract: removeHTMLEntities(itemAbstract),
+                                    authors,
+                                    exhibit: trackExhibitDefaults.includes(itemTrack),
+                                    title: itemTitle,
+                                    track: itemTrack,
+                                    feed: itemId
+                                };
+                            }
+
+                            const startDateStr = dataTimeslot.getElementsByTagName("date")[0].textContent;
+                            const endDateStr = dataTimeslot.getElementsByTagName("end_date")[0].textContent;
+                            const startTimeStr = dataTimeslot.getElementsByTagName("start_time")[0].textContent;
+                            const endTimeStr = dataTimeslot.getElementsByTagName("end_time")[0].textContent;
+                            assert(startDateStr);
+                            assert(endDateStr);
+                            assert(startTimeStr);
+                            assert(endTimeStr);
+
+                            assert(!outputEvents[eventId]);
+                            outputEvents[eventId] = {
+                                id: eventId,
+                                item: itemId,
+                                session: sessionId,
+                                startTime: timeFromConfTime(startDateStr, startTimeStr, timezone),
+                                endTime: timeFromConfTime(endDateStr, endTimeStr, timezone),
+                                chair
+                            };
+                        }
+                    }
+                }
+                else {
+                    throw new Error("Encountered a subevent with no timeslot(s)!");
+                }
             }
         }
     }
@@ -377,7 +355,7 @@ function processResearchrXMLs(
     };
 }
 
-export default function AdminProgramUpload() {
+export default function AdminResearchrProgramUpload() {
     const conference = useConference();
     const { isAdmin } = useUserRoles();
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -387,9 +365,11 @@ export default function AdminProgramUpload() {
     const [inputFeedDatas, setInputFeedDatas] = useState<Array<any>>([]);
 
     const [trackNames, setTrackNames] = useState<string[]>([]);
+    const [roomNames, setRoomNames] = useState<Set<string>>(new Set());
     const [trackVideomRoomDefaults, setTrackVideoRoomDefaults] = useState<Array<string>>([]);
     const [trackTextChatDefaults, setTrackTextChatDefaults] = useState<Array<string>>([]);
     const [trackExhibitDefaults, setTrackExhibitDefaults] = useState<Array<string>>([]);
+    const [roomNamesToInclude, setRoomNamesToInclude] = useState<Set<string>>(new Set());
 
     const [selectedTrackName, setSelectedTrackName] = useState<string | "none">("none");
     const [selectedSessionId, setSelectedSessionId] = useState<string | "none">("none");
@@ -398,14 +378,50 @@ export default function AdminProgramUpload() {
 
     const [programData, setProgramData] = useState<CompleteSpecs | null>(null);
 
-    useHeading("Admin: Program Upload");
+    useHeading("Admin: Upload program from Researchr");
+
+    useEffect(() => {
+        try {
+            let _roomNames: Set<string> = new Set();
+            if (inputProgramDatas) {
+                _roomNames = processResearchrXMLsForRooms(inputProgramDatas).roomNames;
+            }
+
+            const addedRoomNames = Array.from(_roomNames.values()).filter(x => !roomNames.has(x));
+            const deletedRoomNames = Array.from(roomNames.values()).filter(x => !_roomNames.has(x));
+            if (addedRoomNames.length > 0 || deletedRoomNames.length > 0) {
+                setRoomNames(_roomNames);
+
+                setSelectedTrackName("none");
+                setSelectedSessionId("none");
+                setSelectedEventId("none");
+                setSelectedItemName("none");
+
+                setTrackVideoRoomDefaults([]);
+                setTrackTextChatDefaults([]);
+                setTrackExhibitDefaults([]);
+
+                const newSelectedRoomNames = new Set(roomNamesToInclude);
+                addedRoomNames.forEach(x => newSelectedRoomNames.add(x));
+                deletedRoomNames.forEach(x => newSelectedRoomNames.delete(x));
+                setRoomNamesToInclude(newSelectedRoomNames);
+            }
+        }
+        catch (e) {
+            addError(`Error processing data for room names: ${e}`);
+        }
+    }, [inputProgramDatas, roomNames, roomNamesToInclude]);
 
     useEffect(() => {
         try {
             let _trackNames: string[] = [];
             if (inputProgramDatas) {
-                _trackNames = processResearchrXMLsForDefaults(inputProgramDatas).trackNames;
+                _trackNames = processResearchrXMLsForDefaults(inputProgramDatas, roomNamesToInclude)
+                    .trackNames
+                    .sort((x, y) => x.localeCompare(y));
             }
+
+
             const addedTrackNames = _trackNames.filter(x => !trackNames.includes(x));
             const deletedTrackNames = trackNames.filter(x => !_trackNames.includes(x));
 
@@ -436,7 +452,7 @@ export default function AdminProgramUpload() {
         catch (e) {
             addError(`Error processing data for defaults: ${e}`);
         }
-    }, [inputProgramDatas, selectedTrackName, trackNames]);
+    }, [inputProgramDatas, roomNamesToInclude, selectedTrackName, trackNames]);
 
     useEffect(() => {
         setTrackTextChatDefaults(oldDefaults => Array.from(new Set(oldDefaults.concat(trackVideomRoomDefaults)).values()));
@@ -449,9 +465,9 @@ export default function AdminProgramUpload() {
                 for (const feedGroup of inputFeedDatas) {
                     assert(feedGroup instanceof Array);
                     for (const feed of feedGroup) {
-                        assert(feed.name);
+                        assert(feed.id);
                         assert(feed.youtubeURL || feed.zoomURL);
-                        sessionFeeds.set(feed.name, feed);
+                        sessionFeeds.set(feed.id, feed);
                     }
                 }
                 const data = processResearchrXMLs(
@@ -459,7 +475,8 @@ export default function AdminProgramUpload() {
                     trackVideomRoomDefaults,
                     trackTextChatDefaults,
                     trackExhibitDefaults,
-                    sessionFeeds);
+                    sessionFeeds,
+                    roomNamesToInclude);
                 setProgramData(data);
             }
             else {
@@ -469,7 +486,7 @@ export default function AdminProgramUpload() {
         catch (e) {
             addError(`Error processing data: ${e}`);
         }
-    }, [inputFeedDatas, inputProgramDatas, trackExhibitDefaults, trackTextChatDefaults, trackVideomRoomDefaults]);
+    }, [inputFeedDatas, inputProgramDatas, roomNamesToInclude, trackExhibitDefaults, trackTextChatDefaults, trackVideomRoomDefaults]);
 
     function fmtDate(date: Date) {
         return `${date.getUTCDate()}/${date.getUTCMonth()}`;
@@ -541,15 +558,38 @@ export default function AdminProgramUpload() {
                     }} />
             </div>
             <br />
+            <label id="rooms_to_include_label">Researchr rooms to include: Select "rooms" whose events should be included in the upload:</label>
+            <MultiSelect
+                className="rooms_to_include-control__multiselect"
+                labelledBy="rooms_to_include_label"
+                options={Array.from(roomNames.values())
+                    .sort((x, y) => x.localeCompare(y))
+                    .map(x => ({
+                    value: x,
+                    label: x
+                }))}
+                value={Array.from(roomNamesToInclude.values())
+                    .sort((x, y) => x.localeCompare(y))
+                    .map(x => ({ value: x, label: x }))}
+                onChange={(vals: { label: string; value: string }[]) => {
+                    setRoomNamesToInclude(
+                        new Set(vals.map(x => x.value))
+                    );
+                }}
+            />
+            <br />
             <label id="track_video_defaults_label">Track defaults: Select tracks whose events should have video rooms by default:</label>
             <MultiSelect
                 className="track-video-room-defaults-control__multiselect"
                 labelledBy="track_video_defaults_label"
-                options={trackNames.map(x => ({
+                options={trackNames
+                    .map(x => ({
                     value: x,
                     label: x
                 }))}
-                value={trackVideomRoomDefaults.map(x => ({ value: x, label: x }))}
+                value={trackVideomRoomDefaults
+                    .sort((x, y) => x.localeCompare(y))
+                    .map(x => ({ value: x, label: x }))}
                 onChange={(vals: { label: string; value: string }[]) => {
                     setTrackVideoRoomDefaults(vals.map(x => x.value))
                 }}
@@ -563,7 +603,9 @@ export default function AdminProgramUpload() {
                     value: x,
                     label: x
                 }))}
-                value={trackTextChatDefaults.map(x => ({ value: x, label: x }))}
+                value={trackTextChatDefaults
+                    .sort((x, y) => x.localeCompare(y))
+                    .map(x => ({ value: x, label: x }))}
                 onChange={(vals: { label: string; value: string }[]) => {
                     setTrackTextChatDefaults(
                         Array.from(new Set(vals.map(x => x.value).concat(trackVideomRoomDefaults)))
@@ -579,7 +621,9 @@ export default function AdminProgramUpload() {
                     value: x,
                     label: x
                 }))}
-                value={trackExhibitDefaults.map(x => ({ value: x, label: x }))}
+                value={trackExhibitDefaults
+                    .sort((x, y) => x.localeCompare(y))
+                    .map(x => ({ value: x, label: x }))}
                 onChange={(vals: { label: string; value: string }[]) => {
                     setTrackExhibitDefaults(
                         Array.from(new Set(vals.map(x => x.value)))
@@ -604,7 +648,9 @@ export default function AdminProgramUpload() {
                             value={selectedTrackName}
                         >
                             <option disabled value="none" key="delete"> -- select an option -- </option>
-                            {Object.keys(programData.tracks).map(t =>
+                            {Object.keys(programData.tracks)
+                                .sort((x, y) => x.localeCompare(y))
+                                .map(t =>
                                 <option
                                     key={t}
                                     value={t}
@@ -629,7 +675,10 @@ export default function AdminProgramUpload() {
                                     value={selectedSessionId}
                                 >
                                     <option disabled value="none" key="delete"> -- select an option -- </option>
-                                    {Object.values(programData.sessions).filter(x => x?.track === selectedTrackName).map(session => {
+                                    {Object.values(programData.sessions)
+                                        .sort((x, y) => (x && y && x.title.localeCompare(y.title)) || 0)
+                                        .filter(x => x?.track === selectedTrackName)
+                                        .map(session => {
                                         if (session) {
                                             const events = removeUndefined(Object.values(programData.events).filter(x => x?.session === session.id));
 
@@ -656,7 +705,10 @@ export default function AdminProgramUpload() {
                                     value={selectedEventId}
                                 >
                                     <option disabled value="none" key="delete"> -- select an option -- </option>
-                                    {Object.values(programData.events).filter(x => x?.session === selectedSessionId).map(event => {
+                                    {Object.values(programData.events)
+                                        .sort((x, y) => (x && y ? x.startTime < y.startTime ? -1 : x.startTime === y.startTime ? 0 : 1 : 0) || 0)
+                                        .filter(x => x?.session === selectedSessionId)
+                                        .map(event => {
                                         if (event) {
                                             const item = programData.items[event.item];
                                             assert(item);
@@ -702,7 +754,10 @@ export default function AdminProgramUpload() {
                                     value={selectedItemName}
                                 >
                                     <option disabled value="none" key="delete"> -- select an option -- </option>
-                                    {Object.values(programData.items).filter(x => x?.track === selectedTrackName).map(item => {
+                                    {Object.values(programData.items)
+                                        .sort((x, y) => (x && y && x.title.localeCompare(y.title)) || 0)
+                                        .filter(x => x?.track === selectedTrackName)
+                                        .map(item => {
                                         if (item) {
                                             return <option
                                                 key={item.id}

@@ -47,7 +47,7 @@ import ModerationHub from "../Pages/ModerationHub/ModerationHub";
 import ModerationChat from "../Pages/ChatView/ModerationChat";
 import AllAttendees from "../Pages/AllAttendees/AllAttendees";
 import useUserRoles from "../../hooks/useUserRoles";
-import AdminProgramUpload from "../Pages/Admin/Program/ProgramUpload";
+import AdminResearchrProgramUpload from "../Pages/Admin/Program/ResearchrProgramUpload";
 import Sponsor from "../Pages/Sponsor/Sponsor";
 
 interface Props {
@@ -234,7 +234,7 @@ function Page(props: Props) {
                     <Route path="/admin/sidebar" component={() => <AdminSidebar />} />
                     <Route path="/admin/welcome" component={() => <AdminWelcomePage />} />
                     <Route path="/admin/sponsors" component={() => <AdminSponsors />} />
-                    <Route path="/admin/program/upload" component={() => <AdminProgramUpload />} />
+                    <Route path="/admin/program/upload/researchr" component={() => <AdminResearchrProgramUpload />} />
                     <Route path="/admin" component={() => <AdminTools />} />
 
                     {footerRoutes}
