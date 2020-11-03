@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { daysIntoYear } from "../../../../classes/Utils";
+// import { daysIntoYear } from "../../../../classes/Utils";
 import { SortedEventData, SortedSessionData, WholeProgramData } from "../WholeProgramData";
 import SessionGroup from "./SessionGroup";
 import assert from 'assert';

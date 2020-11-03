@@ -2,17 +2,15 @@ import React, { useCallback, useEffect, useReducer } from "react";
 import useConference from "../../../hooks/useConference";
 import useMaybeUserProfile from "../../../hooks/useMaybeUserProfile";
 import MenuExpander, { ButtonSpec } from "../Menu/MenuExpander";
-import MenuGroup, { MenuGroupItems } from "../Menu/MenuGroup";
+import MenuGroup from "../Menu/MenuGroup";
 import MenuItem from "../Menu/MenuItem";
-import { Sponsor, UserProfile, VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import { Sponsor, UserProfile, VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import {
     DataDeletedEventDetails,
     DataUpdatedEventDetails,
 } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../../hooks/useDataSubscription";
-import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-import useSafeAsync from "../../../hooks/useSafeAsync";
 import { addNotification } from "../../../classes/Notifications/Notifications";
 import { useLocation } from "react-router-dom";
 
@@ -364,8 +362,7 @@ export default function SponsorsGroup(props: Props) {
                 )
             ).flat(1);
 
-            console.log("video room updated", participantsUpdates);
-            dispatchUpdate({ action: "updateRoomParticipants", participantsUpdates: participantsUpdates });
+            dispatchUpdate({ action: "updateRoomParticipants", participantsUpdates });
         },
         [state.allSponsors]
     );
@@ -377,7 +374,7 @@ export default function SponsorsGroup(props: Props) {
                     ?.filter(x => x.sponsor.videoRoomId === ev.objectId)
                     .map(x => ({ sponsorId: x.sponsor.id, participants: [] })) ?? []
             );
-            dispatchUpdate({ action: "updateRoomParticipants", participantsUpdates: participantsUpdates });
+            dispatchUpdate({ action: "updateRoomParticipants", participantsUpdates });
         },
         [state.allSponsors]
     );

@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import useConference from "../../../../hooks/useConference";
 import useHeading from "../../../../hooks/useHeading";
 import "./WholeProgram.scss"
 import useSafeAsync from "../../../../hooks/useSafeAsync";
-import TrackColumn from "./TrackColumn";
 import { ContentFeed, ProgramItem, ProgramPerson, ProgramSession, ProgramSessionEvent, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";

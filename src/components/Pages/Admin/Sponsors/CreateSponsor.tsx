@@ -4,10 +4,8 @@ import { ChromePicker, RGBColor } from "react-color";
 import { Controller, useForm } from "react-hook-form";
 import useConference from "../../../../hooks/useConference";
 import AsyncButton from "../../../AsyncButton/AsyncButton";
-import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import "./CreateSponsor.scss";
 import useHeading from "../../../../hooks/useHeading";
-import useSafeAsync from "../../../../hooks/useSafeAsync";
 import ProfileSelector from "./ProfileSelector";
 import {
     addError,
@@ -30,7 +28,7 @@ interface Props {
 
 export default function CreateSponsor(props: Props) {
     const conference = useConference();
-    const { register, handleSubmit, watch, errors, control } = useForm<
+    const { register, handleSubmit, errors, control } = useForm<
         FormData
     >();
     const [state, setState] = useState<State>("notpending");
@@ -40,7 +38,7 @@ export default function CreateSponsor(props: Props) {
         setState("pending");
 
         const requestData: any = data;
-        requestData.level = parseInt(data.level);
+        requestData.level = parseInt(data.level, 10);
         requestData.colour = `rgba(${data.colour.r},${data.colour.g},${data.colour.b},${data.colour.a})`;
         requestData.conference = conference.id;
 

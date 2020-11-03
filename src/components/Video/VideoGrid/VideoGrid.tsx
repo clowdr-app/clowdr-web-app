@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { styled, Theme } from "@material-ui/core/styles";
 
-import { CssBaseline } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 
 import { Room as TwilioRoom } from "twilio-video";

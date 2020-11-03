@@ -15,7 +15,7 @@ import { addError } from "../../../classes/Notifications/Notifications";
 import { Link } from "react-router-dom";
 import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
 import TrackMarker from "../Program/All/TrackMarker";
-import SessionGroup from "../Program/All/SessionGroup";
+// TODO SPLASH: import SessionGroup from "../Program/All/SessionGroup";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 
 function renderTrack(item: ColumnItem<ProgramTrack>): JSX.Element {

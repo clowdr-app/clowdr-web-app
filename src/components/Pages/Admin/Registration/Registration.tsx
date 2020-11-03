@@ -8,13 +8,10 @@ import useConference from "../../../../hooks/useConference";
 import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import useUserRoles from "../../../../hooks/useUserRoles";
-import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../../Columns/Column/Column";
+import Column, { Item as ColumnItem } from "../../../Columns/Column/Column";
 import Columns from "../../../Columns/Columns";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import "./Registration.scss";
-
-interface Props {
-}
 
 type RegistrationSpec = {
     name: string;
@@ -41,7 +38,7 @@ interface SendRegistrationEmailsResponse {
     results: { success: boolean, to: string, reason?: string }[]
 }
 
-export default function AdminRegistration(props: Props) {
+export default function AdminRegistration() {
     const conference = useConference();
     const { isAdmin } = useUserRoles();
     const [isSending, setIsSending] = useState<boolean>(false);
