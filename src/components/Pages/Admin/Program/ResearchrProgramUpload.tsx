@@ -53,7 +53,10 @@ function processResearchrXMLsForRooms(inputs: string[]) {
     };
 }
 
-function processResearchrXMLsForDefaults(inputs: string[], roomNamesToInclude: Set<string>) {
+function processResearchrXMLsForDefaults(
+    inputs: string[],
+    roomNamesToInclude: Set<string>
+) {
     const datas = [];
     const parser = new DOMParser();
     for (const input of inputs) {
@@ -106,7 +109,7 @@ function processResearchrXMLs(
     trackVideomRoomDefaults: string[],
     trackTextChatDefaults: string[],
     trackExhibitDefaults: string[],
-    sessionFeeds: Map<string, { youtubeURL?: string; zoomURL?: string }>,
+    inputFeedsMap: Map<string, { youtubeURL?: string; zoomURL?: string }>,
     roomsToInclude: Set<string>
 ): CompleteSpecs {
     const datas = [];
@@ -147,7 +150,7 @@ function processResearchrXMLs(
             assert(sessionId);
 
             let skipSession = false;
-            if (!sessionFeeds[sessionId]) {
+            if (!inputFeedsMap[sessionId]) {
                 const dataSessionRoomEls = dataSubevent.getElementsByTagName("room");
                 if (dataSessionRoomEls.length) {
                     const sessionRoom = dataSessionRoomEls[0].textContent;
@@ -284,19 +287,43 @@ function processResearchrXMLs(
         }
     }
 
-    for (const sessionFeedId of sessionFeeds.keys()) {
-        const feed = sessionFeeds[sessionFeedId];
-        const session = outputSessions[sessionFeedId];
-        assert(feed);
-        assert(session);
-        outputFeeds[sessionFeedId] = {
-            id: sessionFeedId,
-            name: session.title,
-            videoRoom: false,
-            textChat: false,
-            youtube: feed.youtubeURL,
-            zoomRoom: feed.zoomURL
-        };
+    for (const itemId of inputFeedsMap.keys()) {
+        const feed = inputFeedsMap.get(itemId);
+        const item = outputItems[itemId];
+        const events = Object.values(outputEvents).filter(x => x?.item === itemId);
+        assert(feed, `Feed for ${itemId} not found?!`);
+        assert(item, `Item for ${itemId} not found?!`);
+        assert(events.length, `No events found for streamed item ${itemId}?!`);
+        const sessionIds = events.map(x => {
+            assert(x);
+            return x.session;
+        });
+
+        for (const sessionId of sessionIds) {
+            const session = outputSessions[sessionId];
+            assert(session, `Session for ${sessionId} not found?!`);
+
+            if (outputFeeds[session.id]) {
+                const existingOutputFeed = outputFeeds[session.id];
+                assert(existingOutputFeed);
+                if ("youtube" in existingOutputFeed) {
+                    assert(existingOutputFeed.youtube === feed.youtubeURL);
+                }
+                if ("zoomRoom" in existingOutputFeed) {
+                    assert(existingOutputFeed.zoomRoom === feed.zoomURL);
+                }
+            }
+            else {
+                outputFeeds[session.id] = {
+                    id: itemId,
+                    name: session.title,
+                    videoRoom: false,
+                    textChat: false,
+                    youtube: feed.youtubeURL,
+                    zoomRoom: feed.zoomURL
+                };
+            }
+        }
     }
 
     return {
