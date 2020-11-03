@@ -87,7 +87,11 @@ export default function _Sponsor(props: Props) {
                 />
             );
         } else if (item.buttonContents) {
-            return <Link to={item.buttonContents.link}>{item.buttonContents.text}</Link>;
+            return (
+                <div className="content-item__button">
+                    <Link to={item.buttonContents.link}>{item.buttonContents.text}</Link>
+                </div>
+            );
         } else if (item.markdownContents) {
             return <ReactMarkdown escapeHtml={true} source={item.markdownContents} />;
         } else {

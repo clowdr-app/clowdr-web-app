@@ -5,29 +5,61 @@
     flex-direction: row;
     flex-wrap     : wrap;
     height        : 100%;
+    margin-top    : 1em;
 
     &__content {
         display              : grid;
         grid-template-columns: 1fr 1fr;
-        background-color     : aqua;
-        flex-grow            : 1;
+        grid-gap             : 1em;
+        margin               : 0 2%;
+        flex-shrink          : 1;
+        min-width            : 30em;
+        width                : 76%;
         height               : min-content;
 
         @media only screen and (max-width: $break-md) {}
 
         .content-item {
-            border: 1px black solid;
+            border       : 1px $gray-6 solid;
+            border-radius: 5px;
+            padding      : 1em;
 
             &--wide {
                 grid-column: span 2;
+            }
+
+            .video-player {
+                width: 100%;
+            }
+
+            .content-item__button {
+                display        : flex;
+                flex-direction : row;
+                align-items    : center;
+                justify-content: center;
+                height         : 100%;
+
+                a {
+                    padding      : mm(3) mm(5);
+                    color        : white;
+                    border       : none;
+                    border-radius: radius(2);
+                    font-size    : 1.2em;
+                    background   : $dark-primary;
+
+                    &:disabled {
+                        background: $gray-4;
+                        cursor    : not-allowed;
+                    }
+                }
             }
         }
     }
 
     &__video-room {
-        background-color: beige;
-        height          : 100%;
-        max-width       : 20em;
+        height   : 100%;
+        width    : 20%;
+        max-width: 20em;
 
         @media only screen and (max-width: $break-md) {
             max-width: 100%;
