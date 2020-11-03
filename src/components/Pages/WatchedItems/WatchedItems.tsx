@@ -329,7 +329,8 @@ export default function WatchedItemsPage() {
                 emptyMessage="You are not following any sessions or events."
                 loadingMessage="Loading sessions and events"
                 items={programSessionItems}
-                sort={(a, b) => a.renderData.session.startTime.getTime() - b.renderData.session.endTime.getTime()}>
+                // TODO: Sort sessions by time: sort={(a, b) => a.renderData.session.startTime.getTime() - b.renderData.session.endTime.getTime()}
+            >
                 <h2>Sessions and events</h2>
             </Column>
         </div>

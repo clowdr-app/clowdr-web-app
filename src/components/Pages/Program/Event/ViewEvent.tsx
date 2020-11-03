@@ -251,7 +251,7 @@ export default function ViewEvent(props: Props) {
             : undefined;
     const renderNow = Date.now();
     const eventIsLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
-    const sessionIsLive = !!session && session.startTime.getTime() < renderNow && session.endTime.getTime() > renderNow;
+    const sessionIsLive = false // TODO: Check session live time for SPLASH: !!session && session.startTime.getTime() < renderNow && session.endTime.getTime() > renderNow;
     return <div className="program-event">
         {sessionIsLive || (sessionFeed && sessionFeed.youtubeId)
             ? sessionFeed

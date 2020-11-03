@@ -66,11 +66,12 @@ export default function TrackColumn(props: Props) {
 
     const rows: Array<JSX.Element> = [];
     const sessionEntries
-        = sessions?.sort((x, y) => {
-                return x.startTime < y.startTime ? -1
-                    : x.startTime === y.startTime ? 0
-                        : 1;
-            })
+        = sessions
+            // ?.sort((x, y) => {
+            //     return x.startTime < y.startTime ? -1
+            //         : x.startTime === y.startTime ? 0
+            //             : 1;
+            // })
             ?? [];
 
     for (const session of sessionEntries) {

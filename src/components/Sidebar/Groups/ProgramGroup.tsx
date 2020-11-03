@@ -303,7 +303,7 @@ export default function ProgramGroup(props: Props) {
         if (state.sessions) {
             for (const session of state.sessions) {
                 if (!state.notifiedSessionIds.includes(session.id)) {
-                    const dist = Math.abs(session.startTime.getTime() - now);
+                    const dist = 0; // TODO: Fix for SPLASH: Math.abs(session.startTime.getTime() - now);
                     if (dist < 1000 * 60 * 1.5) {
                         const path = `/session/${session.id}`;
                         if (!location.pathname.includes(path)) {
@@ -521,11 +521,12 @@ export default function ProgramGroup(props: Props) {
             const sessions
                 = state.programSearch && state.programSearch.length >= props.minSearchLength
                     ? state.filteredSessions
-                    : state.filteredSessions
-                        .filter(x =>
-                            x.endTime.getTime() >= endLimit
-                            && x.startTime.getTime() <= startLimit
-                        );
+                    : state.filteredSessions;
+                        // TODO: Fix for SPLASH:
+                        // .filter(x =>
+                        //     x.endTime.getTime() >= endLimit
+                        //     && x.startTime.getTime() <= startLimit
+                        // );
 
             const events
                 = state.programSearch && state.programSearch.length >= props.minSearchLength

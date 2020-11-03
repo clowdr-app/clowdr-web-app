@@ -129,18 +129,19 @@ export default function ProgramList(props: Props) {
             // Place sessions into groups
             for (const session of props.sessions) {
                 for (const boundary of boundaries) {
-                    if (boundary.end <= now) {
-                        if (session.endTime.getTime() <= boundary.end) {
-                            groupedItems[boundary.start].sessions.push(session);
-                            break;
-                        }
-                    }
-                    else {
-                        if (session.startTime.getTime() <= boundary.end) {
-                            groupedItems[boundary.start].sessions.push(session);
-                            break;
-                        }
-                    }
+                    // TODO: Fix for SPLASH
+                    // if (boundary.end <= now) {
+                    //     if (session.endTime.getTime() <= boundary.end) {
+                    //         groupedItems[boundary.start].sessions.push(session);
+                    //         break;
+                    //     }
+                    // }
+                    // else {
+                    //     if (session.startTime.getTime() <= boundary.end) {
+                    //         groupedItems[boundary.start].sessions.push(session);
+                    //         break;
+                    //     }
+                    // }
                 }
             }
 
@@ -214,7 +215,7 @@ export default function ProgramList(props: Props) {
                             track: { id: track.id, name: track.shortName, colour: track.colour },
                             isWatched: !!props.watchedSessions?.includes(session.id),
                             item: { type: "session", data: session },
-                            sortValue: session.startTime.getTime(),
+                            sortValue: 0, // TODO: Fix for SPLASH: session.startTime.getTime(),
                             additionalClasses: "session no-events" // TODO: Remove .no-events if displaying events
                         };
                         return result;
