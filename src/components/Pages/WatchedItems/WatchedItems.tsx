@@ -26,7 +26,8 @@ function renderTrack(item: ColumnItem<ProgramTrack>): JSX.Element {
 }
 
 function renderSession(item: ColumnItem<SessionItemData>): JSX.Element {
-    return <SessionGroup session={item.renderData.session} includeEvents={item.renderData.includeEvents} />;
+    return <></>;
+    // TODO: SPLASH: <SessionGroup session={item.renderData.session} includeEvents={item.renderData.includeEvents} />;
 }
 
 interface SessionItemData {

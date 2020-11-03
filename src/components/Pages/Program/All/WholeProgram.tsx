@@ -198,9 +198,7 @@ export default function WholeProgram() {
         return [];
     }, [data, scheduleView]);
 
-    const schedule = useMemo(() => {
-        return data ? <ScheduleView data={data} /> : <LoadingSpinner />
-    }, [data]);
+    console.log("Re-render!");
 
     return <div className="whole-program-page">
         <div className="switcher">
@@ -216,7 +214,7 @@ export default function WholeProgram() {
         </div>
         <div className={`whole-program${scheduleView ? " schedule" : " tracks"}`}>
             {scheduleView
-                ? schedule
+                ? data ? <ScheduleView data={data} /> : <LoadingSpinner />
                 : <div className="tracks">
                     {columns}
                 </div>

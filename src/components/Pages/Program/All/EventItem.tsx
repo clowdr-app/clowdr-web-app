@@ -1,48 +1,19 @@
-import React, { useCallback, useState } from "react";
-import { ProgramItem, ProgramSessionEvent, ProgramSession, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
-import { DataUpdatedEventDetails, DataDeletedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
-import useConference from "../../../../hooks/useConference";
-import useDataSubscription from "../../../../hooks/useDataSubscription";
-import useSafeAsync from "../../../../hooks/useSafeAsync";
+import React from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import { Link, useHistory } from "react-router-dom";
 import Item from "./Item";
-import { WholeProgramData } from "../WholeProgramData";
+import { SortedEventData } from "../WholeProgramData";
 
 interface Props {
-    event: ProgramSessionEvent;
-    data?: WholeProgramData;
-    session?: ProgramSession;
-    track?: ProgramTrack;
+    event: SortedEventData;
     hideEventTime?: boolean;
+    height?: number;
 }
 
 export default function EventItem(props: Props) {
-    const conference = useConference();
-    const [item, setItem] = useState<ProgramItem | null>(props.data?.items?.find(x => props.event.itemId === x.id) ?? null);
+    const event = props.event.event;
+    const item = props.event.item;
     const history = useHistory();
-
-    // Fetch data
-    useSafeAsync(
-        async () => item ?? await props.event.item,
-        setItem,
-        [props.event.itemId, props.data?.items]);
-
-    // Subscribe to changes
-    const onItemUpdated = useCallback(function _onItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
-        for (const object of ev.objects) {
-            setItem(oldItem => oldItem && object.id === oldItem.id ? object as ProgramItem : null);
-        }
-    }, []);
-
-    const onItemDeleted = useCallback(function _onItemDeleted(ev: DataDeletedEventDetails<"ProgramItem">) {
-        setItem(oldItem => oldItem && ev.objectId === oldItem.id ? null : oldItem)
-    }, []);
-
-    useDataSubscription("ProgramItem",
-        props.data ? null : onItemUpdated,
-        props.data ? null : onItemDeleted,
-        !item, conference);
 
     function fmtTime(date: Date) {
         return date.toLocaleTimeString(undefined, {
@@ -59,34 +30,35 @@ export default function EventItem(props: Props) {
     }
 
     const now = new Date();
-    const isNow = props.event.startTime < now && props.event.endTime > now;
+    const isNow = event.startTime < now && event.endTime > now;
 
     return <div
         className={`event${isNow ? " now" : ""}`}
+        style={{ height: props.height }}
         tabIndex={0}
         onKeyPress={(ev) => {
             if (ev.key === "Enter") {
                 ev.preventDefault();
                 ev.stopPropagation();
-                history.push(`/event/${props.event.id}`);
+                history.push(`/event/${event.id}`);
             }
         }}
         onClick={(ev) => {
             ev.preventDefault();
             ev.stopPropagation();
-            history.push(`/event/${props.event.id}`);
+            history.push(`/event/${event.id}`);
         }}
     >
         <div className="heading">
             {!props.hideEventTime
                 ? <h2 className="title">
-                    {fmtDay(props.event.startTime)} &middot; {fmtTime(props.event.startTime)} - {fmtTime(props.event.endTime)}
+                    {fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}
                 </h2>
                 : <></>
             }
-            {props.session ? <Link
+            {props.event.session ? <Link
                 className="session-info"
-                to={`/session/${props.session.id}`}
+                to={`/session/${props.event.session.id}`}
                 onClick={(ev) => {
                     ev.stopPropagation();
                 }}
@@ -96,11 +68,11 @@ export default function EventItem(props: Props) {
                     }
                 }}
             >
-                {props.session.title}
+                {props.event.session.title}
             </Link> : <></>}
-            {props.track ? <Link
+            {props.event.track ? <Link
                 className="track-info"
-                to={`/track/${props.track.id}`}
+                to={`/track/${props.event.track.id}`}
                 onClick={(ev) => {
                     ev.stopPropagation();
                 }}
@@ -110,9 +82,9 @@ export default function EventItem(props: Props) {
                     }
                 }}
             >
-                {props.track.name}
+                {props.event.track.name}
             </Link> : <></>}
         </div>
-        {item ? <Item item={item} data={props.data} /> : <LoadingSpinner />}
+        {item ? <Item item={item} /> : <LoadingSpinner />}
     </div>;
 }

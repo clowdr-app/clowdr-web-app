@@ -47,7 +47,8 @@ export default function ViewAuthor(props: Props) {
                     </h2>
                     <div className="content">
                         {items ? items.map(x => {
-                            return <Item key={x.id} item={x} clickable={true} />
+                            return <></>;
+                            // TODO: SPLASH <Item key={x.id} item={x} clickable={true} />
                         }) : <LoadingSpinner />}
                     </div>
                 </div>

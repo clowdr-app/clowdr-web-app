@@ -314,15 +314,16 @@ export default function ViewSession(props: Props) {
         buttons: buttons.length > 0 ? buttons : undefined
     });
 
-    const eventsListEl = <div className="whole-program single-track single-session">
-        {session
-            ? <SessionGroup
-                key={session.id}
-                session={session}
-                overrideTitle="Events in this session"
-            />
-            : <LoadingSpinner />}
-    </div>;
+    // TODO SPLASH
+    // const eventsListEl = <div className="whole-program single-track single-session">
+    //     {session
+    //         ? <SessionGroup
+    //             key={session.id}
+    //             session={session}
+    //             overrideTitle="Events in this session"
+    //         />
+    //         : <LoadingSpinner />}
+    // </div>;
 
     // TODO: Make this configurable
     // Showing session feed prior to session starting (20mins)
@@ -347,7 +348,7 @@ export default function ViewSession(props: Props) {
                 : (filler: string) => `This session starts in ${sessionStartTimeText?.distance} ${sessionStartTimeText?.units}. ${filler} will appear here and update throughout the session.`
             : (filler: string) => "";
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
-        {showEventsList ? eventsListEl : <></>}
+        {showEventsList ? /*TODO SPLASH: eventsListEl */ <></> : <></>}
         {session
             ? <SplitterLayout
                 vertical={true}

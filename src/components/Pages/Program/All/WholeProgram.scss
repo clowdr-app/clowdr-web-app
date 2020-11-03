@@ -1,8 +1,8 @@
 @import "../../../../styles/util";
 
 .whole-program-page {
-    height: 100%;
-    display: grid;
+    height        : 100%;
+    display       : grid;
     grid-auto-rows: min-content auto;
 
     .switcher {
@@ -20,8 +20,8 @@
     }
 
     &>.schedule-wrapper {
-        height: 100%;
-        display: grid;
+        height        : 100%;
+        display       : grid;
         grid-auto-rows: min-content auto;
 
         .days {
@@ -65,8 +65,10 @@
                 padding-top: 0;
             }
 
-            .event > .heading {
-                padding-left: 1em;
+            .event {
+                &>.heading {
+                    padding-left: 1em;
+                }
             }
         }
     }
@@ -240,10 +242,24 @@
     .program-item {
         padding-left: 2em;
 
+        .title {
+            display           : -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
+            overflow          : hidden;
+            text-overflow     : ellipsis;
+        }
+
         .authors {
             font-style: italic;
             font-size : 90%;
             margin-top: 0.4em;
+
+            display           : -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
+            overflow          : hidden;
+            text-overflow     : ellipsis;
 
             span {
                 margin: 0 0.4em;

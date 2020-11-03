@@ -7,3 +7,24 @@ export type WholeProgramData = {
     authors: Array<ProgramPerson>;
     items: Array<ProgramItem>;
 }
+
+export type SortedItemData = {
+    item: ProgramItem;
+    eventsForItem: ProgramSessionEvent[];
+    authors: ProgramPerson[];
+};
+
+export type SortedEventData = {
+    event: ProgramSessionEvent;
+    item: SortedItemData;
+
+    session?: ProgramSession;
+    track?: ProgramTrack;
+};
+
+export type SortedSessionData = {
+    session: ProgramSession;
+    earliestStart: Date;
+    latestEnd: Date;
+    eventsOfSession: SortedEventData[];
+};
