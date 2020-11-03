@@ -26,18 +26,26 @@ export default function _Sponsor(props: Props) {
     const [videoRoom, setVideoRoom] = useState<VideoRoom | null>(null);
     useHeading(sponsor?.name ?? "Sponsor");
 
-    useSafeAsync(async () => await Sponsor.get(props.sponsorId, conference.id), setSponsor, [
-        conference.id,
-        props.sponsorId,
-    ]);
+    useSafeAsync(
+        async () => await Sponsor.get(props.sponsorId, conference.id),
+        setSponsor,
+        [conference.id, props.sponsorId],
+        "Sponsor:Sponsor.get"
+    );
 
     useSafeAsync(
         async () => (sponsor?.videoRoomId ? await VideoRoom.get(sponsor.videoRoomId, conference.id) : null),
         setVideoRoom,
-        [sponsor?.videoRoomId, conference.id]
+        [sponsor?.videoRoomId, conference.id],
+        "Sponsor:VideoRoom.get"
     );
 
-    useSafeAsync(async () => await SponsorContent.getAll(conference.id), setContent, [conference.id]);
+    useSafeAsync(
+        async () => await SponsorContent.getAll(conference.id),
+        setContent,
+        [conference.id],
+        "Sponsor:SponsorContent.getAll"
+    );
 
     // Subscribe to content updates
     const onContentUpdated = useCallback(function _onContentUpdated(ev: DataUpdatedEventDetails<"SponsorContent">) {

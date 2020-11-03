@@ -79,12 +79,19 @@ export default function ParticipantList(props: { gridView: boolean; sponsorView:
 
     const [remoteProfiles, setRemoteProfiles] = useState<Array<UserProfile> | null>(null);
 
-    useSafeAsync(async () => {
-        const profiles = await Promise.all(
-            participants.map(participantWithSlot =>
-                UserProfile.get(participantWithSlot.participant.identity, conference.id)));
-        return removeNull(profiles);
-    }, setRemoteProfiles, [participants], "ParticipantList:setRemoteProfiles");
+    useSafeAsync(
+        async () => {
+            const profiles = await Promise.all(
+                participants.map(participantWithSlot =>
+                    UserProfile.get(participantWithSlot.participant.identity, conference.id)
+                )
+            );
+            return removeNull(profiles);
+        },
+        setRemoteProfiles,
+        [participants],
+        "ParticipantList:setRemoteProfiles"
+    );
 
     function participantSorter(x: ParticipantWithSlot, y: ParticipantWithSlot): number {
         return x.slot < y.slot ? -1 : x.slot === y.slot ? 0 : 1;
@@ -134,7 +141,8 @@ export default function ParticipantList(props: { gridView: boolean; sponsorView:
                 {
                     [classes.transparentBackground]: true,
                 },
-                "participants-grid-container"
+                "participants-grid-container",
+                props.sponsorView && "single-column"
             )}
         >
             <div className={classes.gridInnerContainer}>{participantsEl}</div>

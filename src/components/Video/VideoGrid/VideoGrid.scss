@@ -130,7 +130,7 @@
             @include single-column;
         }
 
-        .single-column {
+        &.single-column {
             @include single-column;
         }
     }

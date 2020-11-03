@@ -48,27 +48,46 @@ export default function ViewVideoRoom(props: Props) {
     const { isAdmin, isManager } = useUserRoles();
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-    useSafeAsync(async () => await VideoRoom.get(props.roomId, conference.id), setRoom, [props.roomId, conference.id]);
-    useSafeAsync(async () => (room ? (await room.textChat) ?? "not present" : null), setChat, [room]);
     useSafeAsync(
         async () => await VideoRoom.get(props.roomId, conference.id),
         setRoom,
-        [props.roomId, conference.id], "VideoRoom:setRoom");
+        [props.roomId, conference.id],
+        "VideoRoom:VideoRoom.get"
+    );
     useSafeAsync(
-        async () => room ? ((await room.textChat) ?? "not present") : null,
+        async () => (room ? (await room.textChat) ?? "not present" : null),
         setChat,
-        [room], "VideoRoom:setChat");
-    useSafeAsync(async () => {
-        const profiles = await UserProfile.getAll(conference.id);
-        return profiles
-            .filter(x => !x.isBanned)
-            .map(x => ({
-                value: x.id,
-                label: x.displayName
-            }))
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .filter(x => x.value !== currentUserProfile.id);
-    }, setAllUsers, [], "VideoRoom:setAllUsers");
+        [room],
+        "VideoRoom:getTextChat"
+    );
+    useSafeAsync(
+        async () => await VideoRoom.get(props.roomId, conference.id),
+        setRoom,
+        [props.roomId, conference.id],
+        "VideoRoom:setRoom"
+    );
+    useSafeAsync(
+        async () => (room ? (await room.textChat) ?? "not present" : null),
+        setChat,
+        [room],
+        "VideoRoom:setChat"
+    );
+    useSafeAsync(
+        async () => {
+            const profiles = await UserProfile.getAll(conference.id);
+            return profiles
+                .filter(x => !x.isBanned)
+                .map(x => ({
+                    value: x.id,
+                    label: x.displayName,
+                }))
+                .sort((a, b) => a.label.localeCompare(b.label))
+                .filter(x => x.value !== currentUserProfile.id);
+        },
+        setAllUsers,
+        [],
+        "VideoRoom:setAllUsers"
+    );
 
     const actionButtons: Array<ActionButton> = [];
     if (mVideo && room && room.isPrivate) {
@@ -99,10 +118,15 @@ export default function ViewVideoRoom(props: Props) {
 
     const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
     const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
-    useSafeAsync(async () => {
-        const watched = await currentUserProfile.watched;
-        return watched.watchedRooms.includes(props.roomId);
-    }, setIsFollowing, [currentUserProfile.watchedId, props.roomId], "VideoRoom:setIsFollowing");
+    useSafeAsync(
+        async () => {
+            const watched = await currentUserProfile.watched;
+            return watched.watchedRooms.includes(props.roomId);
+        },
+        setIsFollowing,
+        [currentUserProfile.watchedId, props.roomId],
+        "VideoRoom:setIsFollowing"
+    );
 
     const onWatchedItemsUpdated = useCallback(
         function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {

@@ -23,12 +23,11 @@ export default function ProfileSelector(props: Props) {
     useSafeAsync(
         async () => {
             const profiles = await UserProfile.getAll(conference.id);
-            return profiles.sort((a, b) =>
-                a.realName.localeCompare(b.realName)
-            );
+            return profiles.sort((a, b) => a.realName.localeCompare(b.realName));
         },
         setPeople,
-        [conference.id]
+        [conference.id],
+        "ProfileSelector:UserProfile.getAll"
     );
 
     const options =
@@ -37,9 +36,7 @@ export default function ProfileSelector(props: Props) {
             value: person.id,
         })) ?? [];
 
-    const selected = options.filter(option =>
-        props.userProfiles.includes(option.value)
-    );
+    const selected = options.filter(option => props.userProfiles.includes(option.value));
 
     return (
         <div className="profile-selector">
