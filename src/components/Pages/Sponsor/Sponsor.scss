@@ -1,0 +1,37 @@
+@import "../../../styles/util.scss";
+
+.sponsor {
+    display       : flex;
+    flex-direction: row;
+    flex-wrap     : wrap;
+    height        : 100%;
+
+    &__content {
+        display              : grid;
+        grid-template-columns: 1fr 1fr;
+        background-color     : aqua;
+        flex-grow            : 1;
+        height               : min-content;
+
+        @media only screen and (max-width: $break-md) {}
+
+        .content-item {
+            border: 1px black solid;
+
+            &--wide {
+                grid-column: span 2;
+            }
+        }
+    }
+
+    &__video-room {
+        background-color: beige;
+        height          : 100%;
+        max-width       : 20em;
+
+        @media only screen and (max-width: $break-md) {
+            max-width: 100%;
+            width    : 100%;
+        }
+    }
+}

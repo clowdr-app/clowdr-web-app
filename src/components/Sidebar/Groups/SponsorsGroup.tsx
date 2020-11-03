@@ -113,6 +113,9 @@ function nextSidebarState(
                             }
                         }) ?? null;
                     nextState.allSponsors = nextState.allSponsors?.concat(changes) ?? changes;
+                    nextState.allSponsors = nextState.allSponsors.sort((a, b) =>
+                        a.sponsor.name.localeCompare(b.sponsor.name)
+                    );
                     allSponsorsUpdated = true;
                 }
                 break;
@@ -248,7 +251,7 @@ export default function SponsorsGroup(props: Props) {
 
     // useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, !state.watchedRoomIds, conf);
 
-    // Initial fetch of rooms
+    // Initial fetch of sponsors
     useEffect(() => {
         let cancel: () => void = () => {};
 
@@ -318,7 +321,6 @@ export default function SponsorsGroup(props: Props) {
     }, [conf, conf.id, props.minSearchLength, state.allSponsors, state.sponsorSearch]);
 
     // Subscribe to sponsor updates
-
     const onSponsorUpdated = useCallback(async function _onSponsorUpdated(ev: DataUpdatedEventDetails<"Sponsor">) {
         const newSponsors: FullSponsorInfo[] = await Promise.all(
             ev.objects.map(async object => {

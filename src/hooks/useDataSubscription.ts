@@ -106,6 +106,12 @@ export default function useDataSubscription<K extends CachedSchemaKeys>(
                                 Data.Sponsor.onDataDeleted(conference.id) as any,
                             ];
                             break;
+                        case "SponsorContent":
+                            promises = [
+                                Data.SponsorContent.onDataUpdated(conference.id) as any,
+                                Data.SponsorContent.onDataDeleted(conference.id) as any,
+                            ];
+                            break;
                         case "TextChat":
                             promises = [
                                 Data.TextChat.onDataUpdated(conference.id) as any,
