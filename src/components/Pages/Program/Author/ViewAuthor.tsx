@@ -6,6 +6,7 @@ import useSafeAsync from "../../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import ProfileView from "../../../Profile/ProfileView/ProfileView";
 import Item from "../All/Item";
+import { SortedItemData } from "../WholeProgramData";
 import "./ViewAuthor.scss";
 
 interface Props {
@@ -16,7 +17,7 @@ export default function ViewAuthor(props: Props) {
     const conference = useConference();
     const [author, setAuthor] = useState<ProgramPerson | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [items, setItems] = useState<Array<ProgramItem> | null>(null);
+    const [itemsData, setItemsData] = useState<Array<SortedItemData> | null>(null);
 
     useSafeAsync(
         async () => await ProgramPerson.get(props.authorId, conference.id),
@@ -29,9 +30,16 @@ export default function ViewAuthor(props: Props) {
         [author], "ViewAuthor:setProfile");
 
     useSafeAsync(
-        async () => (await author?.items ?? null)?.sort((x, y) => x.title.localeCompare(y.title)) ?? [],
-        setItems,
-        [author], "ViewAuthor:setItems");
+        async () => {
+            const items = (await author?.items ?? null)?.sort((x, y) => x.title.localeCompare(y.title)) ?? [];
+            return Promise.all(items.map(async item => ({
+                item,
+                authors: await item.authorPerons,
+                eventsForItem: await item.events
+            })));
+        },
+        setItemsData,
+        [author], "ViewAuthor:setItemsData");
 
     // TODO: Subscribe to live updates of profile and items
 
@@ -46,10 +54,9 @@ export default function ViewAuthor(props: Props) {
                         Authored items
                     </h2>
                     <div className="content">
-                        {items ? items.map(x => {
-                            return <></>;
-                            // TODO: SPLASH <Item key={x.id} item={x} clickable={true} />
-                        }) : <LoadingSpinner />}
+                        {itemsData
+                            ? itemsData.map(item => <Item key={item.item.id} item={item} clickable={true} />)
+                            : <LoadingSpinner />}
                     </div>
                 </div>
             </div>

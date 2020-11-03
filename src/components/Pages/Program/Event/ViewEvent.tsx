@@ -263,7 +263,7 @@ export default function ViewEvent(props: Props) {
                 </div>
                 : <LoadingSpinner message="Loading session feed" />
             : <></>}
-        {/* TODO: Re-enable this for splash?
+        {/* TODO: Re-enable this ever?
          {eventFeed
             ? (eventFeed !== "not present"
                 ? !isLive || (eventFeed.youtubeId || eventFeed.zoomRoomId)
@@ -279,7 +279,7 @@ export default function ViewEvent(props: Props) {
             ? <ViewItem
                 showFeedName={true}
                 item={item}
-                // TODO: For SPLASH: && eventHasEnded
+                // TODO: Do we ever want this? `&& eventHasEnded`
                 textChatFeedOnly={(eventIsLive || sessionIsLive) && !!(sessionFeed?.videoRoomId || sessionFeed?.youtubeId || sessionFeed?.zoomRoomId)}
                 heading={{
                     title: item?.title ?? "Event",

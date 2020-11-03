@@ -12,6 +12,8 @@ export default function ScheduleView(props: Props) {
     const dayRows: Array<JSX.Element> = [];
     const sessions = props.data.sessions;
 
+    // TODO: Group into columns based on content feeds sharing the same zoom/youtube source(s)
+
     const sortedSessions: SortedSessionData[] = useMemo(() => {
         if (sessions) {
             const sessionsWithTimes: SortedSessionData[] = sessions.map(session => {

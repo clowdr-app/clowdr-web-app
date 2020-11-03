@@ -83,9 +83,9 @@ export default function Sidebar(props: Props) {
                     {mUser ?
                         <>
                             <MainMenuGroup onItemClicked={onItemClicked} />
+                            <ProgramGroup minSearchLength={minSearchLength} onItemClicked={onItemClicked} />
                             <ChatsGroup minSearchLength={minSearchLength} onItemClicked={onItemClicked} />
                             <RoomsGroup minSearchLength={minSearchLength} onItemClicked={onItemClicked} />
-                            <ProgramGroup minSearchLength={minSearchLength} onItemClicked={onItemClicked} />
                         </>
                         : <></>
                     }

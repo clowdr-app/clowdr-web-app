@@ -9,8 +9,14 @@ import TrackMarker from "../Pages/Program/All/TrackMarker";
 import useMaybeUserProfile from "../../hooks/useMaybeUserProfile";
 import { generateTimeText } from "../../classes/Utils";
 
+export type ProgramSessionWithStartEnd = {
+    session: ProgramSession;
+    earliestStart: Date;
+    latestEnd: Date;
+};
+
 interface Props {
-    sessions: Array<ProgramSession>;
+    sessions: Array<ProgramSessionWithStartEnd>;
     events: Array<ProgramSessionEvent>;
     /**
      * Time boundaries to group items into, in minutes.
@@ -109,7 +115,7 @@ export default function ProgramList(props: Props) {
                 [timeBoundary: number]: {
                     startTime: Date,
                     endTime: Date,
-                    sessions: Array<ProgramSession>,
+                    sessions: Array<ProgramSessionWithStartEnd>,
                     events: Array<ProgramSessionEvent>,
                     isLast: boolean
                 }
@@ -129,19 +135,18 @@ export default function ProgramList(props: Props) {
             // Place sessions into groups
             for (const session of props.sessions) {
                 for (const boundary of boundaries) {
-                    // TODO: Fix for SPLASH
-                    // if (boundary.end <= now) {
-                    //     if (session.endTime.getTime() <= boundary.end) {
-                    //         groupedItems[boundary.start].sessions.push(session);
-                    //         break;
-                    //     }
-                    // }
-                    // else {
-                    //     if (session.startTime.getTime() <= boundary.end) {
-                    //         groupedItems[boundary.start].sessions.push(session);
-                    //         break;
-                    //     }
-                    // }
+                    if (boundary.end <= now) {
+                        if (session.latestEnd.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].sessions.push(session);
+                            break;
+                        }
+                    }
+                    else {
+                        if (session.earliestStart.getTime() <= boundary.end) {
+                            groupedItems[boundary.start].sessions.push(session);
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -207,7 +212,8 @@ export default function ProgramList(props: Props) {
 
                     logger.info(timeText, group);
                     let items: Array<ItemRenderData>;
-                    items = await Promise.all(group.sessions.map(async session => {
+                    items = await Promise.all(group.sessions.map(async sessionWSE => {
+                        const session = sessionWSE.session;
                         const track = await session.track;
                         const result: ItemRenderData = {
                             title: session.title,
@@ -215,7 +221,7 @@ export default function ProgramList(props: Props) {
                             track: { id: track.id, name: track.shortName, colour: track.colour },
                             isWatched: !!props.watchedSessions?.includes(session.id),
                             item: { type: "session", data: session },
-                            sortValue: 0, // TODO: Fix for SPLASH: session.startTime.getTime(),
+                            sortValue: sessionWSE.earliestStart.getTime(),
                             additionalClasses: "session no-events" // TODO: Remove .no-events if displaying events
                         };
                         return result;

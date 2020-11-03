@@ -1,6 +1,6 @@
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import { ContentFeed, ProgramSession, ProgramSessionEvent, WatchedItems } from "@clowdr-app/clowdr-db-schema";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
@@ -15,6 +15,9 @@ import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/
 import useUserProfile from "../../../../hooks/useUserProfile";
 import ChatFrame from "../../../Chat/ChatFrame/ChatFrame";
 import { daysIntoYear, generateTimeText } from "../../../../classes/Utils";
+import SessionGroup from "../All/SessionGroup";
+import { SortedEventData, SortedSessionData } from "../WholeProgramData";
+import assert from "assert";
 
 interface Props {
     sessionId: string;
@@ -277,11 +280,11 @@ export default function ViewSession(props: Props) {
         }
     }
 
-    const earliestStart = events?.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
-    const latestEnd = events?.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
+    const sessionEarliestStart = events?.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
+    const sessionLatestEnd = events?.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
 
     let subtitle: JSX.Element | undefined;
-    if (session && earliestStart && latestEnd) {
+    if (session && sessionEarliestStart && sessionLatestEnd) {
         function fmtDate(date: Date) {
             return date.toLocaleDateString(undefined, {
                 day: "numeric",
@@ -297,13 +300,13 @@ export default function ViewSession(props: Props) {
             });
         }
 
-        const startDay = daysIntoYear(earliestStart);
-        const endDay = daysIntoYear(latestEnd);
+        const startDay = daysIntoYear(sessionEarliestStart);
+        const endDay = daysIntoYear(sessionLatestEnd);
         const isSameDay = startDay === endDay;
-        const endTimeStr = (!isSameDay ? fmtDate(latestEnd) : "") + " " + fmtTime(latestEnd);
+        const endTimeStr = (!isSameDay ? fmtDate(sessionLatestEnd) : "") + " " + fmtTime(sessionLatestEnd);
         subtitle =
             <>
-                {fmtDate(earliestStart)}&nbsp;&middot;&nbsp;{fmtTime(earliestStart)}{` - ${endTimeStr}`}
+                {fmtDate(sessionEarliestStart)}&nbsp;&middot;&nbsp;{fmtTime(sessionEarliestStart)}{` - ${endTimeStr}`}
                 {chairStr ? <>&nbsp;&middot;&nbsp;{chairStr}</> : <></>}
             </>;
     }
@@ -314,41 +317,74 @@ export default function ViewSession(props: Props) {
         buttons: buttons.length > 0 ? buttons : undefined
     });
 
-    // TODO SPLASH
-    // const eventsListEl = <div className="whole-program single-track single-session">
-    //     {session
-    //         ? <SessionGroup
-    //             key={session.id}
-    //             session={session}
-    //             overrideTitle="Events in this session"
-    //         />
-    //         : <LoadingSpinner />}
-    // </div>;
+    const [eventsOfSession, setEventsOfSession] = useState<SortedEventData[] | null>(null);
+    useSafeAsync(async () => events
+        ? await Promise.all(events.map(async event => {
+            const item = await event.item;
+            assert(item);
+            const eResult: SortedEventData = {
+                event,
+                item: {
+                    item,
+                    authors: await item.authorPerons,
+                    eventsForItem: await item.events
+                }
+            };
+            return eResult;
+        })).then(es => es.sort((x, y) =>
+            x.event.startTime < y.event.startTime ? -1
+                : x.event.startTime === y.event.startTime ? 0
+                    : 1))
+        : null
+        , setEventsOfSession, [events], "ViewSession:setEventsOfSession");
+
+    const sessionWithData: SortedSessionData | null = useMemo(() => {
+        if (session && sessionEarliestStart && sessionLatestEnd && eventsOfSession) {
+            return {
+                session,
+                earliestStart: sessionEarliestStart,
+                latestEnd: sessionLatestEnd,
+                eventsOfSession
+            };
+        }
+        else {
+            return null;
+        }
+    }, [eventsOfSession, session, sessionEarliestStart, sessionLatestEnd]);
+    const eventsListEl = <div className="whole-program single-track single-session">
+        {sessionWithData
+            ? <SessionGroup
+                key={sessionWithData.session.id}
+                session={sessionWithData}
+                overrideTitle="Events in this session"
+            />
+            : <LoadingSpinner />}
+    </div>;
 
     // TODO: Make this configurable
     // Showing session feed prior to session starting (20mins)
     const isPreShow =
-        session && earliestStart && latestEnd &&
-        earliestStart.getTime() - (20 * 60 * 1000) < Date.now() &&
-        earliestStart.getTime() > Date.now() &&
-        latestEnd.getTime() > Date.now();
+        session && sessionEarliestStart && sessionLatestEnd &&
+        sessionEarliestStart.getTime() - (20 * 60 * 1000) < Date.now() &&
+        sessionEarliestStart.getTime() > Date.now() &&
+        sessionLatestEnd.getTime() > Date.now();
     const isLive =
-        session && earliestStart && latestEnd &&
-        earliestStart.getTime() < Date.now() &&
-        latestEnd.getTime() > Date.now();
+        session && sessionEarliestStart && sessionLatestEnd &&
+        sessionEarliestStart.getTime() < Date.now() &&
+        sessionLatestEnd.getTime() > Date.now();
 
     const sessionStartTimeText
-        = session && earliestStart
-            ? generateTimeText(earliestStart.getTime(), Date.now())
+        = session && sessionEarliestStart
+            ? generateTimeText(sessionEarliestStart.getTime(), Date.now())
             : null;
     const sessionMessage
-        = session && latestEnd
-            ? latestEnd.getTime() <= Date.now()
+        = session && sessionLatestEnd
+            ? sessionLatestEnd.getTime() <= Date.now()
                 ? (filler: string) => `This session has ended. Please choose a specific event to participate in its conversation.`
                 : (filler: string) => `This session starts in ${sessionStartTimeText?.distance} ${sessionStartTimeText?.units}. ${filler} will appear here and update throughout the session.`
             : (filler: string) => "";
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
-        {showEventsList ? /*TODO SPLASH: eventsListEl */ <></> : <></>}
+        {showEventsList ? eventsListEl : <></>}
         {session
             ? <SplitterLayout
                 vertical={true}

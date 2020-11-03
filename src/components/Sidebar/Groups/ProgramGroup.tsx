@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useReducer } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer } from 'react';
 import useConference from '../../../hooks/useConference';
 import useMaybeUserProfile from '../../../hooks/useMaybeUserProfile';
 import MenuExpander, { ButtonSpec } from "../Menu/MenuExpander";
 import MenuGroup from '../Menu/MenuGroup';
-import ProgramList from '../ProgramList';
+import ProgramList, { ProgramSessionWithStartEnd } from '../ProgramList';
 import MenuItem from '../Menu/MenuItem';
 import { ProgramSession, ProgramSessionEvent, WatchedItems } from '@clowdr-app/clowdr-db-schema';
 import { makeCancelable, removeNull } from '@clowdr-app/clowdr-db-schema/build/Util';
@@ -32,7 +32,7 @@ interface ProgramGroupState {
     sessions: Array<ProgramSession> | null;
     events: Array<ProgramSessionEvent> | null;
 
-    filteredSessions: Array<ProgramSession>;
+    filteredSessions: Array<ProgramSessionWithStartEnd>;
     filteredEvents: Array<ProgramSessionEvent>;
 
     watchedSessionIds: Array<string> | null;
@@ -48,7 +48,7 @@ interface ProgramGroupState {
 type ProgramGroupUpdate
     = { action: "updateSessions"; sessions: Array<ProgramSession> }
     | { action: "updateEvents"; events: Array<ProgramSessionEvent> }
-    | { action: "updateFilteredSessions"; sessions: Array<ProgramSession> }
+    | { action: "updateFilteredSessions"; sessions: Array<ProgramSessionWithStartEnd> }
     | { action: "updateFilteredEvents"; events: Array<ProgramSessionEvent> }
     | { action: "deleteSessions"; sessions: Array<string> }
     | { action: "deleteEvents"; events: Array<string> }
@@ -63,16 +63,17 @@ type ProgramGroupUpdate
     ;
 
 async function filterSessionsAndEvents(
-    allSessions: Array<ProgramSession>,
+    allSessions: Array<ProgramSessionWithStartEnd>,
     allEvents: Array<ProgramSessionEvent>,
     _search: string | null,
-    minSearchLength: number): Promise<[Array<ProgramSession>, Array<ProgramSessionEvent>]> {
+    minSearchLength: number): Promise<[Array<ProgramSessionWithStartEnd>, Array<ProgramSessionEvent>]> {
+
     if (_search && _search.length >= minSearchLength) {
         const search = _search.toLowerCase();
 
-        const sessions: Array<ProgramSession> = removeNull(await Promise.all(allSessions.map(async x => {
+        const sessions: Array<ProgramSessionWithStartEnd> = removeNull(await Promise.all(allSessions.map(async x => {
             // const trackName = (await x.track).name;
-            const sessionTitle = x.title;
+            const sessionTitle = x.session.title;
 
             if (// !!trackName.toLowerCase().match(search)?.length ||
                 !!sessionTitle.toLowerCase().match(search)?.length) {
@@ -303,8 +304,10 @@ export default function ProgramGroup(props: Props) {
         if (state.sessions) {
             for (const session of state.sessions) {
                 if (!state.notifiedSessionIds.includes(session.id)) {
-                    const dist = 0; // TODO: Fix for SPLASH: Math.abs(session.startTime.getTime() - now);
-                    if (dist < 1000 * 60 * 1.5) {
+                    const limit = 1000 * 60 * 1.5;
+                    const earliestStart = state.events?.filter(e => e.sessionId === session.id)?.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000)).getTime() ?? limit + 1;
+                    const dist = Math.abs(earliestStart - now);
+                    if (dist < limit) {
                         const path = `/session/${session.id}`;
                         if (!location.pathname.includes(path)) {
                             if (state.watchedSessionIds?.includes(session.id)
@@ -374,6 +377,20 @@ export default function ProgramGroup(props: Props) {
         notifyWatchedItems();
     }, [notifyWatchedItems]);
 
+    const sessionsWSE: ProgramSessionWithStartEnd[] | null = useMemo(() => {
+        if (state.sessions && state.events) {
+            const events = state.events;
+            return state.sessions.map(session => {
+                const eventsOfSession = events.filter(x => x.sessionId === session.id);
+                return {
+                    session,
+                    earliestStart: eventsOfSession.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000)),
+                    latestEnd: eventsOfSession.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0))
+                };
+            });
+        }
+        return null;
+    }, [state.events, state.sessions]);
     // Update filtered program results
     useEffect(() => {
         let cancel: () => void = () => { };
@@ -381,7 +398,7 @@ export default function ProgramGroup(props: Props) {
         async function updateFiltered() {
             try {
                 const promise = makeCancelable(filterSessionsAndEvents(
-                    state.sessions ?? [],
+                    sessionsWSE ?? [],
                     state.events ?? [],
                     state.programSearch,
                     props.minSearchLength
@@ -404,7 +421,7 @@ export default function ProgramGroup(props: Props) {
         updateFiltered();
 
         return cancel;
-    }, [props.minSearchLength, state.events, state.programSearch, state.sessions]);
+    }, [props.minSearchLength, sessionsWSE, state.events, state.programSearch]);
 
     // Fetch watched items
     useSafeAsync(async () => mUser?.watched ?? null, (data: WatchedItems | null) => {
@@ -521,12 +538,11 @@ export default function ProgramGroup(props: Props) {
             const sessions
                 = state.programSearch && state.programSearch.length >= props.minSearchLength
                     ? state.filteredSessions
-                    : state.filteredSessions;
-                        // TODO: Fix for SPLASH:
-                        // .filter(x =>
-                        //     x.endTime.getTime() >= endLimit
-                        //     && x.startTime.getTime() <= startLimit
-                        // );
+                    : state.filteredSessions
+                        .filter(x =>
+                            x.latestEnd.getTime() >= endLimit
+                            && x.earliestStart.getTime() <= startLimit
+                        );
 
             const events
                 = state.programSearch && state.programSearch.length >= props.minSearchLength
