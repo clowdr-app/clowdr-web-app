@@ -98,168 +98,174 @@ function Page(props: Props) {
             </div>;
     }
 
-    const { noHeading, contents } = useMemo(() => {
+    const resetPasswordRoute = useMemo(() => <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
+        <ResetPassword email={p.match.params.email} token={p.match.params.token} />
+    } />, []);
 
-        const resetPasswordRoute = <Route path="/resetPassword/:token/:email" component={(p: RouteComponentProps<any>) =>
-            <ResetPassword email={p.match.params.email} token={p.match.params.token} />
-        } />;
+    // Note: If you try to fix the local development "error" about "all
+    // children must have a key" caused by the array of routes below and
+    // React being stupid, know that the entire app will become rendered as
+    // a single double-quote character ("). No warnings or errors during
+    // build or runtime, just a single double quote character to mess with
+    // your mind.
+    const footerRoutes = useMemo(() => [
+        <Route path="/about" component={About} />,
+        <Route path="/legal" component={Legal} />,
+        <Route path="/help" component={Help} />
+    ], []);
 
-        // Note: If you try to fix the local development "error" about "all
-        // children must have a key" caused by the array of routes below and
-        // React being stupid, know that the entire app will become rendered as
-        // a single double-quote character ("). No warnings or errors during
-        // build or runtime, just a single double quote character to mess with
-        // your mind.
-        const footerRoutes = [
-            <Route path="/about" component={About} />,
-            <Route path="/legal" component={Legal} />,
-            <Route path="/help" component={Help} />
-        ];
-
-        if (mConf && mUser) {
+    const mainRoutes = useMemo(() => {
+        if (mUser && mConf) {
             // TODO: Route for /program/new (conference manager and admin roles only)
 
-            return {
-                noHeading: false,
-                contents: <Switch>
-                    <Route path="/program/new" component={ComingSoon} />
+            return <Switch>
+                <Route path="/program/new" component={ComingSoon} />
 
-                    <Route path="/moderation/hub" component={(isAdmin || isManager) ? ModerationHub : NotFound} />
-                    <Route path="/moderation/:chatId" component={(p: RouteComponentProps<any>) =>
-                        <ModerationChat chatId={p.match.params.chatId} />
-                    } />
-                    <Route path="/moderation" component={Moderation} />
+                <Route path="/moderation/hub" component={(isAdmin || isManager) ? ModerationHub : NotFound} />
+                <Route path="/moderation/:chatId" component={(p: RouteComponentProps<any>) =>
+                    <ModerationChat chatId={p.match.params.chatId} />
+                } />
+                <Route path="/moderation" component={Moderation} />
 
-                    <Route exact path="/" component={LoggedInWelcome} />
-                    <Route path="/signup" component={() =>
-                        <Redirect to="/" />
-                    } />
+                <Route exact path="/" component={LoggedInWelcome} />
+                <Route path="/signup" component={() =>
+                    <Redirect to="/" />
+                } />
 
-                    <Route path="/watched" component={WatchedItems} />
-                    <Route path="/exhibits" component={Exhibits} />
-                    <Route path="/attendees" component={AllAttendees} />
+                <Route path="/watched" component={WatchedItems} />
+                <Route path="/exhibits" component={Exhibits} />
+                <Route path="/attendees" component={AllAttendees} />
 
-                    <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
-                        <NewChat dmUserProfileId={p.match.params.userProfileId} />
-                    } />
-                    <Route path="/chat/new" component={() =>
-                        <NewChat dmUserProfileId={undefined} />
-                    } />
-                    <Route path="/chat/:chatId" component={(p: RouteComponentProps<any>) =>
-                        <ChatView chatId={p.match.params.chatId} />
-                    } />
-                    <Route path="/chat" component={AllChats} />
+                <Route path="/chat/new/:userProfileId" component={(p: RouteComponentProps<any>) =>
+                    <NewChat dmUserProfileId={p.match.params.userProfileId} />
+                } />
+                <Route path="/chat/new" component={() =>
+                    <NewChat dmUserProfileId={undefined} />
+                } />
+                <Route path="/chat/:chatId" component={(p: RouteComponentProps<any>) =>
+                    <ChatView chatId={p.match.params.chatId} />
+                } />
+                <Route path="/chat" component={AllChats} />
 
 
-                    <Route path="/room/new" component={() =>
-                        <NewVideoRoom />
-                    } />
-                    <Route path="/room/:roomId" component={(p: RouteComponentProps<any>) =>
-                        <VideoRoom roomId={p.match.params.roomId} />
-                    } />
-                    <Route path="/room" component={AllVideoRooms} />
+                <Route path="/room/new" component={() =>
+                    <NewVideoRoom />
+                } />
+                <Route path="/room/:roomId" component={(p: RouteComponentProps<any>) =>
+                    <VideoRoom roomId={p.match.params.roomId} />
+                } />
+                <Route path="/room" component={AllVideoRooms} />
 
 
-                    <Route path="/track/:trackId" component={(p: RouteComponentProps<any>) =>
-                        <ViewTrack trackId={p.match.params.trackId} />
-                    } />
-                    <Route path="/session/:sessionId" component={(p: RouteComponentProps<any>) =>
-                        <ViewSession sessionId={p.match.params.sessionId} />
-                    } />
-                    <Route path="/event/:eventId" component={(p: RouteComponentProps<any>) =>
-                        <ViewEvent eventId={p.match.params.eventId} />
-                    } />
-                    <Route path="/item/:itemId" component={(p: RouteComponentProps<any>) =>
-                        <ViewItem item={p.match.params.itemId} />
-                    } />
-                    <Route path="/author/:authorId" component={(p: RouteComponentProps<any>) =>
-                        <ViewAuthor authorId={p.match.params.authorId} />
-                    } />
-                    <Route path="/program" component={(p: RouteComponentProps<any>) =>
-                        <WholeProgram />
-                    } />
+                <Route path="/track/:trackId" component={(p: RouteComponentProps<any>) =>
+                    <ViewTrack trackId={p.match.params.trackId} />
+                } />
+                <Route path="/session/:sessionId" component={(p: RouteComponentProps<any>) =>
+                    <ViewSession sessionId={p.match.params.sessionId} />
+                } />
+                <Route path="/event/:eventId" component={(p: RouteComponentProps<any>) =>
+                    <ViewEvent eventId={p.match.params.eventId} />
+                } />
+                <Route path="/item/:itemId" component={(p: RouteComponentProps<any>) =>
+                    <ViewItem item={p.match.params.itemId} />
+                } />
+                <Route path="/author/:authorId" component={(p: RouteComponentProps<any>) =>
+                    <ViewAuthor authorId={p.match.params.authorId} />
+                } />
+                <Route path="/program" component={(p: RouteComponentProps<any>) =>
+                    <WholeProgram />
+                } />
 
 
-                    <Route path="/profile/:userProfileId" component={(p: RouteComponentProps<any>) =>
-                        <Profile userProfileId={p.match.params.userProfileId} />
-                    } />
-                    <Route path="/profile" component={() =>
-                        <Redirect to={"/profile/" + mUser.id} />
-                    } />
+                <Route path="/profile/:userProfileId" component={(p: RouteComponentProps<any>) =>
+                    <Profile userProfileId={p.match.params.userProfileId} />
+                } />
+                <Route path="/profile" component={() =>
+                    <Redirect to={"/profile/" + mUser.id} />
+                } />
 
-                    <Route path="/admin/registration" component={() =>
-                        <AdminRegistration />
-                    } />
-                    <Route path="/admin/sidebar" component={() =>
-                        <AdminSidebar />
-                    } />
-                    <Route path="/admin/welcome" component={() =>
-                        <AdminWelcomePage />
-                    } />
-                    <Route path="/admin/program/upload" component={() =>
-                        <AdminProgramUpload />
-                    } />
-                    <Route path="/admin" component={() =>
-                        <AdminTools />
-                    } />
+                <Route path="/admin/registration" component={() =>
+                    <AdminRegistration />
+                } />
+                <Route path="/admin/sidebar" component={() =>
+                    <AdminSidebar />
+                } />
+                <Route path="/admin/welcome" component={() =>
+                    <AdminWelcomePage />
+                } />
+                <Route path="/admin/program/upload" component={() =>
+                    <AdminProgramUpload />
+                } />
+                <Route path="/admin" component={() =>
+                    <AdminTools />
+                } />
 
-                    {footerRoutes}
+                {footerRoutes}
 
-                    {resetPasswordRoute}
+                {resetPasswordRoute}
 
-                    <Route path="/" component={NotFound} />
-                </Switch>
-            };
+                <Route path="/" component={NotFound} />
+            </Switch>
         }
         else {
-            const registerRoute = <Route path="/register/:conferenceId/:registrationId/:email" component={(p: RouteComponentProps<any>) =>
-                <Register conferenceId={p.match.params.conferenceId} registrationId={p.match.params.registrationId} email={p.match.params.email} />
-            } />;
-
-            if (mConf) {
-                const loginComponent = <Login
-                    showSignUp={showSignUp}
-                    doLogin={props.doLogin}
-                    clearSelectedConference={async () => {
-                        props.selectConference(null)
-                    }}
-                />;
-                const signUpComponent
-                    = showSignUp
-                        ? <SignUp clearSelectedConference={async () => {
-                            props.selectConference(null)
-                        }} />
-                        : <Redirect to="/" />;
-
-                return {
-                    noHeading: true,
-                    contents: <Switch>
-                        <Route path="/signup" component={() => signUpComponent} />
-                        {footerRoutes}
-                        {registerRoute}
-                        {resetPasswordRoute}
-                        <Route path="/forgotPassword/:email?" component={(p: RouteComponentProps<any>) =>
-                            <ForgotPassword initialEmail={p.match.params.email} />
-                        } />;
-                        <Route path="/" component={() => loginComponent} />
-                    </Switch>
-                };
-            } else {
-                return {
-                    noHeading: true,
-                    contents: <Switch>
-                        {footerRoutes}
-                        {registerRoute}
-                        {resetPasswordRoute}
-                        <Route path="/" component={() =>
-                            <ConferenceSelection
-                                failedToLoadConferences={props.failedToLoadConferences}
-                                selectConference={props.selectConference} />} />
-                    </Switch>
-                };
-            }
+            return <></>;
         }
-    }, [isAdmin, isManager, mConf, mUser, props, showSignUp]);
+    }, [mUser, mConf, isAdmin, isManager, footerRoutes, resetPasswordRoute]);
+
+
+    const loginComponent = useMemo(() => <Login
+        showSignUp={showSignUp}
+        doLogin={props.doLogin}
+        clearSelectedConference={async () => {
+            props.selectConference(null)
+        }}
+    />, [props, showSignUp]);
+    const signUpComponent = useMemo(() =>
+        showSignUp
+            ? <SignUp clearSelectedConference={async () => {
+                props.selectConference(null)
+            }} />
+            : <Redirect to="/" />,
+        [props, showSignUp]);
+
+    const registerRoute = useMemo(() => <Route path="/register/:conferenceId/:registrationId/:email" component={(p: RouteComponentProps<any>) =>
+        <Register conferenceId={p.match.params.conferenceId} registrationId={p.match.params.registrationId} email={p.match.params.email} />
+    } />, []);
+
+    const confButNoUserRoutes = useMemo(() => <Switch>
+        <Route path="/signup" component={() => signUpComponent} />
+        {footerRoutes}
+        {registerRoute}
+        {resetPasswordRoute}
+        <Route path="/forgotPassword/:email?" component={(p: RouteComponentProps<any>) =>
+            <ForgotPassword initialEmail={p.match.params.email} />
+        } />;
+                <Route path="/" component={() => loginComponent} />
+    </Switch>, [footerRoutes, loginComponent, registerRoute, resetPasswordRoute, signUpComponent]);
+
+    const noConfNoUserRoutes = useMemo(() => <Switch>
+        {footerRoutes}
+        {registerRoute}
+        {resetPasswordRoute}
+        <Route path="/" component={() =>
+            <ConferenceSelection
+                failedToLoadConferences={props.failedToLoadConferences}
+                selectConference={props.selectConference} />} />
+    </Switch>, [footerRoutes, props.failedToLoadConferences, props.selectConference, registerRoute, resetPasswordRoute]);
+
+    let noHeading;
+    let contents;
+    if (mConf && mUser) {
+        noHeading = false;
+        contents = mainRoutes;
+    }
+    else if (mConf) {
+        noHeading = true;
+        contents = confButNoUserRoutes;
+    } else {
+        noHeading = true;
+        contents = noConfNoUserRoutes;
+    }
 
     return <div className="page-wrapper">
         {noHeading ? <></> : <header className="page-header">
