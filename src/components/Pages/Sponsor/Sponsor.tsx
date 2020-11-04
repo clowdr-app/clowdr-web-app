@@ -93,6 +93,17 @@ export default function _Sponsor(props: Props) {
 
     useDataSubscription("SponsorContent", onContentUpdated, onContentDeleted, !content, conference);
 
+    // Subscribe to sponsor updates
+    const onSponsorUpdated = useCallback(function _onSponsorUpdated(ev: DataUpdatedEventDetails<"Sponsor">) {
+        setSponsor(oldSponsor => (ev.objects.find(x => x.id === oldSponsor?.id) as Sponsor) ?? oldSponsor);
+    }, []);
+
+    const onSponsorDeleted = useCallback(function _onSponsorDeleted(ev: DataDeletedEventDetails<"Sponsor">) {
+        setSponsor(oldSponsor => (ev.objectId === oldSponsor?.id ? null : oldSponsor));
+    }, []);
+
+    useDataSubscription("Sponsor", onSponsorUpdated, onSponsorDeleted, !sponsor, conference);
+
     const canEdit = useMemo(() => mUser && (sponsor?.representativeProfileIds.includes(mUser.id) || isAdmin), [
         isAdmin,
         mUser,
