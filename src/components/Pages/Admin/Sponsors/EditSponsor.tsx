@@ -36,28 +36,6 @@ export default function EditSponsor(props: Props) {
     const [state, setState] = useState<State>("notpending");
     useHeading("Sponsors");
 
-    // function toSponsorData(sponsor: FormData): SponsorData {
-    //     const colourMatcher = sponsor.colour.match(
-    //         /^rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-1](\.[0-9]+)?)\s*\)$/i
-    //     );
-    //     const rgbColor: RGBColor = colourMatcher
-    //         ? {
-    //               r: parseInt(colourMatcher[1]),
-    //               g: parseInt(colourMatcher[2]),
-    //               b: parseInt(colourMatcher[3]),
-    //               a: parseFloat(colourMatcher[4]),
-    //           }
-    //         : { r: 0, g: 0, b: 0, a: 0 };
-
-    //     return {
-    //         name: sponsor.name,
-    //         description: sponsor.description,
-    //         colour: rgbColor,
-    //         level: `${sponsor.level}`,
-    //         representativeProfileIds: sponsor.representativeProfileIds,
-    //     };
-    // }
-
     async function onSubmit(data: FormData) {
         setState("pending");
 
