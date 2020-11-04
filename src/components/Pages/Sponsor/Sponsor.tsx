@@ -17,6 +17,7 @@ import useMaybeUserProfile from "../../../hooks/useMaybeUserProfile";
 import useUserRoles from "../../../hooks/useUserRoles";
 import VideoItem from "./VideoItem/VideoItem";
 import NewItem from "./NewItem/NewItem";
+import TextItem from "./TextItem/TextItem";
 
 interface Props {
     sponsorId: string;
@@ -105,6 +106,7 @@ export default function _Sponsor(props: Props) {
                     updateVideoURL={async videoURL => {
                         item.videoURL = videoURL;
                         await item.save();
+                        setItemBeingEdited(null);
                     }}
                     videoURL={item.videoURL}
                 />
@@ -116,7 +118,17 @@ export default function _Sponsor(props: Props) {
                 </div>
             );
         } else if (item.markdownContents) {
-            return <ReactMarkdown escapeHtml={true} source={item.markdownContents} />;
+            return (
+                <TextItem
+                    editing={(canEdit && itemBeingEdited === item.id) ?? false}
+                    markdown={item.markdownContents}
+                    updateText={async markdown => {
+                        item.markdownContents = markdown;
+                        await item.save();
+                        setItemBeingEdited(null);
+                    }}
+                />
+            );
         } else {
             return <>Could not load content</>;
         }

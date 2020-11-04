@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Parse from "parse";
 import VideoItem from "../VideoItem/VideoItem";
 import useConference from "../../../../hooks/useConference";
+import TextItem from "../TextItem/TextItem";
 
 interface Props {
     sponsorId: string;
@@ -18,6 +19,15 @@ export default function NewItem(props: Props) {
             sponsor: props.sponsorId,
             conference: conference.id,
             videoURL,
+        });
+        setState("choose");
+    }
+
+    async function createTextContent(markdown: string) {
+        await Parse.Cloud.run("create-sponsorContent", {
+            sponsor: props.sponsorId,
+            conference: conference.id,
+            markdownContents: markdown,
         });
         setState("choose");
     }
@@ -41,7 +51,7 @@ export default function NewItem(props: Props) {
             case "addingButton":
                 return <></>;
             case "addingText":
-                return <></>;
+                return <TextItem editing={true} markdown="" updateText={createTextContent} />;
             case "addingVideo":
                 return <VideoItem editing={true} videoURL="" updateVideoURL={createVideoContent} />;
         }

@@ -1,0 +1,18 @@
+@import "../../../../styles/util.scss";
+@import "../../../../styles/form";
+
+$gutter    : mm(5);
+$main-width: 100%;
+
+.text-item {
+    @include basic-form;
+
+    textarea {
+        min-height: 15em;
+    }
+
+    .form-buttons {
+        margin: mm(3) 0;
+    }
+
+}
