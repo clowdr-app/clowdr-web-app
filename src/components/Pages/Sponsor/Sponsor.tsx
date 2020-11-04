@@ -193,13 +193,10 @@ export default function _Sponsor(props: Props) {
     );
 
     return sponsor && content && videoRoom ? (
-        <>
-            <div className="sponsor-description">{sponsor?.description}</div>
-            <section className={`sponsor${videoRoom === "none" ? " no-room" : ""}`}>
-                {contentEl}
-                {videoRoomEl}
-            </section>
-        </>
+        <section className={`sponsor${videoRoom === "none" ? " no-room" : ""}`}>
+            {contentEl}
+            {videoRoomEl}
+        </section>
     ) : (
         <LoadingSpinner />
     );
