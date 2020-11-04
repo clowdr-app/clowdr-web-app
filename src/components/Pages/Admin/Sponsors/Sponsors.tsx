@@ -37,6 +37,7 @@ export default function Sponsors(props: Props) {
         if (sponsor) {
             sponsor.name = data.name;
             sponsor.description = data.description;
+            sponsor.logo = data.logo;
             sponsor.colour = data.colour;
             sponsor.level = data.level;
             sponsor.representativeProfileIds = data.representativeProfileIds;
@@ -47,13 +48,13 @@ export default function Sponsors(props: Props) {
     const existingSponsors = (
         <>
             {sponsors?.map(sponsor => (
-                <>
+                <div key={sponsor.id}>
                     <h3>{sponsor.name}</h3>
                     <EditSponsor
                         updateSponsor={async data => await editSponsor(sponsor.id, data)}
                         existingSponsor={sponsor}
                     />
-                </>
+                </div>
             ))}
         </>
     );
