@@ -1,7 +1,5 @@
-import { InputAdornment } from "@material-ui/core";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
 import { addError } from "../../../../classes/Notifications/Notifications";
 import AsyncButton from "../../../AsyncButton/AsyncButton";
 import "./ButtonItem.scss";
@@ -71,16 +69,17 @@ export default function ButtonItem(props: Props) {
             {props.editing ? (
                 form
             ) : (
-                    <div className="content-item__button">
-                        <a
-                            href={props.link}
-                            style={{
-                                backgroundColor: props.sponsorColour
-                            }}>
-                            {props.text}
-                        </a>
-                    </div>
-                )}
+                <div className="content-item__button">
+                    <a
+                        href={props.link}
+                        style={{
+                            backgroundColor: props.sponsorColour,
+                        }}
+                    >
+                        {props.text}
+                    </a>
+                </div>
+            )}
         </div>
     );
 }

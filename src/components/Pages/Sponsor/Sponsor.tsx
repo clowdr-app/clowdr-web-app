@@ -11,8 +11,6 @@ import {
 import "./Sponsor.scss";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import VideoGrid from "../../Video/VideoGrid/VideoGrid";
-import { Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
 import useMaybeUserProfile from "../../../hooks/useMaybeUserProfile";
 import useUserRoles from "../../../hooks/useUserRoles";
 import VideoItem from "./VideoItem/VideoItem";
