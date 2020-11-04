@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Sponsor, SponsorContent, VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
@@ -11,9 +11,12 @@ import {
 import "./Sponsor.scss";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 import VideoGrid from "../../Video/VideoGrid/VideoGrid";
-import ReactPlayer from "react-player";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import useMaybeUserProfile from "../../../hooks/useMaybeUserProfile";
+import useUserRoles from "../../../hooks/useUserRoles";
+import VideoItem from "./VideoItem/VideoItem";
+import NewItem from "./NewItem/NewItem";
 
 interface Props {
     sponsorId: string;
@@ -21,9 +24,12 @@ interface Props {
 
 export default function _Sponsor(props: Props) {
     const conference = useConference();
+    const mUser = useMaybeUserProfile();
+    const { isAdmin } = useUserRoles();
     const [sponsor, setSponsor] = useState<Sponsor | null>(null);
     const [content, setContent] = useState<SponsorContent[] | null>(null);
     const [videoRoom, setVideoRoom] = useState<VideoRoom | null>(null);
+    const [itemBeingEdited, setItemBeingEdited] = useState<string | null>(null);
     useHeading(sponsor?.name ?? "Sponsor");
 
     useSafeAsync(
@@ -41,9 +47,9 @@ export default function _Sponsor(props: Props) {
     );
 
     useSafeAsync(
-        async () => await SponsorContent.getAll(conference.id),
+        async () => (await SponsorContent.getAll(conference.id)).filter(x => x.sponsorId === props.sponsorId),
         setContent,
-        [conference.id],
+        [conference.id, props.sponsorId],
         "Sponsor:SponsorContent.getAll"
     );
 
@@ -72,18 +78,35 @@ export default function _Sponsor(props: Props) {
 
     useDataSubscription("SponsorContent", onContentUpdated, onContentDeleted, !content, conference);
 
+    const canEdit = useMemo(() => mUser && (sponsor?.representativeProfileIds.includes(mUser.id) || isAdmin), [
+        isAdmin,
+        mUser,
+        sponsor,
+    ]);
+
+    async function deleteItem(sponsorContentId: string) {
+        const sponsorContent = await SponsorContent.get(sponsorContentId, conference.id);
+        sponsorContent?.delete();
+    }
+
+    async function toggleItemWide(sponsorContentId: string) {
+        const sponsorContent = await SponsorContent.get(sponsorContentId, conference.id);
+        if (sponsorContent) {
+            sponsorContent.wide = !sponsorContent.wide;
+            await sponsorContent.save();
+        }
+    }
+
     function renderItem(item: SponsorContent) {
         if (item.videoURL) {
             return (
-                <ReactPlayer
-                    className="video-player"
-                    width=""
-                    height=""
-                    playsinline
-                    controls={true}
-                    muted={false}
-                    volume={1}
-                    url={item.videoURL}
+                <VideoItem
+                    editing={(canEdit && itemBeingEdited === item.id) ?? false}
+                    updateVideoURL={async videoURL => {
+                        item.videoURL = videoURL;
+                        await item.save();
+                    }}
+                    videoURL={item.videoURL}
                 />
             );
         } else if (item.buttonContents) {
@@ -101,9 +124,36 @@ export default function _Sponsor(props: Props) {
 
     const contentEl = (
         <div className="sponsor__content">
-            {content?.map(item => (
-                <div className={`content-item ${item.wide && "content-item--wide"}`}>{renderItem(item)}</div>
-            ))}
+            {content
+                ?.sort((a, b) => (a.ordering === b.ordering ? 0 : a.ordering < b.ordering ? -1 : 1))
+                ?.map(item => (
+                    <div key={item.id} className={`content-item ${item.wide && "content-item--wide"}`}>
+                        <div className="content-item__buttons">
+                            {canEdit && (
+                                <button onClick={() => toggleItemWide(item.id)} aria-label="Toggle wide">
+                                    <i className="fas fa-arrows-alt-h"></i>
+                                </button>
+                            )}
+                            {canEdit && itemBeingEdited !== item.id && (
+                                <>
+                                    <button onClick={() => setItemBeingEdited(item.id)} aria-label="Edit">
+                                        <i className="fas fa-edit"></i>
+                                    </button>
+                                    <button onClick={() => deleteItem(item.id)} aria-label="Delete">
+                                        <i className="fas fa-trash"></i>
+                                    </button>
+                                </>
+                            )}
+                            {canEdit && itemBeingEdited === item.id && (
+                                <button onClick={() => setItemBeingEdited(null)} aria-label="Cancel editing">
+                                    <i className="fas fa-window-close"></i>
+                                </button>
+                            )}
+                        </div>
+                        {renderItem(item)}
+                    </div>
+                ))}
+            {canEdit && <NewItem sponsorId={props.sponsorId} />}
         </div>
     );
 

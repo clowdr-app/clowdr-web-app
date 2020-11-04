@@ -23,24 +23,42 @@
             border       : 1px $gray-6 solid;
             border-radius: 5px;
             padding      : 1em;
+            position     : relative;
 
             &--wide {
                 grid-column: span 2;
+            }
+
+            &__buttons {
+                background-color: white;
+                border-radius   : 5px;
+                position        : absolute;
+                right           : 0.2em;
+                top             : 0.2em;
+                z-index         : 100;
+
+                button {
+                    border : 0 none;
+                    padding: 0;
+
+                }
             }
 
             .video-player {
                 width: 100%;
             }
 
-            .content-item__button {
+            &__button {
                 display        : flex;
                 flex-direction : row;
                 align-items    : center;
                 justify-content: center;
                 height         : 100%;
 
+                button,
                 a {
                     padding      : mm(3) mm(5);
+                    margin       : 1em;
                     color        : white;
                     border       : none;
                     border-radius: radius(2);

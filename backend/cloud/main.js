@@ -9,6 +9,7 @@ require("./registration");
 require("./role");
 require("./roleChange");
 require("./sponsors");
+require("./sponsorContent");
 require("./textChat");
 require("./twilio");
 require("./user");

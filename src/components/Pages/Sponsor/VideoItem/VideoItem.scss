@@ -1,0 +1,14 @@
+@import "../../../../styles/util.scss";
+@import "../../../../styles/form";
+
+$gutter    : mm(5);
+$main-width: 100%;
+
+.video-item {
+    @include basic-form;
+
+    .form-buttons {
+        margin: mm(3) 0;
+    }
+
+}
