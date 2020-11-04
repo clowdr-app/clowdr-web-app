@@ -174,7 +174,7 @@ export default function _Sponsor(props: Props) {
             {content
                 ?.sort((a, b) => (a.ordering === b.ordering ? 0 : a.ordering < b.ordering ? -1 : 1))
                 ?.map(item => (
-                    <div key={item.id} className={`content-item ${item.wide && "content-item--wide"}`}>
+                    <div key={item.id} className={`content-item ${item.wide ? "content-item--wide" : ""}`}>
                         <div className="content-item__buttons">
                             {canEdit && (
                                 <button onClick={() => toggleItemWide(item.id)} aria-label="Toggle wide">

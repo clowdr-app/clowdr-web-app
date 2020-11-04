@@ -23,6 +23,7 @@
         flex-shrink          : 1;
         min-width            : 30em;
         height               : min-content;
+        flex-basis           : 0;
 
         @media only screen and (max-width: $break-md) {}
 
@@ -107,6 +108,7 @@
         min-width  : 20em;
         flex-shrink: 1;
         flex-grow  : 1;
+        flex-basis : 0;
 
         @media only screen and (max-width: $break-md) {
             max-width: 100%;
