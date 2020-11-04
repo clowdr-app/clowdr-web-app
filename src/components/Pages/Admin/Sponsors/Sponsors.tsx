@@ -9,9 +9,7 @@ import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import EditSponsor, { SponsorData } from "./EditSponsor";
 import "./Sponsors.scss";
 
-interface Props {}
-
-export default function Sponsors(props: Props) {
+export default function Sponsors() {
     const { isAdmin } = useUserRoles();
     const conference = useConference();
     const [sponsors, setSponsors] = useState<Sponsor[] | undefined>();

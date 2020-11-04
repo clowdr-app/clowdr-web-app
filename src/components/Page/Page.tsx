@@ -49,6 +49,7 @@ import AllAttendees from "../Pages/AllAttendees/AllAttendees";
 import useUserRoles from "../../hooks/useUserRoles";
 import AdminResearchrProgramUpload from "../Pages/Admin/Program/ResearchrProgramUpload";
 import Sponsor from "../Pages/Sponsor/Sponsor";
+import AllSponsors from "../Pages/AllSponsors/AllSponsors";
 
 interface Props {
     doLogin: doLoginF;
@@ -197,6 +198,7 @@ function Page(props: Props) {
                         path="/sponsor/:sponsorId"
                         component={(p: RouteComponentProps<any>) => <Sponsor sponsorId={p.match.params.sponsorId} />}
                     />
+                    <Route path="/sponsor" component={AllSponsors} />
 
                     <Route
                         path="/track/:trackId"
