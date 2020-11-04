@@ -9,6 +9,7 @@ interface Props {
     editing: boolean;
     markdown: string;
     updateText(markdown: string): Promise<void>;
+    sponsorColour: string;
 }
 
 interface FormData {
@@ -54,7 +55,15 @@ export default function TextItem(props: Props) {
 
     return (
         <div className="text-item">
-            {props.editing ? form : <ReactMarkdown escapeHtml={true} source={props.markdown} />}
+            {props.editing ? form : <ReactMarkdown escapeHtml={true} source={props.markdown}
+                renderers={{
+                    link: ({ href, children }: {
+                        href: string;
+                        children: JSX.Element;
+                    }) => {
+                        return <a href={href} style={{ color: props.sponsorColour }}>{children}</a>;
+                    }
+                }}/>}
         </div>
     );
 }

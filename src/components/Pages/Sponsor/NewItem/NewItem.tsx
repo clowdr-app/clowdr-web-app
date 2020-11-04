@@ -7,6 +7,7 @@ import ButtonItem from "../ButtonItem/ButtonItem";
 
 interface Props {
     sponsorId: string;
+    sponsorColour: string;
 }
 
 type State = "addingText" | "addingVideo" | "addingButton" | "choose";
@@ -47,29 +48,43 @@ export default function NewItem(props: Props) {
         switch (state) {
             case "choose":
                 return (
-                    <div className="content-item__button">
-                        <button onClick={() => setState("addingText")}>
-                            <i className="fas fa-align-left"></i> Add text
+                    <>
+                        <div className="content-item__message">
+                            Add content to your page
+                        </div>
+                        <div className="content-item__button">
+                            <button onClick={() => setState("addingText")}
+                                style={{
+                                    backgroundColor: props.sponsorColour
+                                }}>
+                                <i className="fas fa-align-left"></i> Text
                         </button>
-                        <button onClick={() => setState("addingVideo")}>
-                            <i className="fas fa-video"></i> Add video
+                            <button onClick={() => setState("addingVideo")}
+                                style={{
+                                    backgroundColor: props.sponsorColour
+                                }}>
+                                <i className="fas fa-video"></i> Video
                         </button>
-                        <button onClick={() => setState("addingButton")}>
-                            <i className="fas fa-square"></i> Add button
+                            <button onClick={() => setState("addingButton")}
+                                style={{
+                                    backgroundColor: props.sponsorColour
+                                }}>
+                                <i className="fas fa-square"></i> Button
                         </button>
-                    </div>
+                        </div>
+                    </>
                 );
             case "addingButton":
-                return <ButtonItem editing={true} text="" link="" updateButton={createButtonContent} />;
+                return <ButtonItem editing={true} text="" link="" updateButton={createButtonContent} sponsorColour={props.sponsorColour} />;
             case "addingText":
-                return <TextItem editing={true} markdown="" updateText={createTextContent} />;
+                return <TextItem editing={true} markdown="" updateText={createTextContent} sponsorColour={props.sponsorColour} />;
             case "addingVideo":
-                return <VideoItem editing={true} videoURL="" updateVideoURL={createVideoContent} />;
+                return <VideoItem editing={true} videoURL="" updateVideoURL={createVideoContent} sponsorColour={props.sponsorColour} />;
         }
     }
 
     return (
-        <div className="content-item">
+        <div className="content-item--wide">
             <div className="content-item__buttons">
                 {state !== "choose" && (
                     <button onClick={() => setState("choose")} aria-label="Cancel">

@@ -9,6 +9,7 @@ interface Props {
     editing: boolean;
     videoURL: string;
     updateVideoURL(newURL: string): Promise<void>;
+    sponsorColour: string;
 }
 
 interface FormData {

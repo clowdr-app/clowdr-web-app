@@ -20,13 +20,11 @@
         @media only screen and (max-width: $break-md) {}
 
         .content-item {
-            border       : 1px $gray-6 solid;
-            border-radius: 5px;
-            padding      : 1em;
-            position     : relative;
+            position: relative;
 
             &--wide {
                 grid-column: span 2;
+                height  : max-content;
             }
 
             &__buttons {
@@ -36,39 +34,55 @@
                 right           : 0.2em;
                 top             : 0.2em;
                 z-index         : 100;
+                height  : max-content;
 
                 button {
                     border : 0 none;
                     padding: 0;
-
                 }
+            }
+
+            &__message {
+                text-align: center;
+                height  : max-content;
             }
 
             .video-player {
                 width: 100%;
+                margin-top: 1em;
             }
 
             &__button {
                 display        : flex;
                 flex-direction : row;
-                align-items    : center;
+                align-items    : stretch;
                 justify-content: center;
                 height         : 100%;
 
                 button,
                 a {
-                    padding      : mm(3) mm(5);
-                    margin       : 1em;
-                    color        : white;
-                    border       : none;
-                    border-radius: radius(2);
-                    font-size    : 1.2em;
-                    background   : $dark-primary;
+                    padding         : mm(3) mm(5);
+                    margin          : 1em;
+                    color           : white;
+                    border          : none;
+                    border-radius   : radius(2);
+                    font-size       : 1.1em;
+                    background-color: $dark-primary;
 
                     &:disabled {
                         background: $gray-4;
                         cursor    : not-allowed;
                     }
+
+                    &:hover {
+                        opacity: 0.7;
+                    }
+                }
+            }
+
+            .text-item {
+                img {
+                    max-width: 100%;
                 }
             }
         }

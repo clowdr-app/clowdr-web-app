@@ -11,6 +11,7 @@ interface Props {
     text: string;
     link: string;
     updateButton(text: string, link: string): Promise<void>;
+    sponsorColour: string;
 }
 
 interface FormData {
@@ -70,10 +71,16 @@ export default function ButtonItem(props: Props) {
             {props.editing ? (
                 form
             ) : (
-                <div className="content-item__button">
-                    <a href={props.link}>{props.text}</a>
-                </div>
-            )}
+                    <div className="content-item__button">
+                        <a
+                            href={props.link}
+                            style={{
+                                backgroundColor: props.sponsorColour
+                            }}>
+                            {props.text}
+                        </a>
+                    </div>
+                )}
         </div>
     );
 }

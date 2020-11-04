@@ -110,6 +110,7 @@ export default function _Sponsor(props: Props) {
                         setItemBeingEdited(null);
                     }}
                     videoURL={item.videoURL}
+                    sponsorColour={sponsor?.colour ?? ""}
                 />
             );
         } else if (item.buttonContents) {
@@ -123,6 +124,7 @@ export default function _Sponsor(props: Props) {
                         await item.save();
                         setItemBeingEdited(null);
                     }}
+                    sponsorColour={sponsor?.colour ?? ""}
                 />
             );
         } else if (item.markdownContents) {
@@ -135,6 +137,7 @@ export default function _Sponsor(props: Props) {
                         await item.save();
                         setItemBeingEdited(null);
                     }}
+                    sponsorColour={sponsor?.colour ?? ""}
                 />
             );
         } else {
@@ -173,7 +176,7 @@ export default function _Sponsor(props: Props) {
                         {renderItem(item)}
                     </div>
                 ))}
-            {canEdit && <NewItem sponsorId={props.sponsorId} />}
+            {canEdit && <NewItem sponsorId={props.sponsorId} sponsorColour={sponsor?.colour ?? ""} />}
         </div>
     );
 
