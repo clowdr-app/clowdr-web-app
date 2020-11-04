@@ -69,23 +69,29 @@ export default function _Sponsor(props: Props) {
     );
 
     // Subscribe to content updates
-    const onContentUpdated = useCallback(function _onContentUpdated(ev: DataUpdatedEventDetails<"SponsorContent">) {
-        setContent(oldContent => {
-            if (oldContent) {
-                const newContent = Array.from(oldContent);
-                for (const object of ev.objects) {
-                    const idx = newContent?.findIndex(x => x.id === object.id);
-                    if (idx === -1) {
-                        newContent.push(object as SponsorContent);
-                    } else {
-                        newContent.splice(idx, 1, object as SponsorContent);
+    const onContentUpdated = useCallback(
+        function _onContentUpdated(ev: DataUpdatedEventDetails<"SponsorContent">) {
+            setContent(oldContent => {
+                if (oldContent) {
+                    const newContent = Array.from(oldContent);
+                    for (const object of ev.objects) {
+                        const content = object as SponsorContent;
+                        if (content.sponsorId && content.sponsorId === sponsor?.id) {
+                            const idx = newContent?.findIndex(x => x.id === object.id);
+                            if (idx === -1) {
+                                newContent.push(content);
+                            } else {
+                                newContent.splice(idx, 1, content);
+                            }
+                        }
                     }
+                    return newContent;
                 }
-                return newContent;
-            }
-            return null;
-        });
-    }, []);
+                return null;
+            });
+        },
+        [sponsor]
+    );
 
     const onContentDeleted = useCallback(function _onContentDeleted(ev: DataDeletedEventDetails<"SponsorContent">) {
         setContent(oldContent => oldContent?.filter(x => x.id !== ev.objectId) ?? null);
