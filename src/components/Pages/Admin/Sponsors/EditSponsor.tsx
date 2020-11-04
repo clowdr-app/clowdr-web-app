@@ -1,16 +1,20 @@
 import React, { useState } from "react";
-import Parse from "parse";
 import { ChromePicker, RGBColor } from "react-color";
 import { Controller, useForm } from "react-hook-form";
-import useConference from "../../../../hooks/useConference";
 import AsyncButton from "../../../AsyncButton/AsyncButton";
-import "./CreateSponsor.scss";
+import "./EditSponsor.scss";
 import useHeading from "../../../../hooks/useHeading";
 import ProfileSelector from "./ProfileSelector";
-import {
-    addError,
-    addNotification,
-} from "../../../../classes/Notifications/Notifications";
+import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
+import { Sponsor } from "@clowdr-app/clowdr-db-schema";
+
+export interface SponsorData {
+    name: string;
+    description?: string;
+    colour: string;
+    level: number;
+    representativeProfileIds: string[];
+}
 
 interface FormData {
     name: string;
@@ -23,30 +27,53 @@ interface FormData {
 type State = "notpending" | "pending";
 
 interface Props {
-    existingSponsor?: FormData | undefined;
+    existingSponsor?: Sponsor | undefined;
+    updateSponsor(data: SponsorData): Promise<void>;
 }
 
-export default function CreateSponsor(props: Props) {
-    const conference = useConference();
-    const { register, handleSubmit, errors, control } = useForm<
-        FormData
-    >();
+export default function EditSponsor(props: Props) {
+    const { register, handleSubmit, errors, control } = useForm<FormData>();
     const [state, setState] = useState<State>("notpending");
     useHeading("Sponsors");
+
+    // function toSponsorData(sponsor: FormData): SponsorData {
+    //     const colourMatcher = sponsor.colour.match(
+    //         /^rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-1](\.[0-9]+)?)\s*\)$/i
+    //     );
+    //     const rgbColor: RGBColor = colourMatcher
+    //         ? {
+    //               r: parseInt(colourMatcher[1]),
+    //               g: parseInt(colourMatcher[2]),
+    //               b: parseInt(colourMatcher[3]),
+    //               a: parseFloat(colourMatcher[4]),
+    //           }
+    //         : { r: 0, g: 0, b: 0, a: 0 };
+
+    //     return {
+    //         name: sponsor.name,
+    //         description: sponsor.description,
+    //         colour: rgbColor,
+    //         level: `${sponsor.level}`,
+    //         representativeProfileIds: sponsor.representativeProfileIds,
+    //     };
+    // }
 
     async function onSubmit(data: FormData) {
         setState("pending");
 
-        const requestData: any = data;
-        requestData.level = parseInt(data.level, 10);
-        requestData.colour = `rgba(${data.colour.r},${data.colour.g},${data.colour.b},${data.colour.a})`;
-        requestData.conference = conference.id;
+        const requestData: SponsorData = {
+            name: data.name,
+            description: data.description,
+            level: parseInt(data.level, 10),
+            colour: `rgba(${data.colour.r},${data.colour.g},${data.colour.b},${data.colour.a})`,
+            representativeProfileIds: data.representativeProfileIds,
+        };
 
         try {
-            await Parse.Cloud.run("create-sponsor", requestData);
-            addNotification(`Created sponsor '${data.name}'`);
+            await props.updateSponsor(requestData);
+            addNotification(`Saved sponsor '${data.name}'`);
         } catch (e) {
-            addError(`Failed to promote user. Error: ${e}`, 20000);
+            addError(`Failed to save sponsor. Error: ${e}`, 20000);
         } finally {
             setState("notpending");
         }
@@ -54,11 +81,12 @@ export default function CreateSponsor(props: Props) {
 
     const form = (
         <>
-            <form className="create-sponsor" onSubmit={handleSubmit(onSubmit)}>
+            <form className="edit-sponsor" onSubmit={handleSubmit(onSubmit)}>
                 <label htmlFor="name">Sponsor name</label>
                 <input
                     name="name"
                     placeholder="Sponsor name"
+                    defaultValue={props?.existingSponsor?.name}
                     type="text"
                     disabled={state === "pending"}
                     ref={register({ required: true })}
@@ -69,6 +97,7 @@ export default function CreateSponsor(props: Props) {
                 <input
                     name="description"
                     placeholder="Description"
+                    defaultValue={props?.existingSponsor?.description}
                     type="text"
                     disabled={state === "pending"}
                     ref={register}
@@ -79,7 +108,7 @@ export default function CreateSponsor(props: Props) {
                 <Controller
                     control={control}
                     name="colour"
-                    defaultValue={{ r: 0, g: 0, b: 0, a: 0 }}
+                    defaultValue={props?.existingSponsor?.colour ?? { r: 0, g: 0, b: 0, a: 0 }}
                     render={({ onChange, value }) => (
                         <ChromePicker
                             className="colour-input"
@@ -98,7 +127,7 @@ export default function CreateSponsor(props: Props) {
                 <select
                     name="level"
                     ref={register}
-                    defaultValue={0}
+                    defaultValue={props?.existingSponsor?.level ?? 0}
                     disabled={state === "pending"}
                 >
                     <option value={0}>Gold</option>
@@ -106,13 +135,11 @@ export default function CreateSponsor(props: Props) {
                     <option value={2}>Bronze</option>
                 </select>
 
-                <label htmlFor="representativeProfileIds">
-                    Representatives
-                </label>
+                <label htmlFor="representativeProfileIds">Representatives</label>
                 <Controller
                     control={control}
                     name="representativeProfileIds"
-                    defaultValue={[]}
+                    defaultValue={props?.existingSponsor?.representativeProfileIds ?? []}
                     render={({ onChange, value }) => (
                         <ProfileSelector
                             userProfiles={value}
@@ -123,14 +150,11 @@ export default function CreateSponsor(props: Props) {
                 />
 
                 <div className="form-buttons">
-                    <AsyncButton
-                        content="Create"
-                        action={handleSubmit(onSubmit)}
-                    />
+                    <AsyncButton content="Save" action={handleSubmit(onSubmit)} />
                 </div>
             </form>
         </>
     );
 
-    return <section className="create-sponsor">{form}</section>;
+    return <section className="edit-sponsor">{form}</section>;
 }

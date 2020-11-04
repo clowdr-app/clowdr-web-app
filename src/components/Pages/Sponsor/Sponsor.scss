@@ -1,5 +1,11 @@
 @import "../../../styles/util.scss";
 
+.sponsor-description {
+    display  : block;
+    font-size: 1.4em;
+    margin   : 0.4em 1.5em;
+}
+
 .sponsor {
     display       : flex;
     flex-direction: row;
