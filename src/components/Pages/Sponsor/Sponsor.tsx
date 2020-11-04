@@ -30,7 +30,7 @@ export default function _Sponsor(props: Props) {
     const { isAdmin } = useUserRoles();
     const [sponsor, setSponsor] = useState<Sponsor | null>(null);
     const [content, setContent] = useState<SponsorContent[] | null>(null);
-    const [videoRoom, setVideoRoom] = useState<VideoRoom | null>(null);
+    const [videoRoom, setVideoRoom] = useState<VideoRoom | "none" | null>(null);
     const [itemBeingEdited, setItemBeingEdited] = useState<string | null>(null);
     useHeading(sponsor?.name ?? "Sponsor");
 
@@ -38,21 +38,21 @@ export default function _Sponsor(props: Props) {
         async () => await Sponsor.get(props.sponsorId, conference.id),
         setSponsor,
         [conference.id, props.sponsorId],
-        "Sponsor:Sponsor.get"
+        "Sponsor:setSponsor"
     );
 
     useSafeAsync(
-        async () => (sponsor?.videoRoomId ? await VideoRoom.get(sponsor.videoRoomId, conference.id) : null),
+        async () => sponsor ? await sponsor.videoRoom ?? "none" : null,
         setVideoRoom,
-        [sponsor?.videoRoomId, conference.id],
-        "Sponsor:VideoRoom.get"
+        [sponsor?.videoRoomId, conference.id, sponsor],
+        "Sponsor:setVideoRoom"
     );
 
     useSafeAsync(
-        async () => (await SponsorContent.getAll(conference.id)).filter(x => x.sponsorId === props.sponsorId),
+        async () => await sponsor?.contents ?? null,
         setContent,
-        [conference.id, props.sponsorId],
-        "Sponsor:SponsorContent.getAll"
+        [conference.id, props.sponsorId, sponsor],
+        "Sponsor:setContent"
     );
 
     // Subscribe to content updates
@@ -178,13 +178,17 @@ export default function _Sponsor(props: Props) {
     );
 
     const videoRoomEl = (
-        <div className="sponsor__video-room">
-            {videoRoom ? <VideoGrid room={videoRoom} sponsorView={true} /> : <LoadingSpinner />}
-        </div>
+        videoRoom ?
+            videoRoom === "none"
+                ? <></>
+                : <div className="sponsor__video-room">
+                    <VideoGrid room={videoRoom} sponsorView={true} />
+                </div>
+            : <LoadingSpinner />
     );
 
-    return sponsor ? (
-        <section className="sponsor">
+    return sponsor && content && videoRoom ? (
+        <section className={`sponsor${videoRoom === "none" ? " no-room" : ""}`}>
             {contentEl}
             {videoRoomEl}
         </section>
