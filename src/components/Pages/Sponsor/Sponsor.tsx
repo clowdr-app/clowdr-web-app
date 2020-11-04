@@ -18,6 +18,7 @@ import useUserRoles from "../../../hooks/useUserRoles";
 import VideoItem from "./VideoItem/VideoItem";
 import NewItem from "./NewItem/NewItem";
 import TextItem from "./TextItem/TextItem";
+import ButtonItem from "./ButtonItem/ButtonItem";
 
 interface Props {
     sponsorId: string;
@@ -113,9 +114,16 @@ export default function _Sponsor(props: Props) {
             );
         } else if (item.buttonContents) {
             return (
-                <div className="content-item__button">
-                    <Link to={item.buttonContents.link}>{item.buttonContents.text}</Link>
-                </div>
+                <ButtonItem
+                    editing={(canEdit && itemBeingEdited === item.id) ?? false}
+                    text={item.buttonContents.text}
+                    link={item.buttonContents.link}
+                    updateButton={async (text, link) => {
+                        item.buttonContents = { text, link };
+                        await item.save();
+                        setItemBeingEdited(null);
+                    }}
+                />
             );
         } else if (item.markdownContents) {
             return (
