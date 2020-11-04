@@ -19,6 +19,7 @@ import VideoItem from "./VideoItem/VideoItem";
 import NewItem from "./NewItem/NewItem";
 import TextItem from "./TextItem/TextItem";
 import ButtonItem from "./ButtonItem/ButtonItem";
+import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 
 interface Props {
     sponsorId: string;
@@ -32,7 +33,18 @@ export default function _Sponsor(props: Props) {
     const [content, setContent] = useState<SponsorContent[] | null>(null);
     const [videoRoom, setVideoRoom] = useState<VideoRoom | "none" | null>(null);
     const [itemBeingEdited, setItemBeingEdited] = useState<string | null>(null);
-    useHeading(sponsor?.name ?? "Sponsor");
+    useHeading({
+        title: sponsor?.name ?? "Sponsor",
+        icon: sponsor?.logo ? (
+            <img
+                src={handleParseFileURLWeirdness(sponsor?.logo) ?? ""}
+                alt={`${sponsor?.name} logo`}
+                style={{ marginRight: "1em", maxHeight: "2em" }}
+            />
+        ) : (
+            <></>
+        ),
+    });
 
     useSafeAsync(
         async () => await Sponsor.get(props.sponsorId, conference.id),

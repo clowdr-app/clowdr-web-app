@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import Parse from "parse";
 import { ChromePicker, RGBColor } from "react-color";
 import { Controller, useForm } from "react-hook-form";
 import AsyncButton from "../../../AsyncButton/AsyncButton";
@@ -11,6 +12,7 @@ import { Sponsor } from "@clowdr-app/clowdr-db-schema";
 export interface SponsorData {
     name: string;
     description?: string;
+    logo?: Parse.File;
     colour: string;
     level: number;
     representativeProfileIds: string[];
@@ -19,12 +21,11 @@ export interface SponsorData {
 interface FormData {
     name: string;
     description?: string;
+    logo: FileList | null;
     colour: RGBColor;
     level: string;
     representativeProfileIds: string[];
 }
-
-type State = "notpending" | "pending";
 
 interface Props {
     existingSponsor?: Sponsor | undefined;
@@ -32,38 +33,30 @@ interface Props {
 }
 
 export default function EditSponsor(props: Props) {
-    const { register, handleSubmit, errors, control } = useForm<FormData>();
-    const [state, setState] = useState<State>("notpending");
+    const { register, handleSubmit, errors, control, formState } = useForm<FormData>();
     useHeading("Sponsors");
 
-    // function toSponsorData(sponsor: FormData): SponsorData {
-    //     const colourMatcher = sponsor.colour.match(
-    //         /^rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-1](\.[0-9]+)?)\s*\)$/i
-    //     );
-    //     const rgbColor: RGBColor = colourMatcher
-    //         ? {
-    //               r: parseInt(colourMatcher[1]),
-    //               g: parseInt(colourMatcher[2]),
-    //               b: parseInt(colourMatcher[3]),
-    //               a: parseFloat(colourMatcher[4]),
-    //           }
-    //         : { r: 0, g: 0, b: 0, a: 0 };
+    async function uploadFile(file: File): Promise<Parse.File | undefined> {
+        if (file) {
+            const data = new Uint8Array(await file.arrayBuffer());
+            const parseFile = new Parse.File(`logo-${file.name}`, [...data]);
+            await parseFile.save();
 
-    //     return {
-    //         name: sponsor.name,
-    //         description: sponsor.description,
-    //         colour: rgbColor,
-    //         level: `${sponsor.level}`,
-    //         representativeProfileIds: sponsor.representativeProfileIds,
-    //     };
-    // }
+            return parseFile;
+        }
+        return undefined;
+    }
 
     async function onSubmit(data: FormData) {
-        setState("pending");
+        let logo: Parse.File | undefined = undefined;
+        if (data.logo && data.logo.length > 0) {
+            logo = await uploadFile(data.logo[0]);
+        }
 
         const requestData: SponsorData = {
             name: data.name,
             description: data.description,
+            logo,
             level: parseInt(data.level, 10),
             colour: `rgba(${data.colour.r},${data.colour.g},${data.colour.b},${data.colour.a})`,
             representativeProfileIds: data.representativeProfileIds,
@@ -74,8 +67,6 @@ export default function EditSponsor(props: Props) {
             addNotification(`Saved sponsor '${data.name}'`);
         } catch (e) {
             addError(`Failed to save sponsor. Error: ${e}`, 20000);
-        } finally {
-            setState("notpending");
         }
     }
 
@@ -88,7 +79,7 @@ export default function EditSponsor(props: Props) {
                     placeholder="Sponsor name"
                     defaultValue={props?.existingSponsor?.name}
                     type="text"
-                    disabled={state === "pending"}
+                    disabled={formState.isSubmitting}
                     ref={register({ required: true })}
                 />
                 {errors.name && "Choose a name for the sponsor"}
@@ -99,10 +90,13 @@ export default function EditSponsor(props: Props) {
                     placeholder="Description"
                     defaultValue={props?.existingSponsor?.description}
                     type="text"
-                    disabled={state === "pending"}
+                    disabled={formState.isSubmitting}
                     ref={register}
                 />
                 {errors.description?.message}
+
+                <label htmlFor="logo">Logo</label>
+                <input disabled={formState.isSubmitting} name="logo" type="file" ref={register} />
 
                 <label htmlFor="colour">Colour</label>
                 <Controller
@@ -128,7 +122,7 @@ export default function EditSponsor(props: Props) {
                     name="level"
                     ref={register}
                     defaultValue={props?.existingSponsor?.level ?? 0}
-                    disabled={state === "pending"}
+                    disabled={formState.isSubmitting}
                 >
                     <option value={0}>Gold</option>
                     <option value={1}>Silver</option>
@@ -144,7 +138,7 @@ export default function EditSponsor(props: Props) {
                         <ProfileSelector
                             userProfiles={value}
                             setUserProfiles={onChange}
-                            disabled={state === "pending"}
+                            disabled={formState.isSubmitting}
                         />
                     )}
                 />
