@@ -1,5 +1,5 @@
 import { Sponsor } from "@clowdr-app/clowdr-db-schema";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Parse from "parse";
 import { Redirect } from "react-router-dom";
 import useConference from "../../../../hooks/useConference";
@@ -8,18 +8,49 @@ import useUserRoles from "../../../../hooks/useUserRoles";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import EditSponsor, { SponsorData } from "./EditSponsor";
 import "./Sponsors.scss";
+import {
+    DataUpdatedEventDetails,
+    DataDeletedEventDetails,
+} from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import useDataSubscription from "../../../../hooks/useDataSubscription";
 
 export default function Sponsors() {
     const { isAdmin } = useUserRoles();
     const conference = useConference();
-    const [sponsors, setSponsors] = useState<Sponsor[] | undefined>();
+    const [sponsors, setSponsors] = useState<Sponsor[] | null>(null);
 
     useSafeAsync(
-        async () => conference && (await Sponsor.getAll(conference.id)),
+        async () => (await Sponsor.getAll(conference.id)) ?? null,
         setSponsors,
-        [conference],
-        "Sponsors:Sponsor.getAll"
+        [conference.id],
+        "Admin/Sponsors:Sponsor.getAll"
     );
+
+    // Subscribe to sponsor updates
+    const onSponsorsUpdated = useCallback(function _onSponsorsUpdated(ev: DataUpdatedEventDetails<"Sponsor">) {
+        setSponsors(oldSponsors => {
+            if (oldSponsors) {
+                const newSponsors = Array.from(oldSponsors);
+                for (const object of ev.objects) {
+                    const content = object as Sponsor;
+                    const idx = newSponsors?.findIndex(x => x.id === object.id);
+                    if (idx === -1) {
+                        newSponsors.push(content);
+                    } else {
+                        newSponsors.splice(idx, 1, content);
+                    }
+                }
+                return newSponsors;
+            }
+            return null;
+        });
+    }, []);
+
+    const onSponsorsDeleted = useCallback(function _onSponsorsDeleted(ev: DataDeletedEventDetails<"Sponsor">) {
+        setSponsors(oldSponsors => oldSponsors?.filter(x => x.id !== ev.objectId) ?? null);
+    }, []);
+
+    useDataSubscription("Sponsor", onSponsorsUpdated, onSponsorsDeleted, !sponsors, conference);
 
     async function createSponsor(data: SponsorData) {
         const requestData = {
@@ -45,15 +76,17 @@ export default function Sponsors() {
 
     const existingSponsors = (
         <>
-            {sponsors?.map(sponsor => (
-                <div key={sponsor.id}>
-                    <h3>{sponsor.name}</h3>
-                    <EditSponsor
-                        updateSponsor={async data => await editSponsor(sponsor.id, data)}
-                        existingSponsor={sponsor}
-                    />
-                </div>
-            ))}
+            {sponsors
+                ?.sort((a, b) => a.name.localeCompare(b.name))
+                ?.map(sponsor => (
+                    <div key={sponsor.id}>
+                        <h3>{sponsor.name}</h3>
+                        <EditSponsor
+                            updateSponsor={async data => await editSponsor(sponsor.id, data)}
+                            existingSponsor={sponsor}
+                        />
+                    </div>
+                ))}
         </>
     );
 

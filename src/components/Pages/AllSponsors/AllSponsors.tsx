@@ -60,7 +60,6 @@ export default function AllSponsors() {
                     sponsorGroups[0].map(sponsor =>
                         sponsor.logo ? (
                             <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                {" "}
                                 <img
                                     className="sponsor-item__logo"
                                     src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}
@@ -80,7 +79,6 @@ export default function AllSponsors() {
                     sponsorGroups[1].map(sponsor =>
                         sponsor.logo ? (
                             <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                {" "}
                                 <img
                                     className="sponsor-item__logo"
                                     src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}
@@ -100,7 +98,6 @@ export default function AllSponsors() {
                     sponsorGroups[2].map(sponsor =>
                         sponsor.logo ? (
                             <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                {" "}
                                 <img
                                     className="sponsor-item__logo"
                                     src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}

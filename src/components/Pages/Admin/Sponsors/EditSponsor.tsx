@@ -33,7 +33,7 @@ interface Props {
 }
 
 export default function EditSponsor(props: Props) {
-    const { register, handleSubmit, errors, control, formState } = useForm<FormData>();
+    const { register, handleSubmit, errors, control, formState, reset } = useForm<FormData>();
     useHeading("Sponsors");
 
     async function uploadFile(file: File): Promise<Parse.File | undefined> {
@@ -65,8 +65,10 @@ export default function EditSponsor(props: Props) {
         try {
             await props.updateSponsor(requestData);
             addNotification(`Saved sponsor '${data.name}'`);
+            reset();
         } catch (e) {
             addError(`Failed to save sponsor. Error: ${e}`, 20000);
+        } finally {
         }
     }
 
@@ -102,7 +104,7 @@ export default function EditSponsor(props: Props) {
                 <Controller
                     control={control}
                     name="colour"
-                    defaultValue={props?.existingSponsor?.colour ?? { r: 0, g: 0, b: 0, a: 0 }}
+                    defaultValue={props?.existingSponsor?.colour ?? { r: 0, g: 0, b: 0, a: 1 }}
                     render={({ onChange, value }) => (
                         <ChromePicker
                             className="colour-input"
