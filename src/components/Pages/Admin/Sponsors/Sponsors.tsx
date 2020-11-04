@@ -1,5 +1,6 @@
 import { Sponsor } from "@clowdr-app/clowdr-db-schema";
 import React, { useState } from "react";
+import Parse from "parse";
 import { Redirect } from "react-router-dom";
 import useConference from "../../../../hooks/useConference";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
