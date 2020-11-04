@@ -42,14 +42,14 @@ export default function _Sponsor(props: Props) {
     );
 
     useSafeAsync(
-        async () => sponsor ? await sponsor.videoRoom ?? "none" : null,
+        async () => (sponsor ? (await sponsor.videoRoom) ?? "none" : null),
         setVideoRoom,
         [sponsor?.videoRoomId, conference.id, sponsor],
         "Sponsor:setVideoRoom"
     );
 
     useSafeAsync(
-        async () => await sponsor?.contents ?? null,
+        async () => (await sponsor?.contents) ?? null,
         setContent,
         [conference.id, props.sponsorId, sponsor],
         "Sponsor:setContent"
@@ -177,21 +177,26 @@ export default function _Sponsor(props: Props) {
         </div>
     );
 
-    const videoRoomEl = (
-        videoRoom ?
-            videoRoom === "none"
-                ? <></>
-                : <div className="sponsor__video-room">
-                    <VideoGrid room={videoRoom} sponsorView={true} />
-                </div>
-            : <LoadingSpinner />
+    const videoRoomEl = videoRoom ? (
+        videoRoom === "none" ? (
+            <></>
+        ) : (
+            <div className="sponsor__video-room">
+                <VideoGrid room={videoRoom} sponsorView={true} />
+            </div>
+        )
+    ) : (
+        <LoadingSpinner />
     );
 
     return sponsor && content && videoRoom ? (
-        <section className={`sponsor${videoRoom === "none" ? " no-room" : ""}`}>
-            {contentEl}
-            {videoRoomEl}
-        </section>
+        <>
+            <div className="sponsor-description">{sponsor?.description}</div>
+            <section className={`sponsor${videoRoom === "none" ? " no-room" : ""}`}>
+                {contentEl}
+                {videoRoomEl}
+            </section>
+        </>
     ) : (
         <LoadingSpinner />
     );
