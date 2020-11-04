@@ -69,23 +69,29 @@ export default function _Sponsor(props: Props) {
     );
 
     // Subscribe to content updates
-    const onContentUpdated = useCallback(function _onContentUpdated(ev: DataUpdatedEventDetails<"SponsorContent">) {
-        setContent(oldContent => {
-            if (oldContent) {
-                const newContent = Array.from(oldContent);
-                for (const object of ev.objects) {
-                    const idx = newContent?.findIndex(x => x.id === object.id);
-                    if (idx === -1) {
-                        newContent.push(object as SponsorContent);
-                    } else {
-                        newContent.splice(idx, 1, object as SponsorContent);
+    const onContentUpdated = useCallback(
+        function _onContentUpdated(ev: DataUpdatedEventDetails<"SponsorContent">) {
+            setContent(oldContent => {
+                if (oldContent) {
+                    const newContent = Array.from(oldContent);
+                    for (const object of ev.objects) {
+                        const content = object as SponsorContent;
+                        if (content.sponsorId && content.sponsorId === sponsor?.id) {
+                            const idx = newContent?.findIndex(x => x.id === object.id);
+                            if (idx === -1) {
+                                newContent.push(content);
+                            } else {
+                                newContent.splice(idx, 1, content);
+                            }
+                        }
                     }
+                    return newContent;
                 }
-                return newContent;
-            }
-            return null;
-        });
-    }, []);
+                return null;
+            });
+        },
+        [sponsor]
+    );
 
     const onContentDeleted = useCallback(function _onContentDeleted(ev: DataDeletedEventDetails<"SponsorContent">) {
         setContent(oldContent => oldContent?.filter(x => x.id !== ev.objectId) ?? null);
@@ -120,6 +126,32 @@ export default function _Sponsor(props: Props) {
         if (sponsorContent) {
             sponsorContent.wide = !sponsorContent.wide;
             await sponsorContent.save();
+        }
+    }
+
+    async function moveItemUp(idx: number) {
+        if (idx > 0 && content) {
+            const item = content[idx];
+            const itemBefore = content[idx - 1];
+            const itemOrdering = item.ordering;
+            const itemBeforeOrdering = itemBefore.ordering;
+            item.ordering = itemBeforeOrdering;
+            await item.save();
+            itemBefore.ordering = itemOrdering;
+            await itemBefore.save();
+        }
+    }
+
+    async function moveItemDown(idx: number) {
+        if (content && idx < content.length - 1) {
+            const item = content[idx];
+            const itemAfter = content[idx + 1];
+            const itemOrdering = item.ordering;
+            const itemAfterOrdering = itemAfter.ordering;
+            item.ordering = itemAfterOrdering;
+            await item.save();
+            itemAfter.ordering = itemOrdering;
+            await itemAfter.save();
         }
     }
 
@@ -172,21 +204,30 @@ export default function _Sponsor(props: Props) {
     const contentEl = (
         <div className="sponsor__content">
             {content
+                ?.sort((a, b) => a.id.localeCompare(b.id))
                 ?.sort((a, b) => (a.ordering === b.ordering ? 0 : a.ordering < b.ordering ? -1 : 1))
-                ?.map(item => (
+                ?.map((item, idx) => (
                     <div key={item.id} className={`content-item ${item.wide ? "content-item--wide" : ""}`}>
                         <div className="content-item__buttons">
                             {canEdit && (
-                                <button onClick={() => toggleItemWide(item.id)} aria-label="Toggle wide">
-                                    <i className="fas fa-arrows-alt-h"></i>
-                                </button>
+                                <>
+                                    <button onClick={async () => moveItemUp(idx)} aria-label="Move up">
+                                        <i className="far fa-arrow-alt-circle-left"></i>
+                                    </button>
+                                    <button onClick={async () => moveItemDown(idx)} aria-label="Move down">
+                                        <i className="far fa-arrow-alt-circle-right"></i>
+                                    </button>
+                                    <button onClick={async () => toggleItemWide(item.id)} aria-label="Toggle wide">
+                                        <i className="fas fa-arrows-alt-h"></i>
+                                    </button>
+                                </>
                             )}
                             {canEdit && itemBeingEdited !== item.id && (
                                 <>
                                     <button onClick={() => setItemBeingEdited(item.id)} aria-label="Edit">
                                         <i className="fas fa-edit"></i>
                                     </button>
-                                    <button onClick={() => deleteItem(item.id)} aria-label="Delete">
+                                    <button onClick={async () => deleteItem(item.id)} aria-label="Delete">
                                         <i className="fas fa-trash"></i>
                                     </button>
                                 </>
