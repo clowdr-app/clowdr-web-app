@@ -115,7 +115,7 @@ function VideoGrid(props: Props) {
                 {roomState === "disconnected" ? (
                     <PreJoinScreens room={props.room} />
                 ) : (
-                    <Main>
+                    <Main style={{ paddingBottom: "90px" }}>
                         <ReconnectingNotification />
                         <MobileTopMenuBar />
                         <Room sponsorView={props.sponsorView} />
