@@ -129,6 +129,32 @@ export default function _Sponsor(props: Props) {
         }
     }
 
+    async function moveItemUp(idx: number) {
+        if (idx > 0 && content) {
+            const item = content[idx];
+            const itemBefore = content[idx - 1];
+            const itemOrdering = item.ordering;
+            const itemBeforeOrdering = itemBefore.ordering;
+            item.ordering = itemBeforeOrdering;
+            await item.save();
+            itemBefore.ordering = itemOrdering;
+            await itemBefore.save();
+        }
+    }
+
+    async function moveItemDown(idx: number) {
+        if (content && idx < content.length - 1) {
+            const item = content[idx];
+            const itemAfter = content[idx + 1];
+            const itemOrdering = item.ordering;
+            const itemAfterOrdering = itemAfter.ordering;
+            item.ordering = itemAfterOrdering;
+            await item.save();
+            itemAfter.ordering = itemOrdering;
+            await itemAfter.save();
+        }
+    }
+
     function renderItem(item: SponsorContent) {
         if (item.videoURL) {
             return (
@@ -178,21 +204,30 @@ export default function _Sponsor(props: Props) {
     const contentEl = (
         <div className="sponsor__content">
             {content
+                ?.sort((a, b) => a.id.localeCompare(b.id))
                 ?.sort((a, b) => (a.ordering === b.ordering ? 0 : a.ordering < b.ordering ? -1 : 1))
-                ?.map(item => (
+                ?.map((item, idx) => (
                     <div key={item.id} className={`content-item ${item.wide ? "content-item--wide" : ""}`}>
                         <div className="content-item__buttons">
                             {canEdit && (
-                                <button onClick={() => toggleItemWide(item.id)} aria-label="Toggle wide">
-                                    <i className="fas fa-arrows-alt-h"></i>
-                                </button>
+                                <>
+                                    <button onClick={async () => moveItemUp(idx)} aria-label="Move up">
+                                        <i className="far fa-arrow-alt-circle-left"></i>
+                                    </button>
+                                    <button onClick={async () => moveItemDown(idx)} aria-label="Move down">
+                                        <i className="far fa-arrow-alt-circle-right"></i>
+                                    </button>
+                                    <button onClick={async () => toggleItemWide(item.id)} aria-label="Toggle wide">
+                                        <i className="fas fa-arrows-alt-h"></i>
+                                    </button>
+                                </>
                             )}
                             {canEdit && itemBeingEdited !== item.id && (
                                 <>
                                     <button onClick={() => setItemBeingEdited(item.id)} aria-label="Edit">
                                         <i className="fas fa-edit"></i>
                                     </button>
-                                    <button onClick={() => deleteItem(item.id)} aria-label="Delete">
+                                    <button onClick={async () => deleteItem(item.id)} aria-label="Delete">
                                         <i className="fas fa-trash"></i>
                                     </button>
                                 </>
