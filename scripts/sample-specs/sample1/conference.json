@@ -4,7 +4,12 @@
         "shortName": "SC1",
         "welcomeText": "# Welcome\nThis is some opening welcome text.",
         "loggedInText": "# Welcome\nThis is some logged-in welcome text.",
-        "signUpEnabled": true
+        "signUpEnabled": true,
+        "moderationCustomNotice": "# Some markdown\n[With a link](http://www.example.org)",
+        "registration": {
+            "email_text": "${link}",
+            "email_html": "<a href=\"${link}\">Register here</a>"
+        }
     },
     "admin": {
         "username": "sc1-admin",

@@ -183,61 +183,33 @@ async function sendRegistrationEmails(data) {
 
     let sendMessagePromises = [];
 
+    data.conference = await data.conference.fetch({ useMasterKey: true });
+
+    let conferenceName = data.conference.get("name");
+    let conferenceShortName = data.conference.get("shortName");
+
+    let messageText = config.REGISTRATION_EMAIL_MESSAGE_TEXT;
+    let messageHTML = config.REGISTRATION_EMAIL_MESSAGE_HTML;
+
+    messageText = messageText.replace(/\$\{conferenceName\}/gi, conferenceName);
+    messageText = messageText.replace(/\$\{conferenceShortName\}/gi, conferenceShortName);
+
+    messageHTML = messageHTML.replace(/\$\{conferenceName\}/gi, conferenceName);
+    messageHTML = messageHTML.replace(/\$\{conferenceShortName\}/gi, conferenceShortName);
+
     for (let registration of registrations) {
         let email = registration.get("email").toLowerCase();
         let link = `${config.REACT_APP_FRONTEND_URL}/register/${data.conference.id}/${registration.id}/${email}`;
 
-        data.conference = await data.conference.fetch({ useMasterKey: true });
-
-        let conferenceName = data.conference.get("name");
-        let conferenceShortName = data.conference.get("shortName");
-        // TODO: Remove CSCW hard-coded references inc. dates and times
-        let messageText = `Welcome to ${conferenceShortName}: ${conferenceName}!
-
-${conferenceShortName} will be using a new platform called Clowdr to provide an interactive virtual conference experience. Clowdr provides access to the conference program, live sessions, networking, and more.
-
-Activate your Clowdr profile for ${conferenceShortName} at: ${link}
-Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari is not supported at this time.
-
-We recommend that before the start of the conference's technical program on Monday, October 19, you should:
-
-- Fill out your Clowdr profile to help others find you
-- Familiarize yourself with Clowdr's features. The ${conferenceShortName} Social Chairs have put together a virtual treasure hunt to help you learn more. See http://www.quiz-maker.com/QVZ9P6QUP once you have completed your registration and updated your Clowdr profile!
-- Check out the conference program and follow events (papers, posters, panels) you wish to attend
-
-Need help? Email: helpdesk@cscw.acm.org
-
-We look forward to seeing you at ${conferenceShortName}!
-
-Sincerely,
-The ${conferenceShortName} Virtual Program Chairs
-https://cscw.acm.org`;
-
-        let messageHTML = `<h2>Welcome to ${conferenceShortName}: ${conferenceName}!</h2>
-<p>${conferenceShortName} will be using a new platform called Clowdr to provide an interactive virtual conference experience. Clowdr provides access to the conference program, live sessions, networking, and more.</p>
-<p>
-<a href="${link}">Activate your Clowdr profile for ${conferenceShortName} now!</a><br/>
-Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari is not supported at this time.
-</p>
-<p>We recommend that before the start of the conference's technical program on Monday, October 19, you should:</p>
-<ul>
-<li>Fill out your Clowdr profile to help others find you</li>
-<li>Familiarize yourself with Clowdr's features. The ${conferenceShortName} Social Chairs have put together a virtual treasure hunt to help you learn more. <a href="http://www.quiz-maker.com/QVZ9P6QUP">Try the treasure hunt here</a> once you have completed your registration and updated your Clowdr profile!</li>
-<li>Check out the conference program and follow events (papers, posters, panels) you wish to attend</li>
-</ul>
-<p>Need help? Email: helpdesk@cscw.acm.org</p>
-<p>We look forward to seeing you at ${conferenceShortName}!</p>
-<p>Sincerely,<br/>
-The ${conferenceShortName} Virtual Program Chairs<br/>
-<a href="https://cscw.acm.org">https://cscw.acm.org</a>
-</p>`;
+        let thisMessageText = messageText.replace(/\$\{link\}/gi, link);
+        let thisMessageHTML = messageHTML.replace(/\$\{link\}/gi, link);
 
         let message = {
             to: email,
             from: config.SENDGRID_SENDER,
             subject: `Action required for ${conferenceName}: activate your Clowdr profile`,
-            text: messageText,
-            html: messageHTML
+            text: thisMessageText,
+            html: thisMessageHTML
         };
 
         console.log(`Sending email to ${email}`);

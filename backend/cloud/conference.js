@@ -19,6 +19,11 @@ const createConferenceRequestSchema = {
         shortName: "string",
         welcomeText: "string",
 
+        registration: {
+            email_text: "string",
+            email_html: "string"
+        },
+
         // Conference Configuration
         signUpEnabled: "boolean",
         moderationCustomNotice: "string?",
@@ -533,6 +538,14 @@ Parse.Cloud.job("conference-create", async (request) => {
                 }, { useMasterKey: true });
             }
             message("Created sidebar colour.");
+
+            message("Creating registration message text configuration...");
+            await setConfiguration("REGISTRATION_EMAIL_MESSAGE_TEXT", params.conference.registration.email_text);
+            message("Created registration message text configuration.");
+
+            message("Creating registration message HTML configuration...");
+            await setConfiguration("REGISTRATION_EMAIL_MESSAGE_HTML", params.conference.registration.email_html);
+            message("Created registration message HTML configuration.");
 
             // Check for existing admin user
             message("Checking for existing admin user...");

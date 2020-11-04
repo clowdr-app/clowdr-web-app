@@ -189,7 +189,7 @@ type RegistrationSpec = {
         <h2>Send repeat registration emails</h2>
         <p>Send a repeat registration email to all users that have not yet registered. Includes users that have not yet received any registration email.</p>
         <p>{sentRepeats
-                ? <>You have alrerady sent repeat emails. Pressing this button again will send the same people another copy of their registration email. If this is what you would like to do, please refresh the page.</>
+                ? <>You have already sent repeat emails. Pressing this button again will send the same people another copy of their registration email. If this is what you would like to do, please refresh the page.</>
                 : isSending
                 ? <LoadingSpinner message="Sending emails" />
                 : <button disabled={isSending} onClick={() => sendRegistrationEmails(false)}>Send repeat registration emails</button>}</p>
