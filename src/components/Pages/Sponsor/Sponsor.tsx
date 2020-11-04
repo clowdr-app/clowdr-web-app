@@ -20,6 +20,8 @@ import NewItem from "./NewItem/NewItem";
 import TextItem from "./TextItem/TextItem";
 import ButtonItem from "./ButtonItem/ButtonItem";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
+import SplitterLayout from "react-splitter-layout";
+import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 
 interface Props {
     sponsorId: string;
@@ -29,6 +31,7 @@ export default function _Sponsor(props: Props) {
     const conference = useConference();
     const mUser = useMaybeUserProfile();
     const { isAdmin } = useUserRoles();
+    const [size, setSize] = useState(30);
     const [sponsor, setSponsor] = useState<Sponsor | null>(null);
     const [content, setContent] = useState<SponsorContent[] | null>(null);
     const [videoRoom, setVideoRoom] = useState<VideoRoom | "none" | null>(null);
@@ -197,7 +200,31 @@ export default function _Sponsor(props: Props) {
             <></>
         ) : (
             <div className="sponsor__video-room">
-                <VideoGrid room={videoRoom} sponsorView={true} />
+                <SplitterLayout
+                    vertical={true}
+                    percentage={true}
+                    ref={component => {
+                        component?.setState({ secondaryPaneSize: size });
+                    }}
+                    onSecondaryPaneSizeChange={newSize => setSize(newSize)}
+                >
+                    <div className="split top-split">
+                        {videoRoom ? <VideoGrid room={videoRoom} sponsorView={true} /> : <LoadingSpinner />}
+                        <button onClick={() => setSize(100)}>&#9650;</button>
+                    </div>
+                    <div className="split bottom-split">
+                        <button onClick={() => setSize(0)}>&#9660;</button>
+                        {videoRoom.textChatId ? (
+                            videoRoom.textChatId !== "not present" ? (
+                                <ChatFrame chatId={videoRoom.textChatId} />
+                            ) : (
+                                <>This room does not have a chat.</>
+                            )
+                        ) : (
+                            <LoadingSpinner />
+                        )}
+                    </div>
+                </SplitterLayout>
             </div>
         )
     ) : (

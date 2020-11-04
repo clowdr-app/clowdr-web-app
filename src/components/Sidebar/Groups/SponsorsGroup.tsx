@@ -402,7 +402,9 @@ export default function SponsorsGroup(props: Props) {
 
     function getSponsorMenuItems() {
         return state.filteredSponsors.map(sponsor => {
-            const participants = sponsor.participants;
+            const participants = sponsor.participants.filter(x =>
+                sponsor.sponsor.representativeProfileIds.includes(x.id)
+            );
             const morePeopleCount = participants.length - maxSponsorRoomParticipantsToList;
             return {
                 key: sponsor.sponsor.id,
