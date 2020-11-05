@@ -380,7 +380,18 @@ export default function _Sponsor(props: Props) {
                     onSecondaryPaneSizeChange={newSize => setSize(newSize)}
                 >
                     <div className="split top-split">
-                        {videoRoom ? <VideoGrid room={videoRoom} sponsorView={true} /> : <LoadingSpinner />}
+                        {videoRoom && sponsor ? (
+                            <VideoGrid
+                                room={videoRoom}
+                                sponsorView={true}
+                                highlightedProfiles={{
+                                    profiles: sponsor?.representativeProfileIds,
+                                    hexColour: sponsor?.colour,
+                                }}
+                            />
+                        ) : (
+                            <LoadingSpinner />
+                        )}
                         <button onClick={() => setSize(100)}>&#9650;</button>
                     </div>
                     <div className="split bottom-split">

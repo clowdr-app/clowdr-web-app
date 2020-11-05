@@ -1,8 +1,8 @@
-import React from 'react';
-import ParticipantInfo from '../ParticipantInfo/ParticipantInfo';
-import ParticipantTracks from '../ParticipantTracks/ParticipantTracks';
-import { Participant as IParticipant } from 'twilio-video';
-import { UserProfile } from '@clowdr-app/clowdr-db-schema';
+import React from "react";
+import ParticipantInfo from "../ParticipantInfo/ParticipantInfo";
+import ParticipantTracks from "../ParticipantTracks/ParticipantTracks";
+import { Participant as IParticipant } from "twilio-video";
+import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 
 interface ParticipantProps {
     participant: IParticipant;
@@ -16,6 +16,7 @@ interface ParticipantProps {
     hideParticipant?: boolean;
     slot?: number;
     insideGrid: boolean;
+    highlightColour?: string;
 }
 
 export default function Participant({
@@ -28,7 +29,8 @@ export default function Participant({
     isLocalParticipant,
     hideParticipant,
     slot,
-    insideGrid
+    insideGrid,
+    highlightColour,
 }: ParticipantProps) {
     return (
         <ParticipantInfo
@@ -40,6 +42,7 @@ export default function Participant({
             hideParticipant={hideParticipant}
             slot={slot}
             insideGrid={insideGrid}
+            highlightColour={highlightColour}
         >
             <ParticipantTracks
                 participant={participant}

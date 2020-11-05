@@ -41,6 +41,7 @@ const Main = styled("main")(({ theme: _theme }: { theme: Theme }) => ({
 interface Props {
     room: VideoRoom;
     sponsorView: boolean;
+    highlightedProfiles?: { profiles: string[]; hexColour: string };
 }
 
 function VideoGrid(props: Props) {
@@ -118,7 +119,7 @@ function VideoGrid(props: Props) {
                     <Main style={{ paddingBottom: "90px" }}>
                         <ReconnectingNotification />
                         <MobileTopMenuBar />
-                        <Room sponsorView={props.sponsorView} />
+                        <Room sponsorView={props.sponsorView} highlightedProfiles={props.highlightedProfiles} />
                         <MenuBar />
                     </Main>
                 )}

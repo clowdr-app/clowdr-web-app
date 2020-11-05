@@ -20,6 +20,7 @@ const Container = styled("div")(({ theme }) => ({
 
 interface Props {
     sponsorView: boolean;
+    highlightedProfiles?: { profiles: string[]; hexColour: string } | undefined;
 }
 
 export default function Room(props: Props) {
@@ -30,7 +31,11 @@ export default function Room(props: Props) {
     return (
         <Container>
             {presenterView && !props.sponsorView ? <MainParticipant /> : <></>}
-            <ParticipantList gridView={!presenterView} sponsorView={props.sponsorView} />
+            <ParticipantList
+                gridView={!presenterView}
+                sponsorView={props.sponsorView}
+                highlightedProfiles={props.highlightedProfiles}
+            />
         </Container>
     );
 }

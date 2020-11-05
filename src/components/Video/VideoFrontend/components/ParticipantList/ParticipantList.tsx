@@ -64,7 +64,11 @@ function useStyles(singleColumn: boolean) {
     )();
 }
 
-export default function ParticipantList(props: { gridView: boolean; sponsorView: boolean }) {
+export default function ParticipantList(props: {
+    gridView: boolean;
+    sponsorView: boolean;
+    highlightedProfiles?: { profiles: string[]; hexColour: string };
+}) {
     const classes = useStyles(props.sponsorView);
     const {
         room: { localParticipant },
@@ -104,6 +108,11 @@ export default function ParticipantList(props: { gridView: boolean; sponsorView:
                 profile={localUserProfile}
                 isLocalParticipant={true}
                 insideGrid={props.gridView}
+                highlightColour={
+                    props.highlightedProfiles?.profiles.includes(localUserProfile.id)
+                        ? props.highlightedProfiles.hexColour
+                        : undefined
+                }
                 slot={0}
             />
             {participants.sort(participantSorter).map(participantWithSlot => {
@@ -121,6 +130,11 @@ export default function ParticipantList(props: { gridView: boolean; sponsorView:
                 return (
                     <Participant
                         key={participant.sid}
+                        highlightColour={
+                            props.highlightedProfiles?.profiles.includes(participantWithSlot.participant.identity)
+                                ? props.highlightedProfiles.hexColour
+                                : undefined
+                        }
                         participant={participant}
                         profile={remoteProfile}
                         isSelected={participant === selectedParticipant}
