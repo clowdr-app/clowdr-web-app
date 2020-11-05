@@ -3,7 +3,7 @@
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
-const { getUserProfileById } = require("./user");
+const { getRepresentativeUserIds } = require("./sponsors");
 
 const createSponsorContentSchema = {
     markdownContents: "string?",
@@ -108,17 +108,3 @@ async function handleCreateSponsorContent(req) {
     }
 }
 Parse.Cloud.define("create-sponsorContent", handleCreateSponsorContent);
-
-/**
- * @param {Pointer} sponsor
- * @returns {Promise<string[]>}
- */
-async function getRepresentativeUserIds(sponsor, confId) {
-    const representativeProfileIds = await sponsor.get("representativeProfileIds");
-    return await Promise.all(
-        representativeProfileIds.map(async representativeProfileId => {
-            const userProfile = await getUserProfileById(representativeProfileId, confId);
-            return userProfile.get("user").id;
-        })
-    );
-}

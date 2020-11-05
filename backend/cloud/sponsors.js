@@ -94,6 +94,89 @@ async function handleCreateSponsor(req) {
 }
 Parse.Cloud.define("create-sponsor", handleCreateSponsor);
 
+const editSponsorSchema = {
+    sponsor: "string",
+    colour: "string",
+    description: "string?",
+    conference: "string",
+};
+
+/**
+ * @typedef {Object} EditSponsorSpec
+ * @property {Pointer} sponsor
+ * @property {string} colour
+ * @property {string?} description
+ * @property {Parse.File?} logo
+ * @property {Pointer} conference
+ */
+
+/**
+ * Edits a Sponsor.
+ *
+ * Note: you must perform authentication prior to calling this.
+ *
+ * @param {EditSponsorSpec} data
+ * @param {Parse.User} user
+ */
+async function editSponsor(data) {
+    data.sponsor.set("colour", data.colour);
+    if (data.description) {
+        data.sponsor.set("description", data.description);
+    } else {
+        data.sponsor.unset("description");
+    }
+
+    const existingLogo = await data.sponsor.get("logo");
+
+    if (existingLogo && data.logo !== existingLogo) {
+        try {
+            await existingLogo.destroy();
+        } catch (e) {}
+    }
+
+    if (data.logo) {
+        data.sponsor.set("logo", data.logo);
+    } else {
+        data.sponsor.unset("logo");
+    }
+
+    await data.sponsor.save(null, { useMasterKey: true });
+}
+
+/**
+ * @param {Parse.Cloud.FunctionRequest} req
+ */
+async function handleEditSponsor(req) {
+    const { params, user } = req;
+
+    const requestValidation = validateRequest(editSponsorSchema, params);
+    if (requestValidation.ok) {
+        const confId = params.conference;
+        const sponsor = await new Parse.Object("Sponsor", { id: params.sponsor }).fetch({ useMasterKey: true });
+        const representativeUserIds = await getRepresentativeUserIds(sponsor, confId);
+
+        const authorised =
+            !!user && ((await isUserInRoles(user.id, confId, ["admin"])) || representativeUserIds.includes(user.id));
+
+        if (authorised) {
+            const spec = {
+                sponsor,
+                colour: params.colour,
+                description: params.description,
+                logo: params.logo,
+            };
+            spec.conference = new Parse.Object("Conference", { id: confId });
+            await editSponsor(spec, user);
+        }
+    } else {
+        throw new Error(requestValidation.error);
+    }
+}
+Parse.Cloud.define("edit-sponsor", handleEditSponsor);
+
+/**
+ * Update SponsorContent ACLs whenever Sponsor changes.
+ */
 Parse.Cloud.afterSave("Sponsor", async request => {
     const contentItems = await new Parse.Query("SponsorContent")
         .equalTo("sponsor", request.object)
@@ -135,3 +218,21 @@ Parse.Cloud.afterSave("Sponsor", async request => {
         })
     );
 });
+
+/**
+ * @param {Pointer} sponsor
+ * @returns {Promise<string[]>}
+ */
+async function getRepresentativeUserIds(sponsor, confId) {
+    const representativeProfileIds = await sponsor.get("representativeProfileIds");
+    return await Promise.all(
+        representativeProfileIds.map(async representativeProfileId => {
+            const userProfile = await getUserProfileById(representativeProfileId, confId);
+            return userProfile.get("user").id;
+        })
+    );
+}
+
+module.exports = {
+    getRepresentativeUserIds: getRepresentativeUserIds,
+};

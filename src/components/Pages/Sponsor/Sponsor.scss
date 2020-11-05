@@ -6,6 +6,28 @@
     margin   : 0.4em 1.5em;
 }
 
+.logo-container {
+    display : inline-block;
+    position: relative;
+}
+
+.button-group {
+    background-color: white;
+    border-radius   : 5px;
+    position        : absolute;
+    right           : 0.2em;
+    top             : 0.2em;
+    z-index         : 100;
+    height          : max-content;
+    line-height     : 0;
+
+    button {
+        border     : 0 none;
+        line-height: 0;
+        padding    : 4px 2px;
+    }
+}
+
 .sponsor {
     display       : flex;
     flex-direction: row;
@@ -35,21 +57,6 @@
                 height     : max-content;
             }
 
-            &__buttons {
-                background-color: white;
-                border-radius   : 5px;
-                position        : absolute;
-                right           : 0.2em;
-                top             : 0.2em;
-                z-index         : 100;
-                height          : max-content;
-
-                button {
-                    border : 0 none;
-                    padding: 0;
-                }
-            }
-
             &__message {
                 text-align: center;
                 height    : max-content;
@@ -58,35 +65,6 @@
             .video-player {
                 width     : 100%;
                 margin-top: 1em;
-            }
-
-            &__button {
-                display        : flex;
-                flex-direction : row;
-                flex-wrap      : wrap;
-                align-items    : stretch;
-                justify-content: center;
-                height         : 100%;
-
-                button,
-                a {
-                    padding         : mm(3) mm(5);
-                    margin          : 1em;
-                    color           : white;
-                    border          : none;
-                    border-radius   : radius(2);
-                    font-size       : 1.1em;
-                    background-color: $dark-primary;
-
-                    &:disabled {
-                        background: $gray-4;
-                        cursor    : not-allowed;
-                    }
-
-                    &:hover {
-                        opacity: 0.7;
-                    }
-                }
             }
 
             .text-item {

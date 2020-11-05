@@ -65,11 +65,11 @@ export default function ButtonItem(props: Props) {
     );
 
     return (
-        <div className="text-item">
+        <div className="button-item">
             {props.editing ? (
                 form
             ) : (
-                <div className="content-item__button">
+                <div className="button-item__button">
                     <a
                         href={props.link}
                         style={{

@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import Parse from "parse";
 import { Sponsor, SponsorContent, VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
@@ -20,6 +21,7 @@ import ButtonItem from "./ButtonItem/ButtonItem";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import SplitterLayout from "react-splitter-layout";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
+import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 
 interface Props {
     sponsorId: string;
@@ -34,18 +36,7 @@ export default function _Sponsor(props: Props) {
     const [content, setContent] = useState<SponsorContent[] | null>(null);
     const [videoRoom, setVideoRoom] = useState<VideoRoom | "none" | null>(null);
     const [itemBeingEdited, setItemBeingEdited] = useState<string | null>(null);
-    useHeading({
-        title: sponsor?.name ?? "Sponsor",
-        icon: sponsor?.logo ? (
-            <img
-                src={handleParseFileURLWeirdness(sponsor?.logo) ?? ""}
-                alt={`${sponsor?.name} logo`}
-                style={{ marginRight: "1em", maxHeight: "2em" }}
-            />
-        ) : (
-            <></>
-        ),
-    });
+    const uploadRef = useRef<HTMLInputElement>(null);
 
     useSafeAsync(
         async () => await Sponsor.get(props.sponsorId, conference.id),
@@ -115,6 +106,93 @@ export default function _Sponsor(props: Props) {
         mUser,
         sponsor,
     ]);
+
+    async function uploadFile(file: File): Promise<Parse.File | undefined> {
+        if (file) {
+            const data = new Uint8Array(await file.arrayBuffer());
+            const parseFile = new Parse.File(`logo-${file.name}`, [...data]);
+            await parseFile.save();
+
+            return parseFile;
+        }
+        return undefined;
+    }
+
+    const uploadLogo = useCallback(async () => {
+        let logo: Parse.File | undefined = undefined;
+        if (uploadRef.current?.files?.length && uploadRef.current?.files?.length > 0) {
+            if (!["image/gif", "image/jpeg", "image/png", "image/webp"].includes(uploadRef.current.files[0].type)) {
+                addError("Failed to upload logo. It must be a GIF, JPEG, PNG or WEBP file.");
+                return;
+            }
+            logo = await uploadFile(uploadRef.current.files[0]);
+        }
+
+        if (sponsor) {
+            try {
+                await Parse.Cloud.run("edit-sponsor", {
+                    sponsor: sponsor.id,
+                    colour: sponsor.colour,
+                    description: sponsor.description,
+                    logo: logo,
+                    conference: conference.id,
+                });
+            } catch (e) {
+                addError(`Failed to upload logo. Error: ${e}`, 5000);
+            } finally {
+                addNotification(`Uploaded logo`);
+            }
+        }
+    }, [conference.id, sponsor]);
+
+    async function deleteLogo() {
+        if (sponsor) {
+            try {
+                await Parse.Cloud.run("edit-sponsor", {
+                    sponsor: sponsor.id,
+                    colour: sponsor.colour,
+                    description: sponsor.description,
+                    logo: undefined,
+                    conference: conference.id,
+                });
+            } catch (e) {
+                addError(`Failed to delete logo. Error: ${e}`, 5000);
+            } finally {
+                addNotification(`Removed logo`);
+            }
+        }
+    }
+
+    useHeading({
+        title: sponsor?.name ?? "Sponsor",
+        icon: (
+            <div className="logo-container">
+                <input id="logo-upload" type="file" hidden ref={uploadRef} onChange={() => uploadLogo()} />
+                {canEdit && (
+                    <div className="button-group" style={sponsor?.logo ? {} : { position: "static", margin: "0.2em" }}>
+                        {sponsor?.logo ? (
+                            <button onClick={() => deleteLogo()} aria-label="Cancel editing">
+                                <i className="fas fa-window-close" style={{ margin: 0 }}></i>
+                            </button>
+                        ) : (
+                            <>
+                                <button onClick={() => uploadRef.current?.click()} aria-label="Upload logo">
+                                    <i className="fas fa-cloud-upload-alt" style={{ margin: 0 }}></i>
+                                </button>
+                            </>
+                        )}
+                    </div>
+                )}
+                {sponsor?.logo && (
+                    <img
+                        src={handleParseFileURLWeirdness(sponsor?.logo) ?? ""}
+                        alt={`${sponsor?.name} logo`}
+                        style={{ marginRight: "1em", maxHeight: "2em" }}
+                    />
+                )}
+            </div>
+        ),
+    });
 
     async function deleteItem(sponsorContentId: string) {
         const sponsorContent = await SponsorContent.get(sponsorContentId, conference.id);
@@ -208,7 +286,7 @@ export default function _Sponsor(props: Props) {
                 ?.sort((a, b) => (a.ordering === b.ordering ? 0 : a.ordering < b.ordering ? -1 : 1))
                 ?.map((item, idx) => (
                     <div key={item.id} className={`content-item ${item.wide ? "content-item--wide" : ""}`}>
-                        <div className="content-item__buttons">
+                        <div className="button-group">
                             {canEdit && (
                                 <>
                                     <button onClick={async () => moveItemUp(idx)} aria-label="Move up">
