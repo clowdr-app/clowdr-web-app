@@ -128,15 +128,13 @@ async function editSponsor(data) {
 
     const existingLogo = await data.sponsor.get("logo");
 
-    if (existingLogo && data.logo !== existingLogo) {
-        try {
-            await existingLogo.destroy();
-        } catch (e) {}
+    if (existingLogo && (!data.logo || data.logo._name !== existingLogo._name)) {
+        await existingLogo.destroy();
     }
 
-    if (data.logo) {
+    if (data.logo && (!existingLogo || data.logo._name !== existingLogo._name)) {
         data.sponsor.set("logo", data.logo);
-    } else {
+    } else if (existingLogo && (!data.logo || data.logo._name !== existingLogo._name)) {
         data.sponsor.unset("logo");
     }
 

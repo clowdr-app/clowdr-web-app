@@ -22,6 +22,7 @@ import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import SplitterLayout from "react-splitter-layout";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
+import ColourDialog from "./ColourDialog/ColourDialog";
 
 interface Props {
     sponsorId: string;
@@ -36,6 +37,7 @@ export default function _Sponsor(props: Props) {
     const [content, setContent] = useState<SponsorContent[] | null>(null);
     const [videoRoom, setVideoRoom] = useState<VideoRoom | "none" | null>(null);
     const [itemBeingEdited, setItemBeingEdited] = useState<string | null>(null);
+    const [editingColour, setEditingColour] = useState<boolean>(false);
     const uploadRef = useRef<HTMLInputElement>(null);
 
     useSafeAsync(
@@ -163,6 +165,24 @@ export default function _Sponsor(props: Props) {
         }
     }
 
+    async function updateColour(colour: string) {
+        if (sponsor) {
+            try {
+                await Parse.Cloud.run("edit-sponsor", {
+                    sponsor: sponsor.id,
+                    colour: colour,
+                    description: sponsor.description,
+                    logo: sponsor.logo,
+                    conference: conference.id,
+                });
+            } catch (e) {
+                addError(`Failed to update colour. Error: ${e}`, 5000);
+            } finally {
+                addNotification(`Updated colour`);
+            }
+        }
+    }
+
     useHeading({
         title: sponsor?.name ?? "Sponsor",
         icon: (
@@ -171,16 +191,23 @@ export default function _Sponsor(props: Props) {
                 {canEdit && (
                     <div className="button-group" style={sponsor?.logo ? {} : { position: "static", margin: "0.2em" }}>
                         {sponsor?.logo ? (
-                            <button onClick={() => deleteLogo()} aria-label="Cancel editing">
+                            <button onClick={() => deleteLogo()} aria-label="Remove logo" title="Remove logo">
                                 <i className="fas fa-window-close" style={{ margin: 0 }}></i>
                             </button>
                         ) : (
                             <>
-                                <button onClick={() => uploadRef.current?.click()} aria-label="Upload logo">
+                                <button
+                                    onClick={() => uploadRef.current?.click()}
+                                    aria-label="Upload logo"
+                                    title="Upload logo"
+                                >
                                     <i className="fas fa-cloud-upload-alt" style={{ margin: 0 }}></i>
                                 </button>
                             </>
                         )}
+                        <button onClick={() => setEditingColour(true)} aria-label="Change colour" title="Change colour">
+                            <i className="fas fa-paint-brush" style={{ margin: 0 }}></i>
+                        </button>
                     </div>
                 )}
                 {sponsor?.logo && (
@@ -289,29 +316,45 @@ export default function _Sponsor(props: Props) {
                         <div className="button-group">
                             {canEdit && (
                                 <>
-                                    <button onClick={async () => moveItemUp(idx)} aria-label="Move up">
+                                    <button onClick={async () => moveItemUp(idx)} aria-label="Move up" title="Move up">
                                         <i className="far fa-arrow-alt-circle-left"></i>
                                     </button>
-                                    <button onClick={async () => moveItemDown(idx)} aria-label="Move down">
+                                    <button
+                                        onClick={async () => moveItemDown(idx)}
+                                        aria-label="Move down"
+                                        title="Move down"
+                                    >
                                         <i className="far fa-arrow-alt-circle-right"></i>
                                     </button>
-                                    <button onClick={async () => toggleItemWide(item.id)} aria-label="Toggle wide">
+                                    <button
+                                        onClick={async () => toggleItemWide(item.id)}
+                                        aria-label="Toggle wide"
+                                        title="Toggle wide"
+                                    >
                                         <i className="fas fa-arrows-alt-h"></i>
                                     </button>
                                 </>
                             )}
                             {canEdit && itemBeingEdited !== item.id && (
                                 <>
-                                    <button onClick={() => setItemBeingEdited(item.id)} aria-label="Edit">
+                                    <button onClick={() => setItemBeingEdited(item.id)} aria-label="Edit" title="Edit">
                                         <i className="fas fa-edit"></i>
                                     </button>
-                                    <button onClick={async () => deleteItem(item.id)} aria-label="Delete">
+                                    <button
+                                        onClick={async () => deleteItem(item.id)}
+                                        aria-label="Delete"
+                                        title="Delete"
+                                    >
                                         <i className="fas fa-trash"></i>
                                     </button>
                                 </>
                             )}
                             {canEdit && itemBeingEdited === item.id && (
-                                <button onClick={() => setItemBeingEdited(null)} aria-label="Cancel editing">
+                                <button
+                                    onClick={() => setItemBeingEdited(null)}
+                                    aria-label="Cancel editing"
+                                    title="Cancel editing"
+                                >
                                     <i className="fas fa-window-close"></i>
                                 </button>
                             )}
@@ -361,6 +404,12 @@ export default function _Sponsor(props: Props) {
 
     return sponsor && content && videoRoom ? (
         <section className={`sponsor${videoRoom === "none" ? " no-room" : ""}`}>
+            <ColourDialog
+                colour={sponsor.colour}
+                onClose={() => setEditingColour(false)}
+                showDialog={editingColour}
+                updateColour={updateColour}
+            />
             {contentEl}
             {videoRoomEl}
         </section>
