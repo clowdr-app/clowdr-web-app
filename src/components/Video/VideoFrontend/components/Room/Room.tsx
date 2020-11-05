@@ -9,7 +9,7 @@ const Container = styled("div")(({ theme }) => ({
     position: "relative",
     height: "100%",
     display: "grid",
-    gridTemplateColumns: `1fr ${theme.sidebarWidth}px`,
+    gridTemplateColumns: `1fr`,
     gridTemplateRows: "100%",
     [theme.breakpoints.down("sm")]: {
         gridTemplateColumns: `100%`,
