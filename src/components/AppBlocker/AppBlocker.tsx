@@ -6,6 +6,7 @@ import useMaybeConference from '../../hooks/useMaybeConference';
 import useSafeAsync from '../../hooks/useSafeAsync';
 import useUserRoles from '../../hooks/useUserRoles';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
+import { detect as detectBrowser } from "detect-browser";
 
 export default function AppBlocker(props: {
     children: JSX.Element
@@ -40,6 +41,27 @@ export default function AppBlocker(props: {
         }
     }, []);
     useDataSubscription("ConferenceConfiguration", onConfigUpdated, null, maintenanceMode === null, conference);
+
+    const browser = detectBrowser();
+    if (browser?.name !== "android" &&
+        browser?.name !== "chrome" &&
+        browser?.name !== "chromium-webview" &&
+        browser?.name !== "edge" &&
+        browser?.name !== "edge-chromium" &&
+        browser?.name !== "edge-ios" &&
+        browser?.name !== "firefox" &&
+        browser?.name !== "fxios" &&
+        browser?.name !== "ios" &&
+        browser?.name !== "ios-webview" &&
+        browser?.name !== "samsung") {
+        return <div className="page-wrapper">
+            <div className="page">
+                <p>
+                    Clowdr (<a href="https://github.com/clowdr-app/clowdr-web-app/">open source on GitHub</a>) does not currently support your chosen browser. Please use Firefox, Chrome or Edge. Android and iOS sort of work but the experience is a bit patchy - we're working on it.
+                </p>
+            </div>
+        </div>;
+    }
 
     if (maintenanceMode !== null) {
         if (isAdmin || maintenanceMode === false) {
