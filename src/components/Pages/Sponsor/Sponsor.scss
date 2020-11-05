@@ -100,7 +100,7 @@
         @media only screen and (max-width: $break-md) {
             max-width: 100%;
             width    : 100%;
-            height   : min-content;
+            height   : 100vh;
         }
 
         .splitter-layout {
