@@ -3,7 +3,7 @@ import useConference from "../../../../hooks/useConference";
 import useHeading from "../../../../hooks/useHeading";
 import "./WholeProgram.scss"
 import useSafeAsync from "../../../../hooks/useSafeAsync";
-import { ContentFeed, ProgramItem, ProgramPerson, ProgramSession, ProgramSessionEvent, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
+import { ConferenceConfiguration, ContentFeed, ProgramItem, ProgramPerson, ProgramSession, ProgramSessionEvent, ProgramTrack } from "@clowdr-app/clowdr-db-schema";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import Toggle from "react-toggle";
@@ -11,16 +11,33 @@ import ScheduleView from "./ScheduleView";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import { WholeProgramData } from "../WholeProgramData";
 import TracksView from "./TracksView";
+import StreamsView from "./StreamsView";
+
+type ViewOptions = "schedule" | "tracks" | "streams";
 
 export default function WholeProgram() {
     const conference = useConference();
 
-    const [showScheduleView, setShowScheduleView] = useState(true);
+    const [view, setView] = useState<ViewOptions>("streams");
     const [data, setData] = useState<WholeProgramData | null>(null);
+    const [programViews, setProgramViews] = useState<Array<ViewOptions> | null>(null);
 
     useHeading("Whole program");
 
     // Fetch data
+    useSafeAsync(async () => {
+        const configs = await ConferenceConfiguration.getByKey("WHOLE_PROGRAM_VIEWS", conference.id);
+        if (configs.length > 0) {
+            return JSON.parse(configs[0].value);
+        }
+        return ["schedule", "tracks"];
+    }, (views: Array<ViewOptions>) => {
+        setProgramViews(views);
+        if (!views.includes(view)) {
+            setView(views[0]);
+        }
+    }, [conference.id], "WholeProgram:setProgramViews");
+
     useSafeAsync(
         async () => {
             const [tracks, sessions, events, authors, items, feeds]
@@ -166,42 +183,71 @@ export default function WholeProgram() {
     useDataSubscription("ProgramItem", onItemUpdated, onItemDeleted, !data, conference);
 
     const [scheduleComponent, setScheduleComponent] = useState<JSX.Element | null>();
-    const [tracksComponent, setTracksComponent] = useState<JSX.Element | null>();
-
     useSafeAsync(async () => {
         let _scheduleComponent = scheduleComponent ? scheduleComponent : undefined;
-        if (showScheduleView && !_scheduleComponent && data) {
+        if (view === "schedule" && !_scheduleComponent && data) {
             _scheduleComponent = <ScheduleView data={data} />;
         }
         return _scheduleComponent;
-    }, setScheduleComponent, [data, showScheduleView, scheduleComponent], "WholeProgram:setScheduleComponent");
+    }, setScheduleComponent, [data, view, scheduleComponent], "WholeProgram:setScheduleComponent");
 
+    const [tracksComponent, setTracksComponent] = useState<JSX.Element | null>();
     useSafeAsync(async () => {
         let _tracksComponent = tracksComponent ? tracksComponent : undefined;
-        if (!showScheduleView && !_tracksComponent && data) {
+        if (view === "tracks" && !_tracksComponent && data) {
             _tracksComponent = <TracksView data={data} />;
         }
         return _tracksComponent;
-    }, setTracksComponent, [data, showScheduleView, tracksComponent], "WholeProgram:setTracksComponent");
+    }, setTracksComponent, [data, view, tracksComponent], "WholeProgram:setTracksComponent");
+
+    const [streamsComponent, setStreamsComponent] = useState<JSX.Element | null>();
+    useSafeAsync(async () => {
+        let _streamsComponent = streamsComponent ? streamsComponent : undefined;
+        if (view === "streams" && !_streamsComponent && data) {
+            _streamsComponent = <StreamsView data={data} />;
+        }
+        return _streamsComponent;
+    }, setStreamsComponent, [data, view, streamsComponent], "WholeProgram:setStreamsComponent");
+
+    let contentComponent;
+    if (programViews && view) {
+        if (view === "streams") {
+            contentComponent = !data
+                ? <LoadingSpinner />
+                : <div className={`whole-program tracks`}>
+                    {streamsComponent ?? <LoadingSpinner message="Loading streams view" />}
+                </div>;
+        }
+        else {
+            contentComponent = <>
+                {programViews.length > 0
+                    ? <div className="switcher">
+                        <label>
+                            <span>Schedule</span>
+                            <Toggle
+                                icons={false}
+                                defaultChecked={!view}
+                                onChange={(ev) => setView(ev.target.checked ? "tracks" : "schedule")}
+                            />
+                            <span>Tracks</span>
+                        </label>
+                    </div>
+                    : <></>}
+                <div className={`whole-program ${view}`}>
+                    {!data ? <LoadingSpinner />
+                        : view === "schedule"
+                            ? scheduleComponent ?? <LoadingSpinner message="Loading schedule view" />
+                            : tracksComponent ?? <LoadingSpinner message="Loading tracks view" />
+                    }
+                </div>
+            </>;
+        }
+    }
+    else {
+        contentComponent = <LoadingSpinner />;
+    }
 
     return <div className="whole-program-page">
-        <div className="switcher">
-            <label>
-                <span>Schedule</span>
-                <Toggle
-                    icons={false}
-                    defaultChecked={!showScheduleView}
-                    onChange={(ev) => setShowScheduleView(!ev.target.checked)}
-                />
-                <span>Tracks</span>
-            </label>
-        </div>
-        <div className={`whole-program tracks` /*${showScheduleView ? " schedule" : " tracks"}*/}>
-            {!data ? <LoadingSpinner />
-                : showScheduleView
-                    ? scheduleComponent ?? <LoadingSpinner message="Loading schedule view" />
-                    : tracksComponent ?? <LoadingSpinner message="Loading tracks view" />
-            }
-        </div>
+        {contentComponent}
     </div>;
 }
