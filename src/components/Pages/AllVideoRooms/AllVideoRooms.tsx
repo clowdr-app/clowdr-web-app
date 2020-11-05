@@ -1,5 +1,8 @@
-import { ContentFeed, UserProfile, VideoRoom } from "@clowdr-app/clowdr-db-schema";
-import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import { ContentFeed, Sponsor, UserProfile, VideoRoom } from "@clowdr-app/clowdr-db-schema";
+import {
+    DataDeletedEventDetails,
+    DataUpdatedEventDetails,
+} from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useConference from "../../../hooks/useConference";
@@ -11,9 +14,10 @@ import Columns from "../../Columns/Columns";
 import "./AllVideoRooms.scss";
 
 type RoomData = {
-    room: VideoRoom,
-    participants: Array<UserProfile>,
-    contentFeeds: Array<ContentFeed>,
+    room: VideoRoom;
+    participants: Array<UserProfile>;
+    contentFeeds: Array<ContentFeed>;
+    sponsors: Array<Sponsor>;
 };
 
 export default function ChatView() {
@@ -25,18 +29,31 @@ export default function ChatView() {
     const [roomItems, setRoomItems] = useState<Array<ColumnItem<RoomData>> | undefined>();
     const [programRoomItems, setProgramRoomItems] = useState<Array<ColumnItem<RoomData>> | undefined>();
 
-    useSafeAsync(async () => {
-        return videoRooms
-            ? Promise.all(videoRooms.map(async room => {
-                const participants = await room.participantProfiles;
-                const relatedContentFeeds = await ContentFeed.getAllByVideoRoom(room.id, conference.id);
-                return { room, participants, contentFeeds: relatedContentFeeds };
-            }))
-            : null;
-    }, setRooms, [videoRooms, conference.id], "AllVideoRooms:ChatView:setRooms");
+    useSafeAsync(
+        async () => {
+            return videoRooms
+                ? Promise.all(
+                      videoRooms.map(async room => {
+                          const participants = await room.participantProfiles;
+                          const relatedContentFeeds = await ContentFeed.getAllByVideoRoom(room.id, conference.id);
+                          const relatedSponsors = await Sponsor.getAllByVideoRoom(room.id, conference.id);
+                          return { room, participants, contentFeeds: relatedContentFeeds, sponsors: relatedSponsors };
+                      })
+                  )
+                : null;
+        },
+        setRooms,
+        [videoRooms, conference.id],
+        "AllVideoRooms:ChatView:setRooms"
+    );
 
     // Subscribe to VideoRooms
-    useSafeAsync(async () => VideoRoom.getAll(conference.id), setVideoRooms, [conference.id], "AllVideoRooms:ChatView:setVideoRooms");
+    useSafeAsync(
+        async () => VideoRoom.getAll(conference.id),
+        setVideoRooms,
+        [conference.id],
+        "AllVideoRooms:ChatView:setVideoRooms"
+    );
 
     const onVideoRoomUpdated = useCallback(function _onVideoRoomUpdated(ev: DataUpdatedEventDetails<"VideoRoom">) {
         setVideoRooms(existing => {
@@ -63,6 +80,7 @@ export default function ChatView() {
     useEffect(() => {
         const items = rooms
             ?.filter(room => room.contentFeeds.length === 0)
+            ?.filter(room => room.sponsors.length === 0)
             ?.sort(sortRooms)
             ?.map(room => {
                 return {
@@ -70,14 +88,15 @@ export default function ChatView() {
                     renderData: room,
                     text: room.room.name,
                     link: `/room/${room.room.id}`,
-                }
-            })
+                };
+            });
         setRoomItems(items);
     }, [rooms]);
 
     useEffect(() => {
         const items = rooms
             ?.filter(room => room.contentFeeds.length > 0)
+            ?.filter(room => room.sponsors.length === 0)
             ?.sort(sortRooms)
             ?.map(room => {
                 return {
@@ -85,7 +104,7 @@ export default function ChatView() {
                     renderData: room,
                     text: room.room.name,
                     link: `/room/${room.room.id}`,
-                }
+                };
             });
         setProgramRoomItems(items);
     }, [rooms]);
@@ -94,16 +113,13 @@ export default function ChatView() {
         if (x.participants.length > 0) {
             if (y.participants.length > 0) {
                 return x.room.name.localeCompare(y.room.name);
-            }
-            else {
+            } else {
                 return -1;
             }
-        }
-        else {
+        } else {
             if (y.participants.length > 0) {
                 return 1;
-            }
-            else {
+            } else {
                 return x.room.name.localeCompare(y.room.name);
             }
         }
@@ -111,36 +127,45 @@ export default function ChatView() {
 
     function roomRenderer(item: ColumnItem<RoomData>): JSX.Element {
         const data = item.renderData;
-        return <>
-            <Link to={`/room/${data.room.id}`}><i className="fas fa-video room-item__icon"></i>{data.room.name}</Link>
-            {data.participants.length > 0
-                ? <ul className="room-item__participants">
-                    {data.participants.map(participant =>
-                        <li key={participant.id}>
-                            {participant.displayName}
-                        </li>
-                    )}
-                </ul>
-                : <></>}
-        </>;
+        return (
+            <>
+                <Link to={`/room/${data.room.id}`}>
+                    <i className="fas fa-video room-item__icon"></i>
+                    {data.room.name}
+                </Link>
+                {data.participants.length > 0 ? (
+                    <ul className="room-item__participants">
+                        {data.participants.map(participant => (
+                            <li key={participant.id}>{participant.displayName}</li>
+                        ))}
+                    </ul>
+                ) : (
+                    <></>
+                )}
+            </>
+        );
     }
 
-    return <Columns className="all-rooms">
-        <>
-            <Column
-                className="col"
-                itemRenderer={{ render: roomRenderer }}
-                items={roomItems}
-                loadingMessage="Loading rooms">
-                <h2>Breakout rooms</h2>
-            </Column>
-            <Column
-                className="col"
-                itemRenderer={{ render: roomRenderer }}
-                items={programRoomItems}
-                loadingMessage="Loading rooms">
-                <h2>Program rooms</h2>
-            </Column>
-        </>
-    </Columns>;
+    return (
+        <Columns className="all-rooms">
+            <>
+                <Column
+                    className="col"
+                    itemRenderer={{ render: roomRenderer }}
+                    items={roomItems}
+                    loadingMessage="Loading rooms"
+                >
+                    <h2>Breakout rooms</h2>
+                </Column>
+                <Column
+                    className="col"
+                    itemRenderer={{ render: roomRenderer }}
+                    items={programRoomItems}
+                    loadingMessage="Loading rooms"
+                >
+                    <h2>Program rooms</h2>
+                </Column>
+            </>
+        </Columns>
+    );
 }
