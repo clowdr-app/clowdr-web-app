@@ -46,7 +46,7 @@ async function createSponsorContent(data, user) {
         newData.buttonContents = { link: data.buttonLink, text: data.buttonText };
     }
     newData.wide = false;
-    newData.ordering = (lastItem?.get("ordering") ?? -1) + 1;
+    newData.ordering = (lastItem ? lastItem.get("ordering") : -1) + 1;
     newData.videoURL = data.videoURL;
     newData.sponsor = data.sponsor;
     newData.conference = data.conference;
