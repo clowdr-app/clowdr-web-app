@@ -113,9 +113,9 @@ export default function NewItem(props: Props) {
 
     return (
         <div className="content-item content-item--wide">
-            <div className="content-item__buttons">
+            <div className="button-group">
                 {state !== "choose" && (
-                    <button onClick={() => setState("choose")} aria-label="Cancel">
+                    <button onClick={() => setState("choose")} aria-label="Cancel" title="Cancel">
                         <i className="fas fa-window-close"></i>
                     </button>
                 )}
