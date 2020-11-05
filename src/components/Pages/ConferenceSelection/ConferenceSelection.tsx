@@ -40,7 +40,16 @@ export default function ConferenceSelection(props: Props) {
 
                 setConferences(_conferences);
                 if (_conferences.length > 0) {
-                    setSelected(_conferences[0].id);
+                    const hostname = window.location.hostname;
+                    const clowdrDomain = ".clowdr.org";
+                    const subdomain = hostname.substr(0, hostname.length - clowdrDomain.length).toLowerCase();
+                    const possibleConferences = _conferences.filter(x => x.shortName.replace(/ /gi, "").toLowerCase() === subdomain);
+                    if (possibleConferences.length > 0) {
+                        setSelected(possibleConferences[0].id);
+                    }
+                    else {
+                        setSelected(_conferences[0].id);
+                    }
                 }
 
                 cancelConferencesPromise = () => { };
@@ -82,7 +91,9 @@ export default function ConferenceSelection(props: Props) {
                 >
                     <p>Please select your conference to begin</p>
                     <form className="input-wrapper" onSubmit={submitSelection}>
-                        <select onChange={e => setSelected(e.target.value)}
+                        <select
+                            onChange={e => setSelected(e.target.value)}
+                            value={selected ?? ""}
                             title="Conference">
                             {conferences.map((conf, i) =>
                                 <option key={i} value={conf.id}>{conf.name}</option>
