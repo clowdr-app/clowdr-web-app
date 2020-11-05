@@ -41,13 +41,18 @@
         flex-grow            : 5;
         grid-template-columns: 1fr 1fr;
         grid-gap             : 1em;
-        margin               : 0 2%;
+        padding              : 0 1em;
         flex-shrink          : 1;
         min-width            : 30em;
-        height               : min-content;
+        height               : 100%;
+        overflow-y           : auto;
         flex-basis           : 0;
 
-        @media only screen and (max-width: $break-md) {}
+        @media only screen and (max-width: $break-md) {
+            grid-template-columns: 1fr;
+            height               : min-content;
+            min-width            : 100%;
+        }
 
         .content-item {
             position: relative;
@@ -55,6 +60,10 @@
             &--wide {
                 grid-column: span 2;
                 height     : max-content;
+
+                @media only screen and (max-width: $break-md) {
+                    grid-column: span 1;
+                }
             }
 
             &__message {
@@ -91,6 +100,7 @@
         @media only screen and (max-width: $break-md) {
             max-width: 100%;
             width    : 100%;
+            height   : min-content;
         }
 
         .splitter-layout {
