@@ -22,6 +22,7 @@ import useDataSubscription from "../../hooks/useDataSubscription";
 import Video from "../../classes/Video/Video";
 import { addError } from "../../classes/Notifications/Notifications";
 import { handleParseFileURLWeirdness } from "../../classes/Utils";
+import AppBlocker from "../AppBlocker/AppBlocker";
 
 type AppTasks
     = "beginLoadConference"
@@ -543,18 +544,20 @@ export default function App() {
         // Hint: `user` could be null - see also, `useUser` and `useMaybeUser` hooks
         return <div className={appClassName}>
             <ConferenceContext.Provider value={appState.conference}>
-                <UserProfileContext.Provider value={appState.profile}>
-                    <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
-                        <VideoContext.Provider value={videoReady ? Video.instance() : null}>
-                            <UserRolesContext.Provider value={appState.userRoles}>
-                                <EmojiContext.Provider value={{ element: emojiPickerElement}}>
-                                    {sidebar}
-                                    {page}
-                                </EmojiContext.Provider>
-                            </UserRolesContext.Provider>
-                        </VideoContext.Provider>
-                    </ChatContext.Provider>
-                </UserProfileContext.Provider>
+                <UserRolesContext.Provider value={appState.userRoles}>
+                    <UserProfileContext.Provider value={appState.profile}>
+                        <AppBlocker>
+                            <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
+                                <VideoContext.Provider value={videoReady ? Video.instance() : null}>
+                                    <EmojiContext.Provider value={{ element: emojiPickerElement }}>
+                                        {sidebar}
+                                        {page}
+                                    </EmojiContext.Provider>
+                                </VideoContext.Provider>
+                            </ChatContext.Provider>
+                        </AppBlocker>
+                    </UserProfileContext.Provider>
+                </UserRolesContext.Provider>
             </ConferenceContext.Provider>
         </div>;
     }
