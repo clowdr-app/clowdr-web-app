@@ -111,9 +111,9 @@ function nextSidebarState(
                             }
                         }) ?? null;
                     nextState.allSponsors = nextState.allSponsors?.concat(changes) ?? changes;
-                    nextState.allSponsors = nextState.allSponsors.sort((a, b) =>
-                        a.sponsor.name.localeCompare(b.sponsor.name)
-                    );
+                    nextState.allSponsors = nextState.allSponsors
+                        .sort((a, b) => a.sponsor.name.localeCompare(b.sponsor.name))
+                        .sort((a, b) => a.sponsor.level - b.sponsor.level);
                     allSponsorsUpdated = true;
                 }
                 break;
