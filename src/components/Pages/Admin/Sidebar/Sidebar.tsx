@@ -1,13 +1,11 @@
 import Parse from "parse";
 import React, { useRef, useState } from "react";
-import { ChromePicker, ColorResult } from 'react-color';
-import { Redirect } from "react-router-dom";
+import { ChromePicker, ColorResult } from "react-color";
 import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
 import { handleParseFileURLWeirdness } from "../../../../classes/Utils";
 import useConference from "../../../../hooks/useConference";
 import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
-import useUserRoles from "../../../../hooks/useUserRoles";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import "./Sidebar.scss";
 
@@ -15,17 +13,21 @@ export default function AdminSidebar() {
     const defaultSidebarColour = "#761313";
 
     const conference = useConference();
-    const { isAdmin } = useUserRoles();
     const [isSaving, setIsSaving] = useState(false);
     const fileRef = useRef<HTMLInputElement | null>(null);
     const [sidebarColour, setSidebarColour] = useState<string | null>(null);
 
     useHeading("Admin: Sidebar");
 
-    useSafeAsync(async () => {
-        const details = await conference.details;
-        return details.find(x => x.key === "SIDEBAR_COLOUR")?.value ?? defaultSidebarColour;
-    }, setSidebarColour, [conference], "Admin/Sidebar:get SIDEBAR_COLOUR");
+    useSafeAsync(
+        async () => {
+            const details = await conference.details;
+            return details.find(x => x.key === "SIDEBAR_COLOUR")?.value ?? defaultSidebarColour;
+        },
+        setSidebarColour,
+        [conference],
+        "Admin/Sidebar:get SIDEBAR_COLOUR"
+    );
 
     const logoURL = handleParseFileURLWeirdness(conference.headerImage);
 
@@ -41,8 +43,7 @@ export default function AdminSidebar() {
                 conference.headerImage = parseFile;
                 await conference.save();
             }
-        }
-        catch {
+        } catch {
             addError("Sorry, we were unable to save your logo. If this recurs, please contact the Clowdr team.");
         }
         setIsSaving(false);
@@ -58,8 +59,7 @@ export default function AdminSidebar() {
             // @ts-ignore - React doesn't want us to do this, but I can't see another way.
             fileRef.current.value = null;
             await conference.save();
-        }
-        catch {
+        } catch {
             addError("Sorry, we were unable to remove your logo. If this recurs, please contact the Clowdr team.");
         }
         setIsSaving(false);
@@ -79,19 +79,19 @@ export default function AdminSidebar() {
             try {
                 ok = await Parse.Cloud.run("conference-setSidebarBgColour", {
                     colour: color.hex,
-                    conference: conference.id
+                    conference: conference.id,
                 });
-            }
-            catch {
+            } catch {
                 ok = false;
             }
 
             setTimeout(() => {
                 if (ok) {
                     addNotification("Sidebar colour saved.");
-                }
-                else {
-                    addError("Sorry, we were unable to save your sidebar background colour. If this recurs, please contact the Clowdr team.");
+                } else {
+                    addError(
+                        "Sorry, we were unable to save your sidebar background colour. If this recurs, please contact the Clowdr team."
+                    );
                 }
 
                 setIsSaving(false);
@@ -100,32 +100,28 @@ export default function AdminSidebar() {
     }
 
     const sidebarBgDisplayColour = !!sidebarColour ? sidebarColour : "#ffffff";
-    return !isAdmin
-        ? <Redirect to="/notfound" />
-        : <div className="admin-sidebar">
-            <div className="logo"
+    return (
+        <div className="admin-sidebar">
+            <div
+                className="logo"
                 style={{
-                    backgroundColor: sidebarBgDisplayColour
+                    backgroundColor: sidebarBgDisplayColour,
                 }}
             >
-                {logoURL
-                    ? <img src={logoURL} alt={conference.shortName + " logo"} />
-                    : <span>No logo.</span>
-                }
+                {logoURL ? <img src={logoURL} alt={conference.shortName + " logo"} /> : <span>No logo.</span>}
                 <div className="colour">
-                    <span>
-                        Pick sidebar background colour
-                    </span>
+                    <span>Pick sidebar background colour</span>
                     <ChromePicker
-                            className="logo-colour-input"
-                            color={sidebarBgDisplayColour}
-                            onChange={changeSidebarColour}
-                            onChangeComplete={saveSidebarColour}
-                        />
+                        className="logo-colour-input"
+                        color={sidebarBgDisplayColour}
+                        onChange={changeSidebarColour}
+                        onChangeComplete={saveSidebarColour}
+                    />
                 </div>
-                {isSaving
-                    ? <LoadingSpinner message="Saving" />
-                    : <div className="upload">
+                {isSaving ? (
+                    <LoadingSpinner message="Saving" />
+                ) : (
+                    <div className="upload">
                         <input
                             name="logo"
                             id="logo"
@@ -135,15 +131,13 @@ export default function AdminSidebar() {
                             disabled={isSaving}
                             ref={fileRef}
                         />
-                        <label
-                            htmlFor="logo"
-                            title={isSaving ? "Saving logo..." : undefined}
-                        >
+                        <label htmlFor="logo" title={isSaving ? "Saving logo..." : undefined}>
                             Upload Logo
-                    </label>
-                        <button onClick={(ev) => removeLogo(ev)}>Remove logo</button>
+                        </label>
+                        <button onClick={ev => removeLogo(ev)}>Remove logo</button>
                     </div>
-                }
+                )}
             </div>
-        </div>;
+        </div>
+    );
 }

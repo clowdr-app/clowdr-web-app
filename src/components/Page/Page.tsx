@@ -29,6 +29,7 @@ import ViewAuthor from "../Pages/Program/Author/ViewAuthor";
 import ViewItem from "../Pages/Program/Item/ViewItem";
 import NewVideoRoom from "../Pages/NewVideoRoom/NewVideoRoom";
 import Register from "../Pages/Register/Register";
+import { default as AdminAuthors } from "../Pages/Admin/Authors/Authors";
 import { default as AdminRegistration } from "../Pages/Admin/Registration/Registration";
 import { default as AdminSidebar } from "../Pages/Admin/Sidebar/Sidebar";
 import { default as AdminWelcomePage } from "../Pages/Admin/WelcomePage/WelcomePage";
@@ -232,12 +233,16 @@ function Page(props: Props) {
                     />
                     <Route path="/profile" component={() => <Redirect to={"/profile/" + mUser.id} />} />
 
-                    <Route path="/admin/registration" component={() => <AdminRegistration />} />
-                    <Route path="/admin/sidebar" component={() => <AdminSidebar />} />
-                    <Route path="/admin/welcome" component={() => <AdminWelcomePage />} />
-                    <Route path="/admin/sponsors" component={() => <AdminSponsors />} />
-                    <Route path="/admin/program/upload/researchr" component={() => <AdminResearchrProgramUpload />} />
-                    <Route path="/admin" component={() => <AdminTools />} />
+                    <Route path="/admin/registration" component={isAdmin ? AdminRegistration : NotFound} />
+                    <Route path="/admin/sidebar" component={isAdmin ? AdminSidebar : NotFound} />
+                    <Route path="/admin/welcome" component={isAdmin ? AdminWelcomePage : NotFound} />
+                    <Route path="/admin/sponsors" component={isAdmin ? AdminSponsors : NotFound} />
+                    <Route path="/admin/authors" component={isAdmin ? AdminAuthors : NotFound} />
+                    <Route
+                        path="/admin/program/upload/researchr"
+                        component={isAdmin ? AdminResearchrProgramUpload : NotFound}
+                    />
+                    <Route path="/admin" component={isAdmin ? AdminTools : NotFound} />
 
                     {footerRoutes}
 

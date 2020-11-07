@@ -1,11 +1,8 @@
 import { Sponsor } from "@clowdr-app/clowdr-db-schema";
 import React, { useCallback, useState } from "react";
 import Parse from "parse";
-import { Redirect } from "react-router-dom";
 import useConference from "../../../../hooks/useConference";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
-import useUserRoles from "../../../../hooks/useUserRoles";
-import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import EditSponsor, { SponsorData } from "./EditSponsor";
 import "./Sponsors.scss";
 import {
@@ -15,7 +12,6 @@ import {
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 
 export default function Sponsors() {
-    const { isAdmin } = useUserRoles();
     const conference = useConference();
     const [sponsors, setSponsors] = useState<Sponsor[] | null>(null);
 
@@ -99,5 +95,5 @@ export default function Sponsors() {
         </section>
     );
 
-    return isAdmin === null ? <LoadingSpinner /> : isAdmin ? contents : <Redirect to="/notfound" />;
+    return contents;
 }
