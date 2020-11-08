@@ -1,0 +1,38 @@
+.admin-program-editor {
+    .item-title {
+        display  : inline-block;
+        min-width: 20em;
+    }
+
+    .item-track {
+        display  : inline-block;
+        min-width: 15em;
+    }
+
+    .item-exhibit {
+        i {
+            margin-right: 0.3em;
+        }
+    }
+
+    .item-video-chat {
+        min-width: 10em;
+    }
+
+    .item-abstract {
+        textarea {
+            width: 100%;
+            min-height: 15ex;
+        }
+    }
+
+    .editor-table {
+        th:nth-child(4) {
+            min-width: 4em;
+        }
+
+        th:nth-child(5) {
+            min-width: 8em;
+        }
+    }
+}

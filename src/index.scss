@@ -43,6 +43,13 @@ body {
             color           : #fff;
         }
 
+        &[disabled]:hover,
+        &.disabled:hover {
+            text-decoration : none;
+            background-color: $gray-4;
+            color           : $gray-1;
+        }
+
         i {
             padding: 0 0.3em;
         }

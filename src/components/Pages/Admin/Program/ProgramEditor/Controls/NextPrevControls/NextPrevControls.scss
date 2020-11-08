@@ -1,0 +1,14 @@
+.admin-program-editor {
+    .prev-button {
+        grid-area: prev;
+    }
+
+    .next-button,
+    .next-button-wrapper {
+        grid-area: next;
+    }
+
+    .next-button-wrapper > .next-button {
+        grid-area: unset;
+    }
+}

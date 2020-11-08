@@ -428,74 +428,74 @@ async function main() {
     const confId = regsOnly ? await getConference(conferenceData.conference.name) : await createConference(conferenceData);
     console.log(`Conference id: ${confId}`);
 
-    const adminUser = await Parse.User.logIn(conferenceData.admin.username, conferenceData.admin.password);
-    const adminSessionToken = adminUser.getSessionToken();
-    console.log(`Admin user id: ${adminUser.id}`);
+    // const adminUser = await Parse.User.logIn(conferenceData.admin.username, conferenceData.admin.password);
+    // const adminSessionToken = adminUser.getSessionToken();
+    // console.log(`Admin user id: ${adminUser.id}`);
 
-    if (!regsOnly) {
-        // TODO: An object might have the same key but its other fields could have changed
-        //       so it may still need updating
-        const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
-        console.log(`YouTube feeds:\n${JSON.stringify(youtubeFeeds)}`);
+    // if (!regsOnly) {
+    //     // TODO: An object might have the same key but its other fields could have changed
+    //     //       so it may still need updating
+    //     const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
+    //     console.log(`YouTube feeds:\n${JSON.stringify(youtubeFeeds)}`);
 
-        const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
-        console.log(`Zoom rooms:\n${JSON.stringify(zoomRooms)}`);
+    //     const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
+    //     console.log(`Zoom rooms:\n${JSON.stringify(zoomRooms)}`);
 
-        const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
-        console.log(`Text chats:\n${JSON.stringify(textChats)}`);
+    //     const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
+    //     console.log(`Text chats:\n${JSON.stringify(textChats)}`);
 
-        remapObjects(textChats, "textChat", videoRoomsData);
-        const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
-        console.log(`Video rooms:\n${JSON.stringify(videoRooms)}`);
+    //     remapObjects(textChats, "textChat", videoRoomsData);
+    //     const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
+    //     console.log(`Video rooms:\n${JSON.stringify(videoRooms)}`);
 
-        remapObjects(youtubeFeeds, "youtube", contentFeedsData);
-        remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
-        remapObjects(textChats, "textChat", contentFeedsData);
-        remapObjects(videoRooms, "videoRoom", contentFeedsData);
-        const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id", "ContentFeed", "name");
-        console.log(`Content feeds:\n${JSON.stringify(contentFeeds)}`);
+    //     remapObjects(youtubeFeeds, "youtube", contentFeedsData);
+    //     remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
+    //     remapObjects(textChats, "textChat", contentFeedsData);
+    //     remapObjects(videoRooms, "videoRoom", contentFeedsData);
+    //     const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id", "ContentFeed", "name");
+    //     console.log(`Content feeds:\n${JSON.stringify(contentFeeds)}`);
 
-        remapObjects(contentFeeds, "feed", tracksData);
-        remapObjects(contentFeeds, "feed", itemsData);
-        remapObjects(contentFeeds, "feed", sessionsData);
-        remapObjects(contentFeeds, "feed", eventsData);
+    //     remapObjects(contentFeeds, "feed", tracksData);
+    //     remapObjects(contentFeeds, "feed", itemsData);
+    //     remapObjects(contentFeeds, "feed", sessionsData);
+    //     remapObjects(contentFeeds, "feed", eventsData);
 
-        const attachmentTypes = await createObjects(confId, adminSessionToken, attachmentTypesData, "attachmentType", "name", "AttachmentType", "name");
-        console.log(`Attachment types:\n${JSON.stringify(attachmentTypes)}`);
+    //     const attachmentTypes = await createObjects(confId, adminSessionToken, attachmentTypesData, "attachmentType", "name", "AttachmentType", "name");
+    //     console.log(`Attachment types:\n${JSON.stringify(attachmentTypes)}`);
 
-        const tracks = await createObjects(confId, adminSessionToken, tracksData, "track", "name", "ProgramTrack", "name");
-        console.log(`Tracks:\n${JSON.stringify(tracks)}`);
+    //     const tracks = await createObjects(confId, adminSessionToken, tracksData, "track", "name", "ProgramTrack", "name");
+    //     console.log(`Tracks:\n${JSON.stringify(tracks)}`);
 
-        const persons = await createObjects(confId, adminSessionToken, personsData, "person", "name", "ProgramPerson", "name");
-        console.log(`Persons:\n${JSON.stringify(persons)}`);
+    //     const persons = await createObjects(confId, adminSessionToken, personsData, "person", "name", "ProgramPerson", "name");
+    //     console.log(`Persons:\n${JSON.stringify(persons)}`);
 
-        remapObjects(tracks, "track", itemsData);
-        itemsData.forEach(item => {
-            item.authors = item.authors.map(authorName => {
-                return persons[authorName.toLowerCase()];
-            });
-        });
+    //     remapObjects(tracks, "track", itemsData);
+    //     itemsData.forEach(item => {
+    //         item.authors = item.authors.map(authorName => {
+    //             return persons[authorName.toLowerCase()];
+    //         });
+    //     });
 
-        // TODO: For updates: Load in the ID maps and use them to pre-remap the id fields so they can be merged with existing data
+    //     // TODO: For updates: Load in the ID maps and use them to pre-remap the id fields so they can be merged with existing data
 
-        const items = await createObjects(confId, adminSessionToken, itemsData, "item", "id", "ProgramItem", "title");
-        console.log(`Items:\n${JSON.stringify(items)}`);
+    //     const items = await createObjects(confId, adminSessionToken, itemsData, "item", "id", "ProgramItem", "title");
+    //     console.log(`Items:\n${JSON.stringify(items)}`);
 
-        remapObjects(items, "programItem", itemAttachmentsData);
-        remapObjects(attachmentTypes, "attachmentType", itemAttachmentsData);
-        const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url");
-        console.log(`Item attachments:\n${JSON.stringify(itemAttachments)}`);
+    //     remapObjects(items, "programItem", itemAttachmentsData);
+    //     remapObjects(attachmentTypes, "attachmentType", itemAttachmentsData);
+    //     const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url");
+    //     console.log(`Item attachments:\n${JSON.stringify(itemAttachments)}`);
 
-        remapObjects(tracks, "track", sessionsData);
-        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "id");
-        console.log(`Sessions:\n${JSON.stringify(sessions)}`);
+    //     remapObjects(tracks, "track", sessionsData);
+    //     const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "id");
+    //     console.log(`Sessions:\n${JSON.stringify(sessions)}`);
 
-        remapObjects(sessions, "session", eventsData);
-        remapObjects(items, "item", eventsData);
-        const events = await createObjects(confId, adminSessionToken, eventsData, "event", "id");
-        console.log(`Events:\n${JSON.stringify(events)}`);
-    }
+    //     remapObjects(sessions, "session", eventsData);
+    //     remapObjects(items, "item", eventsData);
+    //     const events = await createObjects(confId, adminSessionToken, eventsData, "event", "id");
+    //     console.log(`Events:\n${JSON.stringify(events)}`);
+    // }
 
-    const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name", "Registration", "email");
-    console.log(`Registrations:\n${JSON.stringify(registrations)}`);
+    // const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name", "Registration", "email");
+    // console.log(`Registrations:\n${JSON.stringify(registrations)}`);
 }

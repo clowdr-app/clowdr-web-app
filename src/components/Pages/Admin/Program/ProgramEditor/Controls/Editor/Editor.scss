@@ -1,0 +1,50 @@
+.admin-program-editor {
+    .editor {
+        display       : flex;
+        flex-wrap     : nowrap;
+        flex-direction: row;
+        column-gap    : 1em;
+        height        : 100%;
+
+        .table {
+            flex-basis: 100%;
+            overflow-y: auto;
+            overflow-x: auto;
+            max-height: 100%;
+        }
+
+        .details {
+            flex-basis: 30%;
+
+            h3 {
+                border-bottom : 1px solid #222;
+                padding-bottom: 0.4em;
+                margin-bottom : 0.5em;
+                font-size     : 140%;
+                font-weight   : bold;
+            }
+
+            h4 {
+                border-bottom : 1px solid #ccc;
+                padding-bottom: 0.4em;
+                margin-top    : 1em;
+                margin-bottom : 0;
+                font-size     : 110%;
+                font-weight   : bold;
+            }
+
+            input {
+                width: 100%;
+            }
+
+            label {
+                margin-top : 0.5em;
+                font-weight: bold;
+            }
+
+            .delete-many-button {
+                margin-left: 0.5em;
+            }
+        }
+    }
+}

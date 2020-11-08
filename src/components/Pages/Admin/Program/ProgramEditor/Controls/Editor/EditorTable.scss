@@ -1,0 +1,68 @@
+@import "../../../../../../../styles/util.scss";
+
+.editor-table {
+    min-width: 100%;
+    max-height: 100%;
+
+    .start-add-item-button,
+    .cancel-add-item-button,
+    .complete-add-item-button,
+    .delete-item-button {
+        margin    : 0;
+        padding   : 0;
+        border    : 0;
+        background: none;
+    }
+
+    .start-add-item-button,
+    .complete-add-item-button {
+        color: $color-5;
+
+        &:hover {
+            color: darken($color-5, 20);
+        }
+
+        &[disabled] {
+            color: $gray-1;
+        }
+
+        &[disabled]:hover {
+            background: none;
+            color     : $gray-1;
+        }
+    }
+
+    .cancel-add-item-button,
+    .delete-item-button {
+        color: lighten($primary, 20);
+
+        &:hover {
+            color: $primary;
+        }
+    }
+
+    .select-row-box {
+        margin: 0 0.4em;
+    }
+
+    th, td {
+        &>input {
+            width: 100%;
+        }
+    }
+
+    tbody {
+        tr,
+        td {
+            cursor: pointer;
+        }
+
+
+        td {
+            &:first-child,
+            &:last-child {
+                width: 1em;
+            }
+        }
+    }
+}

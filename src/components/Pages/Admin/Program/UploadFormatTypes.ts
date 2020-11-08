@@ -7,17 +7,12 @@ export type TrackSpec = {
 
 export type FeedSpec = {
     id: string,
-    name: string
-} & ({
-    videoRoom: boolean,
-    textChat?: boolean
-} | {
-    textChat: boolean
-} | {
-    zoomRoom: string
-} | {
-    youtube: string
-});
+    name: string,
+    videoRoom?: boolean,
+    textChat?: boolean,
+    zoomRoom?: string,
+    youtube?: string
+};
 
 export type SessionSpec = {
     id: string,
@@ -40,6 +35,7 @@ export type ItemSpec = {
 export type PersonSpec = {
     name: string,
     affiliation?: string
+    email?: string;
 };
 
 export type EventSpec = {

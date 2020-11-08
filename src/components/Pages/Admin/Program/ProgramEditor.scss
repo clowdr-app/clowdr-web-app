@@ -1,0 +1,45 @@
+.admin-program-editor {
+    height: 100%;
+
+    .react-tabs {
+        height               : 100%;
+        width                : 100%;
+        overflow             : hidden;
+        display              : grid;
+        grid-template-rows   : min-content 1fr;
+        grid-template-columns: 1fr;
+        grid-template-areas  :
+            "tabs"
+            "tab";
+
+        .react-tabs__tab-list {
+            grid-area: tabs;
+        }
+
+        .react-tabs__tab--disabled {
+            background-color: #eee;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        .react-tabs__tab-panel {
+            grid-area            : tab;
+            display              : grid;
+            grid-template-columns: min-content 1fr min-content;
+            grid-template-rows   : min-content 1fr;
+            grid-template-areas  :
+                "prev tab next"
+                ". tab .";
+            column-gap: 1em;
+
+            width   : 100%;
+            height  : calc(100vh - 240px);
+
+            .content {
+                grid-area: tab;
+                width    : 100%;
+                height   : 100%;
+            }
+        }
+    }
+}
