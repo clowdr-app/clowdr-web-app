@@ -145,13 +145,11 @@ function Page(props: Props) {
     // build or runtime, just a single double quote character to mess with
     // your mind.
     const footerRoutes = useMemo(
-        () => (
-            <Switch>
-                <Route path="/about" component={About} />,
-                <Route path="/legal" component={Legal} />,
-                <Route path="/help" component={Help} />,
-            </Switch>
-        ),
+        () => [
+            <Route path="/about" component={About} />,
+            <Route path="/legal" component={Legal} />,
+            <Route path="/help" component={Help} />,
+        ],
         []
     );
 
