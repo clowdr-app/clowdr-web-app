@@ -11,66 +11,74 @@ const { getProfileOfUser } = require("./user");
 // TODO: Before save of ProgramItemAttachment: If type AttachmentType `isCoverImage`, update associated program item's `posterImage` field
 // TODO: Before delete of ProgramItemAttachment: If type AttachmentType `isCoverImage`, clear associated program item's `posterImage` field
 
-Parse.Cloud.beforeDelete("ProgramTrack", async (request) => {
+Parse.Cloud.beforeDelete("ProgramTrack", async request => {
     // Don't prevent deleting stuff just because of an error
     //   If things get deleted in the wrong order, the conference may even be missing
     try {
         const room = request.object;
         const conference = room.get("conference");
 
-        await new Parse.Query("WatchedItems")
-            .equalTo("conference", conference)
-            .map(async watched => {
+        await new Parse.Query("WatchedItems").equalTo("conference", conference).map(
+            async watched => {
                 const watchedIds = watched.get("watchedTracks");
-                watched.set("watchedTracks", watchedIds.filter(x => x !== room.id));
+                watched.set(
+                    "watchedTracks",
+                    watchedIds.filter(x => x !== room.id)
+                );
                 await watched.save(null, { useMasterKey: true });
-            }, { useMasterKey: true });
-    }
-    catch (e) {
+            },
+            { useMasterKey: true }
+        );
+    } catch (e) {
         console.error(`Error deleting program track! ${e}`);
     }
 });
 
-Parse.Cloud.beforeDelete("ProgramSession", async (request) => {
+Parse.Cloud.beforeDelete("ProgramSession", async request => {
     // Don't prevent deleting stuff just because of an error
     //   If things get deleted in the wrong order, the conference may even be missing
     try {
         const room = request.object;
         const conference = room.get("conference");
 
-        await new Parse.Query("WatchedItems")
-            .equalTo("conference", conference)
-            .map(async watched => {
+        await new Parse.Query("WatchedItems").equalTo("conference", conference).map(
+            async watched => {
                 const watchedIds = watched.get("watchedSessions");
-                watched.set("watchedSessions", watchedIds.filter(x => x !== room.id));
+                watched.set(
+                    "watchedSessions",
+                    watchedIds.filter(x => x !== room.id)
+                );
                 await watched.save(null, { useMasterKey: true });
-            }, { useMasterKey: true });
-    }
-    catch (e) {
+            },
+            { useMasterKey: true }
+        );
+    } catch (e) {
         console.error(`Error deleting program session! ${e}`);
     }
 });
 
-Parse.Cloud.beforeDelete("ProgramSessionEvent", async (request) => {
+Parse.Cloud.beforeDelete("ProgramSessionEvent", async request => {
     // Don't prevent deleting stuff just because of an error
     //   If things get deleted in the wrong order, the conference may even be missing
     try {
         const room = request.object;
         const conference = room.get("conference");
 
-        await new Parse.Query("WatchedItems")
-            .equalTo("conference", conference)
-            .map(async watched => {
+        await new Parse.Query("WatchedItems").equalTo("conference", conference).map(
+            async watched => {
                 const watchedIds = watched.get("watchedEvents");
-                watched.set("watchedEvents", watchedIds.filter(x => x !== room.id));
+                watched.set(
+                    "watchedEvents",
+                    watchedIds.filter(x => x !== room.id)
+                );
                 await watched.save(null, { useMasterKey: true });
-            }, { useMasterKey: true });
-    }
-    catch (e) {
+            },
+            { useMasterKey: true }
+        );
+    } catch (e) {
         console.error(`Error deleting program session event! ${e}`);
     }
 });
-
 
 /**
  * @typedef {Parse.Object} Pointer
@@ -103,18 +111,17 @@ const createAttachmentTypeSchema = {
 
 /**
  * Creates an attachment type.
- * 
+ *
  * Note: You must perform authentication prior to calling this.
- * 
+ *
  * @param {AttachmentTypeSpec} data - The specification of the new attachment type.
  * @returns {Promise<Parse.Object>} - The new attachment type
  */
 async function createAttachmentType(data) {
-    const existing
-        = await new Parse.Query("AttachmentType")
-            .equalTo("conference", data.conference)
-            .equalTo("name", data.name)
-            .first({ useMasterKey: true });
+    const existing = await new Parse.Query("AttachmentType")
+        .equalTo("conference", data.conference)
+        .equalTo("name", data.name)
+        .first({ useMasterKey: true });
     if (existing) {
         if (!data.extra) {
             existing.unset("extra");
@@ -122,14 +129,17 @@ async function createAttachmentType(data) {
         if (!data.fileTypes) {
             existing.unset("fileTypes");
         }
-        await existing.save({
-            supportsFile: data.supportsFile,
-            isCoverImage: data.isCoverImage,
-            displayAsLink: data.displayAsLink,
-            extra: data.extra,
-            ordinal: data.ordinal,
-            fileTypes: data.fileTypes,
-        }, { useMasterKey: true });
+        await existing.save(
+            {
+                supportsFile: data.supportsFile,
+                isCoverImage: data.isCoverImage,
+                displayAsLink: data.displayAsLink,
+                extra: data.extra,
+                ordinal: data.ordinal,
+                fileTypes: data.fileTypes,
+            },
+            { useMasterKey: true }
+        );
         return existing;
     }
 
@@ -148,19 +158,17 @@ async function handleCreateAttachmentType(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
             spec.fileTypes = spec.fileTypes || [];
             const result = await createAttachmentType(spec);
             return result.id;
-        }
-        else {
+        } else {
             throw new Error("Permission denied");
         }
-    }
-    else {
+    } else {
         throw new Error(requestValidation.error);
     }
 }
@@ -194,20 +202,22 @@ const createTrackSchema = {
  * @returns {Promise<Parse.Object>} - The new track
  */
 async function createProgramTrack(data) {
-    const existing
-        = await new Parse.Query("ProgramTrack")
-            .equalTo("conference", data.conference)
-            .equalTo("name", data.name)
-            .first({ useMasterKey: true });
+    const existing = await new Parse.Query("ProgramTrack")
+        .equalTo("conference", data.conference)
+        .equalTo("name", data.name)
+        .first({ useMasterKey: true });
     if (existing) {
         if (!data.feed) {
             existing.unset("feed");
         }
-        await existing.save({
-            shortName: data.shortName,
-            colour: data.colour,
-            feed: data.feed
-        }, { useMasterKey: true });
+        await existing.save(
+            {
+                shortName: data.shortName,
+                colour: data.colour,
+                feed: data.feed,
+            },
+            { useMasterKey: true }
+        );
         return existing;
     }
 
@@ -227,7 +237,7 @@ async function handleCreateTrack(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -236,12 +246,10 @@ async function handleCreateTrack(req) {
             }
             const result = await createProgramTrack(spec);
             return result.id;
-        }
-        else {
+        } else {
             throw new Error("Permission denied");
         }
-    }
-    else {
+    } else {
         throw new Error(requestValidation.error);
     }
 }
@@ -273,11 +281,10 @@ const createPersonSchema = {
  * @returns {Promise<Parse.Object>} - The new person
  */
 async function createProgramPerson(data) {
-    const existing
-        = await new Parse.Query("ProgramPerson")
-            .equalTo("conference", data.conference)
-            .equalTo("name", data.name)
-            .first({ useMasterKey: true });
+    const existing = await new Parse.Query("ProgramPerson")
+        .equalTo("conference", data.conference)
+        .equalTo("name", data.name)
+        .first({ useMasterKey: true });
     if (existing) {
         if (!data.affiliation) {
             existing.unset("affiliation");
@@ -285,10 +292,13 @@ async function createProgramPerson(data) {
         if (!data.profile) {
             existing.unset("profile");
         }
-        await existing.save({
-            affiliation: data.affiliation,
-            profile: data.profile
-        }, { useMasterKey: true });
+        await existing.save(
+            {
+                affiliation: data.affiliation,
+                profile: data.profile,
+            },
+            { useMasterKey: true }
+        );
         return existing;
     }
 
@@ -310,7 +320,7 @@ async function handleCreatePerson(req) {
         const confId = params.conference;
 
         // TODO: Auth check: Allow authors to edit their own peron records
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -319,12 +329,10 @@ async function handleCreatePerson(req) {
             }
             const result = await createProgramPerson(spec);
             return result.id;
-        }
-        else {
+        } else {
             throw new Error("Permission denied");
         }
-    }
-    else {
+    } else {
         throw new Error(requestValidation.error);
     }
 }
@@ -361,7 +369,7 @@ async function programPersonSetProfile(data) {
             .find({ useMasterKey: true });
 
         for (let programPerson of programPersons) {
-            programPerson.unset("profile")
+            programPerson.unset("profile");
             await programPerson.save({}, { useMasterKey: true });
         }
 
@@ -376,7 +384,7 @@ async function programPersonSetProfile(data) {
 
         return true;
     } catch (e) {
-        console.error("Error while associating profile with program person.", e)
+        console.error("Error while associating profile with program person.", e);
     }
     return false;
 }
@@ -392,7 +400,11 @@ async function handlePersonSetProfile(req) {
         const reqUserProfile = await getProfileOfUser(user, params.conference);
         const targetUserProfile = await new Parse.Object("UserProfile", { id: params.profile });
 
-        if (!!user && await isUserInRoles(user.id, params.conference, ["admin", "manager", "attendee"]) && reqUserProfile.equals(targetUserProfile)) {
+        if (
+            !!user &&
+            (await isUserInRoles(user.id, params.conference, ["admin", "manager", "attendee"])) &&
+            reqUserProfile.equals(targetUserProfile)
+        ) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: spec.conference });
             spec.profile = new Parse.Object("UserProfile", { id: spec.profile });
@@ -402,12 +414,10 @@ async function handlePersonSetProfile(req) {
 
             const result = await programPersonSetProfile(spec);
             return result;
-        }
-        else {
+        } else {
             throw new Error("Permission denied");
         }
-    }
-    else {
+    } else {
         throw new Error(requestValidation.error);
     }
 }
@@ -449,32 +459,32 @@ const createItemSchema = {
 async function createProgramItem(data) {
     let existing;
     if (data.originatingID) {
-        existing
-            = await new Parse.Query("ProgramItem")
-                .equalTo("conference", data.conference)
-                .equalTo("originatingID", data.originatingID)
-                .first({ useMasterKey: true });
-    }
-    else {
-        existing
-            = await new Parse.Query("ProgramItem")
-                .equalTo("conference", data.conference)
-                .equalTo("title", data.title)
-                .first({ useMasterKey: true });
+        existing = await new Parse.Query("ProgramItem")
+            .equalTo("conference", data.conference)
+            .equalTo("originatingID", data.originatingID)
+            .first({ useMasterKey: true });
+    } else {
+        existing = await new Parse.Query("ProgramItem")
+            .equalTo("conference", data.conference)
+            .equalTo("title", data.title)
+            .first({ useMasterKey: true });
     }
     if (existing) {
         if (!data.feed) {
             existing.unset("feed");
         }
-        await existing.save({
-            abstract: data.abstract,
-            exhibit: data.exhibit,
-            title: data.title,
-            authors: data.authors ? data.authors : [],
-            feed: data.feed,
-            track: data.track,
-            originatingID: data.originatingID
-        }, { useMasterKey: true });
+        await existing.save(
+            {
+                abstract: data.abstract,
+                exhibit: data.exhibit,
+                title: data.title,
+                authors: data.authors ? data.authors : [],
+                feed: data.feed,
+                track: data.track,
+                originatingID: data.originatingID,
+            },
+            { useMasterKey: true }
+        );
         return existing;
     }
 
@@ -491,14 +501,14 @@ async function createProgramItem(data) {
 async function handleCreateItem(req) {
     const { params, user } = req;
 
-    // TODO: posterImage: Validate file type? 
+    // TODO: posterImage: Validate file type?
     //       Or do we always set it automatically separately in before / after save?
     const requestValidation = validateRequest(createItemSchema, params);
     if (requestValidation.ok) {
         const confId = params.conference;
 
         // TODO: Auth check: Allow authors to edit their own item records
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -513,12 +523,10 @@ async function handleCreateItem(req) {
             }
             const result = await createProgramItem(spec);
             return result.id;
-        }
-        else {
+        } else {
             throw new Error("Permission denied");
         }
-    }
-    else {
+    } else {
         throw new Error(requestValidation.error);
     }
 }
@@ -539,7 +547,7 @@ const createItemAttachmentSchema = {
     url: "string?",
     attachmentType: "string",
     conference: "string",
-    programItem: "string"
+    programItem: "string",
 };
 
 /**
@@ -570,7 +578,7 @@ async function handleCreateItemAttachment(req) {
         const confId = params.conference;
 
         // TODO: Auth check: Allow authors to edit their own ItemAttachment records
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -579,12 +587,10 @@ async function handleCreateItemAttachment(req) {
             // TODO: Handle `file` (`Parse.File`)
             const result = await createProgramItemAttachment(spec);
             return result.id;
-        }
-        else {
+        } else {
             throw new Error("Permission denied");
         }
-    }
-    else {
+    } else {
         throw new Error(requestValidation.error);
     }
 }
@@ -594,8 +600,6 @@ Parse.Cloud.define("itemAttachment-create", handleCreateItemAttachment);
 
 /**
  * @typedef {Object} ProgramSessionSpec
- * @property {Date} endTime
- * @property {Date} startTime
  * @property {string} title
  * @property {Pointer} conference
  * @property {Pointer} feed
@@ -608,7 +612,7 @@ const createSessionSchema = {
     feed: "string",
     track: "string",
     chair: "string?",
-    originatingID: "string?"
+    originatingID: "string?",
 };
 
 /**
@@ -622,18 +626,15 @@ const createSessionSchema = {
 async function createProgramSession(data) {
     let existing;
     if (data.originatingID) {
-        existing
-            = await new Parse.Query("ProgramSession")
-                .equalTo("conference", data.conference)
-                .equalTo("originatingID", data.originatingID)
-                .first({ useMasterKey: true });
-    }
-    else {
-        existing
-            = await new Parse.Query("ProgramSession")
-                .equalTo("conference", data.conference)
-                .equalTo("title", data.title)
-                .first({ useMasterKey: true });
+        existing = await new Parse.Query("ProgramSession")
+            .equalTo("conference", data.conference)
+            .equalTo("originatingID", data.originatingID)
+            .first({ useMasterKey: true });
+    } else {
+        existing = await new Parse.Query("ProgramSession")
+            .equalTo("conference", data.conference)
+            .equalTo("title", data.title)
+            .first({ useMasterKey: true });
     }
     if (existing) {
         if (!data.feed) {
@@ -642,13 +643,16 @@ async function createProgramSession(data) {
         if (!data.chair) {
             existing.unset("chair");
         }
-        await existing.save({
-            title: data.title,
-            feed: data.feed,
-            track: data.track,
-            chair: data.chair,
-            originatingID: data.originatingID,
-        }, { useMasterKey: true });
+        await existing.save(
+            {
+                title: data.title,
+                feed: data.feed,
+                track: data.track,
+                chair: data.chair,
+                originatingID: data.originatingID,
+            },
+            { useMasterKey: true }
+        );
         return existing;
     }
 
@@ -668,7 +672,7 @@ async function handleCreateSession(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -676,12 +680,10 @@ async function handleCreateSession(req) {
             spec.track = new Parse.Object("ProgramTrack", { id: spec.track });
             const result = await createProgramSession(spec);
             return result.id;
-        }
-        else {
+        } else {
             throw new Error("Permission denied");
         }
-    }
-    else {
+    } else {
         throw new Error(requestValidation.error);
     }
 }
@@ -709,7 +711,7 @@ const createSessionEventSchema = {
     item: "string",
     session: "string",
     chair: "string?",
-    originatingID: "string?"
+    originatingID: "string?",
 };
 
 /**
@@ -723,11 +725,10 @@ const createSessionEventSchema = {
 async function createProgramSessionEvent(data) {
     let existing;
     if (data.originatingID) {
-        existing
-            = await new Parse.Query("ProgramSessionEvent")
-                .equalTo("conference", data.conference)
-                .equalTo("originatingID", data.originatingID)
-                .first({ useMasterKey: true });
+        existing = await new Parse.Query("ProgramSessionEvent")
+            .equalTo("conference", data.conference)
+            .equalTo("originatingID", data.originatingID)
+            .first({ useMasterKey: true });
     }
     if (existing) {
         if (!data.feed) {
@@ -739,15 +740,18 @@ async function createProgramSessionEvent(data) {
         if (!data.directLink) {
             existing.unset("directLink");
         }
-        await existing.save({
-            directLink: data.directLink,
-            endTime: data.endTime,
-            startTime: data.startTime,
-            feed: data.feed,
-            item: data.item,
-            session: data.session,
-            chair: data.chair
-        }, { useMasterKey: true });
+        await existing.save(
+            {
+                directLink: data.directLink,
+                endTime: data.endTime,
+                startTime: data.startTime,
+                feed: data.feed,
+                item: data.item,
+                session: data.session,
+                chair: data.chair,
+            },
+            { useMasterKey: true }
+        );
         return existing;
     }
 
@@ -767,7 +771,7 @@ async function handleCreateSessionEvent(req) {
     if (requestValidation.ok) {
         const confId = params.conference;
 
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
@@ -780,12 +784,10 @@ async function handleCreateSessionEvent(req) {
             spec.endTime = new Date(spec.endTime);
             const result = await createProgramSessionEvent(spec);
             return result.id;
-        }
-        else {
+        } else {
             throw new Error("Permission denied");
         }
-    }
-    else {
+    } else {
         throw new Error(requestValidation.error);
     }
 }
@@ -798,5 +800,5 @@ module.exports = {
     createProgramPerson,
     createProgramSession,
     createProgramSessionEvent,
-    createProgramTrack
+    createProgramTrack,
 };

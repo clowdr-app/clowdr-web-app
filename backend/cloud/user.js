@@ -7,7 +7,7 @@
 const Twilio = require("twilio");
 const { nanoid } = require("nanoid");
 const sgMail = require("@sendgrid/mail");
-const { isUserInRoles } = require("./role");
+const { isUserInRoles, generateRoleDBName } = require("./role");
 const {
     getConferenceById,
     getConferenceConfigurationByKey
@@ -16,8 +16,7 @@ const {
     getRegistrationById
 } = require("./registration");
 const { validateRequest } = require("./utils");
-const Config = require("./config")
-const { generateRoleDBName } = require("./role");
+const Config = require("./config");
 const { v4: uuidv4 } = require("uuid");
 
 async function getUserByEmail(email) {

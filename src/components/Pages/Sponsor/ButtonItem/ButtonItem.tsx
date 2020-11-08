@@ -59,7 +59,7 @@ export default function ButtonItem(props: Props) {
             {errors.text && <p>Enter a link for the button</p>}
 
             <div className="form-buttons">
-                <AsyncButton content="Save" action={handleSubmit(onSubmit)} />
+                <AsyncButton children="Save" action={handleSubmit(onSubmit)} />
             </div>
         </form>
     );

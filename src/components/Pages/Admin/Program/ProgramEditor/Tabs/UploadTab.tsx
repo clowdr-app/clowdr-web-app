@@ -22,7 +22,6 @@ export default function UploadTab(props: Props) {
         : uploadProgress === false
             ? (
                 <AsyncButton
-                    content="Upload"
                     action={async () => {
                         try {
                             assert(await Parse.Cloud.run("import-program", {
@@ -36,7 +35,7 @@ export default function UploadTab(props: Props) {
                             addError(`Failed upload: ${e}`);
                         }
                     }}
-                />
+                >Upload</AsyncButton>
             )
             : <>Upload progress: {uploadProgress}%</>;
 }

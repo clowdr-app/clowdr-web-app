@@ -48,22 +48,30 @@ export default function TextItem(props: Props) {
             {errors.markdown && <p>Enter some text</p>}
 
             <div className="form-buttons">
-                <AsyncButton content="Save" action={handleSubmit(onSubmit)} />
+                <AsyncButton children="Save" action={handleSubmit(onSubmit)} />
             </div>
         </form>
     );
 
     return (
         <div className="text-item">
-            {props.editing ? form : <ReactMarkdown escapeHtml={true} source={props.markdown}
-                renderers={{
-                    link: ({ href, children }: {
-                        href: string;
-                        children: JSX.Element;
-                    }) => {
-                        return <a href={href} style={{ color: props.sponsorColour }}>{children}</a>;
-                    }
-                }}/>}
+            {props.editing ? (
+                form
+            ) : (
+                <ReactMarkdown
+                    escapeHtml={true}
+                    source={props.markdown}
+                    renderers={{
+                        link: ({ href, children }: { href: string; children: JSX.Element }) => {
+                            return (
+                                <a href={href} style={{ color: props.sponsorColour }}>
+                                    {children}
+                                </a>
+                            );
+                        },
+                    }}
+                />
+            )}
         </div>
     );
 }

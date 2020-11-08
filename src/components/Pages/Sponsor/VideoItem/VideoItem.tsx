@@ -48,7 +48,7 @@ export default function VideoItem(props: Props) {
             {errors.url && <p>Choose a valid url</p>}
 
             <div className="form-buttons">
-                <AsyncButton content="Save" action={handleSubmit(onSubmit)} />
+                <AsyncButton children="Save" action={handleSubmit(onSubmit)} />
             </div>
         </form>
     );

@@ -21,7 +21,7 @@ interface Props {
 type UserOption = {
     label: string;
     value: string;
-}
+};
 
 export default function NewChat(props: Props) {
     const conference = useConference();
@@ -41,49 +41,59 @@ export default function NewChat(props: Props) {
             actionButtons.push({
                 label: `Go to ${invites[0].label}'s profile`,
                 action: `/profile/${invites[0].value}`,
-                icon: <i className="fas fa-eye"></i>
+                icon: <i className="fas fa-eye"></i>,
             });
         }
     }
     useHeading({
         title: "New chat",
-        buttons: actionButtons
+        buttons: actionButtons,
     });
 
     // Fetch DM user profile if it exists
-    useSafeAsync(async () => {
-        const result: Array<UserOption> = [];
-        if (props.dmUserProfileId) {
-            const profile = await UserProfile.get(props.dmUserProfileId, conference.id);
-            if (profile && profile.id !== currentUserProfile.id) {
-                result.push({
-                    value: profile.id,
-                    label: profile.displayName
-                });
+    useSafeAsync(
+        async () => {
+            const result: Array<UserOption> = [];
+            if (props.dmUserProfileId) {
+                const profile = await UserProfile.get(props.dmUserProfileId, conference.id);
+                if (profile && profile.id !== currentUserProfile.id) {
+                    result.push({
+                        value: profile.id,
+                        label: profile.displayName,
+                    });
+                }
             }
-        }
-        return result;
-    }, setInvites, [props.dmUserProfileId], "NewChat:setInvites");
+            return result;
+        },
+        setInvites,
+        [props.dmUserProfileId],
+        "NewChat:setInvites"
+    );
 
     // Fetch all user profiles
-    useSafeAsync(async () => {
-        const profiles = await UserProfile.getAll(conference.id);
-        return profiles
-            .filter(x => !x.isBanned)
-            .map(x => ({
-                value: x.id,
-                label: x.displayName
-            }))
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .filter(x => x.value !== currentUserProfile.id);
-    }, setAllUsers, [], "NewChat:setAllUsers");
+    useSafeAsync(
+        async () => {
+            const profiles = await UserProfile.getAll(conference.id);
+            return profiles
+                .filter(x => !x.isBanned)
+                .map(x => ({
+                    value: x.id,
+                    label: x.displayName,
+                }))
+                .sort((a, b) => a.label.localeCompare(b.label))
+                .filter(x => x.value !== currentUserProfile.id);
+        },
+        setAllUsers,
+        [],
+        "NewChat:setAllUsers"
+    );
 
     /**
      * Check whether the state is currently valid for the form to be submitted.
      */
     function inputValid(): boolean {
         // Currently we don't bother checking that the title is long enough (this is handled at submission time)
-        return invites !== null && invites.length > 0
+        return invites !== null && invites.length > 0;
     }
 
     /**
@@ -96,11 +106,12 @@ export default function NewChat(props: Props) {
 
     async function doCreateChat() {
         if (invites === null || invites.length === 0) {
-            addError("You must invite somebody to chat.")
+            addError("You must invite somebody to chat.");
             return;
         }
 
-        const chatTitle = (!isPublic && invites.length === 1) ? `DM: ${currentUserProfile.displayName} <-> ${invites[0].label}` : title;
+        const chatTitle =
+            !isPublic && invites.length === 1 ? `DM: ${currentUserProfile.displayName} <-> ${invites[0].label}` : title;
 
         if (chatTitle === null || chatTitle.trim().length < 5) {
             addError("You must choose a chat title with at least five characters.");
@@ -116,59 +127,68 @@ export default function NewChat(props: Props) {
         setNewChannelSID(newChannel?.id ?? null);
     }
 
-    const publicEl = <>
-        <label htmlFor="is-public">Public?</label>
-        <Toggle
-            name="is-public"
-            defaultChecked={!props.dmUserProfileId}
-            onChange={(ev) => setIsPublic(ev.target.checked)}
-            disabled={isCreating}
-        />
-    </>;
-    const invitesEl = <>
-        <label>With:</label>
-        <div className="invite-users-control">
-            <MultiSelect
-                className="invite-users-control__multiselect"
-                labelledBy="Invite users"
-                overrideStrings={{ "allItemsAreSelected": "Everyone", "selectAll": "Everyone" }}
-                options={allUsers ?? []}
-                value={invites ?? []}
-                onChange={setInvites}
-                disabled={isCreating}
-            />
-        </div>
-    </>;
-    const titleEl = (isPublic || !invites || invites.length > 1)
-        ? <>
-            <label htmlFor="title-control">Name</label>
-            <input
-                name="title-control"
-                type="text"
-                placeholder="Title of the chat"
-                maxLength={25}
-                onChange={(ev) => setTitle(ev.target.value)}
+    const publicEl = (
+        <>
+            <label htmlFor="is-public">Public?</label>
+            <Toggle
+                name="is-public"
+                defaultChecked={!props.dmUserProfileId}
+                onChange={ev => setIsPublic(ev.target.checked)}
                 disabled={isCreating}
             />
         </>
-        : <></>;
-    const createButton =
+    );
+    const invitesEl = (
+        <>
+            <label>With:</label>
+            <div className="invite-users-control">
+                <MultiSelect
+                    className="invite-users-control__multiselect"
+                    labelledBy="Invite users"
+                    overrideStrings={{ allItemsAreSelected: "Everyone", selectAll: "Everyone" }}
+                    options={allUsers ?? []}
+                    value={invites ?? []}
+                    onChange={setInvites}
+                    disabled={isCreating}
+                />
+            </div>
+        </>
+    );
+    const titleEl =
+        isPublic || !invites || invites.length > 1 ? (
+            <>
+                <label htmlFor="title-control">Name</label>
+                <input
+                    name="title-control"
+                    type="text"
+                    placeholder="Title of the chat"
+                    maxLength={25}
+                    onChange={ev => setTitle(ev.target.value)}
+                    disabled={isCreating}
+                />
+            </>
+        ) : (
+            <></>
+        );
+    const createButton = (
         <AsyncButton
             action={() => doCreateChat()}
             disabled={!inputValid()}
             setIsRunning={setIsCreating}
-            content="Create chat" />;
+            children="Create chat"
+        />
+    );
 
-    return newChannelSID
-        ? <Redirect to={`/chat/${newChannelSID}`} />
-        : <div className="new-chat">
+    return newChannelSID ? (
+        <Redirect to={`/chat/${newChannelSID}`} />
+    ) : (
+        <div className="new-chat">
             <form onSubmit={() => doCreateChat()}>
                 {publicEl}
                 {invitesEl}
                 {titleEl}
-                <div className="submit-container">
-                    {createButton}
-                </div>
+                <div className="submit-container">{createButton}</div>
             </form>
-        </div>;
+        </div>
+    );
 }

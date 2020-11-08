@@ -1,5 +1,5 @@
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
-import React, { ReactElement, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LoadingSpinner } from "../LoadingSpinner/LoadingSpinner";
 import "./AsyncButton.scss";
 
@@ -9,44 +9,28 @@ interface Props {
     disabled?: boolean;
     className?: string;
     action?: Handler;
-    content?: string | JSX.Element;
+    ariaLabel?: string;
+    title?: string;
+    children: string | React.ReactNode | React.ReactNodeArray;
     setIsRunning?(isRunning: boolean): void;
 }
 
-interface Pending {
-    state: "pending";
-}
-interface Running {
-    state: "running";
-}
-interface NotPending {
-    state: "notpending";
-}
-interface Rejected {
-    state: "rejected";
-}
-
-type ActionState =
-    | Pending
-    | Running
-    | NotPending
-    | Rejected;
+type ActionState = "pending" | "running" | "notpending" | "rejected";
 
 export default function AsyncButton(props: Props) {
-
-    const [actionState, setActionState] = useState<ActionState>({ state: "notpending" } as NotPending);
+    const [actionState, setActionState] = useState<ActionState>("notpending");
     const [actionP, setActionP] = useState<CancelablePromise<void> | null>(null);
 
-    const setIsRunning = props.setIsRunning ?? ((b: boolean) => { });
-    const action = props.action ?? (async () => { });
+    const setIsRunning = props.setIsRunning ?? ((b: boolean) => {});
+    const action = props.action ?? (async () => {});
 
     useEffect(() => {
         return actionP?.cancel;
     }, [actionP]);
 
     useEffect(() => {
-        if (actionState.state === "pending") {
-            setActionState({ state: "running" });
+        if (actionState === "pending") {
+            setActionState("running");
 
             setIsRunning(true);
 
@@ -55,50 +39,53 @@ export default function AsyncButton(props: Props) {
 
             p.promise
                 .then(() => {
-                    setActionState({ state: "notpending" });
+                    setActionState("notpending");
                     setIsRunning(false);
                 })
-                .catch(error => {
+                .catch((error: { isCanceled: any }) => {
                     if (!error.isCanceled) {
-                        setActionState({ state: "rejected" });
+                        setActionState("rejected");
                         setIsRunning(false);
                     }
                 });
         }
-    }, [action, actionState.state, setIsRunning]);
+    }, [action, actionState, setIsRunning]);
 
     function handleClick(event: React.FormEvent) {
         event.preventDefault();
         event.stopPropagation();
 
-        if (actionState.state === "notpending" && !props.disabled) {
-            setActionState({ state: "pending" });
+        if (actionState === "notpending" && !props.disabled) {
+            setActionState("pending");
         }
     }
 
-    function getContents(): ReactElement | string | undefined {
-        switch (actionState.state) {
+    function getContents(): React.ReactNode | React.ReactNodeArray | string | undefined {
+        switch (actionState) {
             case "pending":
             case "running":
-                if (typeof props.content === "string") {
-                    return <LoadingSpinner message={props.content ?? "Loading"} />;
-                }
-                else {
-                    return props.content;
+                if (typeof props.children === "string") {
+                    return <LoadingSpinner message={props.children ?? "Loading"} />;
+                } else {
+                    return props.children;
                 }
             case "notpending":
-                return props.content;
+                return props.children;
             case "rejected":
                 return "Failed";
-
         }
     }
 
-    return <button
-        disabled={props.disabled || actionState.state !== "notpending"}
-        onClick={event => handleClick(event)}
-        className={`${actionState.state} ${props.className ?? ""}`}
-        type="button">
-        {getContents()}
-    </button>;
+    return (
+        <button
+            disabled={props.disabled || actionState !== "notpending"}
+            onClick={event => handleClick(event)}
+            className={`${actionState} ${props.className ?? ""}`}
+            aria-label={props.ariaLabel}
+            title={props.title}
+            type="button"
+        >
+            {getContents()}
+        </button>
+    );
 }

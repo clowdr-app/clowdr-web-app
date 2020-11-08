@@ -146,7 +146,7 @@ export default function EditSponsor(props: Props) {
                 />
 
                 <div className="form-buttons">
-                    <AsyncButton content="Save" action={handleSubmit(onSubmit)} />
+                    <AsyncButton children="Save" action={handleSubmit(onSubmit)} />
                 </div>
             </form>
         </>

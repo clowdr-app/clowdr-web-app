@@ -21,7 +21,7 @@ import "./Moderation.scss";
 type UserOption = {
     label: string;
     value: string;
-}
+};
 
 export default function Moderation() {
     const conference = useConference();
@@ -43,31 +43,51 @@ export default function Moderation() {
 
     useHeading({
         title: "Contact moderators",
-        buttons: actionButtons
+        buttons: actionButtons,
     });
 
     // Fetch custom notice
-    useSafeAsync(async () => {
-        const config = await ConferenceConfiguration.getByKey("MODERATION_CUSTOM_NOTICE", conference.id);
-        return config.length > 0 ? config[0].value !== "<null>" ? config[0].value : null : null;
-    }, setCustomNotice, [conference.id], "Moderation:setCustomNotice");
+    useSafeAsync(
+        async () => {
+            const config = await ConferenceConfiguration.getByKey("MODERATION_CUSTOM_NOTICE", conference.id);
+            return config.length > 0 ? (config[0].value !== "<null>" ? config[0].value : null) : null;
+        },
+        setCustomNotice,
+        [conference.id],
+        "Moderation:setCustomNotice"
+    );
 
     // Fetch all moderator profiles
-    useSafeAsync(async () => {
-        const moderatorProfileIds = await _Role.userProfileIdsOfRoles(conference.id, ["admin", "manager"]);
-        const moderatorProfiles = removeNull(await Promise.all(moderatorProfileIds.map(x => UserProfile.get(x, conference.id))));
-        const userOptions = await Promise.all(moderatorProfiles.map(async userProfile => {
-            const online = await mChat?.getIsUserOnline(userProfile.id);
-            return {
-                value: userProfile.id,
-                label: `${userProfile.displayName} ${online ? "(online)" : "(offline)"}`,
-            };
-        }));
-        return userOptions.filter(x => x.value !== currentUserProfile.id);
-    }, setAllModerators, [mChat, conference.id, currentUserProfile.id], "Moderation:setAllModerators");
+    useSafeAsync(
+        async () => {
+            const moderatorProfileIds = await _Role.userProfileIdsOfRoles(conference.id, ["admin", "manager"]);
+            const moderatorProfiles = removeNull(
+                await Promise.all(moderatorProfileIds.map(x => UserProfile.get(x, conference.id)))
+            );
+            const userOptions = await Promise.all(
+                moderatorProfiles.map(async userProfile => {
+                    const online = await mChat?.getIsUserOnline(userProfile.id);
+                    return {
+                        value: userProfile.id,
+                        label: `${userProfile.displayName} ${online ? "(online)" : "(offline)"}`,
+                    };
+                })
+            );
+            return userOptions.filter(x => x.value !== currentUserProfile.id);
+        },
+        setAllModerators,
+        [mChat, conference.id, currentUserProfile.id],
+        "Moderation:setAllModerators"
+    );
 
     // Fetch all moderation channels
-    useSafeAsync(async () => mChat ? (await mChat.listAllModerationChats()).filter(x => x.creator.id === currentUserProfile.id) : null, setModChannels, [mChat], "Moderation:setModChannels");
+    useSafeAsync(
+        async () =>
+            mChat ? (await mChat.listAllModerationChats()).filter(x => x.creator.id === currentUserProfile.id) : null,
+        setModChannels,
+        [mChat],
+        "Moderation:setModChannels"
+    );
 
     const moderationNamePrefix = "Moderation: ";
     useEffect(() => {
@@ -77,16 +97,18 @@ export default function Moderation() {
                 month: "short",
                 day: "2-digit",
                 hour: "2-digit",
-                minute: "2-digit"
-            })} - ${channel.friendlyName.substr(moderationNamePrefix.length)}`
-        };
+                minute: "2-digit",
+            })} - ${channel.friendlyName.substr(moderationNamePrefix.length)}`;
+        }
 
-        setModChannelItems(modChannels?.map(channel => ({
-            key: channel.id,
-            renderData: undefined,
-            text: channelName(channel),
-            link: `/moderation/${channel.id}`
-        })))
+        setModChannelItems(
+            modChannels?.map(channel => ({
+                key: channel.id,
+                renderData: undefined,
+                text: channelName(channel),
+                link: `/moderation/${channel.id}`,
+            }))
+        );
     }, [modChannels]);
 
     /**
@@ -99,7 +121,7 @@ export default function Moderation() {
 
     async function doCreateChannel() {
         if (!anyModerator && (invites === null || invites.length === 0)) {
-            addError("You must invite a moderator to the channel.")
+            addError("You must invite a moderator to the channel.");
             return;
         }
 
@@ -112,98 +134,112 @@ export default function Moderation() {
         setNewChannelSID(newChannel?.id ?? null);
     }
 
-    const allModeratorsEl = <>
-        <label htmlFor="is-any-moderator">Contact any moderator?</label>
-        <Toggle
-            name="is-any-moderator"
-            defaultChecked={true}
-            onChange={(ev) => setIsAnyModerator(ev.target.checked)}
-            disabled={isCreating}
-        />
-    </>;
-    const invitesEl = !anyModerator ? <>
-        <label>Moderators</label>
-        <div className="invite-moderators-control">
-            <MultiSelect
-                className="invite-moderators-control__multiselect"
-                labelledBy="Invite moderators"
-                overrideStrings={{ "allItemsAreSelected": "All moderators", "selectAll": "All moderators" }}
-                options={allModerators ?? []}
-                value={invites ?? []}
-                onChange={setInvites}
+    const allModeratorsEl = (
+        <>
+            <label htmlFor="is-any-moderator">Contact any moderator?</label>
+            <Toggle
+                name="is-any-moderator"
+                defaultChecked={true}
+                onChange={ev => setIsAnyModerator(ev.target.checked)}
                 disabled={isCreating}
             />
-        </div>
-        <p>You can choose a specific moderator to talk to. Other moderators will be able to join the conversation as needed.</p>
-    </> : <></>;
-    const initialMessageEl = <>
-        <label htmlFor="initial-message-control">Initial message</label>
-        <textarea
-            name="initial-message-control"
-            placeholder="What do you want to talk to the moderators about?"
-            maxLength={25}
-            onChange={(ev) => setInitialMessage(ev.target.value)}
-            disabled={isCreating}
-        />
-    </>;
-    const createButton =
+        </>
+    );
+    const invitesEl = !anyModerator ? (
+        <>
+            <label>Moderators</label>
+            <div className="invite-moderators-control">
+                <MultiSelect
+                    className="invite-moderators-control__multiselect"
+                    labelledBy="Invite moderators"
+                    overrideStrings={{ allItemsAreSelected: "All moderators", selectAll: "All moderators" }}
+                    options={allModerators ?? []}
+                    value={invites ?? []}
+                    onChange={setInvites}
+                    disabled={isCreating}
+                />
+            </div>
+            <p>
+                You can choose a specific moderator to talk to. Other moderators will be able to join the conversation
+                as needed.
+            </p>
+        </>
+    ) : (
+        <></>
+    );
+    const initialMessageEl = (
+        <>
+            <label htmlFor="initial-message-control">Initial message</label>
+            <textarea
+                name="initial-message-control"
+                placeholder="What do you want to talk to the moderators about?"
+                maxLength={25}
+                onChange={ev => setInitialMessage(ev.target.value)}
+                disabled={isCreating}
+            />
+        </>
+    );
+    const createButton = (
         <AsyncButton
             action={() => doCreateChannel()}
             disabled={!inputValid()}
             setIsRunning={setIsCreating}
-            content="Contact moderators" />;
+            children="Contact moderators"
+        />
+    );
 
-    const newChannelForm = <div className="moderation-new-channel">
-        {!allModerators
-            ? <LoadingSpinner message="Loading" />
-            : allModerators.length < 1
-                ? <p>No moderators are available.</p>
-                : <form onSubmit={() => doCreateChannel()}>
+    const newChannelForm = (
+        <div className="moderation-new-channel">
+            {!allModerators ? (
+                <LoadingSpinner message="Loading" />
+            ) : allModerators.length < 1 ? (
+                <p>No moderators are available.</p>
+            ) : (
+                <form onSubmit={() => doCreateChannel()}>
                     {allModeratorsEl}
                     {invitesEl}
                     {initialMessageEl}
-                    <div className="submit-container">
-                        {createButton}
-                    </div>
+                    <div className="submit-container">{createButton}</div>
                 </form>
-        }
-    </div>;
+            )}
+        </div>
+    );
 
     function modChannelRenderer(item: ColumnItem): JSX.Element {
-        return item.link
-            ? <Link to={item.link}>
-                {item.text}
-            </Link>
-            : <>{item.text}</>;
+        return item.link ? <Link to={item.link}>{item.text}</Link> : <>{item.text}</>;
     }
 
-    const existingChannels = <div className="moderation-existing-channels">
-        <Column
-            className="moderation-existing-channels"
-            loadingMessage="Loading moderation channels"
-            emptyMessage="You have not yet contacted the moderators."
-            itemRenderer={{ render: modChannelRenderer }}
-            items={modChannelItems}>
-            <h2>Existing moderation channels</h2>
-        </Column>
-    </div>;
+    const existingChannels = (
+        <div className="moderation-existing-channels">
+            <Column
+                className="moderation-existing-channels"
+                loadingMessage="Loading moderation channels"
+                emptyMessage="You have not yet contacted the moderators."
+                itemRenderer={{ render: modChannelRenderer }}
+                items={modChannelItems}
+            >
+                <h2>Existing moderation channels</h2>
+            </Column>
+        </div>
+    );
 
-    return newChannelSID
-        ? <Redirect to={`/moderation/${newChannelSID}`} />
-        : <div className="moderation">
-            {customNotice
-                ? <div className="notice">
-                    <ReactMarkdown
-                        linkTarget="_blank"
-                        escapeHtml={true}
-                    >
+    return newChannelSID ? (
+        <Redirect to={`/moderation/${newChannelSID}`} />
+    ) : (
+        <div className="moderation">
+            {customNotice ? (
+                <div className="notice">
+                    <ReactMarkdown linkTarget="_blank" escapeHtml={true}>
                         {customNotice}
                     </ReactMarkdown>
                 </div>
-                : <></>}
+            ) : (
+                <></>
+            )}
             <div className="columns">
                 {newChannelForm}
                 {existingChannels}
             </div>
-        </div>;
+        </div>
+    );
 }
