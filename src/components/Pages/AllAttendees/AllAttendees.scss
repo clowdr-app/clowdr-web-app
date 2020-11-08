@@ -2,38 +2,78 @@
 
 .all-participants {
     column-fill: auto;
-    max-width  : 800px;
+    margin-top : 1em;
 
-    .column-item {
+    .column__search {
+        display        : flex;
+        justify-content: center;
+        width          : 100%;
+    }
+
+    .participant {
         display      : flex;
-        flex-wrap    : wrap;
-        margin-bottom: 0.4em;
+        column-gap   : 1em;
+        row-gap      : 0.5em;
+        align-items  : center;
+        height       : 3em;
+        padding      : 0 1em;
+        color        : black;
+        border-radius: 5px;
 
-        .name.banned {
-            text-decoration: line-through;
+        @media only screen and (max-width: $break-sm) {
+            flex-wrap: wrap;
+            height   : auto;
+            padding  : 1em;
+        }
+
+        &:hover {
+            background     : $gray-6;
+            text-decoration: none;
+        }
+
+        .name {
+            font-size: 1.1em;
+
+            &.banned {
+                text-decoration: line-through;
+            }
+        }
+
+        .affiliation {
+            font-size     : 0.9em;
+            vertical-align: middle;
+            font-style    : italic;
         }
 
         .flair-box {
             display    : flex;
-            flex-wrap  : wrap;
+            align-items: center;
+            font-size  : 0.9em;
             row-gap    : .4em;
             gap        : mm(2);
-            margin-left: mm(8);
-            width      : 100%;
+            margin-left: auto;
+            flex-shrink: 10;
+            overflow-x : hidden;
+
+            @media only screen and (max-width: $break-sm) {
+                width     : 100%;
+                overflow-x: hidden;
+            }
 
             .flair-container {
                 flex-grow  : 0;
-                flex-shrink: 1;
+                flex-shrink: 0;
             }
         }
 
         .admin-buttons {
-            display    : flex;
-            column-gap : mm(3);
-            width      : auto;
-            margin-left: auto;
+            display   : flex;
+            column-gap: mm(3);
+            width     : auto;
 
-            &__button {}
+            button {
+                width: max-content;
+            }
         }
     }
 }

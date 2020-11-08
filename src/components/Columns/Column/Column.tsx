@@ -6,6 +6,7 @@ import "./Column.scss";
 export interface Item<RenderData = undefined> {
     key: string;
     text: string;
+    searchText?: string[];
     link?: string;
     renderData: RenderData;
 }
@@ -21,36 +22,52 @@ interface Props<RenderData> {
 }
 
 export default function Column<RenderData = undefined>(props: Props<RenderData>) {
-
     const [searchString, setSearchString] = useState<string>("");
 
-    const search = <div className="column__search">
-        <i className="fas fa-search column__search__icon"></i>
-        <input className="column__search__input" defaultValue={searchString} onChange={e => setSearchString(e.target.value)} type="search" />
-    </div>
+    const search = (
+        <div className="column__search">
+            <i className="fas fa-search column__search__icon"></i>
+            <input
+                className="column__search__input"
+                defaultValue={searchString}
+                onChange={e => setSearchString(e.target.value)}
+                type="search"
+            />
+        </div>
+    );
 
-    const items = props.items
-        ? props.items.length > 0
-            ? (searchString.length >= 3 ?
-                props.items
-                    .filter(item => item.text.toLowerCase().includes(searchString.toLowerCase()))
+    const items = props.items ? (
+        props.items.length > 0 ? (
+            (searchString.length >= 3
+                ? props.items.filter(item =>
+                      item.searchText
+                          ? item.searchText.some(t => t.toLowerCase().includes(searchString.toLowerCase()))
+                          : item.text.toLowerCase().includes(searchString.toLowerCase())
+                  )
                 : props.items
-            ).sort(props.sort ? props.sort : (a, b) => a.text.localeCompare(b.text))
+            )
+                .sort(props.sort ? props.sort : (a, b) => a.text.localeCompare(b.text))
                 .map(item => {
-                    return <li key={item.key} className="column-item">
-                        {props.itemRenderer.render(item)}
-                    </li>;
+                    return (
+                        <li key={item.key} className="column-item">
+                            {props.itemRenderer.render(item)}
+                        </li>
+                    );
                 })
-            : <p>{props.emptyMessage}</p>
-        : <LoadingSpinner message={props.loadingMessage} />;
+        ) : (
+            <p>{props.emptyMessage}</p>
+        )
+    ) : (
+        <LoadingSpinner message={props.loadingMessage} />
+    );
 
-    return <div className={`column ${props.className}`}>
-        {props.children}
-        {props.items && props.items.length > 0 && search}
-        <ul className="column__items" >
-            {items}
-        </ul>
-    </div>
+    return (
+        <div className={`column ${props.className}`}>
+            {props.children}
+            {props.items && props.items.length > 0 && search}
+            <ul className="column__items">{items}</ul>
+        </div>
+    );
 }
 
 export interface ItemRenderer<RenderData> {
