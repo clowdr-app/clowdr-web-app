@@ -10,7 +10,6 @@ import { handleParseFileURLWeirdness } from "../../../classes/Utils";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import { Controller, useForm } from "react-hook-form";
 import LocalStorage from "../../../classes/LocalStorage/ProfileEditing";
-import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
 import "./ProfileEditor.scss";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 
@@ -29,7 +28,6 @@ interface FormData {
     flairs?: string[];
     primaryFlairId?: string;
     bio?: string;
-    programPerson?: string;
 }
 
 export default function ProfileEditor(props: Props) {
@@ -61,16 +59,6 @@ export default function ProfileEditor(props: Props) {
     );
 
     async function saveProfile(data: FormData) {
-        const ok = (await Parse.Cloud.run("person-set-profile", {
-            programPerson: data.programPerson === "" ? undefined : data.programPerson,
-            profile: p.id,
-            conference: (await p.conference).id,
-        })) as boolean;
-
-        if (!ok) {
-            throw new Error("Could not save associated program author.");
-        }
-
         const primaryFlair =
             data.flairs && data.flairs.length > 0
                 ? flairs.filter(flair => data.flairs?.includes(flair.id)).sort((x, y) => y.priority - x.priority)[0]
@@ -203,20 +191,6 @@ export default function ProfileEditor(props: Props) {
                             ref={register}
                         />
 
-                        <label htmlFor="programPerson">Author</label>
-                        <p>If you appear on the conference program, link your profile to your author name.</p>
-                        <Controller
-                            name="programPerson"
-                            control={control}
-                            defaultValue={programPerson}
-                            render={({ onChange, value }) => (
-                                <ProgramPersonSelector
-                                    setProgramPersonId={onChange}
-                                    programPersonId={value}
-                                    disabled={formState.isSubmitting}
-                                />
-                            )}
-                        />
                         <div className="submit-container">
                             <input type="submit" value="Save" disabled={formState.isSubmitting} />
                         </div>
