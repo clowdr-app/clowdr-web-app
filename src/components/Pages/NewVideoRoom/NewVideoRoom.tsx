@@ -34,58 +34,71 @@ export default function NewVideoRoom() {
             return;
         }
 
-        const _newRoomId = await mVideo?.createVideoRoom(
-            capacity, !isPersistent, isPrivate, title
-        );
+        const _newRoomId = await mVideo?.createVideoRoom(capacity, !isPersistent, isPrivate, title);
         console.log(`New room id: ${_newRoomId}`);
         setNewRoomId(_newRoomId ?? null);
     }
 
-    const capacityEl = <>
-        <label htmlFor="capacity">Capacity {isAdmin || isManager ? "(max. 50)" : "(max. 10)"}</label>
-        <input type="number" min="2" max={isAdmin || isManager ? "50" : "10"} defaultValue={capacity} onChange={(ev) => setCapacity(ev.target.valueAsNumber)} />
-    </>;
-    const privateEl = <>
-        <label htmlFor="is-private">Private?</label>
-        <Toggle
-            name="is-private"
-            defaultChecked={false}
-            onChange={(ev) => setIsPrivate(ev.target.checked)}
-        />
-        <span>Admins can access all private breakout rooms.</span>
-    </>;
-    const persistentEl = <>
-        <label htmlFor="is-persistent">Persistent?</label>
-        <Toggle
-            name="is-persistent"
-            defaultChecked={false}
-            onChange={(ev) => setIsPersistent(ev.target.checked)}
-        />
-    </>;
-    const titleEl = <>
-        <label htmlFor="title-control">Name</label>
-        <input
-            name="title-control"
-            type="text"
-            placeholder="Title of the room"
-            maxLength={25}
-            onChange={(ev) => setTitle(ev.target.value)}
-        />
-    </>;
-    const createButton =
-        <AsyncButton action={() => doCreateRoom()} content="Create room" />;
+    const capacityEl = (
+        <>
+            <label htmlFor="capacity">Capacity {isAdmin || isManager ? "(max. 50)" : "(max. 10)"}</label>
+            <input
+                type="number"
+                min="2"
+                max={isAdmin || isManager ? "50" : "10"}
+                defaultValue={capacity}
+                onChange={ev => setCapacity(ev.target.valueAsNumber)}
+            />
+        </>
+    );
+    const privateEl = (
+        <>
+            <label htmlFor="is-private">Private?</label>
+            <Toggle name="is-private" defaultChecked={false} onChange={ev => setIsPrivate(ev.target.checked)} />
+            <span>Admins can access all private breakout rooms.</span>
+        </>
+    );
+    const persistentEl = (
+        <>
+            <label htmlFor="is-persistent">Persistent?</label>
+            <Toggle name="is-persistent" defaultChecked={false} onChange={ev => setIsPersistent(ev.target.checked)} />
+        </>
+    );
+    const titleEl = (
+        <>
+            <label htmlFor="title-control">Name</label>
+            <input
+                name="title-control"
+                type="text"
+                placeholder="Title of the room"
+                maxLength={25}
+                onChange={ev => setTitle(ev.target.value)}
+            />
+        </>
+    );
+    const createButton = <AsyncButton action={() => doCreateRoom()} children="Create room" />;
 
-    return newRoomId
-        ? <Redirect to={`/room/${newRoomId}`} />
-        : <div className="new-video-room">
+    return newRoomId ? (
+        <Redirect to={`/room/${newRoomId}`} />
+    ) : (
+        <div className="new-video-room">
             <form onSubmit={() => doCreateRoom()}>
-                {capacityEl}<br />
-                {titleEl}<br />
-                {privateEl}<br />
-                {isAdmin || isManager ? <>{persistentEl}<br/></> : <></>}
-                <div className="submit-container">
-                    {createButton}
-                </div>
+                {capacityEl}
+                <br />
+                {titleEl}
+                <br />
+                {privateEl}
+                <br />
+                {isAdmin || isManager ? (
+                    <>
+                        {persistentEl}
+                        <br />
+                    </>
+                ) : (
+                    <></>
+                )}
+                <div className="submit-container">{createButton}</div>
             </form>
-        </div>;
+        </div>
+    );
 }

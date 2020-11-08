@@ -7,80 +7,90 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import { handleParseFileURLWeirdness } from "../../../classes/Utils";
-// TODO: import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
-import "./ProfileEditor.scss";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
-import { useForm } from "react-hook-form";
-import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import { Controller, useForm } from "react-hook-form";
 import LocalStorage from "../../../classes/LocalStorage/ProfileEditing";
+import ProgramPersonSelector from "../ProgramPersonSelector/ProgramPersonSelector";
+import "./ProfileEditor.scss";
+import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 
 interface Props {
     profile: UserProfile;
 }
 
-function sameObjects(xs: { id: string }[], ys: { id: string }[]) {
-    return JSON.stringify(xs.map(x => x.id).sort()) ===
-        JSON.stringify(ys.map(y => y.id).sort());
+interface FormData {
+    RealName: string;
+    DisplayName: string;
+    pronouns: string[];
+    Affiliation?: string;
+    Position?: string;
+    Country?: string;
+    Webpage?: string;
+    flairs?: string[];
+    primaryFlairId?: string;
+    bio?: string;
+    programPerson?: string;
 }
 
 export default function ProfileEditor(props: Props) {
     const p = props.profile;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { register, handleSubmit, watch, errors } = useForm<FormData>();
+    const { register, handleSubmit, reset, errors, formState, control } = useForm<FormData>();
 
-    const [displayName, setDisplayName] = useState(p.displayName);
-    const [realName, setRealName] = useState(p.realName);
-    const [pronouns, setPronouns] = useState(p.pronouns);
-    const [affiliation, setAffiliation] = useState(p.affiliation);
-    const [position, setPosition] = useState(p.position);
-    const [country, setCountry] = useState(p.country);
-    const [webpage, setWebpage] = useState(p.webpage);
-    const [bio, setBio] = useState(p.bio);
-    const [modifiedFlairs, setModifiedFlairs] = useState<Flair[]>([]);
-    const [originalFlairs, setOriginalFlairs] = useState<Flair[]>([]);
-    // TODO: const [programPersonId, setProgramPersonId] = useState<string | undefined>(undefined);
-    const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [flairs, setFlairs] = useState<Flair[]>([]);
+    const [programPerson, setProgramPerson] = useState<string | null | undefined>(undefined);
 
-    useSafeAsync(async () => {
-        return await p.flairObjects;
-    }, (flairs: Array<Flair>) => {
-        setModifiedFlairs(flairs);
-        setOriginalFlairs(flairs);
-    }, [], "ProfileEditor:setModifiedFlairs/setOriginalFlairs");
+    useSafeAsync(
+        async () => await Flair.getAll(p.conferenceId),
+        setFlairs,
+        [p.conferenceId],
+        "ProfileEditor:Flair.getAll"
+    );
 
-    const saveProfile = async () => {
-        // TODO: CSCW didn't like this:
-        // TODO: Update the associated program person
-        // if (programPersonId !== undefined) {
-        //     const ok = await Parse.Cloud.run("person-set-profile", {
-        //         programPerson: programPersonId === "" ? undefined : programPersonId,
-        //         profile: p.id,
-        //         conference: (await p.conference).id,
-        //     }) as boolean;
+    useSafeAsync(
+        async () => {
+            const persons = await p.programPersons;
+            if (persons.length > 0) {
+                return persons[0].id;
+            }
+            return null;
+        },
+        setProgramPerson,
+        [p.programPersons],
+        "ProfileEditor:programPersons"
+    );
 
-        //     if (!ok) {
-        //         throw new Error("Could not save associated program authors.");
-        //     }
-        // }
+    async function saveProfile(data: FormData) {
+        const ok = (await Parse.Cloud.run("person-set-profile", {
+            programPerson: data.programPerson === "" ? undefined : data.programPerson,
+            profile: p.id,
+            conference: (await p.conference).id,
+        })) as boolean;
 
-        const primaryFlair = modifiedFlairs.length > 0 ? modifiedFlairs.sort((x, y) => x.priority > y.priority ? -1 : x.priority === y.priority ? 0 : 1)[0] : undefined;
+        if (!ok) {
+            throw new Error("Could not save associated program author.");
+        }
 
-        p.realName = realName;
-        p.displayName = displayName;
-        p.pronouns = pronouns;
-        p.affiliation = affiliation;
-        p.position = position;
-        p.country = country;
-        p.webpage = webpage;
-        p.flairs = modifiedFlairs.map(x => x.id);
+        const primaryFlair =
+            data.flairs && data.flairs.length > 0
+                ? flairs.filter(flair => data.flairs?.includes(flair.id)).sort((x, y) => y.priority - x.priority)[0]
+                : undefined;
+
+        p.realName = data.RealName;
+        p.displayName = data.DisplayName;
+        p.pronouns = data.pronouns;
+        p.affiliation = data.Affiliation;
+        p.position = data.Position;
+        p.country = data.Country;
+        p.webpage = data.Webpage;
+        p.flairs = data.flairs ?? [];
         p.primaryFlairId = primaryFlair?.id;
-        p.bio = bio;
+        p.bio = data.bio;
 
         LocalStorage.justSavedProfile = true;
 
         await p.save();
-    };
+    }
 
     const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.item(0);
@@ -94,126 +104,125 @@ export default function ProfileEditor(props: Props) {
         }
     };
 
-    const makeTextInput =
-        (label: string, value: string, setter: (x: string) => void, inputType: string = "text") => {
-            const name = label.replace(/\s/g, "");
+    const makeTextInput = (label: string, value?: string, required = false, inputType: string = "text") => {
+        const name = label.replace(/\s/g, "");
 
-            return <>
+        return (
+            <>
                 <label htmlFor={name}>{label}</label>
                 <input
                     name={name}
                     type={inputType}
-                    value={value}
-                    onChange={(e) => setter(e.target.value)}
-                    disabled={isSaving}
+                    defaultValue={value}
+                    disabled={formState.isSubmitting}
+                    ref={register({ required })}
                 />
-            </>;
-        };
+                {errors[name]}
+            </>
+        );
+    };
 
     const profilePhotoUrl = handleParseFileURLWeirdness(p.profilePhoto);
 
-    const isFormDirty =
-        p.realName !== realName ||
-        p.displayName !== displayName ||
-        p.pronouns !== pronouns ||
-        p.affiliation !== affiliation ||
-        p.position !== position ||
-        p.country !== country ||
-        p.webpage !== webpage ||
-        p.bio !== bio ||
-        !sameObjects(originalFlairs, modifiedFlairs);
-
     async function onSubmit(data: FormData) {
         try {
-            setIsSaving(true);
-            const promise = makeCancelable(saveProfile());
-
-            await promise.promise;
-            setIsSaving(false);
+            await saveProfile(data);
             addNotification("Profile saved.");
-        }
-        catch (e) {
-            if (!e.isCanceled) {
-                setIsSaving(false);
-                addError("Sorry, an error occurred and we were unable to save your profile.");
-                throw e;
-            }
+            reset();
+        } catch (e) {
+            addError("Sorry, an error occurred and we were unable to save your profile.");
+            throw e;
         }
     }
 
-    return <div className="profile-editor">
-        <div className="content">
-            <div className="photo">
-                {profilePhotoUrl
-                    ? <img src={profilePhotoUrl} alt={p.displayName + "'s avatar"} />
-                    : <img src={defaultProfilePic} alt="default avatar" />
-                }
-                <div className="upload">
-                    <input
-                        disabled={isFormDirty}
-                        name="photo"
-                        id="photo"
-                        type="file"
-                        className="photo-input"
-                        onChange={uploadPhoto}
-                    />
-                    <label
-                        htmlFor="photo"
-                        title={isFormDirty ? "Please save your profile info." : undefined}
-                    >
-                        Upload New Photo
-                    </label>
+    return (
+        <div className="profile-editor">
+            <div className="content">
+                <div className="photo">
+                    {profilePhotoUrl ? (
+                        <img src={profilePhotoUrl} alt={p.displayName + "'s avatar"} />
+                    ) : (
+                        <img src={defaultProfilePic} alt="default avatar" />
+                    )}
+                    <div className="upload">
+                        <input
+                            disabled={formState.isDirty || formState.isSubmitting}
+                            name="photo"
+                            id="photo"
+                            type="file"
+                            className="photo-input"
+                            onChange={uploadPhoto}
+                        />
+                        <label htmlFor="photo" title={formState.isDirty ? "Please save your profile info." : undefined}>
+                            Upload New Photo
+                        </label>
+                    </div>
                 </div>
+                {programPerson === undefined ? (
+                    <LoadingSpinner />
+                ) : (
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        {makeTextInput("Real Name", p.realName, true)}
+                        {makeTextInput("Display Name", p.displayName, true)}
+                        <label htmlFor="pronouns">Pronouns</label>
+                        <Controller
+                            name="pronouns"
+                            defaultValue={p.tags}
+                            control={control}
+                            render={({ onChange, value }) => (
+                                <TagInput name="" tags={value} setTags={onChange} disabled={formState.isSubmitting} />
+                            )}
+                        />
+
+                        {makeTextInput("Affiliation", p.affiliation)}
+                        {makeTextInput("Position", p.position)}
+                        {makeTextInput("Country", p.country)}
+                        {makeTextInput("Webpage", p.webpage, false, "url")}
+                        <label htmlFor="flairs">Badges</label>
+                        <p>Click a badge to toggle it on or off. Highlighted badges will be shown on your profile.</p>
+                        <Controller
+                            name="flairs"
+                            defaultValue={p.flairs}
+                            control={control}
+                            render={({ onChange, value }) => (
+                                <FlairInput
+                                    name="flairs"
+                                    flairs={flairs.filter(flair => value.includes(flair.id))}
+                                    setFlairs={value => onChange(value.map(x => x.id))}
+                                    disabled={formState.isSubmitting}
+                                />
+                            )}
+                        />
+                        <label htmlFor="bio">Bio</label>
+                        <textarea
+                            name="bio"
+                            cols={30}
+                            rows={4}
+                            defaultValue={p.bio}
+                            disabled={formState.isSubmitting}
+                            ref={register}
+                        />
+
+                        <label htmlFor="programPerson">Author</label>
+                        <p>If you appear on the conference program, link your profile to your author name.</p>
+                        <Controller
+                            name="programPerson"
+                            control={control}
+                            defaultValue={programPerson}
+                            render={({ onChange, value }) => (
+                                <ProgramPersonSelector
+                                    setProgramPersonId={onChange}
+                                    programPersonId={value}
+                                    disabled={formState.isSubmitting}
+                                />
+                            )}
+                        />
+                        <div className="submit-container">
+                            <input type="submit" value="Save" disabled={formState.isSubmitting} />
+                        </div>
+                    </form>
+                )}
             </div>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                {makeTextInput("Real Name", realName, setRealName)}
-                {makeTextInput("Display Name", displayName, setDisplayName)}
-                <label htmlFor="pronouns">Pronouns</label>
-                <TagInput
-                    name="pronouns"
-                    tags={pronouns}
-                    setTags={ps => setPronouns(ps)}
-                    disabled={isSaving}
-                />
-                {makeTextInput(
-                    "Affiliation",
-                    affiliation ?? "",
-                    (s) => setAffiliation(s === "" ? undefined : s)
-                )}
-                {makeTextInput(
-                    "Position",
-                    position ?? "",
-                    (s) => setPosition(s === "" ? undefined : s)
-                )}
-                {makeTextInput(
-                    "Country",
-                    country ?? "",
-                    (s) => setCountry(s === "" ? undefined : s)
-                )}
-                {makeTextInput(
-                    "Webpage",
-                    webpage ?? "",
-                    (s) => setWebpage(s === "" ? undefined : s),
-                    "url"
-                )}
-                <label htmlFor="flairs">Badges</label>
-                <p>Click a badge to toggle it on or off. Highlighted badges will be shown on your profile.</p>
-                <FlairInput name="flairs" flairs={modifiedFlairs} setFlairs={setModifiedFlairs} disabled={isSaving} />
-                <label htmlFor="bio">Bio</label>
-                <textarea
-                    name="bio"
-                    onChange={e => setBio(e.target.value)}
-                    cols={30} rows={4}
-                    value={bio}
-                    disabled={isSaving}
-                />
-                {/* <label>Program Author</label> */}
-                {/* <p>If you are an author of an item at this conference, please select your name below.</p> */}
-                {/* TODO: CSCW didn't like this: <ProgramPersonSelector setProgramPersonId={setProgramPersonId} disabled={isSaving} /> */}
-                <div className="submit-container">
-                    <input type="submit" value="Save" />
-                </div>
-            </form>
         </div>
-    </div>;
+    );
 }

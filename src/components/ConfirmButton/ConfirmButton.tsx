@@ -23,32 +23,42 @@ export default function ConfirmButton(props: Props) {
         }
     }
 
-    return <div className={`confirm-buttons ${props.className}`}>
-        {status === "normal" && <button
-            title={props.text}
-            className="yes"
-            onClick={(ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
-                setStatus("confirming");
-            }}
-        >{props.text}</button>}
-        {(status === "confirming" || status === "executing") &&
-        <AsyncButton
-            content={`Yes - ${props.text}`}
-            className="yes"
-            setIsRunning={setIsRunning}
-            action={props.action}
-        />}
-        {status === "confirming" &&
-        <button
-        title="No, do not continue"
-        className="no"
-        onClick={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            setStatus("normal");
-        }}
-    >No</button>}
-    </div>;
+    return (
+        <div className={`confirm-buttons ${props.className}`}>
+            {status === "normal" && (
+                <button
+                    title={props.text}
+                    className="yes"
+                    onClick={ev => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        setStatus("confirming");
+                    }}
+                >
+                    {props.text}
+                </button>
+            )}
+            {(status === "confirming" || status === "executing") && (
+                <AsyncButton
+                    children={`Yes - ${props.text}`}
+                    className="yes"
+                    setIsRunning={setIsRunning}
+                    action={props.action}
+                />
+            )}
+            {status === "confirming" && (
+                <button
+                    title="No, do not continue"
+                    className="no"
+                    onClick={ev => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        setStatus("normal");
+                    }}
+                >
+                    No
+                </button>
+            )}
+        </div>
+    );
 }

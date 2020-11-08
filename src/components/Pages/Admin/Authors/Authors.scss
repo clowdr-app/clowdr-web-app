@@ -1,0 +1,29 @@
+.admin-authors {
+    h2 {
+        margin-top: 1em;
+    }
+
+    .authors-to-attendees {
+        max-width: 100%;
+        width    : 50em;
+    }
+
+    .attendee-item {
+        display        : flex;
+        flex-direction : row;
+        justify-content: space-between;
+    }
+
+    .link-authors-form {
+        display    : flex;
+        max-width  : 100%;
+        width      : 50em;
+        column-gap : 0.3em;
+        align-items: center;
+
+        select {
+            flex-basis: 0;
+            flex-grow : 1;
+        }
+    }
+}

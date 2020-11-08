@@ -52,8 +52,8 @@ export default function ColourDialog(props: Props) {
             <Divider />
             <DialogActions>
                 <div className="form-buttons">
-                    <AsyncButton content="Close" action={async () => props.onClose()} />
-                    <AsyncButton content="Save" action={handleSubmit(onSubmit)} />
+                    <AsyncButton children="Close" action={async () => props.onClose()} />
+                    <AsyncButton children="Save" action={handleSubmit(onSubmit)} />
                 </div>
             </DialogActions>
         </Dialog>

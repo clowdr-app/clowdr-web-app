@@ -909,7 +909,7 @@ export default function AdminResearchrProgramUpload() {
                     )}
                     <br />
                     <AsyncButton
-                        content="Upload"
+                        children="Upload"
                         action={async () => {
                             setIsUploading(true);
                             try {

@@ -18,7 +18,9 @@
             }
         }
 
-        input, select, textarea {
+        input,
+        select,
+        textarea {
             border-radius: 4px;
             border       : 1px solid black;
             padding      : mm(3) mm(3);
@@ -37,7 +39,8 @@
                 border-radius: radius(2);
             }
 
-            button {
+            button,
+            input[type=submit] {
                 background  : $color-3;
                 margin-right: mm(5);
 
