@@ -1,30 +1,29 @@
 // tslint:disable:no-console
 
-const yargs = require('yargs');
+const yargs = require("yargs");
 const Parse = require("parse/node");
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 const assert = require("assert");
 
 const argv = yargs
     .option("conference", {
         alias: "c",
         description: "The path to the folder containing the conference spec.",
-        type: "string"
+        type: "string",
     })
     .option("registration", {
         alias: "r",
         description: "Only create registrations.",
-        type: "boolean"
+        type: "boolean",
     })
     .option("identities-map", {
         alias: "i",
         description: "Map of input identities to Parse identities from a previous upload run.",
-        type: "string"
+        type: "string",
     })
     .help()
-    .alias("help", "h")
-    .argv;
+    .alias("help", "h").argv;
 
 main();
 
@@ -91,9 +90,8 @@ async function createConference(conferenceData) {
         let jobStatus = jobStatusR.get("status");
         let message = jobStatusR.get("message");
         if (jobStatus === "failed") {
-            throw new Error(`Create conference job failed! Last message before failure: ${message}`)
-        }
-        else if (jobStatus === "succeeded") {
+            throw new Error(`Create conference job failed! Last message before failure: ${message}`);
+        } else if (jobStatus === "succeeded") {
             confId = message;
             console.log(`Create conference job succeeded. New conference id: ${confId}`);
             break;
@@ -112,16 +110,18 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
         objectCache[tableName] = tableCache = {};
         const existingQ = new Parse.Query(tableName);
         existingQ.equalTo("conference", new Parse.Object("Conference", { id: confId }));
-        await existingQ.eachBatch(xs => {
-            xs.forEach(x => {
-                if (verifyByField === "id") {
-                    tableCache[x.id] = x.id;
-                }
-                else {
-                    tableCache[x.get(verifyByField).toLowerCase()] = x.id;
-                }
-            });
-        }, { batchSize: 1000, useMasterKey: true });
+        await existingQ.eachBatch(
+            xs => {
+                xs.forEach(x => {
+                    if (verifyByField === "id") {
+                        tableCache[x.id] = x.id;
+                    } else {
+                        tableCache[x.get(verifyByField).toLowerCase()] = x.id;
+                    }
+                });
+            },
+            { batchSize: 1000, useMasterKey: true }
+        );
     }
 
     const results = {};
@@ -136,8 +136,7 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
             let existing;
             if (typeof data[verifyByField] === "string") {
                 existing = tableCache[data[verifyByField].toLowerCase()];
-            }
-            else {
+            } else {
                 existing = tableCache[data[verifyByField]];
             }
 
@@ -146,8 +145,7 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
             if (existing) {
                 if (typeof data[keyName] === "string") {
                     results[data[keyName].toLowerCase()] = existing;
-                }
-                else {
+                } else {
                     results[data[keyName]] = existing;
                 }
 
@@ -161,26 +159,23 @@ async function createObjects(confId, adminSessionToken, datas, objectName, keyNa
 
             try {
                 const id = await Parse.Cloud.run(`${objectName}-create`, finalData, {
-                    sessionToken: adminSessionToken
+                    sessionToken: adminSessionToken,
                 });
 
                 if (typeof data[keyName] === "string") {
                     results[data[keyName].toLowerCase()] = id;
-                }
-                else {
+                } else {
                     results[data[keyName]] = id;
                 }
 
                 if (tableCache) {
                     if (typeof finalData[verifyByField] === "string") {
                         tableCache[finalData[verifyByField].toLowerCase()] = id;
-                    }
-                    else {
+                    } else {
                         tableCache[finalData[verifyByField]] = id;
                     }
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 console.error(`Creating ${tableName}: ${data[keyName]} failed`, e);
             }
         }
@@ -192,8 +187,7 @@ function remapObjects(sourceMap, targetKey, targetDatas) {
     for (const data of targetDatas) {
         if (typeof data[targetKey] === "string") {
             data[targetKey] = sourceMap[data[targetKey].toLowerCase()];
-        }
-        else {
+        } else {
             data[targetKey] = sourceMap[data[targetKey]];
         }
     }
@@ -271,7 +265,7 @@ async function main() {
     const textChatsData = [];
     const videoRoomsData = [];
     function extractFeeds(type) {
-        return (item) => {
+        return item => {
             if (item.feed) {
                 let content;
 
@@ -280,7 +274,7 @@ async function main() {
                     if (!feed) {
                         feed = {
                             id: zoomRoomsData.length,
-                            url: item.feed.zoomRoom
+                            url: item.feed.zoomRoom,
                         };
                         zoomRoomsData.push(feed);
                     }
@@ -288,11 +282,10 @@ async function main() {
                         content = {
                             id: contentFeedsData.length,
                             name: item.feed.name,
-                            zoomRoom: feed.id
+                            zoomRoom: feed.id,
                         };
                         contentFeedsData.push(content);
-                    }
-                    else {
+                    } else {
                         content.zoomRoom = feed.id;
                     }
                 }
@@ -301,7 +294,7 @@ async function main() {
                     if (!feed) {
                         feed = {
                             id: youtubeFeedsData.length,
-                            videoId: item.feed.youtube
+                            videoId: item.feed.youtube,
                         };
                         youtubeFeedsData.push(feed);
                     }
@@ -309,11 +302,10 @@ async function main() {
                         content = {
                             id: contentFeedsData.length,
                             name: item.feed.name,
-                            youtube: feed.id
+                            youtube: feed.id,
                         };
                         contentFeedsData.push(content);
-                    }
-                    else {
+                    } else {
                         content.youtube = feed.id;
                     }
                 }
@@ -328,7 +320,7 @@ async function main() {
                                 name: item.feed.name,
                                 autoWatch: false,
                                 isPrivate: false,
-                                isDM: false
+                                isDM: false,
                             };
                             textChatsData.push(newTextChat);
                         }
@@ -339,7 +331,7 @@ async function main() {
                         capacity: item.feed.roomCapacity ?? 50,
                         ephemeral: false,
                         isPrivate: false,
-                        textChat: textChatId
+                        textChat: textChatId,
                     };
                     videoRoomsData.push(newVideoRoom);
 
@@ -347,39 +339,36 @@ async function main() {
                         content = {
                             id: contentFeedsData.length,
                             name: newVideoRoom.name,
-                            videoRoom: newVideoRoom.id
+                            videoRoom: newVideoRoom.id,
                         };
                         contentFeedsData.push(content);
-                    }
-                    else {
+                    } else {
                         content.videoRoom = newVideoRoom.id;
                     }
-                }
-                else if (item.feed.textChat) {
+                } else if (item.feed.textChat) {
                     const newTextChat = {
                         id: textChatsData.length,
                         name: item.feed.name,
                         autoWatch: false,
                         isPrivate: false,
-                        isDM: false
+                        isDM: false,
                     };
                     textChatsData.push(newTextChat);
                     if (!content) {
                         content = {
                             id: contentFeedsData.length,
                             name: newTextChat.name,
-                            textChat: newTextChat.id
+                            textChat: newTextChat.id,
                         };
                         contentFeedsData.push(content);
-                    }
-                    else {
+                    } else {
                         content.textChat = newTextChat.id;
                     }
                 }
 
                 item.feed = content.id;
             }
-        }
+        };
     }
     tracksData.forEach(extractFeeds("Track"));
     itemsData.forEach(extractFeeds("Item"));
@@ -396,14 +385,14 @@ async function main() {
                 name: `Track: ${track.name}`,
                 autoWatch: false,
                 isPrivate: false,
-                isDM: false
+                isDM: false,
             };
             textChatsData.push(newTextChat);
 
             const newContentFeed = {
                 id: contentFeedsData.length,
                 name: newTextChat.name,
-                textChat: newTextChat.id
+                textChat: newTextChat.id,
             };
             contentFeedsData.push(newContentFeed);
 
@@ -414,18 +403,36 @@ async function main() {
     assert(process.env.REACT_APP_PARSE_APP_ID, "REACT_APP_PARSE_APP_ID not provided.");
     assert(process.env.REACT_APP_PARSE_JS_KEY, "REACT_APP_PARSE_JS_KEY not provided.");
     assert(process.env.REACT_APP_PARSE_DATABASE_URL, "REACT_APP_PARSE_DATABASE_URL not provided.");
-    assert(process.env.REACT_APP_TWILIO_CALLBACK_URL, "REACT_APP_TWILIO_CALLBACK_URL (Twilio callback (frontend -> clowdr-backend) url) not provided.");
+    assert(
+        process.env.REACT_APP_TWILIO_CALLBACK_URL,
+        "REACT_APP_TWILIO_CALLBACK_URL (Twilio callback (frontend -> clowdr-backend) url) not provided."
+    );
     assert(process.env.REACT_APP_FRONTEND_URL, "REACT_APP_FRONTEND_URL not provided.");
 
     assert(process.env.TWILIO_MASTER_SID, "TWILIO_MASTER_SID : Twilio master-account SID not provided.");
-    assert(process.env.TWILIO_MASTER_AUTH_TOKEN, "TWILIO_MASTER_AUTH_TOKEN : Twilio master-account authentication token not provided.")
-    assert(process.env.TWILIO_CHAT_PRE_WEBHOOK_URL, "TWILIO_CHAT_PRE_WEBHOOK_URL : Twilio pre-webhook (Twilio -> clowdr-backend) url not provided.");
-    assert(process.env.TWILIO_CHAT_POST_WEBHOOK_URL, "TWILIO_CHAT_POST_WEBHOOK_URL : Twilio post-webhook (Twilio -> clowdr-backend) url not provided.");
+    assert(
+        process.env.TWILIO_MASTER_AUTH_TOKEN,
+        "TWILIO_MASTER_AUTH_TOKEN : Twilio master-account authentication token not provided."
+    );
+    assert(
+        process.env.TWILIO_CHAT_PRE_WEBHOOK_URL,
+        "TWILIO_CHAT_PRE_WEBHOOK_URL : Twilio pre-webhook (Twilio -> clowdr-backend) url not provided."
+    );
+    assert(
+        process.env.TWILIO_CHAT_POST_WEBHOOK_URL,
+        "TWILIO_CHAT_POST_WEBHOOK_URL : Twilio post-webhook (Twilio -> clowdr-backend) url not provided."
+    );
 
-    Parse.initialize(process.env.REACT_APP_PARSE_APP_ID, process.env.REACT_APP_PARSE_JS_KEY, process.env.PARSE_MASTER_KEY);
+    Parse.initialize(
+        process.env.REACT_APP_PARSE_APP_ID,
+        process.env.REACT_APP_PARSE_JS_KEY,
+        process.env.PARSE_MASTER_KEY
+    );
     Parse.serverURL = process.env.REACT_APP_PARSE_DATABASE_URL;
 
-    const confId = regsOnly ? await getConference(conferenceData.conference.name) : await createConference(conferenceData);
+    const confId = regsOnly
+        ? await getConference(conferenceData.conference.name)
+        : await createConference(conferenceData);
     console.log(`Conference id: ${confId}`);
 
     const adminUser = await Parse.User.logIn(conferenceData.admin.username, conferenceData.admin.password);
@@ -435,24 +442,64 @@ async function main() {
     if (!regsOnly) {
         // TODO: An object might have the same key but its other fields could have changed
         //       so it may still need updating
-        const youtubeFeeds = await createObjects(confId, adminSessionToken, youtubeFeedsData, "youtubeFeed", "id", "YouTubeFeed", "videoId");
+        const youtubeFeeds = await createObjects(
+            confId,
+            adminSessionToken,
+            youtubeFeedsData,
+            "youtubeFeed",
+            "id",
+            "YouTubeFeed",
+            "videoId"
+        );
         console.log(`YouTube feeds:\n${JSON.stringify(youtubeFeeds)}`);
 
-        const zoomRooms = await createObjects(confId, adminSessionToken, zoomRoomsData, "zoomRoom", "id", "ZoomRoom", "url");
+        const zoomRooms = await createObjects(
+            confId,
+            adminSessionToken,
+            zoomRoomsData,
+            "zoomRoom",
+            "id",
+            "ZoomRoom",
+            "url"
+        );
         console.log(`Zoom rooms:\n${JSON.stringify(zoomRooms)}`);
 
-        const textChats = await createObjects(confId, adminSessionToken, textChatsData, "textChat", "id", "TextChat", "name");
+        const textChats = await createObjects(
+            confId,
+            adminSessionToken,
+            textChatsData,
+            "textChat",
+            "id",
+            "TextChat",
+            "name"
+        );
         console.log(`Text chats:\n${JSON.stringify(textChats)}`);
 
         remapObjects(textChats, "textChat", videoRoomsData);
-        const videoRooms = await createObjects(confId, adminSessionToken, videoRoomsData, "videoRoom", "id", "VideoRoom", "name");
+        const videoRooms = await createObjects(
+            confId,
+            adminSessionToken,
+            videoRoomsData,
+            "videoRoom",
+            "id",
+            "VideoRoom",
+            "name"
+        );
         console.log(`Video rooms:\n${JSON.stringify(videoRooms)}`);
 
         remapObjects(youtubeFeeds, "youtube", contentFeedsData);
         remapObjects(zoomRooms, "zoomRoom", contentFeedsData);
         remapObjects(textChats, "textChat", contentFeedsData);
         remapObjects(videoRooms, "videoRoom", contentFeedsData);
-        const contentFeeds = await createObjects(confId, adminSessionToken, contentFeedsData, "contentFeed", "id", "ContentFeed", "name");
+        const contentFeeds = await createObjects(
+            confId,
+            adminSessionToken,
+            contentFeedsData,
+            "contentFeed",
+            "id",
+            "ContentFeed",
+            "name"
+        );
         console.log(`Content feeds:\n${JSON.stringify(contentFeeds)}`);
 
         remapObjects(contentFeeds, "feed", tracksData);
@@ -460,13 +507,37 @@ async function main() {
         remapObjects(contentFeeds, "feed", sessionsData);
         remapObjects(contentFeeds, "feed", eventsData);
 
-        const attachmentTypes = await createObjects(confId, adminSessionToken, attachmentTypesData, "attachmentType", "name", "AttachmentType", "name");
+        const attachmentTypes = await createObjects(
+            confId,
+            adminSessionToken,
+            attachmentTypesData,
+            "attachmentType",
+            "name",
+            "AttachmentType",
+            "name"
+        );
         console.log(`Attachment types:\n${JSON.stringify(attachmentTypes)}`);
 
-        const tracks = await createObjects(confId, adminSessionToken, tracksData, "track", "name", "ProgramTrack", "name");
+        const tracks = await createObjects(
+            confId,
+            adminSessionToken,
+            tracksData,
+            "track",
+            "name",
+            "ProgramTrack",
+            "name"
+        );
         console.log(`Tracks:\n${JSON.stringify(tracks)}`);
 
-        const persons = await createObjects(confId, adminSessionToken, personsData, "person", "name", "ProgramPerson", "name");
+        const persons = await createObjects(
+            confId,
+            adminSessionToken,
+            personsData,
+            "person",
+            "name",
+            "ProgramPerson",
+            "name"
+        );
         console.log(`Persons:\n${JSON.stringify(persons)}`);
 
         remapObjects(tracks, "track", itemsData);
@@ -478,24 +549,62 @@ async function main() {
 
         // TODO: For updates: Load in the ID maps and use them to pre-remap the id fields so they can be merged with existing data
 
-        const items = await createObjects(confId, adminSessionToken, itemsData, "item", "id", "ProgramItem", "title");
+        const items = await createObjects(
+            confId,
+            adminSessionToken,
+            itemsData,
+            "item",
+            "title",
+            "ProgramItem",
+            "title"
+        );
         console.log(`Items:\n${JSON.stringify(items)}`);
 
         remapObjects(items, "programItem", itemAttachmentsData);
         remapObjects(attachmentTypes, "attachmentType", itemAttachmentsData);
-        const itemAttachments = await createObjects(confId, adminSessionToken, itemAttachmentsData, "itemAttachment", "url");
+        const itemAttachments = await createObjects(
+            confId,
+            adminSessionToken,
+            itemAttachmentsData,
+            "itemAttachment",
+            "url"
+        );
         console.log(`Item attachments:\n${JSON.stringify(itemAttachments)}`);
 
         remapObjects(tracks, "track", sessionsData);
-        const sessions = await createObjects(confId, adminSessionToken, sessionsData, "session", "id");
+        const sessions = await createObjects(
+            confId,
+            adminSessionToken,
+            sessionsData,
+            "session",
+            "title",
+            "ProgramSession",
+            "title"
+        );
         console.log(`Sessions:\n${JSON.stringify(sessions)}`);
 
         remapObjects(sessions, "session", eventsData);
         remapObjects(items, "item", eventsData);
-        const events = await createObjects(confId, adminSessionToken, eventsData, "event", "id");
+        const events = await createObjects(
+            confId,
+            adminSessionToken,
+            eventsData,
+            "event",
+            "item",
+            "ProgramSessionEvent",
+            "item"
+        );
         console.log(`Events:\n${JSON.stringify(events)}`);
     }
 
-    const registrations = await createObjects(confId, adminSessionToken, registrationsData, "registration", "name", "Registration", "email");
+    const registrations = await createObjects(
+        confId,
+        adminSessionToken,
+        registrationsData,
+        "registration",
+        "name",
+        "Registration",
+        "email"
+    );
     console.log(`Registrations:\n${JSON.stringify(registrations)}`);
 }
