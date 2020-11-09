@@ -35,6 +35,10 @@
             width   : 100%;
             height  : calc(100vh - 240px);
 
+            &:empty {
+                display: none;
+            }
+
             .content {
                 grid-area: tab;
                 width    : 100%;
