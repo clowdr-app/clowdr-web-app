@@ -34,34 +34,46 @@ export default function MessageList(props: Props) {
     }
 
     useEffect(() => {
-        const listeners: Map<ChannelEventNames, () => void> = new Map();
+        const listeners: Map<ChannelEventNames, string | null> = new Map();
         const chat = mChat;
 
         async function attach() {
             if (chat) {
-                listeners.set("messageRemoved", await chat.channelEventOn(props.chatId, "messageRemoved", (msg) => {
-                    const newMessages = messages.filter(x => x.index !== msg.index);
-                    setMessages(newMessages);
-                }));
-
-                listeners.set("messageAdded", await chat.channelEventOn(props.chatId, "messageAdded", (msg) => {
-                    const newMessages = [...messages, msg];
-                    setMessages(sortMessages(newMessages));
-                }));
-
-                listeners.set("messageUpdated", await chat.channelEventOn(props.chatId, "messageUpdated", (msg) => {
-                    if (msg.updateReasons.includes("body") ||
-                        msg.updateReasons.includes("author") ||
-                        msg.updateReasons.includes("attributes")) {
-                        const newMessages = messages.map(x => {
-                            if (x.index === msg.message.index) {
-                                return msg.message;
-                            }
-                            else {
-                                return x;
-                            }
-                        });
+                listeners.set("messageRemoved", await chat.channelEventOn(props.chatId, "messageRemoved", {
+                    componentName: "MessageList",
+                    caller: "setMessages",
+                    function: async (msg) => {
+                        const newMessages = messages.filter(x => x.index !== msg.index);
                         setMessages(newMessages);
+                    }
+                }));
+
+                listeners.set("messageAdded", await chat.channelEventOn(props.chatId, "messageAdded", {
+                    componentName: "MessageList",
+                    caller: "setMessages",
+                    function: async (msg) => {
+                        const newMessages = [...messages, msg];
+                        setMessages(sortMessages(newMessages));
+                    }
+                }));
+
+                listeners.set("messageUpdated", await chat.channelEventOn(props.chatId, "messageUpdated", {
+                    componentName: "MessageList",
+                    caller: "setMessages",
+                    function: async (msg) => {
+                        if (msg.updateReasons.includes("body") ||
+                            msg.updateReasons.includes("author") ||
+                            msg.updateReasons.includes("attributes")) {
+                            const newMessages = messages.map(x => {
+                                if (x.index === msg.message.index) {
+                                    return msg.message;
+                                }
+                                else {
+                                    return x;
+                                }
+                            });
+                            setMessages(newMessages);
+                        }
                     }
                 }));
             }
@@ -73,8 +85,10 @@ export default function MessageList(props: Props) {
             if (chat) {
                 const keys = listeners.keys();
                 for (const key of keys) {
-                    const listener = listeners.get(key) as () => void;
-                    chat.channelEventOff(props.chatId, key, listener);
+                    const listener = listeners.get(key);
+                    if (listener) {
+                        chat.channelEventOff(props.chatId, key, listener);
+                    }
                 }
             }
         };

@@ -22,7 +22,10 @@ export default interface IChannel {
 
     getName(): string;
     setName(value: string): Promise<void>;
-    getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }>;
+    getIsDM(): Promise<false | {
+        member1: MemberDescriptor<Promise<boolean | undefined>>;
+        member2: MemberDescriptor<Promise<boolean | undefined>>;
+    }>;
     getIsPrivate(): Promise<boolean>;
     getIsModeration(): Promise<boolean>;
     getIsModerationCompleted(): Promise<boolean>;
@@ -44,6 +47,10 @@ export default interface IChannel {
     subscribe(): Promise<void>;
     unsubscribe(): Promise<void>;
 
-    on: <K extends ChannelEventNames>(event: K, listener: (arg: ChannelEventArgs<K>) => void) => Promise<() => void>;
-    off: (event: ChannelEventNames, listener: () => void) => void;
+    on: <K extends ChannelEventNames>(event: K, listener: ((arg: ChannelEventArgs<K>) => void) |{
+        componentName: string,
+        caller: string,
+        function: (arg: ChannelEventArgs<K>) => void
+    }) => Promise<string>;
+    off: (event: ChannelEventNames, listener: string) => void;
 }

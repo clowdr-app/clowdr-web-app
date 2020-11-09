@@ -28,7 +28,7 @@ interface Props {
     chatId: string;
 }
 
-type RenderMemberDescriptor = MemberDescriptor & {
+type RenderMemberDescriptor = MemberDescriptor<boolean | undefined> & {
     displayName: string;
 };
 
@@ -43,8 +43,8 @@ type DMInfo =
       }
     | {
           isDM: true;
-          member1: MemberDescriptor & { displayName: string };
-          member2: MemberDescriptor & { displayName: string };
+          member1: MemberDescriptor<boolean | undefined> & { displayName: string };
+          member2: MemberDescriptor<boolean | undefined> & { displayName: string };
       };
 
 type ExtendedChatInfo = {
@@ -151,6 +151,7 @@ export default function ChatView(props: Props) {
                     (await mChat.listChatMembers(props.chatId)).map(async mem => {
                         return {
                             ...mem,
+                            isOnline: await mem.isOnline,
                             displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>",
                         };
                     })
@@ -454,24 +455,25 @@ export default function ChatView(props: Props) {
         }
     }
 
+    const [memberOnline, setMemberOnline] = useState<boolean | undefined>();
+
+    useSafeAsync(async () => {
+        const onlineP = chatInfo?.dmInfo && chatInfo?.dmInfo.isDM
+            ? chatInfo.dmInfo.member1.profileId === mUser.id
+                ? chatInfo.dmInfo.member2.isOnline
+                : chatInfo.dmInfo.member1.isOnline
+            : undefined;
+        const online = await onlineP;
+        return online;
+    }, setMemberOnline, [chatInfo?.dmInfo], "ChatView:setMemberOnline");
+
     useHeading({
         title: chatInfo ? chatInfo.name : "Chat",
-        icon:
-            chatInfo?.dmInfo && chatInfo?.dmInfo.isDM ? (
-                chatInfo.dmInfo.member1.profileId === mUser.id ? (
-                    chatInfo.dmInfo.member2.isOnline ? (
-                        <i className="fas fa-circle online"></i>
-                    ) : (
-                        <i className="far fa-circle"></i>
-                    )
-                ) : chatInfo.dmInfo.member1.isOnline ? (
-                    <i className="fas fa-circle online"></i>
-                ) : (
-                    <i className="far fa-circle"></i>
-                )
-            ) : (
-                undefined
-            ),
+        icon: memberOnline !== undefined
+            ? memberOnline
+                ? <i className="fas fa-circle online"></i>
+                : <i className="far fa-circle"></i>
+            : undefined,
         buttons: actionButtons,
     });
 
@@ -481,65 +483,89 @@ export default function ChatView(props: Props) {
 
     useEffect(() => {
         if (mChat) {
-            const joinedFunctionToOff = mChat.channelEventOn(props.chatId, "memberJoined", async mem => {
-                const newMember: RenderMemberDescriptor = {
-                    profileId: mem.profileId,
-                    isOnline: await mem.getOnlineStatus(),
-                    displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>",
-                };
-                setMembers(oldMembers => (oldMembers ? [...oldMembers, newMember] : [newMember]));
+            const joinedFunctionToOff = mChat.channelEventOn(props.chatId, "memberJoined", {
+                componentName: "ChatView",
+                caller: "setMembers",
+                function: async mem => {
+                    const newMember: RenderMemberDescriptor = {
+                        profileId: mem.profileId,
+                        isOnline: await mem.getOnlineStatus(),
+                        displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>",
+                    };
+                    setMembers(oldMembers => (oldMembers ? [...oldMembers, newMember] : [newMember]));
+                }
             });
 
-            const leftFunctionToOff = mChat.channelEventOn(props.chatId, "memberLeft", async mem => {
-                setMembers(oldMembers => (oldMembers ? oldMembers.filter(x => x.profileId !== mem.profileId) : null));
+            const leftFunctionToOff = mChat.channelEventOn(props.chatId, "memberLeft", {
+                componentName: "ChatView",
+                caller: "setMembers",
+                function: async mem => {
+                    setMembers(oldMembers => (oldMembers ? oldMembers.filter(x => x.profileId !== mem.profileId) : null));
+                }
             });
 
-            const updateFunctionToOff = mChat.serviceEventOn("userUpdated", async event => {
-                if (event.updateReasons.includes("online")) {
-                    setMembers(oldMembers =>
-                        oldMembers
-                            ? oldMembers.map(x =>
-                                  x.profileId === event.user.profileId
-                                      ? {
+            const updateFunctionToOff = mChat.serviceEventOn("userUpdated", {
+                componentName: "ChatView",
+                caller: "setMembers/setChatInfo",
+                function: async event => {
+                    if (event.updateReasons.includes("online")) {
+                        const isOnline = await event.user.isOnline;
+                        setMembers(oldMembers =>
+                            oldMembers
+                                ? oldMembers.map(x =>
+                                    x.profileId === event.user.profileId
+                                        ? {
                                             ...x,
-                                            isOnline: event.user.isOnline,
+                                            isOnline,
                                         }
-                                      : x
-                              )
-                            : null
-                    );
-                    setChatInfo(oldInfo => {
-                        if (oldInfo?.dmInfo.isDM) {
-                            return {
-                                ...oldInfo,
-                                dmInfo: {
-                                    ...oldInfo.dmInfo,
-                                    member1: {
-                                        ...oldInfo.dmInfo.member1,
-                                        isOnline:
-                                            oldInfo.dmInfo.member1.profileId === event.user.profileId
-                                                ? event.user.isOnline
-                                                : oldInfo.dmInfo.member1.isOnline,
+                                        : x
+                                )
+                                : null
+                        );
+                        setChatInfo(oldInfo => {
+                            if (oldInfo?.dmInfo.isDM) {
+                                return {
+                                    ...oldInfo,
+                                    dmInfo: {
+                                        ...oldInfo.dmInfo,
+                                        member1: {
+                                            ...oldInfo.dmInfo.member1,
+                                            isOnline:
+                                                oldInfo.dmInfo.member1.profileId === event.user.profileId
+                                                    ? isOnline
+                                                    : oldInfo.dmInfo.member1.isOnline,
+                                        },
+                                        member2: {
+                                            ...oldInfo.dmInfo.member2,
+                                            isOnline:
+                                                oldInfo.dmInfo.member2.profileId === event.user.profileId
+                                                    ? isOnline
+                                                    : oldInfo.dmInfo.member2.isOnline,
+                                        },
                                     },
-                                    member2: {
-                                        ...oldInfo.dmInfo.member2,
-                                        isOnline:
-                                            oldInfo.dmInfo.member2.profileId === event.user.profileId
-                                                ? event.user.isOnline
-                                                : oldInfo.dmInfo.member2.isOnline,
-                                    },
-                                },
-                            };
-                        }
-                        return oldInfo;
-                    });
+                                };
+                            }
+                            return oldInfo;
+                        });
+                    }
                 }
             });
 
             return async () => {
-                mChat.channelEventOff(props.chatId, "memberJoined", await joinedFunctionToOff);
-                mChat.channelEventOff(props.chatId, "memberLeft", await leftFunctionToOff);
-                mChat.serviceEventOff("userUpdated", await updateFunctionToOff);
+                const joinedFunctionToOffId = await joinedFunctionToOff;
+                if (joinedFunctionToOffId) {
+                    mChat.channelEventOff(props.chatId, "memberJoined", joinedFunctionToOffId);
+                }
+
+                const leftFunctionToOffId = await leftFunctionToOff;
+                if (leftFunctionToOffId) {
+                    mChat.channelEventOff(props.chatId, "memberLeft", leftFunctionToOffId);
+                }
+
+                const updateFunctionToOffId = await updateFunctionToOff;
+                if (updateFunctionToOffId) {
+                    mChat.serviceEventOff("userUpdated", updateFunctionToOffId);
+                }
             };
         }
         return () => {};

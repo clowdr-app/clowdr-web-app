@@ -52,7 +52,10 @@ export default class Channel implements IChannel {
     setName(value: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
+    getIsDM(): Promise<false | {
+        member1: MemberDescriptor<Promise<boolean | undefined>>;
+        member2: MemberDescriptor<Promise<boolean | undefined>>;
+    }> {
         throw new Error("Method not implemented.");
     }
     getIsPrivate(): Promise<boolean> {
@@ -107,10 +110,17 @@ export default class Channel implements IChannel {
         throw new Error("Method not implemented.");
     }
 
-    on<K extends ChannelEventNames>(event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
+    on<K extends ChannelEventNames>(
+        event: K,
+        listenerInfo: ((arg: ChannelEventArgs<K>) => void) | {
+            componentName: string,
+            caller: string,
+            function: (arg: ChannelEventArgs<K>) => void
+        }
+    ): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    off(event: ChannelEventNames, listener: () => void): void {
+    off(event: ChannelEventNames, listener: string): void {
         throw new Error("Method not implemented.");
     }
 }

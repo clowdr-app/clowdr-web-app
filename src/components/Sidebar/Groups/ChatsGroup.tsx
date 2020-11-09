@@ -15,10 +15,10 @@ import useLogger from '../../../hooks/useLogger';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
 import useDataSubscription from '../../../hooks/useDataSubscription';
 import useSafeAsync from '../../../hooks/useSafeAsync';
-import { addNotification } from '../../../classes/Notifications/Notifications';
-import ReactMarkdown from 'react-markdown';
-import { emojify } from 'react-emojione';
-import { useLocation } from 'react-router-dom';
+// import { addNotification } from '../../../classes/Notifications/Notifications';
+// import ReactMarkdown from 'react-markdown';
+// import { emojify } from 'react-emojione';
+// import { useLocation } from 'react-router-dom';
 
 type ChatGroupTasks
     = "loadingActiveChats"
@@ -34,8 +34,8 @@ export type SidebarChatDescriptor = {
     isDM: false;
 } | {
     isDM: true;
-    member1: MemberDescriptor & { displayName: string };
-    member2: MemberDescriptor & { displayName: string };
+    member1: MemberDescriptor<boolean | undefined> & { displayName: string };
+    member2: MemberDescriptor<boolean | undefined> & { displayName: string };
 });
 
 type FilteredChatDescriptor
@@ -267,10 +267,12 @@ export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor)
             exists: true,
             member1: {
                 ...x.member1,
+                isOnline: await x.member1.isOnline,
                 displayName: p1.displayName
             },
             member2: {
                 ...x.member2,
+                isOnline: await x.member2.isOnline,
                 displayName: p2.displayName
             }
         };
@@ -287,7 +289,7 @@ export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserP
     if (chat.isDM) {
         const member1 = chat.member1;
         const member2 = chat.member2;
-        let otherOnline;
+        let otherOnline: boolean | undefined;
 
         if (member1.profileId !== mUser.id) {
             friendlyName = member1.displayName;
@@ -318,7 +320,6 @@ export default function ChatsGroup(props: Props) {
     const conf = useConference();
     const mUser = useMaybeUserProfile();
     const mChat = useMaybeChat();
-    const location = useLocation();
     const logger = useLogger("ChatsGroup");
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
         tasks: new Set([
@@ -335,74 +336,6 @@ export default function ChatsGroup(props: Props) {
     });
 
     logger.enable();
-
-    const renderEmoji = useCallback((text: any) => {
-        const doEmojify = (val: any) => <>{emojify(val, { output: 'unicode' })}</>;
-        return doEmojify(text.value);
-    }, []);
-
-    useEffect(() => {
-        let functionsToOff: Promise<Array<{ id: string; f: () => void }>> = Promise.resolve([]);
-        if (mChat && state.activeChats) {
-            functionsToOff = Promise.all(state.activeChats.map(async c => {
-                return {
-                    id: c.id,
-                    f: await mChat.channelEventOn(c.id, "messageAdded", (msg) => {
-                        if (msg.author !== mUser?.id
-                            && !location.pathname.includes(`/chat/${c.id}`)
-                            && !location.pathname.includes(`/moderation/${c.id}`)
-                            && (!c.isModerationHub || !location.pathname.includes("/moderation/hub"))
-                        ) {
-                            const isAnnouncement = c.friendlyName === "Announcements";
-                            const title = isAnnouncement ? "" : `**${mUser ? computeChatDisplayName(c, mUser).friendlyName : c.friendlyName}**\n\n`;
-                            const body = `${title}${msg.body}`;
-                            addNotification(
-                                <ReactMarkdown
-                                    linkTarget="_blank"
-                                    escapeHtml={true}
-                                    renderers={{
-                                        text: renderEmoji
-                                    }}
-                                >
-                                    {body}
-                                </ReactMarkdown>,
-                                isAnnouncement
-                                    ? undefined
-                                    : c.isModerationHub
-                                        ? (msg.attributes?.moderationChat
-                                            ? {
-                                                url: `/moderation/${msg.attributes.moderationChat}`,
-                                                text: "Go to moderation channel"
-                                            }
-                                            : {
-                                                url: `/moderation/hub`,
-                                                text: "Go to moderation hub"
-                                            }
-                                        )
-                                        : c.isModeration
-                                            ? {
-                                                url: `/moderation/${c.id}`,
-                                                text: "Go to moderation channel"
-                                            }
-                                            : {
-                                                url: `/chat/${c.id}`,
-                                                text: "Go to chat"
-                                            },
-                                3000
-                            );
-                        }
-                    })
-                };
-            }));
-
-            return () => {
-                functionsToOff.then(fs => {
-                    fs.forEach(f => mChat.channelEventOff(f.id, "messageAdded", f.f));
-                });
-            };
-        }
-        return () => { };
-    }, [location.pathname, mChat, mUser, renderEmoji, state.activeChats]);
 
     useSafeAsync(async () => {
         if (mChat) {
@@ -510,46 +443,51 @@ export default function ChatsGroup(props: Props) {
 
     // Subscribe to chat events
     useEffect(() => {
+        const listeners: Map<ServiceEventNames, string | null> = new Map();
+        // TODO: When creating memberJoinedlisteners handlers get lost and why?
+        const memberJoinedlisteners: Map<string, string | null> = new Map();
+
         if (mChat) {
             const chatService = mChat;
-
-            const listeners: Map<ServiceEventNames, () => void> = new Map();
-            const memberJoinedlisteners: Map<string, () => void> = new Map();
-
             async function attach() {
                 try {
-                    listeners.set("userUpdated", await chatService.serviceEventOn("userUpdated", async (u) => {
-                        if (u.updateReasons.includes("friendlyName") ||
-                            u.updateReasons.includes("online") ||
-                            u.updateReasons.includes("attributes")) {
-                            function updateDescriptor(x: SidebarChatDescriptor): SidebarChatDescriptor {
-                                if (x.isDM) {
-                                    const m1 = { ...x.member1 };
-                                    if (m1.profileId === u.user.profileId) {
-                                        m1.isOnline = u.user.isOnline;
-                                    }
+                    listeners.set("userUpdated", await chatService.serviceEventOn("userUpdated", {
+                        componentName: "ChatsGroup",
+                        caller: "updateChatDescriptors",
+                        function: async (u) => {
+                            if (u.updateReasons.includes("friendlyName") ||
+                                u.updateReasons.includes("online") ||
+                                u.updateReasons.includes("attributes")) {
+                                const isOnline = await u.user.isOnline;
+                                function updateDescriptor(x: SidebarChatDescriptor): SidebarChatDescriptor {
+                                    if (x.isDM) {
+                                        const m1 = { ...x.member1 };
+                                        if (m1.profileId === u.user.profileId) {
+                                            m1.isOnline = isOnline;
+                                        }
 
-                                    const m2 = { ...x.member2 };
-                                    if (m2 && m2.profileId === u.user.profileId) {
-                                        m2.isOnline = u.user.isOnline;
-                                    }
+                                        const m2 = { ...x.member2 };
+                                        if (m2 && m2.profileId === u.user.profileId) {
+                                            m2.isOnline = isOnline;
+                                        }
 
-                                    return {
-                                        ...x,
-                                        member1: m1,
-                                        member2: m2
+                                        return {
+                                            ...x,
+                                            member1: m1,
+                                            member2: m2
+                                        }
+                                    }
+                                    else {
+                                        return x;
                                     }
                                 }
-                                else {
-                                    return x;
-                                }
+
+                                dispatchUpdate({
+                                    action: "updateChatDescriptors",
+                                    fActive: updateDescriptor,
+                                    fFiltered: (x) => x.exists ? updateDescriptor(x) : x
+                                });
                             }
-
-                            dispatchUpdate({
-                                action: "updateChatDescriptors",
-                                fActive: updateDescriptor,
-                                fFiltered: (x) => x.exists ? updateDescriptor(x) : x
-                            });
                         }
                     }));
                 }
@@ -561,22 +499,25 @@ export default function ChatsGroup(props: Props) {
             }
 
             attach();
-
-            return function detach() {
-                const keys1 = listeners.keys();
-                for (const key of keys1) {
-                    const listener = listeners.get(key) as () => void;
-                    chatService.serviceEventOff(key, listener);
-                }
-
-                const keys2 = memberJoinedlisteners.keys();
-                for (const key of keys2) {
-                    const listener = memberJoinedlisteners.get(key) as () => void;
-                    chatService.channelEventOff(key, "memberJoined", listener);
-                }
-            };
         }
-        return () => { };
+
+        return function detach() {
+            const keys1 = listeners.keys();
+            for (const key of keys1) {
+                const listener = listeners.get(key);
+                if (listener) {
+                    mChat?.serviceEventOff(key, listener);
+                }
+            }
+
+            const keys2 = memberJoinedlisteners.keys();
+            for (const key of keys2) {
+                const listener = memberJoinedlisteners.get(key);
+                if (listener) {
+                    mChat?.channelEventOff(key, "memberJoined", listener);
+                }
+            }
+        };
     }, [conf, logger, mChat]);
 
     const watchedId = mUser?.watchedId;

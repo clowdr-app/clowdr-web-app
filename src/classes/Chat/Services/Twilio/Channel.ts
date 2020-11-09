@@ -12,6 +12,7 @@ import TwilioChatService from "./ChatService";
 import MappedPaginator from "../../MappedPaginator";
 import { MemberDescriptor } from "../../Chat";
 import assert from "assert";
+import { v4 as uuidv4 } from "uuid";
 
 type ChannelOrDescriptor = TwilioChannel | TwilioChannelDescriptor;
 
@@ -58,7 +59,7 @@ export default class Channel implements IChannel {
 
     private async getCommonChannel(): Promise<{ c: TwilioChannel } | { d: TwilioChannelDescriptor }> {
         if (!this.channel) {
-            const c = await this.service.twilioClient?.getChannelBySid(this.textChat.twilioID);
+            const c = await (await this.service.twilioClient)?.getChannelBySid(this.textChat.twilioID);
             if (!c) {
                 throw new Error("Channel not found");
             }
@@ -172,17 +173,15 @@ export default class Channel implements IChannel {
         // // TODO: Set name
         // this.textChat.name = value;
     }
-    async getIsDM(): Promise<false | { member1: MemberDescriptor; member2: MemberDescriptor }> {
+    async getIsDM(): Promise<false | {
+        member1: MemberDescriptor<Promise<boolean | undefined>>;
+        member2: MemberDescriptor<Promise<boolean | undefined>>;
+    }> {
         try {
             if (this.textChat.isDM) {
                 assert(this.service.conference);
                 const name = this.getName();
                 const members = name.split("-");
-
-                const [member1Online, member2Online] = await Promise.all([
-                    this.service.getIsUserOnline(members[0]),
-                    this.service.getIsUserOnline(members[1])
-                ]);
 
                 this.service.subscribeToUser(members[0]);
                 this.service.subscribeToUser(members[1]);
@@ -190,11 +189,11 @@ export default class Channel implements IChannel {
                 return {
                     member1: {
                         profileId: members[0],
-                        isOnline: member1Online
+                        isOnline: this.service.getIsUserOnline(members[0])
                     },
                     member2: {
                         profileId: members[1],
-                        isOnline: member2Online
+                        isOnline: this.service.getIsUserOnline(members[1])
                     }
                 };
             }
@@ -294,9 +293,31 @@ export default class Channel implements IChannel {
         await channel._unsubscribe();
     }
 
-    async on<K extends ChannelEventNames>(event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
+    private listeners: Map<string, (arg: any) => void> = new Map();
+    async on<K extends ChannelEventNames>(
+        event: K,
+        listenerInfo: ((arg: ChannelEventArgs<K>) => void) | {
+            componentName: string,
+            caller: string,
+            function: (arg: ChannelEventArgs<K>) => void
+        }
+    ): Promise<string> {
         const channel = await this.upgrade();
         const _this = this;
+
+        let listener: (arg: ChannelEventArgs<K>) => void;
+        let listenerId: string;
+        let listenerBaseId: string;
+        if (typeof listenerInfo === "function") {
+            listener = listenerInfo;
+            listenerBaseId = uuidv4();
+            listenerId = listenerBaseId;
+        }
+        else {
+            listener = listenerInfo.function;
+            listenerBaseId = listenerInfo.componentName + "|" + listenerInfo.caller + "|" + event;
+            listenerId = listenerBaseId + "|" + uuidv4();
+        }
 
         function memberWrapper(arg: TwilioMember) {
             listener(new Member(arg) as ChannelEventArgs<K>);
@@ -343,15 +364,32 @@ export default class Channel implements IChannel {
                 _listener = messageUpdatedWrapper;
                 break;
         }
+
+        const existingFKeys
+            = Array.from(this.listeners.keys())
+                .filter(x => x.startsWith(listenerBaseId));
+        for (const existingFKey of existingFKeys) {
+            await this.off(event, existingFKey);
+        }
+
+        this.listeners.set(listenerId, _listener);
+        // console.log(`Switching on ${event} listener for ${this.id} (${listenerId})`);
         channel.on(event, _listener);
 
-        return _listener as any;
+        return listenerId;
     }
 
-    async off(event: ChannelEventNames, listener: () => void) {
-        const commonC = await this.getCommonChannel();
-        if ("c" in commonC) {
-            commonC.c.off(event, listener);
+    async off(event: ChannelEventNames, listener: string) {
+        if (this.listeners.has(listener)) {
+            const listenerF = this.listeners.get(listener);
+            assert(listenerF);
+            this.listeners.delete(listener);
+
+            const commonC = await this.getCommonChannel();
+            if ("c" in commonC) {
+                // console.log(`Switching off ${event} listener for ${this.id} (${listener})`);
+                commonC.c.off(event, listenerF);
+            }
         }
     }
 }

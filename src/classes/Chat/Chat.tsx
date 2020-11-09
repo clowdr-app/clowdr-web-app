@@ -1,5 +1,6 @@
+import React from "react";
 import assert from "assert";
-import { Conference, ConferenceConfiguration, TextChat, UserProfile } from "@clowdr-app/clowdr-db-schema";
+import { Conference, ConferenceConfiguration, TextChat, UserProfile, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import DebugLogger from "@clowdr-app/clowdr-db-schema/build/DebugLogger";
 import { Paginator } from "twilio-chat/lib/interfaces/paginator";
 import IChannel from "./IChannel";
@@ -10,6 +11,9 @@ import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
 import TwilioChatService, { ServiceEventArgs, ServiceEventNames } from "./Services/Twilio/ChatService";
 import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
+import { emojify } from "react-emojione";
+import { addNotification } from "../Notifications/Notifications";
+import ReactMarkdown from "react-markdown";
 
 export type ChatDescriptor = {
     id: string;
@@ -29,8 +33,8 @@ export type ChatDescriptor = {
     isModeration: false;
     isModerationHub: false;
 
-    member1: MemberDescriptor;
-    member2: MemberDescriptor;
+    member1: MemberDescriptor<Promise<boolean | undefined>>;
+    member2: MemberDescriptor<Promise<boolean | undefined>>;
 } | {
     isPrivate: true;
     isDM: false;
@@ -46,9 +50,9 @@ export type ChatDescriptor = {
     isModerationHub: true;
 });
 
-export type MemberDescriptor = {
+export type MemberDescriptor<isOnlineT extends Promise<boolean | undefined> | boolean | undefined> = {
     profileId: string;
-    isOnline: boolean | undefined;
+    isOnline: isOnlineT;
 };
 
 export default class Chat implements IChatManager {
@@ -98,13 +102,15 @@ export default class Chat implements IChatManager {
                     reject(e);
                 }
 
-                try {
-                    this.mirrorService = new ParseMirrorChatService(this);
-                    await this.mirrorService.setup(this.conference, this.profile, this.sessionToken);
-                }
-                catch (e) {
-                    this.logger.warn("Error initialising Parse Chat Mirror service", e);
-                }
+                // try {
+                //     this.mirrorService = new ParseMirrorChatService(this);
+                //     await this.mirrorService.setup(this.conference, this.profile, this.sessionToken);
+                // }
+                // catch (e) {
+                //     this.logger.warn("Error initialising Parse Chat Mirror service", e);
+                // }
+
+                await this.setupMessageNotifications();
 
                 resolve(true);
             });
@@ -113,11 +119,110 @@ export default class Chat implements IChatManager {
         return this.initialisePromise;
     }
 
+    private messageNotificationFunctionsToOff: Map<string, string | null> = new Map();
+    async setupMessageNotifications() {
+        const doEmojify = (val: any) => <>{emojify(val, { output: "unicode" })}</>;
+        const renderEmoji = (text: any) => doEmojify(text.value);
+
+        const activeChats = await this.listWatchedChatsUnfiltered();
+
+        const listenToChat = (c: ChatDescriptor) => this.channelEventOn(c.id, "messageAdded", {
+            componentName: "ChatsGroup",
+            caller: "addNotification",
+            function: async (msg) => {
+                if (msg.author !== this.profile.id
+                    && !window.location.pathname.includes(`/chat/${c.id}`)
+                    && !window.location.pathname.includes(`/moderation/${c.id}`)
+                    && (!c.isModerationHub || !window.location.pathname.includes("/moderation/hub"))
+                ) {
+                    const isAnnouncement = c.friendlyName === "Announcements";
+                    const title
+                        = isAnnouncement
+                            ? ""
+                            : `**${c.isDM
+                                ? (await UserProfile.get(c.member1.profileId === this.profile.id ? c.member2.profileId : c.member1.profileId, this.conference.id))?.displayName
+                                : c.friendlyName}**\n\n`;
+                    const body = `${title}${msg.body}`;
+                    addNotification(
+                        <ReactMarkdown
+                            linkTarget="_blank"
+                            escapeHtml={true}
+                            renderers={{
+                                text: renderEmoji
+                            }}
+                        >
+                            {body}
+                        </ReactMarkdown>,
+                        isAnnouncement
+                            ? undefined
+                            : c.isModerationHub
+                                ? (msg.attributes?.moderationChat
+                                    ? {
+                                        url: `/moderation/${msg.attributes.moderationChat}`,
+                                        text: "Go to moderation channel"
+                                    }
+                                    : {
+                                        url: `/moderation/hub`,
+                                        text: "Go to moderation hub"
+                                    }
+                                )
+                                : c.isModeration
+                                    ? {
+                                        url: `/moderation/${c.id}`,
+                                        text: "Go to moderation channel"
+                                    }
+                                    : {
+                                        url: `/chat/${c.id}`,
+                                        text: "Go to chat"
+                                    },
+                        3000
+                    );
+                }
+            }
+        });
+
+        const p = await Promise.all(activeChats.map(async c => [c.id, await listenToChat(c)]));
+        this.messageNotificationFunctionsToOff = new Map(p as any);
+
+        (await WatchedItems.onDataUpdated(this.conference.id)).subscribe(async (ev) => {
+            const objs = ev.objects as WatchedItems[];
+            for (const obj of objs) {
+                const watchedChats = obj.watchedChats;
+                const newlyActive = watchedChats.filter(x => !this.messageNotificationFunctionsToOff.has(x));
+                const previouslyActive = Array.from(this.messageNotificationFunctionsToOff.keys()).filter(x => !watchedChats.includes(x));
+                assert(this.twilioService);
+                for (const chatId of newlyActive) {
+                    const c = await this.getChat(chatId);
+                    if (c) {
+                        this.messageNotificationFunctionsToOff.set(chatId, await listenToChat(c));
+                    }
+                }
+                for (const chatId of previouslyActive) {
+                    const listenerId = this.messageNotificationFunctionsToOff.get(chatId);
+                    if (listenerId) {
+                        this.channelEventOff(chatId, "messageAdded", listenerId);
+                    }
+                }
+            }
+        });
+    }
+
+    async teardownMessageNotifications() {
+        await Promise.all(Array.from(this.messageNotificationFunctionsToOff.keys()).map(async (key) => {
+            const f = this.messageNotificationFunctionsToOff.get(key);
+            if (f) {
+                await this.channelEventOff(key, "messageAdded", f);
+            }
+        }));
+    }
+
     private async teardown(): Promise<void> {
         if (!this.teardownPromise) {
             if (this.initialisePromise) {
                 const doTeardown = async () => {
                     this.logger.info("Tearing down chat client...");
+
+                    await this.teardownMessageNotifications();
 
                     if (this.twilioService) {
                         try {
@@ -349,7 +454,7 @@ export default class Chat implements IChatManager {
         }
     }
 
-    public async listChatMembers(chatId: string): Promise<Array<MemberDescriptor>> {
+    public async listChatMembers(chatId: string): Promise<Array<MemberDescriptor<Promise<boolean | undefined>>>> {
         try {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
@@ -358,7 +463,7 @@ export default class Chat implements IChatManager {
                 try {
                     return {
                         profileId: member.profileId,
-                        isOnline: await member.getOnlineStatus()
+                        isOnline: member.getOnlineStatus()
                     }
                 }
                 catch {
@@ -463,18 +568,25 @@ export default class Chat implements IChatManager {
     // Other Items:
     // TODO: Mirrored channels
 
-    async channelEventOn<K extends ChannelEventNames>(chatId: string, event: K, listener: (arg: ChannelEventArgs<K>) => void): Promise<() => void> {
+    async channelEventOn<K extends ChannelEventNames>(
+        chatId: string,
+        event: K,
+        listener: ((arg: ChannelEventArgs<K>) => void) | {
+            componentName: string,
+            caller: string,
+            function: (arg: ChannelEventArgs<K>) => Promise<void>
+        }): Promise<string | null> {
         try {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             return channel.on(event, listener);
         }
         catch {
-            return () => { };
+            return null;
         }
     }
 
-    async channelEventOff(chatId: string, event: ChannelEventNames, listener: () => void): Promise<void> {
+    async channelEventOff(chatId: string, event: ChannelEventNames, listener: string): Promise<void> {
         try {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
@@ -486,17 +598,24 @@ export default class Chat implements IChatManager {
 
     // TODO: Something, perhaps the App component, should subscribe to the error events
 
-    async serviceEventOn<K extends ServiceEventNames>(event: K, listener: (arg: ServiceEventArgs<K>) => void): Promise<() => void> {
+    async serviceEventOn<K extends ServiceEventNames>(
+        event: K,
+        listener: ((arg: ServiceEventArgs<K>) => void) | {
+            componentName: string,
+            caller: string,
+            function: (arg: ServiceEventArgs<K>) => Promise<void>
+        }
+    ): Promise<string | null> {
         try {
             assert(this.twilioService);
             return this.twilioService.on(event, listener);
         }
         catch {
-            return () => { };
+            return null;
         }
     }
 
-    async serviceEventOff(event: ServiceEventNames, listener: () => void): Promise<void> {
+    async serviceEventOff(event: ServiceEventNames, listener: string): Promise<void> {
         try {
             assert(this.twilioService);
             this.twilioService.off(event, listener);

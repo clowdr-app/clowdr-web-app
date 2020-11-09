@@ -68,13 +68,13 @@ export default function _Sponsor(props: Props) {
                 if (oldContent) {
                     const newContent = Array.from(oldContent);
                     for (const object of ev.objects) {
-                        const content = object as SponsorContent;
-                        if (content.sponsorId && content.sponsorId === sponsor?.id) {
+                        const xContent = object as SponsorContent;
+                        if (xContent.sponsorId && xContent.sponsorId === sponsor?.id) {
                             const idx = newContent?.findIndex(x => x.id === object.id);
                             if (idx === -1) {
-                                newContent.push(content);
+                                newContent.push(xContent);
                             } else {
-                                newContent.splice(idx, 1, content);
+                                newContent.splice(idx, 1, xContent);
                             }
                         }
                     }
@@ -121,7 +121,7 @@ export default function _Sponsor(props: Props) {
     }
 
     const uploadLogo = useCallback(async () => {
-        let logo: Parse.File | undefined = undefined;
+        let logo: Parse.File | undefined;
         if (uploadRef.current?.files?.length && uploadRef.current?.files?.length > 0) {
             if (!["image/gif", "image/jpeg", "image/png", "image/webp"].includes(uploadRef.current.files[0].type)) {
                 addError("Failed to upload logo. It must be a GIF, JPEG, PNG or WEBP file.");
@@ -136,7 +136,7 @@ export default function _Sponsor(props: Props) {
                     sponsor: sponsor.id,
                     colour: sponsor.colour,
                     description: sponsor.description,
-                    logo: logo,
+                    logo,
                     conference: conference.id,
                 });
             } catch (e) {
@@ -170,7 +170,7 @@ export default function _Sponsor(props: Props) {
             try {
                 await Parse.Cloud.run("edit-sponsor", {
                     sponsor: sponsor.id,
-                    colour: colour,
+                    colour,
                     description: sponsor.description,
                     logo: sponsor.logo,
                     conference: conference.id,

@@ -19,7 +19,7 @@ export default class TwilioChatService implements IChatService {
     private profile: UserProfile | null = null;
     private sessionToken: string | null = null;
 
-    public twilioClient: Twilio.Client | null = null;
+    public twilioClient: Promise<Twilio.Client | null> | null = null;
 
     private _REACT_APP_TWILIO_CALLBACK_URL: string | null = null;
 
@@ -35,99 +35,116 @@ export default class TwilioChatService implements IChatService {
         this.profile = profile;
         this.sessionToken = sessionToken;
 
-        if (!this.twilioToken) {
-            if (LocalStorage_TwilioChatToken.twilioChatToken) {
-                const token = LocalStorage_TwilioChatToken.twilioChatToken;
-                const expiry = LocalStorage_TwilioChatToken.twilioChatTokenExpiry;
-                const confId = LocalStorage_TwilioChatToken.twilioChatTokenConferenceId;
-                const profileId = LocalStorage_TwilioChatToken.twilioChatUserProfileId;
-                this.twilioToken = null;
-
-                if (confId && token && expiry) {
-                    if (confId === conference.id &&
-                        profileId === profile.id &&
-                        expiry.getTime() >= Date.now()) {
-                        this.twilioToken = token;
-                        this.logger.info("Twilio token found in local storage (considered valid).");
-                    }
-                }
-
-                if (!this.twilioToken) {
-                    this.logger.info("Twilio token found in local storage considered invalid (expired, different conference, or some other issue).");
-                }
-            }
-        }
-
-        let retry: boolean;
-        let attempCount = 0;
-
-        do {
-            retry = false;
-            attempCount++;
-
-            if (!this.twilioToken) {
-                const { token, expiry } = await this.fetchFreshToken();
-                if (token) {
-                    this.twilioToken = token;
-                    LocalStorage_TwilioChatToken.twilioChatToken = token;
-                    LocalStorage_TwilioChatToken.twilioChatTokenExpiry = expiry;
-                    LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = conference.id;
-                    LocalStorage_TwilioChatToken.twilioChatUserProfileId = profile.id;
-
-                    this.logger.info("Twilio token obtained.");
-                }
-                else {
-                    this.twilioToken = null;
-                    LocalStorage_TwilioChatToken.twilioChatToken = null;
-                    LocalStorage_TwilioChatToken.twilioChatTokenExpiry = null;
-                    LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = null;
-                    LocalStorage_TwilioChatToken.twilioChatUserProfileId = null;
-
-                    this.logger.warn("Twilio token not obtained.");
-                    throw new Error("Twilio token not obtained.");
-                }
-            }
-
-            assert(this.twilioToken);
+        this.twilioClient = new Promise(async (resolve, reject) => {
+            let resolved = false;
 
             try {
-                // TODO: Increase log level if debugger enabled?
-                this.twilioClient = await Twilio.Client.create(this.twilioToken);
-                this.logger.info("Created Twilio client.");
+                if (!this.twilioToken) {
+                    if (LocalStorage_TwilioChatToken.twilioChatToken) {
+                        const token = LocalStorage_TwilioChatToken.twilioChatToken;
+                        const expiry = LocalStorage_TwilioChatToken.twilioChatTokenExpiry;
+                        const confId = LocalStorage_TwilioChatToken.twilioChatTokenConferenceId;
+                        const profileId = LocalStorage_TwilioChatToken.twilioChatUserProfileId;
+                        this.twilioToken = null;
 
-                // Ensure we fetched this before the service becomes available
-                await this.get_REACT_APP_TWILIO_CALLBACK_URL()
+                        if (confId && token && expiry) {
+                            if (confId === conference.id &&
+                                profileId === profile.id &&
+                                expiry.getTime() >= Date.now()) {
+                                this.twilioToken = token;
+                                this.logger.info("Twilio token found in local storage (considered valid).");
+                            }
+                        }
 
-                // Enable underlying service features
-                this.enableAutoRenewConnection();
-                this.enableAutoJoinOnInvite();
-
-                // TODO: Attach to events
-            }
-            catch (e) {
-                this.twilioClient = null;
-                if (e.toString().includes("expired")) {
-                    this.logger.info("Twilio token (probably) expired.");
-
-                    this.twilioToken = null;
-
-                    if (attempCount < 2) {
-                        retry = true;
+                        if (!this.twilioToken) {
+                            this.logger.info("Twilio token found in local storage considered invalid (expired, different conference, or some other issue).");
+                        }
                     }
                 }
 
-                if (!retry) {
-                    this.logger.error("Could not create Twilio client!", e);
-                    throw e;
+                let retry: boolean;
+                let attempCount = 0;
+
+                do {
+                    retry = false;
+                    attempCount++;
+
+                    if (!this.twilioToken) {
+                        const { token, expiry } = await this.fetchFreshToken();
+                        if (token) {
+                            this.twilioToken = token;
+                            LocalStorage_TwilioChatToken.twilioChatToken = token;
+                            LocalStorage_TwilioChatToken.twilioChatTokenExpiry = expiry;
+                            LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = conference.id;
+                            LocalStorage_TwilioChatToken.twilioChatUserProfileId = profile.id;
+
+                            this.logger.info("Twilio token obtained.");
+                        }
+                        else {
+                            this.twilioToken = null;
+                            LocalStorage_TwilioChatToken.twilioChatToken = null;
+                            LocalStorage_TwilioChatToken.twilioChatTokenExpiry = null;
+                            LocalStorage_TwilioChatToken.twilioChatTokenConferenceId = null;
+                            LocalStorage_TwilioChatToken.twilioChatUserProfileId = null;
+
+                            this.logger.warn("Twilio token not obtained.");
+                            throw new Error("Twilio token not obtained.");
+                        }
+                    }
+
+                    assert(this.twilioToken);
+
+                    try {
+                        // TODO: Increase log level if debugger enabled?
+                        const result = await Twilio.Client.create(this.twilioToken);
+                        resolve(result);
+                        resolved = true;
+                        this.logger.info("Created Twilio client.");
+
+                        // Ensure we fetched this before the service becomes available
+                        await this.get_REACT_APP_TWILIO_CALLBACK_URL()
+
+                        // Enable underlying service features
+                        this.enableAutoRenewConnection();
+                        this.enableAutoJoinOnInvite();
+
+                        // TODO: Attach to events
+                    }
+                    catch (e) {
+                        if (e.toString().includes("expired")) {
+                            this.logger.info("Twilio token (probably) expired.");
+
+                            this.twilioToken = null;
+
+                            if (attempCount < 2) {
+                                retry = true;
+                            }
+                        }
+
+                        if (!retry) {
+                            this.logger.error("Could not create Twilio client!", e);
+                            throw e;
+                        }
+                    }
+                }
+                while (retry);
+
+                if (!resolved) {
+                    resolve(null);
                 }
             }
-        }
-        while (retry);
+            catch (e) {
+                if (!resolved) {
+                    reject(e);
+                }
+            }
+        });
     }
 
     async teardown() {
-        if (this.twilioClient) {
-            await this.twilioClient.shutdown();
+        const client = await this.twilioClient;
+        if (client) {
+            await client.shutdown();
             this.twilioClient = null;
         }
     }
@@ -189,9 +206,7 @@ export default class TwilioChatService implements IChatService {
     }
 
     public async convertTextChatToChannel(tc: TextChat): Promise<Channel> {
-        assert(this.twilioClient);
-        const c = await this.twilioClient.getChannelBySid(tc.twilioID);
-        return new Channel(tc, { c }, this);
+        return new Channel(tc, null, this);
     }
 
     async allChannels(): Promise<Array<Channel>> {
@@ -276,16 +291,14 @@ export default class TwilioChatService implements IChatService {
             return cachedChannel;
         }
 
-        assert(this.twilioClient);
-        const channel = await this.twilioClient.getChannelBySid(channelSid);
-        const result = new Channel(tc, { c: channel }, this);
+        const result = new Channel(tc, null, this);
         this.channelCache.set(channelSid, result);
         return result;
     }
 
     async enableAutoRenewConnection(): Promise<void> {
         this.logger.info("Enabling auto-renew connection.");
-        this.twilioClient?.on("tokenAboutToExpire", async () => {
+        (await this.twilioClient)?.on("tokenAboutToExpire", async () => {
             assert(this.conference);
             assert(this.profile);
 
@@ -301,7 +314,7 @@ export default class TwilioChatService implements IChatService {
 
                 this.logger.info("Twilio token for renewal obtained.");
 
-                await this.twilioClient?.updateToken(token);
+                await (await this.twilioClient)?.updateToken(token);
             }
             else {
                 this.twilioToken = null;
@@ -318,20 +331,21 @@ export default class TwilioChatService implements IChatService {
 
     async enableAutoJoinOnInvite(): Promise<void> {
         this.logger.info("Enabling auto-join on invited.");
-        this.twilioClient?.on("channelInvited", async (channel) => {
+        (await this.twilioClient)?.on("channelInvited", async (channel) => {
             channel.join();
         });
     }
 
     async subscribeToUser(profileId: string) {
         // Causes subscription to the user
-        await this.twilioClient?.getUser(profileId);
+        await (await this.twilioClient)?.getUser(profileId);
     }
 
     async unsubscribeFromUser(profileId: string) {
-        const subs = await this.twilioClient?.getSubscribedUsers();
+        const client = await this.twilioClient;
+        const subs = await client?.getSubscribedUsers();
         if (subs?.map(x => x.identity).includes(profileId)) {
-            const user = await this.twilioClient?.getUser(profileId);
+            const user = await client?.getUser(profileId);
             if (user) {
                 await user.unsubscribe();
             }
@@ -339,13 +353,34 @@ export default class TwilioChatService implements IChatService {
     }
 
     async getIsUserOnline(profileId: string): Promise<boolean | undefined> {
-        const user = await this.twilioClient?.getUserDescriptor(profileId);
+        const user = await (await this.twilioClient)?.getUserDescriptor(profileId);
         return user?.online;
     }
 
-
-    async on<K extends ServiceEventNames>(event: K, listener: (arg: ServiceEventArgs<K>) => void): Promise<() => void> {
+    private listeners: Map<string, (arg: any) => void> = new Map();
+    async on<K extends ServiceEventNames>(
+        event: K,
+        listenerInfo: ((arg: ServiceEventArgs<K>) => void) | {
+            componentName: string,
+            caller: string,
+            function: (arg: ServiceEventArgs<K>) => void
+        }
+    ): Promise<string> {
         const _this = this;
+
+        let listener: (arg: ServiceEventArgs<K>) => void;
+        let listenerId: string;
+        let listenerBaseId: string;
+        if (typeof listenerInfo === "function") {
+            listener = listenerInfo;
+            listenerBaseId = uuidv4();
+            listenerId = listenerBaseId;
+        }
+        else {
+            listener = listenerInfo.function;
+            listenerBaseId = listenerInfo.componentName + "|" + listenerInfo.caller + "|" + event;
+            listenerId = listenerBaseId + "|" + uuidv4();
+        }
 
         async function channelWrapper(arg: TwilioChannel) {
             listener(arg.sid as ServiceEventArgs<K>);
@@ -358,7 +393,7 @@ export default class TwilioChatService implements IChatService {
             assert(_this.conference);
             listener({
                 user: {
-                    isOnline: arg.user.online,
+                    isOnline: Promise.resolve(arg.user.online),
                     profileId: arg.user.identity
                 },
                 updateReasons: arg.updateReasons
@@ -385,14 +420,29 @@ export default class TwilioChatService implements IChatService {
                 break;
 
         }
-        this.twilioClient.on(event, _listener);
+
+        const existingFKeys
+            = Array.from(this.listeners.keys())
+                .filter(x => x.startsWith(listenerBaseId));
+        for (const existingFKey of existingFKeys) {
+            await this.off(event, existingFKey);
+        }
+
+        this.listeners.set(listenerId, _listener);
+        (await this.twilioClient)?.on(event, _listener);
 
         return _listener as any;
     }
 
-    async off(event: ServiceEventNames, listener: () => void) {
-        assert(this.twilioClient);
-        this.twilioClient.off(event, listener);
+    async off(event: ServiceEventNames, listener: string) {
+        if (this.listeners.has(listener)) {
+            const listenerF = this.listeners.get(listener);
+            assert(listenerF);
+            this.listeners.delete(listener);
+
+            assert(this.twilioClient);
+            (await this.twilioClient)?.off(event, listenerF);
+        }
     }
 }
 
@@ -416,7 +466,7 @@ type ConnectionStateChangedEventArgs = Twilio.Client.ConnectionState;
 type ChannelJoinedEventArgs = string;
 type ChannelLeftEventArgs = string;
 type UserUpdatedEventArgs = {
-    user: MemberDescriptor;
+    user: MemberDescriptor<Promise<boolean | undefined>>;
     updateReasons: Array<TwilioUser.UpdateReason>
 };
 
