@@ -147,6 +147,16 @@ export default function EditSponsor(props: Props) {
 
                 <div className="form-buttons">
                     <AsyncButton children="Save" action={handleSubmit(onSubmit)} />
+                    {props.existingSponsor && (
+                        <AsyncButton
+                            children="Delete sponsor"
+                            action={async () => {
+                                if (window.confirm("Are you sure?")) {
+                                    await props.existingSponsor?.delete();
+                                }
+                            }}
+                        />
+                    )}
                 </div>
             </form>
         </>
