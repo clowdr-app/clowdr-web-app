@@ -8,6 +8,7 @@ interface Props {
     event: SortedEventData;
     hideEventTime?: boolean;
     height?: number;
+    eventsLinkToSession?: boolean;
 }
 
 export default function EventItem(props: Props) {
@@ -40,13 +41,23 @@ export default function EventItem(props: Props) {
             if (ev.key === "Enter") {
                 ev.preventDefault();
                 ev.stopPropagation();
-                history.push(`/event/${event.id}`);
+                if (props.eventsLinkToSession) {
+                    history.push(`/session/${event.sessionId}`);
+                }
+                else {
+                    history.push(`/event/${event.id}`);
+                }
             }
         }}
         onClick={(ev) => {
             ev.preventDefault();
             ev.stopPropagation();
-            history.push(`/event/${event.id}`);
+            if (props.eventsLinkToSession) {
+                history.push(`/session/${event.sessionId}`);
+            }
+            else {
+                history.push(`/event/${event.id}`);
+            }
         }}
     >
         <div className="heading">
