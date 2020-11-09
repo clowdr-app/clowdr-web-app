@@ -1,7 +1,18 @@
+@import "../../styles/util.scss";
+
 .columns {
     display        : flex;
     flex-direction : row;
     flex-wrap      : wrap;
     justify-content: center;
     align-items    : flex-start;
+
+    .column {
+        flex-grow  : 1;
+        flex-shrink: 0;
+
+        @media only screen and (max-width: $break-lg) {
+            flex-basis: 100%;
+        }
+    }
 }

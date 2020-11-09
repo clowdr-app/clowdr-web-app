@@ -32,133 +32,173 @@ export default function AllChats() {
     const [allOtherUserItems, setAllOtherUserItems] = useState<ColumnItem<DMData>[] | undefined>();
     const [allOtherChatsItems, setAllOtherChatsItems] = useState<ColumnItem[] | undefined>();
 
-    useSafeAsync(async () => {
-        if (!allChats || !userProfiles || !currentProfile) {
-            return undefined;
-        }
-        const items = allChats
-            ?.filter(chat =>
-                chat.isDM &&
-                (chat.member1.profileId === currentProfile.id || chat.member2.profileId === currentProfile.id))
-            ?.map(async chat => {
-                assert(chat.isDM);
-                const otherProfileId = [chat.member1.profileId, chat.member2.profileId].find(profileId => profileId !== currentProfile.id);
-                const otherProfile = userProfiles?.find(profile => profile.id === otherProfileId);
-                const online = otherProfileId ? onlineStatus?.get(otherProfileId) ?? false : false;
-                const profileLink = `/profile/${otherProfileId}`;
-                const flairs = await otherProfile?.flairObjects ?? [];
-                return otherProfile
-                    ? {
-                        text: otherProfile.displayName,
-                        link: `/chat/${chat.id}`,
-                        key: otherProfile.id,
-                        renderData: { online, profileLink, flairs },
-                    }
-                    : null;
-            });
-        return removeNull(await Promise.all(items ?? []));
-    }, setDmChatItems, [allChats, userProfiles, currentProfile.id, onlineStatus], "AllChats:setDmChatItems");
+    useSafeAsync(
+        async () => {
+            if (!allChats || !userProfiles || !currentProfile) {
+                return undefined;
+            }
+            const items = allChats
+                ?.filter(
+                    chat =>
+                        chat.isDM &&
+                        (chat.member1.profileId === currentProfile.id || chat.member2.profileId === currentProfile.id)
+                )
+                ?.map(async chat => {
+                    assert(chat.isDM);
+                    const otherProfileId = [chat.member1.profileId, chat.member2.profileId].find(
+                        profileId => profileId !== currentProfile.id
+                    );
+                    const otherProfile = userProfiles?.find(profile => profile.id === otherProfileId);
+                    const online = otherProfileId ? onlineStatus?.get(otherProfileId) ?? false : false;
+                    const profileLink = `/profile/${otherProfileId}`;
+                    const flairs = (await otherProfile?.flairObjects) ?? [];
+                    return otherProfile
+                        ? {
+                              text: otherProfile.displayName,
+                              link: `/chat/${chat.id}`,
+                              key: otherProfile.id,
+                              renderData: { online, profileLink, flairs },
+                          }
+                        : null;
+                });
+            return removeNull(await Promise.all(items ?? []));
+        },
+        setDmChatItems,
+        [allChats, userProfiles, currentProfile.id, onlineStatus],
+        "AllChats:setDmChatItems"
+    );
 
-    useSafeAsync(async () => {
-        if (!allChats || !userProfiles || !currentProfile) {
-            return undefined;
-        }
-        const items = userProfiles
-            ?.sort((a, b) => a.displayName.localeCompare(b.displayName))
-            ?.map(async profile => {
-                const online = onlineStatus?.get(profile.id) ?? false;
-                const profileLink = `/profile/${profile.id}`;
-                const flairs = await profile.flairObjects;
-                return {
-                    text: profile.displayName,
-                    link: `/chat/new/${profile.id}`,
-                    key: profile.id,
-                    renderData: { online, profileLink, flairs },
-                }
-            });
-        return await Promise.all(items ?? []);
-    }, setAllOtherUserItems, [allChats, userProfiles, currentProfile.id, onlineStatus], "AllChats:setAllOtherUserItems");
+    useSafeAsync(
+        async () => {
+            if (!allChats || !userProfiles || !currentProfile) {
+                return undefined;
+            }
+            const items = userProfiles
+                ?.filter(profile => profile.id !== currentProfile.id)
+                ?.sort((a, b) => a.displayName.localeCompare(b.displayName))
+                ?.map(async profile => {
+                    const online = onlineStatus?.get(profile.id) ?? false;
+                    const profileLink = `/profile/${profile.id}`;
+                    const flairs = await profile.flairObjects;
+                    return {
+                        text: profile.displayName,
+                        link: `/chat/new/${profile.id}`,
+                        key: profile.id,
+                        renderData: { online, profileLink, flairs },
+                    };
+                });
+            return await Promise.all(items ?? []);
+        },
+        setAllOtherUserItems,
+        [allChats, userProfiles, currentProfile.id, onlineStatus],
+        "AllChats:setAllOtherUserItems"
+    );
 
     useEffect(() => {
         if (!allChats) {
             return;
         }
-        const items = allChats
-            ?.filter(chat => !chat.isDM)
-            ?.sort((a, b) => a.friendlyName.localeCompare(b.friendlyName))
-            ?.map(chat => {
-                return {
-                    text: chat.friendlyName,
-                    link: `/chat/${chat.id}`,
-                    key: chat.id,
-                    renderData: undefined,
-                }
-            }) ?? [];
+        const items =
+            allChats
+                ?.filter(chat => !chat.isDM)
+                ?.sort((a, b) => a.friendlyName.localeCompare(b.friendlyName))
+                ?.map(chat => {
+                    return {
+                        text: chat.friendlyName,
+                        link: `/chat/${chat.id}`,
+                        key: chat.id,
+                        renderData: undefined,
+                    };
+                }) ?? [];
         setAllOtherChatsItems(items);
     }, [allChats]);
 
-
     function dmRenderer(item: ColumnItem<DMData>): JSX.Element {
         const data = item.renderData;
-        return <>
-            <div className="user-info">
-                <i className={`fa${data.online ? 's' : 'r'} fa-circle ${data.online ? 'online' : ''} online-indicator`}></i>
-                <Link to={data.profileLink} title="View profile" className="profile-icon"><i className={`fas fa-user`}></i></Link>
-                <Link to={item.link ?? ""} title="Chat">{item.text}</Link>
-            </div>
-            <div className="flair-box">
-                {data.flairs.map((flair, i) =>
-                    <div className="flair-container" key={i}>
-                        <FlairChip flair={flair} />
+        return (
+            <>
+                <Link to={data.profileLink} className="user-info">
+                    <i
+                        className={`fa${data.online ? "s" : "r"} fa-circle ${
+                            data.online ? "online" : ""
+                        } online-indicator`}
+                    ></i>
+                    {item.text}
+                    <div className="flair-box">
+                        {data.flairs.map((flair, i) => (
+                            <div className="flair-container" key={i}>
+                                <FlairChip flair={flair} />
+                            </div>
+                        ))}
                     </div>
-                )}
-            </div>
-        </>;
+                    <Link to={item.link ?? "#"} title="Send message" aria-label="Send message" className="send-message">
+                        <i className={`far fa-envelope-open fa-lg`}></i>
+                    </Link>
+                </Link>
+            </>
+        );
     }
 
     function isOnlineSorter(x: ColumnItem<DMData>, y: ColumnItem<DMData>) {
         if (x.renderData.online) {
             if (y.renderData.online) {
                 return x.text.localeCompare(y.text);
-            }
-            else {
+            } else {
                 return -1;
             }
-        }
-        else {
+        } else {
             if (y.renderData.online) {
                 return 1;
-            }
-            else {
+            } else {
                 return x.text.localeCompare(y.text);
             }
         }
     }
 
-    return <Columns className="all-chats">
-        <>
-            <Column
-                className="col"
-                items={dmChatItems}
-                itemRenderer={{ render: dmRenderer }}
-                loadingMessage="Loading direct messages">
-                <h2>Direct messages</h2>
-            </Column>
-            <Column
-                className="col"
-                items={allOtherUserItems}
-                sort={isOnlineSorter}
-                itemRenderer={{ render: dmRenderer }}
-                loadingMessage="Loading users">
-                <h2>Users {allOtherUserItems && <>({allOtherUserItems.filter(x => x.renderData.online).length} online)</>}</h2>
-            </Column>
-            <Column
-                className="col"
-                items={allOtherChatsItems}
-                itemRenderer={new DefaultItemRenderer()}
-                loadingMessage="Loading chats">
-                <h2>Chats</h2>
-            </Column>
-        </>
-    </Columns>;
+    function groupChatRenderer(item: ColumnItem): JSX.Element {
+        return (
+            <>
+                <Link to={item.link ?? "#"} className="user-info">
+                    {item.text}
+                </Link>
+            </>
+        );
+    }
+
+    return (
+        <Columns className="all-chats">
+            <>
+                <Column
+                    className="col"
+                    items={dmChatItems}
+                    itemRenderer={{ render: dmRenderer }}
+                    loadingMessage="Loading direct messages"
+                    emptyMessage="No direct messages."
+                >
+                    <h2>Direct messages</h2>
+                </Column>
+                <Column
+                    className="col"
+                    items={allOtherChatsItems}
+                    itemRenderer={{ render: groupChatRenderer }}
+                    loadingMessage="Loading chats"
+                >
+                    <h2>Group chats</h2>
+                </Column>
+                <Column
+                    className="col"
+                    items={allOtherUserItems}
+                    sort={isOnlineSorter}
+                    itemRenderer={{ render: dmRenderer }}
+                    loadingMessage="Loading users"
+                    emptyMessage="No other users available."
+                >
+                    <h2>
+                        Users{" "}
+                        {allOtherUserItems && <>({allOtherUserItems.filter(x => x.renderData.online).length} online)</>}
+                    </h2>
+                </Column>
+            </>
+        </Columns>
+    );
 }

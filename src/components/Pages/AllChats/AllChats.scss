@@ -1,9 +1,29 @@
 @import "../../../styles/util.scss";
 
 .all-chats {
+    margin-top: 1em;
+
     .user-info {
-        display    : flex;
-        align-items: center;
+        display      : flex;
+        align-items  : center;
+        column-gap   : 0.5em;
+        row-gap      : 0.5em;
+        align-items  : center;
+        height       : 3em;
+        padding      : 0 1em;
+        color        : black;
+        border-radius: 5px;
+
+        @media only screen and (max-width: $break-sm) {
+            flex-wrap: wrap;
+            height   : auto;
+            padding  : 1em;
+        }
+
+        &:hover {
+            background     : $gray-6;
+            text-decoration: none;
+        }
 
         .online-indicator {
             color        : $gray-0;
@@ -19,18 +39,37 @@
             font-size: 80%;
             padding  : mm(2);
         }
-    }
 
-    .flair-box {
-        display    : flex;
-        flex-wrap  : wrap;
-        row-gap    : .4em;
-        gap        : mm(2);
-        margin-left: mm(4);
+        .flair-box {
+            display    : flex;
+            align-items: center;
+            font-size  : 0.9em;
+            row-gap    : .4em;
+            gap        : mm(2);
+            margin-left: auto;
+            flex-shrink: 10;
+            overflow-x : hidden;
 
-        .flair-container {
-            flex-grow  : 0;
-            flex-shrink: 1;
+            @media only screen and (max-width: $break-sm) {
+                width     : 100%;
+                overflow-x: hidden;
+            }
+
+            .flair-container {
+                flex-grow  : 0;
+                flex-shrink: 0;
+            }
+        }
+
+        .send-message {
+            background   : $gray-6;
+            border-radius: 5px;
+            color        : black;
+            padding      : 0.5em;
+
+            &:hover {
+                background: $gray-5;
+            }
         }
     }
 }
