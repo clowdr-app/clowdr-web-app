@@ -12,6 +12,7 @@ interface Props {
     includeEvents?: string[] | undefined;
     showSessionTime?: boolean;
     hideEventTimes?: boolean;
+    eventsLinkToSession?: boolean;
 }
 
 export default function SessionGroup(props: Props) {
@@ -31,6 +32,7 @@ export default function SessionGroup(props: Props) {
             key={event.event.id}
             event={event}
             hideEventTime={props.hideEventTimes}
+            eventsLinkToSession={props.eventsLinkToSession}
         />);
     }
 
