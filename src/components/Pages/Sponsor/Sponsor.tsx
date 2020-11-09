@@ -185,6 +185,7 @@ export default function _Sponsor(props: Props) {
 
     useHeading({
         title: sponsor?.name ?? "Sponsor",
+        iconOnly: !!sponsor?.logo,
         icon: (
             <div className="logo-container">
                 <input id="logo-upload" type="file" hidden ref={uploadRef} onChange={() => uploadLogo()} />

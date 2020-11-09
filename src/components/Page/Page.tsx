@@ -354,7 +354,7 @@ function Page(props: Props) {
                 <header className="page-header">
                     <h1 id="page-title" className="banner" aria-level={1}>
                         {heading.icon ? heading.icon : <></>}
-                        {heading.title}
+                        {!heading.iconOnly ? heading.title : <></>}
                     </h1>
                     {heading.subtitle ? <div className="subtitle">{heading.subtitle}</div> : <></>}
                     {actionButtonsWrapper}

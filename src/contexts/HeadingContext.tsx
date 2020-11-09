@@ -3,6 +3,7 @@ import React from 'react';
 export interface HeadingState {
     title: string;
     icon?: JSX.Element;
+    iconOnly?: boolean;
     subtitle?: JSX.Element;
     buttons?: Array<ActionButton>;
 }
