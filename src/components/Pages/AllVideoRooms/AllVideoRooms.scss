@@ -1,22 +1,36 @@
 @import "../../../styles/util.scss";
 
 .all-rooms {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    display        : flex;
+    flex-direction : row;
+    flex-wrap      : wrap;
     justify-content: center;
-    align-items: flex-start;
+    align-items    : flex-start;
 
     .room-item {
+        display      : flex;
+        column-gap   : 1em;
+        row-gap      : 0.5em;
+        align-items  : center;
+        height       : 3em;
+        padding      : 0 1em;
+        color        : black;
+        border-radius: 5px;
+
+        &:hover {
+            background     : $gray-6;
+            text-decoration: none;
+        }
+
         &__icon {
-            font-size: 80%;
+            font-size    : 80%;
             padding-right: mm(2);
         }
 
         &__participants {
-            font-size: 80%;
+            font-size      : 80%;
             list-style-type: disc;
-            margin: mm(0) mm(5);
+            margin         : mm(0) mm(5);
         }
     }
 }

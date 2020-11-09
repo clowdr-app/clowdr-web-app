@@ -20,36 +20,26 @@ type RoomData = {
     sponsors: Array<Sponsor>;
 };
 
-export default function ChatView() {
+export default function AllVideoRooms() {
     useHeading("All Rooms");
 
     const conference = useConference();
     const [videoRooms, setVideoRooms] = useState<Array<VideoRoom> | null>(null);
-    const [rooms, setRooms] = useState<Array<RoomData> | null>(null);
+    const [rooms, setRooms_] = useState<Array<RoomData> | null>(null);
     const [roomItems, setRoomItems] = useState<Array<ColumnItem<RoomData>> | undefined>();
     const [programRoomItems, setProgramRoomItems] = useState<Array<ColumnItem<RoomData>> | undefined>();
 
-    useSafeAsync(
-        async () => {
-            return videoRooms
-                ? Promise.all(
-                      videoRooms.map(async room => {
-                          const participants = await room.participantProfiles;
-                          const relatedContentFeeds = await ContentFeed.getAllByVideoRoom(room.id, conference.id);
-                          const relatedSponsors = await Sponsor.getAllByVideoRoom(room.id, conference.id);
-                          return { room, participants, contentFeeds: relatedContentFeeds, sponsors: relatedSponsors };
-                      })
-                  )
-                : null;
-        },
-        setRooms,
-        [videoRooms, conference.id],
-        "AllVideoRooms:ChatView:setRooms"
-    );
+    const setRooms = (x: Array<RoomData> | null) => {
+        console.log(`AllVideoRooms:setRooms(${x})`);
+        setRooms_(x);
+    };
 
     // Subscribe to VideoRooms
     useSafeAsync(
-        async () => VideoRoom.getAll(conference.id),
+        async () => {
+            const vr = await VideoRoom.getAll(conference.id);
+            return vr;
+        },
         setVideoRooms,
         [conference.id],
         "AllVideoRooms:ChatView:setVideoRooms"
@@ -78,6 +68,37 @@ export default function ChatView() {
     useDataSubscription("VideoRoom", onVideoRoomUpdated, onVideoRoomDeleted, !videoRooms, conference);
 
     useEffect(() => {
+        console.log(`videoRooms: ${JSON.stringify(videoRooms?.map(x => x.name))}`);
+    }, [videoRooms]);
+
+    useSafeAsync(
+        async () => {
+            console.log(
+                `useSafeAsync: executing for AllVideoRooms:ChatView:setRooms with ${JSON.stringify(
+                    videoRooms?.map(x => x.name)
+                )}`
+            );
+            return videoRooms
+                ? await Promise.all(
+                      videoRooms.map(async room => {
+                          const participants = await room.participantProfiles;
+                          console.log(`AllVideoRooms: Got participant profiles for ${room.name}`);
+                          const relatedContentFeeds = await ContentFeed.getAllByVideoRoom(room.id, conference.id);
+                          console.log(`AllVideoRooms: Got related content feeds for ${room.name}`);
+                          const relatedSponsors = await Sponsor.getAllByVideoRoom(room.id, conference.id);
+                          console.log(`AllVideoRooms: Got related sponsors for ${room.name}`);
+                          return { room, participants, contentFeeds: relatedContentFeeds, sponsors: relatedSponsors };
+                      })
+                  )
+                : null;
+        },
+        setRooms,
+        [videoRooms, videoRooms?.length, conference.id],
+        "AllVideoRooms:ChatView:setRooms"
+    );
+
+    useEffect(() => {
+        console.log(`AllVideoRooms: generating roomItems`);
         const items = rooms
             ?.filter(room => room.contentFeeds.length === 0)
             ?.filter(room => room.sponsors.length === 0)
@@ -90,6 +111,7 @@ export default function ChatView() {
                     link: `/room/${room.room.id}`,
                 };
             });
+        console.log(`AllVideoRooms: setting roomItems to ${JSON.stringify(items)}`);
         setRoomItems(items);
     }, [rooms]);
 
@@ -129,43 +151,41 @@ export default function ChatView() {
         const data = item.renderData;
         return (
             <>
-                <Link to={`/room/${data.room.id}`}>
+                <Link to={`/room/${data.room.id}`} className="room-item">
                     <i className="fas fa-video room-item__icon"></i>
                     {data.room.name}
+                    {data.participants.length > 0 ? (
+                        <ul className="room-item__participants">
+                            {data.participants.map(participant => (
+                                <li key={participant.id}>{participant.displayName}</li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <></>
+                    )}
                 </Link>
-                {data.participants.length > 0 ? (
-                    <ul className="room-item__participants">
-                        {data.participants.map(participant => (
-                            <li key={participant.id}>{participant.displayName}</li>
-                        ))}
-                    </ul>
-                ) : (
-                    <></>
-                )}
             </>
         );
     }
 
     return (
         <Columns className="all-rooms">
-            <>
-                <Column
-                    className="col"
-                    itemRenderer={{ render: roomRenderer }}
-                    items={roomItems}
-                    loadingMessage="Loading rooms"
-                >
-                    <h2>Breakout rooms</h2>
-                </Column>
-                <Column
-                    className="col"
-                    itemRenderer={{ render: roomRenderer }}
-                    items={programRoomItems}
-                    loadingMessage="Loading rooms"
-                >
-                    <h2>Program rooms</h2>
-                </Column>
-            </>
+            <Column
+                className="col"
+                itemRenderer={{ render: roomRenderer }}
+                items={roomItems}
+                loadingMessage="Loading rooms"
+            >
+                <h2>Breakout rooms</h2>
+            </Column>
+            <Column
+                className="col"
+                itemRenderer={{ render: roomRenderer }}
+                items={programRoomItems}
+                loadingMessage="Loading rooms"
+            >
+                <h2>Program rooms</h2>
+            </Column>
         </Columns>
     );
 }
