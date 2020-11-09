@@ -15,6 +15,8 @@
 
         .details {
             flex-basis: 30%;
+            height    : 100%;
+            overflow  : auto;
 
             h3 {
                 border-bottom : 1px solid #222;

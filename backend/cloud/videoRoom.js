@@ -1,14 +1,12 @@
 /* global Parse */
 // ^ for eslint
 
-const { validateRequest } = require("./utils");
+const { callWithRetry, validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
 const { getProfileOfUser, getUserProfileById } = require("./user");
 const { getConfig } = require("./config");
 const { createTextChat } = require("./textChat");
 const Twilio = require("twilio");
-
-// TODO: Before delete: Kick any members, delete room in Twilio
 
 // Video rooms are created in Twilio only when they are first needed.
 // So they are created when a user requests an access token for a room -
@@ -76,9 +74,9 @@ Parse.Cloud.beforeDelete("VideoRoom", async (request) => {
             const accountAuth = config.TWILIO_AUTH_TOKEN;
             const twilioClient = Twilio(accountSID, accountAuth);
             try {
-                await twilioClient.video.rooms(twilioID).update({
+                await callWithRetry(() => twilioClient.video.rooms(twilioID).update({
                     status: "completed"
-                });
+                }));
             }
             catch (e) {
                 if (!(e.toString().includes("resource") && e.toString().includes("not found"))) {

@@ -1,7 +1,7 @@
 /* global Parse */
 // ^ for eslint
 
-const { validateRequest } = require("./utils");
+const { callWithRetry, validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
 const { getConfig } = require("./config");
 const { getUserProfileById } = require("./user");
@@ -27,7 +27,7 @@ async function handlePromoteAttendeeToManager(targetProfile, conference) {
     const serviceSID = config.TWILIO_CHAT_SERVICE_SID;
     const service = twilioClient.chat.services(serviceSID);
 
-    const roles = await service.roles.list();
+    const roles = await callWithRetry(() => service.roles.list());
     const channelAdminRole = roles.find(x => x.friendlyName === "channel admin");
     const channelUserRole = roles.find(x => x.friendlyName === "channel user");
     const serviceAdminRole = roles.find(x => x.friendlyName === "service admin");
@@ -39,18 +39,18 @@ async function handlePromoteAttendeeToManager(targetProfile, conference) {
     assert(announcementsAdminRole);
 
     // Promote user to service-level admin
-    await service.users(targetProfile.id).update({ roleSid: serviceAdminRole.sid });
+    await callWithRetry(() => service.users(targetProfile.id).update({ roleSid: serviceAdminRole.sid }));
 
     // Go through all of target user's current channels and promote to channel-level admin role
     const channelPromises = [];
     service.users(targetProfile.id).userChannels.each(channel => {
         channelPromises.push(
-            service
+            callWithRetry(() => service
                 .channels(channel.channelSid)
                 .members(channel.memberSid)
                 .update({
                     roleSid: channelAdminRole.sid
-                }));
+                })));
     });
     await Promise.all(channelPromises);
 
@@ -62,21 +62,21 @@ async function handlePromoteAttendeeToManager(targetProfile, conference) {
             .first({ useMasterKey: true });
     const moderationHubChannelSID = moderationHubTextChat.get("twilioID");
     try {
-        await service.channels(moderationHubChannelSID).members.create({
+        await callWithRetry(() => service.channels(moderationHubChannelSID).members.create({
             identity: targetProfile.id,
             roleSid: channelUserRole.sid,
-        });
+        }));
     } catch (e) {
-        await service.channels(moderationHubChannelSID).members(targetProfile.id).update({
+        await callWithRetry(() => service.channels(moderationHubChannelSID).members(targetProfile.id).update({
             roleSid: channelUserRole.sid,
-        });
+        }));
     }
 
     // Give target user channel-level announcements-admin role for announcements channel
     const announcementsChannelSID = config.TWILIO_ANNOUNCEMENTS_CHANNEL_SID;
-    await service.channels(announcementsChannelSID).members(targetProfile.id).update({
+    await callWithRetry(() => service.channels(announcementsChannelSID).members(targetProfile.id).update({
         roleSid: announcementsAdminRole.sid
-    });
+    }));
 
     const watchedItems = await targetProfile.get("watched").fetch({ useMasterKey: true });
     if (!watchedItems.get("watchedChats").includes(moderationHubTextChat.id)) {
@@ -137,7 +137,7 @@ async function handleDemoteManagerToAttendee(targetProfile, conference) {
     const serviceSID = config.TWILIO_CHAT_SERVICE_SID;
     const service = twilioClient.chat.services(serviceSID);
 
-    const roles = await service.roles.list();
+    const roles = await callWithRetry(() => service.roles.list());
     const channelUserRole = roles.find(x => x.friendlyName === "channel user");
     const serviceUserRole = roles.find(x => x.friendlyName === "service user");
     const announcementsUserRole = roles.find(x => x.friendlyName === "announcements user");
@@ -155,7 +155,7 @@ async function handleDemoteManagerToAttendee(targetProfile, conference) {
     const announcementsChannelSID = config.TWILIO_ANNOUNCEMENTS_CHANNEL_SID;
 
     // Promote user to service-level admin
-    await service.users(targetProfile.id).update({ roleSid: serviceUserRole.sid });
+    await callWithRetry(() => service.users(targetProfile.id).update({ roleSid: serviceUserRole.sid }));
 
     // Remove user from the moderation hub channel
     const moderationHubTextChat
@@ -171,7 +171,7 @@ async function handleDemoteManagerToAttendee(targetProfile, conference) {
     }
 
     const moderationHubChannelSID = moderationHubTextChat.get("twilioID");
-    await service.channels(moderationHubChannelSID).members(targetProfile.id).remove();
+    await callWithRetry(() => service.channels(moderationHubChannelSID).members(targetProfile.id).remove());
 
     // Go through all of target user's current channels and demote to channel-level user role
     const channelPromises = [];
@@ -180,20 +180,20 @@ async function handleDemoteManagerToAttendee(targetProfile, conference) {
         if (announcementsChannelSID !== channel.channelSid) {
             memberChannelSIDs.push(channel.channelSid);
             channelPromises.push(
-                service
+                callWithRetry(() => service
                     .channels(channel.channelSid)
                     .members(channel.memberSid)
                     .update({
                         roleSid: channelUserRole.sid
-                    }));
+                    })));
         }
     });
     await Promise.all(channelPromises);
 
     // Give target user channel-level user role for announcements channel
-    await service.channels(announcementsChannelSID).members(targetProfile.id).update({
+    await callWithRetry(() => service.channels(announcementsChannelSID).members(targetProfile.id).update({
         roleSid: announcementsUserRole.sid
-    });
+    }));
 
     // Give Parse ACL read access to all existing channels that target user is a member of
     const targetUser = targetProfile.get("user");

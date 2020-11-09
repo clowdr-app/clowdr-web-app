@@ -17,7 +17,7 @@ import TracksTab, { generateTrackId } from "./ProgramEditor/Tabs/TracksTab";
 import UploadTab from "./ProgramEditor/Tabs/UploadTab";
 import "./ProgramEditor.scss";
 import assert from "assert";
-import { addNotification } from "../../../../classes/Notifications/Notifications";
+import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import useConference from "../../../../hooks/useConference";
 
@@ -60,12 +60,17 @@ export default function ProgramEditor() {
                 return false;
             }
             else {
-                const result = parseInt(progressStr, 10);
-                if (result === 100) {
-                    addNotification("Upload completed.");
-                    return false;
+                try {
+                    const result = parseInt(progressStr, 10);
+                    if (result === 100) {
+                        addNotification("Upload completed.");
+                        return false;
+                    }
+                    return result;
                 }
-                return result;
+                catch {
+                    addError("Upload failed: " + progressStr);
+                }
             }
         }
         return false;

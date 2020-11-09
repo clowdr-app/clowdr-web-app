@@ -1,12 +1,97 @@
 /* global Parse */
 // ^ for eslint
 
-// TODO: Before delete: Delete Twilio text channel and/or video room
-// TODO: Before delete: Clean up any content feeds
 // TODO: Before delete: Prevent deletion if still in use anywhere
 
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
+
+async function isInUse_TextChat(conferenceId, id, excludeFeedId) {
+    const usedByFeeds =
+        await new Parse.Query("ContentFeed")
+            .equalTo("conference", new Parse.Object("Conference", { id: conferenceId }))
+            .equalTo("textChat", new Parse.Object("TextChat", { id }))
+            .map(x => x.id, { useMasterKey: true });
+    const usedByFeedsExcluding = usedByFeeds.filter(x => x !== excludeFeedId);
+    return usedByFeedsExcluding.length > 0;
+}
+
+async function isInUse_VideoRoom(conferenceId, id, excludeFeedId) {
+    const usedByFeeds =
+        await new Parse.Query("ContentFeed")
+            .equalTo("conference", new Parse.Object("Conference", { id: conferenceId }))
+            .equalTo("videoRoom", new Parse.Object("VideoRoom", { id }))
+            .map(x => x.id, { useMasterKey: true });
+    const usedBySponsors =
+        await new Parse.Query("Sponsor")
+            .equalTo("conference", new Parse.Object("Conference", { id: conferenceId }))
+            .equalTo("videoRoom", new Parse.Object("VideoRoom", { id }))
+            .map(x => x.id, { useMasterKey: true });
+    const usedByFeedsExcluding = usedByFeeds.filter(x => x !== excludeFeedId);
+    return usedByFeedsExcluding.length > 0 || usedBySponsors.length > 0;
+}
+
+async function isInUse_ZoomRoom(conferenceId, id, excludeFeedId) {
+    const usedByFeeds =
+        await new Parse.Query("ContentFeed")
+            .equalTo("conference", new Parse.Object("Conference", { id: conferenceId }))
+            .equalTo("zoomRoom", new Parse.Object("ZoomRoom", { id }))
+            .map(x => x.id, { useMasterKey: true });
+    const usedByFeedsExcluding = usedByFeeds.filter(x => x !== excludeFeedId);
+    return usedByFeedsExcluding.length > 0;
+}
+
+async function isInUse_YouTubeFeed(conferenceId, id, excludeFeedId) {
+    const usedByFeeds =
+        await new Parse.Query("ContentFeed")
+            .equalTo("conference", new Parse.Object("Conference", { id: conferenceId }))
+            .equalTo("youtube", new Parse.Object("YouTubeFeed", { id }))
+            .map(x => x.id, { useMasterKey: true });
+    const usedByFeedsExcluding = usedByFeeds.filter(x => x !== excludeFeedId);
+    return usedByFeedsExcluding.length > 0;
+}
+
+Parse.Cloud.beforeDelete("ContentFeed", async (request) => {
+    const feed = request.object;
+    const feedId = feed.id;
+    const conferenceId = feed.get("conference").id;
+
+    const textChat = feed.get("textChat");
+    if (textChat) {
+        const textChatId = textChat.id;
+        const textChatInUse = await isInUse_TextChat(conferenceId, textChatId, feedId);
+        if (!textChatInUse) {
+            await new Parse.Object("TextChat", { id: textChatId }).destroy({ useMasterKey: true });
+        }
+    }
+
+    const videoRoom = feed.get("videoRoom");
+    if (videoRoom) {
+        const videoRoomId = videoRoom.id;
+        const videoRoomInUse = await isInUse_VideoRoom(conferenceId, videoRoomId, feedId);
+        if (!videoRoomInUse) {
+            await new Parse.Object("VideoRoom", { id: videoRoomId }).destroy({ useMasterKey: true });
+        }
+    }
+
+    const zoomRoom = feed.get("zoomRoom");
+    if (zoomRoom) {
+        const zoomRoomId = zoomRoom.id;
+        const zoomRoomInUse = await isInUse_ZoomRoom(conferenceId, zoomRoomId, feedId);
+        if (!zoomRoomInUse) {
+            await new Parse.Object("ZoomRoom", { id: zoomRoomId }).destroy({ useMasterKey: true });
+        }
+    }
+
+    const youtubeFeed = feed.get("youtube");
+    if (youtubeFeed) {
+        const youtubeFeedId = youtubeFeed.id;
+        const youtubeFeedInUse = await isInUse_YouTubeFeed(conferenceId, youtubeFeedId, feedId);
+        if (!youtubeFeedInUse) {
+            await new Parse.Object("YouTubeFeed", { id: youtubeFeedId }).destroy({ useMasterKey: true });
+        }
+    }
+});
 
 // **** Content Feed **** //
 
@@ -42,17 +127,17 @@ async function createContentFeed(data) {
     let existing;
     if (data.originatingID) {
         existing
-        = await new Parse.Query("ContentFeed")
-            .equalTo("conference", data.conference)
-            .equalTo("originatingID", data.originatingID)
-            .first({ useMasterKey: true });
+            = await new Parse.Query("ContentFeed")
+                .equalTo("conference", data.conference)
+                .equalTo("originatingID", data.originatingID)
+                .first({ useMasterKey: true });
     }
     else {
         existing
-        = await new Parse.Query("ContentFeed")
-            .equalTo("conference", data.conference)
-            .equalTo("name", data.name)
-            .first({ useMasterKey: true });
+            = await new Parse.Query("ContentFeed")
+                .equalTo("conference", data.conference)
+                .equalTo("name", data.name)
+                .first({ useMasterKey: true });
     }
 
     if (existing) {

@@ -15,7 +15,7 @@ const {
 const {
     getRegistrationById
 } = require("./registration");
-const { validateRequest } = require("./utils");
+const { callWithRetry, validateRequest } = require("./utils");
 const Config = require("./config");
 const { v4: uuidv4 } = require("uuid");
 
@@ -157,11 +157,11 @@ async function createUserProfile(user, fullName, newRoleName, conference) {
     const twilioClient = Twilio(twilioAccountSID, twilioAuthToken);
     const twilioChatService = twilioClient.chat.services(twilioChatServiceSID);
     // Adding the user will trigger our Twilio backend to add them to the announcements channel
-    await twilioChatService.users.create({
+    await callWithRetry(() => twilioChatService.users.create({
         identity: newProfile.id,
         friendlyName: uuidv4(),
         xTwilioWebhookEnabled: true
-    });
+    }));
 
     const chatsToAutoWatch = await getAutoWatchTextChats(conference, user.getSessionToken());
     const attendeeRoleName = generateRoleDBName(conference.id, "attendee");
@@ -600,7 +600,7 @@ Parse.Cloud.define("user-ban", async (req) => {
                 const chatService = twilioClient.chat.services(chatServiceSID);
 
                 try {
-                    await chatService.users(targetProfile.id).remove();
+                    await callWithRetry(() => chatService.users(targetProfile.id).remove());
                 }
                 catch (e) {
                     const msg = e.toString().toLowerCase();
@@ -612,12 +612,12 @@ Parse.Cloud.define("user-ban", async (req) => {
 
                 const twilioVideoRooms = await twilioClient.video.rooms.list();
                 await Promise.all(twilioVideoRooms.map(async twilioRoom => {
-                    const participants = await twilioRoom.participants().list();
+                    const participants = await callWithRetry(() => twilioRoom.participants().list());
                     if (participants.some(participant => participant.identity === targetProfile.id)) {
-                        await twilioRoom
+                        await callWithRetry(() => twilioRoom
                             .participants()
                             .get(targetProfile.id)
-                            .update({ status: "disconnected" });
+                            .update({ status: "disconnected" }));
                     }
                 }));
 

@@ -5,30 +5,74 @@ const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 const { getProfileOfUser } = require("./user");
 
-// TODO: Before delete of track/item/session/event: Cleanup unused content feed(s)
 // TODO: Before save: Give authors write access to their program items/events
 
 // TODO: Before save of ProgramItemAttachment: If type AttachmentType `isCoverImage`, update associated program item's `posterImage` field
 // TODO: Before delete of ProgramItemAttachment: If type AttachmentType `isCoverImage`, clear associated program item's `posterImage` field
 
+async function isInUse_ContentFeed(conferenceId, id, excludeTrackId, excludeSessionId, excludeEventId, excludeItemId) {
+    const feed = new Parse.Object("ContentFeed", { id });
+    const conference = new Parse.Object("Conference", { id: conferenceId });
+    const usedByTracks =
+        await new Parse.Query("ProgramTrack")
+            .equalTo("conference", conference)
+            .equalTo("feed", feed)
+            .map(x => x.id, { useMasterKey: true });
+    const usedBySessions =
+        await new Parse.Query("ProgramSession")
+            .equalTo("conference", conference)
+            .equalTo("feed", feed)
+            .map(x => x.id, { useMasterKey: true });
+    const usedByEvents =
+        await new Parse.Query("ProgramSessionEvent")
+            .equalTo("conference", conference)
+            .equalTo("feed", feed)
+            .map(x => x.id, { useMasterKey: true });
+    const usedByItems =
+        await new Parse.Query("ProgramSessionEvent")
+            .equalTo("conference", conference)
+            .equalTo("feed", feed)
+            .map(x => x.id, { useMasterKey: true });
+
+    const usedByTracksExcluding = excludeTrackId ? usedByTracks.filter(x => x !== excludeTrackId) : usedByTracks;
+    const usedBySessionsExcluding = excludeSessionId ? usedBySessions.filter(x => x !== excludeSessionId) : usedBySessions;
+    const usedByEventsExcluding = excludeEventId ? usedByEvents.filter(x => x !== excludeEventId) : usedByEvents;
+    const usedByItemsExcluding = excludeItemId ? usedByItems.filter(x => x !== excludeItemId) : usedByItems;
+
+    return usedByTracksExcluding.length > 0
+        || usedBySessionsExcluding.length > 0
+        || usedByEventsExcluding.length > 0
+        || usedByItemsExcluding.length > 0
+        ;
+}
+
 Parse.Cloud.beforeDelete("ProgramTrack", async request => {
     // Don't prevent deleting stuff just because of an error
     //   If things get deleted in the wrong order, the conference may even be missing
     try {
-        const room = request.object;
-        const conference = room.get("conference");
+        const track = request.object;
+        const conference = track.get("conference");
 
         await new Parse.Query("WatchedItems").equalTo("conference", conference).map(
             async watched => {
                 const watchedIds = watched.get("watchedTracks");
                 watched.set(
                     "watchedTracks",
-                    watchedIds.filter(x => x !== room.id)
+                    watchedIds.filter(x => x !== track.id)
                 );
                 await watched.save(null, { useMasterKey: true });
             },
             { useMasterKey: true }
         );
+
+        const feed = track.get("feed");
+        if (feed) {
+            const feedId = feed.id;
+            const feedInUse = await isInUse_ContentFeed(conference.id, feedId, track.id, undefined, undefined, undefined);
+            if (!feedInUse) {
+                await new Parse.Object("ContentFeed", { id: feedId }).destroy({ useMasterKey: true });
+            }
+        }
     } catch (e) {
         console.error(`Error deleting program track! ${e}`);
     }
@@ -38,20 +82,29 @@ Parse.Cloud.beforeDelete("ProgramSession", async request => {
     // Don't prevent deleting stuff just because of an error
     //   If things get deleted in the wrong order, the conference may even be missing
     try {
-        const room = request.object;
-        const conference = room.get("conference");
+        const session = request.object;
+        const conference = session.get("conference");
 
         await new Parse.Query("WatchedItems").equalTo("conference", conference).map(
             async watched => {
                 const watchedIds = watched.get("watchedSessions");
                 watched.set(
                     "watchedSessions",
-                    watchedIds.filter(x => x !== room.id)
+                    watchedIds.filter(x => x !== session.id)
                 );
                 await watched.save(null, { useMasterKey: true });
             },
             { useMasterKey: true }
         );
+
+        const feed = session.get("feed");
+        if (feed) {
+            const feedId = feed.id;
+            const feedInUse = await isInUse_ContentFeed(conference.id, feedId, undefined, session.id, undefined, undefined);
+            if (!feedInUse) {
+                await new Parse.Object("ContentFeed", { id: feedId }).destroy({ useMasterKey: true });
+            }
+        }
     } catch (e) {
         console.error(`Error deleting program session! ${e}`);
     }
@@ -61,22 +114,56 @@ Parse.Cloud.beforeDelete("ProgramSessionEvent", async request => {
     // Don't prevent deleting stuff just because of an error
     //   If things get deleted in the wrong order, the conference may even be missing
     try {
-        const room = request.object;
-        const conference = room.get("conference");
+        const event = request.object;
+        const conference = event.get("conference");
 
         await new Parse.Query("WatchedItems").equalTo("conference", conference).map(
             async watched => {
                 const watchedIds = watched.get("watchedEvents");
                 watched.set(
                     "watchedEvents",
-                    watchedIds.filter(x => x !== room.id)
+                    watchedIds.filter(x => x !== event.id)
                 );
                 await watched.save(null, { useMasterKey: true });
             },
             { useMasterKey: true }
         );
+
+        const feed = event.get("feed");
+        if (feed) {
+            const feedId = feed.id;
+            const feedInUse = await isInUse_ContentFeed(conference.id, feedId, undefined, undefined, event.id, undefined);
+            if (!feedInUse) {
+                await new Parse.Object("ContentFeed", { id: feedId }).destroy({ useMasterKey: true });
+            }
+        }
     } catch (e) {
         console.error(`Error deleting program session event! ${e}`);
+    }
+});
+
+Parse.Cloud.beforeDelete("ProgramItem", async request => {
+    // Don't prevent deleting stuff just because of an error
+    //   If things get deleted in the wrong order, the conference may even be missing
+    try {
+        const item = request.object;
+        const conference = item.get("conference");
+
+        const feed = item.get("feed");
+        if (feed) {
+            const feedId = feed.id;
+            const feedInUse = await isInUse_ContentFeed(conference.id, feedId, undefined, undefined, undefined, item.id);
+            if (!feedInUse) {
+                await new Parse.Object("ContentFeed", { id: feedId }).destroy({ useMasterKey: true });
+            }
+        }
+
+        await new Parse.Query("ProgramItemAttachment")
+            .equalTo("conference", conference)
+            .equalTo("programItem", item)
+            .map(attachment => attachment.destory({ useMasterKey: true }), { useMasterKey: true });
+    } catch (e) {
+        console.error(`Error deleting program item! ${e}`);
     }
 });
 

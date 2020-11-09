@@ -13,18 +13,16 @@ const { v4: uuidv4 } = require("uuid");
 const assert = require("assert");
 const Twilio = require("twilio");
 
-// TODO: Before delete: Prevent delete if still in use anywhere
-// TODO: Before delete: Delete channel in Twilio
 // TODO: Before delete: Delete mirrored TextChatMessage
 
 async function ensureTwilioUsersExist(service, profiles) {
     const existingUserProfileIds = (await service.users.list()).map(x => x.identity);
     await Promise.all(profiles.map(x => {
         if (!existingUserProfileIds.includes(x.id)) {
-            return service.users.create({
+            return callWithRetry(() => service.users.create({
                 identity: x.id,
                 friendlyName: uuidv4()
-            });
+            }));
         }
         return null;
     }));
@@ -207,7 +205,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
 
         const existingChannels
             = isDM
-                ? (await service.channels.list()).filter(x => x.uniqueName === uniqueName)
+                ? (await callWithRetry(() => service.channels.list())).filter(x => x.uniqueName === uniqueName)
                 : [];
 
         let newChannel;
@@ -260,7 +258,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             const membersProp = channel.members;
             const invitesProp = channel.invites;
 
-            const members = await membersProp.list();
+            const members = await callWithRetry(() => membersProp.list());
             const membersWithProfiles = await Promise.all(members.map(async member => ({
                 member,
                 profile: await getUserProfileById(member.identity, conference.id)
@@ -271,8 +269,8 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             });
 
             // Clear out any invites - we're not using invites anymore
-            const invites = await invitesProp.list();
-            await Promise.all(invites.map(invite => invite.remove()));
+            const invites = await callWithRetry(() => invitesProp.list());
+            await Promise.all(invites.map(invite => callWithRetry(() => invite.remove())));
 
             const memberProfileIds = membersWithProfiles.map(member => member.member.identity);
             // TODO: do we ever actually want to kick based on ACLs?
@@ -289,7 +287,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
             //     }
             // }));
 
-            const roles = await service.roles.list();
+            const roles = await callWithRetry(() => service.roles.list());
             const channelAdminRole = roles.find(x => x.friendlyName === "channel admin");
             const channelUserRole = roles.find(x => x.friendlyName === "channel user");
 
@@ -380,7 +378,7 @@ Parse.Cloud.beforeDelete("TextChat", async (req) => {
             const service = twilioClient.chat.services(serviceSID);
             const channel = service.channels(twilioID);
             try {
-                await channel.remove();
+                await callWithRetry(() => channel.remove());
             }
             catch (e) {
                 // "The requested resource /Services/SERVICE_ID/Channels/CHANNEL_ID was not found"
@@ -525,22 +523,22 @@ async function createTextChat(data) {
             body = `${data.creator.get("displayName")} has requested help${modNames.length > 0 ? ` from ${modNames}` : ""}.`;
         }
 
-        await modHubChannel.messages.create({
+        await callWithRetry(() => modHubChannel.messages.create({
             from: "system",
             body,
             attributes: JSON.stringify({
                 moderationChat: newObject.id
             }),
             xTwilioWebhookEnabled: true
-        });
+        }));
     }
 
     if (data.initialMessage) {
-        await targetChannel.messages.create({
+        await callWithRetry(() => targetChannel.messages.create({
             from: newObject.get("creator").id,
             body: data.initialMessage,
             xTwilioWebhookEnabled: true
-        });
+        }));
     }
 
     return newObject;

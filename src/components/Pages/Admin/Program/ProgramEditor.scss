@@ -17,8 +17,8 @@
         }
 
         .react-tabs__tab--disabled {
-            background-color: #eee;
-            border-top-left-radius: 5px;
+            background-color       : #eee;
+            border-top-left-radius : 5px;
             border-top-right-radius: 5px;
         }
 
@@ -32,17 +32,21 @@
                 ". tab .";
             column-gap: 1em;
 
-            width   : 100%;
-            height  : calc(100vh - 240px);
+            width : 100%;
+            // height: calc(100vh - 140px);
+            height: calc(100vh - 240px);
 
             &:empty {
                 display: none;
             }
 
             .content {
-                grid-area: tab;
-                width    : 100%;
-                height   : 100%;
+                grid-area     : tab;
+                width         : 100%;
+                height        : 100%;
+                // overflow      : auto;
+                // display       : flex;
+                // flex-direction: column;
             }
         }
     }

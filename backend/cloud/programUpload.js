@@ -73,10 +73,10 @@ Parse.Cloud.define("import-program-progress", async (request) => {
             const conference = await new Parse.Object("Conference", { id: confId }).fetch({ useMasterKey: true });
 
             const existingJobStatusQ =
-            await new Parse.Query("ConferenceConfiguration")
-                .equalTo("conference", conference)
-                .equalTo("key", "program-upload-job-id")
-                .first({ useMasterKey: true });
+                await new Parse.Query("ConferenceConfiguration")
+                    .equalTo("conference", conference)
+                    .equalTo("key", "program-upload-job-id")
+                    .first({ useMasterKey: true });
             if (existingJobStatusQ) {
                 const jobId = existingJobStatusQ.get("value");
                 let jobStatusQ = new Parse.Query("_JobStatus");
@@ -165,6 +165,31 @@ Parse.Cloud.job("import-program-job", async (request) => {
         const sessionIds = Object.keys(sessions);
         const attachmentTypeIds = Object.keys(attachmentTypes);
 
+        const existingTrackIds
+            = await new Parse.Query("ProgramTrack")
+                .equalTo("conference", conference)
+                .map(x => x.id, { useMasterKey: true });
+        const existingItemIds
+            = await new Parse.Query("ProgramItem")
+                .equalTo("conference", conference)
+                .map(x => x.id, { useMasterKey: true });
+        const existingEventIds
+            = await new Parse.Query("ProgramSessionEvent")
+                .equalTo("conference", conference)
+                .map(x => x.id, { useMasterKey: true });
+        const existingPersonIds
+            = await new Parse.Query("ProgramPerson")
+                .equalTo("conference", conference)
+                .map(x => x.id, { useMasterKey: true });
+        const existingSessionIds
+            = await new Parse.Query("ProgramSession")
+                .equalTo("conference", conference)
+                .map(x => x.id, { useMasterKey: true });
+        const existingAttachmentTypeIds
+            = await new Parse.Query("AttachmentType")
+                .equalTo("conference", conference)
+                .map(x => x.id, { useMasterKey: true });
+
         // TODO: Validate that everything we try to look up in the maps actually exists.
 
         const totalWork
@@ -175,6 +200,7 @@ Parse.Cloud.job("import-program-job", async (request) => {
             + itemIds.length
             + sessionIds.length
             + eventIds.length
+            + 1
             ;
         let progress = 0;
 
@@ -347,7 +373,41 @@ Parse.Cloud.job("import-program-job", async (request) => {
             incrementProgress();
         }
 
-        // TODO: Delete any not present in the upload (in correct order)
+        const unusedExistingTrackIds = existingTrackIds.filter(x => !tracksMap.has(x));
+        const unusedExistingItemIds = existingItemIds.filter(x => !itemsMap.has(x));
+        const unusedExistingEventIds = existingEventIds.filter(x => !eventsMap.has(x));
+        const unusedExistingPersonIds = existingPersonIds.filter(x => !personsMap.has(x));
+        const unusedExistingSessionIds = existingSessionIds.filter(x => !sessionsMap.has(x));
+        const unusedExistingAttachmentTypeIds = existingAttachmentTypeIds.filter(x => !attachmentTypesMap.has(x));
+
+        // The order of the following deletes matters, a lot.
+        // Note: We trust the rest of the backend to delete unused content feeds automatically
+
+        console.log(`Deleting ${unusedExistingEventIds.length} unused existing events...`);
+        await Promise.all(unusedExistingEventIds.map(id => new Parse.Object("ProgramSessionEvent", { id }).destroy({ useMasterKey: true })));
+        console.log(`Deleted ${unusedExistingEventIds.length} unused existing events.`);
+
+        console.log(`Deleting ${unusedExistingSessionIds.length} unused existing sessions...`);
+        await Promise.all(unusedExistingSessionIds.map(id => new Parse.Object("ProgramSession", { id }).destroy({ useMasterKey: true })));
+        console.log(`Deleted ${unusedExistingSessionIds.length} unused existing sessions.`);
+
+        console.log(`Deleting ${unusedExistingItemIds.length} unused existing items...`);
+        await Promise.all(unusedExistingItemIds.map(id => new Parse.Object("ProgramItem", { id }).destroy({ useMasterKey: true })));
+        console.log(`Deleted ${unusedExistingItemIds.length} unused existing items.`);
+
+        console.log(`Deleting ${unusedExistingTrackIds.length} unused existing tracks...`);
+        await Promise.all(unusedExistingTrackIds.map(id => new Parse.Object("ProgramTrack", { id }).destroy({ useMasterKey: true })));
+        console.log(`Deleted ${unusedExistingTrackIds.length} unused existing tracks.`);
+
+        console.log(`Deleting ${unusedExistingPersonIds.length} unused existing persons...`);
+        await Promise.all(unusedExistingPersonIds.map(id => new Parse.Object("ProgramPerson", { id }).destroy({ useMasterKey: true })));
+        console.log(`Deleted ${unusedExistingPersonIds.length} unused existing persons.`);
+
+        console.log(`Deleting ${unusedExistingAttachmentTypeIds.length} unused existing attachment types...`);
+        await Promise.all(unusedExistingAttachmentTypeIds.map(id => new Parse.Object("AttachmentType", { id }).destroy({ useMasterKey: true })));
+        console.log(`Deleted ${unusedExistingAttachmentTypeIds.length} unused existing attachment types.`);
+
+        incrementProgress();
 
         message("100");
     }
@@ -376,3 +436,5 @@ Parse.Cloud.job("import-program-job", async (request) => {
 //     }
 //     return false;
 // });
+
+// Parse.Cloud.job("clear-program-job"
