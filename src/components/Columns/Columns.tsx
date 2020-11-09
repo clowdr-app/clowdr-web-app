@@ -1,13 +1,11 @@
 import React from "react";
-import "./Columns.scss"
+import "./Columns.scss";
 
 interface Props {
-    children: JSX.Element;
+    children: React.ReactNode | React.ReactNodeArray;
     className?: string;
 }
 
 export default function Columns(props: Props) {
-    return <div className={`columns ${props.className}`}>
-        {props.children}
-    </div>;
+    return <div className={`columns ${props.className}`}>{props.children}</div>;
 }
