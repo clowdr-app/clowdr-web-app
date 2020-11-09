@@ -156,6 +156,7 @@ export default function AllVideoRooms() {
                 itemRenderer={{ render: roomRenderer }}
                 items={roomItems}
                 loadingMessage="Loading rooms"
+                emptyMessage="No breakout rooms."
             >
                 <h2>Breakout rooms</h2>
             </Column>
@@ -164,6 +165,7 @@ export default function AllVideoRooms() {
                 itemRenderer={{ render: roomRenderer }}
                 items={programRoomItems}
                 loadingMessage="Loading rooms"
+                emptyMessage="No program rooms."
             >
                 <h2>Program rooms</h2>
             </Column>
