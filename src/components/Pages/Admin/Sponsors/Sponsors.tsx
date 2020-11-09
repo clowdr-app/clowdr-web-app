@@ -10,6 +10,7 @@ import {
     DataDeletedEventDetails,
 } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
+import { Link } from "react-router-dom";
 
 export default function Sponsors() {
     const conference = useConference();
@@ -72,17 +73,23 @@ export default function Sponsors() {
 
     const existingSponsors = (
         <>
-            {sponsors
-                ?.sort((a, b) => a.name.localeCompare(b.name))
-                ?.map(sponsor => (
-                    <div key={sponsor.id}>
-                        <h3>{sponsor.name}</h3>
-                        <EditSponsor
-                            updateSponsor={async data => await editSponsor(sponsor.id, data)}
-                            existingSponsor={sponsor}
-                        />
-                    </div>
-                ))}
+            {sponsors && sponsors.length > 0 ? (
+                sponsors
+                    ?.sort((a, b) => a.name.localeCompare(b.name))
+                    ?.map(sponsor => (
+                        <div key={sponsor.id}>
+                            <h3>
+                                <Link to={`/sponsor/${sponsor.id}`}>{sponsor.name}</Link>
+                            </h3>
+                            <EditSponsor
+                                updateSponsor={async data => await editSponsor(sponsor.id, data)}
+                                existingSponsor={sponsor}
+                            />
+                        </div>
+                    ))
+            ) : (
+                <p>No sponsors found.</p>
+            )}
         </>
     );
 

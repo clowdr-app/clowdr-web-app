@@ -10,6 +10,8 @@ $main-width: 100%;
     max-width: 50em;
 
     .form-buttons {
-        margin: mm(3) 0;
+        display        : flex;
+        justify-content: space-between;
+        margin         : mm(3) 0;
     }
 }
