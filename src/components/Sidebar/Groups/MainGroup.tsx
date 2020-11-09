@@ -29,7 +29,7 @@ export default function MainMenuGroup(props: Props) {
             element: (
                 <MenuItem
                     icon={profileIcon}
-                    title={`${mUser.displayName} (${mUser.realName})`}
+                    title={`${mUser.displayName}`}
                     label={`Profile (${mUser.displayName})`}
                     action="/profile"
                     onClick={props.onItemClicked}
