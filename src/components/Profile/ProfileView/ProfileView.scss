@@ -5,6 +5,8 @@ $gutter     : mm(10);
 $main-width : mm(180);
 
 .profile-view {
+    margin: 1em 0;
+
     .content {
         display        : flex;
         max-width      : calc(#{$photo-width} + #{$gutter} + #{$main-width});

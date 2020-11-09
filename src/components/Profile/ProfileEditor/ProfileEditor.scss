@@ -6,6 +6,7 @@ $gutter     : mm(10);
 $main-width : mm(150);
 
 .profile-editor {
+    margin: 1em 0;
     @include basic-form;
 
     .content {
