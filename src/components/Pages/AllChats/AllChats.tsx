@@ -8,7 +8,7 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
 import useChats from "../../../hooks/useChats";
 import useUserProfile from "../../../hooks/useUserProfile";
 import useUserProfiles from "../../../hooks/useUserProfiles";
-import Column, { DefaultItemRenderer, Item as ColumnItem } from "../../Columns/Column/Column";
+import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
 import Columns from "../../Columns/Columns";
 import FlairChip from "../../Profile/FlairChip/FlairChip";
 import "./AllChats.scss";
