@@ -440,16 +440,20 @@ export default function SponsorsGroup(props: Props) {
 
     const sponsorsEl = <MenuGroup items={getSponsorMenuItems()} />;
 
-    const sponsorsExpander = mUser && (
-        <MenuExpander
-            title="Sponsors"
-            isOpen={state.isOpen}
-            buttons={sponsorsButtons}
-            onOpenStateChange={() => dispatchUpdate({ action: "setIsOpen", isOpen: !state.isOpen })}
-        >
-            {sponsorsEl}
-        </MenuExpander>
-    );
+    const sponsorsExpander =
+        mUser &&
+        (state.allSponsors && state.allSponsors.length > 0 ? (
+            <MenuExpander
+                title="Sponsors"
+                isOpen={state.isOpen}
+                buttons={sponsorsButtons}
+                onOpenStateChange={() => dispatchUpdate({ action: "setIsOpen", isOpen: !state.isOpen })}
+            >
+                {sponsorsEl}
+            </MenuExpander>
+        ) : (
+            <></>
+        ));
 
     return sponsorsExpander;
 }
