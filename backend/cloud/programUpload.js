@@ -219,6 +219,10 @@ Parse.Cloud.job("import-program-job", async (request) => {
             const feed = feeds[feedId];
             const feedName = feed.name;
 
+            // TODO: Check for an existing content feed first; use its
+            // video room / text chat if existent / needed(or delete if not)
+            // in order to avoid the name case -sensitivity issue
+
             if (feed.youtube) {
                 youtubeObj = await createYouTubeFeed({
                     conference,
