@@ -32,6 +32,7 @@ const Container = styled("div")({
 
 const Main = styled("main")(({ theme: _theme }: { theme: Theme }) => ({
     overflow: "hidden",
+    position: "relative",
     paddingBottom: `${_theme.footerHeight}px`, // Leave some space for the footer
     [_theme.breakpoints.down("sm")]: {
         paddingBottom: `${_theme.mobileFooterHeight + _theme.mobileTopBarHeight}px`, // Leave some space for the mobile header and footer
