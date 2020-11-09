@@ -373,12 +373,19 @@ Parse.Cloud.job("import-program-job", async (request) => {
             incrementProgress();
         }
 
-        const unusedExistingTrackIds = existingTrackIds.filter(x => !tracksMap.has(x));
-        const unusedExistingItemIds = existingItemIds.filter(x => !itemsMap.has(x));
-        const unusedExistingEventIds = existingEventIds.filter(x => !eventsMap.has(x));
-        const unusedExistingPersonIds = existingPersonIds.filter(x => !personsMap.has(x));
-        const unusedExistingSessionIds = existingSessionIds.filter(x => !sessionsMap.has(x));
-        const unusedExistingAttachmentTypeIds = existingAttachmentTypeIds.filter(x => !attachmentTypesMap.has(x));
+        const usedTrackIds = Array.from(tracksMap.values()).map(x => x.id);
+        const usedItemIds = Array.from(itemsMap.values()).map(x => x.id);
+        const usedEventIds = Array.from(eventsMap.values()).map(x => x.id);
+        const usedPersonIds = Array.from(personsMap.values()).map(x => x.id);
+        const usedSessionIds = Array.from(sessionsMap.values()).map(x => x.id);
+        const usedAttachmentTypeIds = Array.from(attachmentTypesMap.values()).map(x => x.id);
+
+        const unusedExistingTrackIds = existingTrackIds.filter(x => !usedTrackIds.includes(x));
+        const unusedExistingItemIds = existingItemIds.filter(x => !usedItemIds.includes(x));
+        const unusedExistingEventIds = existingEventIds.filter(x => !usedEventIds.includes(x));
+        const unusedExistingPersonIds = existingPersonIds.filter(x => !usedPersonIds.includes(x));
+        const unusedExistingSessionIds = existingSessionIds.filter(x => !usedSessionIds.includes(x));
+        const unusedExistingAttachmentTypeIds = existingAttachmentTypeIds.filter(x => !usedAttachmentTypeIds.includes(x));
 
         // The order of the following deletes matters, a lot.
         // Note: We trust the rest of the backend to delete unused content feeds automatically
@@ -437,4 +444,6 @@ Parse.Cloud.job("import-program-job", async (request) => {
 //     return false;
 // });
 
-// Parse.Cloud.job("clear-program-job"
+// Parse.Cloud.job("clear-program-job", async (request) => {
+
+// });
