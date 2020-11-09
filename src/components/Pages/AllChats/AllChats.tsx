@@ -140,24 +140,26 @@ export default function AllChats() {
         const data = item.renderData;
         return (
             <>
-                <Link to={data.profileLink} className="user-info">
-                    <i
-                        className={`fa${data.online ? "s" : "r"} fa-circle ${
-                            data.online ? "online" : ""
-                        } online-indicator`}
-                    ></i>
-                    {item.text}
-                    <div className="flair-box">
-                        {data.flairs.map((flair, i) => (
-                            <div className="flair-container" key={i}>
-                                <FlairChip flair={flair} />
-                            </div>
-                        ))}
-                    </div>
+                <div className="chat-item">
+                    <Link to={data.profileLink} className="user-info">
+                        <i
+                            className={`fa${data.online ? "s" : "r"} fa-circle ${
+                                data.online ? "online" : ""
+                            } online-indicator`}
+                        ></i>
+                        {item.text}
+                        <div className="flair-box">
+                            {data.flairs.map((flair, i) => (
+                                <div className="flair-container" key={i}>
+                                    <FlairChip flair={flair} />
+                                </div>
+                            ))}
+                        </div>
+                    </Link>
                     <Link to={item.link ?? "#"} title="Send message" aria-label="Send message" className="send-message">
                         <i className={`far fa-envelope-open fa-lg`}></i>
                     </Link>
-                </Link>
+                </div>
             </>
         );
     }
