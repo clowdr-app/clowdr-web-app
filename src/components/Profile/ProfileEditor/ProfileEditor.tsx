@@ -80,6 +80,11 @@ export default function ProfileEditor(props: Props) {
         await p.save();
     }
 
+    async function deletePhoto() {
+        p.profilePhoto = undefined;
+        await p.save();
+    }
+
     const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.item(0);
         if (file) {
@@ -131,6 +136,11 @@ export default function ProfileEditor(props: Props) {
                         <img src={profilePhotoUrl} alt={p.displayName + "'s avatar"} />
                     ) : (
                         <img src={defaultProfilePic} alt="default avatar" />
+                    )}
+                    {profilePhotoUrl && (
+                        <button className="delete" aria-label="delete profile image" onClick={deletePhoto}>
+                            <i className="fas fa-trash"></i>
+                        </button>
                     )}
                     <div className="upload">
                         <input

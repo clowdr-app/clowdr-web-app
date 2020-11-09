@@ -64,6 +64,20 @@ $main-width : mm(150);
                     z-index : -1;
                 }
             }
+
+            .delete {
+                position     : absolute;
+                top          : 0;
+                right        : 0;
+                color        : white;
+                background   : rgba(0, 0, 0, 0.4);
+                border-radius: 0;
+                border       : 1px solid white;
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.4)
+                }
+            }
         }
     }
 }

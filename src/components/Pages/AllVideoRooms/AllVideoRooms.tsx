@@ -25,14 +25,9 @@ export default function AllVideoRooms() {
 
     const conference = useConference();
     const [videoRooms, setVideoRooms] = useState<Array<VideoRoom> | null>(null);
-    const [rooms, setRooms_] = useState<Array<RoomData> | null>(null);
+    const [rooms, setRooms] = useState<Array<RoomData> | null>(null);
     const [roomItems, setRoomItems] = useState<Array<ColumnItem<RoomData>> | undefined>();
     const [programRoomItems, setProgramRoomItems] = useState<Array<ColumnItem<RoomData>> | undefined>();
-
-    const setRooms = (x: Array<RoomData> | null) => {
-        console.log(`AllVideoRooms:setRooms(${x})`);
-        setRooms_(x);
-    };
 
     // Subscribe to VideoRooms
     useSafeAsync(
@@ -67,26 +62,14 @@ export default function AllVideoRooms() {
 
     useDataSubscription("VideoRoom", onVideoRoomUpdated, onVideoRoomDeleted, !videoRooms, conference);
 
-    useEffect(() => {
-        console.log(`videoRooms: ${JSON.stringify(videoRooms?.map(x => x.name))}`);
-    }, [videoRooms]);
-
     useSafeAsync(
         async () => {
-            console.log(
-                `useSafeAsync: executing for AllVideoRooms:ChatView:setRooms with ${JSON.stringify(
-                    videoRooms?.map(x => x.name)
-                )}`
-            );
             return videoRooms
                 ? await Promise.all(
                       videoRooms.map(async room => {
                           const participants = await room.participantProfiles;
-                          console.log(`AllVideoRooms: Got participant profiles for ${room.name}`);
                           const relatedContentFeeds = await ContentFeed.getAllByVideoRoom(room.id, conference.id);
-                          console.log(`AllVideoRooms: Got related content feeds for ${room.name}`);
                           const relatedSponsors = await Sponsor.getAllByVideoRoom(room.id, conference.id);
-                          console.log(`AllVideoRooms: Got related sponsors for ${room.name}`);
                           return { room, participants, contentFeeds: relatedContentFeeds, sponsors: relatedSponsors };
                       })
                   )
@@ -98,7 +81,6 @@ export default function AllVideoRooms() {
     );
 
     useEffect(() => {
-        console.log(`AllVideoRooms: generating roomItems`);
         const items = rooms
             ?.filter(room => room.contentFeeds.length === 0)
             ?.filter(room => room.sponsors.length === 0)
@@ -111,7 +93,6 @@ export default function AllVideoRooms() {
                     link: `/room/${room.room.id}`,
                 };
             });
-        console.log(`AllVideoRooms: setting roomItems to ${JSON.stringify(items)}`);
         setRoomItems(items);
     }, [rooms]);
 

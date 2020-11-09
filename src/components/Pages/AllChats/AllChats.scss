@@ -3,12 +3,19 @@
 .all-chats {
     margin-top: 1em;
 
+    .chat-item {
+        column-gap    : 0.2em;
+        display       : flex;
+        flex-direction: row;
+        align-items   : center;
+    }
+
     .user-info {
         display      : flex;
         align-items  : center;
         column-gap   : 0.5em;
+        flex-grow    : 1;
         row-gap      : 0.5em;
-        align-items  : center;
         height       : 3em;
         padding      : 0 1em;
         color        : black;
@@ -60,16 +67,17 @@
                 flex-shrink: 0;
             }
         }
+    }
 
-        .send-message {
-            background   : $gray-6;
-            border-radius: 5px;
-            color        : black;
-            padding      : 0.5em;
+    .send-message {
+        border-radius: 5px;
+        color        : black;
+        height       : 80%;
+        line-height  : normal;
+        padding      : 0.5em;
 
-            &:hover {
-                background: $gray-5;
-            }
+        &:hover {
+            background: $gray-6;
         }
     }
 }
