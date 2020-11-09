@@ -117,6 +117,29 @@ export default function AllChats() {
         const data = item.renderData;
         return (
             <>
+                <Link to={item.link ?? "#"} className="user-info">
+                    <i
+                        className={`fa${data.online ? "s" : "r"} fa-circle ${
+                            data.online ? "online" : ""
+                        } online-indicator`}
+                    ></i>
+                    {item.text}
+                    <div className="flair-box">
+                        {data.flairs.map((flair, i) => (
+                            <div className="flair-container" key={i}>
+                                <FlairChip flair={flair} />
+                            </div>
+                        ))}
+                    </div>
+                </Link>
+            </>
+        );
+    }
+
+    function userRenderer(item: ColumnItem<DMData>): JSX.Element {
+        const data = item.renderData;
+        return (
+            <>
                 <Link to={data.profileLink} className="user-info">
                     <i
                         className={`fa${data.online ? "s" : "r"} fa-circle ${
@@ -189,7 +212,7 @@ export default function AllChats() {
                     className="col"
                     items={allOtherUserItems}
                     sort={isOnlineSorter}
-                    itemRenderer={{ render: dmRenderer }}
+                    itemRenderer={{ render: userRenderer }}
                     loadingMessage="Loading users"
                     emptyMessage="No other users available."
                 >
