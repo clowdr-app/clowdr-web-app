@@ -40,7 +40,7 @@ export default function FlairInput(props: Props) {
     return <div className="flair-input">
         {allFlairs
             .sort((x, y) => x.label.localeCompare(y.label))
-            .sort((x, y) => x.priority < y.priority ? -1 : x.priority === y.priority ? 0 : 1)
+            .sort((x, y) => x.priority > y.priority ? -1 : x.priority === y.priority ? 0 : 1)
             .map((flair, i) =>
             <div className="chip-container" key={i}>
                 <FlairChip
