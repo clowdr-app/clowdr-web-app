@@ -5,7 +5,7 @@
 
 const Twilio = require("twilio");
 
-const { validateRequest } = require("./utils");
+const { callWithRetry, validateRequest } = require("./utils");
 const { generateRoleDBName, getRoleByName, isUserInRoles } = require("./role");
 const assert = require("assert");
 
@@ -202,7 +202,6 @@ async function getConferenceDetails(conference, key) {
     }
 }
 
-// TODO: Apply callWithRetry to Twilio API calls
 Parse.Cloud.job("conference-create", async (request) => {
     const { params, message: _message } = request;
     const message = (msg) => {
@@ -649,23 +648,23 @@ Parse.Cloud.job("conference-create", async (request) => {
                 let accounts = await twilioMasterClient.api.accounts.list({ status: 'active' });
                 for (let account of accounts) {
                     if (account.friendlyName.includes("<<$$##DEAD>>")) {
-                        await account.update({ status: "closed" });
+                        await callWithRetry(() => account.update({ status: "closed" }));
                     }
                 }
 
                 accounts = await twilioMasterClient.api.accounts.list({ status: 'suspended' });
                 for (let account of accounts) {
                     if (account.friendlyName.includes("<<$$##DEAD>>")) {
-                        await account.update({ status: "closed" });
+                        await callWithRetry(() => account.update({ status: "closed" }));
                     }
                 }
             }
             async function getTwilioSubaccount() {
-                let accounts = await twilioMasterClient.api.accounts.list({ friendlyName: generateTwilioSubaccountFriendlyName(), status: "suspended" });
-                accounts = accounts.concat(await twilioMasterClient.api.accounts.list({ friendlyName: generateTwilioSubaccountFriendlyName(), status: "active" }));
+                let accounts = await callWithRetry(() => twilioMasterClient.api.accounts.list({ friendlyName: generateTwilioSubaccountFriendlyName(), status: "suspended" }));
+                accounts = accounts.concat(await callWithRetry(() => twilioMasterClient.api.accounts.list({ friendlyName: generateTwilioSubaccountFriendlyName(), status: "active" })));
                 if (accounts.length === 1) {
                     if (params.twilio.removeExisting) {
-                        await twilioMasterClient.api.accounts(accounts[0].sid).update({ status: "closed" });
+                        await callWithRetry(() => twilioMasterClient.api.accounts(accounts[0].sid).update({ status: "closed" }));
                         return null;
                     }
                     else {
@@ -675,7 +674,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 else if (accounts.length > 0) {
                     if (params.twilio.removeExisting) {
                         for (let account of accounts) {
-                            await twilioMasterClient.api.accounts(account.sid).update({ status: "closed" });
+                            await callWithRetry(() => twilioMasterClient.api.accounts(account.sid).update({ status: "closed" }));
                         }
                         return null;
                     }
@@ -689,10 +688,10 @@ Parse.Cloud.job("conference-create", async (request) => {
                 }
             }
             async function reactivateTwilioSubaccount() {
-                await twilioMasterClient.api.accounts(twilioSubaccount.sid).update({ status: 'active' });
+                await callWithRetry(() => twilioMasterClient.api.accounts(twilioSubaccount.sid).update({ status: 'active' }));
             }
             async function createTwilioSubaccount() {
-                twilioSubaccount = await twilioMasterClient.api.accounts.create({ friendlyName: generateTwilioSubaccountFriendlyName() });
+                twilioSubaccount = await callWithRetry(() => twilioMasterClient.api.accounts.create({ friendlyName: generateTwilioSubaccountFriendlyName() }));
             }
             await clearOutDeadSubaccounts();
             twilioSubaccount = await getTwilioSubaccount();
@@ -712,12 +711,12 @@ Parse.Cloud.job("conference-create", async (request) => {
                 let subaccountAuthToken = twilioSubaccount.authToken;
 
                 twilioSubaccountClient = Twilio(subaccountSID, subaccountAuthToken);
-                let existingKeys = await twilioSubaccountClient.api.keys.list();
+                let existingKeys = await callWithRetry(() => twilioSubaccountClient.api.keys.list());
                 for (let existingKey of existingKeys) {
-                    await existingKey.remove();
+                    await callWithRetry(() => existingKey.remove());
                 }
 
-                let newKey = await twilioSubaccountClient.newKeys.create();
+                let newKey = await callWithRetry(() => twilioSubaccountClient.newKeys.create());
                 await setConfiguration("TWILIO_API_KEY", newKey.sid, false);
                 await setConfiguration("TWILIO_API_SECRET", newKey.secret, false);
                 await setConfiguration("TWILIO_ACCOUNT_SID", subaccountSID, false);
@@ -735,7 +734,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             // Initialise Twilio Programmable Chat Service
             message(`Configuring Twilio chat service...`);
             async function getTwilioChatService() {
-                let services = await twilioSubaccountClient.chat.services.list();
+                let services = await callWithRetry(() => twilioSubaccountClient.chat.services.list());
                 for (let service of services) {
                     if (service.friendlyName === "main") {
                         twilioChatService = service;
@@ -743,12 +742,12 @@ Parse.Cloud.job("conference-create", async (request) => {
                 }
             }
             async function createTwilioChatService() {
-                twilioChatService = await twilioSubaccountClient.chat.services.create({ friendlyName: 'main' });
+                twilioChatService = await callWithRetry(() => twilioSubaccountClient.chat.services.create({ friendlyName: 'main' }));
             }
             async function configureTwilioChatService() {
                 await setConfiguration("TWILIO_CHAT_SERVICE_SID", twilioChatService.sid, false);
 
-                const service = await twilioChatService.update({
+                const service = await callWithRetry(() => twilioChatService.update({
                     reachabilityEnabled: TWILIO_REACHABILITY_ENABLED,
                     readStatusEnabled: TWILIO_READ_STATUS_ENABLED,
                     webhookMethod: TWILIO_WEBHOOK_METHOD,
@@ -761,7 +760,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                     },
                     preWebhookRetryCount: TWILIO_CHAT_PRE_WEBHOOK_RETRY_COUNT,
                     postWebhookRetryCount: TWILIO_CHAT_POST_WEBHOOK_RETRY_COUNT
-                });
+                }));
                 console.log(`Updated Twilio Chat Service: ${service.friendlyName}`);
             }
             await getTwilioChatService();
@@ -770,14 +769,14 @@ Parse.Cloud.job("conference-create", async (request) => {
             }
             else {
                 // Clear out existing: channels, users and roles
-                await Promise.all((await twilioChatService.channels().list()).map(x => x.remove()));
-                await Promise.all((await twilioChatService.users().list()).map(x => x.remove()));
-                await Promise.all((await twilioChatService.roles().list()).map(async x => {
+                await Promise.all((await callWithRetry(() => twilioChatService.channels().list())).map(x => x.remove()));
+                await Promise.all((await callWithRetry(() => twilioChatService.users().list())).map(x => x.remove()));
+                await Promise.all((await callWithRetry(() => twilioChatService.roles().list())).map(async x => {
                     // Don't bother deleting roles we are about to recreate
                     // BUT ALSO: We can't (& shouldn't according to Twilio's docs)
                     // delete the service's default roles
                     if (!defaultTwilioChatRoles.map(y => y.name).includes(x.friendlyName)) {
-                        await x.remove();
+                        await callWithRetry(() => x.remove());
                     }
                 }));
             }
@@ -791,7 +790,7 @@ Parse.Cloud.job("conference-create", async (request) => {
             const twilioChatRoles = new Map();
             async function getChatRoles() {
                 message(`Getting chat roles`);
-                const roles = await twilioChatService.roles().list();
+                const roles = await callWithRetry(() => twilioChatService.roles().list());
                 message(`Got chat roles, processing them...`);
                 for (let role of roles) {
                     twilioChatRoles.set(role.friendlyName, role);
@@ -808,7 +807,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                     type: type
                 };
                 addPermissionsToDescriptor(roleDescriptor, permissions);
-                let role = await twilioChatService.roles().create(roleDescriptor);
+                let role = await callWithRetry(() => twilioChatService.roles().create(roleDescriptor));
                 twilioChatRoles.set(friendlyName, role);
                 message(`Created chat role ${friendlyName}`);
             }
@@ -816,7 +815,7 @@ Parse.Cloud.job("conference-create", async (request) => {
                 message(`Configuring chat role ${friendlyName}`);
                 let obj = {};
                 addPermissionsToDescriptor(obj, permissions);
-                await twilioChatRoles.get(friendlyName).update(obj);
+                await callWithRetry(() => twilioChatRoles.get(friendlyName).update(obj));
                 message(`Configured chat role ${friendlyName}`);
             }
             await getChatRoles();
@@ -954,7 +953,7 @@ async function configureGlobalChats(message, twilioChatService, setConfiguration
     message(`Configuring announcements channel...`);
     let twilioAnnouncementsChannel = null;
     async function getAnnouncementsChannel() {
-        let channels = await twilioChatService.channels().list();
+        let channels = await callWithRetry(() => twilioChatService.channels().list());
         for (let channel of channels) {
             if (channel.friendlyName === TWILIO_ANNOUNCEMENTS_CHANNEL_NAME) {
                 twilioAnnouncementsChannel = channel;
@@ -962,12 +961,12 @@ async function configureGlobalChats(message, twilioChatService, setConfiguration
         }
     }
     async function createAnnouncementsChannel() {
-        twilioAnnouncementsChannel = await twilioChatService.channels().create({
+        twilioAnnouncementsChannel = await callWithRetry(() => twilioChatService.channels().create({
             friendlyName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
             uniqueName: TWILIO_ANNOUNCEMENTS_CHANNEL_NAME,
             attributes: {},
             type: "public"
-        });
+        }));
     }
     await getAnnouncementsChannel();
     if (!twilioAnnouncementsChannel) {
@@ -978,21 +977,21 @@ async function configureGlobalChats(message, twilioChatService, setConfiguration
 
     message(`Adding admin user to announcements channel...`);
     try {
-        await twilioChatService.users().create({
+        await callWithRetry(() => twilioChatService.users().create({
             identity: adminUserProfile.id,
             friendlyName: "original-admin",
             roleSid: twilioChatRoles.get("service admin").sid
-        });
+        }));
     }
     catch (e) {
         if (!e.toString().toLowerCase().includes("user already exists")) {
             throw e;
         }
     }
-    await twilioAnnouncementsChannel.members().create({
+    await callWithRetry(() => twilioAnnouncementsChannel.members().create({
         identity: adminUserProfile.id,
         roleSid: twilioChatRoles.get("announcements admin").sid
-    });
+    }));
     message(`Added admin user to announcements channel.`);
 
     message(`Creating announcements text chat in Parse...`);
@@ -1026,7 +1025,7 @@ async function configureGlobalChats(message, twilioChatService, setConfiguration
     message(`Configuring moderation hub channel...`);
     let twilioModerationHubChannel = null;
     async function getModerationHubChannel() {
-        let channels = await twilioChatService.channels().list();
+        let channels = await callWithRetry(() => twilioChatService.channels().list());
         for (let channel of channels) {
             if (channel.friendlyName === TWILIO_MODERATIONHUB_CHANNEL_NAME) {
                 twilioModerationHubChannel = channel;
@@ -1034,28 +1033,28 @@ async function configureGlobalChats(message, twilioChatService, setConfiguration
         }
     }
     async function createModerationHubChannel() {
-        twilioModerationHubChannel = await twilioChatService.channels().create({
+        twilioModerationHubChannel = await callWithRetry(() => twilioChatService.channels().create({
             friendlyName: TWILIO_MODERATIONHUB_CHANNEL_NAME,
             uniqueName: TWILIO_MODERATIONHUB_CHANNEL_NAME,
             attributes: {},
             type: "private"
-        });
+        }));
     }
     await getModerationHubChannel();
     if (!twilioModerationHubChannel) {
         await createModerationHubChannel();
     }
     try {
-        await twilioModerationHubChannel.members().create({
+        await callWithRetry(() => twilioModerationHubChannel.members().create({
             identity: adminUserProfile.id,
             roleSid: twilioChatRoles.get("channel user").sid
-        });
+        }));
     }
     catch (e) {
-        await twilioModerationHubChannel.members().update({
+        await callWithRetry(() => twilioModerationHubChannel.members().update({
             identity: adminUserProfile.id,
             roleSid: twilioChatRoles.get("channel user").sid
-        });
+        }));
     }
     message(`Configured moderation hub channel.`);
 
@@ -1220,7 +1219,7 @@ Parse.Cloud.job("regenerate-global-chats", async (request) => {
             await getTwilioSubaccountClient();
 
             async function getTwilioChatService() {
-                let services = await twilioSubaccountClient.chat.services.list();
+                let services = await callWithRetry(() => twilioSubaccountClient.chat.services.list());
                 for (let service of services) {
                     if (service.friendlyName === "main") {
                         twilioChatService = service;
@@ -1233,7 +1232,7 @@ Parse.Cloud.job("regenerate-global-chats", async (request) => {
             const twilioChatRoles = new Map();
             async function getChatRoles() {
                 message(`Getting chat roles`);
-                const roles = await twilioChatService.roles().list();
+                const roles = await callWithRetry(() => twilioChatService.roles().list());
                 message(`Got chat roles, processing them...`);
                 for (let role of roles) {
                     twilioChatRoles.set(role.friendlyName, role);
@@ -1242,7 +1241,7 @@ Parse.Cloud.job("regenerate-global-chats", async (request) => {
             }
             await getChatRoles();
 
-            await Promise.all((await twilioChatService.users().list()).map(x => x.remove()));
+            await Promise.all((await callWithRetry(() => twilioChatService.users().list())).map(x => x.remove()));
 
             // Create the announcements channel
             await configureGlobalChats(message, twilioChatService, setConfiguration, adminUserProfile, twilioChatRoles, conference, managerRole, adminRole, attendeeRole);
