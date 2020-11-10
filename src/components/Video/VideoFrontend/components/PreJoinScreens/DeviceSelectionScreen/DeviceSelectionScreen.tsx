@@ -1,53 +1,57 @@
-import React from 'react';
-import { makeStyles, Typography, Grid, Button, Theme, Hidden } from '@material-ui/core';
-import LocalVideoPreview from './LocalVideoPreview/LocalVideoPreview';
-import SettingsMenu from './SettingsMenu/SettingsMenu';
-import ToggleAudioButton from '../../Buttons/ToggleAudioButton/ToggleAudioButton';
-import ToggleVideoButton from '../../Buttons/ToggleVideoButton/ToggleVideoButton';
-import { useAppState } from '../../../state';
-import useVideoContext from '../../../hooks/useVideoContext/useVideoContext';
-import { VideoRoom } from '@clowdr-app/clowdr-db-schema';
-import assert from 'assert';
-import useUserProfile from '../../../../../../hooks/useUserProfile';
+import React from "react";
+import { makeStyles, Typography, Grid, Button, Theme, Hidden } from "@material-ui/core";
+import LocalVideoPreview from "./LocalVideoPreview/LocalVideoPreview";
+import SettingsMenu from "./SettingsMenu/SettingsMenu";
+import ToggleAudioButton from "../../Buttons/ToggleAudioButton/ToggleAudioButton";
+import ToggleVideoButton from "../../Buttons/ToggleVideoButton/ToggleVideoButton";
+import { useAppState } from "../../../state";
+import useVideoContext from "../../../hooks/useVideoContext/useVideoContext";
+import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
+import assert from "assert";
+import useUserProfile from "../../../../../../hooks/useUserProfile";
 
 const useStyles = makeStyles((theme: Theme) => ({
     gutterBottom: {
-        marginBottom: '1em',
+        marginBottom: "1em",
     },
     marginTop: {
-        marginTop: '1em',
+        marginTop: "1em",
     },
     deviceButton: {
-        width: '100%',
-        border: '2px solid #aaa',
-        margin: '1em 0',
+        color: "black",
+        width: "100%",
+        border: "2px solid #aaa",
+        margin: "1em 0",
+        "&:hover": {
+            color: "black",
+        },
     },
     localPreviewContainer: {
-        paddingRight: '2em',
-        [theme.breakpoints.down('sm')]: {
-            padding: '0 2.5em',
+        paddingRight: "2em",
+        [theme.breakpoints.down("sm")]: {
+            padding: "0 2.5em",
         },
     },
     joinButtons: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        [theme.breakpoints.down('sm')]: {
-            flexDirection: 'column-reverse',
-            width: '100%',
-            '& button': {
-                margin: '0.5em 0',
+        display: "flex",
+        justifyContent: "space-between",
+        [theme.breakpoints.down("sm")]: {
+            flexDirection: "column-reverse",
+            width: "100%",
+            "& button": {
+                margin: "0.5em 0",
             },
         },
     },
     mobileButtonBar: {
-        [theme.breakpoints.down('sm')]: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            margin: '1.5em 0 1em',
+        [theme.breakpoints.down("sm")]: {
+            display: "flex",
+            justifyContent: "space-between",
+            margin: "1.5em 0 1em",
         },
     },
     mobileButton: {
-        padding: '0.8em 0',
+        padding: "0.8em 0",
         margin: 0,
     },
 }));
@@ -90,7 +94,7 @@ export default function DeviceSelectionScreen({ room }: DeviceSelectionScreenPro
                     </div>
                 </Grid>
                 <Grid item md={5} sm={12} xs={12}>
-                    <Grid container direction="column" justify="space-between" style={{ height: '100%' }}>
+                    <Grid container direction="column" justify="space-between" style={{ height: "100%" }}>
                         <div>
                             <Hidden smDown>
                                 <ToggleAudioButton className={classes.deviceButton} disabled={disableButtons} />

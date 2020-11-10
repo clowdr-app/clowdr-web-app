@@ -13,37 +13,36 @@ const { getProfileOfUser } = require("./user");
 async function isInUse_ContentFeed(conferenceId, id, excludeTrackId, excludeSessionId, excludeEventId, excludeItemId) {
     const feed = new Parse.Object("ContentFeed", { id });
     const conference = new Parse.Object("Conference", { id: conferenceId });
-    const usedByTracks =
-        await new Parse.Query("ProgramTrack")
-            .equalTo("conference", conference)
-            .equalTo("feed", feed)
-            .map(x => x.id, { useMasterKey: true });
-    const usedBySessions =
-        await new Parse.Query("ProgramSession")
-            .equalTo("conference", conference)
-            .equalTo("feed", feed)
-            .map(x => x.id, { useMasterKey: true });
-    const usedByEvents =
-        await new Parse.Query("ProgramSessionEvent")
-            .equalTo("conference", conference)
-            .equalTo("feed", feed)
-            .map(x => x.id, { useMasterKey: true });
-    const usedByItems =
-        await new Parse.Query("ProgramSessionEvent")
-            .equalTo("conference", conference)
-            .equalTo("feed", feed)
-            .map(x => x.id, { useMasterKey: true });
+    const usedByTracks = await new Parse.Query("ProgramTrack")
+        .equalTo("conference", conference)
+        .equalTo("feed", feed)
+        .map(x => x.id, { useMasterKey: true });
+    const usedBySessions = await new Parse.Query("ProgramSession")
+        .equalTo("conference", conference)
+        .equalTo("feed", feed)
+        .map(x => x.id, { useMasterKey: true });
+    const usedByEvents = await new Parse.Query("ProgramSessionEvent")
+        .equalTo("conference", conference)
+        .equalTo("feed", feed)
+        .map(x => x.id, { useMasterKey: true });
+    const usedByItems = await new Parse.Query("ProgramSessionEvent")
+        .equalTo("conference", conference)
+        .equalTo("feed", feed)
+        .map(x => x.id, { useMasterKey: true });
 
     const usedByTracksExcluding = excludeTrackId ? usedByTracks.filter(x => x !== excludeTrackId) : usedByTracks;
-    const usedBySessionsExcluding = excludeSessionId ? usedBySessions.filter(x => x !== excludeSessionId) : usedBySessions;
+    const usedBySessionsExcluding = excludeSessionId
+        ? usedBySessions.filter(x => x !== excludeSessionId)
+        : usedBySessions;
     const usedByEventsExcluding = excludeEventId ? usedByEvents.filter(x => x !== excludeEventId) : usedByEvents;
     const usedByItemsExcluding = excludeItemId ? usedByItems.filter(x => x !== excludeItemId) : usedByItems;
 
-    return usedByTracksExcluding.length > 0
-        || usedBySessionsExcluding.length > 0
-        || usedByEventsExcluding.length > 0
-        || usedByItemsExcluding.length > 0
-        ;
+    return (
+        usedByTracksExcluding.length > 0 ||
+        usedBySessionsExcluding.length > 0 ||
+        usedByEventsExcluding.length > 0 ||
+        usedByItemsExcluding.length > 0
+    );
 }
 
 Parse.Cloud.beforeDelete("ProgramTrack", async request => {
@@ -68,7 +67,14 @@ Parse.Cloud.beforeDelete("ProgramTrack", async request => {
         const feed = track.get("feed");
         if (feed) {
             const feedId = feed.id;
-            const feedInUse = await isInUse_ContentFeed(conference.id, feedId, track.id, undefined, undefined, undefined);
+            const feedInUse = await isInUse_ContentFeed(
+                conference.id,
+                feedId,
+                track.id,
+                undefined,
+                undefined,
+                undefined
+            );
             if (!feedInUse) {
                 await new Parse.Object("ContentFeed", { id: feedId }).destroy({ useMasterKey: true });
             }
@@ -100,7 +106,14 @@ Parse.Cloud.beforeDelete("ProgramSession", async request => {
         const feed = session.get("feed");
         if (feed) {
             const feedId = feed.id;
-            const feedInUse = await isInUse_ContentFeed(conference.id, feedId, undefined, session.id, undefined, undefined);
+            const feedInUse = await isInUse_ContentFeed(
+                conference.id,
+                feedId,
+                undefined,
+                session.id,
+                undefined,
+                undefined
+            );
             if (!feedInUse) {
                 await new Parse.Object("ContentFeed", { id: feedId }).destroy({ useMasterKey: true });
             }
@@ -132,7 +145,14 @@ Parse.Cloud.beforeDelete("ProgramSessionEvent", async request => {
         const feed = event.get("feed");
         if (feed) {
             const feedId = feed.id;
-            const feedInUse = await isInUse_ContentFeed(conference.id, feedId, undefined, undefined, event.id, undefined);
+            const feedInUse = await isInUse_ContentFeed(
+                conference.id,
+                feedId,
+                undefined,
+                undefined,
+                event.id,
+                undefined
+            );
             if (!feedInUse) {
                 await new Parse.Object("ContentFeed", { id: feedId }).destroy({ useMasterKey: true });
             }
@@ -152,7 +172,14 @@ Parse.Cloud.beforeDelete("ProgramItem", async request => {
         const feed = item.get("feed");
         if (feed) {
             const feedId = feed.id;
-            const feedInUse = await isInUse_ContentFeed(conference.id, feedId, undefined, undefined, undefined, item.id);
+            const feedInUse = await isInUse_ContentFeed(
+                conference.id,
+                feedId,
+                undefined,
+                undefined,
+                undefined,
+                item.id
+            );
             if (!feedInUse) {
                 await new Parse.Object("ContentFeed", { id: feedId }).destroy({ useMasterKey: true });
             }
@@ -161,7 +188,7 @@ Parse.Cloud.beforeDelete("ProgramItem", async request => {
         await new Parse.Query("ProgramItemAttachment")
             .equalTo("conference", conference)
             .equalTo("programItem", item)
-            .map(attachment => attachment.destory({ useMasterKey: true }), { useMasterKey: true });
+            .map(attachment => attachment.destroy({ useMasterKey: true }), { useMasterKey: true });
     } catch (e) {
         console.error(`Error deleting program item! ${e}`);
     }
@@ -396,6 +423,10 @@ async function createProgramPerson(data) {
     return newObject;
 }
 
+Parse.Cloud.beforeSave("ProgramPerson", req => {
+    // TODO: update permissions for program item attachments
+});
+
 /**
  * @param {Parse.Cloud.FunctionRequest} req
  */
@@ -622,6 +653,57 @@ Parse.Cloud.define("item-create", handleCreateItem);
 // **** Program Item Attachment **** //
 
 /**
+ *
+ * @param {Pointer} user
+ * @param {Pointer} programItem
+ * @returns {Promise<boolean>}
+ */
+async function isUserAnAuthorOf(user, programItem, confId) {
+    const profile = await getProfileOfUser(user, confId);
+    const item = await programItem.fetch({ useMasterKey: true });
+    const authors = item.get("authors");
+    const matchingProgramPeople = await new Parse.Query("ProgramPerson")
+        .equalTo("profile", profile)
+        .containedIn("objectId", authors)
+        .count({ useMasterKey: true });
+    return matchingProgramPeople > 0;
+}
+
+/**
+ * @param {Pointer} programItemAttachment
+ */
+async function updateProgramItemAttachmentACLs(programItemAttachment) {
+    const programItem = await programItemAttachment.get("programItem").fetch({ useMasterKey: true });
+    const authors = programItem.get("authors");
+    const matchingProgramPeople = await new Parse.Query("ProgramPerson")
+        .containedIn("objectId", authors)
+        .find({ useMasterKey: true });
+
+    const profiles = await Promise.all(
+        matchingProgramPeople.map(async person => {
+            const profile = person.get("profile");
+            return profile ? await profile.fetch({ useMasterKey: true }) : undefined;
+        })
+    );
+    const users = await Promise.all(
+        profiles.map(async profile => {
+            if (profile) {
+                const user = profile.get("user");
+                return (await user) ? await user.fetch({ useMasterKey: true }) : undefined;
+            } else {
+                return undefined;
+            }
+        })
+    );
+
+    const acl = programItemAttachment.getACL();
+    for (let user of users.filter(u => u !== undefined)) {
+        acl.setWriteAccess(user.id, true);
+    }
+    programItemAttachment.setACL(acl);
+}
+
+/**
  * @typedef {Object} ProgramItemAttachmentSpec
  * @property {Parse.File | undefined} [file]
  * @property {string | undefined} [url]
@@ -663,14 +745,16 @@ async function handleCreateItemAttachment(req) {
     const requestValidation = validateRequest(createItemAttachmentSchema, params);
     if (requestValidation.ok) {
         const confId = params.conference;
+        const programItem = new Parse.Object("ProgramItem", { id: params.programItem });
+        const userIsAuthorOfProgramItem = await isUserAnAuthorOf(user, programItem, confId);
 
         // TODO: Auth check: Allow authors to edit their own ItemAttachment records
-        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
+        const authorized = !!user && ((await isUserInRoles(user.id, confId, ["admin"])) || userIsAuthorOfProgramItem);
         if (authorized) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
             spec.attachmentType = new Parse.Object("AttachmentType", { id: spec.attachmentType });
-            spec.programItem = new Parse.Object("ProgramItem", { id: spec.programItem });
+            spec.programItem = programItem;
             // TODO: Handle `file` (`Parse.File`)
             const result = await createProgramItemAttachment(spec);
             return result.id;
@@ -682,6 +766,10 @@ async function handleCreateItemAttachment(req) {
     }
 }
 Parse.Cloud.define("itemAttachment-create", handleCreateItemAttachment);
+
+Parse.Cloud.beforeSave("ProgramItemAttachment", async req => {
+    await updateProgramItemAttachmentACLs(req.object);
+});
 
 // **** Program Session **** //
 

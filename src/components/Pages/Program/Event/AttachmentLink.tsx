@@ -1,5 +1,8 @@
 import { AttachmentType, ProgramItemAttachment } from "@clowdr-app/clowdr-db-schema";
-import { DataUpdatedEventDetails, DataDeletedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import {
+    DataUpdatedEventDetails,
+    DataDeletedEventDetails,
+} from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
 import { handleParseFileURLWeirdness } from "../../../../classes/Utils";
 import useConference from "../../../../hooks/useConference";
@@ -19,44 +22,74 @@ export default function AttachmentLink(props: Props) {
     const [attachmentType, setAttachmentType] = useState<AttachmentType | null>(null);
     const [showVideo, setShowVideo] = useState<boolean>(!!props.showVideo);
 
-    useSafeAsync(async () => await props.attachment.attachmentType, setAttachmentType, [props.attachment.attachmentType], "ViewAuthor:setAttachmentType");
+    useSafeAsync(
+        async () => await props.attachment.attachmentType,
+        setAttachmentType,
+        [props.attachment.attachmentType],
+        "ViewAuthor:setAttachmentType"
+    );
 
-    const onAttachmentTypeUpdated = useCallback(function _onAttachmentTypeUpdated(ev: DataUpdatedEventDetails<"AttachmentType">) {
-        for (const object of ev.objects) {
-            if (attachmentType && object.id === attachmentType.id) {
-                setAttachmentType(object as AttachmentType);
+    const onAttachmentTypeUpdated = useCallback(
+        function _onAttachmentTypeUpdated(ev: DataUpdatedEventDetails<"AttachmentType">) {
+            for (const object of ev.objects) {
+                if (attachmentType && object.id === attachmentType.id) {
+                    setAttachmentType(object as AttachmentType);
+                }
             }
-        }
-    }, [attachmentType]);
+        },
+        [attachmentType]
+    );
 
-    const onAttachmentTypeDeleted = useCallback(function _onAttachmentTypeDeleted(ev: DataDeletedEventDetails<"AttachmentType">) {
-        if (attachmentType && attachmentType.id === ev.objectId) {
-            setAttachmentType(null)
-        }
-    }, [attachmentType]);
+    const onAttachmentTypeDeleted = useCallback(
+        function _onAttachmentTypeDeleted(ev: DataDeletedEventDetails<"AttachmentType">) {
+            if (attachmentType && attachmentType.id === ev.objectId) {
+                setAttachmentType(null);
+            }
+        },
+        [attachmentType]
+    );
 
-    useDataSubscription("AttachmentType", onAttachmentTypeUpdated, onAttachmentTypeDeleted, !attachmentType, conference);
+    useDataSubscription(
+        "AttachmentType",
+        onAttachmentTypeUpdated,
+        onAttachmentTypeDeleted,
+        !attachmentType,
+        conference
+    );
 
     if (attachmentType) {
-        const url
-            = attachmentType.supportsFile
-                ? handleParseFileURLWeirdness(props.attachment.file) ?? props.attachment.url
-                : props.attachment.url;
+        const url = attachmentType.supportsFile
+            ? handleParseFileURLWeirdness(props.attachment.file) ?? props.attachment.url
+            : props.attachment.url;
 
         let displayAsLink = attachmentType.displayAsLink;
         if (!displayAsLink) {
-            if (attachmentType.fileTypes.includes("image/png")
-                || attachmentType.fileTypes.includes("image/jpeg")) {
+            if (attachmentType.fileTypes.includes("image/png") || attachmentType.fileTypes.includes("image/jpeg")) {
                 // Display as an image
                 return <img className="attachment-link__image" src={url} alt={attachmentType.name} />;
-            }
-            else if (attachmentType.fileTypes.includes("video")) {
+            } else if (attachmentType.fileTypes.includes("video")) {
                 // Display as an embedded video
-                return showVideo
-                    ? <ReactPlayer className="video-player" width="" height="" playsinline controls={true} muted={false} volume={1} url={url} />
-                    : <button onClick={() => { setShowVideo(true); }}>Reveal Video</button>;
-            }
-            else {
+                return showVideo ? (
+                    <ReactPlayer
+                        className="video-player"
+                        width=""
+                        height=""
+                        playsinline
+                        controls={true}
+                        muted={false}
+                        volume={1}
+                        url={url}
+                    />
+                ) : (
+                    <button
+                        onClick={() => {
+                            setShowVideo(true);
+                        }}
+                    >
+                        Reveal Video
+                    </button>
+                );
+            } else {
                 displayAsLink = true;
             }
         }
@@ -64,11 +97,14 @@ export default function AttachmentLink(props: Props) {
         if (displayAsLink) {
             if (url) {
                 // TODO: Display a file/link type icon?
-                return <a className="button" href={url} target="_blank" rel="noopener noreferrer">Visit Link</a>
+                return (
+                    <a className="button" href={url} target="_blank" rel="noopener noreferrer">
+                        Visit Link ({attachmentType.name})
+                    </a>
+                );
             }
         }
-    }
-    else {
+    } else {
         return <LoadingSpinner />;
     }
 

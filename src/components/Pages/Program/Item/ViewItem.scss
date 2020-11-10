@@ -2,9 +2,36 @@
 
 .program-item {
     .attachments {
+        margin: 1em 0;
+
         h3 {
             font-size  : inherit;
             font-weight: bold;
+        }
+
+        .attachment-items {
+            display    : flex;
+            align-items: stretch;
+            flex-wrap  : wrap;
+            gap        : 1em;
+
+            &__item {
+                flex-basis: 30em;
+                max-width : 30em;
+                text-align: center;
+                position  : relative;
+
+                &__delete {
+                    position: absolute;
+                    top     : 0;
+                    right   : 0;
+                }
+            }
+        }
+
+        &__upload {
+            max-width: 40em;
+            width    : 100%;
         }
     }
 }
