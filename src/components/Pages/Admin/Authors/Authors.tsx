@@ -156,7 +156,9 @@ export default function Authors() {
                     Linked attendee
                 </label>
                 <select name="userProfile" ref={register({ required: true })} disabled={formState.isSubmitting}>
-                    {profiles?.map(profile => (
+                    {profiles
+                        ?.sort((a, b) => a.displayName.localeCompare(b.displayName))
+                        ?.map(profile => (
                         <option key={profile.id} value={profile.id}>
                             {profile.realName} {profile.affiliation ? `(${profile.affiliation})` : ""}
                         </option>
