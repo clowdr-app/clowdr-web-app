@@ -136,7 +136,7 @@ export default function AdminRegistration() {
 
     const adminPanel = (
         <>
-            <h2>Upload new registrations</h2>
+            {/* <h2>Upload new registrations</h2>
             <p>
                 You can upload new registrations using a JSON file. The required format is specified below. Emails will
                 not be sent to new addresses until you press one of the Send buttons below. Duplicate registrations will
@@ -210,7 +210,7 @@ type RegistrationSpec = {
     newRole: "attendee" | "manager" | "admin";
 };`}
                 </pre>
-            </p>
+            </p> */}
             <h2>Send initial registration emails</h2>
             <p>Send the first registration email to any users that have not yet been sent one.</p>
             <p>
