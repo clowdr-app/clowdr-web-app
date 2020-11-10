@@ -673,34 +673,37 @@ async function isUserAnAuthorOf(user, programItem, confId) {
  * @param {Pointer} programItemAttachment
  */
 async function updateProgramItemAttachmentACLs(programItemAttachment) {
-    const programItem = await programItemAttachment.get("programItem").fetch({ useMasterKey: true });
-    const authors = programItem.get("authors");
-    const matchingProgramPeople = await new Parse.Query("ProgramPerson")
-        .containedIn("objectId", authors)
-        .find({ useMasterKey: true });
+    const programItemPointer = await programItemAttachment.get("programItem");
+    if (programItemPointer) {
+        const programItem = programItemPointer.fetch({ useMasterKey: true });
+        const authors = programItem.get("authors");
+        const matchingProgramPeople = await new Parse.Query("ProgramPerson")
+            .containedIn("objectId", authors)
+            .find({ useMasterKey: true });
 
-    const profiles = await Promise.all(
-        matchingProgramPeople.map(async person => {
-            const profile = person.get("profile");
-            return profile ? await profile.fetch({ useMasterKey: true }) : undefined;
-        })
-    );
-    const users = await Promise.all(
-        profiles.map(async profile => {
-            if (profile) {
-                const user = profile.get("user");
-                return (await user) ? await user.fetch({ useMasterKey: true }) : undefined;
-            } else {
-                return undefined;
-            }
-        })
-    );
+        const profiles = await Promise.all(
+            matchingProgramPeople.map(async person => {
+                const profile = person.get("profile");
+                return profile ? await profile.fetch({ useMasterKey: true }) : undefined;
+            })
+        );
+        const users = await Promise.all(
+            profiles.map(async profile => {
+                if (profile) {
+                    const user = profile.get("user");
+                    return (await user) ? await user.fetch({ useMasterKey: true }) : undefined;
+                } else {
+                    return undefined;
+                }
+            })
+        );
 
-    const acl = programItemAttachment.getACL();
-    for (let user of users.filter(u => u !== undefined)) {
-        acl.setWriteAccess(user.id, true);
+        const acl = programItemAttachment.getACL();
+        for (let user of users.filter(u => u !== undefined)) {
+            acl.setWriteAccess(user.id, true);
+        }
+        programItemAttachment.setACL(acl);
     }
-    programItemAttachment.setACL(acl);
 }
 
 /**
