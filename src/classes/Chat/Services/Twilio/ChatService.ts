@@ -352,9 +352,27 @@ export default class TwilioChatService implements IChatService {
         }
     }
 
+    private getOnlineStatePromises: Map<string, Promise<boolean | undefined>> = new Map();
     async getIsUserOnline(profileId: string): Promise<boolean | undefined> {
-        const user = await (await this.twilioClient)?.getUserDescriptor(profileId);
-        return user?.online;
+        let p = this.getOnlineStatePromises.get(profileId);
+        if (!p) {
+            p = new Promise<boolean | undefined>(async (resolve, reject) => {
+                try {
+                    const client = await this.twilioClient;
+                    const d = await client?.getUserDescriptor(profileId);
+                    const online = d?.online;
+                    resolve(online);
+                }
+                catch (e) {
+                    reject(e);
+                }
+                finally {
+                    this.getOnlineStatePromises.delete(profileId);
+                }
+            });
+            this.getOnlineStatePromises.set(profileId, p);
+        }
+        return p;
     }
 
     private listeners: Map<string, Map<string, (arg: any) => void>> = new Map();
