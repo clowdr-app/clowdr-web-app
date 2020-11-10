@@ -50,11 +50,13 @@ export default function useOnlineStatus(userProfiles: UserProfile[]): Map<string
                     }
                 }
             });
-            return async () => {
-                const functionToOffId = await functionToOff;
-                if (functionToOffId) {
-                    mChat.serviceEventOff("userUpdated", functionToOffId);
-                }
+            return () => {
+                (async () => {
+                    const functionToOffId = await functionToOff;
+                    if (functionToOffId) {
+                        mChat.serviceEventOff("userUpdated", functionToOffId);
+                    }
+                })();
             };
         }
         return () => { };

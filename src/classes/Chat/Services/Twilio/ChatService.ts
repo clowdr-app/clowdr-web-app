@@ -357,7 +357,7 @@ export default class TwilioChatService implements IChatService {
         return user?.online;
     }
 
-    private listeners: Map<string, (arg: any) => void> = new Map();
+    private listeners: Map<string, Map<string, (arg: any) => void>> = new Map();
     async on<K extends ServiceEventNames>(
         event: K,
         listenerInfo: ((arg: ServiceEventArgs<K>) => void) | {
@@ -421,27 +421,44 @@ export default class TwilioChatService implements IChatService {
 
         }
 
-        const existingFKeys
-            = Array.from(this.listeners.keys())
-                .filter(x => x.startsWith(listenerBaseId));
-        for (const existingFKey of existingFKeys) {
-            await this.off(event, existingFKey);
+        let listenerMap = this.listeners.get(event);
+        if (listenerMap) {
+            const existingFKeys
+                = Array.from(listenerMap.keys())
+                    .filter(x => x.startsWith(listenerBaseId));
+            for (const existingFKey of existingFKeys) {
+                await this.off(event, existingFKey);
+            }
+        }
+        else {
+            listenerMap = new Map();
+            this.listeners.set(event, listenerMap);
+
+            const client = await this.twilioClient;
+            assert(client);
+            client.on(event, (arg) => {
+                const map = this.listeners.get(event);
+                if (map) {
+                    const funcs = map.values();
+                    for (const func of funcs) {
+                        func(arg);
+                    }
+                }
+            });
         }
 
-        this.listeners.set(listenerId, _listener);
-        (await this.twilioClient)?.on(event, _listener);
+        listenerMap.set(listenerId, _listener);
 
         return _listener as any;
     }
 
     async off(event: ServiceEventNames, listener: string) {
-        if (this.listeners.has(listener)) {
-            const listenerF = this.listeners.get(listener);
-            assert(listenerF);
-            this.listeners.delete(listener);
-
-            assert(this.twilioClient);
-            (await this.twilioClient)?.off(event, listenerF);
+        if (this.listeners.has(event)) {
+            const listenerMap = this.listeners.get(event);
+            const listenerF = listenerMap?.get(listener);
+            if (listenerF) {
+                listenerMap?.delete(listener);
+            }
         }
     }
 }

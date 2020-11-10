@@ -293,7 +293,7 @@ export default class Channel implements IChannel {
         await channel._unsubscribe();
     }
 
-    private listeners: Map<string, (arg: any) => void> = new Map();
+    private listeners: Map<string, Map<string, (arg: any) => void>> = new Map();
     async on<K extends ChannelEventNames>(
         event: K,
         listenerInfo: ((arg: ChannelEventArgs<K>) => void) | {
@@ -365,30 +365,41 @@ export default class Channel implements IChannel {
                 break;
         }
 
-        const existingFKeys
-            = Array.from(this.listeners.keys())
-                .filter(x => x.startsWith(listenerBaseId));
-        for (const existingFKey of existingFKeys) {
-            await this.off(event, existingFKey);
+        let listenerMap = this.listeners.get(event);
+        if (listenerMap) {
+            const existingFKeys
+                = Array.from(listenerMap.keys())
+                    .filter(x => x.startsWith(listenerBaseId));
+            for (const existingFKey of existingFKeys) {
+                await this.off(event, existingFKey);
+            }
+        }
+        else {
+            listenerMap = new Map();
+            this.listeners.set(event, listenerMap);
+
+            channel.on(event, (arg) => {
+                const map = this.listeners.get(event);
+                if (map) {
+                    const funcs = map.values();
+                    for (const func of funcs) {
+                        func(arg);
+                    }
+                }
+            });
         }
 
-        this.listeners.set(listenerId, _listener);
-        // console.log(`Switching on ${event} listener for ${this.id} (${listenerId})`);
-        channel.on(event, _listener);
+        listenerMap.set(listenerId, _listener);
 
         return listenerId;
     }
 
     async off(event: ChannelEventNames, listener: string) {
-        if (this.listeners.has(listener)) {
-            const listenerF = this.listeners.get(listener);
-            assert(listenerF);
-            this.listeners.delete(listener);
-
-            const commonC = await this.getCommonChannel();
-            if ("c" in commonC) {
-                // console.log(`Switching off ${event} listener for ${this.id} (${listener})`);
-                commonC.c.off(event, listenerF);
+        if (this.listeners.has(event)) {
+            const listenerMap = this.listeners.get(event);
+            const listenerF = listenerMap?.get(listener);
+            if (listenerF) {
+                listenerMap?.delete(listener);
             }
         }
     }

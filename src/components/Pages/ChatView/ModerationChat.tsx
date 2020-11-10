@@ -367,65 +367,64 @@ export default function ModerationChat(props: Props) {
     // TODO: Action buttons: Launch video chat
 
     useEffect(() => {
-        if (mChat) {
-            const joinedFunctionToOff = mChat.channelEventOn(props.chatId, "memberJoined", {
-                componentName: "ModerationChat",
-                caller: "setMembers",
-                function: async mem => {
-                    const newMember: RenderMemberDescriptor = {
-                        profileId: mem.profileId,
-                        isOnline: mem.getOnlineStatus(),
-                        displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>",
-                    };
-                    setMembers(oldMembers => (oldMembers ? [...oldMembers, newMember] : [newMember]));
-                }
-            });
+        const joinedFunctionToOff = mChat?.channelEventOn(props.chatId, "memberJoined", {
+            componentName: "ModerationChat",
+            caller: "setMembers",
+            function: async mem => {
+                const newMember: RenderMemberDescriptor = {
+                    profileId: mem.profileId,
+                    isOnline: mem.getOnlineStatus(),
+                    displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>",
+                };
+                setMembers(oldMembers => (oldMembers ? [...oldMembers, newMember] : [newMember]));
+            }
+        });
 
-            const leftFunctionToOff = mChat.channelEventOn(props.chatId, "memberLeft", {
-                componentName: "ModerationChat",
-                caller: "setMembers",
-                function: async mem => {
-                    setMembers(oldMembers => (oldMembers ? oldMembers.filter(x => x.profileId !== mem.profileId) : null));
-                }
-            });
+        const leftFunctionToOff = mChat?.channelEventOn(props.chatId, "memberLeft", {
+            componentName: "ModerationChat",
+            caller: "setMembers",
+            function: async mem => {
+                setMembers(oldMembers => (oldMembers ? oldMembers.filter(x => x.profileId !== mem.profileId) : null));
+            }
+        });
 
-            const updateFunctionToOff = mChat.serviceEventOn("userUpdated", {
-                componentName: "ModerationChat",
-                caller: "setMembers",
-                function: async event => {
-                    if (event.updateReasons.includes("online")) {
-                        setMembers(oldMembers =>
-                            oldMembers
-                                ? oldMembers.map(x =>
-                                    x.profileId === event.user.profileId
-                                        ? {
-                                            ...x,
-                                            isOnline: event.user.isOnline,
-                                        }
-                                        : x
-                                )
-                                : null
-                        );
-                    }
+        const updateFunctionToOff = mChat?.serviceEventOn("userUpdated", {
+            componentName: "ModerationChat",
+            caller: "setMembers",
+            function: async event => {
+                if (event.updateReasons.includes("online")) {
+                    setMembers(oldMembers =>
+                        oldMembers
+                            ? oldMembers.map(x =>
+                                x.profileId === event.user.profileId
+                                    ? {
+                                        ...x,
+                                        isOnline: event.user.isOnline,
+                                    }
+                                    : x
+                            )
+                            : null
+                    );
                 }
-            });
+            }
+        });
 
-            return async () => {
+        return () => {
+            (async () => {
                 const joinedFunctionToOffId = await joinedFunctionToOff;
                 if (joinedFunctionToOffId) {
-                    mChat.channelEventOff(props.chatId, "memberJoined", joinedFunctionToOffId);
+                    mChat?.channelEventOff(props.chatId, "memberJoined", joinedFunctionToOffId);
                 }
                 const leftFunctionToOffId = await leftFunctionToOff;
                 if (leftFunctionToOffId) {
-                    mChat.channelEventOff(props.chatId, "memberLeft", leftFunctionToOffId);
+                    mChat?.channelEventOff(props.chatId, "memberLeft", leftFunctionToOffId);
                 }
                 const updateFunctionToOffId = await updateFunctionToOff;
                 if (updateFunctionToOffId) {
-                    mChat.serviceEventOff("userUpdated", updateFunctionToOffId);
+                    mChat?.serviceEventOff("userUpdated", updateFunctionToOffId);
                 }
-            };
-        }
-        return () => {};
+            })();
+        };
     }, [conf.id, mChat, props.chatId]);
 
     async function doInvite() {

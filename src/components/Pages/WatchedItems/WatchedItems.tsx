@@ -77,90 +77,87 @@ export default function WatchedItemsPage() {
 
     // Subscribe to chat messages
     useEffect(() => {
-        if (mChat && activeChats) {
-            const addFunctionsToOff = Promise.all(activeChats.map(async c => {
-                const chatName = computeChatDisplayName(c, userProfile).friendlyName;
-                return {
-                    id: c.id,
-                    f: await mChat.channelEventOn(c.id, "messageAdded", {
-                        componentName: "WatchedItems",
-                        caller: "setMessages",
-                        function: async (msg) => {
-                            if (msg.author !== userProfile.id) {
-                                const renderedMsg = await renderMessage(conference, userProfile, c.id, msg, c.isDM, chatName);
-                                // We only ever add to the list
-                                setMessages(oldMessages => oldMessages ? [...oldMessages, renderedMsg] : [renderedMsg]);
-                            }
+        const addFunctionsToOff = activeChats ? Promise.all(activeChats.map(async c => {
+            const chatName = computeChatDisplayName(c, userProfile).friendlyName;
+            return {
+                id: c.id,
+                f: await mChat?.channelEventOn(c.id, "messageAdded", {
+                    componentName: "WatchedItems",
+                    caller: "setMessages",
+                    function: async (msg) => {
+                        if (msg.author !== userProfile.id) {
+                            const renderedMsg = await renderMessage(conference, userProfile, c.id, msg, c.isDM, chatName);
+                            // We only ever add to the list
+                            setMessages(oldMessages => oldMessages ? [...oldMessages, renderedMsg] : [renderedMsg]);
                         }
-                    })
-                };
-            }));
+                    }
+                })
+            };
+        })) : Promise.resolve([]);
 
-            const updateFunctionsToOff = Promise.all(activeChats.map(async c => {
-                const chatName = computeChatDisplayName(c, userProfile).friendlyName;
-                return {
-                    id: c.id,
-                    f: await mChat.channelEventOn(c.id, "messageUpdated", {
-                        componentName: "WatchedItems",
-                        caller: "setMessages",
-                        function: async (msg) => {
-                            if (msg.updateReasons.includes("body") ||
-                                msg.updateReasons.includes("author") ||
-                                msg.updateReasons.includes("attributes")) {
-                                const renderedMsg = await renderMessage(conference, userProfile, c.id, msg.message, c.isDM, chatName);
-                                setMessages(oldMessages => oldMessages
-                                    ? oldMessages.map(x => x.sid === msg.message.sid ? renderedMsg : x)
-                                    : oldMessages
-                                );
-                            }
-                        }
-                    })
-                };
-            }));
-
-            const removeFunctionsToOff = Promise.all(activeChats.map(async c => {
-                return {
-                    id: c.id,
-                    f: await mChat.channelEventOn(c.id, "messageRemoved", {
-                        componentName: "WatchedItems",
-                        caller: "setMessages",
-                        function: async (msg) => {
+        const updateFunctionsToOff = activeChats ? Promise.all(activeChats.map(async c => {
+            const chatName = computeChatDisplayName(c, userProfile).friendlyName;
+            return {
+                id: c.id,
+                f: await mChat?.channelEventOn(c.id, "messageUpdated", {
+                    componentName: "WatchedItems",
+                    caller: "setMessages",
+                    function: async (msg) => {
+                        if (msg.updateReasons.includes("body") ||
+                            msg.updateReasons.includes("author") ||
+                            msg.updateReasons.includes("attributes")) {
+                            const renderedMsg = await renderMessage(conference, userProfile, c.id, msg.message, c.isDM, chatName);
                             setMessages(oldMessages => oldMessages
-                                ? oldMessages.filter(x => x.sid !== msg.sid)
+                                ? oldMessages.map(x => x.sid === msg.message.sid ? renderedMsg : x)
                                 : oldMessages
                             );
                         }
-                    })
-                };
-            }));
-
-            return () => {
-                addFunctionsToOff.then(fs => {
-                    fs.forEach(f => {
-                        if (f.f) {
-                            mChat.channelEventOff(f.id, "messageAdded", f.f);
-                        }
-                    });
-                });
-
-                updateFunctionsToOff.then(fs => {
-                    fs.forEach(f => {
-                        if (f.f) {
-                            mChat.channelEventOff(f.id, "messageUpdated", f.f);
-                        }
-                    });
-                });
-
-                removeFunctionsToOff.then(fs => {
-                    fs.forEach(f => {
-                        if (f.f) {
-                            mChat.channelEventOff(f.id, "messageRemoved", f.f);
-                        }
-                    });
-                });
+                    }
+                })
             };
-        }
-        return () => { };
+        })) : Promise.resolve([]);
+
+        const removeFunctionsToOff = activeChats ? Promise.all(activeChats.map(async c => {
+            return {
+                id: c.id,
+                f: await mChat?.channelEventOn(c.id, "messageRemoved", {
+                    componentName: "WatchedItems",
+                    caller: "setMessages",
+                    function: async (msg) => {
+                        setMessages(oldMessages => oldMessages
+                            ? oldMessages.filter(x => x.sid !== msg.sid)
+                            : oldMessages
+                        );
+                    }
+                })
+            };
+        })) : Promise.resolve([]);
+
+        return () => {
+            addFunctionsToOff.then(fs => {
+                fs.forEach(f => {
+                    if (f.f) {
+                        mChat?.channelEventOff(f.id, "messageAdded", f.f);
+                    }
+                });
+            });
+
+            updateFunctionsToOff.then(fs => {
+                fs.forEach(f => {
+                    if (f.f) {
+                        mChat?.channelEventOff(f.id, "messageUpdated", f.f);
+                    }
+                });
+            });
+
+            removeFunctionsToOff.then(fs => {
+                fs.forEach(f => {
+                    if (f.f) {
+                        mChat?.channelEventOff(f.id, "messageRemoved", f.f);
+                    }
+                });
+            });
+        };
     }, [mChat, userProfile, activeChats, conference]);
 
     // Fetch chat messages
