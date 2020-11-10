@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { styled, Theme } from "@material-ui/core/styles";
 
 import { MuiThemeProvider } from "@material-ui/core/styles";
@@ -24,6 +24,7 @@ import useVideoContext from "../VideoFrontend/hooks/useVideoContext/useVideoCont
 import useLocalVideoToggle from "../VideoFrontend/hooks/useLocalVideoToggle/useLocalVideoToggle";
 import { Prompt } from "react-router-dom";
 import "./VideoGrid.scss";
+import MediaErrorSnackbar from "../VideoFrontend/components/PreJoinScreens/MediaErrorSnackbar/MediaErrorSnackbar";
 
 const Container = styled("div")({
     display: "grid",
@@ -54,6 +55,7 @@ function VideoGrid(props: Props) {
     const unmountRef = useRef<() => void>();
     const unloadRef = useRef<EventListener>();
     const existingRoomRef = useRef<TwilioRoom | undefined>();
+    const [mediaError, setMediaError] = useState<Error>();
 
     useEffect(() => {
         function stop() {
@@ -115,15 +117,16 @@ function VideoGrid(props: Props) {
             <Prompt when={roomState !== "disconnected"} message="Are you sure you want to leave the video room?" />
             <Container style={{ height: "100%" }} className="video-grid">
                 {roomState === "disconnected" ? (
-                    <PreJoinScreens room={props.room} />
+                    <PreJoinScreens room={props.room} setMediaError={setMediaError} />
                 ) : (
                     <Main style={{ paddingBottom: "90px" }}>
                         <ReconnectingNotification />
                         <MobileTopMenuBar />
                         <Room sponsorView={props.sponsorView} highlightedProfiles={props.highlightedProfiles} />
-                        <MenuBar />
+                        <MenuBar setMediaError={setMediaError} />
                     </Main>
                 )}
+                <MediaErrorSnackbar error={mediaError} dismissError={() => setMediaError(undefined)} />
             </Container>
         </>
     );
