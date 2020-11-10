@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import useHeading from "../../../hooks/useHeading";
 import useUserProfile from "../../../hooks/useUserProfile";
 import ProfileEditor from "../../Profile/ProfileEditor/ProfileEditor";
@@ -20,30 +20,32 @@ export default function Profile(props: Props) {
 
     useHeading({
         title: profile ? profile.displayName : "Profile",
-        buttons: profile && profile.id !== loggedInUserProfile.id ? [{
-            label: `Send DM`,
-            icon: <i className="fas fa-envelope" />,
-            action: `/chat/new/${profile.id}`
-        }] : []
+        buttons:
+            profile && profile.id !== loggedInUserProfile.id
+                ? [
+                      {
+                          label: `Send DM`,
+                          icon: <i className="fas fa-envelope" />,
+                          action: `/chat/new/${profile.id}`,
+                      },
+                  ]
+                : [],
     });
 
     useEffect(() => {
-        let cancel: () => void = () => { };
+        let cancel: () => void = () => {};
 
         async function updateProfile() {
             try {
-                const profileCancelablePromise =
-                    makeCancelable(UserProfile.get(props.userProfileId, conference.id));
+                const profileCancelablePromise = makeCancelable(UserProfile.get(props.userProfileId, conference.id));
                 cancel = profileCancelablePromise.cancel;
                 setProfile(await profileCancelablePromise.promise);
-            }
-            catch (e) {
+            } catch (e) {
                 if (!e.isCanceled) {
                     throw e;
                 }
-            }
-            finally {
-                cancel = () => { };
+            } finally {
+                cancel = () => {};
             }
         }
 
@@ -52,18 +54,23 @@ export default function Profile(props: Props) {
         return cancel;
     }, [conference.id, props.userProfileId]);
 
-    let element;
-    if (props.userProfileId === loggedInUserProfile.id) {
-        element = <>
-            {editing
-                ? <ProfileEditor profile={loggedInUserProfile} />
-                : <ProfileView profile={loggedInUserProfile} setEditing={() => setEditing(true)} />
-            }
-        </>;
-    } else if (profile) {
-        element = <ProfileView profile={profile} />;
-    } else {
-        element = <>Loading profile</>;
-    }
-    return element;
+    let element = useMemo(() => {
+        if (props.userProfileId === loggedInUserProfile.id) {
+            return (
+                <>
+                    {editing ? (
+                        <ProfileEditor profile={loggedInUserProfile} setViewing={() => setEditing(false)} />
+                    ) : (
+                        <ProfileView profile={loggedInUserProfile} setEditing={() => setEditing(true)} />
+                    )}
+                </>
+            );
+        } else if (profile) {
+            return <ProfileView profile={profile} />;
+        } else {
+            return <>Loading profile</>;
+        }
+    }, [editing, loggedInUserProfile, profile, props.userProfileId]);
+
+    return <>{element}</>;
 }

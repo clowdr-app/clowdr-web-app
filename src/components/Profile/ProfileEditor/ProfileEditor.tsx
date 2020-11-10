@@ -15,6 +15,7 @@ import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
 
 interface Props {
     profile: UserProfile;
+    setViewing?: () => void;
 }
 
 interface FormData {
@@ -202,6 +203,7 @@ export default function ProfileEditor(props: Props) {
                         />
 
                         <div className="submit-container">
+                            <button onClick={props?.setViewing ?? (() => {})}>Preview</button>
                             <input type="submit" value="Save" disabled={formState.isSubmitting} />
                         </div>
                     </form>

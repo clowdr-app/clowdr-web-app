@@ -51,6 +51,7 @@ import useUserRoles from "../../hooks/useUserRoles";
 import Sponsor from "../Pages/Sponsor/Sponsor";
 import AllSponsors from "../Pages/AllSponsors/AllSponsors";
 import ProgramEditor from "../Pages/Admin/Program/ProgramEditor";
+import ProfileItems from "../Pages/ProfileItems/ProfileItems";
 
 interface Props {
     doLogin: doLoginF;
@@ -224,6 +225,15 @@ function Page(props: Props) {
                         component={(p: RouteComponentProps<any>) => <ViewAuthor authorId={p.match.params.authorId} />}
                     />
                     <Route path="/program" component={(p: RouteComponentProps<any>) => <WholeProgram />} />
+
+                    <Route path="/myitems" component={() => <Redirect to={`/profile/${mUser.id}/items`} />} />
+
+                    <Route
+                        path="/profile/:userProfileId/items"
+                        component={(p: RouteComponentProps<any>) => (
+                            <ProfileItems userProfileId={p.match.params.userProfileId} />
+                        )}
+                    />
 
                     <Route
                         path="/profile/:userProfileId"

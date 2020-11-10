@@ -1,5 +1,5 @@
 import React from "react";
-import { makeStyles, Typography, Grid, Button, Theme, Hidden } from "@material-ui/core";
+import { makeStyles, Grid, Button, Theme, Hidden } from "@material-ui/core";
 import LocalVideoPreview from "./LocalVideoPreview/LocalVideoPreview";
 import SettingsMenu from "./SettingsMenu/SettingsMenu";
 import ToggleAudioButton from "../../Buttons/ToggleAudioButton/ToggleAudioButton";
