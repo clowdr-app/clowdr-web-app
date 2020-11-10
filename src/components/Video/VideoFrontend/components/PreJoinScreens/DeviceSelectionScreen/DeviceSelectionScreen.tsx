@@ -76,11 +76,7 @@ export default function DeviceSelectionScreen({ room }: DeviceSelectionScreenPro
 
     return (
         <>
-            <Typography variant="h5" className={classes.gutterBottom}>
-                Join {room.name}
-            </Typography>
-
-            <Grid container justify="center">
+            <Grid container justify="center" aria-label="join video room form">
                 <Grid item md={7} sm={12} xs={12}>
                     <div className={classes.localPreviewContainer}>
                         <LocalVideoPreview identity={user.displayName} />
@@ -109,7 +105,7 @@ export default function DeviceSelectionScreen({ room }: DeviceSelectionScreenPro
                                 onClick={handleJoin}
                                 disabled={disableButtons}
                             >
-                                Join Now
+                                Join room
                             </Button>
                         </div>
                     </Grid>
