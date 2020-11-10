@@ -47,6 +47,10 @@
                 &:disabled {
                     background: $gray-4;
                     cursor    : not-allowed;
+
+                    &hover {
+                        background: $gray-4;
+                    }
                 }
             }
 

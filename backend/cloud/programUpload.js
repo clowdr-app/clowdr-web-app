@@ -13,7 +13,7 @@ const {
     createProgramPerson,
     createProgramSession,
     createProgramSessionEvent,
-    createProgramTrack
+    createProgramTrack,
 } = require("./program");
 const { createTextChat } = require("./textChat");
 const { createVideoRoom } = require("./videoRoom");
@@ -21,19 +21,18 @@ const { createYouTubeFeed } = require("./youtube");
 const { createZoomRoom } = require("./zoom");
 const assert = require("assert");
 
-Parse.Cloud.define("import-program", async (request) => {
+Parse.Cloud.define("import-program", async request => {
     try {
         const { params, user } = request;
         const confId = params.conference;
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const conference = await new Parse.Object("Conference", { id: confId }).fetch({ useMasterKey: true });
 
-            const existingJobStatusQ =
-                await new Parse.Query("ConferenceConfiguration")
-                    .equalTo("conference", conference)
-                    .equalTo("key", "program-upload-job-id")
-                    .first({ useMasterKey: true });
+            const existingJobStatusQ = await new Parse.Query("ConferenceConfiguration")
+                .equalTo("conference", conference)
+                .equalTo("key", "program-upload-job-id")
+                .first({ useMasterKey: true });
             if (existingJobStatusQ) {
                 throw new Error("Already importing!");
             }
@@ -50,33 +49,31 @@ Parse.Cloud.define("import-program", async (request) => {
             const jobId = await Parse.Cloud.startJob("import-program-job", {
                 conference: confId,
                 data: JSON.stringify(params.data),
-                userId: user.id
+                userId: user.id,
             });
 
             await newProgramUploadJobObj.save({ value: jobId }, { useMasterKey: true });
 
             return true;
         }
-    }
-    catch (e) {
+    } catch (e) {
         console.error("Could not import program: " + e);
     }
     return false;
 });
 
-Parse.Cloud.define("import-program-progress", async (request) => {
+Parse.Cloud.define("import-program-progress", async request => {
     try {
         const { params, user } = request;
         const confId = params.conference;
-        const authorized = !!user && await isUserInRoles(user.id, confId, ["admin"]);
+        const authorized = !!user && (await isUserInRoles(user.id, confId, ["admin"]));
         if (authorized) {
             const conference = await new Parse.Object("Conference", { id: confId }).fetch({ useMasterKey: true });
 
-            const existingJobStatusQ =
-                await new Parse.Query("ConferenceConfiguration")
-                    .equalTo("conference", conference)
-                    .equalTo("key", "program-upload-job-id")
-                    .first({ useMasterKey: true });
+            const existingJobStatusQ = await new Parse.Query("ConferenceConfiguration")
+                .equalTo("conference", conference)
+                .equalTo("key", "program-upload-job-id")
+                .first({ useMasterKey: true });
             if (existingJobStatusQ) {
                 const jobId = existingJobStatusQ.get("value");
                 let jobStatusQ = new Parse.Query("_JobStatus");
@@ -96,16 +93,15 @@ Parse.Cloud.define("import-program-progress", async (request) => {
 
             return false;
         }
-    }
-    catch (e) {
+    } catch (e) {
         console.error("Could not import program: " + e);
     }
     return false;
 });
 
-Parse.Cloud.job("import-program-job", async (request) => {
+Parse.Cloud.job("import-program-job", async request => {
     const { params, message: _message } = request;
-    const message = (msg) => {
+    const message = msg => {
         console.log(msg);
         _message(msg);
     };
@@ -126,15 +122,7 @@ Parse.Cloud.job("import-program-job", async (request) => {
         const adminProfile = await getProfileOfUser(user, confId);
         const conference = await new Parse.Object("Conference", { id: confId }).fetch({ useMasterKey: true });
 
-        const {
-            tracks,
-            feeds,
-            items,
-            events,
-            persons,
-            sessions,
-            attachmentTypes
-        } = programData;
+        const { tracks, feeds, items, events, persons, sessions, attachmentTypes } = programData;
 
         for (const sessionSpec of Object.values(sessions)) {
             if (!sessionSpec.feed) {
@@ -144,7 +132,7 @@ Parse.Cloud.job("import-program-job", async (request) => {
             if (!feeds[sessionSpec.feed]) {
                 feeds[sessionSpec.feed] = {
                     id: sessionSpec.feed,
-                    name: sessionSpec.title
+                    name: sessionSpec.title,
                 };
             }
         }
@@ -165,48 +153,41 @@ Parse.Cloud.job("import-program-job", async (request) => {
         const sessionIds = Object.keys(sessions);
         const attachmentTypeIds = Object.keys(attachmentTypes);
 
-        const existingTrackIds
-            = await new Parse.Query("ProgramTrack")
-                .equalTo("conference", conference)
-                .map(x => x.id, { useMasterKey: true });
-        const existingItemIds
-            = await new Parse.Query("ProgramItem")
-                .equalTo("conference", conference)
-                .map(x => x.id, { useMasterKey: true });
-        const existingEventIds
-            = await new Parse.Query("ProgramSessionEvent")
-                .equalTo("conference", conference)
-                .map(x => x.id, { useMasterKey: true });
-        const existingPersonIds
-            = await new Parse.Query("ProgramPerson")
-                .equalTo("conference", conference)
-                .map(x => x.id, { useMasterKey: true });
-        const existingSessionIds
-            = await new Parse.Query("ProgramSession")
-                .equalTo("conference", conference)
-                .map(x => x.id, { useMasterKey: true });
-        const existingAttachmentTypeIds
-            = await new Parse.Query("AttachmentType")
-                .equalTo("conference", conference)
-                .map(x => x.id, { useMasterKey: true });
+        const existingTrackIds = await new Parse.Query("ProgramTrack")
+            .equalTo("conference", conference)
+            .map(x => x.id, { useMasterKey: true });
+        const existingItemIds = await new Parse.Query("ProgramItem")
+            .equalTo("conference", conference)
+            .map(x => x.id, { useMasterKey: true });
+        const existingEventIds = await new Parse.Query("ProgramSessionEvent")
+            .equalTo("conference", conference)
+            .map(x => x.id, { useMasterKey: true });
+        const existingPersonIds = await new Parse.Query("ProgramPerson")
+            .equalTo("conference", conference)
+            .map(x => x.id, { useMasterKey: true });
+        const existingSessionIds = await new Parse.Query("ProgramSession")
+            .equalTo("conference", conference)
+            .map(x => x.id, { useMasterKey: true });
+        const existingAttachmentTypeIds = await new Parse.Query("AttachmentType")
+            .equalTo("conference", conference)
+            .map(x => x.id, { useMasterKey: true });
 
         // TODO: Validate that everything we try to look up in the maps actually exists.
 
-        const totalWork
-            = feedIds.length
-            + attachmentTypeIds.length
-            + personIds.length
-            + trackIds.length
-            + itemIds.length
-            + sessionIds.length
-            + eventIds.length
-            + 1
-            ;
+        const totalWork =
+            feedIds.length +
+            attachmentTypeIds.length +
+            personIds.length +
+            trackIds.length +
+            itemIds.length +
+            sessionIds.length +
+            eventIds.length +
+            1;
         let progress = 0;
 
         const incrementProgress = () => {
             progress++;
-            const progressPC = Math.round(1000 * progress / totalWork) / 10;
+            const progressPC = Math.round((1000 * progress) / totalWork) / 10;
             message(progressPC.toString());
         };
 
@@ -226,23 +207,22 @@ Parse.Cloud.job("import-program-job", async (request) => {
             if (feed.youtube) {
                 youtubeObj = await createYouTubeFeed({
                     conference,
-                    videoId: feed.youtube
+                    videoId: feed.youtube,
                 });
             }
 
             if (feed.zoomRoom) {
                 zoomRoomObj = await createZoomRoom({
                     conference,
-                    url: feed.zoomRoom
+                    url: feed.zoomRoom,
                 });
             }
 
             if (feed.textChat || feed.videoRoom) {
-                textChatObj
-                    = await new Parse.Query("TextChat")
-                        .equalTo("conference", conference)
-                        .equalTo("name", feedName)
-                        .first({ useMasterKey: true });
+                textChatObj = await new Parse.Query("TextChat")
+                    .equalTo("conference", conference)
+                    .equalTo("name", feedName)
+                    .first({ useMasterKey: true });
                 if (!textChatObj) {
                     textChatObj = await createTextChat({
                         name: feedName,
@@ -251,128 +231,151 @@ Parse.Cloud.job("import-program-job", async (request) => {
                         isDM: false,
                         autoWatch: false,
                         creator: adminProfile,
-                        mode: "ordinary"
+                        mode: "ordinary",
                     });
                 }
             }
 
             if (feed.videoRoom) {
-                videoRoomObj
-                    = await new Parse.Query("VideoRoom")
-                        .equalTo("conference", conference)
-                        .equalTo("name", feedName)
-                        .first({ useMasterKey: true });
+                videoRoomObj = await new Parse.Query("VideoRoom")
+                    .equalTo("conference", conference)
+                    .equalTo("name", feedName)
+                    .first({ useMasterKey: true });
                 if (!videoRoomObj) {
-                    videoRoomObj = await createVideoRoom({
-                        capacity: 50,
-                        ephemeral: false,
-                        isPrivate: false,
-                        name: feedName,
-                        conference,
-                        textChat: textChatObj
-                    }, user);
-                }
-                else {
+                    videoRoomObj = await createVideoRoom(
+                        {
+                            capacity: 50,
+                            ephemeral: false,
+                            isPrivate: false,
+                            name: feedName,
+                            conference,
+                            textChat: textChatObj,
+                        },
+                        user
+                    );
+                } else {
                     await videoRoomObj.save({ textChat: textChatObj }, { useMasterKey: true });
                 }
             }
 
-            feedsMap.set(feedId, await createContentFeed({
-                name: feedName,
-                conference,
-                youtube: youtubeObj,
-                zoomRoom: zoomRoomObj,
-                videoRoom: videoRoomObj,
-                textChat: !videoRoomObj ? textChatObj : undefined,
-                originatingID: feedId
-            }));
+            feedsMap.set(
+                feedId,
+                await createContentFeed({
+                    name: feedName,
+                    conference,
+                    youtube: youtubeObj,
+                    zoomRoom: zoomRoomObj,
+                    videoRoom: videoRoomObj,
+                    textChat: !videoRoomObj ? textChatObj : undefined,
+                    originatingID: feedId,
+                })
+            );
 
             incrementProgress();
         }
 
         for (const attachmentTypeId of attachmentTypeIds) {
             const attachmentTypeSpec = attachmentTypes[attachmentTypeId];
-            attachmentTypesMap.set(attachmentTypeId, await createAttachmentType({
-                supportsFile: attachmentTypeSpec.supportsFile,
-                name: attachmentTypeSpec.name,
-                isCoverImage: attachmentTypeSpec.isCoverImage,
-                displayAsLink: attachmentTypeSpec.displayAsLink,
-                extra: attachmentTypeSpec.extra,
-                ordinal: attachmentTypeSpec.ordinal,
-                conference,
-                fileTypes: attachmentTypeSpec.fileTypes ? attachmentTypeSpec.fileTypes : [],
-            }));
+            attachmentTypesMap.set(
+                attachmentTypeId,
+                await createAttachmentType({
+                    supportsFile: attachmentTypeSpec.supportsFile,
+                    name: attachmentTypeSpec.name,
+                    isCoverImage: attachmentTypeSpec.isCoverImage,
+                    displayAsLink: attachmentTypeSpec.displayAsLink,
+                    extra: attachmentTypeSpec.extra,
+                    ordinal: attachmentTypeSpec.ordinal,
+                    conference,
+                    fileTypes: attachmentTypeSpec.fileTypes ? attachmentTypeSpec.fileTypes : [],
+                })
+            );
 
             incrementProgress();
         }
 
         for (const personId of personIds) {
             const personSpec = persons[personId];
-            personsMap.set(personId, await createProgramPerson({
-                name: personSpec.name,
-                affiliation: personSpec.affiliation,
-                conference
-            }));
+            personsMap.set(
+                personId,
+                await createProgramPerson({
+                    name: personSpec.name,
+                    affiliation: personSpec.affiliation,
+                    email: personSpec.email,
+                    conference,
+                })
+            );
 
             incrementProgress();
         }
 
         for (const trackId of trackIds) {
             const trackSpec = tracks[trackId];
-            tracksMap.set(trackId, await createProgramTrack({
-                shortName: trackSpec.shortName,
-                name: trackSpec.name,
-                colour: trackSpec.colour,
-                feed: trackSpec.feed ? feedsMap.get(trackSpec.feed) : undefined,
-                conference
-            }));
+            tracksMap.set(
+                trackId,
+                await createProgramTrack({
+                    shortName: trackSpec.shortName,
+                    name: trackSpec.name,
+                    colour: trackSpec.colour,
+                    feed: trackSpec.feed ? feedsMap.get(trackSpec.feed) : undefined,
+                    conference,
+                })
+            );
 
             incrementProgress();
         }
 
         for (const itemId of itemIds) {
             const itemSpec = items[itemId];
-            itemsMap.set(itemId, await createProgramItem({
-                abstract: itemSpec.abstract,
-                exhibit: itemSpec.exhibit,
-                title: itemSpec.title,
-                authors: itemSpec.authors.map(x => personsMap.get(x).id),
-                feed: itemSpec.feed ? feedsMap.get(itemSpec.feed) : undefined,
-                track: tracksMap.get(itemSpec.track),
-                originatingID: itemSpec.id,
-                conference
-            }));
+            itemsMap.set(
+                itemId,
+                await createProgramItem({
+                    abstract: itemSpec.abstract,
+                    exhibit: itemSpec.exhibit,
+                    title: itemSpec.title,
+                    authors: itemSpec.authors.map(x => personsMap.get(x).id),
+                    feed: itemSpec.feed ? feedsMap.get(itemSpec.feed) : undefined,
+                    track: tracksMap.get(itemSpec.track),
+                    originatingID: itemSpec.id,
+                    conference,
+                })
+            );
 
             incrementProgress();
         }
 
         for (const sessionId of sessionIds) {
             const sessionSpec = sessions[sessionId];
-            sessionsMap.set(sessionId, await createProgramSession({
-                title: sessionSpec.title,
-                feed: sessionSpec.feed ? feedsMap.get(sessionSpec.feed) : undefined,
-                track: tracksMap.get(sessionSpec.track),
-                chair: sessionSpec.chair,
-                originatingID: sessionSpec.id,
-                conference
-            }));
+            sessionsMap.set(
+                sessionId,
+                await createProgramSession({
+                    title: sessionSpec.title,
+                    feed: sessionSpec.feed ? feedsMap.get(sessionSpec.feed) : undefined,
+                    track: tracksMap.get(sessionSpec.track),
+                    chair: sessionSpec.chair,
+                    originatingID: sessionSpec.id,
+                    conference,
+                })
+            );
 
             incrementProgress();
         }
 
         for (const eventId of eventIds) {
             const eventSpec = events[eventId];
-            eventsMap.set(eventId, await createProgramSessionEvent({
-                directLink: eventSpec.directLink,
-                endTime: new Date(eventSpec.endTime),
-                startTime: new Date(eventSpec.startTime),
-                feed: eventSpec.feed ? feedsMap.get(eventSpec.feed) : undefined,
-                item: itemsMap.get(eventSpec.item),
-                session: sessionsMap.get(eventSpec.session),
-                chair: eventSpec.chair,
-                originatingID: eventSpec.id,
-                conference
-            }));
+            eventsMap.set(
+                eventId,
+                await createProgramSessionEvent({
+                    directLink: eventSpec.directLink,
+                    endTime: new Date(eventSpec.endTime),
+                    startTime: new Date(eventSpec.startTime),
+                    feed: eventSpec.feed ? feedsMap.get(eventSpec.feed) : undefined,
+                    item: itemsMap.get(eventSpec.item),
+                    session: sessionsMap.get(eventSpec.session),
+                    chair: eventSpec.chair,
+                    originatingID: eventSpec.id,
+                    conference,
+                })
+            );
 
             incrementProgress();
         }
@@ -389,40 +392,59 @@ Parse.Cloud.job("import-program-job", async (request) => {
         const unusedExistingEventIds = existingEventIds.filter(x => !usedEventIds.includes(x));
         const unusedExistingPersonIds = existingPersonIds.filter(x => !usedPersonIds.includes(x));
         const unusedExistingSessionIds = existingSessionIds.filter(x => !usedSessionIds.includes(x));
-        const unusedExistingAttachmentTypeIds = existingAttachmentTypeIds.filter(x => !usedAttachmentTypeIds.includes(x));
+        const unusedExistingAttachmentTypeIds = existingAttachmentTypeIds.filter(
+            x => !usedAttachmentTypeIds.includes(x)
+        );
 
         // The order of the following deletes matters, a lot.
         // Note: We trust the rest of the backend to delete unused content feeds automatically
 
         console.log(`Deleting ${unusedExistingEventIds.length} unused existing events...`);
-        await Promise.all(unusedExistingEventIds.map(id => new Parse.Object("ProgramSessionEvent", { id }).destroy({ useMasterKey: true })));
+        await Promise.all(
+            unusedExistingEventIds.map(id =>
+                new Parse.Object("ProgramSessionEvent", { id }).destroy({ useMasterKey: true })
+            )
+        );
         console.log(`Deleted ${unusedExistingEventIds.length} unused existing events.`);
 
         console.log(`Deleting ${unusedExistingSessionIds.length} unused existing sessions...`);
-        await Promise.all(unusedExistingSessionIds.map(id => new Parse.Object("ProgramSession", { id }).destroy({ useMasterKey: true })));
+        await Promise.all(
+            unusedExistingSessionIds.map(id =>
+                new Parse.Object("ProgramSession", { id }).destroy({ useMasterKey: true })
+            )
+        );
         console.log(`Deleted ${unusedExistingSessionIds.length} unused existing sessions.`);
 
         console.log(`Deleting ${unusedExistingItemIds.length} unused existing items...`);
-        await Promise.all(unusedExistingItemIds.map(id => new Parse.Object("ProgramItem", { id }).destroy({ useMasterKey: true })));
+        await Promise.all(
+            unusedExistingItemIds.map(id => new Parse.Object("ProgramItem", { id }).destroy({ useMasterKey: true }))
+        );
         console.log(`Deleted ${unusedExistingItemIds.length} unused existing items.`);
 
         console.log(`Deleting ${unusedExistingTrackIds.length} unused existing tracks...`);
-        await Promise.all(unusedExistingTrackIds.map(id => new Parse.Object("ProgramTrack", { id }).destroy({ useMasterKey: true })));
+        await Promise.all(
+            unusedExistingTrackIds.map(id => new Parse.Object("ProgramTrack", { id }).destroy({ useMasterKey: true }))
+        );
         console.log(`Deleted ${unusedExistingTrackIds.length} unused existing tracks.`);
 
         console.log(`Deleting ${unusedExistingPersonIds.length} unused existing persons...`);
-        await Promise.all(unusedExistingPersonIds.map(id => new Parse.Object("ProgramPerson", { id }).destroy({ useMasterKey: true })));
+        await Promise.all(
+            unusedExistingPersonIds.map(id => new Parse.Object("ProgramPerson", { id }).destroy({ useMasterKey: true }))
+        );
         console.log(`Deleted ${unusedExistingPersonIds.length} unused existing persons.`);
 
         console.log(`Deleting ${unusedExistingAttachmentTypeIds.length} unused existing attachment types...`);
-        await Promise.all(unusedExistingAttachmentTypeIds.map(id => new Parse.Object("AttachmentType", { id }).destroy({ useMasterKey: true })));
+        await Promise.all(
+            unusedExistingAttachmentTypeIds.map(id =>
+                new Parse.Object("AttachmentType", { id }).destroy({ useMasterKey: true })
+            )
+        );
         console.log(`Deleted ${unusedExistingAttachmentTypeIds.length} unused existing attachment types.`);
 
         incrementProgress();
 
         message("100");
-    }
-    catch (e) {
+    } catch (e) {
         console.error("ERROR: " + e.stack, e);
         message(e);
         throw e;

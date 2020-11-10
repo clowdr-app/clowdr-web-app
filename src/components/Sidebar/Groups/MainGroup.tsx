@@ -49,6 +49,17 @@ export default function MainMenuGroup(props: Props) {
             ),
         },
         {
+            key: "my-items",
+            element: (
+                <MenuItem
+                    title="My program items"
+                    label="My program items"
+                    action="/myitems"
+                    onClick={props.onItemClicked}
+                />
+            ),
+        },
+        {
             key: "exhibits",
             element: (
                 <MenuItem title="Exhibition" label="Exhibition" action="/exhibits" onClick={props.onItemClicked} />

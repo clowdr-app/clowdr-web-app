@@ -1,0 +1,14 @@
+@import "../../../../../styles/util.scss";
+@import "../../../../../styles/form.scss";
+
+$gutter    : 0;
+$main-width: 100%;
+
+.attachment-upload {
+    @include basic-form;
+
+    border-radius: 5px;
+    border       : 1px solid $gray-5;
+    margin       : 1em;
+    padding      : 1em;
+}

@@ -1,5 +1,14 @@
-import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
-import { ProgramItem, ProgramSession, ProgramSessionEvent, ContentFeed, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import {
+    DataDeletedEventDetails,
+    DataUpdatedEventDetails,
+} from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import {
+    ProgramItem,
+    ProgramSession,
+    ProgramSessionEvent,
+    ContentFeed,
+    WatchedItems,
+} from "@clowdr-app/clowdr-db-schema";
 import React, { useCallback, useEffect, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import useConference from "../../../../hooks/useConference";
@@ -32,11 +41,18 @@ export default function ViewEvent(props: Props) {
     useSafeAsync(
         async () => await ProgramSessionEvent.get(props.eventId, conference.id),
         setEvent,
-        [props.eventId, conference.id], "ViewEvent:setEvent");
-    useSafeAsync(async () => await event?.item ?? null, setItem, [event], "ViewEvent:setItem");
-    useSafeAsync(async () => await event?.session ?? null, setSession, [event], "ViewEvent:setSession");
+        [props.eventId, conference.id],
+        "ViewEvent:setEvent"
+    );
+    useSafeAsync(async () => (await event?.item) ?? null, setItem, [event], "ViewEvent:setItem");
+    useSafeAsync(async () => (await event?.session) ?? null, setSession, [event], "ViewEvent:setSession");
     useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session], "ViewEvent:setSessionFeed");
-    useSafeAsync(async () => event ? ((await event.feed) ?? "not present") : null, setEventFeed, [event], "ViewEvent:setEventFeed");
+    useSafeAsync(
+        async () => (event ? (await event.feed) ?? "not present" : null),
+        setEventFeed,
+        [event],
+        "ViewEvent:setEventFeed"
+    );
 
     const [refreshTime, setRefreshTime] = useState<number>(0);
     useEffect(() => {
@@ -49,69 +65,93 @@ export default function ViewEvent(props: Props) {
     }, [event, refreshTime]);
 
     // Subscribe to data updates
-    const onSessionEventUpdated = useCallback(function _onSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
-        for (const object of ev.objects) {
-            if (event && object.id === event.id) {
-                setEvent(object as ProgramSessionEvent);
+    const onSessionEventUpdated = useCallback(
+        function _onSessionEventUpdated(ev: DataUpdatedEventDetails<"ProgramSessionEvent">) {
+            for (const object of ev.objects) {
+                if (event && object.id === event.id) {
+                    setEvent(object as ProgramSessionEvent);
+                }
             }
-        }
-    }, [event]);
+        },
+        [event]
+    );
 
-    const onSessionEventDeleted = useCallback(function _onSessionEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {
-        if (event && event.id === ev.objectId) {
-            setEvent(null)
-        }
-    }, [event]);
-
-    const onItemUpdated = useCallback(function _onItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
-        for (const object of ev.objects) {
-            if (item && object.id === item.id) {
-                setItem(object as ProgramItem);
+    const onSessionEventDeleted = useCallback(
+        function _onSessionEventDeleted(ev: DataDeletedEventDetails<"ProgramSessionEvent">) {
+            if (event && event.id === ev.objectId) {
+                setEvent(null);
             }
-        }
-    }, [item]);
+        },
+        [event]
+    );
 
-    const onItemDeleted = useCallback(function _onItemDeleted(ev: DataDeletedEventDetails<"ProgramItem">) {
-        if (item && item.id === ev.objectId) {
-            setItem(null)
-        }
-    }, [item]);
-
-    const onSessionUpdated = useCallback(function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
-        for (const object of ev.objects) {
-            if (session && object.id === session.id) {
-                setSession(object as ProgramSession);
+    const onItemUpdated = useCallback(
+        function _onItemUpdated(ev: DataUpdatedEventDetails<"ProgramItem">) {
+            for (const object of ev.objects) {
+                if (item && object.id === item.id) {
+                    setItem(object as ProgramItem);
+                }
             }
-        }
-    }, [session]);
+        },
+        [item]
+    );
 
-    const onSessionDeleted = useCallback(function _onSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
-        if (session && session.id === ev.objectId) {
-            setSession(null)
-        }
-    }, [session]);
+    const onItemDeleted = useCallback(
+        function _onItemDeleted(ev: DataDeletedEventDetails<"ProgramItem">) {
+            if (item && item.id === ev.objectId) {
+                setItem(null);
+            }
+        },
+        [item]
+    );
 
-    const onContentFeedUpdated = useCallback(function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
-        for (const object of ev.objects) {
-            if (sessionFeed && object.id === sessionFeed.id) {
-                setSessionFeed(object as ContentFeed);
+    const onSessionUpdated = useCallback(
+        function _onSessionUpdated(ev: DataUpdatedEventDetails<"ProgramSession">) {
+            for (const object of ev.objects) {
+                if (session && object.id === session.id) {
+                    setSession(object as ProgramSession);
+                }
+            }
+        },
+        [session]
+    );
+
+    const onSessionDeleted = useCallback(
+        function _onSessionDeleted(ev: DataDeletedEventDetails<"ProgramSession">) {
+            if (session && session.id === ev.objectId) {
+                setSession(null);
+            }
+        },
+        [session]
+    );
+
+    const onContentFeedUpdated = useCallback(
+        function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
+            for (const object of ev.objects) {
+                if (sessionFeed && object.id === sessionFeed.id) {
+                    setSessionFeed(object as ContentFeed);
+                }
+
+                if (eventFeed && eventFeed !== "not present" && object.id === eventFeed.id) {
+                    setEventFeed(object as ContentFeed);
+                }
+            }
+        },
+        [sessionFeed, eventFeed]
+    );
+
+    const onContentFeedDeleted = useCallback(
+        function _onContentFeedDeleted(ev: DataDeletedEventDetails<"ContentFeed">) {
+            if (sessionFeed && ev.objectId === sessionFeed.id) {
+                setSessionFeed(null);
             }
 
-            if (eventFeed && eventFeed !== "not present" && object.id === eventFeed.id) {
-                setEventFeed(object as ContentFeed);
+            if (eventFeed && eventFeed !== "not present" && ev.objectId === eventFeed.id) {
+                setEventFeed(null);
             }
-        }
-    }, [sessionFeed, eventFeed]);
-
-    const onContentFeedDeleted = useCallback(function _onContentFeedDeleted(ev: DataDeletedEventDetails<"ContentFeed">) {
-        if (sessionFeed && ev.objectId === sessionFeed.id) {
-            setSessionFeed(null);
-        }
-
-        if (eventFeed && eventFeed !== "not present" && ev.objectId === eventFeed.id) {
-            setEventFeed(null);
-        }
-    }, [sessionFeed, eventFeed]);
+        },
+        [sessionFeed, eventFeed]
+    );
 
     useDataSubscription("ProgramSessionEvent", onSessionEventUpdated, onSessionEventDeleted, !event, conference);
     useDataSubscription("ProgramItem", onItemUpdated, onItemDeleted, !item, conference);
@@ -122,78 +162,94 @@ export default function ViewEvent(props: Props) {
         return date.toLocaleTimeString(undefined, {
             hour12: false,
             hour: "numeric",
-            minute: "numeric"
+            minute: "numeric",
         });
     }
 
     function fmtDay(date: Date) {
         return date.toLocaleDateString(undefined, {
-            weekday: "short"
+            weekday: "short",
         });
     }
 
     const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
     const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
-    useSafeAsync(async () => {
-        const watched = await userProfile.watched;
-        return watched.watchedEvents.includes(props.eventId);
-    }, setIsFollowing, [userProfile.watchedId, props.eventId], "ViewEvent:setIsFollowing");
+    useSafeAsync(
+        async () => {
+            const watched = await userProfile.watched;
+            return watched.watchedEvents.includes(props.eventId);
+        },
+        setIsFollowing,
+        [userProfile.watchedId, props.eventId],
+        "ViewEvent:setIsFollowing"
+    );
 
-    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        for (const object of update.objects) {
-            if (object.id === userProfile.watchedId) {
-                setIsFollowing((object as WatchedItems).watchedEvents.includes(props.eventId));
+    const onWatchedItemsUpdated = useCallback(
+        function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+            for (const object of update.objects) {
+                if (object.id === userProfile.watchedId) {
+                    setIsFollowing((object as WatchedItems).watchedEvents.includes(props.eventId));
+                }
             }
-        }
-    }, [props.eventId, userProfile.watchedId]);
+        },
+        [props.eventId, userProfile.watchedId]
+    );
 
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, isFollowing === null, conference);
 
-    const doFollow = useCallback(async function _doFollow() {
-        try {
-            const p = makeCancelable((async () => {
-                const watched = await userProfile.watched;
-                if (!watched.watchedEvents.includes(props.eventId)) {
-                    watched.watchedEvents.push(props.eventId);
-                    await watched.save();
-                }
-            })());
-            setChangingFollow(p);
-            await p.promise;
-            setChangingFollow(null);
-        }
-        catch (e) {
-            if (!e.isCanceled) {
+    const doFollow = useCallback(
+        async function _doFollow() {
+            try {
+                const p = makeCancelable(
+                    (async () => {
+                        const watched = await userProfile.watched;
+                        if (!watched.watchedEvents.includes(props.eventId)) {
+                            watched.watchedEvents.push(props.eventId);
+                            await watched.save();
+                        }
+                    })()
+                );
+                setChangingFollow(p);
+                await p.promise;
                 setChangingFollow(null);
-                throw e;
+            } catch (e) {
+                if (!e.isCanceled) {
+                    setChangingFollow(null);
+                    throw e;
+                }
             }
-        }
-        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.eventId, userProfile.watchedId]);
+            // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [props.eventId, userProfile.watchedId]
+    );
 
-    const doUnfollow = useCallback(async function _doFollow() {
-        try {
-            const p = makeCancelable((async () => {
-                const watched = await userProfile.watched;
-                if (watched.watchedEvents.includes(props.eventId)) {
-                    watched.watchedEvents = watched.watchedEvents.filter(x => x !== props.eventId);
-                    await watched.save();
-                }
-            })());
-            setChangingFollow(p);
-            await p.promise;
-            setChangingFollow(null);
-        }
-        catch (e) {
-            if (!e.isCanceled) {
+    const doUnfollow = useCallback(
+        async function _doFollow() {
+            try {
+                const p = makeCancelable(
+                    (async () => {
+                        const watched = await userProfile.watched;
+                        if (watched.watchedEvents.includes(props.eventId)) {
+                            watched.watchedEvents = watched.watchedEvents.filter(x => x !== props.eventId);
+                            await watched.save();
+                        }
+                    })()
+                );
+                setChangingFollow(p);
+                await p.promise;
                 setChangingFollow(null);
-                throw e;
+            } catch (e) {
+                if (!e.isCanceled) {
+                    setChangingFollow(null);
+                    throw e;
+                }
             }
-        }
-        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.eventId, userProfile.watchedId]);
+            // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [props.eventId, userProfile.watchedId]
+    );
 
     const buttons: Array<ActionButton> = [];
     if (event) {
@@ -202,22 +258,21 @@ export default function ViewEvent(props: Props) {
                 buttons.push({
                     label: changingFollow ? "Changing" : "Unfollow event",
                     icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
-                    action: (ev) => {
+                    action: ev => {
                         ev.preventDefault();
                         ev.stopPropagation();
                         doUnfollow();
-                    }
+                    },
                 });
-            }
-            else {
+            } else {
                 buttons.push({
                     label: changingFollow ? "Changing" : "Follow event",
                     icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
-                    action: (ev) => {
+                    action: ev => {
                         ev.preventDefault();
                         ev.stopPropagation();
                         doFollow();
-                    }
+                    },
                 });
             }
         }
@@ -225,14 +280,14 @@ export default function ViewEvent(props: Props) {
         buttons.push({
             label: "Session",
             action: `/session/${event.sessionId}`,
-            icon: <i className="fas fa-eye"></i>
+            icon: <i className="fas fa-eye"></i>,
         });
     }
     if (session) {
         buttons.push({
             label: "Track",
             action: `/track/${session.trackId}`,
-            icon: <i className="fas fa-eye"></i>
+            icon: <i className="fas fa-eye"></i>,
         });
     }
     if (item) {
@@ -245,25 +300,43 @@ export default function ViewEvent(props: Props) {
     // TODO: Offer to auto-move to the session's next event 30 secs before the
     //       end of the current event
 
-    const subtitle
-        = event
-            ? <>{fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}{event.chair ? <>&nbsp;&middot;&nbsp;Chaired by {event.chair}</> : <></>}</>
-            : undefined;
+    const subtitle = event ? (
+        <>
+            {fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}
+            {event.chair ? <>&nbsp;&middot;&nbsp;Chaired by {event.chair}</> : <></>}
+            {session ? <>&nbsp;&middot;&nbsp;{session.title}</> : <></>}
+        </>
+    ) : (
+        undefined
+    );
     const renderNow = Date.now();
     const eventIsLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
-    const sessionIsLive = false // TODO: Check session live time for SPLASH: !!session && session.startTime.getTime() < renderNow && session.endTime.getTime() > renderNow;
-    return <div className="program-event">
-        {sessionIsLive || (sessionFeed && sessionFeed.youtubeId)
-            ? sessionFeed
-                ? <div className="session-feed">
-                    <h2>{sessionFeed.name}</h2>
-                    {eventIsLive || sessionFeed.youtubeId
-                        ? <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={!eventIsLive && "Sorry, something has gone wrong and we are unable to show you the session feed for this event."} />
-                        : <>This event is part of an ongoing live session. Please join the session to participate.</>}
-                </div>
-                : <LoadingSpinner message="Loading session feed" />
-            : <></>}
-        {/* TODO: Re-enable this ever?
+    const sessionIsLive = false; // TODO: Check session live time for SPLASH: !!session && session.startTime.getTime() < renderNow && session.endTime.getTime() > renderNow;
+    return (
+        <div className="program-event">
+            {sessionIsLive || (sessionFeed && sessionFeed.youtubeId) ? (
+                sessionFeed ? (
+                    <div className="session-feed">
+                        <h2>{sessionFeed.name}</h2>
+                        {eventIsLive || sessionFeed.youtubeId ? (
+                            <ViewContentFeed
+                                feed={sessionFeed}
+                                hideZoomOrVideo={
+                                    !eventIsLive &&
+                                    "Sorry, something has gone wrong and we are unable to show you the session feed for this event."
+                                }
+                            />
+                        ) : (
+                            <>This event is part of an ongoing live session. Please join the session to participate.</>
+                        )}
+                    </div>
+                ) : (
+                    <LoadingSpinner message="Loading session feed" />
+                )
+            ) : (
+                <></>
+            )}
+            {/* TODO: Re-enable this ever?
          {eventFeed
             ? (eventFeed !== "not present"
                 ? !isLive || (eventFeed.youtubeId || eventFeed.zoomRoomId)
@@ -275,17 +348,24 @@ export default function ViewEvent(props: Props) {
                 : <></>)
             : <LoadingSpinner message="Loading event feed" />
         } */}
-        {item
-            ? <ViewItem
-                showFeedName={true}
-                item={item}
-                // TODO: Do we ever want this? `&& eventHasEnded`
-                textChatFeedOnly={(eventIsLive || sessionIsLive) && !!(sessionFeed?.videoRoomId || sessionFeed?.youtubeId || sessionFeed?.zoomRoomId)}
-                heading={{
-                    title: item?.title ?? "Event",
-                    subtitle,
-                    buttons: buttons.length > 0 ? buttons : undefined
-                }} />
-            : <LoadingSpinner />}
-    </div>;
+            {item ? (
+                <ViewItem
+                    showFeedName={false}
+                    item={item}
+                    // TODO: Do we ever want this? `&& eventHasEnded`
+                    textChatFeedOnly={
+                        (eventIsLive || sessionIsLive) &&
+                        !!(sessionFeed?.videoRoomId || sessionFeed?.youtubeId || sessionFeed?.zoomRoomId)
+                    }
+                    heading={{
+                        title: item?.title ?? "Event",
+                        subtitle,
+                        buttons: buttons.length > 0 ? buttons : undefined,
+                    }}
+                />
+            ) : (
+                <LoadingSpinner />
+            )}
+        </div>
+    );
 }
