@@ -678,7 +678,7 @@ async function isUserAnAuthorOf(user, programItem, confId) {
 async function updateProgramItemAttachmentACLs(programItemAttachment) {
     const programItemPointer = await programItemAttachment.get("programItem");
     if (programItemPointer) {
-        const programItem = programItemPointer.fetch({ useMasterKey: true });
+        const programItem = await programItemPointer.fetch({ useMasterKey: true });
         const authors = programItem.get("authors");
         const matchingProgramPeople = await new Parse.Query("ProgramPerson")
             .containedIn("objectId", authors)
