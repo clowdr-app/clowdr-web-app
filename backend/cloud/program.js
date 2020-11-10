@@ -375,6 +375,7 @@ Parse.Cloud.define("track-create", handleCreateTrack);
  * @typedef {Object} ProgramPersonSpec
  * @property {string} shortName
  * @property {string} name
+ * @property {string | undefined} email
  * @property {Pointer} conference
  * @property {Pointer | undefined} [profile]
  */
@@ -384,6 +385,7 @@ const createPersonSchema = {
     affiliation: "string?",
     conference: "string",
     profile: "string?",
+    email: "string?",
 };
 
 /**
@@ -410,6 +412,7 @@ async function createProgramPerson(data) {
             {
                 affiliation: data.affiliation,
                 profile: data.profile,
+                email: data.email,
             },
             { useMasterKey: true }
         );
