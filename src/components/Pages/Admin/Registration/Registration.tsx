@@ -164,6 +164,17 @@ export default function AdminRegistration() {
                                                 const fileContents = await file.text();
                                                 const fileData = JSON.parse(fileContents);
                                                 assert(fileData instanceof Array);
+                                                for (const reg of fileData) {
+                                                    if (!reg.country) {
+                                                        reg.country = "<Unknown>";
+                                                    }
+                                                    if (!reg.affiliation) {
+                                                        reg.affiliation = "<Unknown>";
+                                                    }
+                                                    if (!reg.newRole) {
+                                                        reg.newRole = "attendee";
+                                                    }
+                                                }
                                                 result = (result || ([] as any[])).concat(fileData);
                                             } catch (e) {
                                                 addError(`File "${file.name}" contains invalid data.`);
