@@ -2,12 +2,16 @@
 
 .all-participants {
     column-fill: auto;
-    margin-top : 1em;
+    height     : 100%;
 
     .column__search {
         display        : flex;
         justify-content: center;
         width          : 100%;
+    }
+
+    .column-item {
+        position: relative;
     }
 
     .participant {
@@ -20,11 +24,11 @@
         color        : black;
         border-radius: 5px;
 
-        @media only screen and (max-width: $break-sm) {
-            flex-wrap: wrap;
-            height   : auto;
-            padding  : 1em;
-        }
+        // Necessitated by Firefox failure to respect min-width on .name due to nested grids and flex containers
+        position: absolute;
+        width   : 100%;
+        top     : 0;
+        left    : 0;
 
         &:hover {
             background     : $gray-6;
@@ -32,7 +36,12 @@
         }
 
         .name {
-            font-size: 1.1em;
+            font-size    : 1.1em;
+            white-space  : nowrap;
+            overflow     : hidden;
+            text-overflow: ellipsis;
+            min-width    : 5em;
+            flex-shrink  : 1;
 
             &.banned {
                 text-decoration: line-through;
@@ -54,11 +63,6 @@
             margin-left: auto;
             flex-shrink: 10;
             overflow-x : hidden;
-
-            @media only screen and (max-width: $break-sm) {
-                width     : 100%;
-                overflow-x: hidden;
-            }
 
             .flair-container {
                 flex-grow  : 0;

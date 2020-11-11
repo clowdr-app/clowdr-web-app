@@ -135,7 +135,7 @@ export default function AllAttendees() {
             const isManager = managers && managers.includes(profileId);
             const isBanned = item.renderData.profile.isBanned;
             return (
-                <Link to={item.link ? item.link : "#"} className="participant">
+                <Link to={item.link ? item.link : "#"} className="participant" title={item.text}>
                     <div className={`name${isBanned ? " banned" : ""}`} aria-label="user display name">
                         {item.text}
                     </div>

@@ -6,17 +6,19 @@
     flex-wrap      : wrap;
     justify-content: center;
     align-items    : flex-start;
-    margin-top     : 1em;
 
     .room-item {
         display      : flex;
         column-gap   : 1em;
         row-gap      : 0.5em;
         align-items  : center;
-        min-height   : 3em;
         padding      : 0.3em 1em;
+        height       : 100%;
         color        : black;
         border-radius: 5px;
+        white-space  : nowrap;
+        overflow     : hidden;
+        text-overflow: ellipsis;
 
         &:hover {
             background     : $gray-6;

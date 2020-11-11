@@ -1,11 +1,12 @@
 @import "../../../styles/util.scss";
 
 .all-chats {
-    margin-top: 1em;
+    height: 100%;
 
     .chat-item {
         column-gap    : 0.2em;
         display       : flex;
+        height        : 100%;
         flex-direction: row;
         align-items   : center;
     }
@@ -16,16 +17,13 @@
         column-gap   : 0.5em;
         flex-grow    : 1;
         row-gap      : 0.5em;
-        min-height   : 3em;
+        height       : 100%;
         padding      : 0.3em 1em;
         color        : black;
         border-radius: 5px;
-
-        @media only screen and (max-width: $break-sm) {
-            flex-wrap: wrap;
-            height   : auto;
-            padding  : 1em;
-        }
+        white-space  : nowrap;
+        overflow     : hidden;
+        text-overflow: ellipsis;
 
         &:hover {
             background     : $gray-6;
@@ -56,11 +54,6 @@
             margin-left: auto;
             flex-shrink: 10;
             overflow-x : hidden;
-
-            @media only screen and (max-width: $break-sm) {
-                width     : 100%;
-                overflow-x: hidden;
-            }
 
             .flair-container {
                 flex-grow  : 0;

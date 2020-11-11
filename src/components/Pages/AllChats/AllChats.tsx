@@ -183,7 +183,7 @@ export default function AllChats() {
     function groupChatRenderer(item: ColumnItem): JSX.Element {
         return (
             <>
-                <Link to={item.link ?? "#"} className="user-info">
+                <Link to={item.link ?? "#"} className="user-info" title={item.text}>
                     {item.text}
                 </Link>
             </>
@@ -192,38 +192,39 @@ export default function AllChats() {
 
     return (
         <Columns className="all-chats">
-            <>
-                <Column
-                    className="col"
-                    items={dmChatItems}
-                    itemRenderer={{ render: dmRenderer }}
-                    loadingMessage="Loading direct messages"
-                    emptyMessage="No direct messages."
-                >
-                    <h2>Direct messages</h2>
-                </Column>
-                <Column
-                    className="col"
-                    items={allOtherChatsItems}
-                    itemRenderer={{ render: groupChatRenderer }}
-                    loadingMessage="Loading chats"
-                >
-                    <h2>Group chats</h2>
-                </Column>
-                <Column
-                    className="col"
-                    items={allOtherUserItems}
-                    sort={isOnlineSorter}
-                    itemRenderer={{ render: userRenderer }}
-                    loadingMessage="Loading users"
-                    emptyMessage="No other users available."
-                >
-                    <h2>
-                        Users{" "}
-                        {allOtherUserItems && <>({allOtherUserItems.filter(x => x.renderData.online).length} online)</>}
-                    </h2>
-                </Column>
-            </>
+            <Column
+                className="col"
+                items={dmChatItems}
+                itemRenderer={{ render: dmRenderer }}
+                loadingMessage="Loading direct messages"
+                emptyMessage="No direct messages."
+                windowWithItemHeight={50}
+            >
+                <h2>Direct messages</h2>
+            </Column>
+            <Column
+                className="col"
+                items={allOtherChatsItems}
+                itemRenderer={{ render: groupChatRenderer }}
+                loadingMessage="Loading chats"
+                windowWithItemHeight={50}
+            >
+                <h2>Group chats</h2>
+            </Column>
+            <Column
+                className="col"
+                items={allOtherUserItems}
+                sort={isOnlineSorter}
+                itemRenderer={{ render: userRenderer }}
+                loadingMessage="Loading users"
+                emptyMessage="No other users available."
+                windowWithItemHeight={50}
+            >
+                <h2>
+                    Users{" "}
+                    {allOtherUserItems && <>({allOtherUserItems.filter(x => x.renderData.online).length} online)</>}
+                </h2>
+            </Column>
         </Columns>
     );
 }

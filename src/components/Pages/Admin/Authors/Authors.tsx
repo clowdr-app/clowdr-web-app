@@ -137,43 +137,45 @@ export default function Authors() {
             </table>
 
             <h2>Link a program author to an attendee</h2>
-            <form className="link-authors-form" onSubmit={handleSubmit(onSubmit)}>
-                <label htmlFor="programPerson" hidden>
-                    Program author
-                </label>
-                <select name="programPerson" ref={register({ required: true })} disabled={formState.isSubmitting}>
-                    {authors
-                        ?.filter(author => !author.profileId)
-                        ?.sort((a, b) => a.name.localeCompare(b.name))
-                        ?.map(author => (
-                            <option key={author.id} value={author.id}>
-                                {author.name} {author.affiliation ? `(${author.affiliation})` : ""}
-                            </option>
-                        ))}
-                </select>
+            <div className="link-authors-form-wrapper">
+                <form className="link-authors-form" onSubmit={handleSubmit(onSubmit)}>
+                    <label htmlFor="programPerson" hidden>
+                        Program author
+                    </label>
+                    <select name="programPerson" ref={register({ required: true })} disabled={formState.isSubmitting}>
+                        {authors
+                            ?.filter(author => !author.profileId)
+                            ?.sort((a, b) => a.name.localeCompare(b.name))
+                            ?.map(author => (
+                                <option key={author.id} value={author.id}>
+                                    {author.name} {author.affiliation ? `(${author.affiliation})` : ""}
+                                </option>
+                            ))}
+                    </select>
 
-                <label htmlFor="userProfile" hidden>
-                    Linked attendee
-                </label>
-                <select name="userProfile" ref={register({ required: true })} disabled={formState.isSubmitting}>
-                    {profiles
-                        ?.sort((a, b) => a.displayName.localeCompare(b.displayName))
-                        ?.map(profile => (
-                        <option key={profile.id} value={profile.id}>
-                            {profile.realName} {profile.affiliation ? `(${profile.affiliation})` : ""}
-                        </option>
-                    ))}
-                </select>
+                    <label htmlFor="userProfile" hidden>
+                        Linked attendee
+                    </label>
+                    <select name="userProfile" ref={register({ required: true })} disabled={formState.isSubmitting}>
+                        {profiles
+                            ?.sort((a, b) => a.displayName.localeCompare(b.displayName))
+                            ?.map(profile => (
+                                <option key={profile.id} value={profile.id}>
+                                    {profile.realName} {profile.affiliation ? `(${profile.affiliation})` : ""}
+                                </option>
+                            ))}
+                    </select>
 
-                <div className="form-buttons">
-                    <AsyncButton
-                        action={handleSubmit(onSubmit)}
-                        disabled={!!(errors.programPerson || errors.userProfile)}
-                    >
-                        <i className="fas fa-plus"></i>
-                    </AsyncButton>
-                </div>
-            </form>
+                    <div className="form-buttons">
+                        <AsyncButton
+                            action={handleSubmit(onSubmit)}
+                            disabled={!!(errors.programPerson || errors.userProfile)}
+                        >
+                            <i className="fas fa-plus"></i>
+                        </AsyncButton>
+                    </div>
+                </form>
+            </div>
         </>
     );
 

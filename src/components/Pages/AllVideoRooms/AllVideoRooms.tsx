@@ -157,6 +157,7 @@ export default function AllVideoRooms() {
                 items={roomItems}
                 loadingMessage="Loading rooms"
                 emptyMessage="No breakout rooms."
+                windowWithItemHeight={50}
             >
                 <h2>Breakout rooms</h2>
             </Column>
@@ -166,6 +167,7 @@ export default function AllVideoRooms() {
                 items={programRoomItems}
                 loadingMessage="Loading rooms"
                 emptyMessage="No program rooms."
+                windowWithItemHeight={50}
             >
                 <h2>Program rooms</h2>
             </Column>
