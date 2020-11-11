@@ -54,69 +54,85 @@ export default function AllSponsors() {
 
     return (
         <section className="all-sponsors">
-            <h2>Gold</h2>
-            <div className="sponsor-items sponsor-items--gold">
-                {0 in sponsorGroups &&
-                    sponsorGroups[0]
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map(sponsor =>
-                            sponsor.logo ? (
-                                <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                    <img
-                                        className="sponsor-item__logo"
-                                        src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}
-                                        alt={sponsor.name}
-                                    />
-                                </a>
-                            ) : (
-                                <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                    {sponsor.name}
-                                </a>
-                            )
-                        )}
-            </div>
-            <h2>Silver</h2>
-            <div className="sponsor-items sponsor-items--silver">
-                {1 in sponsorGroups &&
-                    sponsorGroups[1]
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map(sponsor =>
-                            sponsor.logo ? (
-                                <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                    <img
-                                        className="sponsor-item__logo"
-                                        src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}
-                                        alt={sponsor.name}
-                                    />
-                                </a>
-                            ) : (
-                                <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                    {sponsor.name}
-                                </a>
-                            )
-                        )}
-            </div>
-            <h2>Bronze</h2>
-            <div className="sponsor-items sponsor-items--bronze">
-                {2 in sponsorGroups &&
-                    sponsorGroups[2]
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map(sponsor =>
-                            sponsor.logo ? (
-                                <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                    <img
-                                        className="sponsor-item__logo"
-                                        src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}
-                                        alt={sponsor.name}
-                                    />
-                                </a>
-                            ) : (
-                                <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
-                                    {sponsor.name}
-                                </a>
-                            )
-                        )}
-            </div>
+            {0 in sponsorGroups && sponsorGroups[0].length > 0 ? (
+                <>
+                    <h2>Gold</h2>
+                    <div className="sponsor-items sponsor-items--gold">
+                        {sponsorGroups[0]
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map(sponsor =>
+                                sponsor.logo ? (
+                                    <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
+                                        <img
+                                            className="sponsor-item__logo"
+                                            src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}
+                                            alt={sponsor.name}
+                                        />
+                                    </a>
+                                ) : (
+                                    <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
+                                        {sponsor.name}
+                                    </a>
+                                )
+                            )}
+                    </div>
+                </>
+            ) : (
+                <></>
+            )}
+            {1 in sponsorGroups && sponsorGroups[1].length > 0 ? (
+                <>
+                    <h2>Silver</h2>
+                    <div className="sponsor-items sponsor-items--silver">
+                        {sponsorGroups[1]
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map(sponsor =>
+                                sponsor.logo ? (
+                                    <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
+                                        <img
+                                            className="sponsor-item__logo"
+                                            src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}
+                                            alt={sponsor.name}
+                                        />
+                                    </a>
+                                ) : (
+                                    <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
+                                        {sponsor.name}
+                                    </a>
+                                )
+                            )}
+                    </div>
+                </>
+            ) : (
+                <></>
+            )}
+            {1 in sponsorGroups && sponsorGroups[1].length > 0 ? (
+                <>
+                    <h2>Bronze</h2>
+                    <div className="sponsor-items sponsor-items--bronze">
+                        {2 in sponsorGroups &&
+                            sponsorGroups[2]
+                                .sort((a, b) => a.name.localeCompare(b.name))
+                                .map(sponsor =>
+                                    sponsor.logo ? (
+                                        <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
+                                            <img
+                                                className="sponsor-item__logo"
+                                                src={handleParseFileURLWeirdness(sponsor.logo) ?? ""}
+                                                alt={sponsor.name}
+                                            />
+                                        </a>
+                                    ) : (
+                                        <a href={`/sponsor/${sponsor.id}`} className="sponsor-item">
+                                            {sponsor.name}
+                                        </a>
+                                    )
+                                )}
+                    </div>
+                </>
+            ) : (
+                <></>
+            )}
         </section>
     );
 }
