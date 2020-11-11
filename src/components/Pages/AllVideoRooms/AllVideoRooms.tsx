@@ -132,9 +132,9 @@ export default function AllVideoRooms() {
         const data = item.renderData;
         return (
             <>
-                <Link to={`/room/${data.room.id}`} className="room-item">
+                <Link to={`/room/${data.room.id}`} className="room-item" title={data.room.name}>
                     <i className="fas fa-video room-item__icon"></i>
-                    {data.room.name}
+                    <div className="room-item__name">{data.room.name}</div>
                     {data.participants.length > 0 ? (
                         <ul className="room-item__participants">
                             {data.participants.map(participant => (
@@ -157,6 +157,7 @@ export default function AllVideoRooms() {
                 items={roomItems}
                 loadingMessage="Loading rooms"
                 emptyMessage="No breakout rooms."
+                sort={(a, b) => sortRooms(a.renderData, b.renderData)}
                 windowWithItemHeight={50}
             >
                 <h2>Breakout rooms</h2>
@@ -167,6 +168,7 @@ export default function AllVideoRooms() {
                 items={programRoomItems}
                 loadingMessage="Loading rooms"
                 emptyMessage="No program rooms."
+                sort={(a, b) => sortRooms(a.renderData, b.renderData)}
                 windowWithItemHeight={50}
             >
                 <h2>Program rooms</h2>

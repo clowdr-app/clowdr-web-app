@@ -35,6 +35,7 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
                 defaultValue={searchString}
                 onChange={e => setSearchString(e.target.value)}
                 type="search"
+                aria-label="Items in list"
             />
         </div>
     );

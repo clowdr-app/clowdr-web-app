@@ -8,21 +8,24 @@
     align-items    : flex-start;
 
     .room-item {
-        display      : flex;
-        column-gap   : 1em;
-        row-gap      : 0.5em;
-        align-items  : center;
-        padding      : 0.3em 1em;
-        height       : 100%;
-        color        : black;
-        border-radius: 5px;
-        white-space  : nowrap;
-        overflow     : hidden;
-        text-overflow: ellipsis;
+        display             : flex;
+        column-gap          : 1em;
+        row-gap             : 0.5em;
+        align-items         : center;
+        padding             : 0.3em 1em;
+        height              : 100%;
+        color               : black;
+        border-radius       : 5px;
+        white-space         : nowrap;
+        overflow            : hidden;
+        text-overflow       : ellipsis;
+        --room-item-bg-color: #fff;
+        background          : var(--room-item-bg-color);
 
         &:hover {
-            background     : $gray-6;
-            text-decoration: none;
+            background          : $gray-6;
+            text-decoration     : none;
+            --room-item-bg-color: #{$gray-6};
         }
 
         &__icon {
@@ -30,10 +33,47 @@
             padding-right: mm(2);
         }
 
+        &__name {
+            min-width    : 0;
+            overflow     : hidden;
+            text-overflow: ellipsis;
+            flex-grow    : 1;
+        }
+
         &__participants {
-            font-size      : 80%;
             list-style-type: disc;
             margin         : mm(0) mm(5);
+            color          : $gray-1;
+            font-size      : 80%;
+            margin-left    : auto;
+            flex-grow      : 1;
+            overflow       : hidden;
+
+            column-gap    : 1.5em;
+            display       : flex;
+            flex-direction: column;
+            flex-wrap     : wrap;
+            height        : 100%;
+
+            position: relative;
+
+            &:after {
+                content   : "";
+                position  : absolute;
+                right     : 0;
+                top       : 0;
+                height    : 100%;
+                width     : 2em;
+                background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, var(--room-item-bg-color) 100%);
+            }
+
+            li {
+                width: 10em;
+            }
+
+            li::marker {
+                color: $color-5;
+            }
         }
     }
 }
