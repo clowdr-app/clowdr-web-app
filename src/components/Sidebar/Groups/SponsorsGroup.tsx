@@ -448,7 +448,7 @@ export default function SponsorsGroup(props: Props) {
         mUser &&
         (state.allSponsors && state.allSponsors.length > 0 ? (
             <MenuExpander
-                title="Sponsors"
+                title="Sponsor Booths"
                 isOpen={state.isOpen}
                 buttons={sponsorsButtons}
                 onOpenStateChange={() => dispatchUpdate({ action: "setIsOpen", isOpen: !state.isOpen })}
