@@ -157,7 +157,7 @@ export default function AllChats() {
                         </div>
                     </Link>
                     <Link to={item.link ?? "#"} title="Send message" aria-label="Send message" className="send-message">
-                        <i className={`far fa-envelope-open fa-lg`}></i>
+                        <i className={`far fa-envelope-open fa-lg`} style={{ verticalAlign: "middle" }}></i>
                     </Link>
                 </div>
             </>
