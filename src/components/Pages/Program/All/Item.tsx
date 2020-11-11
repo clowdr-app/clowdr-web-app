@@ -26,7 +26,7 @@ export default function Item(props: Props) {
     }
 
     return <div
-        className={`program-item${props.clickable ? " clickable" : ""}`}
+        className={`program-item${props.clickable ? " clickable" : ""}${item.item.exhibit ? " exhibited" : ""}`}
         onClick={(ev) => {
             if (props.clickable) {
                 ev.preventDefault();
@@ -40,7 +40,10 @@ export default function Item(props: Props) {
             }
         }}
     >
-        <div className="title">{item.item.title}</div>
+        <div className="title">
+            <span className="title-text">{item.item.title}</span>
+            {item.item.exhibit ? <span className="exhibited-text"> (Exhibition item)</span> : <></>}
+        </div>
         <AuthorsList authors={item.authors} idOrdering={item.item.authors} />
     </div>;
 }

@@ -262,6 +262,12 @@
             text-overflow     : ellipsis;
         }
 
+        &.exhibited {
+            .title {
+                font-weight: bold;
+            }
+        }
+
         .authors {
             font-style: italic;
             font-size : 90%;
