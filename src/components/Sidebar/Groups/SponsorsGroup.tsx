@@ -416,21 +416,25 @@ export default function SponsorsGroup(props: Props) {
                         action={`/sponsor/${sponsor.sponsor.id}`}
                         onClick={props.onItemClicked}
                     >
-                        <ul>
-                            {participants
-                                .slice(0, Math.min(participants.length, maxSponsorRoomParticipantsToList))
-                                .map(x => (
-                                    <li key={x.id}>
-                                        <div>{x.displayName}</div>
-                                    </li>
-                                ))}
-                        </ul>
-                        {morePeopleCount > 0 ? (
-                            <div key="more-participants" className="plus-bullet">
-                                {morePeopleCount} more {morePeopleCount === 1 ? "person" : "people"}...
-                            </div>
-                        ) : (
-                            <></>
+                        {participants.length > 0 && (
+                            <>
+                                <ul>
+                                    {participants
+                                        .slice(0, Math.min(participants.length, maxSponsorRoomParticipantsToList))
+                                        .map(x => (
+                                            <li key={x.id}>
+                                                <div>{x.displayName}</div>
+                                            </li>
+                                        ))}
+                                </ul>
+                                {morePeopleCount > 0 ? (
+                                    <div key="more-participants" className="plus-bullet">
+                                        {morePeopleCount} more {morePeopleCount === 1 ? "person" : "people"}...
+                                    </div>
+                                ) : (
+                                    <></>
+                                )}
+                            </>
                         )}
                     </MenuItem>
                 ),

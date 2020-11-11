@@ -314,16 +314,23 @@
 
             .menu-item {
                 margin-top     : 0.3ex;
-                padding        : 0 0.3em 0.1em 0.2em;
+                padding        : 0 0.3em 0.1em 0.3em;
+                border-radius  : 5px;
                 display        : inline-block;
                 color          : inherit;
                 border         : none;
                 width          : 100%;
                 text-decoration: none;
+                transition     : background-color 0.1s ease;
 
                 &:hover,
                 &:focus {
                     text-decoration: none;
+                }
+
+                &:hover {
+                    background: rgba(0, 0, 0, 0.1);
+                    transition: background-color 0.1s ease;
                 }
 
                 .head-row {
@@ -442,11 +449,11 @@
                             padding  : 0;
                             width    : auto;
 
-                            display      : -webkit-box;
+                            display           : -webkit-box;
                             -webkit-box-orient: vertical;
                             -webkit-line-clamp: 2;
-                            overflow     : hidden;
-                            text-overflow: ellipsis;
+                            overflow          : hidden;
+                            text-overflow     : ellipsis;
                         }
                     }
 
