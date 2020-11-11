@@ -58,9 +58,10 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 interface DeviceSelectionScreenProps {
     room: VideoRoom;
+    setMediaError?(error: Error): void;
 }
 
-export default function DeviceSelectionScreen({ room }: DeviceSelectionScreenProps) {
+export default function DeviceSelectionScreen({ room, setMediaError }: DeviceSelectionScreenProps) {
     const user = useUserProfile();
     const classes = useStyles();
     const { getToken, isFetching } = useAppState();
@@ -83,8 +84,16 @@ export default function DeviceSelectionScreen({ room }: DeviceSelectionScreenPro
                     </div>
                     <div className={classes.mobileButtonBar}>
                         <Hidden mdUp>
-                            <ToggleAudioButton className={classes.mobileButton} disabled={disableButtons} />
-                            <ToggleVideoButton className={classes.mobileButton} disabled={disableButtons} />
+                            <ToggleAudioButton
+                                className={classes.mobileButton}
+                                disabled={disableButtons}
+                                setMediaError={setMediaError}
+                            />
+                            <ToggleVideoButton
+                                className={classes.mobileButton}
+                                disabled={disableButtons}
+                                setMediaError={setMediaError}
+                            />
                         </Hidden>
                         <SettingsMenu mobileButtonClass={classes.mobileButton} />
                     </div>
@@ -93,8 +102,16 @@ export default function DeviceSelectionScreen({ room }: DeviceSelectionScreenPro
                     <Grid container direction="column" justify="space-between" style={{ height: "100%" }}>
                         <div>
                             <Hidden smDown>
-                                <ToggleAudioButton className={classes.deviceButton} disabled={disableButtons} />
-                                <ToggleVideoButton className={classes.deviceButton} disabled={disableButtons} />
+                                <ToggleAudioButton
+                                    className={classes.deviceButton}
+                                    disabled={disableButtons}
+                                    setMediaError={setMediaError}
+                                />
+                                <ToggleVideoButton
+                                    className={classes.deviceButton}
+                                    disabled={disableButtons}
+                                    setMediaError={setMediaError}
+                                />
                             </Hidden>
                         </div>
                         <div className={classes.joinButtons}>

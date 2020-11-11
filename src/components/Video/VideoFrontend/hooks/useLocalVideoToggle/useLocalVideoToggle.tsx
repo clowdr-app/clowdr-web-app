@@ -1,7 +1,6 @@
-import { LocalVideoTrack } from 'twilio-video';
-import { useCallback, useState } from 'react';
-import useVideoContext from '../useVideoContext/useVideoContext';
-import LocalStorage_TwilioVideo from '../../../../../classes/LocalStorage/TwilioVideo';
+import { useCallback, useState } from "react";
+import useVideoContext from "../useVideoContext/useVideoContext";
+import LocalStorage_TwilioVideo from "../../../../../classes/LocalStorage/TwilioVideo";
 
 export default function useLocalVideoToggle() {
     const {
@@ -9,7 +8,6 @@ export default function useLocalVideoToggle() {
         localVideoTrack: videoTrack,
         getLocalVideoTrack,
         removeLocalVideoTrack,
-        onError,
     } = useVideoContext();
     const [isPublishing, setIspublishing] = useState(false);
 
@@ -18,26 +16,32 @@ export default function useLocalVideoToggle() {
             LocalStorage_TwilioVideo.twilioVideoLastCamera = videoTrack.mediaStreamTrack.getSettings().deviceId ?? null;
             const localTrackPublication = localParticipant?.unpublishTrack(videoTrack);
             // TODO: remove when SDK implements this event. See: https://issues.corp.twilio.com/browse/JSDK-2592
-            localParticipant?.emit('trackUnpublished', localTrackPublication);
+            localParticipant?.emit("trackUnpublished", localTrackPublication);
             removeLocalVideoTrack();
         }
     }, [localParticipant, removeLocalVideoTrack, videoTrack]);
 
-    const toggleVideoEnabled = useCallback(() => {
+    const toggleVideoEnabled = useCallback(async () => {
         if (!isPublishing) {
             if (videoTrack) {
                 stopVideo();
                 LocalStorage_TwilioVideo.twilioVideoCameraEnabled = false;
             } else {
                 setIspublishing(true);
-                LocalStorage_TwilioVideo.twilioVideoCameraEnabled = true;
-                getLocalVideoTrack({ deviceId: { exact: LocalStorage_TwilioVideo.twilioVideoLastCamera ?? undefined } })
-                    .then((track: LocalVideoTrack) => localParticipant?.publishTrack(track, { priority: 'low' }))
-                    .catch(onError)
-                    .finally(() => setIspublishing(false));
+                try {
+                    LocalStorage_TwilioVideo.twilioVideoCameraEnabled = true;
+                    const track = await getLocalVideoTrack({
+                        deviceId: { exact: LocalStorage_TwilioVideo.twilioVideoLastCamera ?? undefined },
+                    });
+                    localParticipant?.publishTrack(track, { priority: "low" });
+                } catch (e) {
+                    throw e;
+                } finally {
+                    setIspublishing(false);
+                }
             }
         }
-    }, [isPublishing, videoTrack, stopVideo, getLocalVideoTrack, onError, localParticipant]);
+    }, [isPublishing, videoTrack, stopVideo, getLocalVideoTrack, localParticipant]);
 
     return { isEnabled: !!videoTrack, toggleVideoEnabled, stopVideo } as const;
 }
