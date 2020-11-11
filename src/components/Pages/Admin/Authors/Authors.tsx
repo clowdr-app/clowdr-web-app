@@ -96,7 +96,9 @@ export default function Authors() {
             return (
                 <tr key={author.id}>
                     <td style={{ width: "50%" }}>
-                        {author.name} {author.affiliation ? `(${author.affiliation})` : ""}
+                        <a href={`/author/${author.id}`}>
+                            {author.name} {author.affiliation ? `(${author.affiliation})` : ""}
+                        </a>
                     </td>
                     <td style={{ width: "50%" }}>{renderProfile(author)}</td>
                     <td style={{ width: "0" }}>
