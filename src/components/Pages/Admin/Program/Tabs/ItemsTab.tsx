@@ -38,6 +38,7 @@ export default function ItemsTab(props: Props) {
 
     const [newItem, setNewItem] = useState<Partial<ItemSpec>>();
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+    const [highlightedKeys, setHighlightedKeys] = useState<string[]>([]);
     const [titleFilter, setTitleFilter] = useState<string>("");
     const [trackFilter, setTrackFilter] = useState<ReadonlyArray<{ label: string; value: string }>>([]);
     const propsData = props.data;
@@ -352,6 +353,35 @@ export default function ItemsTab(props: Props) {
             <p>TODO: Instructions</p>
             <p>TODO: CSV/JSON/XML import</p>
             <p>Note: Double click to select a single item. Use checkboxes to select multiple.</p>
+            <p className="highlighting-controls">
+                <button
+                    onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+
+                        const itemTitles = Object.keys(propsData.items).map(key => ({
+                            key,
+                            title: propsData.items[key]?.title?.trim()?.toLowerCase()
+                        }));
+                        const itemTitleCounts = itemTitles.reduce((a, b) => b.title ? ({
+                            ...a,
+                            [b.title]: [...(a[b.title] ?? []), b.key]
+                        }) : a, {});
+                        const duplicatedTitles = Object.keys(itemTitleCounts).filter(a => itemTitleCounts[a].length > 1);
+                        setHighlightedKeys(duplicatedTitles.flatMap(title => itemTitleCounts[title]));
+                    }}
+                >
+                    Highlight duplicated titles
+                </button>
+                <button
+                    onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        setHighlightedKeys([]);
+                    }}>
+                    Clear highlights
+                </button>
+            </p>
             <Editor
                 data={propsData.items}
                 sort={(x, y) => {
@@ -441,6 +471,7 @@ export default function ItemsTab(props: Props) {
                     }
                 }}
                 selectedKeys={selectedKeys}
+                highlightedKeys={highlightedKeys}
                 toggleSelection={(key) => {
                     setSelectedKeys(old => old.includes(key) ? old.filter(x => x !== key) : [...old, key]);
                 }}

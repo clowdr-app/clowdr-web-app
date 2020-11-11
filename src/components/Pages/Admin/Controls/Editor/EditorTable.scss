@@ -57,6 +57,9 @@
             cursor: pointer;
         }
 
+        tr.highlight {
+            background-color: lighten($primary, 60);
+        }
 
         td {
             &:first-child,

@@ -27,6 +27,7 @@ export interface TableEditorProps<I, F extends FilterTypes<I>> {
     };
 
     selectedKeys: string[];
+    highlightedKeys?: string[];
     toggleSelection: (key: string) => void;
     select: (keys: string[]) => void;
 
@@ -143,6 +144,7 @@ export default function EditorTable<I, F extends FilterTypes<I>>(props: TableEdi
                     ev.stopPropagation();
                     props.select([key]);
                 }}
+                className={props.highlightedKeys?.includes(key) ? "highlight" : ""}
             >
                 <td key="<<select>>">
                     {!props.addRow?.beingAdded
