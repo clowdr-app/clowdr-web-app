@@ -72,21 +72,25 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
             {props.items && props.items.length > 0 && search}
             {props.items ? (
                 <div className="column__contents">
-                    {props.windowWithItemHeight !== undefined ? (
-                        <AutoSizer>
-                            {({ height, width }) => (
-                                <List
-                                    height={height}
-                                    width={width}
-                                    itemCount={items.length ?? 0}
-                                    itemSize={props.windowWithItemHeight ?? 0}
-                                >
-                                    {renderListItem}
-                                </List>
-                            )}
-                        </AutoSizer>
+                    {items.length > 0 ? (
+                        props.windowWithItemHeight !== undefined ? (
+                            <AutoSizer>
+                                {({ height, width }) => (
+                                    <List
+                                        height={height}
+                                        width={width}
+                                        itemCount={items.length ?? 0}
+                                        itemSize={props.windowWithItemHeight ?? 0}
+                                    >
+                                        {renderListItem}
+                                    </List>
+                                )}
+                            </AutoSizer>
+                        ) : (
+                            items.map((_item, i) => renderListItem({ index: i }))
+                        )
                     ) : (
-                        items.map((_item, i) => renderListItem({ index: i }))
+                        <p>{props.emptyMessage ?? "No items"}</p>
                     )}
                 </div>
             ) : (
