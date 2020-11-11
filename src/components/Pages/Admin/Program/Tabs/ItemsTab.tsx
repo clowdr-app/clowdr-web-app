@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { CompleteSpecs, ItemSpec } from "../../UploadFormatTypes";
-import AdminEditor, { EditorProps } from "../Controls/Editor/Editor";
+import { CompleteSpecs, ItemSpec } from "../UploadFormatTypes";
+import AdminEditor, { EditorProps } from "../../Controls/Editor/Editor";
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import "./ItemsTab.scss";
-import { NewItemKey } from "../Controls/Editor/EditorTable";
-import { addError } from "../../../../../../classes/Notifications/Notifications";
+import { NewItemKey } from "../../Controls/Editor/EditorTable";
+import { addError } from "../../../../../classes/Notifications/Notifications";
 import Toggle from "react-toggle";
 import assert from "assert";
 import { removeUndefined } from "@clowdr-app/clowdr-db-schema/build/Util";

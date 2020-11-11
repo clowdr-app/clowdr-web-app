@@ -1,5 +1,6 @@
 import { Tooltip } from "@material-ui/core";
 import React, { useState } from "react";
+import AsyncButton from "../../../../AsyncButton/AsyncButton";
 import "./EditorTable.scss";
 
 export const NewItemKey = "<<¦¦new¦¦>>";
@@ -34,9 +35,9 @@ export interface TableEditorProps<I, F extends FilterTypes<I>> {
         incomplete?: string;
         begin: () => void;
         cancel: () => void;
-        complete: () => void;
+        complete: () => Promise<void> | void;
     };
-    deleteRows?: (keys: Array<string>) => void;
+    deleteRows?: (keys: Array<string>) => Promise<void> | void;
 }
 
 export default function EditorTable<I, F extends FilterTypes<I>>(props: TableEditorProps<I, F>) {
@@ -161,16 +162,14 @@ export default function EditorTable<I, F extends FilterTypes<I>>(props: TableEdi
                 {props.deleteRows
                     ? (
                         <td>
-                            <button
+                            <AsyncButton
                                 className="delete-item-button"
-                                onClick={(ev) => {
-                                    ev.preventDefault();
-                                    ev.stopPropagation();
-                                    props.deleteRows?.([key]);
+                                action={async () => {
+                                    await props.deleteRows?.([key]);
                                 }}
                             >
                                 <i className="fas fa-trash-alt" />
-                            </button>
+                            </AsyncButton>
                         </td>
                     )
                     : <td></td>}
@@ -198,17 +197,15 @@ export default function EditorTable<I, F extends FilterTypes<I>>(props: TableEdi
                 }
             }
             const completeButton = (
-                <button
+                <AsyncButton
                     className="complete-add-item-button"
-                    onClick={(ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        addRow.complete();
+                    action={async () => {
+                        await addRow.complete();
                     }}
                     disabled={!!addRow.incomplete}
                 >
                     <i className="fas fa-check-circle" />
-                </button>
+                </AsyncButton>
             );
             return (
                 <tr key={`<<new${noContent ? "-noContent" : ""}>>`}>

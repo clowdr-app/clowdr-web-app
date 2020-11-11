@@ -1,18 +1,28 @@
 .admin-registrations {
-    li {
-        display: flex;
-        flex-wrap: wrap;
 
-        .name {
-            min-width: 20em;
-            margin-right: 2em;
+    .email-buttons,
+    .save-changes-buttons {
+        margin    : 1em 0;
+        text-align: center;
+
+        button {
+            margin-right: 1em;
         }
-        .email {
-            min-width: 20em;
-            margin-right: 2em;
-        }
-        .link {
-            min-width: 40em;
+    }
+
+    .import {
+        margin    : 1em 0;
+    }
+
+    table {
+        th {
+            &>input[type=text] {
+                min-width: 10vw;
+            }
+
+            &>div {
+                min-width: 10vw;
+            }
         }
     }
 }

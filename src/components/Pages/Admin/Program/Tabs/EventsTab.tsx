@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { CompleteSpecs, EventSpec } from "../../UploadFormatTypes";
-import AdminEditor, { EditorProps } from "../Controls/Editor/Editor";
+import { CompleteSpecs, EventSpec } from "../UploadFormatTypes";
+import AdminEditor, { EditorProps } from "../../Controls/Editor/Editor";
 import Select from 'react-select';
 import "./EventsTab.scss";
-import { NewItemKey } from "../Controls/Editor/EditorTable";
-import { addError } from "../../../../../../classes/Notifications/Notifications";
+import { NewItemKey } from "../../Controls/Editor/EditorTable";
+import { addError } from "../../../../../classes/Notifications/Notifications";
 import assert from "assert";
 import { removeUndefined } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { v4 as uuidv4 } from "uuid";

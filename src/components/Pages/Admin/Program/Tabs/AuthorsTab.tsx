@@ -1,46 +1,46 @@
 import React, { useState, useCallback } from "react";
-import { CompleteSpecs, TrackSpec } from "../../UploadFormatTypes";
-import AdminEditor, { EditorProps } from "../Controls/Editor/Editor";
-import { NewItemKey } from "../Controls/Editor/EditorTable";
-import { addError } from "../../../../../../classes/Notifications/Notifications";
-import { ChromePicker } from 'react-color';
-import invertColour from 'invert-color';
-import "./TracksTab.scss";
+import { CompleteSpecs, PersonSpec } from "../UploadFormatTypes";
+import AdminEditor, { EditorProps } from "../../Controls/Editor/Editor";
+import "./AuthorsTab.scss";
+import { NewItemKey } from "../../Controls/Editor/EditorTable";
+import { addError } from "../../../../../classes/Notifications/Notifications";
 
-const Editor = (props: EditorProps<TrackSpec | undefined, {
+const Editor = (props: EditorProps<PersonSpec | undefined, {
     name: string;
-    shortName: string;
+    affiliation: string;
+    email: string;
 }>) => AdminEditor(props);
 
 interface Props {
     data: CompleteSpecs;
 
-    createTrack: (spec: TrackSpec) => string;
-    updateTrack: (oldId: string, item: TrackSpec) => boolean;
-    deleteTracks: (keys: string[]) => void;
+    createPerson: (spec: PersonSpec) => string;
+    updatePerson: (oldId: string, item: PersonSpec) => boolean;
+    deletePersons: (keys: string[]) => void;
 }
 
-export function generateTrackId(spec: TrackSpec) {
-    return spec.name;
+export function generatePersonId(spec: PersonSpec) {
+    return spec.name + "¦" + spec.affiliation;
 }
 
 export default function AuthorsTab(props: Props) {
-    const [newItem, setNewItem] = useState<Partial<TrackSpec>>();
+    const [newItem, setNewItem] = useState<Partial<PersonSpec>>();
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const [nameFilter, setNameFilter] = useState<string>("");
-    const [shortNameFilter, setShortNameFilter] = useState<string>("");
+    const [affiliationFilter, setAffiliationFilter] = useState<string>("");
+    const [emailFilter, setEmailFilter] = useState<string>("");
     const propsData = props.data;
-    const propsCreateTrack = props.createTrack;
-    const propsUpdateTrack = props.updateTrack;
-    const propsDeleteTracks = props.deleteTracks;
+    const propsCreatePerson = props.createPerson;
+    const propsUpdatePerson = props.updatePerson;
+    const propsDeletePersons = props.deletePersons;
 
     const renderName = useCallback((data: string) => {
-        return <span className="track-name">{data}</span>;
+        return <span className="person-name">{data}</span>;
     }, []);
 
     const renderNameEditor = useCallback((key: string, data?: string) => {
         return <input
-            className="track-name"
+            className="person-name"
             type="text"
             value={data ?? ""}
             placeholder="Enter a name"
@@ -52,28 +52,27 @@ export default function AuthorsTab(props: Props) {
                     setNewItem(old => ({ ...old, name: newValue }));
                 }
                 else {
-                    const item = propsData.tracks[key];
+                    const item = propsData.persons[key];
                     if (item) {
-                        const oldId = generateTrackId(item);
+                        const oldId = generatePersonId(item);
                         item.name = newValue;
-                        propsUpdateTrack(oldId, item);
-                        setSelectedKeys([generateTrackId(item)]);
+                        propsUpdatePerson(oldId, item);
                     }
                     else {
-                        addError("Could not update track name: Track not found.");
+                        addError("Could not update person name: Person not found.");
                     }
                 }
             }}
         />;
-    }, [propsData.tracks, propsUpdateTrack]);
+    }, [propsData.persons, propsUpdatePerson]);
 
-    const renderShortName = useCallback((data?: string) => {
-        return <span className="track-shortname">{data ?? "<Not provided>"}</span>;
+    const renderAffiliation = useCallback((data?: string) => {
+        return <span className="person-affiliation">{data ?? "<Not provided>"}</span>;
     }, []);
 
-    const renderShortNameEditor = useCallback((key: string, data?: string) => {
+    const renderAffiliationEditor = useCallback((key: string, data?: string) => {
         return <input
-            className="track-shortname"
+            className="person-affiliation"
             type="text"
             value={data ?? ""}
             placeholder="Enter a name"
@@ -81,74 +80,52 @@ export default function AuthorsTab(props: Props) {
                 ev.stopPropagation();
                 const newValue = ev.target.value;
                 if (key === NewItemKey) {
-                    setNewItem(old => ({ ...old, shortName: newValue }));
+                    setNewItem(old => ({ ...old, affiliation: newValue }));
                 }
                 else {
-                    const item = propsData.tracks[key];
+                    const item = propsData.persons[key];
                     if (item) {
-                        const oldId = generateTrackId(item);
-                        item.shortName = newValue;
-                        propsUpdateTrack(oldId, item);
+                        const oldId = generatePersonId(item);
+                        item.affiliation = newValue;
+                        propsUpdatePerson(oldId, item);
                     }
                     else {
-                        addError("Could not update track short name: Track not found.");
+                        addError("Could not update person affiliation: Person not found.");
                     }
                 }
             }}
         />;
-    }, [propsData.tracks, propsUpdateTrack]);
+    }, [propsData.persons, propsUpdatePerson]);
 
-    const renderColour = useCallback((data?: string) => {
-        const colour = data ?? "#ffffff";
-        return (
-            <span
-                className="track-colour"
-                style={{
-                    backgroundColor: colour,
-                    color: invertColour(colour, true)
-                }}>
-                {data ?? "<Not provided>"}
-            </span>
-        );
+    const renderEmail = useCallback((data?: string) => {
+        return <span className="person-email">{data ?? "<Not provided>"}</span>;
     }, []);
 
-    const renderColourEditor = useCallback((key: string, data?: string) => {
-        return <ChromePicker
-            color={data ?? ""}
-            onChange={(colour) => {
-                const newValue = colour.hex;
+    const renderEmailEditor = useCallback((key: string, data?: string) => {
+        return <input
+            className="person-email"
+            type="email"
+            value={data ?? ""}
+            placeholder="Enter an email address"
+            onChange={(ev) => {
+                ev.stopPropagation();
+                const newValue = ev.target.value;
                 if (key === NewItemKey) {
-                    setNewItem(old => ({ ...old, colour: newValue }));
+                    setNewItem(old => ({ ...old, email: newValue }));
                 }
                 else {
-                    const item = propsData.tracks[key];
+                    const item = propsData.persons[key];
                     if (item) {
-                        item.colour = newValue;
-                        propsUpdateTrack(generateTrackId(item), item);
+                        item.email = newValue;
+                        propsUpdatePerson(generatePersonId(item), item);
                     }
                     else {
-                        addError("Could not update track colour: Track not found.");
-                    }
-                }
-            }}
-            onChangeComplete={(colour) => {
-                const newValue = colour.hex;
-                if (key === NewItemKey) {
-                    setNewItem(old => ({ ...old, colour: newValue }));
-                }
-                else {
-                    const item = propsData.tracks[key];
-                    if (item) {
-                        item.colour = newValue;
-                        propsUpdateTrack(generateTrackId(item), item);
-                    }
-                    else {
-                        addError("Could not update track colour: Track not found.");
+                        addError("Could not update person email: Person not found.");
                     }
                 }
             }}
         />;
-    }, [propsData.tracks, propsUpdateTrack]);
+    }, [propsData.persons, propsUpdatePerson]);
 
     return (
         <>
@@ -156,7 +133,7 @@ export default function AuthorsTab(props: Props) {
             <p>TODO: CSV/JSON/XML import</p>
             <p>Note: Double click to select a single item. Use checkboxes to select multiple.</p>
             <Editor
-                data={propsData.tracks}
+                data={propsData.persons}
                 sort={(x, y) => {
                     if (x && y) {
                         return x.name.localeCompare(y.name) as -1 | 0 | 1;
@@ -188,7 +165,7 @@ export default function AuthorsTab(props: Props) {
                                         const vP = v.toLowerCase();
                                         setNameFilter(v);
                                         setSelectedKeys(oldKeys => oldKeys.filter(key => {
-                                            return !propsData.tracks[key] || !!propsData.tracks[key]?.name.toLowerCase().includes(vP);
+                                            return !propsData.persons[key] || !!propsData.persons[key]?.name.toLowerCase().includes(vP);
                                         }));
                                     }}
                                 />;
@@ -198,23 +175,23 @@ export default function AuthorsTab(props: Props) {
                             }
                         }
                     },
-                    shortName: {
-                        name: "Short Name",
+                    affiliation: {
+                        name: "Affiliation",
                         order: 1,
-                        render: renderShortName,
-                        renderEditor: renderShortNameEditor,
+                        render: renderAffiliation,
+                        renderEditor: renderAffiliationEditor,
                         filter: {
-                            value: shortNameFilter,
+                            value: affiliationFilter,
                             render: () => {
                                 return <input
                                     placeholder="Filter..."
-                                    value={shortNameFilter}
+                                    value={affiliationFilter}
                                     onChange={(ev) => {
                                         const v = ev.target.value;
                                         const vP = v.toLowerCase();
-                                        setShortNameFilter(v);
+                                        setAffiliationFilter(v);
                                         setSelectedKeys(oldKeys => oldKeys.filter(key => {
-                                            return !!propsData.tracks[key]?.shortName?.toLowerCase().includes(vP);
+                                            return !!propsData.persons[key]?.affiliation?.toLowerCase().includes(vP);
                                         }));
                                     }}
                                 />;
@@ -224,11 +201,31 @@ export default function AuthorsTab(props: Props) {
                             }
                         }
                     },
-                    colour: {
-                        name: "Colour",
+                    email: {
+                        name: "Email",
                         order: 2,
-                        render: renderColour,
-                        renderEditor: renderColourEditor,
+                        render: renderEmail,
+                        renderEditor: renderEmailEditor,
+                        filter: {
+                            value: emailFilter,
+                            render: () => {
+                                return <input
+                                    placeholder="Filter..."
+                                    value={emailFilter}
+                                    onChange={(ev) => {
+                                        const v = ev.target.value;
+                                        const vP = v.toLowerCase();
+                                        setEmailFilter(v);
+                                        setSelectedKeys(oldKeys => oldKeys.filter(key => {
+                                            return !!propsData.persons[key]?.email?.toLowerCase().includes(vP);
+                                        }));
+                                    }}
+                                />;
+                            },
+                            apply: (value, data) => {
+                                return value.length === 0 || !!data?.toLowerCase().includes(value.toLowerCase());
+                            }
+                        }
                     },
                 }}
                 selectedKeys={selectedKeys}
@@ -245,11 +242,7 @@ export default function AuthorsTab(props: Props) {
                     beingAdded: newItem,
                     incomplete:
                         newItem?.name && newItem.name.length >= 5
-                            ? newItem?.shortName && newItem.shortName.length >= 5
-                                ? newItem?.colour && newItem.shortName.length > 0
-                                    ? undefined
-                                    : "Colour required"
-                                : "Short name required, min. length of 5."
+                            ? undefined
                             : "Name required, min. length of 5.",
                     begin: () => {
                         setNewItem({});
@@ -259,15 +252,22 @@ export default function AuthorsTab(props: Props) {
                     },
                     complete: () => {
                         if (newItem) {
-                            if (propsCreateTrack(newItem as TrackSpec)) {
+                            if (newItem.affiliation === "") {
+                                delete newItem.affiliation;
+                            }
+                            if (newItem.email === "") {
+                                delete newItem.email;
+                            }
+
+                            if (propsCreatePerson(newItem as PersonSpec)) {
                                 setNewItem(undefined);
-                                setSelectedKeys(oldKeys => [...oldKeys, generateTrackId(newItem as TrackSpec)]);
+                                setSelectedKeys(oldKeys => [...oldKeys, generatePersonId(newItem as PersonSpec)]);
                             }
                         }
                     }
                 }}
                 deleteRows={(keys) => {
-                    propsDeleteTracks(keys);
+                    propsDeletePersons(keys);
                     setSelectedKeys(oldKeys => oldKeys.filter(x => !keys.includes(x)));
                 }}
             />

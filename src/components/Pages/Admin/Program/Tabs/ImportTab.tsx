@@ -1,8 +1,8 @@
 import assert from "assert";
 import React, { useEffect, useState } from "react";
 import MultiSelect from "react-multi-select-component";
-import { addError } from "../../../../../../classes/Notifications/Notifications";
-import { CompleteSpecs, EventSpec, FeedSpec, ItemSpec, PersonSpec, SessionSpec, TrackSpec } from "../../UploadFormatTypes";
+import { addError } from "../../../../../classes/Notifications/Notifications";
+import { CompleteSpecs, EventSpec, FeedSpec, ItemSpec, PersonSpec, SessionSpec, TrackSpec } from "../UploadFormatTypes";
 import { parse as parseDate } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz';
 import { generatePersonId } from "./AuthorsTab";

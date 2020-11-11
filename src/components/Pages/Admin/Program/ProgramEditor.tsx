@@ -6,15 +6,15 @@ import useUserRoles from "../../../../hooks/useUserRoles";
 import { CompleteSpecs, FeedSpec } from "./UploadFormatTypes";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
-import WelcomeTab from "./ProgramEditor/Tabs/WelcomeTab";
-import NextPrevControls from "./ProgramEditor/Controls/NextPrevControls/NextPrevControls";
-import ImportTab from "./ProgramEditor/Tabs/ImportTab";
-import ItemsTab from "./ProgramEditor/Tabs/ItemsTab";
-import AuthorsTab, { generatePersonId } from "./ProgramEditor/Tabs/AuthorsTab";
-import SessionsTab from "./ProgramEditor/Tabs/SessionsTab";
-import EventsTab from "./ProgramEditor/Tabs/EventsTab";
-import TracksTab, { generateTrackId } from "./ProgramEditor/Tabs/TracksTab";
-import UploadTab from "./ProgramEditor/Tabs/UploadTab";
+import WelcomeTab from "./Tabs/WelcomeTab";
+import NextPrevControls from "../Controls/NextPrevControls/NextPrevControls";
+import ImportTab from "./Tabs/ImportTab";
+import ItemsTab from "./Tabs/ItemsTab";
+import AuthorsTab, { generatePersonId } from "./Tabs/AuthorsTab";
+import SessionsTab from "./Tabs/SessionsTab";
+import EventsTab from "./Tabs/EventsTab";
+import TracksTab, { generateTrackId } from "./Tabs/TracksTab";
+import UploadTab from "./Tabs/UploadTab";
 import "./ProgramEditor.scss";
 import assert from "assert";
 import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
@@ -34,7 +34,6 @@ enum ProgramTabs {
 
 export default function ProgramEditor() {
     const conference = useConference();
-    const { isAdmin } = useUserRoles();
     // TODO: Load from existing program
     const [defaultProgramSpec, setDefaultProgramSpec] = useState<CompleteSpecs>({
         tracks: {},
@@ -674,11 +673,9 @@ export default function ProgramEditor() {
         );
     }, [currentTab, defaultProgramSpec, isFeedInUse, itemsKeys.length, programSpec, sessionsKeys.length, uploadInProgress, uploadProgress]);
 
-    return !isAdmin
-        ? <Redirect to="/notfound" />
-        : (
-            <div className="admin-program-editor">
-                {tabs}
-            </div>
-        );
+    return (
+        <div className="admin-program-editor admin-editor">
+            {tabs}
+        </div>
+    );
 }

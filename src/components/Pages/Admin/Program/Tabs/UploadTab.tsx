@@ -1,11 +1,11 @@
 import assert from "assert";
 import Parse from "parse";
 import React from "react";
-import { addError, addNotification } from "../../../../../../classes/Notifications/Notifications";
-import useConference from "../../../../../../hooks/useConference";
-import AsyncButton from "../../../../../AsyncButton/AsyncButton";
-import { LoadingSpinner } from "../../../../../LoadingSpinner/LoadingSpinner";
-import { CompleteSpecs } from "../../UploadFormatTypes";
+import { addError, addNotification } from "../../../../../classes/Notifications/Notifications";
+import useConference from "../../../../../hooks/useConference";
+import AsyncButton from "../../../../AsyncButton/AsyncButton";
+import { LoadingSpinner } from "../../../../LoadingSpinner/LoadingSpinner";
+import { CompleteSpecs } from "../UploadFormatTypes";
 
 interface Props {
     uploadProgress: false | null | number;
