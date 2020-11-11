@@ -8,6 +8,7 @@ import useHeading from "../../../../hooks/useHeading";
 import ProfileSelector from "./ProfileSelector";
 import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
 import { Sponsor } from "@clowdr-app/clowdr-db-schema";
+import ConfirmButton from "../../../ConfirmButton/ConfirmButton";
 
 export interface SponsorData {
     name: string;
@@ -148,12 +149,12 @@ export default function EditSponsor(props: Props) {
                 <div className="form-buttons">
                     <AsyncButton children="Save" action={handleSubmit(onSubmit)} />
                     {props.existingSponsor && (
-                        <AsyncButton
-                            children="Delete sponsor"
+                        <ConfirmButton
+                            text="Delete sponsor"
                             action={async () => {
-                                if (window.confirm("Are you sure?")) {
-                                    await props.existingSponsor?.delete();
-                                }
+                                const room = await props.existingSponsor?.videoRoom;
+                                await props.existingSponsor?.delete();
+                                await room?.delete();
                             }}
                         />
                     )}
