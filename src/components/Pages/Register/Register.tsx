@@ -126,9 +126,9 @@ export default function Register(props: Props) {
                 <p>Welcome to Clowdr. Please choose a password to complete your registration for {_conference.name}.</p>
                 {/* TODO: Make this Code of Conduct link a public ConferenceConfiguration*/}
                 <p>
-                    This conference has a <a href="https://cscw.acm.org/2020/index.php/code-of-conduct/">Code of Conduct</a>.
-                    By registering for this conference you are agreeing to the <a href="https://cscw.acm.org/2020/index.php/code-of-conduct/">Code of Conduct</a>. The conference organisers may
-                    revoke your access to the conference at any time if they determine you have breached the <a href="https://cscw.acm.org/2020/index.php/code-of-conduct/">Code of Conduct</a>.
+                    This conference has a <a href="https://2020.splashcon.org/attending/Conduct">Code of Conduct</a>.
+                    By registering for this conference you are agreeing to the <a href="https://2020.splashcon.org/attending/Conduct">Code of Conduct</a>. The conference organisers may
+                    revoke your access to the conference at any time if they determine you have breached the <a href="https://2020.splashcon.org/attending/Conduct">Code of Conduct</a>.
                 </p>
                 <label htmlFor="email">Email</label>
                 <input name="email" type="email" value={props.email} disabled />
