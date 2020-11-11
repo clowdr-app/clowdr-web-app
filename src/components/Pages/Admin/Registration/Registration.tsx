@@ -210,7 +210,7 @@ export default function AdminRegistration() {
             </div>
             <div className="import">
                 <label><h2>Import CSV</h2></label><br />
-                <p>Import new registrations (overlapping email addresses will be ignored). Your CSV data should contain (at minimum) the Name and Email columns.</p>
+                <p>Import new registrations (duplicate email addresses will be ignored). Your CSV data should contain (at minimum) the Name and Email columns.</p>
                 <p>The first line of your data should contain column names (/headings).</p>
                 <CSVReader
                     onFileLoad={(data) => {
