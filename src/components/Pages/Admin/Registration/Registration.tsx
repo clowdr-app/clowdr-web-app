@@ -15,6 +15,7 @@ import Select from "react-select";
 import { CSVReader } from 'react-papaparse'
 
 type RegistrationSpec = {
+    id?: string;
     name: string;
     email: string;
     affiliation: string;
@@ -63,6 +64,7 @@ export default function AdminRegistration() {
             const result: { [K: string]: RegistrationSpec } = {};
             for (const reg of regsArr) {
                 result[reg.email] = {
+                    id: reg.id,
                     name: reg.name,
                     email: reg.email,
                     affiliation: reg.affiliation ?? "<Unknown>",
@@ -154,6 +156,8 @@ export default function AdminRegistration() {
         const response = (await Parse.Cloud.run("registration-save-many", data)) as SaveRegistrationEmailsResponse;
         return response;
     }
+
+    // TODO: Option to send registration emails to selected rows
 
     return (
         <div className="admin-registrations admin-editor">
@@ -557,6 +561,26 @@ export default function AdminRegistration() {
                 }}
                 select={(keys) => {
                     setSelectedKeys(keys);
+                }}
+                renderSingleEditor={(key) => {
+                    if (regs && key !== NewItemKey) {
+                        const reg = regs[key];
+                        if (reg?.id) {
+                            const linkURL = `${process.env.REACT_APP_FRONTEND_URL}/register/${conference.id}/${reg.id}/${reg.email}`;
+                            return (
+                                <>
+                                    <p>
+                                        Direct registration link:<br />
+                                        <a href={linkURL}>{linkURL}</a>
+                                    </p>
+                                </>
+                            );
+                        }
+                        else {
+                            return <>Please save your changes then refresh the page to generate the direct link for this registration.</>;
+                        }
+                    }
+                    return <></>;
                 }}
                 renderMultiEditor={renderMultiEditor}
                 addRow={{
