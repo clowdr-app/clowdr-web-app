@@ -53,6 +53,7 @@ export default function MessageList(props: Props) {
                     caller: "setMessages",
                     function: async (msg) => {
                         const newMessages = [...messages, msg];
+                        chat.setLastReadIndex(props.chatId, msg.index, 0);
                         setMessages(sortMessages(newMessages));
                     }
                 }));
@@ -99,7 +100,11 @@ export default function MessageList(props: Props) {
             try {
                 const pager = await mChat.getMessages(props.chatId);
                 if (pager) {
-                    return { messages: pager.items, pager };
+                    const msgs = pager.items;
+                    if (msgs.length > 0) {
+                        mChat.setLastReadIndex(props.chatId, msgs[msgs.length - 1].index, 0);
+                    }
+                    return { messages: msgs, pager };
                 }
             }
             catch (e) {

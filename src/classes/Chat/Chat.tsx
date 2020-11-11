@@ -14,6 +14,7 @@ import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { emojify } from "react-emojione";
 import { addNotification } from "../Notifications/Notifications";
 import ReactMarkdown from "react-markdown";
+import { SimpleEventDispatcher } from "strongly-typed-events";
 
 export type ChatDescriptor = {
     id: string;
@@ -22,6 +23,8 @@ export type ChatDescriptor = {
     isAnnouncements: boolean;
     creator: UserProfile;
     createdAt: Date;
+    getLastReadIndex: () => Promise<number | null>;
+    getUnreadCount: () => Promise<number>;
 } & ({
     isPrivate: boolean;
     isDM: false;
@@ -66,6 +69,11 @@ export default class Chat implements IChatManager {
 
     private logger: DebugLogger = new DebugLogger("Chat");
 
+    public chatUnreadCountChangedEvent: SimpleEventDispatcher<{
+        chatId: string;
+        unreadCount: number;
+    }> = new SimpleEventDispatcher();
+
     constructor(
         private conference: Conference,
         private profile: UserProfile,
@@ -82,8 +90,6 @@ export default class Chat implements IChatManager {
     //       descriptors - we can ensure all requests come back through this
     //       Chat interface and thus can be directed to the relevant service
     //       even in the presence of real-time upgrading.
-
-    // TODO: Notifications
 
     // TODO: Internal: A way to query which service owns a given chat SID
 
@@ -177,6 +183,12 @@ export default class Chat implements IChatManager {
                                     },
                         3000
                     );
+
+                    const unreadCount = await c.getUnreadCount();
+                    this.chatUnreadCountChangedEvent.dispatch({
+                        chatId: c.id,
+                        unreadCount
+                    });
                 }
             }
         });
@@ -280,6 +292,8 @@ export default class Chat implements IChatManager {
                     friendlyName: chan.getName(),
                     creator,
                     createdAt,
+                    getLastReadIndex: () => chan.getLastReadIndex(),
+                    getUnreadCount: () => chan.getUnreadMessageCount(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
                     isModeration: false,
@@ -294,6 +308,8 @@ export default class Chat implements IChatManager {
                     friendlyName: chan.getName(),
                     creator,
                     createdAt,
+                    getLastReadIndex: () => chan.getLastReadIndex(),
+                    getUnreadCount: () => chan.getUnreadMessageCount(),
                     autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                     isAnnouncements,
                     isModeration: isMod,
@@ -313,6 +329,8 @@ export default class Chat implements IChatManager {
                         friendlyName: chan.getName(),
                         creator,
                         createdAt,
+                        getLastReadIndex: () => chan.getLastReadIndex(),
+                        getUnreadCount: () => chan.getUnreadMessageCount(),
                         autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                         isAnnouncements,
                         isPrivate: true,
@@ -329,6 +347,8 @@ export default class Chat implements IChatManager {
                         friendlyName: chan.getName(),
                         creator,
                         createdAt,
+                        getLastReadIndex: () => chan.getLastReadIndex(),
+                        getUnreadCount: () => chan.getUnreadMessageCount(),
                         autoWatchEnabled: await chan.getIsAutoWatchEnabled(),
                         isAnnouncements,
                         isModeration: false,
@@ -533,7 +553,26 @@ export default class Chat implements IChatManager {
         const channel = await this.twilioService.getChannel(chatId);
         return channel.removeReaction(messageSid, reaction);
     }
-    // TODO: Get/set last read message key
+    async getLastReadIndex(chatId: string): Promise<number | null> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatId);
+        return channel.getLastReadIndex();
+    }
+    async setLastReadIndex(chatId: string, value: number | null, expectedUnreadCount: number): Promise<void> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatId);
+        await channel.setLastReadIndex(value);
+        this.chatUnreadCountChangedEvent.dispatch({
+            chatId,
+            unreadCount: expectedUnreadCount
+        });
+    }
+    async getUnreadMessageCount(chatId: string): Promise<number> {
+        assert(this.twilioService);
+        const channel = await this.twilioService.getChannel(chatId);
+        return channel.getUnreadMessageCount();
+    }
+
     // TODO: Edit channel
     // TODO: Delete channel
 

@@ -34,6 +34,9 @@ export default class Channel implements IChannel {
     setLastReadIndex(value: number | null): Promise<void> {
         throw new Error("Method not implemented.");
     }
+    getUnreadMessageCount(): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
     addMembers(userProfileIds: string[]): Promise<void> {
         throw new Error("Method not implemented.");
     }

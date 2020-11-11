@@ -14,6 +14,7 @@ export default interface IChannel {
 
     getLastReadIndex(): Promise<number | null>;
     setLastReadIndex(value: number | null): Promise<void>;
+    getUnreadMessageCount(): Promise<number>;
 
     addMembers(userProfileIds: string[]): Promise<void>;
     removeMembers(userProfileIds: string[]): Promise<void>;

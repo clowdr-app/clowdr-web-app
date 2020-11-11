@@ -30,6 +30,7 @@ export type SidebarChatDescriptor = {
     friendlyName: string;
     isModeration: boolean;
     isModerationHub: boolean;
+    unreadCount: number;
 } & ({
     isDM: false;
 } | {
@@ -264,6 +265,7 @@ export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor)
         assert(p2);
         return {
             ...x,
+            unreadCount: await x.getUnreadCount(),
             exists: true,
             member1: {
                 ...x.member1,
@@ -278,7 +280,11 @@ export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor)
         };
     }
     else {
-        return { ...x, exists: true };
+        return {
+            ...x,
+            unreadCount: await x.getUnreadCount(),
+            exists: true
+        };
     }
 }
 
@@ -308,7 +314,7 @@ export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserP
         icon = <i className="fas fa-hashtag"></i>;
     }
 
-    return { friendlyName, icon };
+    return { friendlyName, icon, unreadCount: chat.unreadCount };
 }
 
 interface Props {
@@ -520,6 +526,22 @@ export default function ChatsGroup(props: Props) {
         };
     }, [conf, logger, mChat]);
 
+    useEffect(() => {
+        let f: () => void = () => { };
+        if (mChat) {
+            f = mChat.chatUnreadCountChangedEvent.sub((ev) => {
+                dispatchUpdate({
+                    action: "updateChatDescriptors",
+                    fActive: (x) => x.id === ev.chatId ? { ...x, unreadCount: ev.unreadCount } : x,
+                    fFiltered: (x) => x.exists && x.id === ev.chatId ? { ...x, unreadCount: ev.unreadCount } : x
+                });
+            });
+        }
+        return () => {
+            f();
+        };
+    }, [mChat]);
+
     const watchedId = mUser?.watchedId;
     const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
         for (const object of update.objects) {
@@ -660,16 +682,18 @@ export default function ChatsGroup(props: Props) {
             const renderedChats = chats
                 .filter(x => !x.exists || (!x.isModeration && !x.isModerationHub))
                 .map(chat => {
-                    const { friendlyName, icon }
+                    const { friendlyName, icon, unreadCount }
                         = chat.exists
                             ? computeChatDisplayName(chat, mUser)
                             : {
                                 friendlyName: chat.friendlyName,
-                                icon: <i className="fas fa-plus" />
+                                icon: <i className="fas fa-plus" />,
+                                unreadCount: undefined
                             };
                     return {
                         friendlyName,
                         icon,
+                        unreadCount,
                         key: chat.exists ? chat.id : `new-${friendlyName}`,
                         path: chat.exists ? `/chat/${chat.id}` : chat.targetPath
                     };
@@ -677,18 +701,17 @@ export default function ChatsGroup(props: Props) {
                 .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName));
 
             const chatMenuItems: MenuGroupItems = [];
-            for (const { key, friendlyName, icon, path } of renderedChats) {
+            for (const { key, friendlyName, icon, path, unreadCount } of renderedChats) {
 
-                // TODO: "New messages in this chat" boldification
                 chatMenuItems.push({
                     key,
                     element:
                         <MenuItem
-                            title={friendlyName}
-                            label={friendlyName}
+                            title={friendlyName + (!!unreadCount ? ` (${unreadCount})` : "")}
+                            label={friendlyName + (unreadCount !== undefined ? ` (${unreadCount} unread messages)` : "")}
                             icon={icon}
                             action={path}
-                            bold={false}
+                            bold={unreadCount ? unreadCount > 0 : false}
                             onClick={props.onItemClicked} />
                 });
             }

@@ -133,6 +133,10 @@ export default class Channel implements IChannel {
             await channel.updateLastConsumedMessageIndex(value);
         }
     }
+    async getUnreadMessageCount(): Promise<number> {
+        const channel = await this.upgrade();
+        return (await channel.getUnconsumedMessagesCount()) ?? (await channel.getMessagesCount());
+    }
     async addMembers(userProfileIds: string[]): Promise<void> {
         return Parse.Cloud.run("textChat-invite", {
             conference: (await this.textChat.conference).id,
