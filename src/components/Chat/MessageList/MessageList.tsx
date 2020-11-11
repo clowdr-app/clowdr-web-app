@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./MessageList.scss";
 import "../../Profile/FlairChip/FlairChip.scss";
 
@@ -28,9 +28,10 @@ export default function MessageList(props: Props) {
     const [messages, setMessages] = useState<Array<IMessage>>([]);
     const [renderedMessages, setRenderedMessages] = useState<Array<RenderedMessage>>([]);
     const mChat = useMaybeChat();
+    const scrollerRef = useRef<HTMLDivElement>(null);
 
     function sortMessages(msgs: Array<IMessage>): Array<IMessage> {
-        return msgs.sort((x, y) => x.index < y.index ? -1 : x.index === y.index ? 0 : 1);
+        return msgs.sort((x, y) => (x.index < y.index ? -1 : x.index === y.index ? 0 : 1));
     }
 
     useEffect(() => {
@@ -39,44 +40,90 @@ export default function MessageList(props: Props) {
 
         async function attach() {
             if (chat) {
-                listeners.set("messageRemoved", await chat.channelEventOn(props.chatId, "messageRemoved", {
-                    componentName: "MessageList",
-                    caller: "setMessages",
-                    function: async (msg) => {
-                        const newMessages = messages.filter(x => x.index !== msg.index);
-                        setMessages(newMessages);
-                    }
-                }));
-
-                listeners.set("messageAdded", await chat.channelEventOn(props.chatId, "messageAdded", {
-                    componentName: "MessageList",
-                    caller: "setMessages",
-                    function: async (msg) => {
-                        const newMessages = [...messages, msg];
-                        chat.setLastReadIndex(props.chatId, msg.index, 0);
-                        setMessages(sortMessages(newMessages));
-                    }
-                }));
-
-                listeners.set("messageUpdated", await chat.channelEventOn(props.chatId, "messageUpdated", {
-                    componentName: "MessageList",
-                    caller: "setMessages",
-                    function: async (msg) => {
-                        if (msg.updateReasons.includes("body") ||
-                            msg.updateReasons.includes("author") ||
-                            msg.updateReasons.includes("attributes")) {
-                            const newMessages = messages.map(x => {
-                                if (x.index === msg.message.index) {
-                                    return msg.message;
-                                }
-                                else {
-                                    return x;
-                                }
-                            });
+                listeners.set(
+                    "messageRemoved",
+                    await chat.channelEventOn(props.chatId, "messageRemoved", {
+                        componentName: "MessageList",
+                        caller: "setMessages",
+                        function: async msg => {
+                            const newMessages = messages.filter(x => x.index !== msg.index);
                             setMessages(newMessages);
-                        }
-                    }
-                }));
+                        },
+                    })
+                );
+
+                listeners.set(
+                    "messageAdded",
+                    await chat.channelEventOn(props.chatId, "messageAdded", {
+                        componentName: "MessageList",
+                        caller: "setMessages",
+                        function: async msg => {
+                            const newMessages = [...messages, msg];
+                            chat.setLastReadIndex(props.chatId, msg.index, 0);
+                            setMessages(sortMessages(newMessages));
+                        },
+                    })
+                );
+
+                listeners.set(
+                    "messageUpdated",
+                    await chat.channelEventOn(props.chatId, "messageUpdated", {
+                        componentName: "MessageList",
+                        caller: "setMessages",
+                        function: async msg => {
+                            if (
+                                msg.updateReasons.includes("body") ||
+                                msg.updateReasons.includes("author") ||
+                                msg.updateReasons.includes("attributes")
+                            ) {
+                                const newMessages = messages.map(x => {
+                                    if (x.index === msg.message.index) {
+                                        return msg.message;
+                                    } else {
+                                        return x;
+                                    }
+                                });
+                                setMessages(newMessages);
+                            }
+                        },
+                    })
+                );
+
+                listeners.set(
+                    "messageAdded",
+                    await chat.channelEventOn(props.chatId, "messageAdded", {
+                        componentName: "MessageList",
+                        caller: "setMessages",
+                        function: async msg => {
+                            const newMessages = [...messages, msg];
+                            setMessages(sortMessages(newMessages));
+                        },
+                    })
+                );
+
+                listeners.set(
+                    "messageUpdated",
+                    await chat.channelEventOn(props.chatId, "messageUpdated", {
+                        componentName: "MessageList",
+                        caller: "setMessages",
+                        function: async msg => {
+                            if (
+                                msg.updateReasons.includes("body") ||
+                                msg.updateReasons.includes("author") ||
+                                msg.updateReasons.includes("attributes")
+                            ) {
+                                const newMessages = messages.map(x => {
+                                    if (x.index === msg.message.index) {
+                                        return msg.message;
+                                    } else {
+                                        return x;
+                                    }
+                                });
+                                setMessages(newMessages);
+                            }
+                        },
+                    })
+                );
             }
         }
 
@@ -95,52 +142,92 @@ export default function MessageList(props: Props) {
         };
     }, [mChat, messages, props.chatId]);
 
-    useSafeAsync(async () => {
-        if (mChat) {
-            try {
-                const pager = await mChat.getMessages(props.chatId);
-                if (pager) {
-                    const msgs = pager.items;
-                    if (msgs.length > 0) {
-                        mChat.setLastReadIndex(props.chatId, msgs[msgs.length - 1].index, 0);
+    useSafeAsync(
+        async () => {
+            if (mChat) {
+                try {
+                    const pager = await mChat.getMessages(props.chatId, 10);
+                    if (pager) {
+                        const msgs = pager.items;
+                        if (msgs.length > 0) {
+                            mChat.setLastReadIndex(props.chatId, msgs[msgs.length - 1].index, 0);
+                        }
+                        return { messages: msgs, pager };
                     }
-                    return { messages: msgs, pager };
+                } catch (e) {
+                    console.error("Failed to fetch chat messages.", e);
+                    addError("Failed to fetch chat messages.");
                 }
             }
-            catch (e) {
-                console.error("Failed to fetch chat messages.", e);
-                addError("Failed to fetch chat messages.");
+            return null;
+        },
+        (
+            data: {
+                messages: IMessage[];
+                pager: Paginator<IMessage>;
+            } | null
+        ) => {
+            if (data) {
+                setMessages(data.messages);
+                setMessagesPager(data.pager);
+            } else {
+                setMessages([]);
+                setMessagesPager(null);
             }
-        }
-        return null;
-    }, (data: {
-        messages: IMessage[],
-        pager: Paginator<IMessage>
-    } | null) => {
-        if (data) {
-            setMessages(data.messages);
-            setMessagesPager(data.pager);
-        }
-        else {
-            setMessages([]);
-            setMessagesPager(null);
-        }
-    }, [mChat, props.chatId], "MessageList:getMessages");
+        },
+        [mChat, props.chatId],
+        "MessageList:getMessages"
+    );
 
-    useSafeAsync(async () =>
-        Promise.all(messages.map(async message =>
-            renderMessage(conf, userProfile, props.chatId, message))),
+    // This hook fires after the first batch of messages are retrieved and continues until there are
+    // either no more messages or the container is scrollable
+    useSafeAsync(
+        async () => {
+            if (messagePager) {
+                if (
+                    scrollerRef.current &&
+                    scrollerRef.current.scrollHeight <= scrollerRef.current.clientHeight &&
+                    messagePager.hasPrevPage
+                ) {
+                    try {
+                        return await getNextPageMessages();
+                    } catch (e) {
+                        console.error("Failed to fetch chat messages.", e);
+                        addError("Failed to fetch chat messages.");
+                    }
+                }
+                return "no change";
+            }
+            return null;
+        },
+        (data: { messages: IMessage[]; pager: Paginator<IMessage> } | "no change" | null) => {
+            if (data) {
+                if (data !== "no change") {
+                    setMessages(data.messages);
+                    setMessagesPager(data.pager);
+                }
+            }
+            // If the pager has gone but there are still messages cached, remove them
+            if (messages.length > 0) {
+                setMessages([]);
+            }
+        },
+        [messagePager],
+        "MessageList:getMessagesUntilScrollable"
+    );
+
+    useSafeAsync(
+        async () => Promise.all(messages.map(async message => renderMessage(conf, userProfile, props.chatId, message))),
         setRenderedMessages,
         [messages],
         "MessageList:renderMessages"
     );
 
-    async function loadMoreMessages() {
+    async function getNextPageMessages() {
         assert(messagePager);
         assert(messagePager.hasPrevPage);
 
         const prevPage = await messagePager.prevPage();
-        setMessagesPager(prevPage);
 
         const items = prevPage.items;
         const existingMsgIdxs = messages.map(x => x.index);
@@ -149,37 +236,40 @@ export default function MessageList(props: Props) {
             const idx = existingMsgIdxs.indexOf(item.index);
             if (idx > -1) {
                 newMessages.splice(idx, 1, item);
-            }
-            else {
+            } else {
                 newMessages.push(item);
             }
         }
-        setMessages(sortMessages(newMessages));
+
+        return { messages: sortMessages(newMessages), pager: prevPage };
     }
 
+    async function loadMoreMessages() {
+        const { messages, pager } = await getNextPageMessages();
 
-    // TODO: Detect if loaded messages render shorter than the available space
-    //       if so, element won't present a scrollbar so we must manually load
-    //       in more messages until overflow occurs.
+        setMessagesPager(pager);
+        setMessages(messages);
+    }
 
-    return <div id={props.chatId} className="message-list">
-        <InfiniteScroll
-            dataLength={messages.length}
-            next={() => loadMoreMessages()}
-            inverse={true}
-            // Has to be applied as style not scss
-            style={{ display: 'flex', flexDirection: 'column-reverse' }}
-            hasMore={messagePager === null || messagePager.hasPrevPage}
-            loader={<LoadingSpinner />}
-            endMessage={
-                <p className="start-of-chat">
-                    Beginning of chat.
-                </p>}
-            scrollableTarget={props.chatId}
-        >
-            <div>
-                {renderedMessages.map(x => <Message key={x.sid} msg={x} hideReportButton={props.hideMessageReportButtons} />)}
-            </div>
-        </InfiniteScroll>
-    </div>;
+    return (
+        <div id={props.chatId} className="message-list" ref={scrollerRef}>
+            <InfiniteScroll
+                dataLength={messages.length}
+                next={async () => await loadMoreMessages()}
+                inverse={true}
+                // Has to be applied as style not scss
+                style={{ display: "flex", flexDirection: "column-reverse" }}
+                hasMore={messagePager === null || messagePager.hasPrevPage}
+                loader={<LoadingSpinner />}
+                endMessage={<p className="start-of-chat">Beginning of chat.</p>}
+                scrollableTarget={props.chatId}
+            >
+                <div>
+                    {renderedMessages.map(x => (
+                        <Message key={x.sid} msg={x} hideReportButton={props.hideMessageReportButtons} />
+                    ))}
+                </div>
+            </InfiniteScroll>
+        </div>
+    );
 }
