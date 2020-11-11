@@ -166,7 +166,7 @@ export default function ProfileEditor(props: Props) {
                         <label htmlFor="pronouns">Pronouns</label>
                         <Controller
                             name="pronouns"
-                            defaultValue={p.tags}
+                            defaultValue={p.pronouns}
                             control={control}
                             render={({ onChange, value }) => (
                                 <TagInput name="" tags={value} setTags={onChange} disabled={formState.isSubmitting} />
