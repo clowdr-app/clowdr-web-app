@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Parse from "parse";
-import { Redirect } from "react-router-dom";
 import useHeading from "../../../../hooks/useHeading";
-import useUserRoles from "../../../../hooks/useUserRoles";
-import { CompleteSpecs, FeedSpec } from "./UploadFormatTypes";
+import { AttachmentTypeSpec, CompleteSpecs, EventSpec, FeedSpec, ItemSpec, PersonSpec, SessionSpec, TrackSpec } from "./UploadFormatTypes";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import WelcomeTab from "./Tabs/WelcomeTab";
@@ -20,6 +18,9 @@ import assert from "assert";
 import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import useConference from "../../../../hooks/useConference";
+import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
+import { AttachmentType, ProgramTrack, ProgramSession, ProgramSessionEvent, ProgramPerson, ProgramItem, ContentFeed } from "@clowdr-app/clowdr-db-schema";
+import { removeUndefined } from "@clowdr-app/clowdr-db-schema/build/Util";
 
 enum ProgramTabs {
     Welcome = 0,
@@ -32,23 +33,14 @@ enum ProgramTabs {
     Upload = 7
 }
 
-export default function ProgramEditor() {
+function InnerProgramEditor(props: {
+    defaultProgramSpec: CompleteSpecs
+}) {
     const conference = useConference();
-    // TODO: Load from existing program
-    const [defaultProgramSpec, setDefaultProgramSpec] = useState<CompleteSpecs>({
-        tracks: {},
-        feeds: {},
-        items: {},
-        events: {},
-        persons: {},
-        sessions: {},
-        attachmentTypes: {}
-    });
-    const [programSpec, setProgramSpec] = useState<CompleteSpecs>(defaultProgramSpec);
+    const [programSpec, setProgramSpec] = useState<CompleteSpecs>(props.defaultProgramSpec);
     const [uploadProgress, setUploadProgress] = useState<number | false | null>(null);
     const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
-    // TODO: Reset default tab to Welcome
-    const [currentTab, setCurrentTab] = useState<ProgramTabs>(ProgramTabs.Import);
+    const [currentTab, setCurrentTab] = useState<ProgramTabs>(ProgramTabs.Welcome);
 
     useSafeAsync(async () => {
         if (uploadProgress !== false) {
@@ -158,7 +150,7 @@ export default function ProgramEditor() {
                         <ImportTab
                             mergeProgramData={(data) => {
                                 // TODO: Merge rather than replace
-                                setProgramSpec(data ?? defaultProgramSpec);
+                                setProgramSpec(data ?? props.defaultProgramSpec);
                             }}
                         />
                     </div>
@@ -213,19 +205,21 @@ export default function ProgramEditor() {
                                 return key;
                             }}
                             createTrack={(name) => {
+                                const newTrack = {
+                                    name,
+                                    shortName: name,
+                                    colour: "#ffffff"
+                                };
+                                const newId = generateTrackId(newTrack);
                                 setProgramSpec(oldSpec => {
-                                    if (!oldSpec.tracks[name]) {
+                                    if (!oldSpec.tracks[newId]) {
                                         const newSpec = { ...oldSpec };
-                                        newSpec.tracks[name] = {
-                                            name,
-                                            shortName: name,
-                                            colour: "#ffffff"
-                                        };
+                                        newSpec.tracks[newId] = newTrack;
                                         return newSpec;
                                     }
                                     return oldSpec;
                                 });
-                                return name;
+                                return newId;
                             }}
                             updateItem={(oldId, item) => {
                                 setProgramSpec(oldSpec => {
@@ -434,19 +428,21 @@ export default function ProgramEditor() {
                                 return false;
                             }}
                             createTrack={(name) => {
+                                const newTrack = {
+                                    name,
+                                    shortName: name,
+                                    colour: "#ffffff"
+                                };
+                                const newId = generateTrackId(newTrack);
                                 setProgramSpec(oldSpec => {
-                                    if (!oldSpec.tracks[name]) {
+                                    if (!oldSpec.tracks[newId]) {
                                         const newSpec = { ...oldSpec };
-                                        newSpec.tracks[name] = {
-                                            name,
-                                            shortName: name,
-                                            colour: "#ffffff"
-                                        };
+                                        newSpec.tracks[newId] = newTrack;
                                         return newSpec;
                                     }
                                     return oldSpec;
                                 });
-                                return name;
+                                return newId;
                             }}
                             updateSession={(oldId, session) => {
                                 setProgramSpec(oldSpec => {
@@ -671,11 +667,165 @@ export default function ProgramEditor() {
                 </TabPanel>
             </Tabs>
         );
-    }, [currentTab, defaultProgramSpec, isFeedInUse, itemsKeys.length, programSpec, sessionsKeys.length, uploadInProgress, uploadProgress]);
+    }, [currentTab, isFeedInUse, itemsKeys.length, programSpec, props.defaultProgramSpec, sessionsKeys.length, uploadInProgress, uploadProgress]);
 
     return (
         <div className="admin-program-editor admin-editor">
             {tabs}
         </div>
+    );
+}
+
+export default function ProgramEditor() {
+    const conference = useConference();
+    // TODO: Load from existing program
+    const [defaultProgramSpec, setDefaultProgramSpec] = useState<CompleteSpecs | null>(null);
+
+    useSafeAsync(
+        async () => {
+            const [tracks, sessions, events, authors, items, feeds, attachmentTypes]
+                = await Promise.all<
+                    Array<ProgramTrack>,
+                    Array<ProgramSession>,
+                    Array<ProgramSessionEvent>,
+                    Array<ProgramPerson>,
+                    Array<ProgramItem>,
+                    Array<FeedSpec & { parseId: string }>,
+                    Array<AttachmentType>
+                >([
+                    ProgramTrack.getAll(conference.id),
+                    ProgramSession.getAll(conference.id),
+                    ProgramSessionEvent.getAll(conference.id),
+                    ProgramPerson.getAll(conference.id),
+                    ProgramItem.getAll(conference.id),
+                    ContentFeed.getAll(conference.id).then(async _feeds => {
+                        const specs: Array<FeedSpec & { parseId: string }> = [];
+                        for (const feed of _feeds) {
+                            specs.push({
+                                parseId: feed.id,
+                                id: feed.originatingID ?? feed.id,
+                                name: feed.name,
+                                textChat: !!feed.textChat,
+                                videoRoom: !!feed.videoRoom,
+                                youtube: (await feed.youtube)?.videoId,
+                                zoomRoom: (await feed.zoomRoom)?.url
+                            });
+                        }
+                        return specs;
+                    }),
+                    AttachmentType.getAll(conference.id)
+                ]);
+            return {
+                tracks: tracks.reduce((acc, o) => {
+                    const spec: TrackSpec = {
+                        name: o.name,
+                        shortName: o.shortName,
+                        colour: o.colour
+                    };
+                    acc[generateTrackId(spec)] = spec;
+                    return acc;
+                }, {}),
+                feeds: feeds.reduce((acc, spec) => {
+                    const theSpec: any = { ...spec };
+                    delete theSpec.parseId;
+                    acc[spec.id] = theSpec;
+                    return acc;
+                }, {}),
+                items: items.reduce((acc, o) => {
+                    const id = o.originatingID ?? o.id;
+                    const track = tracks.find(_track => _track.id === o.trackId);
+                    assert(track);
+                    const feedId = o.feedId ? feeds.find(feed => feed.parseId === o.feedId)?.id : undefined;
+                    const spec: ItemSpec = {
+                        id,
+                        abstract: o.abstract,
+                        authors: removeUndefined(o.authors.map(authorId => {
+                            const author = authors.find(_author => _author.id === authorId);
+                            if (author) {
+                                return generatePersonId(author);
+                            }
+                            return undefined;
+                        })),
+                        exhibit: o.exhibit,
+                        title: o.title,
+                        track: generateTrackId(track),
+                        feed: feedId
+                    };
+                    acc[id] = spec;
+                    return acc;
+                }, {}),
+                events: events.reduce((acc, o) => {
+                    const id = o.originatingID ?? o.id;
+
+                    const item = items.find(_item => _item.id === o.itemId);
+                    assert(item);
+                    const itemId = item.originatingID ?? item.id;
+
+                    const session = sessions.find(_session => _session.id === o.sessionId);
+                    assert(session);
+                    const sessionId = session.originatingID ?? session.id;
+
+                    const feedId = o.feedId ? feeds.find(feed => feed.parseId === o.feedId)?.id : undefined;
+                    const spec: EventSpec = {
+                        id,
+                        endTime: o.endTime,
+                        startTime: o.startTime,
+                        chair: o.chair,
+                        directLink: o.directLink,
+                        item: itemId,
+                        session: sessionId,
+                        feed: feedId
+                    };
+                    acc[id] = spec;
+                    return acc;
+                }, {}),
+                persons: authors.reduce((acc, o) => {
+                    const spec: PersonSpec = {
+                        name: o.name,
+                        affiliation: o.affiliation,
+                        email: o.email
+                    };
+                    const id = generatePersonId(spec);
+                    acc[id] = spec;
+                    return acc;
+                }, {}),
+                sessions: sessions.reduce((acc, o) => {
+                    const id = o.originatingID ?? o.id;
+                    const track = tracks.find(_track => _track.id === o.trackId);
+                    assert(track);
+                    const feedId = feeds.find(feed => feed.parseId === o.feedId)?.id;
+                    assert(feedId);
+                    const spec: SessionSpec = {
+                        id,
+                        title: o.title,
+                        chair: o.chair,
+                        track: generateTrackId(track),
+                        feed: feedId
+                    };
+                    acc[id] = spec;
+                    return acc;
+                }, {}),
+                attachmentTypes: attachmentTypes.reduce((acc, o) => {
+                    const spec: AttachmentTypeSpec = {
+                        name: o.name,
+                        displayAsLink: o.displayAsLink,
+                        isCoverImage: o.isCoverImage,
+                        ordinal: o.ordinal ?? 0,
+                        supportsFile: o.supportsFile,
+                        extra: o.extra,
+                        fileTypes: o.fileTypes
+                    };
+                    acc[o.id] = spec;
+                    return acc;
+                }, {})
+            };
+        },
+        setDefaultProgramSpec,
+        [conference.id], "WholeProgram:setData");
+
+    return (
+        !defaultProgramSpec
+            ? <LoadingSpinner message="Loading program..." />
+            : <InnerProgramEditor defaultProgramSpec={defaultProgramSpec} />
     );
 }

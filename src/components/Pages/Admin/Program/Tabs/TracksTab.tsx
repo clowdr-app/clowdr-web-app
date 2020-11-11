@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function generateTrackId(spec: TrackSpec) {
-    return spec.name;
+    return spec.name.toLowerCase();
 }
 
 export default function AuthorsTab(props: Props) {

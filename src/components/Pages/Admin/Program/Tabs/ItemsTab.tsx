@@ -107,7 +107,7 @@ export default function ItemsTab(props: Props) {
     }, [propsData.items, propsUpdateItem]);
 
     const renderTrack = (data: string) => {
-        return <span className="item-track">{data}</span>;
+        return <span className="item-track">{propsData.tracks[data]?.name}</span>;
     };
 
     const renderTrackEditor = useCallback((key: string, data?: string) => {
@@ -139,10 +139,10 @@ export default function ItemsTab(props: Props) {
                     updateItemTrack(newTrackKey);
                 }}
                 options={trackOptions}
-                value={data && { label: data, value: data } as any}
+                value={data && { label: propsData.tracks[data]?.name, value: data } as any}
             />
         );
-    }, [propsCreateTrack, propsData.items, propsUpdateItem, trackOptions]);
+    }, [propsCreateTrack, propsData.items, propsData.tracks, propsUpdateItem, trackOptions]);
 
     const renderExhibit = useCallback((data: boolean) => {
         return (

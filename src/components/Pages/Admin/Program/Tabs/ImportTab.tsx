@@ -128,17 +128,17 @@ function processResearchrXMLs(
             const dataSessionTrackEls = dataSubevent
                 .getElementsByTagName("tracks")[0]
                 .getElementsByTagName("track");
-            const sessionTrack = dataSessionTrackEls[0].textContent;
+            const sessionTrack = dataSessionTrackEls[0].textContent?.trim();
             assert(sessionTrack);
 
             const dataSessionTitleEls = dataSubevent.getElementsByTagName("title");
             assert(dataSessionTitleEls.length);
-            const sessionTitle = dataSessionTitleEls[0].textContent;
+            const sessionTitle = dataSessionTitleEls[0].textContent?.trim();
             assert(sessionTitle);
 
             const dataSessionSubeventIdEls = dataSubevent.getElementsByTagName("subevent_id");
             assert(dataSessionSubeventIdEls.length);
-            const sessionId = dataSessionSubeventIdEls[0].textContent;
+            const sessionId = dataSessionSubeventIdEls[0].textContent?.trim();
             assert(sessionId);
 
             let skipSession = false;
@@ -155,7 +155,7 @@ function processResearchrXMLs(
             }
 
             if (!skipSession) {
-                outputTracks[sessionTrack] = {
+                outputTracks[sessionTrack.toLowerCase()] = {
                     name: sessionTrack,
                     colour: "#ffffff",
                     shortName: sessionTrack
@@ -165,7 +165,7 @@ function processResearchrXMLs(
                     id: sessionId,
                     title: sessionTitle,
                     feed: sessionId,
-                    track: sessionTrack,
+                    track: sessionTrack.toLowerCase(),
                 };
 
                 assert(!outputSessions[sessionId]);
@@ -176,30 +176,30 @@ function processResearchrXMLs(
                     for (const dataTimeslot of dataTimeslots) {
                         const eventIdEls = dataTimeslot.getElementsByTagName("event_id");
                         if (eventIdEls.length > 0) {
-                            const itemId = eventIdEls[0].textContent;
+                            const itemId = eventIdEls[0].textContent?.trim();
                             assert(itemId);
 
                             const dataEventTrackEls = dataTimeslot
                                 .getElementsByTagName("tracks")[0]
                                 .getElementsByTagName("track");
-                            const itemTrack = dataEventTrackEls[0].textContent;
+                            const itemTrack = dataEventTrackEls[0].textContent?.trim();
                             assert(itemTrack);
-                            outputTracks[itemTrack] = {
+                            outputTracks[itemTrack.toLowerCase()] = {
                                 name: itemTrack,
                                 colour: "#ffffff",
                                 shortName: itemTrack
                             };
 
                             const dataDescriptionEls = dataTimeslot.getElementsByTagName("description");
-                            const itemAbstract = dataDescriptionEls[0].textContent;
+                            const itemAbstract = dataDescriptionEls[0].textContent?.trim();
                             assert(itemAbstract);
 
                             const dataTitleEls = dataTimeslot.getElementsByTagName("title");
-                            const itemTitle = dataTitleEls[0].textContent;
+                            const itemTitle = dataTitleEls[0].textContent?.trim();
                             assert(itemTitle);
 
                             const dataSlotEls = dataTimeslot.getElementsByTagName("slot_id");
-                            const eventId = dataSlotEls[0].textContent;
+                            const eventId = dataSlotEls[0].textContent?.trim();
                             assert(eventId);
 
                             const authors = [];
@@ -223,6 +223,7 @@ function processResearchrXMLs(
                                         if (affiliation === "undefined") {
                                             affiliation = undefined;
                                         }
+                                        affiliation = affiliation?.trim();
                                         const personSpec = {
                                             name: concatName,
                                             affiliation
@@ -252,7 +253,7 @@ function processResearchrXMLs(
                                     authors,
                                     exhibit: trackExhibitDefaults.includes(itemTrack),
                                     title: itemTitle,
-                                    track: itemTrack,
+                                    track: itemTrack.toLowerCase(),
                                     feed: itemId
                                 };
                             }

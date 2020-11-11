@@ -582,8 +582,13 @@ async function createProgramItem(data) {
     if (data.originatingID) {
         existing = await new Parse.Query("ProgramItem")
             .equalTo("conference", data.conference)
-            .equalTo("originatingID", data.originatingID)
-            .first({ useMasterKey: true });
+            .get(data.originatingID, { useMasterKey: true });
+        if (!existing) {
+            existing = await new Parse.Query("ProgramItem")
+                .equalTo("conference", data.conference)
+                .equalTo("originatingID", data.originatingID)
+                .first({ useMasterKey: true });
+        }
     } else {
         existing = await new Parse.Query("ProgramItem")
             .equalTo("conference", data.conference)
@@ -809,8 +814,13 @@ async function createProgramSession(data) {
     if (data.originatingID) {
         existing = await new Parse.Query("ProgramSession")
             .equalTo("conference", data.conference)
-            .equalTo("originatingID", data.originatingID)
-            .first({ useMasterKey: true });
+            .get(data.originatingID, { useMasterKey: true });
+        if (!existing) {
+            existing = await new Parse.Query("ProgramSession")
+                .equalTo("conference", data.conference)
+                .equalTo("originatingID", data.originatingID)
+                .first({ useMasterKey: true });
+        }
     } else {
         existing = await new Parse.Query("ProgramSession")
             .equalTo("conference", data.conference)
@@ -908,8 +918,13 @@ async function createProgramSessionEvent(data) {
     if (data.originatingID) {
         existing = await new Parse.Query("ProgramSessionEvent")
             .equalTo("conference", data.conference)
-            .equalTo("originatingID", data.originatingID)
-            .first({ useMasterKey: true });
+            .get(data.originatingID, { useMasterKey: true });
+        if (!existing) {
+            existing = await new Parse.Query("ProgramSessionEvent")
+                .equalTo("conference", data.conference)
+                .equalTo("originatingID", data.originatingID)
+                .first({ useMasterKey: true });
+        }
     }
     if (existing) {
         if (!data.feed) {

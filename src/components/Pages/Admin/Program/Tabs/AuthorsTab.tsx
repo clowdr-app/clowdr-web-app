@@ -20,7 +20,7 @@ interface Props {
 }
 
 export function generatePersonId(spec: PersonSpec) {
-    return spec.name + "¦" + spec.affiliation;
+    return spec.name.toLowerCase() + "¦" + spec.affiliation?.toLowerCase();
 }
 
 export default function AuthorsTab(props: Props) {

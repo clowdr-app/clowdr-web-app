@@ -86,7 +86,7 @@ export default function SessionsTab(props: Props) {
     }, [propsData.sessions, propsUpdateSession]);
 
     const renderTrack = (data: string) => {
-        return <span className="session-track">{data}</span>;
+        return <span className="session-track">{propsData.tracks[data]?.name}</span>;
     };
 
     const renderTrackEditor = useCallback((key: string, data?: string) => {
@@ -118,10 +118,10 @@ export default function SessionsTab(props: Props) {
                     updateItemTrack(newTrackKey);
                 }}
                 options={trackOptions}
-                value={data && { label: data, value: data } as any}
+                value={data && { label: propsData.tracks[data]?.name, value: data } as any}
             />
         );
-    }, [propsCreateTrack, propsData.sessions, propsUpdateSession, trackOptions]);
+    }, [propsCreateTrack, propsData.sessions, propsData.tracks, propsUpdateSession, trackOptions]);
 
     const renderSingleEditor = useCallback((key: string) => {
         const isNew = key === NewItemKey;

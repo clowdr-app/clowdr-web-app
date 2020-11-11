@@ -1,8 +1,7 @@
 export type TrackSpec = {
     shortName?: string,
     name: string,
-    colour: string,
-    textChat?: boolean,
+    colour: string
 };
 
 export type FeedSpec = {
