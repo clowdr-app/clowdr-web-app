@@ -204,7 +204,7 @@ export default class Chat implements IChatManager {
                                             url: `/chat/${c.id}`,
                                             text: "Go to chat"
                                         },
-                            3000
+                            10000
                         );
 
                         const unreadCount = await c.getUnreadCount();
