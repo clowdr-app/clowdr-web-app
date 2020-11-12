@@ -16,7 +16,7 @@ import useTrack from "../../hooks/useTrack/useTrack";
 import useParticipantIsReconnecting from "../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting";
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 
-const BORDER_SIZE = 2;
+const BORDER_SIZE = 3;
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles<any, { highlightColour?: string }>({
@@ -28,15 +28,11 @@ const useStyles = makeStyles((theme: Theme) =>
             overflow: "hidden",
             "& video": {
                 filter: "none",
-                objectFit: "contain !important",
+                objectFit: "contain !important" as any,
             },
-            borderRadius: "4px",
-            border: `${BORDER_SIZE}px solid rgb(245, 248, 255)`,
+            border: props => `${BORDER_SIZE}px solid ${props.highlightColour ?? "black"}`,
             paddingTop: `calc(${(9 / 16) * 100}% - ${BORDER_SIZE}px)`,
             background: "black",
-        },
-        highlight: {
-            border: props => `1px solid ${props.highlightColour ?? "black"}`,
         },
         notContainedInGrid: {
             [theme.breakpoints.down("sm")]: {
@@ -190,8 +186,7 @@ export default function ParticipantInfo({
                 {
                     [classes.hideParticipant]: hideParticipant,
                     [classes.cursorPointer]: Boolean(onClick),
-                    [classes.notContainedInGrid]: !insideGrid,
-                    [classes.highlight]: highlightColour,
+                    [classes.notContainedInGrid]: !insideGrid
                 },
                 slot !== undefined ? `area-${slot}` : undefined
             )}
