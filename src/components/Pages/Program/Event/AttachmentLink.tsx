@@ -91,9 +91,9 @@ export default function AttachmentLink(props: Props) {
                 else {
                     return (
                         <Tooltip title="Click to view in more detail">
-                            <Link to={url ?? ""} title="View image" target="_blank">
+                            <a href={url ?? ""} title="View image" target="_blank" rel="noopener noreferrer">
                                 {imgEl}
-                            </Link>
+                            </a>
                         </Tooltip>
                     );
                 }
